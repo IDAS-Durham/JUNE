@@ -1,41 +1,48 @@
+import numpy as np
 from random import uniform
+from scipy import stats
+from covid.classes import World, Person, Postcode, Household
+
 """
 This file contains routines to attribute people with different characteristics
 according to census data.
 """
 
-def assign_people_to_household(household, ratios_data):
+def populate_world(world:World):
     """
-    Assigns a certain resident configuration to a household.
-    The input is a dictionary with each configuration and the probability.
-    The first number of the key is the number of adults, and the second one is the number
-    of kids.
-    example = {
-        "2 0" : 0.1,
-        "2 1" : 0.6,
-        "1 1" : 0.3,
-    }
+    Populates all postcodes in the world.
     """
+    print("Populating postcodes...")
+    for postcode in world.postcodes.values():
+        print("#", end="")
+        populate_postcode(postcode)
+
+
+def populate_postcode(postcode:Postcode):
+    """
+    Populates a postcode with houses and people according to the census frequencies
+    """
+    census_freq = postcode.census_freq
     try:
-        assert sum(ratios_data.values()) == 1
+        assert sum(census_freq.values()) == 1
     except:
-        raise ValueError("ratios should add to 1")
-    configurations = []
-    pdf_values = []
-    total = 0
-    random_number = uniform(0, 1)
-    for key in ratios_data.keys():
-        config_probability = ratios_data[key]
-        total += config_probability
-        if total >= random_number:
-            return key
-    raise ValueError("whoops, should not be here!")
+        raise ValueError("Census frequency values should add to 1")
 
-def populate_county(county, ratios_data): 
-    total_pop = county.population_number
-
-
-    
-
-
+    # create a random variable with the census data to sample from it
+    census_keys_values_array = (np.array(list(census_freq.keys())), np.array(list(census_freq.values())))
+    random_variable = stats.rv_discrete(values=census_keys_values_array)
+    number_of_households = postcode.n_residents // 4 + min(postcode.n_residents % 4, 1)
+    for i in range(0,postcode.n_residents):
+        household_number = postcode.world.total_households + i // 4
+        # add 1 to world population
+        postcode.world.total_people += 1
+        # create person
+        person = Person(postcode.world.total_people, postcode, 0, random_variable.rvs(1), 0, 0)
+        postcode.people[person.id] = person
+        # put person into house
+        if i % 4 == 0:
+            household = Household(household_number, postcode) 
+            postcode.households[household_number] = household
+        else:
+            household.residents[person.id] = person
 
