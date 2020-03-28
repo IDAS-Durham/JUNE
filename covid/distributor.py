@@ -33,7 +33,7 @@ def populate_postcode(postcode:Postcode):
     random_variable = stats.rv_discrete(values=census_keys_values_array)
     number_of_households = postcode.n_residents // 4 + min(postcode.n_residents % 4, 1)
     for i in range(0,postcode.n_residents):
-        household_number = postcode.world.total_households + i // 4
+        postcode.world.total_households += i // 4
         # add 1 to world population
         postcode.world.total_people += 1
         # create person
@@ -42,7 +42,7 @@ def populate_postcode(postcode:Postcode):
         # put person into house
         if i % 4 == 0:
             household = Household(household_number, postcode) 
-            postcode.households[household_number] = household
+            postcode.households[postcode.world.total_households] = household
         else:
             household.residents[person.id] = person
 
