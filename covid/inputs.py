@@ -61,7 +61,7 @@ def df2dict(population_df: pd.DataFrame) -> dict:
 
 
 def create_input_dictionary(
-    DATA_DIR: str = "../data/census_data/postcode_sector/",
+    DATA_DIR: str = os.path.join("..", "data", "census_data", "postcode_sector")
 ) -> dict:
     """Formats input dictionary to populate realistic households in England and Wales
 
