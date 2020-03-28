@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 
 
@@ -6,7 +7,7 @@ def read_population_df(DATA_DIR: str) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
 
     Args:
-        DATA_DIR: path to dataset (csv file)
+        DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
 
     Returns:
         pandas dataframe with ratio of males and females per postcode
@@ -21,7 +22,7 @@ def read_population_df(DATA_DIR: str) -> pd.DataFrame:
     ]
     population_usecols = [2, 4, 5, 6]
     population_df = pd.read_csv(
-        DATA_DIR + population,
+        os.path.join(DATA_DIR, population),
         names=population_column_names,
         usecols=population_usecols,
         header=0,
