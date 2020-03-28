@@ -11,16 +11,17 @@ class World:
         self.postcodes_idxtoname, self.postcodes = self.read_postcodes()
         self.people = {}
         self.total_people = 0
+        self.total_households = 0
 
     def read_postcodes(self):
         postcodes_idxtoname = []
         postcodes = {}
-        for i, key in enumerate(self.input_dict.keys()):
+        for i, key in enumerate(self.input_dict["postcode_sector"].keys()):
             postcodes_idxtoname.append(key)
             postcodes[i] = Postcode(self,
                                     i,
-                                    self.input_dict[key]["n_residents"],
-                                    self.input_dict[key]["census_freq"]
+                                    self.input_dict["postcode_sector"][key]["n_residents"],
+                                    self.input_dict["postcode_sector"][key]["census_freq"],
             )
         return postcodes_idxtoname, postcodes
 
@@ -45,9 +46,10 @@ class Household:
     its residents.
     """
 
-    def __init__(self, house_id):
+    def __init__(self, house_id, postcode):
         self.id = house_id
         self.residents = {}
+        self.postcode = postcode
 
 class Person:
     """
