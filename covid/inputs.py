@@ -1,7 +1,5 @@
 import pandas as pd
 
-
-
 def read_population_df(DATA_DIR: str) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
 
