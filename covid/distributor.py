@@ -23,26 +23,19 @@ def populate_postcode(postcode:Postcode):
     Populates a postcode with houses and people according to the census frequencies
     """
     census_freq = postcode.census_freq
+    n_residents = postcode.n_residents
     try:
-        assert sum(census_freq.values()) == 1
+        assert np.sum(census_freq.values) == 1
     except:
         raise ValueError("Census frequency values should add to 1")
 
     # create a random variable with the census data to sample from it
-    census_keys_values_array = (np.array(list(census_freq.keys())), np.array(list(census_freq.values())))
-    random_variable = stats.rv_discrete(values=census_keys_values_array)
-    number_of_households = postcode.n_residents // 4 + min(postcode.n_residents % 4, 1)
-    for i in range(0,postcode.n_residents):
-        postcode.world.total_households += i // 4
-        # add 1 to world population
+    random_variable = stats.rv_discrete(values=(np.arange(0,len(census_freq)), census_freq.values))
+    residents_sex_random = random_variable.rvs(size = postcode.n_residents)
+    people_ids = np.arange(postcode.world.total_people + 1, postcode.world.total_people + postcode.n_residents + 1)
+    # create people and record it to the world and postcodes
+    for i in range(0, postcode.n_residents):
+        person = Person(people_ids[i], postcode, 0, residents_sex_random[i], 0, 0) 
         postcode.world.total_people += 1
-        # create person
-        person = Person(postcode.world.total_people, postcode, 0, random_variable.rvs(1), 0, 0)
-        postcode.people[person.id] = person
-        # put person into house
-        if i % 4 == 0:
-            household = Household(household_number, postcode) 
-            postcode.households[postcode.world.total_households] = household
-        else:
-            household.residents[person.id] = person
-
+        postcode.world.people[postcode.world.total_people] = person
+        postcode.people[postcode.world.total_people] = person
