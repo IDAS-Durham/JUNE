@@ -24,6 +24,7 @@ def populate_postcode(postcode:Postcode):
     """
     census_freq = postcode.census_freq
     n_residents = postcode.n_residents
+    n_households = postcode.n_households
     try:
         assert np.sum(census_freq.values) == 1
     except:
@@ -35,7 +36,11 @@ def populate_postcode(postcode:Postcode):
     people_ids = np.arange(postcode.world.total_people + 1, postcode.world.total_people + postcode.n_residents + 1)
     # create people and record it to the world and postcodes
     for i in range(0, postcode.n_residents):
+        if i % 4 == 0:
+            household = Household(i//4, postcode)
         person = Person(people_ids[i], postcode, 0, residents_sex_random[i], 0, 0) 
+        household.residents[i%4] = person
+        postcode.households[i%4] = household
         postcode.world.total_people += 1
         postcode.world.people[postcode.world.total_people] = person
         postcode.people[postcode.world.total_people] = person
