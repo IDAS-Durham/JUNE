@@ -6,38 +6,32 @@ class World:
     """
     Stores global information about the simulation
     """
-    def __init__(self, input_dict):
-        self.input_dict = input_dict
-        self.postcodes_idxtoname, self.postcodes = self.read_postcodes()
+    def __init__(self, input_df):
+        self.input_df = input_df
+        self.postcodes = self.read_postcodes_census()
         self.people = {}
         self.total_people = 0
-        self.total_households = 0
 
-    def read_postcodes(self):
-        postcodes_idxtoname = []
-        postcodes = {}
-        for i, key in enumerate(self.input_dict["postcode_sector"].keys()):
-            postcodes_idxtoname.append(key)
-            postcodes[i] = Postcode(self,
-                                    i,
-                                    self.input_dict["postcode_sector"][key]["n_residents"],
-                                    self.input_dict["postcode_sector"][key]["census_freq"],
-            )
-        return postcodes_idxtoname, postcodes
+    def read_postcodes_census(self):
+        postcodes_dict = {}
+        postcodes = self.input_df.apply(lambda row: Postcode(self, row.name, row["n_residents"], row["n_households"], row[["males", "females"]]), axis=1)
+        for i, postcode in enumerate(postcodes):
+            postcodes_dict[i] = postcode
+        return postcodes_dict
 
 class Postcode:
     """
     Stores information about the postcode, like the total population
     number, universities, etc.
     """
-
-    def __init__(self, world, postcode_id, n_residents, census_freq):
+    def __init__(self, world, name, n_residents, n_households, census_freq):
         self.world = world
-        self.id = postcode_id 
-        self.n_residents = n_residents 
-        self.people = {} 
-        self.households = {}
+        self.name = name
+        self.n_residents = int(n_residents)
+        self.n_households = n_households
         self.census_freq = census_freq
+        self.people = {}
+        self.households = {}
 
 
 class Household:
