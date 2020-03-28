@@ -1,5 +1,3 @@
-PEOPLE_IDS = {}
-
 """
 This file contains the classes definitions for the code
 """
