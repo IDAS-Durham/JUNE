@@ -73,11 +73,10 @@ def test_frequencies():
         freq /= world.postcodes[i].n_residents
         frequencies.append(freq)
     frequencies = np.asarray(frequencies)
-    print("\n")
-    print(frequencies)
-    print(census_df["females"].values)
 
-    np.testing.assert_equal(frequencies > 0.5, census_df["females"].values > 0.5)
+    np.testing.assert_almost_equal(
+        frequencies > 0.5, census_df["females"].values > 0.5, decimal=2
+    )
 
 
 if __name__ == "__main__":
