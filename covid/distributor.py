@@ -1,6 +1,7 @@
+import numpy as np
 from random import uniform
 from scipy import stats
-from classes import World, Person, Postcode, Household
+from covid.classes import World, Person, Postcode, Household
 
 """
 This file contains routines to attribute people with different characteristics
@@ -8,12 +9,18 @@ according to census data.
 """
 
 def populate_world(world:World):
-    for postcode in world.postcodes:
+    """
+    Populates all postcodes in the world.
+    """
+    print("Populating postcodes...")
+    for postcode in world.postcodes.values():
+        print("#", end="")
         populate_postcode(postcode)
 
 
 def populate_postcode(postcode:Postcode):
     """
+    Populates a postcode with houses and people according to the census frequencies
     """
     census_freq = postcode.census_freq
     try:
@@ -21,10 +28,12 @@ def populate_postcode(postcode:Postcode):
     except:
         raise ValueError("Census frequency values should add to 1")
 
-    random_variable = stats.rv_discrete(values=(census_freq.keys(), census_freq.values()))
+    # create a random variable with the census data to sample from it
+    census_keys_values_array = (np.array(list(census_freq.keys())), np.array(list(census_freq.values())))
+    random_variable = stats.rv_discrete(values=census_keys_values_array)
     number_of_households = postcode.n_residents // 4 + min(postcode.n_residents % 4, 1)
     for i in range(0,postcode.n_residents):
-        household_number = i // 4
+        household_number = postcode.world.total_households + i // 4
         # add 1 to world population
         postcode.world.total_people += 1
         # create person
@@ -32,7 +41,8 @@ def populate_postcode(postcode:Postcode):
         postcode.people[person.id] = person
         # put person into house
         if i % 4 == 0:
-            household = Household(household_number) 
+            household = Household(household_number, postcode) 
+            postcode.households[household_number] = household
         else:
             household.residents[person.id] = person
 
