@@ -1,9 +1,15 @@
 import pandas as pd
 
 
+
 def read_population_df(DATA_DIR: str) -> pd.DataFrame:
-    """
-        
+    """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
+
+    Args:
+        DATA_DIR: path to dataset (csv file)
+
+    Returns:
+        pandas dataframe with ratio of males and females per postcode
 
     """
     population = "usual_resident_population.csv"
@@ -34,6 +40,14 @@ def read_population_df(DATA_DIR: str) -> pd.DataFrame:
 
 
 def df2dict(population_df: pd.DataFrame) -> dict:
+    """Convert dataframe into hierarchical dictionary
+
+    Args: 
+        population_df: Dataframe with population data
+
+    Returns:
+        dictionary with ratio of males and females per postcode
+    """
     total_residents = population_df["n_residents"].sum()
     population_dict = {"n_residents": total_residents, "postcode_sector": {}}
     population_dict["postcode_sector"] = population_df[["n_residents"]].to_dict("index")
@@ -48,7 +62,14 @@ def df2dict(population_df: pd.DataFrame) -> dict:
 def create_input_dictionary(
     DATA_DIR: str = "../data/census_data/postcode_sector/",
 ) -> dict:
+    """Formats input dictionary to populate realistic households in England and Wales
 
+    Args:
+        DATA_DIR: path to dataset (csv file)
+
+    Returns:
+        dictionary with ratio of males and females per postcode
+    """
     population_df = read_population_df(DATA_DIR)
     population_dict = df2dict(population_df)
 
