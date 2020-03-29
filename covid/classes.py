@@ -1,21 +1,42 @@
 """
 This file contains the classes definitions for the code
 """
+import numpy as np
 
 class World:
     """
     Stores global information about the simulation
     """
-    def __init__(self, input_df):
-        self.input_df = input_df
-        self.postcodes = self.read_postcodes_census()
+    def __init__(self, input_dict):
         self.people = {}
         self.total_people = 0
+        self.decoder_sex = {}
+        self.decoder_age = {}
+        self.decoder_household = {}
+        self.postcodes = self.read_postcodes_census(input_dict)
 
-    def read_postcodes_census(self):
+    def read_postcodes_census(self, input_dict):
+        n_residents_df = input_dict.pop("n_residents")
+        n_households_df = input_dict.pop("n_households")
+        age_df = input_dict.pop("age_freq")
+        sex_df = input_dict.pop("sex_freq")
+        for i, column in enumerate(age_df.columns):
+            self.decoder_age[i] = column
+        for i, column in enumerate(sex_df.columns):
+            self.decoder_sex[i] = column
+        #household_df = input_dict.pop("household_freq")
         postcodes_dict = {}
-        postcodes = self.input_df.apply(lambda row: Postcode(self, row.name, row["n_residents"], row["n_households"], row[["males", "females"]]), axis=1)
-        for i, postcode in enumerate(postcodes):
+        for i, postcode_name in enumerate(n_residents_df.index):
+            postcode = Postcode(self,
+                                postcode_name,
+                                n_residents_df.loc[postcode_name],
+                                n_households_df.loc[postcode_name],
+                                {
+                                    "age_freq": age_df.loc[postcode_name],
+                                    "sex_freq" : sex_df.loc[postcode_name],
+        #                            "household_freq": household_df[postcode_name]
+                                }
+                                )
             postcodes_dict[i] = postcode
         return postcodes_dict
 
@@ -30,8 +51,17 @@ class Postcode:
         self.n_residents = int(n_residents)
         self.n_households = n_households
         self.census_freq = census_freq
+        self.check_census_freq_ratios()
         self.people = {}
         self.households = {}
+
+    def check_census_freq_ratios(self):
+        for key in self.census_freq.keys():
+            try:
+                assert np.isclose(np.sum(self.census_freq[key].values), 1.0, atol=0, rtol=1e-5)
+            except AssertionError as e:
+                raise ValueError(f"Postcode {self.name} key {key}, ratios not adding to 1")
+
 
 
 class Household:
