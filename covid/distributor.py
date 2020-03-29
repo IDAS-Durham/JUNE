@@ -23,6 +23,7 @@ def populate_postcode(postcode:Postcode):
     """
     Populates a postcode with houses and people according to the census frequencies
     """
+    ADULT_THRESHOLD = 6 # 6 corresponds to 18-19 years old
     age_freq = postcode.census_freq["age_freq"]
     sex_freq = postcode.census_freq["sex_freq"]
     household_freq = postcode.census_freq["household_freq"]
@@ -42,10 +43,17 @@ def populate_postcode(postcode:Postcode):
     household_sampling = age_random_variable.rvs(size = postcode.n_residents)
     people_ids = np.arange(postcode.world.total_people+1,
                            postcode.world.total_people+postcode.n_residents+1)
-    # create world population
+    # create postcode population
+    adults = []
+    kids = []
     for i in range(0, postcode.n_residents):
         postcode.world.total_people += 1
-        postcode.world.people[postcode.world.total_people] = Person(people_ids[i], postcode, age_sampling[i], sex_sampling[i], 0, 0) 
+        person = Person(people_ids[i], postcode, age_sampling[i], sex_sampling[i], 0, 0) 
+        if person.age < ADULT_THRESHOLD:
+            kids.append(person)
+        else:
+            adults.append(person)
+        postcode.world.people[postcode.world.total_people] = person
 
     # create houses for the world population 
     for i in range(0, postcode.n_residents):
