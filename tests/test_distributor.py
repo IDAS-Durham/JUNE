@@ -1,13 +1,13 @@
 import numpy as np
 import os
-from covid.inputs import create_input_df
+from covid.inputs import create_input_dict
 from covid.classes import World, Person, Postcode, Household
 from covid.distributor import populate_world
 
 
 def test_global():
 
-    census_df = create_input_df()
+    census_df = create_input_dict()
     census_df = census_df.sample(n=20)
     world = World(census_df)
     populate_world(world)
@@ -40,7 +40,7 @@ def test_global():
 
 def test_per_postcode():
 
-    census_df = create_input_df()
+    census_df = create_input_dict()
     census_df = census_df.sample(n=20)
     world = World(census_df)
     populate_world(world)
@@ -60,7 +60,7 @@ def test_per_postcode():
 
 def test_frequencies():
 
-    census_df = create_input_df()
+    census_df = create_input_dict()
     census_df = census_df.sample(n=20)
     world = World(census_df)
     populate_world(world)

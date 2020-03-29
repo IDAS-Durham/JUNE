@@ -13,3 +13,7 @@ def test_frequencies_sum():
             np.testing.assert_allclose(
                 input_dict[key].sum(axis=1).values, np.ones(len(input_dict[key])),
             )
+
+def test_compatible_datasets():
+
+    # same number of households and residents in all datasets
