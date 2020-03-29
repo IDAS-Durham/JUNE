@@ -3,6 +3,23 @@ import random
 
 
 class Symptoms:
+    """
+    The probability for the individual symptom severity.
+    This is time-dependent, and the actual value is calculated in the method
+    Probability.  We allow to vary parameters around their mean value with
+    a left- and right-sided Gaussian described by sigma and the result
+    limited by 2 sigma in either direction or physical limits.  
+
+    Currently one form is implemented:
+    - SymptomsGaussian(Symptoms)
+    S(t) = S_0 exp{-[t-(tstart+tmean)]^2/sigma^2} with parameters
+    Symptoms:MaxSeverity, Symptoms:Tmean, and Symptoms:SigmaT, and with 
+    variations set by combining the parameter name with the tags Lower and 
+    Upper.
+
+    TODO: we should try and map this onto the Flute/Imperial models, as far
+    as possible, to have a baseline and to facilitate validation.
+    """
     def __init__(self,params={},time=-1.):
         self.starttime = time
         self.severity      = 0.

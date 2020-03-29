@@ -5,6 +5,24 @@ import matplotlib
 import matplotlib.pyplot as plt 
 
 class Group:
+    """
+    A group of people enjoying social interactions.  It contains three lists,
+    all people in the group, the healthy ones and the infected ones (we may 
+    have to add the immune ones as well).
+
+    This is very basic and we will have to specify derived classes with
+    additional information - like household, work, commute - where some,
+    like household groups are stable and others, like commute groups, are
+    randomly assorted on a step-by-step base.
+
+    The logic is that the group will enjoy one Interaction per time step,
+    where the infection spreads, with a probablity driven by transmission
+    probabilities and inteaction intensity, plus, possilby, individual
+    susceptibility to become infected.
+
+    TODO: we will have to decide in how far specific groups define behavioral
+    patterns, which may be time-dependent.
+    """
     def __init__(self,gname,gtype,gsize=-1,mode="None"):
         self.gname     = gname
         self.gtype     = gtype
