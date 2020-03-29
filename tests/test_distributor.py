@@ -68,8 +68,13 @@ def compute_frequency(world, attribute):
     decoder = getattr(world, 'decoder_' + attribute)
     for i in world.postcodes.keys():
         freq = np.zeros(len(decoder))
-        for j in world.postcodes[i].people.keys():
-            freq[getattr(world.postcodes[i].people[j], attribute)] += 1
+        try:
+            for j in world.postcodes[i].people.keys():
+                    freq[getattr(world.postcodes[i].people[j], attribute)] += 1
+        except:
+            for j in world.postcodes[i].households.keys():
+                    freq[getattr(world.postcodes[i].households[j], attribute)] += 1
+
         freq /= world.postcodes[i].n_residents
         frequencies.append(freq)
     frequencies = np.asarray(frequencies)

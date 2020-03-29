@@ -74,7 +74,7 @@ class Household:
 
     def __init__(self, house_id, configuration, postcode):
         self.id = house_id
-        self.configuration = configuration
+        self.household_composition = configuration
         self.residents = {}
         self.postcode = postcode
 
