@@ -32,10 +32,10 @@ def test_global():
 
     assert n_households == n_households_est
 
-    #n_households_est = sum(
+    # n_households_est = sum(
     #    [len(world.postcodes[i].households) for i in range(len(world.postcodes))]
-    #)
-    #assert n_households == n_households_est
+    # )
+    # assert n_households == n_households_est
 
 
 def test_per_postcode():
@@ -74,9 +74,7 @@ def test_frequencies():
         frequencies.append(freq)
     frequencies = np.asarray(frequencies)
 
-    np.testing.assert_allclose(
-        frequencies, census_df["females"].values, rtol=1e-1
-    )
+    np.testing.assert_allclose(frequencies, census_df["females"].values, rtol=1e-1)
 
 
 if __name__ == "__main__":

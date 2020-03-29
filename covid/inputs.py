@@ -86,37 +86,32 @@ def read_household_df(DATA_DIR: str) -> pd.DataFrame:
 
     return households_df
 
-def read_ages_df(DATA_DIR: str) -> pd.DataFrame:
-    ages = 'age_structure.csv' 
-    ages_names = ['postcode_sector', 
-                    '0-4',
-                    '5-7',
-                    '8-9',
-                    '10-14',
-                    '15',
-                    '16-17',
-                    '18-19',
-                    '20-24',
-                    '25-29',
-                    '30-44',
-                    '45-59',
-                    '60-64',
-                    '65-74',
-                    '75-84',
-                    '85-89',
-                    '90-XXX',
-                 ]
 
+def read_ages_df(DATA_DIR: str) -> pd.DataFrame:
+    ages = "age_structure.csv"
+    ages_names = [
+        "postcode_sector",
+        "0-4",
+        "5-7",
+        "8-9",
+        "10-14",
+        "15",
+        "16-17",
+        "18-19",
+        "20-24",
+        "25-29",
+        "30-44",
+        "45-59",
+        "60-64",
+        "65-74",
+        "75-84",
+        "85-89",
+        "90-XXX",
+    ]
 
     ages_usecols = [2,] + list(range(5, 21))
 
-    ages_df = read_df(DATA_DIR,
-            ages,
-                                ages_names,
-                                ages_usecols,
-                                "postcode_sector"
-
-                               )
+    ages_df = read_df(DATA_DIR, ages, ages_names, ages_usecols, "postcode_sector")
     # to frequencies
     ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
 
@@ -136,6 +131,7 @@ def read_bedrooms_df(DATA_DIR: str)-> pd.DataFrame:
 
 '''
 
+
 def create_input_dict(
     DATA_DIR: str = os.path.join("..", "data", "census_data", "postcode_sector")
 ) -> dict:
@@ -152,18 +148,16 @@ def create_input_dict(
     ages_df = read_ages_df(DATA_DIR)
 
     input_dict = {
-                'n_residents': population_df['n_residents'],
-                'n_households': households_df['n_households'],
-                'age_freq': ages_df,
-                'sex_freq': population_df[['males','females']],
-                }
+        "n_residents": population_df["n_residents"],
+        "n_households": households_df["n_households"],
+        "age_freq": ages_df,
+        "sex_freq": population_df[["males", "females"]],
+    }
     return input_dict
 
 
 if __name__ == "__main__":
 
-
     input_dict = create_input_dict()
 
-    print(input_dict['n_residents'])
-    print(input_dict['age_freq'])
+    print(input_dict["age_freq"])
