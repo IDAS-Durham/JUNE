@@ -227,7 +227,7 @@ def create_input_dict(
         "n_households": n_households_df["n_households"],
         "age_freq": ages_df,
         "sex_freq": population_df[["males", "females"]],
-        "household_freq": households_df,
+        "household_composition_freq": households_df,
     }
 
     return input_dict
