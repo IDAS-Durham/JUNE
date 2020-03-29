@@ -100,7 +100,7 @@ def populate_postcode(postcode:Postcode):
         configuration = household_sampling[house_id]
         household = Household(house_id, configuration, postcode)
         house_id += 1
-        configuration_decoded = postcode.world.decoder_household[configuration]
+        configuration_decoded = postcode.world.decoder_household_composition[configuration]
         populate_household(household, configuration_decoded, adults, kids, old)
         postcode.households[house_id] = household
 
