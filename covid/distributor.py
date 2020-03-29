@@ -1,6 +1,7 @@
 import numpy as np
 from random import uniform
 from scipy import stats
+import warnings
 from covid.classes import World, Person, Postcode, Household
 
 """
@@ -27,13 +28,13 @@ def populate_household(household, configuration, adults, kids, old):
     n_oldadult = int(n_oldadult)
     n_adults = n_adults + n_oldadult
     if n_kids > len(kids):
-        print("Warning, too few kids to fill household")
+        warnings.warn("Warning, too few kids to fill household")
         n_kids = len(kids)
     if n_old > len(old):
-        print("Warning, too few old people to fill household")
+        warnings.warn("Warning, too few old people to fill household")
         n_old = len(old)
     if n_adults > len(adults):
-        print("Warning, too few adults to fill household")
+        warnings.warn("Warning, too few adults to fill household")
         n_adults = len(adults)
     for i in range(0, n_kids):
         kid = kids.pop()
