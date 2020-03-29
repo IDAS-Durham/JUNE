@@ -5,12 +5,23 @@ import symptoms
 import sys
 
 class Infection:
-    def __init__(self,time):
+    """
+    The description of the infection, with two time dependent characteristics,
+    which may vary by individual:
+    - transmission probability, Ptransmission.
+    - symptom severity, Severity
+    Either of them will be a numer between 0 (low) and 1 (high, strong sypmotoms), 
+    and for both we will have some thresholds.
+    Another important part for the infection is their begin, starttime, which must
+    be given in the constructor.  Transmission probability and symptom severity
+    can be added/modified a posteriori.
+    """
+    def __init__(self,time,trans=False,sypm=False):
         self.Tthreshold = 0.01
         self.Sthreshold = 0.01
         self.starttime  = time
-        self.trans      = False
-        self.symp       = False
+        self.trans      = trans
+        self.symp       = symp
 
     def SetTransmission(self, t):
         if not isinstance(t, transmission.Transmission):
