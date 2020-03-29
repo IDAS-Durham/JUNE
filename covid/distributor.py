@@ -24,6 +24,7 @@ def populate_postcode(postcode:Postcode):
     Populates a postcode with houses and people according to the census frequencies
     """
     ADULT_THRESHOLD = 6 # 6 corresponds to 18-19 years old
+    OLD_THRESHOLD = 12 # 12 corresponds to 65-74 years old
     age_freq = postcode.census_freq["age_freq"]
     sex_freq = postcode.census_freq["sex_freq"]
     household_freq = postcode.census_freq["household_freq"]
@@ -46,20 +47,58 @@ def populate_postcode(postcode:Postcode):
     # create postcode population
     adults = []
     kids = []
+    old = []
     for i in range(0, postcode.n_residents):
         postcode.world.total_people += 1
         person = Person(people_ids[i], postcode, age_sampling[i], sex_sampling[i], 0, 0) 
         if person.age < ADULT_THRESHOLD:
             kids.append(person)
         else:
-            adults.append(person)
+            if person.age >= OLD_THRESHOLD:
+                old.append(person)
+            else:
+                adults.append(person)
         postcode.world.people[postcode.world.total_people] = person
 
     # create houses for the world population 
-    for i in range(0, postcode.n_residents):
-        if i % 4 == 0:
-            household = Household(i//4, postcode)
-        household.residents[i%4] = person
-        postcode.households[i%4] = household
-        postcode.world.people[postcode.world.total_people] = person
-        postcode.people[postcode.world.total_people] = person
+    house_id = 0
+    while (len(adults) > 0 or len(kids) > 0 or len(old) > 0) and (house_id < n_households):
+        configuration = household_sampling[house_id]
+        household = Household(house_id, configuration, postcode)
+        house_id += 1
+        populate_household(household, configuration, adults, kids, old)
+
+    def populate_household(household, configuration, adults, kids, old):
+        counter = 0
+        n_kids, n_adults, n_old = configuration.split(" ")
+        if n_kids > len(kids):
+            print("Warning, too few kids to fill household")
+            n_kids = len(kids)
+        if n_old > len(old):
+            print("Warning, too few old people to fill household")
+            n_old = len(old)
+        if n_adults > len(adults):
+            print("Warning, too few adults to fill household")
+            n_adults = len(adults)
+        for i in range(0, len(n_kids)):
+            kid = kids.pop()
+            kid.household = household
+            household.residents[counter] = kid
+            counter += 1
+        for i in range(0, len(n_adults)):
+            adult = adults.pop()
+            adult.household = household
+            household.residents[counter] = adult 
+            counter += 1
+        for i in range(0, len(n_old)):
+            oldperson = old.pop()
+            oldperson.household = household
+            household.residents[counter] = oldperson
+            counter += 1
+
+
+
+
+
+
+
