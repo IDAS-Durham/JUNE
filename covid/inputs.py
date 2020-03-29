@@ -193,12 +193,13 @@ def bedrooms2households(bedrooms_df: pd.DataFrame) -> pd.DataFrame:
     # iv) Families classified as others count as young adults with no children
     households_df["0 2 0 0"] = (
         bedrooms_df["Young_Family_1B"]
+        + 0.9*bedrooms_df["Young_Family_2B"]
         + bedrooms_df["Other_Family_1B"]
         + bedrooms_df["Other_Family_2B"]
     )
-    households_df["1 2 0 0"] = bedrooms_df["Young_Family_2B"]
-    households_df["2 2 0 0"] = bedrooms_df["Young_Family_3B"]
-    households_df["3 2 0 0"] = bedrooms_df["Young_Family_4B"]
+    households_df["1 2 0 0"] = 0.1*bedrooms_df["Young_Family_2B"] + 0.9*bedrooms_df["Young_Family_3B"]
+    households_df["2 2 0 0"] = 0.1*bedrooms_df["Young_Family_3B"] + 0.9*bedrooms_df["Young_Family_4B"]
+    households_df["3 2 0 0"] = 0.1*bedrooms_df["Young_Family_4B"]
     households_df["0 3 0 0"] = bedrooms_df["Other_Family_3B"]
     households_df["0 4 0 0"] = bedrooms_df["Other_Family_4B"]
     return households_df
