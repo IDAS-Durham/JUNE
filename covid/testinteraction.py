@@ -7,9 +7,16 @@ class Tester:
         self.groupsize   = groupsize
         self.timesteps   = timesteps
         self.deltaT      = deltaT
-        self.tparams     = {"Transmission:MeanProb": 0.6,
-                            "Transmission:Exponent": 2.,
-                            "Transmission:Norm":     4.}
+        self.tparams     = {"Transmission:Type":          "XNExp",
+                            "Transmission:MeanProb":      0.6,
+                            "Transmission:MeanProbUpper": 0.2,
+                            "Transmission:MeanProbLower": 0.1,
+                            "Transmission:Exponent":      2.,
+                            "Transmission:ExponentLower": 1.,
+                            "Transmission:ExponentUpper": 1.,
+                            "Transmission:Norm":          2.,
+                            "Transmission:NormUpper":     0.5,
+                            "Transmission:NormLower":     0.5}
         self.sparams     = {"Symptoms:MaxSeverity": 0.5,
                             "Symptoms:Tmean":       8.,
                             "Symptoms:SigmaT":      4.}
