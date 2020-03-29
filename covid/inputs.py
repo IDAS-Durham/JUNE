@@ -152,6 +152,25 @@ def read_bedrooms_df(DATA_DIR: str, freq: bool = True)-> pd.DataFrame:
         bedrooms_df = bedrooms_df.div(bedrooms_df.sum(axis=1), axis=0)
     return bedrooms_df
 
+def bedrooms2households(bedrooms_df):
+    households_df = pd.DataFrame()
+    households_df['0 0 0 1'] = bedrooms_df['Person']
+    # ASSUMPTIONS
+    # i) Old families are composed of couples only 
+    households_df['0 0 2 0'] = bedrooms_df['Old_Family'] 
+    # ii) Lone parents with one or two bedrooms only have one child
+    households_df['1 1 0 0'] = bedrooms_df['Lone_Family_1B'] + bedrooms_df['Lone_Family_2B']
+    # iii) Lone parents with three or more bedrooms only have two children
+    households_df['2 1 0 0'] = bedrooms_df['Lone_Family_3B'] + bedrooms_df['Lone_Family_4B']
+    # iv) Families classified as others count as young adults with no children
+    households_df['0 2 0 0'] = bedrooms_df['Young_Family_1B'] + bedrooms_df['Other_Family_1B'] + bedrooms_df['Other_Family_2B']
+    households_df['1 2 0 0'] = bedrooms_df['Young_Family_2B']
+    households_df['2 2 0 0'] = bedrooms_df['Young_Family_3B'] 
+    households_df['3 2 0 0'] = bedrooms_df['Young_Family_4B']
+    households_df['0 3 0 0'] = bedrooms_df['Other_Family_3B']
+    households_df['0 4 0 0'] = bedrooms_df['Other_Family_4B']
+    return households_df
+
 def create_input_dict(
     DATA_DIR: str = os.path.join("..", "data", "census_data", "postcode_sector")
 ) -> dict:
@@ -164,14 +183,17 @@ def create_input_dict(
         dictionary with frequencies of populations 
     """
     population_df = read_population_df(DATA_DIR)
-    households_df = read_household_df(DATA_DIR)
+    n_households_df = read_household_df(DATA_DIR)
     ages_df = read_ages_df(DATA_DIR)
+    bedrooms_df = read_bedrooms_df(DATA_DIR)
+    households_df = bedrooms2households(bedrooms_df)
 
     input_dict = {
         "n_residents": population_df["n_residents"],
-        "n_households": households_df["n_households"],
+        "n_households": n_households_df["n_households"],
         "age_freq": ages_df,
         "sex_freq": population_df[["males", "females"]],
+        "household_freq": households_df,
     }
 
     return input_dict
@@ -181,4 +203,4 @@ if __name__ == "__main__":
 
     input_dict = create_input_dict()
 
-    print(input_dict["age_freq"])
+    print(input_dict["household_freq"])
