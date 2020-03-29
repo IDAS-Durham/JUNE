@@ -89,10 +89,11 @@ def test_frequencies():
 
     for key, value in census_dict_safe.items():
         if 'freq' in key:
+            print(key)
             frequencies = compute_frequency(world, key.split('_')[0])
             np.testing.assert_allclose(frequencies, 
                                         census_dict_safe[key].values,
-                                        atol= 1./np.sqrt(census_dict_safe["n_residents"].median()))
+                                        atol= 1./np.sqrt(census_dict_safe["n_residents"].min()))
 
 
 if __name__ == "__main__":
