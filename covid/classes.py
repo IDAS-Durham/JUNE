@@ -27,7 +27,6 @@ class World:
             self.decoder_sex[i] = column
         for i, column in enumerate(household_df.columns):
             self.decoder_household[i] = column
-        #household_df = input_dict.pop("household_freq")
         postcodes_dict = {}
         for i, postcode_name in enumerate(n_residents_df.index):
             postcode = Postcode(self,
@@ -37,7 +36,7 @@ class World:
                                 {
                                     "age_freq": age_df.loc[postcode_name],
                                     "sex_freq" : sex_df.loc[postcode_name],
-                                    "household_freq": household_df[postcode_name]
+                                    "household_freq": household_df.loc[postcode_name]
                                 }
                                 )
             postcodes_dict[i] = postcode
