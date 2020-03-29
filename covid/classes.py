@@ -20,10 +20,13 @@ class World:
         n_households_df = input_dict.pop("n_households")
         age_df = input_dict.pop("age_freq")
         sex_df = input_dict.pop("sex_freq")
+        household_df = input_dict.pop("household_freq")
         for i, column in enumerate(age_df.columns):
             self.decoder_age[i] = column
         for i, column in enumerate(sex_df.columns):
             self.decoder_sex[i] = column
+        for i, column in enumerate(household_df.columns):
+            self.decoder_household[i] = column
         #household_df = input_dict.pop("household_freq")
         postcodes_dict = {}
         for i, postcode_name in enumerate(n_residents_df.index):
@@ -34,7 +37,7 @@ class World:
                                 {
                                     "age_freq": age_df.loc[postcode_name],
                                     "sex_freq" : sex_df.loc[postcode_name],
-        #                            "household_freq": household_df[postcode_name]
+                                    "household_freq": household_df[postcode_name]
                                 }
                                 )
             postcodes_dict[i] = postcode
@@ -87,6 +90,7 @@ class Person:
         self.health_index = health_index
         self.econ_index = econ_index
         self.postcode = postcode
+        self.household = None
 
 class Adult(Person):
 
