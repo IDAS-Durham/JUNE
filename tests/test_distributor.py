@@ -62,17 +62,22 @@ def test_per_postcode():
 
     np.testing.assert_equal(n_households_est, census_dict_safe["n_households"].values)
 
-# TODO: GENERALIZE FOR ANY FREQUENCY, NOT NECESSARILY BINARY
-def get_frequency(world, attribute):
+def compute_frequency(world, attribute):
     frequencies = []
+    decoder = getattr(world, 'decoder_' + attribute)
     for i in world.postcodes.keys():
-        freq = 0
+        freq = np.zeros(len(decoder))
+        #print(world.postcodes[i].people)
         for j in world.postcodes[i].people.keys():
-            freq += getattr(world.postcodes[i].people[j], attribute)
+            freq[getattr(world.postcodes[i].people[j], attribute)] += 1
         freq /= world.postcodes[i].n_residents
         frequencies.append(freq)
     frequencies = np.asarray(frequencies)
+    print(frequencies)
+    assert frequencies.shape == (len(world.postcodes), len(decoder))
     return frequencies
+
+
 
 def test_frequencies():
 
@@ -86,13 +91,15 @@ def test_frequencies():
 
     for key, value in census_dict_safe.items():
         if 'freq' in key:
-            print(key)
-            frequencies = get_frequency(world, key)
-            if key == 'sex': # replace by if binary, compute frequency of postive class (saved in person or sowhere)
-                np.testing.assert_allclose(frequencies, census_dict_safe[key]["females"].values, rtol=1e-1)
-            else:
-    
-            for column in census_dict_safe[key].columns:
+            frequencies = compute_frequency(world, key)
+            np.testing.assert_allclose(frequencies, census_dict_safe[key].values, rtol=1e-1)
 
 if __name__ == "__main__":
-    test_global()
+    census_dict = create_input_dict()
+    for key, value in census_dict.items():
+        census_dict[key] = census_dict[key].sample(n=20,random_state=111)
+    census_dict_safe = census_dict.copy()
+
+    world = World(census_dict)
+    populate_world(world)
+    compute_frequency(world, 'sex')
