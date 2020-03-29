@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 
-
 def read_df(
     DATA_DIR: str, filename: str, column_names: list, usecols: list, index: str
 ) -> pd.DataFrame:
@@ -25,7 +24,7 @@ def read_df(
     return df
 
 
-def read_population_df(DATA_DIR: str) -> pd.DataFrame:
+def read_population_df(DATA_DIR: str, freq : bool = True) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
 
     Args:
@@ -56,13 +55,14 @@ def read_population_df(DATA_DIR: str) -> pd.DataFrame:
         population_df["males"] + population_df["females"],
         check_names=False,
     )
-    # Convert to ratios
-    population_df["males"] /= population_df["n_residents"]
-    population_df["females"] /= population_df["n_residents"]
+    if freq:
+        # Convert to ratios
+        population_df["males"] /= population_df["n_residents"]
+        population_df["females"] /= population_df["n_residents"]
     return population_df
 
 
-def read_household_df(DATA_DIR: str) -> pd.DataFrame:
+def read_household_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks105ew
 
     Args:
@@ -87,7 +87,7 @@ def read_household_df(DATA_DIR: str) -> pd.DataFrame:
     return households_df
 
 
-def read_ages_df(DATA_DIR: str) -> pd.DataFrame:
+def read_ages_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     ages = "age_structure.csv"
     ages_names = [
         "postcode_sector",
@@ -112,25 +112,45 @@ def read_ages_df(DATA_DIR: str) -> pd.DataFrame:
     ages_usecols = [2,] + list(range(5, 21))
 
     ages_df = read_df(DATA_DIR, ages, ages_names, ages_usecols, "postcode_sector")
-    # to frequencies
-    ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
-
+    if freq:
+        ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
     return ages_df
 
 
-'''
-def read_bedrooms_df(DATA_DIR: str)-> pd.DataFrame:
+def read_bedrooms_df(DATA_DIR: str, freq: bool = True)-> pd.DataFrame:
     """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/lc1402ew
     Args:
         DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
 
     Returns:
-        pandas dataframe with number of households per postcode sector
+        pandas dataframe with number of bedrooms per household type per postcode sector
 
     """
+    bedrooms = 'household_compositon_by_bedrooms.csv'
+    bedrooms_usecols = [2, 8, 18] + list(range(24, 28)) \
+                        + list(range(29, 33)) + list(range(34, 38))
 
-'''
+    bedrooms_names = ['postcode_sector',
+                    'Person', # regardless of bedrooms (only one person)
+                    'Old_Family', # assumed to be 2 always
+                    'Young_Family_1B',
+                    'Young_Family_2B',
+                    'Young_Family_3B',
+                    'Young_Family_4B',
+                    'Lone_Family_1B',
+                    'Lone_Family_2B',
+                    'Lone_Family_3B',
+                    'Lone_Family_4B',
+                    'Other_Family_1B',
+                    'Other_Family_2B',
+                    'Other_Family_3B',
+                    'Other_Family_4B',
+                    ]
 
+    bedrooms_df = read_df(DATA_DIR, bedrooms, bedrooms_names, bedrooms_usecols, "postcode_sector")
+    if freq:
+        bedrooms_df = bedrooms_df.div(bedrooms_df.sum(axis=1), axis=0)
+    return bedrooms_df
 
 def create_input_dict(
     DATA_DIR: str = os.path.join("..", "data", "census_data", "postcode_sector")
@@ -153,6 +173,7 @@ def create_input_dict(
         "age_freq": ages_df,
         "sex_freq": population_df[["males", "females"]],
     }
+
     return input_dict
 
 
