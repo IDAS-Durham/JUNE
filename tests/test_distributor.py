@@ -9,7 +9,7 @@ def test_global():
 
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20,random_state=111)
+        census_dict[key] = census_dict[key].sample(n=5,random_state=111)
     census_dict_safe = census_dict.copy()
     world = World(census_dict)
     populate_world(world)
@@ -44,7 +44,7 @@ def test_per_postcode():
 
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20,random_state=111)
+        census_dict[key] = census_dict[key].sample(n=5,random_state=111)
     census_dict_safe = census_dict.copy()
 
     world = World(census_dict)
@@ -63,6 +63,7 @@ def test_per_postcode():
     np.testing.assert_equal(n_households_est, census_dict_safe["n_households"].values)
 
 def compute_frequency(world, attribute):
+    print(attribute)
     frequencies = []
     decoder = getattr(world, 'decoder_' + attribute)
     for i in world.postcodes.keys():
@@ -81,7 +82,7 @@ def test_frequencies():
 
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20,random_state=111)
+        census_dict[key] = census_dict[key].sample(n=5,random_state=111)
     census_dict_safe = census_dict.copy()
 
     world = World(census_dict)
@@ -89,8 +90,9 @@ def test_frequencies():
 
     for key, value in census_dict_safe.items():
         if 'freq' in key:
-            print(key)
-            frequencies = compute_frequency(world, key.split('_')[0])
+            attribute = key.split('_')
+            attribute = '_'.join(attribute[:-1])
+            frequencies = compute_frequency(world, attribute)
             np.testing.assert_allclose(frequencies, 
                                         census_dict_safe[key].values,
                                         atol= 1./np.sqrt(census_dict_safe["n_residents"].min()))
