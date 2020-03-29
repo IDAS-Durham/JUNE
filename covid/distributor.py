@@ -90,6 +90,7 @@ def populate_postcode(postcode:Postcode):
                 old.append(person)
             else:
                 adults.append(person)
+        postcode.people[i] = person
         postcode.world.people[postcode.world.total_people] = person
 
     # create houses for the world population 
