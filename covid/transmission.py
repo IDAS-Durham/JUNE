@@ -3,6 +3,28 @@ import random
 
 
 class Transmission:
+    """
+    The probability for an individual to transmit the infection.
+    This is time-dependent, and the actual value is calculated in the method
+    Probability.  We allow to vary parameters around their mean value with
+    a left- and right-sided Gaussian described by sigma and the result
+    limited by 2 sigma in either direction or physical limits.  
+
+    Currently two forms are implemented:
+    - TransmissionConstantInterval
+    a constant transmission probability, given by the value and the length
+    of the transmission period.
+    Parameters are Transmission:MeanProb and Transmission:EndTime, with widths
+    Transmission:MeanProbUpper and Transmission:MeanProbLower and similar for the
+    end time.
+    - TransmissionXNExp
+    a probablity of the form $P(t) = P_0 x^n exp(-x/a)$ with parameters given
+    by P_0 = Transmission:MeanProb, n = Transmission:Exponent, and 
+    a = Transmission:Norm 
+
+    TODO: we should try and map this onto the Flute/Imperial models, as far
+    as possible, to have a baseline and to facilitate validation.
+    """
     def __init__(self,params={},time=-1.):
         self.starttime = time
         self.prob      = 0.
