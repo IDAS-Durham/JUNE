@@ -67,13 +67,11 @@ def compute_frequency(world, attribute):
     decoder = getattr(world, 'decoder_' + attribute)
     for i in world.postcodes.keys():
         freq = np.zeros(len(decoder))
-        #print(world.postcodes[i].people)
         for j in world.postcodes[i].people.keys():
             freq[getattr(world.postcodes[i].people[j], attribute)] += 1
         freq /= world.postcodes[i].n_residents
         frequencies.append(freq)
     frequencies = np.asarray(frequencies)
-    print(frequencies)
     assert frequencies.shape == (len(world.postcodes), len(decoder))
     return frequencies
 
@@ -91,15 +89,11 @@ def test_frequencies():
 
     for key, value in census_dict_safe.items():
         if 'freq' in key:
-            frequencies = compute_frequency(world, key)
-            np.testing.assert_allclose(frequencies, census_dict_safe[key].values, rtol=1e-1)
+            frequencies = compute_frequency(world, key.split('_')[0])
+            np.testing.assert_allclose(frequencies, 
+                                        census_dict_safe[key].values,
+                                        atol= 1./np.sqrt(census_dict_safe["n_residents"].median()))
+
 
 if __name__ == "__main__":
-    census_dict = create_input_dict()
-    for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20,random_state=111)
-    census_dict_safe = census_dict.copy()
-
-    world = World(census_dict)
-    populate_world(world)
-    compute_frequency(world, 'sex')
+    test_frequencies()
