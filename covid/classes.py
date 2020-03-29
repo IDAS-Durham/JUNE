@@ -12,7 +12,7 @@ class World:
         self.total_people = 0
         self.decoder_sex = {}
         self.decoder_age = {}
-        self.decoder_household = {}
+        self.decoder_household_composition = {}
         self.postcodes = self.read_postcodes_census(input_dict)
 
     def read_postcodes_census(self, input_dict):
@@ -26,7 +26,7 @@ class World:
         for i, column in enumerate(sex_df.columns):
             self.decoder_sex[i] = column
         for i, column in enumerate(household_compostion_df.columns):
-            self.decoder_household[i] = column
+            self.decoder_household_composition[i] = column
         postcodes_dict = {}
         for i, postcode_name in enumerate(n_residents_df.index):
             postcode = Postcode(self,
