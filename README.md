@@ -4,7 +4,8 @@ Repository for data and models built
 
 Given the size of this team we should work in branches and merge regularly and separate folders for projects.
 
-**Note:** When sharing data please keep files to < 50MB preferrably zipped
+**Important Git LFS**
+To be able to store data in the repo, and to avoid the problems related to it with git, the repo is configured to use [Git LFS](https://git-lfs.github.com/). Please install it. Every file with a ``.csv`` extension is then automatically dealt with Git LFS. 
 
 # Ongoing documentation sources
 
