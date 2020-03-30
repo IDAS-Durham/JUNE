@@ -99,11 +99,14 @@ def test_frequencies():
             attribute = key.split("_")
             attribute = "_".join(attribute[:-1])
             frequencies = compute_frequency(world, attribute)
-            np.testing.assert_allclose(
-                frequencies,
-                census_dict_safe[key].values,
-                atol=1.0 / np.sqrt(census_dict_safe["n_residents"].min()),
-            )
+            atol_matrix = 1./np.sqrt(census_dict_safe["n_residents"]*census_dict_safe[key].values)
+            for i in frequencies.shape[0]:
+                for j in frequencies.shape[1]:
+                    np.testing.assert_allclose(
+                        frequencies[i,j],
+                        census_dict_safe[key].values[i,j],
+                        atol=atol_matrix[i,j]
+                    )
 
 def test_lonely_children():
     census_dict = create_input_dict()
