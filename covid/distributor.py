@@ -2,7 +2,7 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
-from covid.classes import World, Person, Postcode, Household
+from covid.classes import World, Person, Area, Household
 
 """
 This file contains routines to attribute people with different characteristics
@@ -11,12 +11,12 @@ according to census data.
 
 def populate_world(world:World):
     """
-    Populates all postcodes in the world.
+    Populates all areas in the world.
     """
-    print("Populating postcodes...")
-    for postcode in world.postcodes.values():
+    print("Populating areas...")
+    for area in world.areas.values():
         print("#", end="")
-        populate_postcode(postcode)
+        populate_area(area)
     print("\n")
 
 def populate_household(household, configuration, adults, kids, old):
@@ -52,17 +52,17 @@ def populate_household(household, configuration, adults, kids, old):
         household.residents[counter] = oldperson
         counter += 1
 
-def populate_postcode(postcode:Postcode):
+def populate_area(area:Area):
     """
-    Populates a postcode with houses and people according to the census frequencies
+    Populates a area with houses and people according to the census frequencies
     """
     ADULT_THRESHOLD = 6 # 6 corresponds to 18-19 years old
     OLD_THRESHOLD = 12 # 12 corresponds to 65-74 years old
-    age_freq = postcode.census_freq["age_freq"]
-    sex_freq = postcode.census_freq["sex_freq"]
-    household_freq = postcode.census_freq["household_freq"]
-    n_residents = postcode.n_residents
-    n_households = postcode.n_households
+    age_freq = area.census_freq["age_freq"]
+    sex_freq = area.census_freq["sex_freq"]
+    household_freq = area.census_freq["household_freq"]
+    n_residents = area.n_residents
+    n_households = area.n_households
     # create a random variable with the census data to sample from it
     sex_random_variable = stats.rv_discrete(values=(np.arange(0,len(sex_freq)),
                                                     sex_freq.values))
@@ -72,18 +72,18 @@ def populate_postcode(postcode:Postcode):
                                                     household_freq.values))
 
     # sample from random variables
-    sex_sampling = sex_random_variable.rvs(size = postcode.n_residents)
-    age_sampling = age_random_variable.rvs(size = postcode.n_residents)
-    household_sampling = household_random_variable.rvs(size = postcode.n_residents)
-    people_ids = np.arange(postcode.world.total_people+1,
-                           postcode.world.total_people+postcode.n_residents+1)
-    # create postcode population
+    sex_sampling = sex_random_variable.rvs(size = area.n_residents)
+    age_sampling = age_random_variable.rvs(size = area.n_residents)
+    household_sampling = household_random_variable.rvs(size = area.n_residents)
+    people_ids = np.arange(area.world.total_people+1,
+                           area.world.total_people+area.n_residents+1)
+    # create area population
     adults = []
     kids = []
     old = []
-    for i in range(0, postcode.n_residents):
-        postcode.world.total_people += 1
-        person = Person(people_ids[i], postcode, age_sampling[i], sex_sampling[i], 0, 0) 
+    for i in range(0, area.n_residents):
+        area.world.total_people += 1
+        person = Person(people_ids[i], area, age_sampling[i], sex_sampling[i], 0, 0) 
         if person.age < ADULT_THRESHOLD:
             kids.append(person)
         else:
@@ -91,16 +91,16 @@ def populate_postcode(postcode:Postcode):
                 old.append(person)
             else:
                 adults.append(person)
-        postcode.people[i] = person
-        postcode.world.people[postcode.world.total_people] = person
+        area.people[i] = person
+        area.world.people[area.world.total_people] = person
 
     # create houses for the world population 
     house_id = 0
     while (len(adults) > 0 or len(kids) > 0 or len(old) > 0) and (house_id < n_households):
         configuration = household_sampling[house_id]
-        household = Household(house_id, configuration, postcode)
+        household = Household(house_id, configuration, area)
         house_id += 1
-        configuration_decoded = postcode.world.decoder_household_composition[configuration]
+        configuration_decoded = area.world.decoder_household_composition[configuration]
         populate_household(household, configuration_decoded, adults, kids, old)
-        postcode.households[house_id] = household
+        area.households[house_id] = household
 
