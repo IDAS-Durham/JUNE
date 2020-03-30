@@ -13,9 +13,9 @@ class World:
         self.decoder_sex = {}
         self.decoder_age = {}
         self.decoder_household_composition = {}
-        self.postcodes = self.read_postcodes_census(input_dict)
+        self.areas = self.read_areas_census(input_dict)
 
-    def read_postcodes_census(self, input_dict):
+    def read_areas_census(self, input_dict):
         n_residents_df = input_dict.pop("n_residents")
         n_households_df = input_dict.pop("n_households")
         age_df = input_dict.pop("age_freq")
@@ -27,24 +27,24 @@ class World:
             self.decoder_sex[i] = column
         for i, column in enumerate(household_compostion_df.columns):
             self.decoder_household_composition[i] = column
-        postcodes_dict = {}
-        for i, postcode_name in enumerate(n_residents_df.index):
-            postcode = Postcode(self,
-                                postcode_name,
-                                n_residents_df.loc[postcode_name],
-                                n_households_df.loc[postcode_name],
+        areas_dict = {}
+        for i, area_name in enumerate(n_residents_df.index):
+            area = Area(self,
+                                area_name,
+                                n_residents_df.loc[area_name],
+                                n_households_df.loc[area_name],
                                 {
-                                    "age_freq": age_df.loc[postcode_name],
-                                    "sex_freq" : sex_df.loc[postcode_name],
-                                    "household_freq": household_compostion_df.loc[postcode_name]
+                                    "age_freq": age_df.loc[area_name],
+                                    "sex_freq" : sex_df.loc[area_name],
+                                    "household_freq": household_compostion_df.loc[area_name]
                                 }
                                 )
-            postcodes_dict[i] = postcode
-        return postcodes_dict
+            areas_dict[i] = area
+        return areas_dict
 
-class Postcode:
+class Area:
     """
-    Stores information about the postcode, like the total population
+    Stores information about the area, like the total population
     number, universities, etc.
     """
     def __init__(self, world, name, n_residents, n_households, census_freq):
@@ -62,7 +62,7 @@ class Postcode:
             try:
                 assert np.isclose(np.sum(self.census_freq[key].values), 1.0, atol=0, rtol=1e-5)
             except AssertionError as e:
-                raise ValueError(f"Postcode {self.name} key {key}, ratios not adding to 1")
+                raise ValueError(f"area {self.name} key {key}, ratios not adding to 1")
 
 
 
@@ -72,35 +72,35 @@ class Household:
     its residents.
     """
 
-    def __init__(self, house_id, configuration, postcode):
+    def __init__(self, house_id, configuration, area):
         self.id = house_id
         self.household_composition = configuration
         self.residents = {}
-        self.postcode = postcode
+        self.area = area
 
 class Person:
     """
     Represents a single individual
     """
 
-    def __init__(self, person_id, postcode, age, sex, health_index, econ_index):
+    def __init__(self, person_id, area, age, sex, health_index, econ_index):
         self.id = person_id
         self.age = age
         self.sex = sex
         self.health_index = health_index
         self.econ_index = econ_index
-        self.postcode = postcode
+        self.area = area
         self.household = None
 
 class Adult(Person):
 
-    def __init__(self, postcode, age, sex, health_index, econ_index, employed):
-        Person.__init__(self, postcode, age, sex, health_index, econ_index)
+    def __init__(self, area, age, sex, health_index, econ_index, employed):
+        Person.__init__(self, area, age, sex, health_index, econ_index)
         self.employed = employed
 
 class Child(Person):
-    def __init__(self, postcode, age, sex, health_index, econ_index):
-        Person.__init__(self, postcode, age, sex, health_index, econ_index)
+    def __init__(self, area, age, sex, health_index, econ_index):
+        Person.__init__(self, area, age, sex, health_index, econ_index)
 
 
 
