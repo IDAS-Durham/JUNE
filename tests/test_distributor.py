@@ -69,11 +69,11 @@ def compute_frequency(world, attribute):
     decoder = getattr(world, "decoder_" + attribute)
     for i in world.postcodes.keys():
         freq = np.zeros(len(decoder))
-        try:
+        if 'house' not in attribute:
             for j in world.postcodes[i].people.keys():
                 freq[getattr(world.postcodes[i].people[j], attribute)] += 1
             freq /= world.postcodes[i].n_residents
-        except:
+        else:
             for j in world.postcodes[i].households.keys():
                 freq[getattr(world.postcodes[i].households[j], attribute)] += 1
             freq /= world.postcodes[i].n_households
@@ -105,6 +105,26 @@ def test_frequencies():
                 atol=1.0 / np.sqrt(census_dict_safe["n_residents"].min()),
             )
 
+def test_lonely_children():
+    census_dict = create_input_dict()
+    for key, value in census_dict.items():
+        census_dict[key] = census_dict[key].sample(n=2, random_state=111)
+    census_dict_safe = census_dict.copy()
 
+    world = World(census_dict)
+    populate_world(world)
+    attribute = 'age'
+    decoder = getattr(world, "decoder_" + attribute)
+    only_children = 0
+    for i in world.postcodes.keys():
+        for j in world.postcodes[i].households.keys():
+            freq = np.zeros(len(decoder))
+            for k in world.postcodes[i].households[j].residents.keys():
+                freq[getattr(world.postcodes[i].households[j].residents[k], attribute)] += 1
+                # if no adults, but at least one child
+                if (np.sum(freq[5:]) == 0.) & (np.sum(freq[:5]) > 0.):
+                    only_children += 1
+
+    assert only_children == 0
 if __name__ == "__main__":
-    test_frequencies()
+    test_lonely_children()

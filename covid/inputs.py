@@ -8,7 +8,7 @@ def read_df(
     """Read dataframe and format
 
     Args:
-        DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
+        DATA_DIR: path to dataset folder (default should be output_area folder) 
         filename:
         column_names: names of columns for output dataframe 
         usecols: ids of columns to read
@@ -29,15 +29,15 @@ def read_population_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
 
     Args:
-        DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
+        DATA_DIR: path to dataset folder (default should be output_area folder) 
 
     Returns:
-        pandas dataframe with ratio of males and females per postcode
+        pandas dataframe with ratio of males and females per output area 
 
     """
     population = "usual_resident_population.csv"
     population_column_names = [
-        "postcode_sector",
+        "output_area",
         "n_residents",
         "males",
         "females",
@@ -48,7 +48,7 @@ def read_population_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         population,
         population_column_names,
         population_usecols,
-        "postcode_sector",
+        "output_area",
     )
 
     pd.testing.assert_series_equal(
@@ -67,22 +67,22 @@ def read_household_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks105ew
 
     Args:
-        DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
+        DATA_DIR: path to dataset folder (default should be output_area folder) 
 
     Returns:
-        pandas dataframe with number of households per postcode sector
+        pandas dataframe with number of households per output area 
 
     """
 
     households = "household_composition.csv"
     households_names = [
-        "postcode_sector",
+        "output_area",
         "n_households",
     ]
     households_usecols = [2, 4]
 
     households_df = read_df(
-        DATA_DIR, households, households_names, households_usecols, "postcode_sector",
+        DATA_DIR, households, households_names, households_usecols, "output_area",
     )
 
     return households_df
@@ -92,15 +92,15 @@ def read_ages_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read ages dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks102ew
 
     Args:
-        DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
+        DATA_DIR: path to dataset folder (default should be output_area folder) 
 
     Returns:
-        pandas dataframe with age profiles per postcode sector
+        pandas dataframe with age profiles per output area 
 
     """
     ages = "age_structure.csv"
     ages_names = [
-        "postcode_sector",
+        "output_area",
         "0-4",
         "5-7",
         "8-9",
@@ -121,7 +121,7 @@ def read_ages_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
 
     ages_usecols = [2,] + list(range(5, 21))
 
-    ages_df = read_df(DATA_DIR, ages, ages_names, ages_usecols, "postcode_sector")
+    ages_df = read_df(DATA_DIR, ages, ages_names, ages_usecols, "output_area")
     if freq:
         ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
     return ages_df
@@ -130,10 +130,10 @@ def read_ages_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
 def read_bedrooms_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/lc1402ew
     Args:
-        DATA_DIR: path to dataset folder (default should be postcode_sector folder) 
+        DATA_DIR: path to dataset folder (default should be output_area folder) 
 
     Returns:
-        pandas dataframe with number of bedrooms per household type per postcode sector
+        pandas dataframe with number of bedrooms per household type per output area 
 
     """
     bedrooms = "household_compositon_by_bedrooms.csv"
@@ -142,7 +142,7 @@ def read_bedrooms_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     )
 
     bedrooms_names = [
-        "postcode_sector",
+        "output_area",
         "Person",  # regardless of bedrooms (only one person)
         "Old_Family",  # assumed to be 2 always
         "Young_Family_1B",
@@ -160,7 +160,7 @@ def read_bedrooms_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     ]
 
     bedrooms_df = read_df(
-        DATA_DIR, bedrooms, bedrooms_names, bedrooms_usecols, "postcode_sector"
+        DATA_DIR, bedrooms, bedrooms_names, bedrooms_usecols, "output_area"
     )
     if freq:
         bedrooms_df = bedrooms_df.div(bedrooms_df.sum(axis=1), axis=0)
@@ -206,7 +206,7 @@ def bedrooms2households(bedrooms_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def create_input_dict(
-    DATA_DIR: str = os.path.join("..", "data", "census_data", "postcode_sector")
+    DATA_DIR: str = os.path.join("..", "data", "census_data", "output_area", "NorthEast")
 ) -> dict:
     """Reads and formats input dataframe to populate realistic households in England and Wales
 
