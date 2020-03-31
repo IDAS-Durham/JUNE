@@ -116,7 +116,7 @@ def test_frequencies():
 def test_lonely_children():
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20, random_state=111)
+        census_dict[key] = census_dict[key].sample(n=2, random_state=111)
     census_dict_safe = census_dict.copy()
 
     world = World(census_dict)
