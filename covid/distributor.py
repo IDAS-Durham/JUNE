@@ -37,7 +37,7 @@ class Distributor:
         self.same_sex_rv = stats.rv_discrete(values=([0,1], [0.9, 0.1])) # when we match sex, we assume 10% of first 2 adults have same sex.
 
     def _compute_compatible_adult_age(self, first_adult_age):
-        age_variation = self.age_groups_rv.rvs(size=1)
+        age_variation = self.age_groups_rv.rvs(size=1)[0]
         if first_adult_age == len(self.area.world.decoder_age) - 1:
             age = first_adult_age - abs(age_variation)
         elif first_adult_age == self.ADULT_THRESHOLD:
@@ -71,8 +71,8 @@ class Distributor:
         n_kids = int(n_kids)
         # first populate with an adult with random age and sex
         self.area.world.total_people += 1
-        age = self.adult_age_rv.rvs(size=1),
-        sex = self.sex_rv.rvs(size=1),
+        age = self.adult_age_rv.rvs(size=1)[0]
+        sex = self.sex_rv.rvs(size=1)[0]
         first_adult_sex = sex
         first_adult_age = age
         people_left = self._init_person_to_household(age, sex, household, 0)
@@ -84,15 +84,15 @@ class Distributor:
             else:
                 # fill with random kids
                 for i in range(0, n_kids):
-                    age = self.kid_age_rv.rvs(size=1),
-                    sex = self.sex_rv.rvs(size=1),
+                    age = self.kid_age_rv.rvs(size=1)[0]
+                    sex = self.sex_rv.rvs(size=1)[0]
                     people_left = self._init_person_to_household(age, sex, household, i+1)
                     if not people_left:
                         return household
                 return household
         else:
             # fill another adult with matching sex 
-            same_sex = self.same_sex_rv.rvs(size=1)
+            same_sex = self.same_sex_rv.rvs(size=1)[0]
             if same_sex == 0:
                 matching_sex = int(not first_adult_sex)
             else:
@@ -107,7 +107,7 @@ class Distributor:
                 else:
                     # fill with random adults
                     for i in range(0, n_adults-2):
-                        sex = self.sex_rv.rvs(size=1)
+                        sex = self.sex_rv.rvs(size=1)[0]
                         matching_age = self._compute_compatible_adult_age(first_adult_age) 
                         people_left = self._init_person_to_household(matching_age, sex, household, i+2)
                         if not people_left:
@@ -116,8 +116,8 @@ class Distributor:
             else:
                 # fill with random kids
                 for i in range(0, n_kids):
-                    sex = self.sex_rv.rvs(size=1)
-                    age = self.kid_age_rv.rvs(size=1),
+                    sex = self.sex_rv.rvs(size=1)[0]
+                    age = self.kid_age_rv.rvs(size=1)[0]
                     people_left = self._init_person_to_household(age, sex, household, i+2)
                     if not people_left:
                         return household
@@ -139,8 +139,8 @@ class Distributor:
         while self.residents_available > 0:
             random_hs_idx = np.random.randint(0, len(self.area.households))
             random_household = self.area.households[random_hs_idx]
-            random_sex = self.sex_rv.rvs(size=1)
-            random_age = self.age_rv.rvs(size=1)
+            random_sex = self.sex_rv.rvs(size=1)[0]
+            random_age = self.age_rv.rvs(size=1)[0]
             self._init_person_to_household(random_age, random_sex, random_household, len(household.residents)+1)
 
 def populate_world(world:World):
