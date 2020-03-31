@@ -17,6 +17,7 @@ class Distributor:
         self._init_random_variables()
         self.residents_available = area.n_residents
         self.people_counter = 0
+        self.no_kids_area = False
 
     def _init_random_variables(self):
         age_freq = self.area.census_freq["age_freq"]
@@ -26,9 +27,13 @@ class Distributor:
         # create a random variable with the census data to sample from it
         self.sex_rv = stats.rv_discrete(values=(np.arange(0,len(sex_freq)),sex_freq.values))
         # create random variables for adult and kids age
-        age_kid_freqs_norm = age_freq.values[:self.ADULT_THRESHOLD] / np.sum(age_freq.values[:self.ADULT_THRESHOLD])
+        age_kids_freq = age_freq.values[:self.ADULT_THRESHOLD]
+        if len(age_kids_freq) == 0:
+            self.no_kids_area = True
+        else:
+            age_kid_freqs_norm =  age_kids_freq / np.sum(age_kids_freq)
+            self.kid_age_rv = stats.rv_discrete(values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm))
         adult_freqs_norm = age_freq.values[self.ADULT_THRESHOLD:] / np.sum(age_freq.values[self.ADULT_THRESHOLD:])
-        self.kid_age_rv = stats.rv_discrete(values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm))
         self.adult_age_rv = stats.rv_discrete(values=(np.arange(self.ADULT_THRESHOLD, len(age_freq)), adult_freqs_norm))
         self.age_rv = stats.rv_discrete(values=(np.arange(0, len(age_freq)), age_freq.values))
         # random variable for household freq.
@@ -70,6 +75,8 @@ class Distributor:
         n_kids, n_adults, n_old, n_other = household_composition_decoded.split(" ")
         n_adults = int(n_adults) + int(n_old) + int(n_other) # ! assume for now this
         n_kids = int(n_kids)
+        if self.no_kids_area:
+            n_kids = 0
         # first populate with an adult with random age and sex
         self.area.world.total_people += 1
         age = self.adult_age_rv.rvs(size=1)[0]
