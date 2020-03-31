@@ -116,7 +116,7 @@ def test_frequencies():
 def test_lonely_children():
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=2, random_state=111)
+        census_dict[key] = census_dict[key].sample(n=20, random_state=111)
     census_dict_safe = census_dict.copy()
 
     world = World(census_dict)
@@ -130,7 +130,7 @@ def test_lonely_children():
             for k in world.areas[i].households[j].residents.keys():
                 freq[getattr(world.areas[i].households[j].residents[k], attribute)] += 1
                 # if no adults, but at least one child
-                if (np.sum(freq[5:]) == 0.) & (np.sum(freq[:5]) > 0.):
+                if (np.sum(freq[5:]) == 0.) and (np.sum(freq[:5]) > 0.):
                     only_children += 1
 
     assert only_children == 0
