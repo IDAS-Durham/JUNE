@@ -66,7 +66,8 @@ class Distributor:
             return True
 
     def populate_household(self, household):
-        n_kids, n_adults, n_old, n_other = household.household_composition.split(" ")
+        household_composition_decoded = self.area.world.decoder_household_composition[household.household_composition]
+        n_kids, n_adults, n_old, n_other = household_composition_decoded.split(" ")
         n_adults = int(n_adults) + int(n_old) + int(n_other) # ! assume for now this
         n_kids = int(n_kids)
         # first populate with an adult with random age and sex
@@ -127,8 +128,7 @@ class Distributor:
         people_counter = 0
         for house_id in range(0, self.area.n_households):
             composition_id = self.household_rv.rvs(size=1)[0]
-            composition = self.area.world.decoder_household_composition[composition_id]
-            household = Household(house_id, composition, self.area)
+            household = Household(house_id, composition_id, self.area)
             self.area.households[house_id] = household
             self.populate_household(household)
             household.n_residents = len(household.residents)
