@@ -1,8 +1,9 @@
 import numpy as np
 import os
 from covid.inputs import create_input_dict
-from covid.classes import World, Person, Area, Household
+from covid.classes import World, Area, Household
 from covid.distributor import populate_world
+from covid.person import Person
 
 
 def test_global():
@@ -99,9 +100,13 @@ def test_frequencies():
             attribute = key.split("_")
             attribute = "_".join(attribute[:-1])
             frequencies = compute_frequency(world, attribute)
-            atol_matrix = 1./np.sqrt(census_dict_safe["n_residents"]*census_dict_safe[key].values)
-            for i in frequencies.shape[0]:
-                for j in frequencies.shape[1]:
+            n_samples = census_dict_safe[key].mul(census_dict_safe["n_residents"], axis=0)
+            atol_matrix = 1./np.sqrt(n_samples)
+            atol_matrix = np.where(atol_matrix == np.inf,
+                                 0.,
+                                 atol_matrix)
+            for i in range(frequencies.shape[0]):
+                for j in range(frequencies.shape[1]):
                     np.testing.assert_allclose(
                         frequencies[i,j],
                         census_dict_safe[key].values[i,j],
