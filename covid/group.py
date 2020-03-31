@@ -8,7 +8,8 @@ allowed_groups = ["Household",
                   "Work:Outdoor", "Work:Indoor",
                   "Commute:Public", "Commute:Private",
                   "Leisure:Outdoor", "Leisure:Indoor",
-                  "Shopping"]
+                  "Shopping",
+                  "ReferenceGroup"]
 
 class Group:
     """
