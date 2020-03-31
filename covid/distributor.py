@@ -14,10 +14,10 @@ class Distributor:
     def __init__(self, area):
         self.ADULT_THRESHOLD = 6 # 6 corresponds to 18-19 years old
         self.area = area
+        self.no_kids_area = False
         self._init_random_variables()
         self.residents_available = area.n_residents
         self.people_counter = 0
-        self.no_kids_area = False
 
     def _init_random_variables(self):
         age_freq = self.area.census_freq["age_freq"]
@@ -28,7 +28,7 @@ class Distributor:
         self.sex_rv = stats.rv_discrete(values=(np.arange(0,len(sex_freq)),sex_freq.values))
         # create random variables for adult and kids age
         age_kids_freq = age_freq.values[:self.ADULT_THRESHOLD]
-        if np.sum(age_kids_freq) == 0:
+        if np.sum(age_kids_freq) == 0.0:
             self.no_kids_area = True
         else:
             age_kid_freqs_norm =  age_kids_freq / np.sum(age_kids_freq)
