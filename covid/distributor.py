@@ -38,7 +38,7 @@ class Distributor:
 
     def _compute_compatible_adult_age(self, first_adult_age):
         age_variation = self.age_groups_rv.rvs(size=1)
-        if first_adult_age == len(self.area.world.decoder_age):
+        if first_adult_age == len(self.area.world.decoder_age) - 1:
             age = first_adult_age - abs(age_variation)
         else:
             age = first_adult_age + age_variation
