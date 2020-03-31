@@ -1,7 +1,7 @@
 import sys
-import infection
 import random
-import infection as Infection
+#from covid import infection
+#import covid.infection as Infection
 
 
 class Person:
@@ -27,8 +27,8 @@ class Person:
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
     def __init__(self, person_id, area, age, sex, health_index, econ_index):
-        if not self.sane(self, person_id, area, age, sex, health_index, econ_index):
-            return
+        #if not self.sane(self, person_id, area, age, sex, health_index, econ_index):
+        #    return
         self.id             = person_id
         self.age            = age
         self.sex            = sex
@@ -36,7 +36,7 @@ class Person:
         self.econ_index     = econ_index
         self.area           = area
         self.household      = None
-        self.init_health_information()
+        #self.init_health_information()
 
     def sane(self, person_id, area, age, sex, health_index, econ_index):
         if (age<0 or age>120 or

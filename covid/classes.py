@@ -75,6 +75,7 @@ class Household:
     def __init__(self, house_id, configuration, area):
         self.id = house_id
         self.household_composition = configuration
-        self.residents = group(self.id,"household")
+        self.residents = {}
+        #self.residents = group(self.id,"household")
         self.area = area
 

@@ -1,8 +1,9 @@
 import numpy as np
 import os
 from covid.inputs import create_input_dict
-from covid.classes import World, Person, Area, Household
+from covid.classes import World, Area, Household
 from covid.distributor import populate_world
+from covid.person import Person
 
 
 def test_global():
