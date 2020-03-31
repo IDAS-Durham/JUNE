@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 
-
 def read_df(
     DATA_DIR: str, filename: str, column_names: list, usecols: list, index: str
 ) -> pd.DataFrame:
