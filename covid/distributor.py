@@ -34,6 +34,7 @@ class Distributor:
         # random variable for household freq.
         self.household_rv = stats.rv_discrete(values=(np.arange(0,len(household_freq)), household_freq.values))
         self.age_groups_rv = stats.rv_discrete(values=([-1, 0, 1], [0.2, 0.6, 0.2]))
+        self.same_sex_rv = stats.rv.discrete(values=([0,1], [0.9, 1])) # when we match sex, we assume 10% of first 2 adults have same sex.
 
     def _compute_compatible_adult_age(self, first_adult_age):
         age_variation = self.age_groups_rv.rvs(size=1)
@@ -89,7 +90,11 @@ class Distributor:
                 return household
         else:
             # fill another adult with matching sex 
-            matching_sex = int(not first_adult_sex)
+            same_sex = self.same_sex_rv.rv(size=1)
+            if same_sex == 0:
+                matching_sex = int(not first_adult_sex)
+            else:
+                matching_sex = first_adult_sex
             matching_age = self._compute_compatible_adult_age(first_adult_age) 
             people_left = self._init_person_to_household(matching_age, matching_sex, household, 1)
             if not people_left:
