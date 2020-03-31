@@ -75,35 +75,6 @@ class Household:
     def __init__(self, house_id, configuration, area):
         self.id = house_id
         self.household_composition = configuration
-        self.residents = {}
+        self.residents = group(self.id,"household")
         self.area = area
-
-class Person:
-    """
-    Represents a single individual
-    """
-
-    def __init__(self, person_id, area, age, sex, health_index, econ_index):
-        self.id = person_id
-        self.age = age
-        self.sex = sex
-        self.health_index = health_index
-        self.econ_index = econ_index
-        self.area = area
-        self.household = None
-
-class Adult(Person):
-
-    def __init__(self, area, age, sex, health_index, econ_index, employed):
-        Person.__init__(self, area, age, sex, health_index, econ_index)
-        self.employed = employed
-
-class Child(Person):
-    def __init__(self, area, age, sex, health_index, econ_index):
-        Person.__init__(self, area, age, sex, health_index, econ_index)
-
-
-
-
-
 
