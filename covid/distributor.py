@@ -67,9 +67,8 @@ class Distributor:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
         #        d[i] = {}
         for i in range(0, self.area.n_residents):
-            age_random = self.age_rv(size=1)[0]
-            sex_random = self.sex_rv(size=1)[0]
-            person = Person(
+            age_random = self.age_rv.rvs(size=1)[0]
+            sex_random = self.sex_rv.rvs(size=1)[0]
             person = Person(self.area.world.total_people,
                             self.area,
                             age_random,
@@ -217,7 +216,7 @@ class Distributor:
         if adult_sex == 0 or not self._women: # if the sex is man or there are no women left
             if not self._men: # no men left 
                 return -1
-             else:
+            else:
                 household.residents[counter] = self._men.popitem()[1]
                 counter += 1
         elif adult_sex == 1 or not self._man:
@@ -242,6 +241,7 @@ class Distributor:
                     student = self._women[self._student_keys.pop()]
                 household.residents[counter] = student
                 counter += 1
+        return household
     
     def _create_twoparent_household(self, n_kids, n_students, household):
         """
@@ -288,6 +288,7 @@ class Distributor:
                     student = self._women[self._student_keys.pop()]
                 household.residents[counter] = student
                 counter += 1
+        return household
 
     def populate_household(self, household):
         household_composition_decoded = self.area.world.decoder_household_composition[household.household_composition]
@@ -296,15 +297,15 @@ class Distributor:
             if n_kids != 0: 
                 raise "There are kids in a student/old house"
             if n_students != 0 and n_old == 0:
-                return _create_student_household(n_students, household)
+                return self._create_student_household(n_students, household)
             elif n_students == 0 and n_old != 0:
-                return _create_oldpeople_household(n_old, household)
+                return self._create_oldpeople_household(n_old, household)
             else:
                 raise "Household configuration not possible!"
         elif n_adults == 1: # adult living alone or monoparental family with n_kids and n_students (independent child)
-            return _create_singleparent_household(n_kids, n_students, household)
+            return self._create_singleparent_household(n_kids, n_students, household)
         elif n_adults == 2 and n_students == 0: # two parents family with n_kids and n_students (independent child)
-            return _create_twoparent_household(n_kids, n_students, household)
+            return self._create_twoparent_household(n_kids, n_students, household)
         
     def distribute_people_to_household(self):
         if len(self.area.people) == 0:
@@ -313,11 +314,12 @@ class Distributor:
         while self._men or self._women or self._oldmen or self._oldwomen:
             composition_id = self.household_rv.rvs(size=1)[0]
             household = Household(house_id, composition_id, self.area)
-            household = populate_household(self, household)
+            household = self.populate_household(household)
             if household == -1:
                 continue
             self.area.households[house_id] = household
             house_id += 1
+        self.kids_left = len(self._kids)
 
 def populate_world(world:World):
     """
@@ -326,7 +328,7 @@ def populate_world(world:World):
     print("Populating areas...")
     for area in world.areas.values():
         distributor = Distributor(area)
-        distributor.populate_area()
+        distributor.distribute_people_to_household()
         print("#", end="")
         #populate_area(area)
     print("\n")
