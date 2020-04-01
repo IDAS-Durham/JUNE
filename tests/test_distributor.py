@@ -134,6 +134,7 @@ def test_lonely_children():
     for i in world.areas.keys():
         for j in world.areas[i].households.keys():
             freq = np.zeros(len(decoder))
+            print(world.areas[i].name)
             for k in world.areas[i].households[j].residents.keys():
                 freq[getattr(world.areas[i].households[j].residents[k], attribute)] += 1
                 # if no adults, but at least one child
