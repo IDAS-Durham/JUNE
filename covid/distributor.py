@@ -235,6 +235,7 @@ class Distributor:
                     return household
                 else:
                     return household
+        raise "error"
 
     def _create_singleparent_household(self, n_kids, n_students, household):
         """
@@ -337,8 +338,14 @@ class Distributor:
                 raise "Household configuration not possible!"
         elif n_adults == 1: # adult living alone or monoparental family with n_kids and n_students (independent child)
             return self._create_singleparent_household(n_kids, n_students, household)
-        elif n_adults == 2 and n_students == 0: # two parents family with n_kids and n_students (independent child)
+        elif n_adults == 2: # two parents family with n_kids and n_students (independent child)
             return self._create_twoparent_household(n_kids, n_students, household)
+        else:
+            print(n_kids)
+            print(n_students)
+            print(n_adults)
+            print(n_old)
+            raise "error adults have to be 0,1 or 2"
         
     def distribute_people_to_household(self):
         if len(self.area.people) == 0:
@@ -360,6 +367,7 @@ def populate_world(world:World):
     """
     print("Populating areas...")
     for area in world.areas.values():
+        print(area.name)
         distributor = Distributor(area)
         distributor.populate_area()
         distributor.distribute_people_to_household()
