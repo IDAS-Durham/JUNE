@@ -19,4 +19,5 @@ def test_positive():
     input_dict = create_input_dict()
     for key, value in input_dict.items():
         if "freq" in key:
-             assert any(input_dict[key] < 0.) == False
+            print(key)
+            assert np.sum(input_dict[key].values < 0.) == 0
