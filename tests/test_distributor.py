@@ -10,6 +10,7 @@ def test_global():
 
     census_dict = create_input_dict()
     for key, value in census_dict.items():
+        print("world -->", key)
         census_dict[key] = census_dict[key].sample(n=5, random_state=111)
     census_dict_safe = census_dict.copy()
     world = World(census_dict)
@@ -118,8 +119,6 @@ def test_frequencies():
                             atol=atol_matrix[i]
                         )
 
-
-
 def test_lonely_children():
     census_dict = create_input_dict()
     for key, value in census_dict.items():
@@ -141,5 +140,6 @@ def test_lonely_children():
                     only_children += 1
 
     assert only_children == 0
+
 if __name__ == "__main__":
-    test_frequencies()
+    test_global()
