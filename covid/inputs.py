@@ -319,7 +319,7 @@ def people_compositions2households(comp_people_df):
 
     # OLD OTHER
     # v) old other live in houses of 2 or 3
-    households_df[f"0 0 0 2"] = (
+    households_df[f"0 0 0 2"] += (
         comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
     )
     households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
