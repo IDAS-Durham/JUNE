@@ -24,7 +24,17 @@ def read_df(
     df.set_index(index, inplace=True)
     return df
 
+def read_household_composition_people():
+    """
+    TableID: QS112EW
+    https://www.nomisweb.co.uk/census/2011/qs112ew
+    """
 
+def read_household_size()
+"""
+    https://www.nomisweb.co.uk/census/2011/qs406ew
+    QS406EW
+"""
 def read_population_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
 
