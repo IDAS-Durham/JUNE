@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 
 
@@ -273,15 +274,15 @@ def people_compositions2households(comp_people_df):
     households_df["0 0 2 0"] = comp_people_df["Family_0k"] // 2
 
     # COUPLES 1 DEPENDENT KID
-    households_df["1 0 2 0"] = (
-        comp_people_df["Family_1k"] // 3 - comp_people_df["Family_1k"] % 3
+    households_df["1 0 2 0"] = np.max(
+        comp_people_df["Family_1k"] // 3 - comp_people_df["Family_1k"] % 3, 0
     )
     # i) Assumption: there can be only one independent child, and is a young adult
     households_df["1 1 2 0"] = comp_people_df["Family_1k"] % 3
 
     # COUPLES >2 DEPENDENT KIDS
-    households_df["2 0 2 0"] = (
-        comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4
+    households_df["2 0 2 0"] = np.max(
+        comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4,0
     )
     # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
     households_df["3 0 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
@@ -296,14 +297,14 @@ def people_compositions2households(comp_people_df):
     households_df["0 2 2 0"] = comp_people_df["Family_adult_children"] % 3
 
     # LONE PARENTS 1 DEPENDENT KID
-    households_df["1 0 1 0"] = (
-        comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2
+    households_df["1 0 1 0"] = np.max(
+        comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2, 0 
     )
     # i) Assumption: there can be only one independent child, and is a young adult
     households_df["1 1 1 0"] = comp_people_df["Lone_1k"] % 2
 
-    households_df["2 0 1 0"] = (
-        comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3
+    households_df["2 0 1 0"] = np.max(
+        comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3, 0 
     )
     # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
     households_df["3 0 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
@@ -311,16 +312,16 @@ def people_compositions2households(comp_people_df):
 
     # STUDENTS
     # iv) Students live in houses of 3 or 4
-    households_df[f"0 3 0 0"] = (
-        comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3
+    households_df[f"0 3 0 0"] = np.max(
+        comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3, 0
     )
 
     households_df[f"0 4 0 0"] = comp_people_df["Students"] % 3
 
     # OLD OTHER
     # v) old other live in houses of 2 or 3
-    households_df[f"0 0 0 2"] += (
-        comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
+    households_df[f"0 0 0 2"] += np.max(
+        comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2, 0 
     )
     households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
 
