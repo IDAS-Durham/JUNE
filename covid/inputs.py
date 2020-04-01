@@ -290,9 +290,9 @@ def people_compositions2households(comp_people_df):
 
     # COUPLES WITH ONLY INDEPENDENT CHILDREN
     # iii) Assumption: either one or two children (no more than two)
-    households_df["0 1 2 0"] = (
+    households_df["0 1 2 0"] = np.max(
         comp_people_df["Family_adult_children"] // 3
-        - comp_people_df["Family_adult_children"] % 3
+        - comp_people_df["Family_adult_children"] % 3, 0
     )
     households_df["0 2 2 0"] = comp_people_df["Family_adult_children"] % 3
 
