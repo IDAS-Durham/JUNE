@@ -16,14 +16,12 @@ class Single_Interaction:
             return
         for person in self.group.healthy_people():
             transmission_probability = self.combined_transmission_probability(person,time)
-            print ("Testing ",person.name())
             if random.random() < transmission_probability:
-                print (*"Person ",person.name()," is now infected.")
                 person.set_infection(infection_selector.make_infection(time))
                 
     def combined_transmission_probability(self,recipient,time):
-        susceptibility        = recipient.susceptibility()
-        interaction_intensity = self.group.intensity()
+        susceptibility        = recipient.get_susceptibility()
+        interaction_intensity = self.group.get_intensity()
         recipient_probability = susceptibility * interaction_intensity
         prob_notransmission   = 1.
         for person in self.group.infected_people():
@@ -37,8 +35,6 @@ class Single_Interaction:
     
     def group(self):
         return self.group
-        
-
 
     
 class Interaction:
@@ -49,6 +45,6 @@ class Interaction:
             group.update_status_lists(time)
 
     def single_time_step(self,time,infection_selector):
-        for group in groups:
-            interaction = single_interaction(group)
+        for group in self.groups:
+            interaction = Single_Interaction(group)
             interaction.single_time_step(time,infection_selector)

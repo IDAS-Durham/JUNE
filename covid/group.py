@@ -1,5 +1,6 @@
 import person as Person
 import sys
+import random
 import matplotlib
 import matplotlib.pyplot as plt 
 
@@ -9,7 +10,7 @@ allowed_groups = ["Household",
                   "Commute:Public", "Commute:Private",
                   "Leisure:Outdoor", "Leisure:Indoor",
                   "Shopping",
-                  "ReferenceGroup"]
+                  "ReferenceGroup","Random"]
 
 class Group:
     """
@@ -32,32 +33,39 @@ class Group:
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
-    def __init__(self,name,spec):
-        if not self.sane(spec):
+    def __init__(self,name,spec,number=-1):
+        if not self.sane(name,spec):
             return
         self.name      = name
         self.spec      = spec
-        self.intensity = None
+        self.intensity = 1.  # None
         self.people    = []
         self.infected  = []
         self.healthy   = []
-
+        if self.spec=="Random":
+            self.fill_random_group(number)
+        
     def sane(self,name,spec):
         if not spec in allowed_groups:
             print ("Error: tried to initialise group with wrong specification:",spec)
+            return False
+        return True
+
+    def set_intensity(self,intensity):
+        self.intensity = intensity
         
-    def intensity(self,time):
+    def get_intensity(self,time=0):
         if self.intensity == None:
             return 1.
-        return self.intensity.intensity(time)
+        return self.intensity #.intensity(time)
 
     def add(self, person):
         if not isinstance(person, Person.Person):
             print ("Error in Group.Add(",p,") is not a person.")
             print("--> Exit the code.")
             sys.exit()
-        if p in self.people:
-            print ("Tried to add already present person",p.Name(),
+        if person in self.people:
+            print ("Tried to add already present person",person.Name(),
                    " to group ",self.gname,".")
             print("--> Ignore and proceed.")
         else:
@@ -101,9 +109,17 @@ class Group:
     def infected_people(self):
         return self.infected
 
+    def fill_random_group(self,number):
+        print ("Filling random group with ",number,"members.")
+        for i in range(number):
+            age = random.randrange(0,100)
+            sex = random.choice(("M","F"))
+            self.add(Person.Person(str(i), 0, age, sex, 0, 0))
+        self.output(False,False)
+                
     def output(self,plot=False,full=False):
         print ("==================================================")
-        print ("Group ",self.gname,", type = ",self.gtype," with ",
+        print ("Group ",self.name,", type = ",self.spec," with ",
                len(self.people)," people.")
         print("* ",self.size_healthy(),
               "(",round(self.size_healthy()/self.size()*100),"%) are healthy, ",
@@ -113,13 +129,13 @@ class Group:
         M    = 0
         F    = 0
         for p in self.people:
-            ages.append(p.age())
-            if p.sex()=="F":
+            ages.append(p.get_age())
+            if p.get_sex()=="F":
                 F += 1
             else:
                 M += 1
-        print("* ",F,"(",round(F/self.Number()*100.),"%) females, ",
-              M,"(",round(M/self.Number()*100),"%) males;")
+        print("* ",F,"(",round(F/self.size()*100.),"%) females, ",
+              M,"(",round(M/self.size()*100),"%) males;")
         if plot:
             fig, axes = plt.subplots()
             axes.hist(ages, 20, range=(0,100), density=True, facecolor='blue', alpha=0.5)
