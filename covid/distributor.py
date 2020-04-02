@@ -359,7 +359,13 @@ class Distributor:
             self.populate_area()
         house_id = 0 
         while self._men or self._women or self._oldmen or self._oldwomen:
+            #print('men: ', len(self._men))
+            #print('women: ', len(self._women))
+            #print('oldmen: ', len(self._oldmen))
+            #print('oldwommen: ', len(self._oldwomen))
+            #print(self.area.census_freq["household_freq"])
             composition_id = self.household_rv.rvs(size=1)[0]
+            #print(self.area.world.decoder_household_composition[composition_id])
             household = Household(house_id, composition_id, self.area)
             household = self.populate_household(household)
             if household == -1:
@@ -373,13 +379,13 @@ def populate_world(world:World):
     Populates all areas in the world.
     """
     print("Populating areas...")
-#    pbar = tqdm(total=len(world.areas.keys()))
+    pbar = tqdm(total=len(world.areas.keys()))
     for area in world.areas.values():
-        print(area.name)
+        #print(area.name)
         distributor = Distributor(area)
         distributor.populate_area()
         distributor.distribute_people_to_household()
-#        pbar.update(1)
+        pbar.update(1)
         #populate_area(area)
     print("\n")
     pbar.close()

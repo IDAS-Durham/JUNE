@@ -1,4 +1,7 @@
 from covid.area import Area
+from sklearn.neighbors import BallTree
+import pandas as pd
+
 class World:
     """
     Stores global information about the simulation
@@ -10,7 +13,16 @@ class World:
         self.decoder_age = {}
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(input_dict)
-#        self.schools = self.read_school_census(school_input_dict)
+        self.schools = self.read_school_census()
+
+    def read_school_census(school_input_dict):
+        """
+        Reads school location and sizes, it initializes a KD tree on a sphere,
+        to query the closest schools to a given location.
+        """
+        school_data = pd.read_csv("../data/census_data/school_data/england_schools_data.csv")
+        self.school_tree = BallTree(np.deg2rad(areas[['latitute', 'longitude']].values),
+                                               metric='haversine')
 
     def read_areas_census(self, input_dict):
         n_residents_df = input_dict.pop("n_residents")
