@@ -76,6 +76,7 @@ def compute_n_samples(world, attribute):
             #freq /= world.areas[i].n_residents
         else:
             for j in world.areas[i].households.keys():
+                print(getattr(world.areas[i].households[j], attribute))
                 freq[getattr(world.areas[i].households[j], attribute)] += 1
             #freq /= world.areas[i].n_households
 
