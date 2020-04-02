@@ -92,7 +92,7 @@ def test_frequencies():
 
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20, random_state=111)
+        census_dict[key] = census_dict[key].sample(n=30, random_state=111)
     census_dict_safe = census_dict.copy()
 
     world = World(census_dict)
@@ -109,7 +109,7 @@ def test_frequencies():
                 n_samples = census_dict_safe[key].mul(census_dict_safe["n_residents"], axis=0)
             n_samples_total = n_samples.values.sum(axis=0)
             n_samples_est = np.sum(frequencies, axis=0)
-            atol_matrix = n_samples_total*(1./np.sqrt(n_samples_total) + 1)
+            atol_matrix = n_samples_total*(1./np.sqrt(n_samples_total))
             atol_matrix = np.where(atol_matrix == np.inf,
                                  0.,
                                  atol_matrix)
