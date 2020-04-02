@@ -1,8 +1,6 @@
 import sys
 import random
-#from covid import infection
-#import covid.infection as Infection
-
+import covid.infection as Infection
 
 class Person:
     """
@@ -27,7 +25,7 @@ class Person:
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
     def __init__(self, person_id, area, age, sex, health_index, econ_index):
-        #if not self.sane(self, person_id, area, age, sex, health_index, econ_index):
+        #if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
         self.id             = person_id
         self.age            = age
@@ -36,9 +34,9 @@ class Person:
         self.econ_index     = econ_index
         self.area           = area
         self.household      = None
-        #self.init_health_information()
+        self.init_health_information()
 
-    def sane(self, person_id, area, age, sex, health_index, econ_index):
+    def is_sane(self, person_id, area, age, sex, health_index, econ_index):
         if (age<0 or age>120 or
             not (sex=="M" or sex=="F") ):
             print ("Error: tried to initialise person with descriptors out of range: ")
@@ -47,25 +45,28 @@ class Person:
             sys.exit()
         return True
         
-    def name(self):
-        return self.person_id
+    def get_name(self):
+        return self.id
 
-    def age(self):
+    def get_age(self):
         return self.age
 
-    def sex(self):
+    def get_sex(self):
         return self.sex
         
-    def health_index(self):
+    def get_health_index(self):
         return self.health_index
     
-    def econ_index(self):
+    def get_econ_index(self):
         return self.econ_index
+    
+    def get_susceptibility(self):
+        return self.susceptibility
     
     def set_household(self,household):
         self.household = household
 
-    def init_health_information():
+    def init_health_information(self):
         self.susceptibility = 1.
         self.healthy        = True
         self.infection      = None
