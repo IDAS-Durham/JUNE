@@ -97,7 +97,7 @@ def read_household_composition_people(DATA_DIR, ages_df):
     comp_people_df["Family_1k"] += (
         comp_people_df["SS_Family_1k"]
         + comp_people_df["Couple_Family_1k"]
-        + comp_people_df["Other_1k"]
+        + 0.6*comp_people_df["Other_1k"]
     )
     comp_people_df["Family_2k"] += (
         comp_people_df["SS_Family_2k"]
@@ -123,7 +123,7 @@ def read_household_composition_people(DATA_DIR, ages_df):
     ] += comp_people_df["Other"][~((areas_no_house_old) & (areas_with_old))]
     comp_people_df["Old_Family"][
         (areas_no_house_old) & (areas_with_old)
-    ] += comp_people_df["Other"][(areas_no_house_old) & (areas_with_old)]
+    ] += comp_people_df["Other"][(areas_no_house_old) & (areas_with_old)] + 0.4*comp_people_df["Other_1k"][(areas_no_house_old) & (areas_with_old)]
     comp_people_df = comp_people_df.drop(
         columns=[
             c
