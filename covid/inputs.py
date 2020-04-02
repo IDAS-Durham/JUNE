@@ -32,7 +32,7 @@ def read_household_composition_people(DATA_DIR, ages_df):
     https://www.nomisweb.co.uk/census/2011/qs112ew
 
     """
-    household_people = 'household_composition_people.csv'
+    household_people = "household_composition_people.csv"
     usecols = [
         2,
         6,
@@ -92,8 +92,7 @@ def read_household_composition_people(DATA_DIR, ages_df):
 
     # Combine equivalent fields
     comp_people_df["Family_0k"] += (
-        comp_people_df["SS_Family_0k"]
-        + comp_people_df["Couple_Family_0k"]
+        comp_people_df["SS_Family_0k"] + comp_people_df["Couple_Family_0k"]
     )
     comp_people_df["Family_1k"] += (
         comp_people_df["SS_Family_1k"]
@@ -112,17 +111,29 @@ def read_household_composition_people(DATA_DIR, ages_df):
 
     # Since other contains some old, give it some probability when there are old people in the area
     areas_with_old = ages_df[ages_df.columns[OLD_THRESHOLD:]].sum(axis=1) > 0
-    areas_no_house_old = comp_people_df['Person_old'] + comp_people_df['Old_Family'] + comp_people_df['Old_Unclassified'] == 0
+    areas_no_house_old = (
+        comp_people_df["Person_old"]
+        + comp_people_df["Old_Family"]
+        + comp_people_df["Old_Unclassified"]
+        == 0
+    )
 
-    comp_people_df["Family_0k"][~((areas_no_house_old) & (areas_with_old))] += comp_people_df["Other"][~((areas_no_house_old) & (areas_with_old))]
-    comp_people_df["Old_Family"][(areas_no_house_old) & (areas_with_old)] += comp_people_df["Other"][(areas_no_house_old) & (areas_with_old)]
+    comp_people_df["Family_0k"][
+        ~((areas_no_house_old) & (areas_with_old))
+    ] += comp_people_df["Other"][~((areas_no_house_old) & (areas_with_old))]
+    comp_people_df["Old_Family"][
+        (areas_no_house_old) & (areas_with_old)
+    ] += comp_people_df["Other"][(areas_no_house_old) & (areas_with_old)]
     comp_people_df = comp_people_df.drop(
         columns=[
-            c for c in comp_people_df.columns if "SS" in c or "Couple" in c or "Other" in c
+            c
+            for c in comp_people_df.columns
+            if "SS" in c or "Couple" in c or "Other" in c
         ]
     )
 
     return comp_people_df
+
 
 def read_population_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
@@ -281,14 +292,14 @@ def people_compositions2households(comp_people_df, freq=True):
     # COUPLES 1 DEPENDENT KID
     households_df["1 0 2 0"] = (
         comp_people_df["Family_1k"] // 3 - comp_people_df["Family_1k"] % 3
-        ).apply(lambda x: max(x,0))
+    ).apply(lambda x: max(x, 0))
     # i) Assumption: there can be only one independent child, and is a young adult
     households_df["1 1 2 0"] = comp_people_df["Family_1k"] % 3
 
     # COUPLES >2 DEPENDENT KIDS
     households_df["2 0 2 0"] = (
         comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4
-        ).apply(lambda x: max(x,0))
+    ).apply(lambda x: max(x, 0))
     # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
     households_df["3 0 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
     households_df["2 1 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
@@ -298,19 +309,19 @@ def people_compositions2households(comp_people_df, freq=True):
     households_df["0 1 2 0"] = (
         comp_people_df["Family_adult_children"] // 3
         - comp_people_df["Family_adult_children"] % 3
-        ).apply(lambda x: max(x,0))
+    ).apply(lambda x: max(x, 0))
     households_df["0 2 2 0"] = comp_people_df["Family_adult_children"] % 3
 
     # LONE PARENTS 1 DEPENDENT KID
     households_df["1 0 1 0"] = (
-        comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2 
-        ).apply(lambda x: max(x,0))
+        comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2
+    ).apply(lambda x: max(x, 0))
     # i) Assumption: there can be only one independent child, and is a young adult
     households_df["1 1 1 0"] = comp_people_df["Lone_1k"] % 2
 
     households_df["2 0 1 0"] = (
-        comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3 
-        ).apply(lambda x: max(x,0))
+        comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3
+    ).apply(lambda x: max(x, 0))
     # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
     households_df["3 0 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
     households_df["2 1 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
@@ -319,7 +330,7 @@ def people_compositions2households(comp_people_df, freq=True):
     # iv) Students live in houses of 3 or 4
     households_df[f"0 3 0 0"] = (
         comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3
-        ).apply(lambda x: max(x,0))
+    ).apply(lambda x: max(x, 0))
 
     households_df[f"0 4 0 0"] = comp_people_df["Students"] % 3
 
@@ -327,7 +338,7 @@ def people_compositions2households(comp_people_df, freq=True):
     # v) old other live in houses of 2 or 3
     households_df[f"0 0 0 2"] += (
         comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
-        ).apply(lambda x: max(x,0))
+    ).apply(lambda x: max(x, 0))
     households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
 
     if freq:
@@ -354,8 +365,8 @@ def create_input_dict(
     ages_df = read_ages_df(DATA_DIR)
     comp_people_df = read_household_composition_people(DATA_DIR, ages_df)
     households_df = people_compositions2households(comp_people_df)
-    #bedrooms_df = read_bedrooms_df(DATA_DIR)
-    #households_df = bedrooms2households(bedrooms_df)
+    # bedrooms_df = read_bedrooms_df(DATA_DIR)
+    # households_df = bedrooms2households(bedrooms_df)
 
     input_dict = {
         "n_residents": population_df["n_residents"],
