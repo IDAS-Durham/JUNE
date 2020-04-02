@@ -6,6 +6,7 @@ from covid.world import World
 from covid.area import Area
 from covid.household import Household
 from covid.person import Person
+from tqdm import tqdm
 
 """
 This file contains routines to attribute people with different characteristics
@@ -19,6 +20,7 @@ class Distributor:
         self.OLD_THRESHOLD = 12 # 12 corresponds to 65+
         self.area = area
         self.no_kids_area = False
+        self.no_students_area = False
         self._init_random_variables()
         self.residents_available = area.n_residents
         self.people_counter = 0
@@ -52,7 +54,10 @@ class Distributor:
         self.age_groups_rv = stats.rv_discrete(values=([-1, 0, 1], [0.2, 0.6, 0.2]))
         self.same_sex_rv = stats.rv_discrete(values=([0,1], [0.9, 0.1])) # when we match sex, we assume 10% of first 2 adults have same sex.
         age_students_freq = age_freq.values[6:8]
-        self.student_rv = stats.rv_discrete(values=([6,7], age_students_freq / np.sum(age_students_freq)))
+        if np.sum(age_students_freq) == 0.0:
+            self.no_student_area = True
+        else:
+            self.student_rv = stats.rv_discrete(values=([6,7], age_students_freq / np.sum(age_students_freq)))
 
     def populate_area(self):
         """
@@ -356,6 +361,12 @@ class Distributor:
         while self._men or self._women or self._oldmen or self._oldwomen:
             composition_id = self.household_rv.rvs(size=1)[0]
             household = Household(house_id, composition_id, self.area)
+            print(self.area.world.decoder_household_composition[household.household_composition])
+            print('men left: ', len(self._men))
+            print('women left: ', len(self._women))
+            print('old men left: ', len(self._oldmen))
+            print('old women left: ', len(self._oldwomen))
+            print('--------------------------------------------')
             household = self.populate_household(household)
             if household == -1:
                 continue
@@ -368,12 +379,14 @@ def populate_world(world:World):
     Populates all areas in the world.
     """
     print("Populating areas...")
+#    pbar = tqdm(total=len(world.areas.keys()))
     for area in world.areas.values():
         print(area.name)
         distributor = Distributor(area)
         distributor.populate_area()
         distributor.distribute_people_to_household()
-        print("#", end="")
+#        pbar.update(1)
         #populate_area(area)
     print("\n")
+    pbar.close()
 

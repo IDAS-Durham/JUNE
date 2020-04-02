@@ -42,3 +42,4 @@ wcwidth==0.1.9
 pytest
 pytest-cov
 scipy
+tqdm
