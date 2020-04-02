@@ -1,3 +1,2 @@
-*.pyc
-.ipynb*
-_site
+data
+covid/__pycache__/
