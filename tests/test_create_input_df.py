@@ -14,6 +14,10 @@ def test_frequencies_sum():
                 input_dict[key].sum(axis=1).values, np.ones(len(input_dict[key])),
             )
 
-#def test_compatible_datasets():
+def test_positive():
 
-    # same number of households and residents in all datasets
+    input_dict = create_input_dict()
+    for key, value in input_dict.items():
+        if "freq" in key:
+            print(key)
+            assert np.sum(input_dict[key].values < 0.) == 0
