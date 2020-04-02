@@ -35,7 +35,6 @@ class Single_Interaction:
     
     def group(self):
         return self.group
-
     
 class Interaction:
     def __init__(self,groups,time):
