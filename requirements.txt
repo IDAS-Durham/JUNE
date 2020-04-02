@@ -39,3 +39,6 @@ tornado==6.0.4
 tqdm==4.43.0
 traitlets==4.3.3
 wcwidth==0.1.9
+pytest
+pytest-cov
+scipy
