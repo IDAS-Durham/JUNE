@@ -145,3 +145,4 @@ def test_lonely_children():
 
 if __name__ == "__main__":
     test_global()
+    test_frequencies()
