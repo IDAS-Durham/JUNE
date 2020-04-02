@@ -203,7 +203,7 @@ class Distributor:
         if n_old == 3: # if its three people, just fill random sex
             for i in range(0, 3):
                 old_sex = self.sex_rv.rvs(size=1)[0]
-                if old_sex == 0 or not self._women:
+                if old_sex == 0 or not self._oldwomen:
                     if not self._oldmen:
                         if i == 0:
                             return -1
@@ -361,12 +361,6 @@ class Distributor:
         while self._men or self._women or self._oldmen or self._oldwomen:
             composition_id = self.household_rv.rvs(size=1)[0]
             household = Household(house_id, composition_id, self.area)
-            print(self.area.world.decoder_household_composition[household.household_composition])
-            print('men left: ', len(self._men))
-            print('women left: ', len(self._women))
-            print('old men left: ', len(self._oldmen))
-            print('old women left: ', len(self._oldwomen))
-            print('--------------------------------------------')
             household = self.populate_household(household)
             if household == -1:
                 continue
