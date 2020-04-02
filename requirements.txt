@@ -43,3 +43,4 @@ pytest
 pytest-cov
 scipy
 tqdm
+sklearn
