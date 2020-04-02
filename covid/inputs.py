@@ -352,7 +352,7 @@ def create_input_dict(
     population_df = read_population_df(DATA_DIR)
     n_households_df = read_household_df(DATA_DIR)
     ages_df = read_ages_df(DATA_DIR)
-    comp_people_df = read_household_composition_people(DATA_DIR)
+    comp_people_df = read_household_composition_people(DATA_DIR, ages_df)
     households_df = people_compositions2households(comp_people_df)
     #bedrooms_df = read_bedrooms_df(DATA_DIR)
     #households_df = bedrooms2households(bedrooms_df)
