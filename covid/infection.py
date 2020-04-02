@@ -1,7 +1,7 @@
 import numpy as np
 import random
-import transmission as Transmission
-import symptoms as Symptoms
+import covid.transmission as Transmission
+import covid.symptoms as Symptoms
 import sys
 
 class InfectionSelector:
