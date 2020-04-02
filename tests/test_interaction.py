@@ -48,7 +48,7 @@ if __name__=="__main__":
     import matplotlib
     import matplotlib.pyplot as plt
 
-    mode   = "Superposition"
+    mode   = "Probabilistic"
     N      = 1000
     betas  = [0.050,0.100,0.150]
     cols   = ["steelblue","royalblue","navy"]
