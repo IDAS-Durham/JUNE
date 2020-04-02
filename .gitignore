@@ -1,1 +1,2 @@
-data/
+data
+covid/__pycache__/

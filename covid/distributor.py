@@ -2,7 +2,9 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
-from covid.classes import World,  Area, Household
+from covid.world import World
+from covid.area import Area
+from covid.household import Household
 from covid.person import Person
 
 """
