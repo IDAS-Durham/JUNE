@@ -10,6 +10,7 @@ class World:
         self.decoder_age = {}
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(input_dict)
+        self.schools = self.read_school_census(school_input_dict)
 
     def read_areas_census(self, input_dict):
         n_residents_df = input_dict.pop("n_residents")
