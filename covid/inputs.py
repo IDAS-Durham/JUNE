@@ -261,7 +261,7 @@ def read_bedrooms_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     return bedrooms_df
 
 
-def people_compositions2households(comp_people_df):
+def people_compositions2households(comp_people_df, freq=True):
 
     households_df = pd.DataFrame()
 
@@ -274,96 +274,61 @@ def people_compositions2households(comp_people_df):
     households_df["0 0 2 0"] = comp_people_df["Family_0k"] // 2
 
     # COUPLES 1 DEPENDENT KID
-    households_df["1 0 2 0"] = np.max(
-        comp_people_df["Family_1k"] // 3 - comp_people_df["Family_1k"] % 3, 0
-    )
+    households_df["1 0 2 0"] = (
+        comp_people_df["Family_1k"] // 3 - comp_people_df["Family_1k"] % 3
+        ).apply(lambda x: max(x,0))
     # i) Assumption: there can be only one independent child, and is a young adult
     households_df["1 1 2 0"] = comp_people_df["Family_1k"] % 3
 
     # COUPLES >2 DEPENDENT KIDS
-    households_df["2 0 2 0"] = np.max(
-        comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4,0
-    )
+    households_df["2 0 2 0"] = (
+        comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4
+        ).apply(lambda x: max(x,0))
     # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
     households_df["3 0 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
     households_df["2 1 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
 
     # COUPLES WITH ONLY INDEPENDENT CHILDREN
     # iii) Assumption: either one or two children (no more than two)
-    households_df["0 1 2 0"] = np.max(
+    households_df["0 1 2 0"] = (
         comp_people_df["Family_adult_children"] // 3
-        - comp_people_df["Family_adult_children"] % 3, 0
-    )
+        - comp_people_df["Family_adult_children"] % 3
+        ).apply(lambda x: max(x,0))
     households_df["0 2 2 0"] = comp_people_df["Family_adult_children"] % 3
 
     # LONE PARENTS 1 DEPENDENT KID
-    households_df["1 0 1 0"] = np.max(
-        comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2, 0 
-    )
+    households_df["1 0 1 0"] = (
+        comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2 
+        ).apply(lambda x: max(x,0))
     # i) Assumption: there can be only one independent child, and is a young adult
     households_df["1 1 1 0"] = comp_people_df["Lone_1k"] % 2
 
-    households_df["2 0 1 0"] = np.max(
-        comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3, 0 
-    )
+    households_df["2 0 1 0"] = (
+        comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3 
+        ).apply(lambda x: max(x,0))
     # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
     households_df["3 0 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
     households_df["2 1 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
 
     # STUDENTS
     # iv) Students live in houses of 3 or 4
-    households_df[f"0 3 0 0"] = np.max(
-        comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3, 0
-    )
+    households_df[f"0 3 0 0"] = (
+        comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3
+        ).apply(lambda x: max(x,0))
 
     households_df[f"0 4 0 0"] = comp_people_df["Students"] % 3
 
     # OLD OTHER
     # v) old other live in houses of 2 or 3
-    households_df[f"0 0 0 2"] += np.max(
-        comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2, 0 
-    )
+    households_df[f"0 0 0 2"] += (
+        comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
+        ).apply(lambda x: max(x,0))
     households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
 
-    return households_df.div(households_df.sum(axis=1), axis=0)
-
-
-def bedrooms2households(bedrooms_df: pd.DataFrame) -> pd.DataFrame:
-    """Converts bedroom data into assumptions of how households are populated by different age groups
-    
-    Args: 
-        bedrooms_df: number of bedrooms per different family types
-    
-    Returns:
-        households_df: how households are populated by age group
-    """
-
-    households_df = pd.DataFrame()
-    households_df["0 0 0 1"] = bedrooms_df["Person"]
-    # ASSUMPTIONS
-    # i) Old families are composed of couples only
-    households_df["0 0 2 0"] = bedrooms_df["Old_Family"]
-    # ii) Lone parents with one or two bedrooms only have one child
-    households_df["1 1 0 0"] = (
-        bedrooms_df["Lone_Family_1B"] + bedrooms_df["Lone_Family_2B"]
-    )
-    # iii) Lone parents with three or more bedrooms only have two children
-    households_df["2 1 0 0"] = bedrooms_df["Lone_Family_3B"]
-
-    households_df["3 1 0 0"] = bedrooms_df["Lone_Family_4B"]
-    # iv) Families classified as others count as young adults with no children
-    households_df["0 2 0 0"] = (
-        bedrooms_df["Young_Family_1B"]
-        + 0.2 * bedrooms_df["Young_Family_2B"]
-        + bedrooms_df["Other_Family_1B"]
-        + bedrooms_df["Other_Family_2B"]
-    )
-    households_df["1 2 0 0"] = 0.8 * bedrooms_df["Young_Family_2B"]
-    households_df["2 2 0 0"] = bedrooms_df["Young_Family_3B"]
-    households_df["3 2 0 0"] = bedrooms_df["Young_Family_4B"]
-    households_df["0 3 0 0"] = bedrooms_df["Other_Family_3B"]
-    households_df["0 4 0 0"] = bedrooms_df["Other_Family_4B"]
-    return households_df
+    if freq:
+        return households_df.div(households_df.sum(axis=1), axis=0)
+    else:
+        return households_df
 
 
 def create_input_dict(
