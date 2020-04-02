@@ -26,7 +26,7 @@ def read_df(
     return df
 
 
-def read_household_composition_people(DATA_DIR):
+def read_household_composition_people(DATA_DIR, ages_df):
     """
     TableID: QS112EW
     https://www.nomisweb.co.uk/census/2011/qs112ew
@@ -85,6 +85,7 @@ def read_household_composition_people(DATA_DIR):
         "Old_Unclassified",
         "Other",
     ]
+    OLD_THRESHOLD = 12
     comp_people_df = read_df(
         DATA_DIR, household_people, column_names, usecols, "output_area"
     )
@@ -93,7 +94,6 @@ def read_household_composition_people(DATA_DIR):
     comp_people_df["Family_0k"] += (
         comp_people_df["SS_Family_0k"]
         + comp_people_df["Couple_Family_0k"]
-        + comp_people_df["Other"]
     )
     comp_people_df["Family_1k"] += (
         comp_people_df["SS_Family_1k"]
@@ -110,7 +110,12 @@ def read_household_composition_people(DATA_DIR):
         + comp_people_df["Couple_Family_adult_children"]
     )
 
+    # Since other contains some old, give it some probability when there are old people in the area
+    areas_with_old = ages_df[ages_df.columns[OLD_THRESHOLD:]].sum(axis=1) > 0
+    areas_no_house_old = comp_people_df['Person_old'] + comp_people_df['Old_Family'] + comp_people_df['Old_Unclassified'] == 0
 
+    comp_people_df["Family_0k"][~((areas_no_house_old) & (areas_with_old))] += comp_people_df["Other"][~((areas_no_house_old) & (areas_with_old))]
+    comp_people_df["Old_Family"][(areas_no_house_old) & (areas_with_old)] += comp_people_df["Other"][(areas_no_house_old) & (areas_with_old)]
     comp_people_df = comp_people_df.drop(
         columns=[
             c for c in comp_people_df.columns if "SS" in c or "Couple" in c or "Other" in c
@@ -347,7 +352,7 @@ def create_input_dict(
     population_df = read_population_df(DATA_DIR)
     n_households_df = read_household_df(DATA_DIR)
     ages_df = read_ages_df(DATA_DIR)
-    comp_people_df = read_household_composition_people(DATA_DIR)
+    comp_people_df = read_household_composition_people(DATA_DIR, ages_df)
     households_df = people_compositions2households(comp_people_df)
     #bedrooms_df = read_bedrooms_df(DATA_DIR)
     #households_df = bedrooms2households(bedrooms_df)
