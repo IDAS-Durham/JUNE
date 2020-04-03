@@ -1,7 +1,9 @@
 import numpy as np
 import os
 from covid.inputs import create_input_dict
-from covid.classes import World, Area, Household
+from covid.world import World
+from covid.area import Area
+from covid.household import Household
 from covid.distributor import populate_world
 from covid.person import Person
 
@@ -77,6 +79,7 @@ def compute_n_samples(world, attribute):
             #freq /= world.areas[i].n_residents
         else:
             for j in world.areas[i].households.keys():
+                print(getattr(world.areas[i].households[j], attribute))
                 freq[getattr(world.areas[i].households[j], attribute)] += 1
             #freq /= world.areas[i].n_households
 
@@ -90,7 +93,7 @@ def test_frequencies():
 
     census_dict = create_input_dict()
     for key, value in census_dict.items():
-        census_dict[key] = census_dict[key].sample(n=20, random_state=111)
+        census_dict[key] = census_dict[key].sample(n=50, random_state=111)
     census_dict_safe = census_dict.copy()
 
     world = World(census_dict)
@@ -107,10 +110,11 @@ def test_frequencies():
                 n_samples = census_dict_safe[key].mul(census_dict_safe["n_residents"], axis=0)
             n_samples_total = n_samples.values.sum(axis=0)
             n_samples_est = np.sum(frequencies, axis=0)
-            atol_matrix = n_samples_total*(1./np.sqrt(n_samples_total) + 1)
+            atol_matrix = n_samples_total*(1./np.sqrt(n_samples_total)) 
             atol_matrix = np.where(atol_matrix == np.inf,
                                  0.,
                                  atol_matrix)
+
 
             for i in range(len(n_samples_est)): 
                 np.testing.assert_allclose(
@@ -143,3 +147,4 @@ def test_lonely_children():
 
 if __name__ == "__main__":
     test_global()
+    test_frequencies()

@@ -1,6 +1,6 @@
 import sys
 import random
-import infection as Infection
+import covid.infection as Infection
 
 class Person:
     """
