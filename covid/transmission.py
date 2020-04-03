@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class Transmission:
     """
@@ -71,9 +72,9 @@ class TransmissionSIR(Transmission):
                 if is_recovered:
                     self.probT = 0 # can't transmit anymore
                     self.person.set_susceptibility(0) # immune
-                    self.person.set_recovered(isrecovered)
+                    self.person.set_recovered(is_recovered)
                     break # can only recover one time
-            self.lastime = time # update last time
+            self.lasttime = time # update last time
         self.value = self.probT
         
 #################################################################################
