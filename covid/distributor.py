@@ -455,7 +455,7 @@ class Distributor:
                         household_filled_config
                     ]
                 except KeyError:
-                    lastkey = len(self.area.world.decoder_household_composition) - 1
+                    lastkey = len(self.area.world.decoder_household_composition)
                     self.area.world.decoder_household_composition[lastkey] = household_filled_config
                     self.area.world.encoder_household_composition[household_filled_config] = lastkey 
                     household.household_configuration = self.area.world.encoder_household_composition[
