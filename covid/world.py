@@ -19,7 +19,7 @@ class World:
         self.areas = self.read_areas_census(inputs.household_dict)
         self.school_tree = self.create_school_tree(inputs.school_df)
 
-    def create_school_tree(school_df):
+    def create_school_tree(self,school_df):
         """
         Reads school location and sizes, it initializes a KD tree on a sphere,
         to query the closest schools to a given location.
