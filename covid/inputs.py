@@ -29,7 +29,9 @@ class Inputs:
             "household_composition_freq": households_df,
         }
 
-        self.school_df = self.read_school_census()
+        school_df = self.read_school_census()
+        self.primary_school, self. secondary_school = self.process_school_census(school_df)
+
      
 
     def read_df(
@@ -342,8 +344,57 @@ class Inputs:
         to query the closest schools to a given location.
         """
         school_filename = os.path.join(self.DATA_DIR, "school_data", "england_schools_data.csv")
-        school_df = pd.read_csv(school_filename)
+        school_df = pd.read_csv(school_filename, index_col = 0)
+        school_df.dropna(inplace=True)
         return school_df
+
+    def split_schools(self, mixed_df, percent_secondary):
+        primary_list, secondary_list = [], []
+        for index, row in mixed_df.iterrows():
+            n_secondary = int(percent_secondary*row['NOR'])
+            n_primary = row['NOR'] - n_secondary
+            row['NOR'] = n_primary
+            primary_list.append(row.to_dict())
+
+            row['NOR'] = n_secondary
+            secondary_list.append(row.to_dict())
+
+        return pd.DataFrame.from_dict(primary_list), pd.DataFrame.from_dict(secondary_list)
+
+    def process_school_census(self, school_df):
+        
+        limits_primary = [5,11]
+        years_primary = 1 + limits_primary[1] - limits_primary[0]
+        limits_secondary = [12,16]
+        years_secondary = 1 + limits_secondary[1] - limits_secondary[0]
+        total_years = years_primary + years_secondary
+        percent_secondary = years_secondary / total_years
+
+        primary = (school_df['primary'] == True)
+        secondary = (school_df['secondary'] == True)
+
+        school_df = school_df.loc[primary | secondary]
+        primary_df = school_df.loc[primary & ~secondary]
+        secondary_df = school_df.loc[~primary & secondary]
+        mixed_df = school_df.loc[primary & secondary]
+
+        pure_primary_size = len(primary_df)
+        pure_secondary_size = len(secondary_df)
+        mixed_size = len(mixed_df)
+
+        assert pure_primary_size + pure_secondary_size + mixed_size == len(school_df)
+
+        extra_primary_df, extra_secondary_df = self.split_schools(mixed_df, percent_secondary)
+        primary_df = pd.concat([primary_df, extra_primary_df])
+        secondary_df = pd.concat([secondary_df, extra_secondary_df])
+
+        assert len(primary_df) == pure_primary_size + mixed_size
+        assert len(secondary_df) == pure_secondary_size + mixed_size
+        
+        primary_df.drop(columns=['primary', 'secondary'], inplace=True) 
+        secondary_df.drop(columns=['primary', 'secondary'], inplace=True)
+
+        return primary_df, secondary_df
 
 
 
@@ -351,4 +402,5 @@ if __name__ == "__main__":
 
     ip = Inputs()
 
-    print(ip.household_dict["household_composition_freq"])
+    print(ip.primary_school)
+    print(ip.secondary_school)
