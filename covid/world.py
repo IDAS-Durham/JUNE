@@ -19,7 +19,8 @@ class World:
         self.encoder_household_composition = {}
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(inputs.household_dict)
-        self.primary_school_tree = self.create_school_tree(inputs.school_df)
+        self.primary_school_tree = self.create_school_tree(inputs.primary_school)
+        self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
 
     def create_school_tree(self,school_df):
         """
