@@ -24,7 +24,8 @@ class Transmission:
     TODO: we should try and map this onto the Flute/Imperial models, as far
     as possible, to have a baseline and to facilitate validation.
     """
-    def __init__(self,params={},time=-1.):
+    def __init__(self,person,params={},time=-1.):
+        self.person    = person
         self.starttime = time
         self.value     = 0.
         self.init(params)
@@ -38,7 +39,7 @@ class Transmission:
         else:
             self.value = 0.
         return max(0.,self.value)
-        
+
     def calculate(self,time):
         pass
 
@@ -52,6 +53,28 @@ class TransmissionSI(Transmission):
 
     def calculate(self,time):
         self.value = self.prob
+        
+#################################################################################
+#################################################################################
+#################################################################################
+
+class TransmissionSIR(Transmission):
+    def init(self,params):
+        self.probT = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
+        self.probR = min(1.,max(0.,params["Transmission:Recovery"]["Value"]))
+        self.lasttime = 0
+
+    def calculate(self,time):
+        if self.probT>0 and time>self.lasttime:
+            for t in range(self.lasttime,time,1): 
+                isrecovered = random.random()<self.probR
+                if isrecovered:
+                    self.probT = 0
+                    self.person.set_susceptibility(0)
+                    self.person.set_healthy(True)
+                    break
+            self.lastime = time
+        self.value = self.probT
         
 #################################################################################
 #################################################################################
