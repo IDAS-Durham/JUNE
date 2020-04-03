@@ -22,11 +22,8 @@ class World:
         self.encoder_household_composition = {}
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(inputs.household_dict)
-        self.primary_schools, self.primary_schools_tree = self._init_schools(
-            inputs.primary_school
-        )
-        self.secondary_schools, self.secondary_schools_tree = self._init_schools(
-            inputs.secondary_school
+        self.schools, self.schools_tree = self._init_schools(
+            inputs.school_df
         )
         # self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
 
@@ -46,21 +43,12 @@ class World:
             schools[i] = school
         return schools, school_tree
 
-    def get_closest_primary_schools(self, area, k=1):
+    def get_closest_schools(self, area, radius):
         """
         Returns the k schools closest to the output area centroid.
         """
-        dist, neighbors = self.primary_schools_tree.query(
-            np.deg2rad(area.coordinates.reshape(1, -1)), k=k
-        )
-        return neighbors[0]
-
-    def get_closest_secondary_schools(self, area, k=1):
-        """
-        Returns the k schools closest to the output area centroid.
-        """
-        dist, neighbors = self.secondary_schools_tree.query(
-            np.deg2rad(area.coordinates.reshape(1, -1)), k=k
+        distances, neighbours = self.schools_tree.query(
+            np.deg2rad(area.coordinates.reshape(1, -1)), r=radius, sort_results=True,
         )
         return neighbors[0]
 
