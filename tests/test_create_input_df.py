@@ -32,7 +32,7 @@ def test_enough_houses():
     old_config = [c for c in input_dict['household_composition_freq'].columns if int(c.split(' ')[-1])>0 ]
     areas_no_house = (input_dict['household_composition_freq'][['0 0 0 3', '0 0 0 2', '0 0 0 1']]).sum(axis=1) == 0.
 
-    assert len(input_dict['household_composition_freq'][(areas_no_house) & (areas_with)]) == 0
+    assert len(input_dict['household_composition_freq'].loc[(areas_no_house) & (areas_with)]) == 0
 
     CHILDREN_THRESHOLD = 6
     areas_with = input_dict['age_freq'][input_dict['age_freq'].columns[:CHILDREN_THRESHOLD]].sum(axis=1) > 0
@@ -46,7 +46,7 @@ def test_enough_houses():
     adult_config = [c for c in input_dict['household_composition_freq'].columns if int(c.split(' ')[2])>0 ]
     areas_no_house = (input_dict['household_composition_freq'][adult_config]).sum(axis=1) == 0.
 
-    assert len(input_dict['household_composition_freq'][(areas_no_house) & (areas_with)]) == 0
+    assert len(input_dict['household_composition_freq'].loc[(areas_no_house) & (areas_with)]) == 0
 
 
  
