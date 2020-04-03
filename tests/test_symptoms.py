@@ -1,14 +1,16 @@
 import sys
+
 sys.path.append("../covid")
 import transmission as Transmission
 import infection as Infection
 import symptoms as Symptoms
 
+
 def trivial_check():
     Tparams = {}
     Tparams["Transmission:Type"] = "SI"
     tparams = {}
-    Tparams["Transmission:Probability"] = tparams 
+    Tparams["Transmission:Probability"] = tparams
     tparams["Mean"] = 0.5
 
     Sparams = {}
@@ -17,16 +19,17 @@ def trivial_check():
     params_MT = {}
     params_ST = {}
     Sparams["Symptoms:MaximalSeverity"] = params_MS
-    Sparams["Symptoms:MeanTime"] = params_MT # incubation period
-    Sparams["Symptoms:SigmaTime"] = params_ST # approx how long it takes to get better
+    Sparams["Symptoms:MeanTime"] = params_MT  # incubation period
+    Sparams["Symptoms:SigmaTime"] = params_ST  # approx how long it takes to get better
     params_MS["Mean"] = 0.8
     params_MT["Mean"] = 7.0
     params_ST["Mean"] = 10.0
-    selector  = Infection.InfectionSelector(Tparams, Sparams)
+    selector = Infection.InfectionSelector(Tparams, Sparams)
     infection = selector.make_infection(0)
-    print ("Tparams = ", Tparams)
-    print ("Sparams = ", Sparams)
-    print ("   * Symptom severity = ", infection.symptom_severity(1))
+    print("Tparams = ", Tparams)
+    print("Sparams = ", Sparams)
+    print("   * Symptom severity = ", infection.symptom_severity(1))
+
 
 def distribute_value():
     import random
@@ -36,7 +39,7 @@ def distribute_value():
     Tparams = {}
     Tparams["Transmission:Type"] = "SI"
     params = {}
-    Tparams["Transmission:Probability"] = params 
+    Tparams["Transmission:Probability"] = params
     params["Mean"] = 0.5
 
     Sparams = {}
@@ -84,13 +87,18 @@ def distribute_value():
         severities2.append(infection.symptom_severity(1))
 
     fig, ax = plt.subplots(1, 2, figsize=(9, 4))
-    ax[0].set_title('Two different parameter sets')
-    ax[0].hist(severities1, bins=100, density=True, alpha=0.5, color='C0', label='Param set 1')
-    ax[0].hist(severities2, bins=100,  density=True, alpha=0.5, color='C1', label='Param set 2')
-    ax[1].set_title('Evolution of symptom severity over time')
+    ax[0].set_title("Two different parameter sets")
+    ax[0].hist(
+        severities1, bins=100, density=True, alpha=0.5, color="C0", label="Param set 1"
+    )
+    ax[0].hist(
+        severities2, bins=100, density=True, alpha=0.5, color="C1", label="Param set 2"
+    )
+    ax[1].set_title("Evolution of symptom severity over time")
     ax[1].plot(severity_t)
     plt.tight_layout()
     plt.show()
+
 
 if __name__ == "__main__":
     trivial_check()
