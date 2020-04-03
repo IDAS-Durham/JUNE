@@ -1,13 +1,13 @@
-import infection as Infection
-import group     as Group 
-import person    as Person
+from covid.infection import Infection
+from covid.group import Group 
+from covid.person import Person
 import sys
 import random
 
 class Single_Interaction:
     def __init__(self,group,mode):
         self.mode = mode
-        if not isinstance(group,Group.Group):
+        if not isinstance(group, Group):
             print ("Error in Interaction.__init__, no group:",group)
             return
         self.group = group
@@ -20,22 +20,22 @@ class Single_Interaction:
             transmission_probability = self.added_transmission_probability(time)
         elif self.mode=="Probabilistic":
             transmission_probability = self.combined_transmission_probability(time)
-        for recipient in self.group.healthy_people():
+        for recipient in self.group.get_susceptible():
             susceptibility        = recipient.get_susceptibility()
             interaction_intensity = self.group.get_intensity()
             recipient_probability = susceptibility * interaction_intensity
-            if random.random() < transmission_probability * recipient_probability
-                person.set_infection(infection_selector.make_infection(time))
+            if random.random() < transmission_probability * recipient_probability:
+                recipient.set_infection(infection_selector.make_infection(recipient, time))
                 
-    def combined_transmission_probability(self,recipient,time):
+    def combined_transmission_probability(self, time):
         prob_notransmission   = 1.
-        for person in self.group.infected_people():
+        for person in self.group.get_infected():
             prob_notransmission *= (1.-person.transmission_probability(time))
         return 1.-prob_notransmission
 
-    def added_transmission_probability(self,recipient,time):
+    def added_transmission_probability(self, time):
         prob_transmission     = 0.
-        for person in self.group.infected_people():
+        for person in self.group.get_infected():
             prob_transmission += person.transmission_probability(time)
         return prob_transmission
 

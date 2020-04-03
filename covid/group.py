@@ -113,13 +113,13 @@ class Group:
     def people(self):
         return self.people
 
-    def susceptible_people(self):
+    def get_susceptible(self):
         return self.susceptible
         
-    def infected_people(self):
+    def get_infected(self):
         return self.infected
 
-    def recovered_people(self):
+    def get_recovered(self):
         return self.recovered
 
     def fill_random_group(self,number):
@@ -138,6 +138,7 @@ class Group:
               "(",round(self.size_susceptible()/self.size()*100),"%) are susceptible, ",
               self.size_infected(),
               "(",round(self.size_infected()/self.size()*100),"%) are infected,",
+              self.size_recovered(),
               "(",round(self.size_recovered() / self.size()*100), "%) have recovered.")
 
         ages = []
