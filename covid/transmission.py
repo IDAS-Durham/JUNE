@@ -34,7 +34,7 @@ class Transmission:
         pass
     
     def probability(self,time):
-        if time>self.starttime:
+        if time >= self.starttime:
             self.calculate(time)
         else:
             self.value = 0.
@@ -62,18 +62,18 @@ class TransmissionSIR(Transmission):
     def init(self,params):
         self.probT = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
         self.probR = min(1.,max(0.,params["Transmission:Recovery"]["Value"]))
-        self.lasttime = 0
+        self.lasttime = 0 # last time they had a chance to recover
 
     def calculate(self,time):
         if self.probT>0 and time>self.lasttime:
-            for t in range(self.lasttime,time,1): 
-                isrecovered = random.random()<self.probR
-                if isrecovered:
-                    self.probT = 0
-                    self.person.set_susceptibility(0)
-                    self.person.set_healthy(True)
-                    break
-            self.lastime = time
+            for t in range(self.lasttime, time, 1):
+                is_recovered = random.random() < self.probR
+                if is_recovered:
+                    self.probT = 0 # can't transmit anymore
+                    self.person.set_susceptibility(0) # immune
+                    self.person.set_recovered(isrecovered)
+                    break # can only recover one time
+            self.lastime = time # update last time
         self.value = self.probT
         
 #################################################################################
