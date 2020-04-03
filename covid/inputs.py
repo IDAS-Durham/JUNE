@@ -341,7 +341,7 @@ class Inputs:
         Reads school location and sizes, it initializes a KD tree on a sphere,
         to query the closest schools to a given location.
         """
-        school_filename = os.path.join(self.DATA_DIR, "school_data", "england_schools_data.scv")
+        school_filename = os.path.join(self.DATA_DIR, "school_data", "england_schools_data.csv")
         school_df = pd.read_csv(school_filename)
         return school_df
 
