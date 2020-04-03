@@ -1,6 +1,7 @@
 from covid.area import Area
 from sklearn.neighbors import BallTree
 import pandas as pd
+import numpy as np
 
 class World:
     """
@@ -12,16 +13,18 @@ class World:
         self.decoder_sex = {}
         self.decoder_age = {}
         self.decoder_household_composition = {}
+        self.encoder_household_composition = {}
         self.areas = self.read_areas_census(input_dict)
         self.schools = self.read_school_census()
+        print(self.encoder_household_composition)
 
-    def read_school_census(school_input_dict):
+    def read_school_census(self):
         """
         Reads school location and sizes, it initializes a KD tree on a sphere,
         to query the closest schools to a given location.
         """
         school_data = pd.read_csv("../data/census_data/school_data/england_schools_data.csv")
-        self.school_tree = BallTree(np.deg2rad(areas[['latitute', 'longitude']].values),
+        self.school_tree = BallTree(np.deg2rad(school_data[['latitude', 'longitude']].values),
                                                metric='haversine')
 
     def read_areas_census(self, input_dict):
@@ -36,6 +39,7 @@ class World:
             self.decoder_sex[i] = column
         for i, column in enumerate(household_compostion_df.columns):
             self.decoder_household_composition[i] = column
+            self.encoder_household_composition[column] = i
         areas_dict = {}
         for i, area_name in enumerate(n_residents_df.index):
             area = Area(self,

@@ -13,8 +13,10 @@ This file contains routines to attribute people with different characteristics
 according to census data.
 """
 
+
 class HouseholdError(BaseException):
     """ class for throwing household related errors """
+
     pass
 
 
@@ -24,6 +26,7 @@ class Distributor:
     on census data from NOMIS. 
     Note: in this class student refers to an adult age 18-25, independently of they being a student or not.
     """
+
     def __init__(self, area):
         self.STUDENT_THRESHOLD = 6
         self.ADULT_THRESHOLD = 6  # 6 corresponds to 18-19 years old
@@ -75,11 +78,14 @@ class Distributor:
         )
         # random variable for the probability of a couple having different age groups,
         # -1 lower group, 0 same, +1 upper, currently this is not used.
-        #self.age_groups_rv = stats.rv_discrete(values=([-1, 0, 1], [0.2, 0.6, 0.2]))
+        # self.age_groups_rv = stats.rv_discrete(values=([-1, 0, 1], [0.2, 0.6, 0.2]))
         # when we match sex in a couple, we assume 10% of first 2 adults have same sex.
         self.same_sex_rv = stats.rv_discrete(
-            values=([0, 1], [1-self.SAME_SEX_COUPLE_RATIO, self.SAME_SEX_COUPLE_RATIO])
-        )  
+            values=(
+                [0, 1],
+                [1 - self.SAME_SEX_COUPLE_RATIO, self.SAME_SEX_COUPLE_RATIO],
+            )
+        )
 
     def populate_area(self):
         """
@@ -188,14 +194,14 @@ class Distributor:
             return -1  # empty house
         for i in range(0, n_students):
             if not self._student_keys:
-                return household
+                return i
             student_key = self._student_keys.popitem()[0]
             try:  # check if man
                 student = self._men.pop(student_key)
             except KeyError:
                 student = self._women.pop(student_key)
             household.residents[i] = student
-        return household
+        return n_students
 
     def _create_oldpeople_household(self, n_old, household):
         """
@@ -211,22 +217,22 @@ class Distributor:
                     household.residents[1] = self._oldwomen.popitem()[1]
                     if n_old == 3 and self._oldwomen:
                         household.residents[2] = self._oldwomen.popitem()[1]
-                        return household
+                        return 3
                     else:
-                        return household
+                        return 2
                 else:
-                    return household
+                    return 1
         elif not self._oldwomen:  # no women left, fill with men
             household.residents[0] = self._oldmen.popitem()[1]
             if n_old >= 2 and self._oldmen:
                 household.residents[1] = self._oldmen.popitem()[1]
                 if n_old == 3 and self._oldmen:
                     household.residents[2] = self._oldmen.popitem()[1]
-                    return household
+                    return 3
                 else:
-                    return household
+                    return 2
             else:
-                return household
+                return 1
         # here we have at least one man and at least one woman
         # n = 3 case
         if n_old == 3:  # if its three people, just fill random sex
@@ -237,41 +243,43 @@ class Distributor:
                         if i == 0:
                             return -1
                         else:
-                            return household
+                            return i
                     else:
                         household.residents[i] = self._oldmen.popitem()[1]
                 elif old_sex == 1 or not self._oldmen:
                     household.residents[i] = self._oldwomen.popitem()[1]
-            return household
+            return 3
         # n <= 2 case
         old_sex = self.sex_rv.rvs(size=1)[0]
         if old_sex == 0:  # it is a man
             household.residents[0] = self._oldmen.popitem()[1]
             if n_old == 1:
-                return household
+                return 1
             else:
                 if self._oldwomen:
                     household.residents[1] = self._oldwomen.popitem()[1]
-                    return household
+                    return 2
                 elif self._oldmen:
                     household.residents[1] = self._oldmen.popitem()[1]
-                    return household
+                    return 2
                 else:
-                    return household
+                    return 1
         else:
             household.residents[0] = self._oldwomen.popitem()[1]
             if n_old == 1:
-                return household
+                return 1
             else:
                 if self._oldmen:
                     household.residents[1] = self._oldmen.popitem()[1]
-                    return household
+                    return 2
                 elif self._oldwomen:
                     household.residents[1] = self._oldwomen.popitem()[1]
-                    return household
+                    return 2
                 else:
-                    return household
-        raise HouseholdError("Reached end of assigning old people to houses without result.") 
+                    return 1
+        raise HouseholdError(
+            "Reached end of assigning old people to houses without result."
+        )
 
     def _create_singleparent_household(self, n_kids, n_students, household):
         """
@@ -285,7 +293,7 @@ class Distributor:
             adult_sex == 0 or not self._women
         ):  # if the sex is man or there are no women left
             if not self._men:  # no men left
-                return -1
+                return -1, -1
             else:
                 self._fill_random_man(household, counter)
                 counter += 1
@@ -300,9 +308,10 @@ class Distributor:
             for i in range(0, min(n_kids, len(self._kids.keys()))):
                 household.residents[counter] = self._kids.popitem()[1]
                 counter += 1
+        filled_kids = counter - 1
         # add non dependable kids
         if n_students == 0:
-            return household
+            return filled_kids, 0  # kids filled, students filled
         else:
             for i in range(0, min(n_students, len(self._student_keys))):
                 student_key = self._student_keys.popitem()[0]
@@ -312,7 +321,8 @@ class Distributor:
                     student = self._women.pop(student_key)
                 household.residents[counter] = student
                 counter += 1
-        return household
+        filled_students = counter - filled_kids - 1
+        return filled_kids, filled_students
 
     def _create_twoparent_household(self, n_kids, n_students, household):
         """
@@ -327,7 +337,7 @@ class Distributor:
             counter += 1
         else:
             if not self._women:
-                return -1
+                return -1, -1, -1
             else:
                 self._fill_random_woman(household, counter)
                 counter += 1
@@ -337,10 +347,11 @@ class Distributor:
             counter += 1
         else:
             if not self._men:
-                return household
+                pass
             else:
                 self._fill_random_man(household, counter)
                 counter += 1
+        filled_adults = counter
         # add kids
         if not self._kids:  # no kids left
             pass
@@ -348,9 +359,10 @@ class Distributor:
             for i in range(0, min(n_kids, len(self._kids.keys()))):
                 household.residents[counter] = self._kids.popitem()[1]
                 counter += 1
+        filled_kids = counter - filled_adults
         # add non dependable kids
         if n_students == 0:
-            return household
+            pass
         else:
             for i in range(0, min(n_students, len(self._student_keys))):
                 student_key = self._student_keys.popitem()[0]
@@ -360,7 +372,8 @@ class Distributor:
                     student = self._women.pop(student_key)
                 household.residents[counter] = student
                 counter += 1
-        return household
+        filled_students = counter - filled_kids - filled_adults
+        return filled_kids, filled_students, filled_adults
 
     def populate_household(self, household):
         """
@@ -377,19 +390,35 @@ class Distributor:
             if n_kids != 0:
                 raise HouseholdError("There are kids in a student/old house")
             if n_students != 0 and n_old == 0:
-                return self._create_student_household(n_students, household)
+                n_students = self._create_student_household(n_students, household)
+                if n_students == -1:
+                    return -1
+                return f"0 {n_students} 0 0"
             elif n_students == 0 and n_old != 0:
-                return self._create_oldpeople_household(n_old, household)
+                n_old = self._create_oldpeople_household(n_old, household)
+                if n_old == -1:
+                    return -1
+                return f"0 0 0 {n_old}"
             else:
                 raise HouseholdError("Household configuration not possible!")
         elif (
             n_adults == 1
         ):  # adult living alone or monoparental family with n_kids and n_students (independent child)
-            return self._create_singleparent_household(n_kids, n_students, household)
+            n_kids, n_students = self._create_singleparent_household(
+                n_kids, n_students, household
+            )
+            if n_kids == -1:
+                return -1
+            return f"{n_kids} {n_students} 1 0"
         elif (
             n_adults == 2
         ):  # two parents family with n_kids and n_students (independent child)
-            return self._create_twoparent_household(n_kids, n_students, household)
+            n_kids, n_students, n_adults = self._create_twoparent_household(
+                n_kids, n_students, household
+            )
+            if n_kids == -1:
+                return -1
+            return f"{n_kids} {n_students} {n_adults} 0"
         else:
             raise HouseholdError("error number of adults have to be 0,1 or 2")
 
@@ -398,17 +427,40 @@ class Distributor:
             self.populate_area()
         house_id = 0
         while self._men or self._women or self._oldmen or self._oldwomen:
-            # print('men: ', len(self._men))
-            # print('women: ', len(self._women))
-            # print('oldmen: ', len(self._oldmen))
-            # print('oldwommen: ', len(self._oldwomen))
-            # print(self.area.census_freq["household_freq"])
-            composition_id = self.household_rv.rvs(size=1)[0]
-            # print(self.area.world.decoder_household_composition[composition_id])
-            household = Household(house_id, composition_id, self.area)
-            household = self.populate_household(household)
-            if household == -1:
+            if not self._men and not self._women: # 
+                """
+                Only old people left.. just fill them in pairs this is to avoid
+                problems in areas where old people live but no household configuration
+                exists for them
+                """
+                composition_id = self.area.world.encoder_household_composition["0 0 0 2"]
+                household = Household(house_id, composition_id, self.area)
+                household_filled_config = self.populate_household(household)
+            else:
+                #print('men: ', len(self._men))
+                #print('women: ', len(self._women))
+                #print('oldmen: ', len(self._oldmen))
+                #print('oldwommen: ', len(self._oldwomen))
+                #print(self.area.census_freq["household_freq"])
+                composition_id = self.household_rv.rvs(size=1)[0]
+                #print(self.area.world.decoder_household_composition[composition_id])
+                household = Household(house_id, composition_id, self.area)
+                household_filled_config = self.populate_household(household)
+            if household_filled_config == -1:  # empty house
                 continue
+            else:
+                # store actual household config
+                try: # the key might not exist yet
+                    household.household_configuration = self.area.world.encoder_household_composition[
+                        household_filled_config
+                    ]
+                except KeyError:
+                    lastkey = len(self.area.world.decoder_household_composition) - 1
+                    self.area.world.decoder_household_composition[lastkey] = household_filled_config
+                    self.area.world.encoder_household_composition[household_filled_config] = lastkey 
+                    household.household_configuration = self.area.world.encoder_household_composition[
+                        household_filled_config
+                    ]
             self.area.households[house_id] = household
             house_id += 1
         self.kids_left = len(self._kids)
@@ -419,9 +471,9 @@ def populate_world(world: World):
     Populates all areas in the world.
     """
     print("Populating areas...")
-    pbar = tqdm(total=len(world.areas.keys())) # progress bar
+    pbar = tqdm(total=len(world.areas.keys()))  # progress bar
     for area in world.areas.values():
-        # print(area.name)
+    #    print(area.name)
         distributor = Distributor(area)
         distributor.populate_area()
         distributor.distribute_people_to_household()
