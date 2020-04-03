@@ -13,7 +13,7 @@ class Single_Interaction:
         self.group = group
         
     def single_time_step(self,time,infection_selector):
-        if (self.group.size_infected() == 0 or self.group.size_healthy() == 0): 
+        if (self.group.size_infected() == 0 or self.group.size_susceptible() == 0): 
             return
         transmission_probability = 0.
         if self.mode=="Superposition":
