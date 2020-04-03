@@ -1,9 +1,10 @@
-from covid.area import Area
-<<<<<<< HEAD
-from covid.inputs import Inputs
 from sklearn.neighbors import BallTree
+from covid.inputs import Inputs
+from covid.area import Area
+from covid.distributors import *
 import pandas as pd
 import numpy as np
+from tqdm import tqdm # for a fancy progress bar
 
 class World:
     """
@@ -15,9 +16,11 @@ class World:
         self.total_people = 0
         self.decoder_sex = {}
         self.decoder_age = {}
+        self.encoder_household_composition = {}
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(inputs.household_dict)
-        self.school_tree = self.create_school_tree(inputs.school_df)
+        self.primary_school_tree = self.create_school_tree(inputs.primary_school)
+        self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
 
     def create_school_tree(self,school_df):
         """
@@ -29,6 +32,11 @@ class World:
         return school_tree
 
     def read_areas_census(self, input_dict):
+        """
+        Reads census data from the input dictionary, and initializes
+        the encoders/decoders for sex, age, and household variables.
+        It also initializes all the areas of the world.
+        """
         n_residents_df = input_dict.pop("n_residents")
         n_households_df = input_dict.pop("n_households")
         age_df = input_dict.pop("age_freq")
@@ -55,4 +63,26 @@ class World:
                                 )
             areas_dict[i] = area
         return areas_dict
+
+    def populate_world(self):
+        """
+        Populates world with people, houses, schools, etc.
+        """
+        print("creating world...")
+        pbar = tqdm(total=len(self.areas.keys()))  # progress bar
+        for area in self.areas.values():
+            # create population
+            people_dist = PeopleDistributor(area)
+            people_dist.populate_area()
+
+            # distribute people to households
+            household_dist = HouseholdDistributor(area)
+            household_dist.distribute_people_to_household()
+
+            # distribute kids to schools
+            school_dist = SchoolDistributor(area)
+            school_dist.distribute_kids_to_school() 
+
+            pbar.update(1)
+        pbar.close()
 
