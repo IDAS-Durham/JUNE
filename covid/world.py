@@ -1,5 +1,4 @@
 from covid.area import Area
-<<<<<<< HEAD
 from covid.inputs import Inputs
 from sklearn.neighbors import BallTree
 import pandas as pd
