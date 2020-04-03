@@ -461,6 +461,8 @@ class Distributor:
                     household.household_configuration = self.area.world.encoder_household_composition[
                         household_filled_config
                     ]
+                    print(household.household_configuration)
+                    print(self.area)
             self.area.households[house_id] = household
             house_id += 1
         self.kids_left = len(self._kids)
