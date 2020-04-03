@@ -13,10 +13,3 @@ class School:
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
 
-class PrimarySchool(School):
-    def __init__(self, school_id, coordinates, n_pupils, urn):
-        super.__init__(school_id, coordinates, n_pupils, urn)
-
-class SecondarySchool(School):
-    def __init__(self, school_id, coordinates, n_pupils, urn):
-        super.__init__(school_id, coordinates, n_pupils, urn)
