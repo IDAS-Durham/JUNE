@@ -36,12 +36,13 @@ class Group:
     def __init__(self,name,spec,number=-1):
         if not self.sane(name,spec):
             return
-        self.name      = name
-        self.spec      = spec
-        self.intensity = 1.  # None
-        self.people    = []
-        self.infected  = []
-        self.healthy   = []
+        self.name        = name
+        self.spec        = spec
+        self.intensity   = 1.  # None
+        self.people      = []
+        self.susceptible = []
+        self.infected    = []
+        self.recovered   = []
         if self.spec=="Random":
             self.fill_random_group(number)
         
@@ -70,44 +71,56 @@ class Group:
             print("--> Ignore and proceed.")
         else:
             self.people.append(person)
-            if (person.is_healthy()):
-                self.healthy.append(person)
-            else:
+            if person.is_susceptible():
+                self.susceptible.append(person)
+            if person.is_infected():
                 self.infected.append(person)
+            if person.is_recovered():
+                self.recovered.append(person)
 
     def update_status_lists(self,time=0):
-        self.healthy.clear()
+        self.susceptible.clear()
         self.infected.clear()
+        self.recovered.clear()
         for person in self.people:
             person.update_health_status(time)
-            if person.is_healthy():
-                self.healthy.append(person)
-            else:
+            if person.is_susceptible():
+                self.susceptible.append(person)
+            if person.is_infected():
                 self.infected.append(person)
+            if person.is_recovered():
+                self.recovered.append(person)
 
     def clear(self,all=True):
         if all:
             self.people.clear();
-        self.healthy.clear()
+        self.susceptible.clear()
         self.infected.clear()
+        self.recovered.clear()
                 
     def size(self):
         return len(self.people)
     
-    def size_healthy(self):
-        return len(self.healthy)
+    def size_susceptible(self):
+        return len(self.susceptible)
         
     def size_infected(self):
         return len(self.infected)
+
+    def size_recovered(self):
+        return len(self.recovered)
     
     def people(self):
         return self.people
 
-    def healthy_people(self):
-        return self.healthy
+    def get_susceptible(self):
+        return self.susceptible
         
-    def infected_people(self):
+    def get_infected(self):
         return self.infected
+
+    def get_recovered(self):
+        return self.recovered
 
     def fill_random_group(self,number):
         print ("Filling random group with ",number,"members.")
@@ -121,10 +134,13 @@ class Group:
         print ("==================================================")
         print ("Group ",self.name,", type = ",self.spec," with ",
                len(self.people)," people.")
-        print("* ",self.size_healthy(),
-              "(",round(self.size_healthy()/self.size()*100),"%) are healthy, ",
+        print("* ",self.size_susceptible(),
+              "(",round(self.size_susceptible()/self.size()*100),"%) are susceptible, ",
               self.size_infected(),
-              "(",round(self.size_infected()/self.size()*100),"%) are infected.")
+              "(",round(self.size_infected()/self.size()*100),"%) are infected,",
+              self.size_recovered(),
+              "(",round(self.size_recovered() / self.size()*100), "%) have recovered.")
+
         ages = []
         M    = 0
         F    = 0

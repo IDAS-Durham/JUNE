@@ -3,10 +3,9 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-sys.path.append("../covid")
-import group as Group
-import interaction as Interaction
-import infection as Infection
+from covid.group import Group
+from covid.interaction import Interaction
+from covid.infection import Infection, InfectionSelector
 
 
 def ratio_SI_simulated(beta, N, times, mode):
@@ -18,10 +17,10 @@ def ratio_SI_simulated(beta, N, times, mode):
     selector = Infection.InfectionSelector(Tparams, None)
     group = Group.Group("test", "Random", N)
     group.set_intensity(group.get_intensity() / group.size())
-    group.people[0].set_infection(selector.make_infection(0))
+    group.people[0].set_infection(selector.make_infection(group.people[0], 0))
     groups = []
     groups.append(group)
-    interaction = Interaction.Interaction(groups, 0, mode)
+    interaction = Interaction(groups, 0, mode)
     ratio = []
     print("===============================================")
     for time in times:
@@ -30,7 +29,7 @@ def ratio_SI_simulated(beta, N, times, mode):
             print(time, value)
         ratio.append(value)
         interaction.single_time_step(time, selector)
-        group.update_status_lists()
+        group.update_status_lists(time)
     return ratio
 
 
@@ -62,11 +61,11 @@ if __name__ == "__main__":
     for beta in betas:
         simul = ratio_SI_simulated(beta, N, times, mode)
         anal = ratio_SI_analytic(beta, N, times)
-        simuls.append(ratio)
-        anals.append(SI)
+        simuls.append(simul)
+        anals.append(anal)
         diff = []
         for i in range(len(times)):
-            diff.append(ratio[i] / SI[i])
+            diff.append(simul[i] / anal[i])
         diffs.append(diff)
 
     fig, axes = plt.subplots(2, 1, sharex=True)
