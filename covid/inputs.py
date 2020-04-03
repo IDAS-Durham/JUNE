@@ -97,7 +97,7 @@ def read_household_composition_people(DATA_DIR, ages_df):
     comp_people_df["Family_1k"] += (
         comp_people_df["SS_Family_1k"]
         + comp_people_df["Couple_Family_1k"]
-        + 0.6*comp_people_df["Other_1k"]
+        + comp_people_df["Other_1k"]
     )
     comp_people_df["Family_2k"] += (
         comp_people_df["SS_Family_2k"]
@@ -118,12 +118,15 @@ def read_household_composition_people(DATA_DIR, ages_df):
         == 0
     )
 
-    comp_people_df["Family_0k"][
+    comp_people_df["Family_0k"].loc[
         ~((areas_no_house_old) & (areas_with_old))
-    ] += comp_people_df["Other"][~((areas_no_house_old) & (areas_with_old))]
-    comp_people_df["Old_Family"][
+    ] += comp_people_df["Other"].loc[~((areas_no_house_old) & (areas_with_old))]
+
+    comp_people_df["Old_Family"].loc[
         (areas_no_house_old) & (areas_with_old)
-    ] += comp_people_df["Other"][(areas_no_house_old) & (areas_with_old)] + 0.4*comp_people_df["Other_1k"][(areas_no_house_old) & (areas_with_old)]
+    ] += comp_people_df["Other"].loc[(areas_no_house_old) & (areas_with_old)] \
+            + 0.4*comp_people_df["Other_1k"].loc[(areas_no_house_old) & (areas_with_old)]
+
     comp_people_df = comp_people_df.drop(
         columns=[
             c
@@ -237,45 +240,6 @@ def read_ages_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
     return ages_df
 
 
-def read_bedrooms_df(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
-    """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/lc1402ew
-    Args:
-        DATA_DIR: path to dataset folder (default should be output_area folder) 
-
-    Returns:
-        pandas dataframe with number of bedrooms per household type per output area 
-
-    """
-    bedrooms = "household_compositon_by_bedrooms.csv"
-    bedrooms_usecols = (
-        [2, 8, 18] + list(range(24, 28)) + list(range(29, 33)) + list(range(34, 38))
-    )
-
-    bedrooms_names = [
-        "output_area",
-        "Person",  # regardless of bedrooms (only one person)
-        "Old_Family",  # assumed to be 2 always
-        "Young_Family_1B",
-        "Young_Family_2B",
-        "Young_Family_3B",
-        "Young_Family_4B",
-        "Lone_Family_1B",
-        "Lone_Family_2B",
-        "Lone_Family_3B",
-        "Lone_Family_4B",
-        "Other_Family_1B",
-        "Other_Family_2B",
-        "Other_Family_3B",
-        "Other_Family_4B",
-    ]
-
-    bedrooms_df = read_df(
-        DATA_DIR, bedrooms, bedrooms_names, bedrooms_usecols, "output_area"
-    )
-    if freq:
-        bedrooms_df = bedrooms_df.div(bedrooms_df.sum(axis=1), axis=0)
-    return bedrooms_df
-
 
 def people_compositions2households(comp_people_df, freq=True):
 
@@ -365,8 +329,6 @@ def create_input_dict(
     ages_df = read_ages_df(DATA_DIR)
     comp_people_df = read_household_composition_people(DATA_DIR, ages_df)
     households_df = people_compositions2households(comp_people_df)
-    # bedrooms_df = read_bedrooms_df(DATA_DIR)
-    # households_df = bedrooms2households(bedrooms_df)
 
     input_dict = {
         "n_residents": population_df["n_residents"],
