@@ -43,4 +43,4 @@ pytest
 pytest-cov
 scipy
 tqdm
-sklearn
+sklearn==0.22.2
