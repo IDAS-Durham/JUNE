@@ -27,8 +27,6 @@ class HouseholdDistributor:
         self.SAME_SEX_COUPLE_RATIO = 0.1
         self.area = area
         self._init_random_variables()
-        self.people_counter = 0
-        self.household_counter = 0
 
     def _init_random_variables(self):
         """
