@@ -37,3 +37,19 @@ To install the package, install requisites and
 
 ``pip install -e .``
 
+
+# World class example
+
+A testing example of a populated world class (where world means the North East) can be found here:
+
+https://mega.nz/file/KmgyhQJI#SvX2QMncx9Gdabpd4xqSWEdZjfJC3DXaGDH5uRis9eo
+
+The world can be loaded with
+
+```
+import pickle
+with open("world.pkl", "rb") as f:
+  world = pickle.load(f)
+```
+
+The people habiting the world is ``world.people``, and the output areas are in ``world.areas``, people live in houses found at ``world.areas.households``, each person also has an attirube ``people.household`` that points to the household they belong.

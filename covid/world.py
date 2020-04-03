@@ -1,4 +1,5 @@
 from covid.area import Area
+<<<<<<< HEAD
 from covid.inputs import Inputs
 from sklearn.neighbors import BallTree
 import pandas as pd
@@ -15,7 +16,6 @@ class World:
         self.decoder_sex = {}
         self.decoder_age = {}
         self.decoder_household_composition = {}
-        self.encoder_household_composition = {}
         self.areas = self.read_areas_census(inputs.household_dict)
         self.school_tree = self.create_school_tree(inputs.school_df)
 
