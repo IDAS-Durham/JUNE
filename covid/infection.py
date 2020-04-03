@@ -1,7 +1,7 @@
 import numpy as np
 import random
-import transmission as Transmission
-import symptoms as Symptoms
+import covid.transmission as Transmission
+import covid.symptoms as Symptoms
 import sys
 
 class InfectionSelector:
@@ -39,14 +39,14 @@ class InfectionSelector:
         return transmission
 
     def select_severity(self,time):
-        if self.symptoms.params["Symptoms:Type"]==None:
+        if self.symptoms_params["Symptoms:Type"]==None:
             return None
         if self.symptoms_params["Symptoms:Type"]=="Gauss":
             names = ["Symptoms:MaximalSeverity",
                      "Symptoms:MeanTime",
                      "Symptoms:SigmaTime"]
-            params, variations = self.make_parameters(self.symptoms_params,names)
-            sever = Symptoms.SymptomsGaussian(params,time)
+            params = self.make_parameters(self.symptoms_params,names)
+            symptoms = Symptoms.SymptomsGaussian(params, time)
         return symptoms
             
     def make_parameters(self,parameters,names):
@@ -136,9 +136,9 @@ class Infection:
         return self.transmission.probability(time)
 
     def symptom_severity(self,time):
-        if not self.symptoms:
+        if self.symptoms == None:
             return 0.
-        return self.symptoms.severity(time)
+        return self.symptoms.Severity(time)
 
     def still_infected(self,time):
         return ((self.transmission!=None and
