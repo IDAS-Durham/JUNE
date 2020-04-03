@@ -26,8 +26,8 @@ class InfectionSelector:
             params = self.make_parameters(self.transmission_params,names)
             transmission = Transmission.TransmissionSI(person,params,time)
         elif self.transmission_params["Transmission:Type"]=="SIR":
-            names = ["Transmission:Probability"]
-            names = ["Transmission:Recovery"]
+            names = ["Transmission:Probability",
+                    "Transmission:Recovery"]
             params = self.make_parameters(self.transmission_params,names)
             transmission = Transmission.TransmissionSIR(person,params,time)
         elif self.transmission_params["Transmission:Type"]=="XNExp":
@@ -146,7 +146,12 @@ class Infection:
         return self.symptoms.Severity(time)
 
     def still_infected(self,time):
-        return ((self.transmission!=None and
-                 self.transmission.probability(time)>self.threshold_transmission) or
-                (self.symptoms!=None and
-                 self.symptoms.severity(time)>self.threshold_symptoms))
+        transmission_bool = (self.transmission!=None and self.transmission.probability(time)>self.threshold_transmission)
+        # if self.transmission.person.is_infected():
+        #     print(self.transmission.probability(time))
+        symptoms_bool = (self.symptoms!=None and
+                 self.symptoms.severity(time)>self.threshold_symptoms)
+                
+        # print('Transmission = ', transmission_bool)
+        is_infected = transmission_bool or symptoms_bool
+        return is_infected
