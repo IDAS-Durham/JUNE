@@ -18,16 +18,12 @@ def test_global():
     world = World(census_dict)
     populate_world(world)
 
-    n_residents_est = sum(
-        [world.areas[i].n_residents for i in range(len(world.areas))]
-    )
+    n_residents_est = sum([world.areas[i].n_residents for i in range(len(world.areas))])
     n_residents = census_dict_safe["n_residents"].sum()
 
     assert n_residents == n_residents_est
 
-    n_residents_est = sum(
-        [len(world.areas[i].people) for i in range(len(world.areas))]
-    )
+    n_residents_est = sum([len(world.areas[i].people) for i in range(len(world.areas))])
 
     assert n_residents == n_residents_est
 
@@ -54,15 +50,11 @@ def test_per_area():
     world = World(census_dict)
     populate_world(world)
 
-    n_residents_est = [
-        world.areas[i].n_residents for i in range(len(world.areas))
-    ]
+    n_residents_est = [world.areas[i].n_residents for i in range(len(world.areas))]
 
     np.testing.assert_equal(n_residents_est, census_dict_safe["n_residents"].values)
 
-    n_households_est = [
-        world.areas[i].n_households for i in range(len(world.areas))
-    ]
+    n_households_est = [world.areas[i].n_households for i in range(len(world.areas))]
 
     np.testing.assert_equal(n_households_est, census_dict_safe["n_households"].values)
 
@@ -73,15 +65,15 @@ def compute_n_samples(world, attribute):
     decoder = getattr(world, "decoder_" + attribute)
     for i in world.areas.keys():
         freq = np.zeros(len(decoder))
-        if 'house' not in attribute:
+        if "house" not in attribute:
             for j in world.areas[i].people.keys():
                 freq[getattr(world.areas[i].people[j], attribute)] += 1
-            #freq /= world.areas[i].n_residents
+            # freq /= world.areas[i].n_residents
         else:
             for j in world.areas[i].households.keys():
                 print(getattr(world.areas[i].households[j], attribute))
                 freq[getattr(world.areas[i].households[j], attribute)] += 1
-            #freq /= world.areas[i].n_households
+            # freq /= world.areas[i].n_households
 
         frequencies.append(freq)
     frequencies = np.asarray(frequencies)
@@ -104,24 +96,24 @@ def test_frequencies():
             attribute = key.split("_")
             attribute = "_".join(attribute[:-1])
             frequencies = compute_n_samples(world, attribute)
-            if 'house' in key:
-                n_samples = census_dict_safe[key].mul(census_dict_safe["n_households"], axis=0)
+            if "house" in key:
+                n_samples = census_dict_safe[key].mul(
+                    census_dict_safe["n_households"], axis=0
+                )
             else:
-                n_samples = census_dict_safe[key].mul(census_dict_safe["n_residents"], axis=0)
+                n_samples = census_dict_safe[key].mul(
+                    census_dict_safe["n_residents"], axis=0
+                )
             n_samples_total = n_samples.values.sum(axis=0)
             n_samples_est = np.sum(frequencies, axis=0)
-            atol_matrix = n_samples_total*(1./np.sqrt(n_samples_total)) 
-            atol_matrix = np.where(atol_matrix == np.inf,
-                                 0.,
-                                 atol_matrix)
+            atol_matrix = n_samples_total * (1.0 / np.sqrt(n_samples_total))
+            atol_matrix = np.where(atol_matrix == np.inf, 0.0, atol_matrix)
 
-
-            for i in range(len(n_samples_est)): 
+            for i in range(len(n_samples_est)):
                 np.testing.assert_allclose(
-                            n_samples_total[i],
-                            n_samples_est[i],
-                            atol=atol_matrix[i]
-                        )
+                    n_samples_total[i], n_samples_est[i], atol=atol_matrix[i]
+                )
+
 
 def test_lonely_children():
     census_dict = create_input_dict()
@@ -131,7 +123,7 @@ def test_lonely_children():
 
     world = World(census_dict)
     populate_world(world)
-    attribute = 'age'
+    attribute = "age"
     decoder = getattr(world, "decoder_" + attribute)
     only_children = 0
     for i in world.areas.keys():
@@ -140,10 +132,11 @@ def test_lonely_children():
             for k in world.areas[i].households[j].residents.keys():
                 freq[getattr(world.areas[i].households[j].residents[k], attribute)] += 1
                 # if no adults, but at least one child
-                if (np.sum(freq[5:]) == 0.) & (np.sum(freq[:5]) > 0.):
+                if (np.sum(freq[5:]) == 0.0) & (np.sum(freq[:5]) > 0.0):
                     only_children += 1
 
     assert only_children == 0
+
 
 if __name__ == "__main__":
     test_global()

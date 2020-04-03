@@ -2,16 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 
+
 class Inputs:
     """
     Reads in data used to populate the simulation
     """
-    def __init__(
-            self,
-            DATA_DIR: str = os.path.join(
-                    "..", "data", "census_data" 
-                    )
-        ):
+
+    def __init__(self, DATA_DIR: str = os.path.join("..", "data", "census_data")):
 
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", "NorthEast")
@@ -30,12 +27,17 @@ class Inputs:
         }
 
         school_df = self.read_school_census()
-        self.primary_school, self. secondary_school = self.process_school_census(school_df)
-
-     
+        self.primary_school, self.secondary_school = self.process_school_census(
+            school_df
+        )
 
     def read_df(
-            self, DATA_DIR: str, filename: str, column_names: list, usecols: list, index: str
+        self,
+        DATA_DIR: str,
+        filename: str,
+        column_names: list,
+        usecols: list,
+        index: str,
     ) -> pd.DataFrame:
         """Read dataframe and format
 
@@ -51,11 +53,13 @@ class Inputs:
 
         """
         df = pd.read_csv(
-            os.path.join(DATA_DIR, filename), names=column_names, usecols=usecols, header=0,
+            os.path.join(DATA_DIR, filename),
+            names=column_names,
+            usecols=usecols,
+            header=0,
         )
         df.set_index(index, inplace=True)
         return df
-
 
     def read_household_composition_people(self, ages_df):
         """
@@ -153,10 +157,11 @@ class Inputs:
             ~((areas_no_house_old) & (areas_with_old))
         ] += comp_people_df["Other"].loc[~((areas_no_house_old) & (areas_with_old))]
 
-        comp_people_df["Old_Family"].loc[
-            (areas_no_house_old) & (areas_with_old)
-        ] += comp_people_df["Other"].loc[(areas_no_house_old) & (areas_with_old)] \
-                + 0.4*comp_people_df["Other_1k"].loc[(areas_no_house_old) & (areas_with_old)]
+        comp_people_df["Old_Family"].loc[(areas_no_house_old) & (areas_with_old)] += (
+            comp_people_df["Other"].loc[(areas_no_house_old) & (areas_with_old)]
+            + 0.4
+            * comp_people_df["Other_1k"].loc[(areas_no_house_old) & (areas_with_old)]
+        )
 
         comp_people_df = comp_people_df.drop(
             columns=[
@@ -167,7 +172,6 @@ class Inputs:
         )
 
         return comp_people_df
-
 
     def read_population_df(self, freq: bool = True) -> pd.DataFrame:
         """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
@@ -205,7 +209,6 @@ class Inputs:
             population_df["females"] /= population_df["n_residents"]
         return population_df
 
-
     def read_household_df(self, freq: bool = True) -> pd.DataFrame:
         """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks105ew
 
@@ -224,11 +227,14 @@ class Inputs:
         households_usecols = [2, 4]
 
         households_df = self.read_df(
-            self.OUTPUT_AREA_DIR, households, households_names, households_usecols, "output_area",
+            self.OUTPUT_AREA_DIR,
+            households,
+            households_names,
+            households_usecols,
+            "output_area",
         )
 
         return households_df
-
 
     def read_ages_df(self, freq: bool = True) -> pd.DataFrame:
         """Read ages dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks102ew
@@ -262,12 +268,12 @@ class Inputs:
 
         ages_usecols = [2,] + list(range(5, 21))
 
-        ages_df = self.read_df(self.OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area")
+        ages_df = self.read_df(
+            self.OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area"
+        )
         if freq:
             ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
         return ages_df
-
-
 
     def people_compositions2households(self, comp_people_df, freq=True):
 
@@ -329,7 +335,8 @@ class Inputs:
         # OLD OTHER
         # v) old other live in houses of 2 or 3
         households_df[f"0 0 0 2"] += (
-            comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
+            comp_people_df["Old_Unclassified"] // 2
+            - comp_people_df["Old_Unclassified"] % 2
         ).apply(lambda x: max(x, 0))
         households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
 
@@ -343,35 +350,40 @@ class Inputs:
         Reads school location and sizes, it initializes a KD tree on a sphere,
         to query the closest schools to a given location.
         """
-        school_filename = os.path.join(self.DATA_DIR, "school_data", "england_schools_data.csv")
-        school_df = pd.read_csv(school_filename, index_col = 0)
+        school_filename = os.path.join(
+            self.DATA_DIR, "school_data", "england_schools_data.csv"
+        )
+        school_df = pd.read_csv(school_filename, index_col=0)
         school_df.dropna(inplace=True)
         return school_df
 
     def split_schools(self, mixed_df, percent_secondary):
         primary_list, secondary_list = [], []
         for index, row in mixed_df.iterrows():
-            n_secondary = int(percent_secondary*row['NOR'])
-            n_primary = row['NOR'] - n_secondary
-            row['NOR'] = n_primary
+            n_secondary = int(percent_secondary * row["NOR"])
+            n_primary = row["NOR"] - n_secondary
+            row["NOR"] = n_primary
             primary_list.append(row.to_dict())
 
-            row['NOR'] = n_secondary
+            row["NOR"] = n_secondary
             secondary_list.append(row.to_dict())
 
-        return pd.DataFrame.from_dict(primary_list), pd.DataFrame.from_dict(secondary_list)
+        return (
+            pd.DataFrame.from_dict(primary_list),
+            pd.DataFrame.from_dict(secondary_list),
+        )
 
     def process_school_census(self, school_df):
-        
-        limits_primary = [5,11]
+
+        limits_primary = [5, 11]
         years_primary = 1 + limits_primary[1] - limits_primary[0]
-        limits_secondary = [12,16]
+        limits_secondary = [12, 16]
         years_secondary = 1 + limits_secondary[1] - limits_secondary[0]
         total_years = years_primary + years_secondary
         percent_secondary = years_secondary / total_years
 
-        primary = (school_df['primary'] == True)
-        secondary = (school_df['secondary'] == True)
+        primary = school_df["primary"] == True
+        secondary = school_df["secondary"] == True
 
         school_df = school_df.loc[primary | secondary]
         primary_df = school_df.loc[primary & ~secondary]
@@ -384,18 +396,19 @@ class Inputs:
 
         assert pure_primary_size + pure_secondary_size + mixed_size == len(school_df)
 
-        extra_primary_df, extra_secondary_df = self.split_schools(mixed_df, percent_secondary)
+        extra_primary_df, extra_secondary_df = self.split_schools(
+            mixed_df, percent_secondary
+        )
         primary_df = pd.concat([primary_df, extra_primary_df])
         secondary_df = pd.concat([secondary_df, extra_secondary_df])
 
         assert len(primary_df) == pure_primary_size + mixed_size
         assert len(secondary_df) == pure_secondary_size + mixed_size
-        
-        primary_df.drop(columns=['primary', 'secondary'], inplace=True) 
-        secondary_df.drop(columns=['primary', 'secondary'], inplace=True)
+
+        primary_df.drop(columns=["primary", "secondary"], inplace=True)
+        secondary_df.drop(columns=["primary", "secondary"], inplace=True)
 
         return primary_df, secondary_df
-
 
 
 if __name__ == "__main__":
