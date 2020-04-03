@@ -1,6 +1,6 @@
 import sys
 import random
-import infection as Infection
+from covid.infection import Infection
 
 class Person:
     """
@@ -74,7 +74,7 @@ class Person:
         self.recovered      = False
         
     def set_infection(self,infection):
-        if (not isinstance(infection, Infection.Infection) and
+        if (not isinstance(infection, Infection) and
             not infection==None):
             print ("Error in Infection.Add(",infection,") is not an infection")
             print("--> Exit the code.")
@@ -91,10 +91,6 @@ class Person:
                 self.infected = True
             else:
                 self.infected = False
-                self.susceptibility = 0 # immune
-                self.recovered = True
-        else:
-            self.susceptible = True
             
     def is_susceptible(self):
         return self.susceptible
@@ -105,8 +101,8 @@ class Person:
     def is_recovered(self):
         return self.recovered
 
-    def set_recovered(self, isrecovered):
-        self.recovered = isrecovered
+    def set_recovered(self, is_recovered):
+        self.recovered = is_recovered
 
     def susceptibility(self):
         return self.susceptibility

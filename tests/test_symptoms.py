@@ -19,8 +19,8 @@ def trivial_check():
     params_MT = {}
     params_ST = {}
     Sparams["Symptoms:MaximalSeverity"] = params_MS
-    Sparams["Symptoms:MeanTime"] = params_MT  # incubation period
-    Sparams["Symptoms:SigmaTime"] = params_ST  # approx how long it takes to get better
+    Sparams["Symptoms:MeanTime"] = params_MT
+    Sparams["Symptoms:SigmaTime"] = params_ST
     params_MS["Mean"] = 0.8
     params_MT["Mean"] = 7.0
     params_ST["Mean"] = 10.0
@@ -44,7 +44,6 @@ def distribute_value():
 
     Sparams = {}
     Sparams["Symptoms:Type"] = "Gauss"
-    # dictionary for each parameters for now. probably better to have just one for all of them.
     params_MS = {}
     params_MT = {}
     params_ST = {}
