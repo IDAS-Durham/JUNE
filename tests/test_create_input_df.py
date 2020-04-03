@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
-from covid.inputs import create_input_dict
+from covid.inputs import Inputs 
 import numpy
 
 
 def test_frequencies_sum():
-    input_dict = create_input_dict()
 
+    inputs = Inputs()
+    input_dict = inputs.household_dict
     for key, value in input_dict.items():
         if "freq" in key:
 
@@ -16,7 +17,9 @@ def test_frequencies_sum():
 
 def test_positive():
 
-    input_dict = create_input_dict()
+    inputs = Inputs()
+    input_dict = inputs.household_dict
+
     for key, value in input_dict.items():
         if "freq" in key:
             print(key)
@@ -24,9 +27,10 @@ def test_positive():
 
 def test_enough_houses():
 
-    OLD_THRESHOLD = 12
+    inputs = Inputs()
+    input_dict = inputs.household_dict
 
-    input_dict = create_input_dict()
+    OLD_THRESHOLD = 12
 
     areas_with = input_dict['age_freq'][input_dict['age_freq'].columns[OLD_THRESHOLD:]].sum(axis=1) > 0
     old_config = [c for c in input_dict['household_composition_freq'].columns if int(c.split(' ')[-1])>0 ]
