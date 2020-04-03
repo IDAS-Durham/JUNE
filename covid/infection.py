@@ -9,10 +9,10 @@ class InfectionSelector:
         self.transmission_params = Tparams
         self.symptoms_params     = Sparams
 
-    def make_infection(self,time):
-        transmission = self.select_transmission(time)
+    def make_infection(self,person,time):
+        transmission = self.select_transmission(person,time)
         if self.symptoms_params!=None:
-            symptoms = self.select_severity(time)
+            symptoms = self.select_severity(person,time)
         else:
             symptoms = None
         infection =  Infection(time)
@@ -20,25 +20,30 @@ class InfectionSelector:
         infection.set_symptoms(symptoms)
         return infection
         
-    def select_transmission(self,time):
+    def select_transmission(self,person,time):
         if self.transmission_params["Transmission:Type"]=="SI":
             names = ["Transmission:Probability"]
             params = self.make_parameters(self.transmission_params,names)
-            transmission = Transmission.TransmissionSI(params,time)
+            transmission = Transmission.TransmissionSI(person,params,time)
+        elif self.transmission_params["Transmission:Type"]=="SIR":
+            names = ["Transmission:Probability"]
+            names = ["Transmission:Recovery"]
+            params = self.make_parameters(self.transmission_params,names)
+            transmission = Transmission.TransmissionSIR(person,params,time)
         elif self.transmission_params["Transmission:Type"]=="XNExp":
             names = ["Transmission:Probability",
                      "Transmission:Exponent",
                      "Transmission:Norm"]
             params, variations = self.make_parameters(self.transmission_params,names)
-            transmission = Transmission.TransmissionXNExp(params,time)
+            transmission = Transmission.TransmissionXNExp(person,params,time)
         elif self.transmission_params["Transmission:Type"]=="Box":
             names = ["Transmission:Probability",
                      "Transmission:EndTime"]
             params = self.make_parameters(self.transmission_params,names)
-            transmission = Transmission.TransmissionConstantInterval(params,time)
+            transmission = Transmission.TransmissionConstantInterval(person,params,time)
         return transmission
 
-    def select_severity(self,time):
+    def select_severity(self,person,time):
         if self.symptoms_params["Symptoms:Type"]==None:
             return None
         if self.symptoms_params["Symptoms:Type"]=="Gauss":
@@ -46,7 +51,7 @@ class InfectionSelector:
                      "Symptoms:MeanTime",
                      "Symptoms:SigmaTime"]
             params = self.make_parameters(self.symptoms_params,names)
-            symptoms = Symptoms.SymptomsGaussian(params, time)
+            symptoms = Symptoms.SymptomsGaussian(person,params, time)
         return symptoms
             
     def make_parameters(self,parameters,names):

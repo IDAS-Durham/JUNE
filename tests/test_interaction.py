@@ -8,7 +8,7 @@ import group       as Group
 import interaction as Interaction
 import infection   as Infection
 
-def ratio_infecteds(beta,N,times,mode):
+def ratio_SI_simulated(beta,N,times,mode):
     Tparams = {}
     Tparams["Transmission:Type"] = "SI"
     params = {}
@@ -32,7 +32,7 @@ def ratio_infecteds(beta,N,times,mode):
         group.update_status_lists()
     return ratio
 
-def ratio_SI(beta,N,times):
+def ratio_SI_analytic(beta,N,times):
     print ("-----------------------------------------------")
     ratios = []
     for time in times:
@@ -52,15 +52,15 @@ if __name__=="__main__":
     N      = 1000
     betas  = [0.050,0.100,0.150]
     cols   = ["steelblue","royalblue","navy"]
-    ratios = []
-    SIs    = []
+    simuls = []
+    anals  = []
     diffs  = []
     times  = np.arange(100)
     for beta in betas:
-        ratio = ratio_infecteds(beta,N,times,mode)
-        SI    = ratio_SI(beta,N,times)
-        ratios.append(ratio)
-        SIs.append(SI)
+        simul = ratio_SI_simulated(beta,N,times,mode)
+        anal  = ratio_SI_analytic(beta,N,times)
+        simuls.append(ratio)
+        anals.append(SI)
         diff = []
         for i in range(len(times)):
             diff.append(ratio[i]/SI[i])
@@ -70,8 +70,8 @@ if __name__=="__main__":
     for i in range(len(betas)):
         beta  = betas[i]
         name  = "$\\beta = $"+str(beta)
-        axes[0].semilogy(times,ratios[i],label=name,color=cols[i])
-        axes[0].semilogy(times,SIs[i],color=cols[i],linestyle="dashed")
+        axes[0].semilogy(times,simuls[i],label=name,color=cols[i])
+        axes[0].semilogy(times,anals[i],color=cols[i],linestyle="dashed")
         axes[1].plot(times,diffs[i],color=cols[i])
         print (name)
     axes[0].legend()

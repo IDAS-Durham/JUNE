@@ -15,34 +15,28 @@ class Single_Interaction:
     def single_time_step(self,time,infection_selector):
         if (self.group.size_infected() == 0 or self.group.size_healthy() == 0): 
             return
-        for person in self.group.healthy_people():
-            if self.mode=="Superposition":
-                transmission_probability = self.added_transmission_probability(person,time)
-            else:
-                transmission_probability = self.combined_transmission_probability(person,time)
-            if random.random() < transmission_probability:
+        transmission_probability = 0.
+        if self.mode=="Superposition":
+            transmission_probability = self.added_transmission_probability(time)
+        elif self.mode=="Probabilistic":
+            transmission_probability = self.combined_transmission_probability(time)
+        for recipient in self.group.healthy_people():
+            susceptibility        = recipient.get_susceptibility()
+            interaction_intensity = self.group.get_intensity()
+            recipient_probability = susceptibility * interaction_intensity
+            if random.random() < transmission_probability * recipient_probability
                 person.set_infection(infection_selector.make_infection(time))
                 
     def combined_transmission_probability(self,recipient,time):
-        susceptibility        = recipient.get_susceptibility()
-        interaction_intensity = self.group.get_intensity()
-        recipient_probability = susceptibility * interaction_intensity
         prob_notransmission   = 1.
         for person in self.group.infected_people():
-            individual_prob      = (person.transmission_probability(time) *
-                                    recipient_probability)
-            prob_notransmission *= (1.-individual_prob)
+            prob_notransmission *= (1.-person.transmission_probability(time))
         return 1.-prob_notransmission
 
     def added_transmission_probability(self,recipient,time):
-        susceptibility        = recipient.get_susceptibility()
-        interaction_intensity = self.group.get_intensity()
-        recipient_probability = susceptibility * interaction_intensity
         prob_transmission     = 0.
         for person in self.group.infected_people():
-            individual_prob    = (person.transmission_probability(time) *
-                                  recipient_probability)
-            prob_transmission += individual_prob
+            prob_transmission += person.transmission_probability(time)
         return prob_transmission
 
     def set_group(self,group):
