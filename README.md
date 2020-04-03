@@ -42,7 +42,7 @@ To install the package, install requisites and
 
 A testing example of a populated world class (where world means the North East) can be found here:
 
-https://mega.nz/file/KmgyhQJI#SvX2QMncx9Gdabpd4xqSWEdZjfJC3DXaGDH5uRis9eo
+https://mega.nz/file/KjwXhYwL#AXiTRt8mEgwGiJeANGhtWwBLPmgoDWovx58ywnZQ1PM
 
 The world can be loaded with
 
