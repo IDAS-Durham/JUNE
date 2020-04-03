@@ -1,6 +1,6 @@
 import sys
 import random
-import covid.infection as Infection
+from covid.infection import Infection
 
 class Person:
     """
@@ -69,34 +69,47 @@ class Person:
 
     def init_health_information(self):
         self.susceptibility = 1.
-        self.healthy        = True
+        self.susceptible    = True
+        self.infected       = False
         self.infection      = None
+        self.recovered      = False
         
     def set_infection(self,infection):
-        if (not isinstance(infection, Infection.Infection) and
+        if (not isinstance(infection, Infection) and
             not infection==None):
             print ("Error in Infection.Add(",infection,") is not an infection")
             print("--> Exit the code.")
             sys.exit()
         self.infection  = infection
-        if not self.infection==None:
-            self.healthy = False
+        self.infected = True
+        if not self.infection == None:
+            self.susceptible = False
 
     def update_health_status(self,time):
-        if (self.infection==None or
-            self.infection.still_infected(time) ):
-            self.healthy = True
-        else:
-            self.healthy = False
+        if not self.infection == None:
+            self.susceptible = False
+            if self.infection.still_infected(time):
+                self.infected = True
+            else:
+                self.infected = False
             
-    def is_healthy(self):
-        return self.healthy
+    def is_susceptible(self):
+        return self.susceptible
 
     def is_infected(self):
-        return not self.is_healthy()
+        return self.infected
+
+    def is_recovered(self):
+        return self.recovered
+
+    def set_recovered(self, is_recovered):
+        self.recovered = is_recovered
 
     def susceptibility(self):
         return self.susceptibility
+
+    def set_susceptibility(self, susceptibility):
+        self.susceptibility = susceptibility
     
     def transmission_probability(self,time):
         if self.infection==None:
@@ -111,10 +124,12 @@ class Person:
     def output(self):
         print ("--------------------------------------------------")
         print ("Person [",self.pname,"]: age = ",self.age," sex = ",self.sex)
-        if self.is_healthy():
-            print ("-- person is healthy.")
-        else:
+        if self.is_susceptible():
+            print ("-- person is susceptible.")
+        if self.is_infected():
             print ("-- person is infected.")
+        if self.is_recovered():
+            print ("-- person has recovered.")
 
 
     
