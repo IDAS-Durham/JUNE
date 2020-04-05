@@ -24,40 +24,56 @@ class SchoolDistributor:
 
     def __init__(self, area):
         self.area = area
-        self.MAX_SCHOOLS = 6
-        self.age_means = {}
-        for agegroup_id, agegroup in area.world.decoder_age.items():
-            try:
-                age_1, age_2 = agegroup.split("-")
-                if age_2 == 'XXX':
-                    agemean = 90
-                else:
-                    age_1 = float(age_1)
-                    age_2 = float(age_2)
-                    agemean = (age_2 - age_1) / 2.0
-            except:
-                agemean = int(agegroup)
-            self.age_means[agegroup_id] = agemean
+        self.MAX_SCHOOLS = 5
+        self.closest_schools_by_age = {}
+        self.is_agemean_full = {}
+        for agemean, school_tree in self.area.world.school_trees.pairs():
+            closest_schools = self.area.world.get_closest_schools(
+                    agemean, self.area, self.MAX_SCHOOLS,
+                    )
+            self.closest_schools_by_age[agemean] = closest_schools
+            self.is_agemean_full[agemean] = False
+
+    def compute_age_group_mean(self, age):
+        agegroup = self.area.world.decoder_age[age]
+        try:
+            age_1, age_2 = agegroup.split("-")
+            if age_2 == 'XXX':
+                agemean = 90
+            else:
+                age_1 = float(age_1)
+                age_2 = float(age_2)
+                agemean = (age_2 + age_1) / 2.0
+        except:
+            agemean = int(agegroup)
+        return agemean
 
     def distribute_kids_to_school(self):
-        closest_schools = self.area.world.get_closest_schools(
-            self.area, self.MAX_SCHOOLS
-        )
-        n_school = 0
-        current_school = self.area.world.schools[closest_schools[n_school]]
-        school_random_mode = False
         for person in self.area.people.values():
-            while (current_school.n_pupils == current_school.n_pupils_max) and (not school_random_mode):
-                n_school += 1
-                if n_school == self.MAX_SCHOOLS:
-                    school_random_mode = True
+            if person.age <= 6: #person age up to 19 yo
+                agemean = self.compute_age_group_mean(person.age) 
+                if self.is_agemean_full[agemean]: #if all schools at that age are full, assign one randomly
+                    if person.age == 6: # if it has 18-19 years old, then do not fill
+                        continue
+                    random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)
+                    school_id = self.closest_schools_by_age[agemean][random_number]
+                    school = self.world.schools[agemean][school_id]
                 else:
-                    current_school = self.area.world.schools[closest_schools[n_school]]
-            agemean = self.age_means[person.age]
-            if agemean > current_school.age_min and agemean < current_school.age_max:
-                current_school.pupils[current_school.n_pupils] = person
+                    schools_full = 0
+                    for i in range(0, self.MAX_SCHOOLS): # look for non full school
+                        school_id = self.closest_schools_by_age[agemean][i]
+                        school = self.world.schools[agemean][school_id]
+                        if school.n_pupils >= school.n_pupils_max:
+                            schools_full += 1
+                        else:
+                            break
+                    if schools_full == self.MAX_SCHOOLS: #all schools are full
+                        self.is_agemean_full[agemean] = True
+                        random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)
+                        school_id = self.closest_schools_by_age[agemean][random_number]
+                        school = self.world.schools[agemean][school_id]
+                    else: # just keep the school saved in the previous for loop
+                        pass
+                school.pupils[school.n_pupils] = person
                 person.school = current_school
-                current_school.n_pupils += 1
-
-
-
+                school.n_pupils += 1
