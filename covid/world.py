@@ -14,6 +14,7 @@ class World:
     """
 
     def __init__(self):
+        print("Initializing world...")
         inputs = Inputs()
         self.people = {}
         self.total_people = 0
@@ -22,10 +23,12 @@ class World:
         self.encoder_household_composition = {}
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(inputs.household_dict)
+        print("Creating schools...")
         self.schools, self.schools_tree = self._init_schools(
             inputs.school_df
         )
         # self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
+        print("Done.")
 
     def _init_schools(self, school_df):
         """
@@ -38,19 +41,23 @@ class World:
                 i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 row["NOR"],
-                row["URN"],
+                row["age_min"],
+                row["age_max"]
             )
             schools[i] = school
         return schools, school_tree
 
-    def get_closest_schools(self, area, radius):
+    def get_closest_schools(self, area, k=3):
         """
         Returns the k schools closest to the output area centroid.
         """
+        #distances, neighbours = self.schools_tree.query(
+        #    np.deg2rad(area.coordinates.reshape(1, -1)), r=radius, sort_results=True,
+        #)
         distances, neighbours = self.schools_tree.query(
-            np.deg2rad(area.coordinates.reshape(1, -1)), r=radius, sort_results=True,
+            np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True,
         )
-        return neighbors[0]
+        return neighbours[0]
 
     def _create_school_tree(self, school_df):
         """
@@ -87,7 +94,7 @@ class World:
             self.encoder_household_composition[column] = i
         areas_dict = {}
         for i, area_name in enumerate(n_residents_df.index):
-            area_coord = areas_coordinates_df.loc[area_name][["X", "Y"]].values
+            area_coord = areas_coordinates_df.loc[area_name][["Y", "X"]].values
             area = Area(
                 self,
                 area_name,
@@ -107,7 +114,7 @@ class World:
         """
         Populates world with people, houses, schools, etc.
         """
-        print("creating world...")
+        print("Populating world ...")
         pbar = tqdm(total=len(self.areas.keys()))  # progress bar
         for area in self.areas.values():
             # create population
@@ -120,8 +127,7 @@ class World:
 
             # distribute kids to schools
             school_dist = SchoolDistributor(area)
-            school_dist.distribute_kids_to_primary_school()
-            school_dist.distribute_kids_to_secondary_school()
+            school_dist.distribute_kids_to_school()
 
             pbar.update(1)
         pbar.close()
