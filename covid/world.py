@@ -15,27 +15,41 @@ class World:
 
     def __init__(self):
         print("Initializing world...")
-        inputs = Inputs()
+        self.inputs = Inputs()
         self.people = {}
         self.total_people = 0
         self.decoder_sex = {}
         self.decoder_age = {}
         self.encoder_household_composition = {}
         self.decoder_household_composition = {}
-        self.areas = self.read_areas_census(inputs.household_dict)
+        self.areas = self.read_areas_census(self.inputs.household_dict)
         print("Creating schools...")
         self.schools, self.schools_tree = self._init_schools(
-            inputs.school_df
+            self.inputs.school_df
         )
         # self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
         print("Done.")
+
+    def _compute_age_group_mean(self, agegroup):
+            try:
+                age_1, age_2 = agegroup.split("-")
+                if age_2 == 'XXX':
+                    agemean = 90
+                else:
+                    age_1 = float(age_1)
+                    age_2 = float(age_2)
+                    agemean = (age_2 + age_1) / 2.0
+            except:
+                agemean = int(agegroup)
+            return agemean
 
     def _init_schools(self, school_df):
         """
         Initializes schools.
         """
+        SCHOOL_AGE_THRESHOLD = [1, 7]
         schools = {}
-        school_tree = self._create_school_tree(school_df)
+        
         for i, (index, row) in enumerate(school_df.iterrows()):
             school = School(
                 i,
@@ -45,6 +59,16 @@ class World:
                 row["age_max"]
             )
             schools[i] = school
+
+        school_age = list(self.decoder_age.values())[
+                                    SCHOOL_AGE_THRESHOLD[0]:SCHOOL_AGE_THRESHOLD[1]
+                                    ]
+        school_tree = {}
+        for age in school_age:
+            mean = self._compute_age_group_mean(age)
+            _school_df = school_df[(school_df['age_min'] < mean) & (school_df['age_max'] > mean)]
+            school_tree[age] = self._create_school_tree(_school_df)
+
         return schools, school_tree
 
     def get_closest_schools(self, area, k=3):
@@ -131,3 +155,8 @@ class World:
 
             pbar.update(1)
         pbar.close()
+
+if __name__ == '__main__':
+
+    world = World()
+
