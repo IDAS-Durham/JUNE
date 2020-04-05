@@ -71,14 +71,15 @@ class World:
 
         return schools, school_tree
 
-    def get_closest_schools(self, area, k=3):
+    def get_closest_schools(self, age_mean, area, k=3):
         """
         Returns the k schools closest to the output area centroid.
         """
         #distances, neighbours = self.schools_tree.query(
         #    np.deg2rad(area.coordinates.reshape(1, -1)), r=radius, sort_results=True,
         #)
-        distances, neighbours = self.schools_tree.query(
+        school_tree = self.school_trees[age_mean]
+        distances, neighbours = school_tree.query(
             np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True,
         )
         return neighbours[0]
