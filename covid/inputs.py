@@ -11,16 +11,16 @@ class Inputs:
     def __init__(self, DATA_DIR: str = os.path.join("..", "data", "census_data")):
 
         self.DATA_DIR = DATA_DIR
-        self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", "NorthEast")
+        self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", "EnglandWales")
         population_df = self.read_population_df()
-        n_households_df = self.read_household_df()
+        #n_households_df = self.read_household_df()
         ages_df = self.read_ages_df()
         comp_people_df = self.read_household_composition_people(ages_df)
         households_df = self.people_compositions2households(comp_people_df)
 
         self.household_dict = {
             "n_residents": population_df["n_residents"],
-            "n_households": n_households_df["n_households"],
+            #"n_households": n_households_df["n_households"],
             "age_freq": ages_df,
             "sex_freq": population_df[["males", "females"]],
             "household_composition_freq": households_df,
@@ -186,7 +186,7 @@ class Inputs:
             "males",
             "females",
         ]
-        population_usecols = [2, 4, 5, 6]
+        population_usecols = [2, 5, 6, 7]
         population_df = self.read_df(
             self.OUTPUT_AREA_DIR,
             population,
@@ -194,12 +194,16 @@ class Inputs:
             population_usecols,
             "output_area",
         )
-
-        pd.testing.assert_series_equal(
-            population_df["n_residents"],
-            population_df["males"] + population_df["females"],
-            check_names=False,
-        )
+        try:
+            pd.testing.assert_series_equal(
+                population_df["n_residents"],
+                population_df["males"] + population_df["females"],
+                check_names=False,
+            )
+        except AssertionError:
+            print("males: ", len(population_df["males"]))
+            print("females: ", len(population_df["females"]))
+            raise AssertionError
         if freq:
             # Convert to ratios
             population_df["males"] /= population_df["n_residents"]
@@ -348,7 +352,7 @@ class Inputs:
         to query the closest schools to a given location.
         """
         school_filename = os.path.join(
-            self.DATA_DIR, "school_data", "england_schools_data.csv"
+            self.DATA_DIR, "school_data", "uk_schools_data.csv"
         )
         school_df = pd.read_csv(school_filename, index_col=0)
         school_df.dropna(inplace=True)

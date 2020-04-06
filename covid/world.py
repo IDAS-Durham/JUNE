@@ -17,6 +17,7 @@ class World:
         print("Initializing world...")
         self.inputs = Inputs()
         self.people = {}
+        self.total_people = 0
         self.decoder_sex = {}
         self.decoder_age = {}
         self.encoder_household_composition = {}
@@ -115,7 +116,7 @@ class World:
         )
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         n_residents_df = input_dict.pop("n_residents")
-        n_households_df = input_dict.pop("n_households")
+        #n_households_df = input_dict.pop("n_households")
         age_df = input_dict.pop("age_freq")
         sex_df = input_dict.pop("sex_freq")
         household_compostion_df = input_dict.pop("household_composition_freq")
@@ -133,7 +134,7 @@ class World:
                 self,
                 area_name,
                 n_residents_df.loc[area_name],
-                n_households_df.loc[area_name],
+                0, #n_households_df.loc[area_name],
                 {
                     "age_freq": age_df.loc[area_name],
                     "sex_freq": sex_df.loc[area_name],
