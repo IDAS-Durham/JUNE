@@ -13,11 +13,17 @@ def load_world(path2world):
         world = pickle.load(f)
     return world
 
+def test_number_schools():
+
+    world = load_world('/cosma7/data/dp004/dc-quer1/world.pkl')
+    inputs = Inputs()
+    assert len(world.schools) ==  len(inputs.school_df)
+
 def test_all_kids_school():
     
     world = load_world('/cosma7/data/dp004/dc-quer1/world.pkl')
     KIDS_LOW = 1
-    KIDS_UP = 6
+    KIDS_UP = 5
     lost_kids = 0
     for i in world.areas.keys():
         for j in world.areas[i].people.keys():
