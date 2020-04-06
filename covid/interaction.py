@@ -22,22 +22,23 @@ class Single_Interaction:
             transmission_probability = self.combined_transmission_probability(time)
         for recipient in self.group.get_susceptible():
             susceptibility        = recipient.get_susceptibility()
-            interaction_intensity = self.group.get_intensity()
-            recipient_probability = susceptibility * interaction_intensity
+            recipient_probability = susceptibility
             if random.random() < transmission_probability * recipient_probability:
                 recipient.set_infection(infection_selector.make_infection(recipient, time))
                 
     def combined_transmission_probability(self, time):
         prob_notransmission   = 1.
+        interaction_intensity = self.group.get_intensity()/self.group.size()
         for person in self.group.get_infected():
-            prob_notransmission *= (1.-person.transmission_probability(time))
+            prob_notransmission *= (1.-person.transmission_probability(time)*interaction_intensity)
         return 1.-prob_notransmission
 
     def added_transmission_probability(self, time):
         prob_transmission     = 0.
+        interaction_intensity = self.group.get_intensity()
         for person in self.group.get_infected():
             prob_transmission += person.transmission_probability(time)
-        return prob_transmission
+        return prob_transmission*interaction_intensity
 
     def set_group(self,group):
         self.group = group
