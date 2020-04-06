@@ -28,7 +28,7 @@ class Single_Interaction:
                 
     def combined_transmission_probability(self, time):
         prob_notransmission   = 1.
-        interaction_intensity = self.group.get_intensity()
+        interaction_intensity = self.group.get_intensity()/self.group.size()
         for person in self.group.get_infected():
             prob_notransmission *= (1.-person.transmission_probability(time)*interaction_intensity)
         return 1.-prob_notransmission
