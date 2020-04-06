@@ -7,8 +7,8 @@ import os
 def read_home_work_areacode(DATA_DIR):
     """
     The dataframe derives from:
-        TableID: WU01UK
-        https://www.nomisweb.co.uk/census/2011/wu01uk
+        TableID: WU01EW
+        https://wicid.ukdataservice.ac.uk/cider/wicid/downloads.php
     , but is processed to be placed in a pandas.DataFrame.
     The MSOA area code is used for homes (rows) and work (columns).
     """
