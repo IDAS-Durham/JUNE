@@ -17,7 +17,6 @@ class World:
         print("Initializing world...")
         self.inputs = Inputs()
         self.people = {}
-        self.total_people = 0
         self.decoder_sex = {}
         self.decoder_age = {}
         self.encoder_household_composition = {}
