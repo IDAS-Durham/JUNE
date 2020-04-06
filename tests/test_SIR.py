@@ -6,9 +6,16 @@ from covid.group import Group
 from covid.interaction import Interaction
 from covid.infection import Infection, InfectionSelector
 
-def get_groups(beta, mu, N, times, mode):
+def seed_infections(group, n_infections, selector):
+    choices = np.random.choice(group.size(), n_infections)
+    for choice in choices:
+        group.people[choice].set_infection(selector.make_infection(group.people[choice], 0))
+        
+
+def get_groups(beta, mu, tau, N, times, mode, n_infections):
     Tparams = {}
     Tparams["Transmission:Type"] = "SIR"
+    Tparams['Transmission:RecoverCutoff'] = {"Mean": tau}
     paramsP = {}
     Tparams["Transmission:Probability"] = paramsP
     paramsP["Mean"] = beta
@@ -18,7 +25,8 @@ def get_groups(beta, mu, N, times, mode):
     selector = InfectionSelector(Tparams, None)
     group = Group("test", "Random", N)
     group.set_intensity(group.get_intensity() / group.size())
-    group.people[0].set_infection(selector.make_infection(group.people[0], 0))
+    #group.set_intensity(1)
+    seed_infections(group, n_infections, selector)
     groups = []
     groups.append(group)
     interaction = Interaction(groups, 0, mode)
@@ -41,12 +49,14 @@ def get_groups(beta, mu, N, times, mode):
 
 if __name__ == "__main__":
     mode = 'Superposition'
-    N = 1000
-    beta = 0.05
-    mu = 0.001
-    times = np.arange(2000)
+    N    = 1000
+    beta = 0.3
+    mu   = 0.005
+    tau  = 100000
+    n_infections = 10
+    times = np.arange(100)
 
-    susceptible, infected, recovered = get_groups(beta, mu, N, times, mode)
+    susceptible, infected, recovered = get_groups(beta, mu, tau, N, times, mode, n_infections)
 
     plt.figure()
     plt.plot(susceptible, label='Susceptible')

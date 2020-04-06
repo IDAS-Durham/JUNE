@@ -17,7 +17,7 @@ class Infection:
     can be added/modified a posteriori.
     """
     def __init__(self,time,transmission=None,symptoms=None):
-        self.threshold_transmission = 0.01
+        self.threshold_transmission = 0.00
         self.threshold_symptoms     = 0.01
         self.starttime              = time
         self.transmission           = transmission
