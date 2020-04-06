@@ -2,6 +2,7 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
+from covid.school import SchoolError
 
 EARTH_RADIUS = 6371  # km
 
@@ -10,13 +11,6 @@ This file contains routines to attribute people with different characteristics
 according to census data.
 """
 
-
-class SchoolError(BaseException):
-    """Class for throwing household related errors."""
-
-    pass
-
-
 class SchoolDistributor:
     """
     Distributes students to different schools
@@ -24,7 +18,7 @@ class SchoolDistributor:
 
     def __init__(self, area):
         self.area = area
-        self.MAX_SCHOOLS = 5
+        self.MAX_SCHOOLS = 6
         self.closest_schools_by_age = {}
         self.is_agemean_full = {}
         for agegroup, school_tree in self.area.world.school_trees.items():

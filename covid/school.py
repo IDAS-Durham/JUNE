@@ -1,3 +1,7 @@
+class SchoolError(BaseException):
+    """Class for throwing school related errors."""
+    pass
+
 class School:
     """
     The School class represents a household and contains information about 
