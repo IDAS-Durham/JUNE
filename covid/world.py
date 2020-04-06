@@ -2,7 +2,7 @@ from sklearn.neighbors import BallTree
 from covid.inputs import Inputs
 from covid.area import Area
 from covid.distributors import *
-from covid.school import School
+from covid.school import School, SchoolError
 import pandas as pd
 import numpy as np
 from tqdm import tqdm  # for a fancy progress bar
@@ -51,32 +51,37 @@ class World:
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
         ]
         school_trees = {}
-        school_counter = 0
         school_agegroup_to_global_indices = {}  # stores for each age group the index to the school
-        for agegroup in school_age:
-            school_agegroup_to_global_indices[agegroup] = {}
+        # create school neighbour trees
+        for agegroup in school_age: 
+            school_agegroup_to_global_indices[agegroup] = {} # this will be used to track school universally
             mean = self._compute_age_group_mean(agegroup)
-            _school_df = school_df[
-                (school_df["age_min"] < mean) & (school_df["age_max"] > mean)
+            _school_df_agegroup = school_df[
+                (school_df["age_min"] <= mean) & (school_df["age_max"] >= mean)
             ]
-            school_trees[agegroup] = self._create_school_tree(_school_df)
-            for i, (index, row) in enumerate(_school_df.iterrows()):
-                school = School(
-                    i,
-                    np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
-                    row["NOR"],
-                    row["age_min"],
-                    row["age_max"],
-                )
-                school_agegroup_to_global_indices[agegroup][i] = school_counter
-                schools[school_counter] = school
-                school_counter += 1
+            school_trees[agegroup] = self._create_school_tree(_school_df_agegroup)
+        # create schools and put them in the right age group
+        for i, (index, row) in enumerate(school_df.iterrows()): 
+            school = School(
+                i, 
+                np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
+                row["NOR"],
+                row["age_min"],
+                row["age_max"],
+            )
+            # to which age group does this school belong to?
+            for agegroup in school_age:
+                agemean = self._compute_age_group_mean(agegroup)
+                if school.age_min <= agemean and school.age_max >= agemean:
+                    school_agegroup_to_global_indices[agegroup][len(school_agegroup_to_global_indices[agegroup])] = i
+            schools[i] = school
+        # store variables to class
         self.schools = schools
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
         return None
 
-    def get_closest_schools(self, age, area, k=3):
+    def get_closest_schools(self, age, area, k):
         """
         Returns the k schools closest to the output area centroid.
         """
@@ -146,7 +151,6 @@ class World:
         """
         print("Populating world ...")
         pbar = tqdm(total=len(self.areas.keys()))  # progress bar
-        counter = 0
         for area in self.areas.values():
             # create population
             people_dist = PeopleDistributor(area)
@@ -161,9 +165,7 @@ class World:
             school_dist.distribute_kids_to_school()
 
             pbar.update(1)
-            counter += 1
-            #if counter > 50:
-            #    break
+
         pbar.close()
 
 
