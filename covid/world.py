@@ -24,24 +24,22 @@ class World:
         self.decoder_household_composition = {}
         self.areas = self.read_areas_census(self.inputs.household_dict)
         print("Creating schools...")
-        self.schools, self.schools_tree = self._init_schools(
-            self.inputs.school_df
-        )
+        self._init_schools(self.inputs.school_df)
         # self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
         print("Done.")
 
     def _compute_age_group_mean(self, agegroup):
-            try:
-                age_1, age_2 = agegroup.split("-")
-                if age_2 == 'XXX':
-                    agemean = 90
-                else:
-                    age_1 = float(age_1)
-                    age_2 = float(age_2)
-                    agemean = (age_2 + age_1) / 2.0
-            except:
-                agemean = int(agegroup)
-            return agemean
+        try:
+            age_1, age_2 = agegroup.split("-")
+            if age_2 == "XXX":
+                agemean = 90
+            else:
+                age_1 = float(age_1)
+                age_2 = float(age_2)
+                agemean = (age_2 + age_1) / 2.0
+        except:
+            agemean = int(agegroup)
+        return agemean
 
     def _init_schools(self, school_df):
         """
@@ -49,36 +47,43 @@ class World:
         """
         SCHOOL_AGE_THRESHOLD = [1, 7]
         schools = {}
-        
-        for i, (index, row) in enumerate(school_df.iterrows()):
-            school = School(
-                i,
-                np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
-                row["NOR"],
-                row["age_min"],
-                row["age_max"]
-            )
-            schools[i] = school
-
         school_age = list(self.decoder_age.values())[
-                                    SCHOOL_AGE_THRESHOLD[0]:SCHOOL_AGE_THRESHOLD[1]
-                                    ]
-        school_tree = {}
-        for age in school_age:
-            mean = self._compute_age_group_mean(age)
-            _school_df = school_df[(school_df['age_min'] < mean) & (school_df['age_max'] > mean)]
-            school_tree[age] = self._create_school_tree(_school_df)
+            SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
+        ]
+        school_trees = {}
+        school_counter = 0
+        school_agegroup_to_global_indices = {}  # stores for each age group the index to the school
+        for agegroup in school_age:
+            school_agegroup_to_global_indices[agegroup] = {}
+            mean = self._compute_age_group_mean(agegroup)
+            _school_df = school_df[
+                (school_df["age_min"] < mean) & (school_df["age_max"] > mean)
+            ]
+            school_trees[agegroup] = self._create_school_tree(_school_df)
+            for i, (index, row) in enumerate(_school_df.iterrows()):
+                school = School(
+                    i,
+                    np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
+                    row["NOR"],
+                    row["age_min"],
+                    row["age_max"],
+                )
+                school_agegroup_to_global_indices[agegroup][i] = school_counter
+                schools[school_counter] = school
+                school_counter += 1
+        self.schools = schools
+        self.school_trees = school_trees
+        self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
+        return None
 
-        return schools, school_tree
-
-    def get_closest_schools(self, age_mean, area, k=3):
+    def get_closest_schools(self, age, area, k=3):
         """
         Returns the k schools closest to the output area centroid.
         """
-        #distances, neighbours = self.schools_tree.query(
+        # distances, neighbours = self.schools_tree.query(
         #    np.deg2rad(area.coordinates.reshape(1, -1)), r=radius, sort_results=True,
-        #)
-        school_tree = self.school_trees[age_mean]
+        # )
+        school_tree = self.school_trees[age]
         distances, neighbours = school_tree.query(
             np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True,
         )
@@ -141,6 +146,7 @@ class World:
         """
         print("Populating world ...")
         pbar = tqdm(total=len(self.areas.keys()))  # progress bar
+        counter = 0
         for area in self.areas.values():
             # create population
             people_dist = PeopleDistributor(area)
@@ -155,9 +161,12 @@ class World:
             school_dist.distribute_kids_to_school()
 
             pbar.update(1)
+            counter += 1
+            #if counter > 50:
+            #    break
         pbar.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     world = World()
-

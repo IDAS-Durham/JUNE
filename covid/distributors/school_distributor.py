@@ -27,18 +27,25 @@ class SchoolDistributor:
         self.MAX_SCHOOLS = 5
         self.closest_schools_by_age = {}
         self.is_agemean_full = {}
-        for agemean, school_tree in self.area.world.school_trees.pairs():
-            closest_schools = self.area.world.get_closest_schools(
-                    agemean, self.area, self.MAX_SCHOOLS,
-                    )
-            self.closest_schools_by_age[agemean] = closest_schools
-            self.is_agemean_full[agemean] = False
+        for agegroup, school_tree in self.area.world.school_trees.items():
+            closest_schools = []
+            closest_schools_idx = self.area.world.get_closest_schools(
+                agegroup, self.area, self.MAX_SCHOOLS,
+            )
+            for idx in closest_schools_idx:
+                closest_schools.append(
+                    area.world.schools[
+                        area.world.school_agegroup_to_global_indices[agegroup][idx]
+                    ]
+                )
+            agemean = self.compute_age_group_mean(agegroup)
+            self.closest_schools_by_age[agegroup] = closest_schools
+            self.is_agemean_full[agegroup] = False
 
-    def compute_age_group_mean(self, age):
-        agegroup = self.area.world.decoder_age[age]
+    def compute_age_group_mean(self, agegroup):
         try:
             age_1, age_2 = agegroup.split("-")
-            if age_2 == 'XXX':
+            if age_2 == "XXX":
                 agemean = 90
             else:
                 age_1 = float(age_1)
@@ -50,30 +57,30 @@ class SchoolDistributor:
 
     def distribute_kids_to_school(self):
         for person in self.area.people.values():
-            if person.age <= 6: #person age up to 19 yo
-                agemean = self.compute_age_group_mean(person.age) 
-                if self.is_agemean_full[agemean]: #if all schools at that age are full, assign one randomly
-                    if person.age == 6: # if it has 18-19 years old, then do not fill
+            if person.age <= 6 and person.age >= 1:  # person age from 5 up to 19 yo
+                agegroup = self.area.world.decoder_age[person.age]
+                agemean = self.compute_age_group_mean(agegroup)
+                if self.is_agemean_full[
+                    agegroup
+                ]:  # if all schools at that age are full, assign one randomly
+                    if person.age == 6:  # if it is 18-19 yo, then do not fill
                         continue
-                    random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)
-                    school_id = self.closest_schools_by_age[agemean][random_number]
-                    school = self.world.schools[agemean][school_id]
+                    random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
+                    school = self.closest_schools_by_age[agegroup][random_number]
                 else:
                     schools_full = 0
-                    for i in range(0, self.MAX_SCHOOLS): # look for non full school
-                        school_id = self.closest_schools_by_age[agemean][i]
-                        school = self.world.schools[agemean][school_id]
+                    for i in range(0, self.MAX_SCHOOLS):  # look for non full school
+                        school = self.closest_schools_by_age[agegroup][i]
                         if school.n_pupils >= school.n_pupils_max:
                             schools_full += 1
                         else:
                             break
-                    if schools_full == self.MAX_SCHOOLS: #all schools are full
-                        self.is_agemean_full[agemean] = True
-                        random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)
-                        school_id = self.closest_schools_by_age[agemean][random_number]
-                        school = self.world.schools[agemean][school_id]
-                    else: # just keep the school saved in the previous for loop
+                    if schools_full == self.MAX_SCHOOLS:  # all schools are full
+                        self.is_agemean_full[agegroup] = True
+                        random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
+                        school = self.closest_schools_by_age[agegroup][random_number]
+                    else:  # just keep the school saved in the previous for loop
                         pass
                 school.pupils[school.n_pupils] = person
-                person.school = current_school
+                person.school = school
                 school.n_pupils += 1
