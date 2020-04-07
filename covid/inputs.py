@@ -31,6 +31,7 @@ class Inputs:
         }
 
         self.school_df = self.read_school_census()
+        self.company_df = self.read_companysize_census()
 
     def read_df(
         self,
@@ -386,6 +387,21 @@ class Inputs:
         assert school_df["age_max"].max() < 20
         return school_df
 
+    def read_companysize_census(self):
+        """
+        Gives nr. of companies with nr. of employees per MSOA
+        (NOMIS: UK Business Counts - local units by industry and employment size band)
+        """
+        worksize_filename = os.path.join(
+            self.DATA_DIR, "middle_output_area", zone, "business_counts_northeast_2019.csv"
+        )
+        company_df = pd.read_csv(worksize_filename)
+        company_df = company_df.rename(columns={"mnemonic": "MSOA11CD"})
+        company_df = company_df.drop(columns=["Area"])
+
+        assert company_df.isnull().values.any() == False
+        return company_df
+    
     def read_home_work_areacode(DATA_DIR):
         """
         The dataframe derives from:
@@ -473,7 +489,7 @@ class Inputs:
 
         # create dictionary to merge OA into MSOA
         dirs = (
-            "/home/christovis/PhD/5_COVID_19/data/census_data/area_code_translations/"
+            "../data/census_data/area_code_translations/"
         )
         dic = pd.read_csv(
             dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
