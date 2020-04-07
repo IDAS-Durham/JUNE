@@ -64,33 +64,24 @@ class TransmissionSIR(Transmission):
         self.probT = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
         self.probR = min(1.,max(0.,params["Transmission:Recovery"]["Value"]))
         self.RecoverCutoff = params["Transmission:RecoverCutoff"]["Mean"]
-        self.lasttime = 0 # last time they had a chance to recover
-
+        self.lasttime = self.starttime # last time they had a chance to recover
 
     def calculate(self,time):
         if self.probR != 0:
             if self.probT>0 and time>self.lasttime:
                 for t in range(self.lasttime, time, 1):
-                    is_recovered = random.random() < self.probR * (time - self.starttime)
-                    if is_recovered:
-                        self.probT = 0 # can't transmit anymore
+                    if random.random() < self.probR:
                         self.person.set_susceptibility(0) # immune
-                        self.person.set_recovered(is_recovered)
-                        break # can only recover one time
-                self.lasttime = time # update last time
-
+                        self.person.set_recovered(True)
+                        break                             # can only recover once
         else:
             if self.probT>0 and time>self.lasttime:
                 for t in range(self.lasttime, time, 1):
-                    is_recovered = time > self.starttime + self.RecoverCutoff
-                    if is_recovered:
-                        self.probT = 0 # can't transmit anymore
+                    if time > self.starttime + self.RecoverCutoff:
                         self.person.set_susceptibility(0) # immune
-                        self.person.set_recovered(is_recovered)
-                        break # can only recover one time
-                self.lasttime = time # update last time
-
-
+                        self.person.set_recovered(True)
+                        break                             # can only recover once
+        self.lasttime = time                              # update last time
         self.value = self.probT
 
 
