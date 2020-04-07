@@ -1,6 +1,7 @@
 from covid.infection import Infection
 from covid.group import Group 
 from covid.person import Person
+import numpy as np
 import sys
 import random
 
@@ -23,8 +24,9 @@ class Single_Interaction:
         for recipient in self.group.get_susceptible():
             susceptibility        = recipient.get_susceptibility()
             recipient_probability = susceptibility
-            if random.random() < transmission_probability * recipient_probability:
-                recipient.set_infection(infection_selector.make_infection(recipient, time))
+            if recipient_probability>0.:
+                if random.random() <= transmission_probability * recipient_probability:
+                    recipient.set_infection(infection_selector.make_infection(recipient, time))
                 
     def combined_transmission_probability(self, time):
         prob_notransmission   = 1.
@@ -35,7 +37,7 @@ class Single_Interaction:
 
     def added_transmission_probability(self, time):
         prob_transmission     = 0.
-        interaction_intensity = self.group.get_intensity()
+        interaction_intensity = self.group.get_intensity()/self.group.size()
         for person in self.group.get_infected():
             prob_transmission += person.transmission_probability(time)
         return prob_transmission*interaction_intensity
