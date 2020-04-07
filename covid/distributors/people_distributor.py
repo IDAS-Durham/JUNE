@@ -12,9 +12,9 @@ class PeopleDistributor:
     """
     def __init__(self, area):
         self.area = area
-        self.STUDENT_THRESHOLD = 6
-        self.ADULT_THRESHOLD = 6  # 6 corresponds to 18-19 years old
-        self.OLD_THRESHOLD = 12  # 12 corresponds to 65+
+        self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
+        self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
+        self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self._init_random_variables()
         self.no_kids_area = False
         self.no_students_area = False
