@@ -11,6 +11,7 @@ This file contains routines to attribute people with different characteristics
 according to census data.
 """
 
+
 class SchoolDistributor:
     """
     Distributes students to different schools
@@ -18,7 +19,8 @@ class SchoolDistributor:
 
     def __init__(self, area):
         self.area = area
-        self.MAX_SCHOOLS = 6
+        self.MAX_SCHOOLS = area.world.config["schools"]["neighbour_schools"]
+        self.SCHOOL_AGE_RANGE = area.world.config["schools"]["school_age_range"]
         self.closest_schools_by_age = {}
         self.is_agemean_full = {}
         for agegroup, school_tree in self.area.world.school_trees.items():
@@ -51,7 +53,10 @@ class SchoolDistributor:
 
     def distribute_kids_to_school(self):
         for person in self.area.people.values():
-            if person.age <= 6 and person.age >= 1:  # person age from 5 up to 19 yo
+            if (
+                person.age <= self.SCHOOL_AGE_RANGE[1]
+                and person.age >= self.SCHOOL_AGE_RANGE[0]
+            ):  # person age from 5 up to 19 yo
                 agegroup = self.area.world.decoder_age[person.age]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
@@ -71,7 +76,9 @@ class SchoolDistributor:
                             break
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
                         self.is_agemean_full[agegroup] = True
-                        random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
+                        random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[
+                            0
+                        ]
                         school = self.closest_schools_by_age[agegroup][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
