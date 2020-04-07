@@ -5,7 +5,9 @@ from covid.distributors import *
 from covid.school import School, SchoolError
 import pandas as pd
 import numpy as np
-from tqdm import tqdm  # for a fancy progress bar
+from tqdm.auto import tqdm  # for a fancy progress bar
+import yaml
+import os
 
 
 class World:
@@ -13,9 +15,18 @@ class World:
     Stores global information about the simulation
     """
 
-    def __init__(self):
+    def __init__(self, config_file=None):
         print("Initializing world...")
-        self.inputs = Inputs()
+        if config_file is None:
+            config_file = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "configs",
+                "config_example.yaml",
+            )
+        with open(config_file, "r") as f:
+            self.config = yaml.load(f, Loader=yaml.FullLoader)
+        self.inputs = Inputs(zone = self.config["world"]["zone"])
         self.people = {}
         self.total_people = 0
         self.decoder_sex = {}
@@ -51,19 +62,23 @@ class World:
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
         ]
         school_trees = {}
-        school_agegroup_to_global_indices = {}  # stores for each age group the index to the school
+        school_agegroup_to_global_indices = (
+            {}
+        )  # stores for each age group the index to the school
         # create school neighbour trees
-        for agegroup in school_age: 
-            school_agegroup_to_global_indices[agegroup] = {} # this will be used to track school universally
+        for agegroup in school_age:
+            school_agegroup_to_global_indices[
+                agegroup
+            ] = {}  # this will be used to track school universally
             mean = self._compute_age_group_mean(agegroup)
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= mean) & (school_df["age_max"] >= mean)
             ]
             school_trees[agegroup] = self._create_school_tree(_school_df_agegroup)
         # create schools and put them in the right age group
-        for i, (index, row) in enumerate(school_df.iterrows()): 
+        for i, (index, row) in enumerate(school_df.iterrows()):
             school = School(
-                i, 
+                i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 row["NOR"],
                 row["age_min"],
@@ -73,7 +88,9 @@ class World:
             for agegroup in school_age:
                 agemean = self._compute_age_group_mean(agegroup)
                 if school.age_min <= agemean and school.age_max >= agemean:
-                    school_agegroup_to_global_indices[agegroup][len(school_agegroup_to_global_indices[agegroup])] = i
+                    school_agegroup_to_global_indices[agegroup][
+                        len(school_agegroup_to_global_indices[agegroup])
+                    ] = i
             schools[i] = school
         # store variables to class
         self.schools = schools
@@ -116,7 +133,7 @@ class World:
         )
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         n_residents_df = input_dict.pop("n_residents")
-        #n_households_df = input_dict.pop("n_households")
+        # n_households_df = input_dict.pop("n_households")
         age_df = input_dict.pop("age_freq")
         sex_df = input_dict.pop("sex_freq")
         household_compostion_df = input_dict.pop("household_composition_freq")
@@ -134,7 +151,7 @@ class World:
                 self,
                 area_name,
                 n_residents_df.loc[area_name],
-                0, #n_households_df.loc[area_name],
+                0,  # n_households_df.loc[area_name],
                 {
                     "age_freq": age_df.loc[area_name],
                     "sex_freq": sex_df.loc[area_name],

@@ -8,19 +8,23 @@ class Inputs:
     Reads in data used to populate the simulation
     """
 
-    def __init__(self, DATA_DIR: str = os.path.join("..", "data", "census_data")):
+    def __init__(
+        self,
+        zone="NorthEast",
+        DATA_DIR: str = os.path.join("..", "data", "census_data"),
+    ):
 
         self.DATA_DIR = DATA_DIR
-        self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", "EnglandWales")
+        self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
         population_df = self.read_population_df()
-        #n_households_df = self.read_household_df()
+        # n_households_df = self.read_household_df()
         ages_df = self.read_ages_df()
         comp_people_df = self.read_household_composition_people(ages_df)
         households_df = self.people_compositions2households(comp_people_df)
 
         self.household_dict = {
             "n_residents": population_df["n_residents"],
-            #"n_households": n_households_df["n_households"],
+            # "n_households": n_households_df["n_households"],
             "age_freq": ages_df,
             "sex_freq": population_df[["males", "females"]],
             "household_composition_freq": households_df,
@@ -49,6 +53,8 @@ class Inputs:
             df: formatted df
 
         """
+
+        df = pd.read_csv(os.path.join(DATA_DIR, filename), header=0,)
         df = pd.read_csv(
             os.path.join(DATA_DIR, filename),
             names=column_names,
@@ -179,6 +185,7 @@ class Inputs:
             pandas dataframe with ratio of males and females per output area 
 
         """
+        # TODO: column names need to be more general for other datasets.
         population = "usual_resident_population.csv"
         population_column_names = [
             "output_area",
@@ -186,14 +193,28 @@ class Inputs:
             "males",
             "females",
         ]
-        population_usecols = [2, 5, 6, 7]
-        population_df = self.read_df(
-            self.OUTPUT_AREA_DIR,
-            population,
-            population_column_names,
-            population_usecols,
-            "output_area",
+        # population_usecols = [2, 5, 6, 7]
+        population_usecols = [
+            "geography code",
+            "Variable: All usual residents; measures: Value",
+            "Variable: Males; measures: Value",
+            "Variable: Females; measures: Value",
+        ]
+        population_df = pd.read_csv(
+            os.path.join(self.OUTPUT_AREA_DIR, population),
+            usecols=population_usecols,
         )
+        names_dict = dict(zip(population_usecols, population_column_names))
+        population_df.rename(columns=names_dict, inplace=True)
+        population_df.set_index("output_area", inplace=True)
+
+        # population_df = self.read_df(
+        #    self.OUTPUT_AREA_DIR,
+        #    population,
+        #    population_column_names,
+        #    population_usecols,
+        #    "output_area",
+        # )
         try:
             pd.testing.assert_series_equal(
                 population_df["n_residents"],
@@ -356,19 +377,17 @@ class Inputs:
         )
         school_df = pd.read_csv(school_filename, index_col=0)
         school_df.dropna(inplace=True)
-        school_df['age_min'].replace(to_replace=np.arange(0,4),
-                                    value=4,
-                                    inplace=True)
+        school_df["age_min"].replace(to_replace=np.arange(0, 4), value=4, inplace=True)
 
-        school_df['age_max'].replace(to_replace=np.arange(20,50),
-                                        value=19,
-                                        inplace=True)
+        school_df["age_max"].replace(
+            to_replace=np.arange(20, 50), value=19, inplace=True
+        )
 
-        assert school_df['age_min'].min() <= 4
-        assert school_df['age_max'].max() < 20 
+        assert school_df["age_min"].min() <= 4
+        assert school_df["age_max"].max() < 20
         return school_df
 
-    
+
 if __name__ == "__main__":
 
     ip = Inputs()
