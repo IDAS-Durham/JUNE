@@ -17,6 +17,7 @@ class Inputs:
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
         self.MIDDLE_OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "middle_output_area", zone)
+        oa2msoa_df = self.oa2msoa()
         
         # Read census data on high resolution map (OA)
         population_df = self.read_population_df()
@@ -35,8 +36,9 @@ class Inputs:
         self.school_df = self.read_school_census()
         #self.company_df = self.read_companysize_census()
         # Read census data on low resolution map (MSOA)
-        #self.workflow_dict = self.create_workflow_dict()
-        #self.companysize_df = self.read_companysize_census()
+        self.oa2msoa_df = self.oa2msoa()
+        self.workflow_dict = self.create_workflow_dict()
+        self.companysize_df = self.read_companysize_census()
 
     def read_df(
         self,
@@ -69,6 +71,20 @@ class Inputs:
         )
         df.set_index(index, inplace=True)
         return df
+
+    def oa2msoa(self):
+        """
+        Creat link between OA and MSOA layers.
+        """
+        usecols = [0, 1]
+        column_names = ["OA11CD", "MSOA11CD"]
+        oa2msoa_df = self.read_df(
+            os.path.join(self.DATA_DIR, "area_code_translations"),
+            "oa_msoa_englandwales_2011.csv",
+            column_names, usecols, "OA11CD"
+        )
+
+        return oa2msoa_df
 
     def read_household_composition_people(self, ages_df):
         """
@@ -397,10 +413,6 @@ class Inputs:
         Gives nr. of companies with nr. of employees per MSOA
         (NOMIS: UK Business Counts - local units by industry and employment size band)
         """
-        worksize_filename = os.path.join(
-            self.MIDDLE_OUTPUT_AREA_DIR, "business_counts_northeast_2019.csv"
-        )
-
         usecols = [1, 3, 4, 5, 6, 7, 8, 9, 10]
         column_names = [
             "MSOA11CD",
