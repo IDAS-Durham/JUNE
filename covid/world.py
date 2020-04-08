@@ -6,7 +6,6 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
 
-
 class World:
     """
     Stores global information about the simulation
@@ -24,8 +23,11 @@ class World:
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         # decoders for census variables 
-        self.decoder_age = {}
+        self.inputs = Inputs(zone=self.config["world"]["zone"])
+        self.people = {}
+        self.total_people = 0
         self.decoder_sex = {}
+        self.decoder_age = {}
         self.decoder_household_composition = {}
         self.encoder_household_composition = {}
         print("Reading inputs...")
@@ -54,6 +56,7 @@ class World:
         print("Creating schools...")
         self._init_schools(self.inputs.school_df)
         #self._init_companies(self.inputs.company_df)
+        self.populate_world()
         print("Done.")
         '''
 
@@ -89,10 +92,18 @@ class World:
                 self,
                 area_code,
                 area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
-                company_df[company_df["msoa11cd"] == "E02002559"][[
-                    "Micro (0 to 9)", "10 to 19", "20 to 49", "50 to 99",
-                    "100 to 249", "250 to 499", "500 to 999", "1000+",
-                ]].values
+                company_df[company_df["msoa11cd"] == "E02002559"][
+                    [
+                        "Micro (0 to 9)",
+                        "10 to 19",
+                        "20 to 49",
+                        "50 to 99",
+                        "100 to 249",
+                        "250 to 499",
+                        "500 to 999",
+                        "1000+",
+                    ]
+                ].values,
             )
             areas_dict[i] = area
         return areas_dict
@@ -105,7 +116,7 @@ class World:
             company_df: pd.DataFrame
                 Contains information on nr. of companies with nr. of employees per MSOA
         """
-        LABOUR_AGE_THRESHOLD = [8, 13]
+        self.WORK_AGE_THRESHOLD = [8, 13]
         companies = {}
         school_age = list(self.decoder_age.values())[
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
@@ -147,42 +158,6 @@ class World:
         self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
         return None
 
-    #def populate_world(self):
-    #    """
-    #    Populates world with people, houses, schools, etc.
-    #    """
-    #    print("Populating world ...")
-    #    pbar = tqdm(total=len(self.areas.keys()))  # progress bar
-    #    for area in self.areas.values():
-    #        # create population
-    #        people_dist = PeopleDistributor(area)
-    #        people_dist.populate_area()
-
-    #        # distribute people to households
-    #        household_dist = HouseholdDistributor(area)
-    #        household_dist.distribute_people_to_household()
-
-    #        # distribute kids to schools
-    #        school_dist = SchoolDistributor(area)
-    #        school_dist.distribute_kids_to_school()
-
-    #        # TODO: distribute workers to companies
-    #        # work_dist = WorkDistributor(area)
-    #        # work_dist.distribute_adults_to_work()
-
-    #        pbar.update(1)
-
-    #    #print("and make it work ...")
-    #    #pbar = tqdm(total=len(self.msoareas.keys()))  # progress bar
-    #    #for msoarea in self.msoareas.values():
-    #        # TODO: distribute workers to companies
-    #        # work_dist = WorkDistributor(msoarea)
-    #        # work_dist.distribute_adults_to_companies()
-
-    #        #pbar.update(1)
-
-    #    pbar.close()
-
     def _active_groups(self, time):
 
         return self.config["world"]["step_active_groups"][time]
@@ -190,24 +165,35 @@ class World:
     def _set_active_members(self, active_groups):
         for group in active_groups:
             group._set_active_members()
+
     def _unset_active_members(self, active_groups):
         for group in active_groups:
             group._unset_active_members()
 
+    def _initialize_infection_selector(self,):
+        Tparams = {}
+        Tparams["Transmission:Type"] = "SI"
+        params = {}
+        Tparams["Transmission:Probability"] = params
+        params["Mean"] = beta
+        selector = InfectionSelector(Tparams, None)
+        return selector
 
     def _infect(self, group, duration):
-        for ind_group in world:
-            break
-            # check there are suceptible (if all infected don't run)
-            # Call Frank
+        for group_instance in getattr(self, group).keys():
+            interaction = Single_Interaction(group_instance, "Superposition")
+            selector = self._initialize_infection_selector()
+            # one step is one hour
+            for step in range(duration * self.config["world"]["steps_per_hour"]):
+                interaction.single_time_step(step, selector)
 
-    def seed_infection(self, n_infected):
+     def seed_infection(self, n_infected):
         pass
 
     def group_dynamics(self, total_days):
 
         time_steps = self.config["world"]["step_duration"].keys()
-        assert sum(self.config["world"]["step_duration"].values()) == 24 
+        assert sum(self.config["world"]["step_duration"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         self.days = 0
         while self.days <= total_days:
@@ -215,16 +201,14 @@ class World:
                 active_groups = self._active_groups(time)
                 # update people (where they are according to time)
                 self._set_active_members(active_groups)
-
                 # infect people in groups
                 for group in active_groups:
-                    break
-                        #self._infect(group,
-#                                self.config["world"]["step_duration"]) # Call infection with how long it lasts
+                    self._infect(
+                        group, self.config["world"]["step_duration"],
+                    )
                 self._unset_active_members(active_groups)
             self.days += 1
 
-        
 
 if __name__ == "__main__":
 
