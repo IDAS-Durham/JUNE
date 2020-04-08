@@ -1,19 +1,21 @@
 from sklearn.neighbors import BallTree
+from covid.groups import Group
 import numpy as np
 
 class SchoolError(BaseException):
     """Class for throwing school related errors."""
     pass
 
-class School:
+class School(Group):
     """
     The School class represents a household and contains information about 
     its pupils (6 - 14 years old).
     """
 
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
+        super().__init__("School_%05d"%school_id, "School")
         self.id = school_id
-        self.pupils= {}
+        self.people = []
         self.coordinates = coordinates
         #self.residents = group(self.id,"household")
         self.n_pupils_max = n_pupils
@@ -49,8 +51,8 @@ class Schools:
         Initializes schools.
         """
         SCHOOL_AGE_THRESHOLD = [1, 7]
-        schools = {}
-        school_age = list(self.world.areas.decoder_age.values())[
+        schools = []
+        school_age = list(self.world.decoder_age.values())[
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
         ]
         school_trees = {}
@@ -83,7 +85,7 @@ class Schools:
                     school_agegroup_to_global_indices[agegroup][
                         len(school_agegroup_to_global_indices[agegroup])
                     ] = i
-            schools[i] = school
+            schools.append(school)
         # store variables to class
         self.members = schools
         self.school_trees = school_trees
@@ -109,3 +111,11 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
+
+    def set_active_members(self):
+        for school in self.members:
+            for person in school.people:
+                if person.active_group != None:
+                    raise SchoolError("Trying to set an already active person")
+                else:
+                    person.active_group = "school"

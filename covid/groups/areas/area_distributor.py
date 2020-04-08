@@ -39,13 +39,14 @@ class AreaDistributor:
             self.areas.world.decoder_sex[i] = column
         for i, column in enumerate(household_compostion_df.columns):
             self.areas.world.decoder_household_composition[i] = column
-            self.areas.encoder_household_composition[column] = i
-        areas_dict = {}
+            self.areas.world.encoder_household_composition[column] = i
+        areas_list = []
         for i, area_name in enumerate(n_residents_df.index):
             area_coord = areas_coordinates_df.loc[area_name][["Y", "X"]].values
             area = Area(
                 self.areas.world,
                 area_name,
+                None,
                 n_residents_df.loc[area_name],
                 0,  # n_households_df.loc[area_name],
                 {
@@ -55,5 +56,5 @@ class AreaDistributor:
                 },
                 area_coord,
             )
-            areas_dict[i] = area
-        self.areas.members = areas_dict
+            areas_list.append(area)
+        self.areas.members = areas_list 
