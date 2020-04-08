@@ -18,7 +18,7 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     selector = InfectionSelector(Tparams, None)
     group = Group("test", "Random", N)
     if mode=='Superposition':
-        group.set_intensity(group.get_intensity() / group.size())
+        group.set_intensity(group.get_intensity())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], 0))
     groups = []
@@ -35,7 +35,6 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
         group.update_status_lists(time)
     return ratio
 
-
 def ratio_SI_analytic(beta, N, I_0, times):
     print("-----------------------------------------------")
     ratios = []
@@ -45,6 +44,43 @@ def ratio_SI_analytic(beta, N, I_0, times):
             print(time, ratio)
         ratios.append(ratio)
     return ratios
+
+def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
+    Tparams = {}
+    Tparams["Transmission:Type"] = "SIR"
+    paramsP  = {}
+    Tparams["Transmission:Probability"] = paramsP
+    paramsP["Mean"] = beta
+    paramsR  = {}
+    Tparams["Transmission:Recovery"] = paramsR
+    paramsR["Mean"] = gamma
+    paramsRC = {}
+    Tparams["Transmission:RecoverCutoff"] = paramsRC
+    paramsRC["Mean"] = 1000
+    selector = InfectionSelector(Tparams, None)
+    group = Group("test", "Random", N)
+    if mode=='Superposition':
+        group.set_intensity(group.get_intensity())
+    for i in range(I_0):
+        group.people[i].set_infection(selector.make_infection(group.people[i], times[0]-1))
+    groups = []
+    groups.append(group)
+    interaction = Interaction(groups, 0, mode)
+    ratio = []
+    print("===============================================")
+    ratioI_by_N = []
+    ratioR_by_N = []
+    for time in times:
+        valueI = group.size_infected() / group.size()
+        valueR = group.size_recovered() / group.size()
+        if time / 10 == int(time / 10):
+            print(time, valueI, valueR)
+        ratioI_by_N.append(valueI)
+        ratioR_by_N.append(valueR)
+        interaction.single_time_step(time, selector)
+        group.update_status_lists(time)
+    return ratioI_by_N, ratioR_by_N
+
 
 def ratio_SIR_numerical(beta, gamma, N, I_0, times):
     """
@@ -98,45 +134,53 @@ def multi_run(I_0, N, times, betas_sim, betas_anal, nruns, mode):
     return np.mean(simul_av, axis=0), np.std(simul_av, axis=0)/np.sqrt(nruns), anals, np.mean(diff_av, axis=0), np.std(diff_av, axis=0)/np.sqrt(nruns)
 
 def test_SI():
-    I_0 = 100
+    I_0 = 10
     mode = "Probabilistic"
-    N = 3000
-    nruns = 1
-    times = np.arange(100)
+    N = 1000
+    nruns = 10
+    times = np.arange(0,100)
 
+    delta_ref = []
+    for i in times:
+        delta_ref.append(1)
+        
     cols = [["steelblue", "royalblue", "navy"], ["salmon", "red", "darkred"]]
     
     def calculate(mode):
         if mode=='Probabilistic':
-            betas_sim  = [0.050, 0.100, 0.150]
-            betas_anal = [0.050, 0.100, 0.150]
+            betas_sim  = [0.1]  #[0.050, 0.100, 0.150]
+            betas_anal = [0.1]  #[0.050, 0.100, 0.150]
             simuls_av, simul,  anals, diff_av, diff = multi_run(I_0, N, times, betas_sim, betas_anal, nruns, mode)
         else:
-            betas_sim  = [0.050, 0.100, 0.150]
-            betas_anal = [0.050, 0.100, 0.150]
+            betas_sim  = [0.1] #[0.050, 0.100, 0.150]
+            betas_anal = [0.1] #[0.050, 0.100, 0.150]
             simuls_av, simul,  anals, diff_av, diff = multi_run(I_0, N, times, betas_sim, betas_anal, nruns, mode)
 
         return simuls_av, simul, anals, diff_av, diff
 
     modes = ['Probabilistic', 'Superposition']
-    betas_anal = [0.05, 0.1,0.150]
+    names = ['mult', 'add']
+    betas_anal = [0.1] #[0.050, 0.100,0.150]
     fig, axes = plt.subplots(2, 1, sharex=True)
     for j, mode in enumerate(modes):
         simuls_av, simul, anals, diff_av, diff = calculate(mode)
         for i in range(len(betas_anal)):
             beta = betas_anal[i]
-            name = "$\\beta = $" + str(beta)
+            name = "$\\beta = $" + str(beta)+" ("+names[j]+")"
             axes[0].plot(times, simuls_av[i], label=name, color=cols[j][i])
-            axes[0].fill_between(times, simuls_av[i]+simul[i], simuls_av[i]-simul[i], alpha =0.4, color = cols[j][i])
+            axes[0].fill_between(times, simuls_av[i]+simul[i],
+                                 simuls_av[i]-simul[i], alpha =0.4, color = cols[j][i])
             axes[0].plot(times, anals[i], color=cols[j][i], linestyle="dashed")
             axes[1].plot(times, diff_av[i], color=cols[j][i])
-            axes[1].fill_between(times, diff_av[i]+diff[i], diff_av[i]-diff[i], alpha =0.4, color = cols[j][i])
+            axes[1].fill_between(times, diff_av[i]+diff[i],
+                                 diff_av[i]-diff[i], alpha =0.4, color = cols[j][i])
             print(name)
     axes[0].legend()
     axes[0].set_ylabel("infected ratio")
     axes[0].set_yscale
-    titlestring = "$N = "+str(N)+"$, $N_0 = "+str(I_0)+"$ simulation vs SI model"
+    titlestring = str(nruns)+" simulation runs ($N = "+str(N)+"$, $N_0 = "+str(I_0)+"$) vs SI model"
     axes[0].set_title(titlestring)
+    axes[1].plot(times,delta_ref,color = "black", linestyle="dashed")
     axes[1].set_ylabel("simulation/analytic")
     axes[1].set_xlabel("time")
     fig.suptitle("Ratio of infected people (SI)")
@@ -144,31 +188,40 @@ def test_SI():
 
 
 def test_SIR():
-    N      = 10000
-    N0     = 100
-    betas  = [0.500, 0.500, 0.300]
-    gammas = [0.100, 0.250, 0.100]
-    colsI  = ["salmon", "red", "darkred"]
-    colsR  = ["steelblue", "royalblue", "navy"]
-    styles = ["solid","dashed","dotted"]
-    infN   = []
-    recN   = []
-    times  = np.arange(100)
+    N         = 10000
+    N0        = 50
+    betas     = [0.300]
+    gammas    = [0.100]
+    colsR     = ["salmon", "red", "darkred"]
+    colsI     = ["steelblue", "royalblue", "navy"]
+    stylesnum = ["solid"]
+    stylessim = ["dashed"]
+    infNnum   = []
+    recNnum   = []
+    infNsim   = []
+    recNsim   = []
+    times    = np.arange(0,100)
     for i in range(len(betas)):
         beta  = betas[i]
         gamma = gammas[i]
         print ("beta = ",beta,", gamma = ",gamma)
         infected, recovered = ratio_SIR_numerical(beta, gamma, N, N0, times)
-        infN.append(infected)
-        recN.append(recovered)
+        infNnum.append(infected)
+        recNnum.append(recovered)
+        print ("N, N0 = ",N, N0)
+        infected, recovered = ratio_SIR_simulated(beta, gamma, N, N0, times,"Probabilistic")
+        infNsim.append(infected)
+        recNsim.append(recovered)
 
     fig, axis = plt.subplots(1, 1, sharex=True)
     for i in range(len(betas)):
         beta  = betas[i]
         gamma = gammas[i]
         name  = "$\\beta = $" + str(beta)+", $\\gamma = $"+str(gamma)
-        axis.plot(times, infN[i], label=name+": infected", color=colsI[i], linestyle=styles[i])
-        axis.plot(times, recN[i], label=name+": recovered", color=colsR[i], linestyle=styles[i])
+        axis.plot(times, infNnum[i], label=name+": infected", color=colsI[i], linestyle=stylesnum[i])
+        axis.plot(times, recNnum[i], label=name+": recovered", color=colsR[i], linestyle=stylesnum[i])
+        axis.plot(times, infNsim[i], label=name+": infected", color=colsI[i], linestyle=stylessim[i])
+        axis.plot(times, recNsim[i], label=name+": recovered", color=colsR[i], linestyle=stylessim[i])
         print(name)
     fig.suptitle("Ratios of infected and recovered people (SIR)")
     plt.legend()
@@ -182,5 +235,5 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import itertools
     
-    test_SI()
+    test_SIR()
 
