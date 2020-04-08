@@ -11,3 +11,8 @@ class MSOArea:
         self.name = name
         self.small_areas = oares
         self.companysizes = companysizes
+
+class MSOAreas:
+
+    def __init__(self):
+        self.members = []

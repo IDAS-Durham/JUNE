@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from covid.group import Group
+from covid.groups import Group
 from covid.interaction import Interaction
 from covid.infection import Infection, InfectionSelector
 

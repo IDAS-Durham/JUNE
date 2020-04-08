@@ -8,15 +8,12 @@ class Company:
     its workers(19 - 74 years old).
     """
 
-    def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
-        self.id = school_id
-        self.pupils= {}
-        self.coordinates = coordinates
-        #self.residents = group(self.id,"household")
-        self.n_pupils_max = n_pupils
+    def __init__(self, company_id, msoa, n_employees):
+        self.id = company_id
+        self.people = []
+        self.msoa = msoa
+        self.n_employees_max = n_employees
         self.n_pupils = 0
-        self.age_min = age_min
-        self.age_max = age_max
 
 class Companies:
     pass
