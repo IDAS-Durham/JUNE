@@ -1,14 +1,16 @@
 from sklearn.neighbors import BallTree
-from covid.inputs import Inputs
-from covid.area import Area
-from covid.distributors import *
-from covid.school import School, SchoolError
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
 
+from covid.inputs import Inputs
+from covid.area import Area
+from covid.distributors import *
+from covid.school import School, SchoolError
+from covid.interaction import Single_Interaction
+from covid.infection_selector import InfectionSelector
 
 class World:
     """
@@ -290,15 +292,27 @@ class World:
         for group in active_groups:
             group._unset_active_members()
 
+    def _initialize_infection_selector(self, ):
+        Tparams = {}
+        Tparams["Transmission:Type"] = "SI"
+        params  = {}
+        Tparams["Transmission:Probability"] = params
+        params["Mean"] = beta
+        selector = InfectionSelector(Tparams, None)
+        return selector 
+
 
     def _infect(self, group, duration):
-        for ind_group in world:
-            # check there are suceptible (if all infected don't run)
-            # Call Frank
+        for group_instance in getattr(self, group).keys():
+            interaction = Single_Interaction(group_instance, "Superposition")
+            selector = self._initialize_infection_selector()
+            # one step is one hour
+            for step in range(duration*self.config["world"]["steps_per_hour"]):
+                interaction.single_time_step(step, selector)
 
     def seed_infection(self, n_infected):
 
-    def group_dynamics(self, total_days):
+    def group_dynamics(self, total_days ):
 
         time_steps = self.config["world"]["step_duration"].keys()
         assert sum(self.config["world"]["step_duration"].values()) == 24 
@@ -309,11 +323,11 @@ class World:
                 active_groups = self._active_groups(time)
                 # update people (where they are according to time)
                 self._set_active_members(active_groups)
-
                 # infect people in groups
                 for group in active_groups:
-                        #self._infect(group,
-#                                self.config["world"]["step_duration"]) # Call infection with how long it lasts
+                        self._infect(group,
+                                self.config["world"]["step_duration"],
+                                )
                 self._unset_active_members(active_groups)
             self.days += 1
 
