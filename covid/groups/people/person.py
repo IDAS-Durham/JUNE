@@ -139,7 +139,7 @@ class People:
 
     def __init__(self, world):
         self.world = world
-        self.members = {}
+        self.members = []
         self.total_people = 0
 
     def populate_area(self, area):

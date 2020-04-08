@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("../covid")
-import group as Group
+from covid.groups import Group
 
 if __name__ == "__main__":
     import person as Person

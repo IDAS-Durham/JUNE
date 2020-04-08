@@ -74,8 +74,8 @@ class PersonDistributor:
             person = Person(
                 self.people.total_people, self.area, age_random, sex_random, 0, 0
             )
-            self.people.members[self.people.total_people] = person
-            self.area.people[i] = person
+            self.people.members.append(person)
+            self.area.people.append(person)
             self.people.total_people += 1
             # assign person to the right group:
             if age_random < self.ADULT_THRESHOLD:
