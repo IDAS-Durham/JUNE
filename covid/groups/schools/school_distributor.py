@@ -53,12 +53,12 @@ class SchoolDistributor:
         return agemean
 
     def distribute_kids_to_school(self):
-        for person in self.area.people.values():
+        for person in self.area.people:
             if (
                 person.age <= self.SCHOOL_AGE_RANGE[1]
                 and person.age >= self.SCHOOL_AGE_RANGE[0]
             ):  # person age from 5 up to 19 yo
-                agegroup = self.area.world.areas.decoder_age[person.age]
+                agegroup = self.area.world.decoder_age[person.age]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
                     agegroup
@@ -83,6 +83,6 @@ class SchoolDistributor:
                         school = self.closest_schools_by_age[agegroup][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.pupils[school.n_pupils] = person
+                school.people.append(person)
                 person.school = school
                 school.n_pupils += 1
