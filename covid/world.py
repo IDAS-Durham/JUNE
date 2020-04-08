@@ -86,7 +86,7 @@ class World:
         Initializes a world instance from an already populated world.
         """
         import pickle
-        with open(pickle_obj, "r") as f:
+        with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
     
