@@ -2,7 +2,7 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
-from covid.school import SchoolError
+#from covid.school import SchoolError
 
 EARTH_RADIUS = 6371  # km
 
@@ -17,21 +17,22 @@ class SchoolDistributor:
     Distributes students to different schools
     """
 
-    def __init__(self, area):
+    def __init__(self, schools, area):
         self.area = area
+        self.schools = schools
         self.MAX_SCHOOLS = area.world.config["schools"]["neighbour_schools"]
         self.SCHOOL_AGE_RANGE = area.world.config["schools"]["school_age_range"]
         self.closest_schools_by_age = {}
         self.is_agemean_full = {}
-        for agegroup, school_tree in self.area.world.school_trees.items():
+        for agegroup, school_tree in self.schools.school_trees.items():
             closest_schools = []
-            closest_schools_idx = self.area.world.get_closest_schools(
+            closest_schools_idx = self.schools.get_closest_schools(
                 agegroup, self.area, self.MAX_SCHOOLS,
             )
             for idx in closest_schools_idx:
                 closest_schools.append(
-                    area.world.schools[
-                        area.world.school_agegroup_to_global_indices[agegroup][idx]
+                    self.schools.members[
+                        self.schools.school_agegroup_to_global_indices[agegroup][idx]
                     ]
                 )
             agemean = self.compute_age_group_mean(agegroup)
@@ -57,7 +58,7 @@ class SchoolDistributor:
                 person.age <= self.SCHOOL_AGE_RANGE[1]
                 and person.age >= self.SCHOOL_AGE_RANGE[0]
             ):  # person age from 5 up to 19 yo
-                agegroup = self.area.world.decoder_age[person.age]
+                agegroup = self.area.world.areas.decoder_age[person.age]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
                     agegroup

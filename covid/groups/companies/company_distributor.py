@@ -2,7 +2,6 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
-from covid.school import SchoolError
 
 """
 This file contains routines to attribute people with different characteristics
