@@ -31,7 +31,7 @@ class Inputs:
         }
 
         self.school_df = self.read_school_census()
-        self.company_df = self.read_companysize_census()
+        #self.company_df = self.read_companysize_census()
 
     def read_df(
         self,

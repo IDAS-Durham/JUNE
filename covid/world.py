@@ -1,8 +1,5 @@
-from sklearn.neighbors import BallTree
 from covid.inputs import Inputs
-from covid.area import Area
-from covid.distributors import *
-from covid.school import School, SchoolError
+from covid.groups import *
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
@@ -26,146 +23,53 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
-        '''
-        self.inputs = Inputs(zone=self.config["world"]["zone"])
-        self.people = {}
-        self.total_people = 0
-        self.decoder_sex = {}
+        # decoders for census variables 
         self.decoder_age = {}
-        self.encoder_household_composition = {}
+        self.decoder_sex = {}
         self.decoder_household_composition = {}
-        self.areas = self.read_areas_census(self.inputs.household_dict)
+        self.encoder_household_composition = {}
+        print("Reading inputs...")
+        self.inputs = Inputs(zone=self.config["world"]["zone"])
+        print("Initializing areas...")
+        self.areas = Areas(self)
+        areas_distributor = AreaDistributor(self.areas, self.inputs.household_dict)
+        areas_distributor.read_areas_census()
+        print("Initializing people...")
+        self.people = People(self)
+        for area in self.areas.members.values():
+            person_distributor = PersonDistributor(self.people, area)
+            person_distributor.populate_area()
+        print("Initializing households...")
+        for area in self.areas.members.values():
+            area.households = Households(area)
+            household_distributor = HouseholdDistributor(self, area.households, area)
+            household_distributor.distribute_people_to_household()
+        print("Initializing schools...")
+        self.schools = Schools(self, self.areas, self.inputs.school_df)
+        for area in self.areas.members.values():
+            self.distributor = SchoolDistributor(self.schools, area)
+            self.distributor.distribute_kids_to_school()
+        '''
         #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         print("Creating schools...")
         self._init_schools(self.inputs.school_df)
-        # self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
         #self._init_companies(self.inputs.company_df)
         print("Done.")
         '''
 
-    def _compute_age_group_mean(self, agegroup):
-        try:
-            age_1, age_2 = agegroup.split("-")
-            if age_2 == "XXX":
-                agemean = 90
-            else:
-                age_1 = float(age_1)
-                age_2 = float(age_2)
-                agemean = (age_2 + age_1) / 2.0
-        except:
-            agemean = int(agegroup)
-        return agemean
-
-    def _init_schools(self, school_df):
+    @classmethod
+    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
         """
-        Initializes schools.
+        Initializes a world instance from an already populated world.
         """
-        SCHOOL_AGE_THRESHOLD = [1, 7]
-        schools = {}
-        school_age = list(self.decoder_age.values())[
-            SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
-        ]
-        school_trees = {}
-        school_agegroup_to_global_indices = (
-            {}
-        )  # stores for each age group the index to the school
-        # create school neighbour trees
-        for agegroup in school_age:
-            school_agegroup_to_global_indices[
-                agegroup
-            ] = {}  # this will be used to track school universally
-            mean = self._compute_age_group_mean(agegroup)
-            _school_df_agegroup = school_df[
-                (school_df["age_min"] <= mean) & (school_df["age_max"] >= mean)
-            ]
-            school_trees[agegroup] = self._create_school_tree(_school_df_agegroup)
-        # create schools and put them in the right age group
-        for i, (index, row) in enumerate(school_df.iterrows()):
-            school = School(
-                i,
-                np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
-                row["NOR"],
-                row["age_min"],
-                row["age_max"],
-            )
-            # to which age group does this school belong to?
-            for agegroup in school_age:
-                agemean = self._compute_age_group_mean(agegroup)
-                if school.age_min <= agemean and school.age_max >= agemean:
-                    school_agegroup_to_global_indices[agegroup][
-                        len(school_agegroup_to_global_indices[agegroup])
-                    ] = i
-            schools[i] = school
-        # store variables to class
-        self.schools = schools
-        self.school_trees = school_trees
-        self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
-        return None
-
-    def get_closest_schools(self, age, area, k):
-        """
-        Returns the k schools closest to the output area centroid.
-        """
-        # distances, neighbours = self.schools_tree.query(
-        #    np.deg2rad(area.coordinates.reshape(1, -1)), r=radius, sort_results=True,
-        # )
-        school_tree = self.school_trees[age]
-        distances, neighbours = school_tree.query(
-            np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True,
-        )
-        return neighbours[0]
-
-    def _create_school_tree(self, school_df):
-        """
-        Reads school location and sizes, it initializes a KD tree on a sphere,
-        to query the closest schools to a given location.
-        """
-        school_tree = BallTree(
-            np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
-        )
-        return school_tree
-
-    def read_areas_census(self, input_dict):
-        """
-        Reads census data from the input dictionary, and initializes
-        the encoders/decoders for sex, age, and household variables.
-        It also initializes all the areas of the world.
-        This is all on the OA layer.
-        """
-        # TODO: put this in input class
-        areas_coordinates_df = pd.read_csv(
-            "../data/geographical_data/oa_coorindates.csv"
-        )
-        areas_coordinates_df.set_index("OA11CD", inplace=True)
-        n_residents_df = input_dict.pop("n_residents")
-        # n_households_df = input_dict.pop("n_households")
-        age_df = input_dict.pop("age_freq")
-        sex_df = input_dict.pop("sex_freq")
-        household_compostion_df = input_dict.pop("household_composition_freq")
-        for i, column in enumerate(age_df.columns):
-            self.decoder_age[i] = column
-        for i, column in enumerate(sex_df.columns):
-            self.decoder_sex[i] = column
-        for i, column in enumerate(household_compostion_df.columns):
-            self.decoder_household_composition[i] = column
-            self.encoder_household_composition[column] = i
-        areas_dict = {}
-        for i, area_name in enumerate(n_residents_df.index):
-            area_coord = areas_coordinates_df.loc[area_name][["Y", "X"]].values
-            area = Area(
-                self,
-                area_name,
-                n_residents_df.loc[area_name],
-                0,  # n_households_df.loc[area_name],
-                {
-                    "age_freq": age_df.loc[area_name],
-                    "sex_freq": sex_df.loc[area_name],
-                    "household_freq": household_compostion_df.loc[area_name],
-                },
-                area_coord,
-            )
-            areas_dict[i] = area
-        return areas_dict
+        import pickle
+        with open(pickle_obj, "r") as f:
+            world = pickle.load(f)
+        return world
+    
+    @classmethod
+    def from_config(cls, config_file):
+        return cls(config_file)
 
     def read_msoareas_census(self, company_df):
         """
@@ -243,41 +147,41 @@ class World:
         self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
         return None
 
-    def populate_world(self):
-        """
-        Populates world with people, houses, schools, etc.
-        """
-        print("Populating world ...")
-        pbar = tqdm(total=len(self.areas.keys()))  # progress bar
-        for area in self.areas.values():
-            # create population
-            people_dist = PeopleDistributor(area)
-            people_dist.populate_area()
+    #def populate_world(self):
+    #    """
+    #    Populates world with people, houses, schools, etc.
+    #    """
+    #    print("Populating world ...")
+    #    pbar = tqdm(total=len(self.areas.keys()))  # progress bar
+    #    for area in self.areas.values():
+    #        # create population
+    #        people_dist = PeopleDistributor(area)
+    #        people_dist.populate_area()
 
-            # distribute people to households
-            household_dist = HouseholdDistributor(area)
-            household_dist.distribute_people_to_household()
+    #        # distribute people to households
+    #        household_dist = HouseholdDistributor(area)
+    #        household_dist.distribute_people_to_household()
 
-            # distribute kids to schools
-            school_dist = SchoolDistributor(area)
-            school_dist.distribute_kids_to_school()
+    #        # distribute kids to schools
+    #        school_dist = SchoolDistributor(area)
+    #        school_dist.distribute_kids_to_school()
 
-            # TODO: distribute workers to companies
-            # work_dist = WorkDistributor(area)
-            # work_dist.distribute_adults_to_work()
+    #        # TODO: distribute workers to companies
+    #        # work_dist = WorkDistributor(area)
+    #        # work_dist.distribute_adults_to_work()
 
-            pbar.update(1)
+    #        pbar.update(1)
 
-        #print("and make it work ...")
-        #pbar = tqdm(total=len(self.msoareas.keys()))  # progress bar
-        #for msoarea in self.msoareas.values():
-            # TODO: distribute workers to companies
-            # work_dist = WorkDistributor(msoarea)
-            # work_dist.distribute_adults_to_companies()
+    #    #print("and make it work ...")
+    #    #pbar = tqdm(total=len(self.msoareas.keys()))  # progress bar
+    #    #for msoarea in self.msoareas.values():
+    #        # TODO: distribute workers to companies
+    #        # work_dist = WorkDistributor(msoarea)
+    #        # work_dist.distribute_adults_to_companies()
 
-            #pbar.update(1)
+    #        #pbar.update(1)
 
-        pbar.close()
+    #    pbar.close()
 
     def _active_groups(self, time):
 
@@ -293,10 +197,12 @@ class World:
 
     def _infect(self, group, duration):
         for ind_group in world:
+            break
             # check there are suceptible (if all infected don't run)
             # Call Frank
 
     def seed_infection(self, n_infected):
+        pass
 
     def group_dynamics(self, total_days):
 
@@ -312,6 +218,7 @@ class World:
 
                 # infect people in groups
                 for group in active_groups:
+                    break
                         #self._infect(group,
 #                                self.config["world"]["step_duration"]) # Call infection with how long it lasts
                 self._unset_active_members(active_groups)

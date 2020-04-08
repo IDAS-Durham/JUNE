@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Area:
     """
     Stores information about the area, like the total population
@@ -26,4 +25,17 @@ class Area:
                 )
             except AssertionError:
                 raise ValueError(f"area {self.name} key {key}, ratios not adding to 1")
+
+
+class Areas:
+
+    def __init__(self, world):
+        self.world = world
+        self.members = {}
+        self.decoder_age = {}
+        self.decoder_sex = {}
+        self.decoder_household_composition = {}
+        self.encoder_household_composition = {}
+        #self.distributor = AreaDistributor(self, input_dict)
+        #self.members = self.distributor.read_areas_census()
 

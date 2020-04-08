@@ -1,17 +1,18 @@
 import numpy as np
 from scipy import stats
-from covid.person import Person
+from covid.groups.people import Person
 
-class PeopleError(BaseException):
+class PersonError(BaseException):
     pass
 
-class PeopleDistributor:
+class PersonDistributor:
     """
     Creates the population of the given area with sex and age given
     by the census statistics
     """
-    def __init__(self, area):
+    def __init__(self, people, area):
         self.area = area
+        self.people = people
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
@@ -71,11 +72,11 @@ class PeopleDistributor:
             age_random = self.area.age_rv.rvs(size=1)[0]
             sex_random = self.area.sex_rv.rvs(size=1)[0]
             person = Person(
-                self.area.world.total_people, self.area, age_random, sex_random, 0, 0
+                self.people.total_people, self.area, age_random, sex_random, 0, 0
             )
-            self.area.world.people[self.area.world.total_people] = person
+            self.people.members[self.people.total_people] = person
             self.area.people[i] = person
-            self.area.world.total_people += 1
+            self.people.total_people += 1
             # assign person to the right group:
             if age_random < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
