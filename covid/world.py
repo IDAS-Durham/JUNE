@@ -42,6 +42,7 @@ class World:
         self._init_schools(self.inputs.school_df)
         # self.secondary_school_tree = self.create_school_tree(inputs.secondary_school)
         #self._init_companies(self.inputs.company_df)
+        self.populate_world()
         print("Done.")
         '''
 
@@ -203,7 +204,7 @@ class World:
             company_df: pd.DataFrame
                 Contains information on nr. of companies with nr. of employees per MSOA
         """
-        LABOUR_AGE_THRESHOLD = [8, 13]
+        self.WORK_AGE_THRESHOLD = [8, 13]
         companies = {}
         school_age = list(self.decoder_age.values())[
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
@@ -255,7 +256,7 @@ class World:
             # create population
             people_dist = PeopleDistributor(area)
             people_dist.populate_area()
-
+    
             # distribute people to households
             household_dist = HouseholdDistributor(area)
             household_dist.distribute_people_to_household()
