@@ -58,7 +58,6 @@ class World:
         #self._init_companies(self.inputs.company_df)
         self.populate_world()
         print("Done.")
-        '''
 
     @classmethod
     def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
@@ -111,6 +110,7 @@ class World:
     def _init_companies(self, company_df):
         """
         Initializes companies.
+        Fit function to company size distribution.
 
         Input:
             company_df: pd.DataFrame
@@ -125,7 +125,19 @@ class World:
         school_agegroup_to_global_indices = (
             {}
         )  # stores for each age group the index to the school
-        # create school neighbour trees
+        #areas_dict = {}
+        #for i, area_code in enumerate(company_df["MSOA11CD"].values):
+        #    area = MSOA(
+        #        self,
+        #        area_code,
+        #        area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
+        #        company_df[company_df["msoa11cd"] == "E02002559"][[
+        #            "Micro (0 to 9)", "10 to 19", "20 to 49", "50 to 99",
+        #            "100 to 249", "250 to 499", "500 to 999", "1000+",
+        #        ]].values
+        #    )
+        #    areas_dict[i] = area
+        # create companies
         for agegroup in school_age:
             school_agegroup_to_global_indices[
                 agegroup
@@ -208,9 +220,11 @@ class World:
                     )
                 self._unset_active_members(active_groups)
             self.days += 1
+    """
 
 
 if __name__ == "__main__":
+    world = World()
 
-    world = World.from_pickle()
-    world.group_dynamics(2)
+    #world = World.from_pickle()
+    #world.group_dynamics(2)

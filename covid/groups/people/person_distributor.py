@@ -50,6 +50,7 @@ class PersonDistributor:
         self.area.sex_rv = stats.rv_discrete(
             values=(np.arange(0, len(sex_freq)), sex_freq.values)
         )
+
     def populate_area(self):
         """
         Creates all people living in this area, with the charactersitics
@@ -112,4 +113,3 @@ class PersonDistributor:
             raise (
                 "Number of men, women, oldmen, oldwomen, and kids doesnt add up to total population"
             )
-
