@@ -22,11 +22,10 @@ class HouseholdDistributor:
     Note: in this class student refers to an adult age 18-25, independently of they being a student or not.
     """
 
-    def __init__(self, world, households, area):
+    def __init__(self, world, area):
         self.world = world
-        self.households = households
         self.SAME_SEX_COUPLE_RATIO = area.world.config["households"]["same_sex_couple_ratio"]
-        self.area = households.area
+        self.area = area
         self._init_random_variables()
 
     def _init_random_variables(self):
@@ -366,7 +365,8 @@ class HouseholdDistributor:
                     household.household_composition = self.world.encoder_household_composition[
                         household_filled_config
                     ]
-            self.households.members.append(household)
+            self.world.households.members.append(household)
+            self.area.households.append(household)
             house_id += 1
         self.kids_left = len(self.area._kids)
 

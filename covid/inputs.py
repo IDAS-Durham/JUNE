@@ -36,9 +36,9 @@ class Inputs:
         self.school_df = self.read_school_census()
         #self.company_df = self.read_companysize_census()
         # Read census data on low resolution map (MSOA)
-        self.oa2msoa_df = self.oa2msoa()
-        self.workflow_dict = self.create_workflow_dict()
-        self.companysize_df = self.read_companysize_census()
+        #self.oa2msoa_df = self.oa2msoa()
+        #self.workflow_dict = self.create_workflow_dict()
+        #self.companysize_df = self.read_companysize_census()
 
     def read_df(
         self,
