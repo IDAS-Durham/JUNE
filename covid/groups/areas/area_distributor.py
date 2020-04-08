@@ -4,8 +4,8 @@ from covid.groups.areas import Area
 
 
 class AreaDistributor:
-    def __init__(self, areas, input_dict):
-        self.input_dict = input_dict
+    def __init__(self, areas, input_data):
+        self.input = input_data 
         self.areas = areas
 
     def read_areas_census(self):
@@ -15,34 +15,14 @@ class AreaDistributor:
         It also initializes all the areas of the world.
         This is all on the OA layer.
         """
-        input_dict = self.input_dict
-        # TODO: put this in input class
-        areas_coordinates_df_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..",
-            "..",
-            "..",
-            "data",
-            "geographical_data",
-            "oa_coorindates.csv",
-        )
-        areas_coordinates_df = pd.read_csv(areas_coordinates_df_path)
-        areas_coordinates_df.set_index("OA11CD", inplace=True)
-        n_residents_df = input_dict.pop("n_residents")
-        # n_households_df = input_dict.pop("n_households")
-        age_df = input_dict.pop("age_freq")
-        sex_df = input_dict.pop("sex_freq")
-        household_compostion_df = input_dict.pop("household_composition_freq")
-        for i, column in enumerate(age_df.columns):
-            self.areas.world.decoder_age[i] = column
-        for i, column in enumerate(sex_df.columns):
-            self.areas.world.decoder_sex[i] = column
-        for i, column in enumerate(household_compostion_df.columns):
-            self.areas.world.decoder_household_composition[i] = column
-            self.areas.world.encoder_household_composition[column] = i
+        n_residents_df = self.input.n_residents
+        age_df = self.input.age_freq 
+        sex_df = self.input.sex_freq
+        household_composition_df = self.input.household_composition_freq
         areas_list = []
         for i, area_name in enumerate(n_residents_df.index):
-            area_coord = areas_coordinates_df.loc[area_name][["Y", "X"]].values
+            area_coord = self.input.areas_coordinates_df.loc[area_name][["Y", "X"]].values
+            
             area = Area(
                 self.areas.world,
                 area_name,
@@ -52,7 +32,7 @@ class AreaDistributor:
                 {
                     "age_freq": age_df.loc[area_name],
                     "sex_freq": sex_df.loc[area_name],
-                    "household_freq": household_compostion_df.loc[area_name],
+                    "household_freq": household_composition_df.loc[area_name],
                 },
                 area_coord,
             )
