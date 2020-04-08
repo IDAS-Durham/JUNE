@@ -2,15 +2,26 @@ title: Covid configuration example
 
 world:
   zone: NorthEast # available are all UK regions, and EnglandWales together.
+  steps_per_hour: 10
+  step_duration: 
+      1: 8 # first time step duration in hours
+      2: 16
+  step_active_groups: 
+    1: ['schools', 'households'] # active groups during first time step
+    2: ['households']
+
 
 people:
   adult_threshold: 6 # 18 yo
   student_age_group: 7
   old_threshold: 12 # 12 corresponds to +65 yo
 
+households:
+  same_sex_couple_ratio: 0.1
+
 schools:
   school_age_range: [1,6] # numbers correspond to age groups defined by NOMIS dataset.
   neighbour_schools: 6
 
-households:
-  same_sex_couple_ratio: 0.1
+companies:
+  work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.

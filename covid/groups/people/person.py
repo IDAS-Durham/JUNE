@@ -1,6 +1,7 @@
 import sys
 import random
 from covid.infection import Infection
+#from covid.groups.people import PersonDistributor
 
 class Person:
     """
@@ -134,14 +135,14 @@ class Person:
             print ("-- person has recovered.")
 
 
-    
-class Adult(Person):
+class People:
 
-    def __init__(self, area, age, sex, health_index, econ_index, employed):
-        Person.__init__(self, area, age, sex, health_index, econ_index)
-        self.employed = employed
+    def __init__(self, world):
+        self.world = world
+        self.members = {}
+        self.total_people = 0
 
-class Child(Person):
-    def __init__(self, area, age, sex, health_index, econ_index):
-        Person.__init__(self, area, age, sex, health_index, econ_index)
+    def populate_area(self, area):
+        distributor = PersonDistributor(self, area)
+        distributor.populate_area()
 
