@@ -51,7 +51,6 @@ class World:
         for area in self.areas.members.values():
             self.distributor = SchoolDistributor(self.schools, area)
             self.distributor.distribute_kids_to_school()
-        '''
         #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         print("Creating schools...")
         self._init_schools(self.inputs.school_df)
