@@ -26,7 +26,6 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
-        '''
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         self.people = {}
         self.total_people = 0
@@ -42,7 +41,6 @@ class World:
         #self._init_companies(self.inputs.company_df)
         self.populate_world()
         print("Done.")
-        '''
 
     def _compute_age_group_mean(self, agegroup):
         try:
@@ -150,12 +148,14 @@ class World:
         for i, column in enumerate(household_compostion_df.columns):
             self.decoder_household_composition[i] = column
             self.encoder_household_composition[column] = i
+
         areas_dict = {}
         for i, area_name in enumerate(n_residents_df.index):
             area_coord = areas_coordinates_df.loc[area_name][["Y", "X"]].values
             area = Area(
                 self,
                 area_name,
+                self.inputs.oa2msoa_df.loc[area_name].values[0],
                 n_residents_df.loc[area_name],
                 0,  # n_households_df.loc[area_name],
                 {
@@ -165,38 +165,16 @@ class World:
                 },
                 area_coord,
             )
+            print(area.name, area.msoarea)
+            print("\n")
             areas_dict[i] = area
         return areas_dict
 
-    def read_msoareas_census(self, company_df):
-        """
-        Creat link between OA and MSOA layers.
-        """
-        dirs = "../data/census_data/area_code_translations/"
-        area_trans_df = pd.read_csv(
-            dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv"
-        )
-        area_trans_df = area_trans_df.drop_duplicates(subset="OA11CD").set_index(
-            "OA11CD"
-        )["MSOA11CD"]
-
-        areas_dict = {}
-        for i, area_code in enumerate(company_df["MSOA11CD"].values):
-            area = MSOAres(
-                self,
-                area_code,
-                area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
-                company_df[company_df["msoa11cd"] == "E02002559"][[
-                    "Micro (0 to 9)", "10 to 19", "20 to 49", "50 to 99",
-                    "100 to 249", "250 to 499", "500 to 999", "1000+",
-                ]].values
-            )
-            areas_dict[i] = area
-        return areas_dict
-
+    
     def _init_companies(self, company_df):
         """
         Initializes companies.
+        Fit function to company size distribution.
 
         Input:
             company_df: pd.DataFrame
@@ -211,7 +189,19 @@ class World:
         school_agegroup_to_global_indices = (
             {}
         )  # stores for each age group the index to the school
-        # create school neighbour trees
+        #areas_dict = {}
+        #for i, area_code in enumerate(company_df["MSOA11CD"].values):
+        #    area = MSOA(
+        #        self,
+        #        area_code,
+        #        area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
+        #        company_df[company_df["msoa11cd"] == "E02002559"][[
+        #            "Micro (0 to 9)", "10 to 19", "20 to 49", "50 to 99",
+        #            "100 to 249", "250 to 499", "500 to 999", "1000+",
+        #        ]].values
+        #    )
+        #    areas_dict[i] = area
+        # create companies
         for agegroup in school_age:
             school_agegroup_to_global_indices[
                 agegroup
@@ -279,7 +269,7 @@ class World:
             #pbar.update(1)
 
         pbar.close()
-
+    """
     def _active_groups(self, time):
 
         return self.config["world"]["step_active_groups"][time]
@@ -317,10 +307,12 @@ class World:
 #                                self.config["world"]["step_duration"]) # Call infection with how long it lasts
                 self._unset_active_members(active_groups)
             self.days += 1
+    """
 
         
 
 if __name__ == "__main__":
+    world = World()
 
-    world = World.from_pickle()
-    world.group_dynamics(2)
+    #world = World.from_pickle()
+    #world.group_dynamics(2)

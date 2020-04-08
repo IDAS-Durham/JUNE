@@ -2,14 +2,17 @@ import numpy as np
 from scipy import stats
 from covid.person import Person
 
+
 class PeopleError(BaseException):
     pass
+
 
 class PeopleDistributor:
     """
     Creates the population of the given area with sex and age given
     by the census statistics
     """
+
     def __init__(self, area):
         self.area = area
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
@@ -49,6 +52,7 @@ class PeopleDistributor:
         self.area.sex_rv = stats.rv_discrete(
             values=(np.arange(0, len(sex_freq)), sex_freq.values)
         )
+
     def populate_area(self):
         """
         Creates all people living in this area, with the charactersitics
@@ -71,7 +75,12 @@ class PeopleDistributor:
             age_random = self.area.age_rv.rvs(size=1)[0]
             sex_random = self.area.sex_rv.rvs(size=1)[0]
             person = Person(
-                self.area.world.total_people, self.area, age_random, sex_random, 0, 0
+                self.area.world.total_people,
+                self.area,
+                age_random,
+                sex_random,
+                0,
+                0,
             )
             self.area.world.people[self.area.world.total_people] = person
             self.area.people[i] = person
@@ -111,4 +120,3 @@ class PeopleDistributor:
             raise (
                 "Number of men, women, oldmen, oldwomen, and kids doesnt add up to total population"
             )
-
