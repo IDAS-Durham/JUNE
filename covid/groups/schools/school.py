@@ -111,3 +111,11 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
+
+    def set_active_members(self):
+        for school in self.members:
+            for person in school.people:
+                if person.active_group != None:
+                    raise SchoolError("Trying to set an already active person")
+                else:
+                    person.active_group = "school"

@@ -1,10 +1,26 @@
 from covid.inputs import Inputs
 from covid.groups import *
+from covid.infection_selector import InfectionSelector
+from covid.interaction import Single_Interaction
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
+
+tau = 100000
+beta = 0.3
+mu = 0.005
+n_infections = 2
+Tparams = {}
+Tparams["Transmission:Type"] = "SIR"
+Tparams['Transmission:RecoverCutoff'] = {"Mean": tau}
+paramsP = {}
+Tparams["Transmission:Probability"] = paramsP
+paramsP["Mean"] = beta
+paramsR = {}
+Tparams["Transmission:Recovery"] = paramsR
+paramsR["Mean"] = mu
 
 class World:
     """
@@ -38,24 +54,30 @@ class World:
         areas_distributor.read_areas_census()
         print("Initializing people...")
         self.people = People(self)
+        pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             person_distributor = PersonDistributor(self.people, area)
             person_distributor.populate_area()
+            pbar.update(1)
+        pbar.close()
         print("Initializing households...")
+        pbar = tqdm(total=len(self.areas.members))
+        self.households = Households(self)
         for area in self.areas.members:
-            area.households = Households(area)
-            household_distributor = HouseholdDistributor(self, area.households, area)
+            household_distributor = HouseholdDistributor(self, area)
             household_distributor.distribute_people_to_household()
+            pbar.update(1)
+        pbar.close()
         print("Initializing schools...")
         self.schools = Schools(self, self.areas, self.inputs.school_df)
+        pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             self.distributor = SchoolDistributor(self.schools, area)
             self.distributor.distribute_kids_to_school()
+            pbar.update(1)
+        pbar.close()
         #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
-        print("Creating schools...")
-        self._init_schools(self.inputs.school_df)
         #self._init_companies(self.inputs.company_df)
-        self.populate_world()
         print("Done.")
 
     @classmethod
@@ -170,18 +192,18 @@ class World:
         return None
 
     def _active_groups(self, time):
-
         return self.config["world"]["step_active_groups"][time]
 
-    def _set_active_members(self, active_groups):
-        for group in active_groups:
-            group._set_active_members()
+    def set_active_group_to_people(self, active_groups):
+        for group_name in active_groups:
+            group = getattr(self, group_name)
+            group.set_active_members()
 
-    def _unset_active_members(self, active_groups):
-        for group in active_groups:
-            group._unset_active_members()
+    def set_allpeople_free(self):
+        for person in self.people.members:
+            person.active_group = None
 
-    def _initialize_infection_selector(self,):
+    def _initialize_infection_selector(self):
         Tparams = {}
         Tparams["Transmission:Type"] = "SI"
         params = {}
@@ -191,38 +213,47 @@ class World:
         return selector
 
     def _infect(self, group, duration):
-        for group_instance in getattr(self, group).keys():
+        for group_instance in getattr(self, group).members:
             interaction = Single_Interaction(group_instance, "Superposition")
             selector = self._initialize_infection_selector()
             # one step is one hour
+            if len(group_instance.people) == 0:
+                continue
             for step in range(duration * self.config["world"]["steps_per_hour"]):
                 interaction.single_time_step(step, selector)
 
-    def seed_infection(self, n_infected):
-        pass
+    def seed_infections_group(self, group):#, n_infections, selector):
+        
+        selector = InfectionSelector(Tparams, None)
+        choices = np.random.choice(group.size(), n_infections)
+        for choice in choices:
+            group.people[choice].set_infection(selector.make_infection(group.people[choice], 0))
+
+    def do_timestep(self, time, duration):
+        active_groups = self._active_groups(time)
+        # update people (where they are according to time)
+        self.set_active_group_to_people(active_groups)
+        # infect people in groups
+        for group in active_groups:
+            self._infect(
+                group, duration,
+            )
+        self.set_allpeople_free()
 
     def group_dynamics(self, total_days):
 
         time_steps = self.config["world"]["step_duration"].keys()
         assert sum(self.config["world"]["step_duration"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
-        self.days = 0
+        self.days = 1
         while self.days <= total_days:
             for time in time_steps:
-                active_groups = self._active_groups(time)
-                # update people (where they are according to time)
-                self._set_active_members(active_groups)
-                # infect people in groups
-                for group in active_groups:
-                    self._infect(
-                        group, self.config["world"]["step_duration"],
-                    )
-                self._unset_active_members(active_groups)
+                duration = self.config["world"]["step_duration"][time]
+                self.do_timestep(time, duration)
             self.days += 1
 
 
 if __name__ == "__main__":
     world = World()
-
     #world = World.from_pickle()
     #world.group_dynamics(2)
