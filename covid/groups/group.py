@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 
 allowed_groups = ["Household",
+                  "School",
                   "Work:Outdoor", "Work:Indoor",
                   "Commute:Public", "Commute:Private",
                   "Leisure:Outdoor", "Leisure:Indoor",
@@ -65,7 +66,7 @@ class Group:
             print ("Error in Group.Add(",p,") is not a person.")
             print("--> Exit the code.")
             sys.exit()
-        if person in self.people:
+        if person in self.people.values():
             print ("Tried to add already present person",person.Name(),
                    " to group ",self.gname,".")
             print("--> Ignore and proceed.")

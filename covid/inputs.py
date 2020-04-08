@@ -34,6 +34,7 @@ class Inputs:
             "household_composition_freq": households_df,
         }
         self.school_df = self.read_school_census()
+        #self.company_df = self.read_companysize_census()
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
         self.workflow_dict = self.create_workflow_dict()

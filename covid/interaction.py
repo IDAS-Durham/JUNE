@@ -1,6 +1,5 @@
 from covid.infection import Infection
-from covid.group import Group 
-from covid.person import Person
+from covid.groups import Group 
 import numpy as np
 import sys
 import random
