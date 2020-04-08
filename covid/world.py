@@ -24,7 +24,7 @@ class World:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         # decoders for census variables 
         self.inputs = Inputs(zone=self.config["world"]["zone"])
-        self.people = {}
+        self.people = []
         self.total_people = 0
         self.decoder_sex = {}
         self.decoder_age = {}
@@ -38,17 +38,17 @@ class World:
         areas_distributor.read_areas_census()
         print("Initializing people...")
         self.people = People(self)
-        for area in self.areas.members.values():
+        for area in self.areas.members:
             person_distributor = PersonDistributor(self.people, area)
             person_distributor.populate_area()
         print("Initializing households...")
-        for area in self.areas.members.values():
+        for area in self.areas.members:
             area.households = Households(area)
             household_distributor = HouseholdDistributor(self, area.households, area)
             household_distributor.distribute_people_to_household()
         print("Initializing schools...")
         self.schools = Schools(self, self.areas, self.inputs.school_df)
-        for area in self.areas.members.values():
+        for area in self.areas.members:
             self.distributor = SchoolDistributor(self.schools, area)
             self.distributor.distribute_kids_to_school()
         '''
@@ -187,7 +187,7 @@ class World:
             for step in range(duration * self.config["world"]["steps_per_hour"]):
                 interaction.single_time_step(step, selector)
 
-     def seed_infection(self, n_infected):
+    def seed_infection(self, n_infected):
         pass
 
     def group_dynamics(self, total_days):
