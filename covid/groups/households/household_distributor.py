@@ -81,7 +81,7 @@ class HouseholdDistributor:
         and in one upper or lower group with another probability. (Default is 60/40)
         """
         age_variation = self.age_groups_rv.rvs(size=1)[0]
-        if first_adult_age == len(self.world.areas.decoder_age) - 1:
+        if first_adult_age == len(self.world.decoder_age) - 1:
             age = first_adult_age - abs(age_variation)
         elif first_adult_age == self.ADULT_THRESHOLD:
             age = first_adult_age + abs(age_variation)
@@ -295,7 +295,7 @@ class HouseholdDistributor:
         Given a household with a certain household composition, fills it from the available 
         people pool.
         """
-        household_composition_decoded = self.world.areas.decoder_household_composition[
+        household_composition_decoded = self.world.decoder_household_composition[
             household.household_composition
         ]
         n_kids, n_students, n_adults, n_old = map(
@@ -366,8 +366,8 @@ class HouseholdDistributor:
                     ]
                 except KeyError:
                     aux = True
-                    lastkey = len(self.world.areas.decoder_household_composition)
-                    self.world.areas.decoder_household_composition[lastkey] = household_filled_config
+                    lastkey = len(self.world.decoder_household_composition)
+                    self.world.decoder_household_composition[lastkey] = household_filled_config
                     self.world.areas.encoder_household_composition[household_filled_config] = lastkey 
                     household.household_composition = self.world.areas.encoder_household_composition[
                         household_filled_config

@@ -34,11 +34,11 @@ class AreaDistributor:
         sex_df = input_dict.pop("sex_freq")
         household_compostion_df = input_dict.pop("household_composition_freq")
         for i, column in enumerate(age_df.columns):
-            self.areas.decoder_age[i] = column
+            self.areas.world.decoder_age[i] = column
         for i, column in enumerate(sex_df.columns):
-            self.areas.decoder_sex[i] = column
+            self.areas.world.decoder_sex[i] = column
         for i, column in enumerate(household_compostion_df.columns):
-            self.areas.decoder_household_composition[i] = column
+            self.areas.world.decoder_household_composition[i] = column
             self.areas.encoder_household_composition[column] = i
         areas_dict = {}
         for i, area_name in enumerate(n_residents_df.index):
