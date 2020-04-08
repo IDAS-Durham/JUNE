@@ -1,4 +1,4 @@
-class CompnayError(BaseException):
+class CompanyError(BaseException):
     """Class for throwing company related errors."""
     pass
 
@@ -14,4 +14,7 @@ class Company:
         self.msoa = msoa
         self.n_employees_max = n_employees
         self.n_pupils = 0
+
+class Companies:
+    pass
 
