@@ -21,16 +21,21 @@ class Inputs:
 
         # Read census data on high resolution map (OA)
         self.n_residents = pd.read_csv(
-            os.path.join(self.OUTPUT_AREA_DIR, "residents.csv")
+            os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
+            names=["output_area", "n_residents"],
+            index_col="output_area",
         )
 
-        self.ages_freq, self.decoder_ages = self.read("age_structure.csv")
+        self.age_freq, self.decoder_age = self.read("age_structure.csv")
         self.sex_freq, self.decoder_sex = self.read("sex.csv")
         self.household_composition_freq, self.decoder_household_composition = self.read(
             "household_composition.csv"
         )
-
+        self.encoder_household_composition = {}
+        for i, column in enumerate(self.household_composition_freq.columns):
+            self.encoder_household_composition[column] = i
         self.school_df = self.read_school_census()
+        self.areas_coordinates_df = self.read_coordinates()
         # self.company_df = self.read_companysize_census()
         # Read census data on low resolution map (MSOA)
         # self.oa2msoa_df = self.oa2msoa()
@@ -44,6 +49,19 @@ class Inputs:
         freq = df.div(df.sum(axis=1), axis=0)
         decoder = {i: df.columns[i] for i in range(df.shape[-1])}
         return freq, decoder
+
+    def read_coordinates(self):
+        areas_coordinates_df_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "data",
+            "processed",
+            "geographical_data",
+            "oa_coorindates.csv",
+        )
+        areas_coordinates_df = pd.read_csv(areas_coordinates_df_path)
+        areas_coordinates_df.set_index("OA11CD", inplace=True)
+        return areas_coordinates_df
 
     def read_school_census(self):
         """
@@ -293,7 +311,8 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.ages_freq)
-    print(ip.decoder_ages)
+    print(ip.age_freq)
+    print(ip.decoder_age)
     print(ip.decoder_sex)
     print(ip.decoder_household_composition)
+    print(ip.areas_coordinates_df)

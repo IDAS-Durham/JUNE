@@ -6,11 +6,7 @@ import os
 
 
 def read_df(
-    DATA_DIR: str,
-    filename: str,
-    column_names: list,
-    usecols: list,
-    index: str,
+    DATA_DIR: str, filename: str, column_names: list, usecols: list, index: str,
 ) -> pd.DataFrame:
     """Read dataframe and format
 
@@ -27,13 +23,11 @@ def read_df(
     """
 
     df = pd.read_csv(
-        os.path.join(DATA_DIR, filename),
-        names=column_names,
-        usecols=usecols,
-        header=0,
+        os.path.join(DATA_DIR, filename), names=column_names, usecols=usecols, header=0,
     )
     df.set_index(index, inplace=True)
     return df
+
 
 def read_population_df(OUTPUT_AREA_DIR) -> pd.DataFrame:
     """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
@@ -78,7 +72,8 @@ def read_population_df(OUTPUT_AREA_DIR) -> pd.DataFrame:
 
     return population_df["n_residents"], population_df.drop(columns="n_residents")
 
-def read_ages_df(OUTPUT_AREA_DIR:str ,freq: bool = True) -> pd.DataFrame:
+
+def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
     """Read ages dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks102ew
 
     Args:
@@ -110,11 +105,8 @@ def read_ages_df(OUTPUT_AREA_DIR:str ,freq: bool = True) -> pd.DataFrame:
 
     ages_usecols = [2,] + list(range(5, 21))
 
-    ages_df = read_df(
-        OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area"
-    )
+    ages_df = read_df(OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area")
     return ages_df
-
 
 
 def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
@@ -215,8 +207,7 @@ def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
 
     comp_people_df["Old_Family"].loc[(areas_no_house_old) & (areas_with_old)] += (
         comp_people_df["Other"].loc[(areas_no_house_old) & (areas_with_old)]
-        + 0.4
-        * comp_people_df["Other_1k"].loc[(areas_no_house_old) & (areas_with_old)]
+        + 0.4 * comp_people_df["Other_1k"].loc[(areas_no_house_old) & (areas_with_old)]
     )
 
     comp_people_df = comp_people_df.drop(
@@ -228,6 +219,7 @@ def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
     )
 
     return comp_people_df
+
 
 def read_household_df(OUTPUT_AREA_DIR: str) -> pd.DataFrame:
     """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks105ew
@@ -256,7 +248,8 @@ def read_household_df(OUTPUT_AREA_DIR: str) -> pd.DataFrame:
 
     return households_df
 
-def people_compositions2households( comp_people_df):
+
+def people_compositions2households(comp_people_df):
 
     households_df = pd.DataFrame()
 
@@ -316,15 +309,14 @@ def people_compositions2households( comp_people_df):
     # OLD OTHER
     # v) old other live in houses of 2 or 3
     households_df[f"0 0 0 2"] += (
-        comp_people_df["Old_Unclassified"] // 2
-        - comp_people_df["Old_Unclassified"] % 2
+        comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
     ).apply(lambda x: max(x, 0))
     households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
 
     return households_df
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     region = "NorthEast"
     RAW_DATA_DIR = os.path.join("..", "data", "raw", "census_data")
@@ -340,12 +332,7 @@ if __name__ == '__main__':
     if not os.path.exists(OUTPUT_AREA_DIR):
         os.makedirs(OUTPUT_AREA_DIR)
 
-    residents.to_csv(os.path.join(OUTPUT_AREA_DIR, 'residents.csv'))
-    sex_df.to_csv(os.path.join(OUTPUT_AREA_DIR, 'sex.csv'))
-    ages_df.to_csv(os.path.join(OUTPUT_AREA_DIR, 'age_structure.csv'))
-    households_df.to_csv(os.path.join(OUTPUT_AREA_DIR, 'household_composition.csv'))
-
-
-
-
-
+    residents.to_csv(os.path.join(OUTPUT_AREA_DIR, "residents.csv"))
+    sex_df.to_csv(os.path.join(OUTPUT_AREA_DIR, "sex.csv"))
+    ages_df.to_csv(os.path.join(OUTPUT_AREA_DIR, "age_structure.csv"))
+    households_df.to_csv(os.path.join(OUTPUT_AREA_DIR, "household_composition.csv"))
