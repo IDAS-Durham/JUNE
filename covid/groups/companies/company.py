@@ -10,7 +10,7 @@ class Company:
 
     def __init__(self, company_id, msoa, n_employees):
         self.id = company_id
-        self.employees = {}
+        self.people = []
         self.msoa = msoa
         self.n_employees_max = n_employees
         self.n_pupils = 0

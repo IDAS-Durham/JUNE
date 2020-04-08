@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("../covid")
 from covid.transmission import Transmission
-from covid.person import Person
+from covid.groups.people import Person
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
 
