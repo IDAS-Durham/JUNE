@@ -22,9 +22,9 @@ class CompanyDistributor:
     def distribute_adults_to_companies(self):
         for person in self.msoarea.people.values():
             if (
-                person.age <= self.SCHOOL_AGE_RANGE[1]
-                and person.age >= self.SCHOOL_AGE_RANGE[0]
-            ):  # person age from 5 up to 19 yo
+                person.age <= self.WORK_AGE_RANGE[1]
+                and person.age >= self.WORK_AGE_RANGE[0]
+            ):  # person age from 20 up to 74 yo
                 agegroup = self.area.world.decoder_age[person.age]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
@@ -50,6 +50,6 @@ class CompanyDistributor:
                         school = self.closest_schools_by_age[agegroup][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.pupils[school.n_pupils] = person
-                person.school = school
-                school.n_pupils += 1
+                company.employees[company.n_employees] = person
+                person.company = company
+                company.n_pupils += 1
