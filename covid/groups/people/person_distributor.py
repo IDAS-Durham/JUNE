@@ -50,6 +50,7 @@ class PersonDistributor:
         self.area.sex_rv = stats.rv_discrete(
             values=(np.arange(0, len(sex_freq)), sex_freq.values)
         )
+
     def populate_area(self):
         """
         Creates all people living in this area, with the charactersitics
@@ -74,8 +75,8 @@ class PersonDistributor:
             person = Person(
                 self.people.total_people, self.area, age_random, sex_random, 0, 0
             )
-            self.people.members[self.people.total_people] = person
-            self.area.people[i] = person
+            self.people.members.append(person)
+            self.area.people.append(person)
             self.people.total_people += 1
             # assign person to the right group:
             if age_random < self.ADULT_THRESHOLD:
@@ -112,4 +113,3 @@ class PersonDistributor:
             raise (
                 "Number of men, women, oldmen, oldwomen, and kids doesnt add up to total population"
             )
-

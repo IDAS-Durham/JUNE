@@ -34,6 +34,7 @@ class Person:
         self.health_index   = health_index
         self.econ_index     = econ_index
         self.area           = area
+        self.active_group   = None
         self.household      = None
         self.school         = None
         self.init_health_information()
@@ -139,7 +140,7 @@ class People:
 
     def __init__(self, world):
         self.world = world
-        self.members = {}
+        self.members = []
         self.total_people = 0
 
     def populate_area(self, area):
