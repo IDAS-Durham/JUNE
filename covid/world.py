@@ -12,6 +12,7 @@ from covid.school import School, SchoolError
 from covid.interaction import Single_Interaction
 from covid.infection_selector import InfectionSelector
 
+
 class World:
     """
     Stores global information about the simulation
@@ -28,7 +29,7 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
-        '''
+        """
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         self.people = {}
         self.total_people = 0
@@ -44,7 +45,7 @@ class World:
         #self._init_companies(self.inputs.company_df)
         self.populate_world()
         print("Done.")
-        '''
+        """
 
     def _compute_age_group_mean(self, agegroup):
         try:
@@ -188,10 +189,18 @@ class World:
                 self,
                 area_code,
                 area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
-                company_df[company_df["msoa11cd"] == "E02002559"][[
-                    "Micro (0 to 9)", "10 to 19", "20 to 49", "50 to 99",
-                    "100 to 249", "250 to 499", "500 to 999", "1000+",
-                ]].values
+                company_df[company_df["msoa11cd"] == "E02002559"][
+                    [
+                        "Micro (0 to 9)",
+                        "10 to 19",
+                        "20 to 49",
+                        "50 to 99",
+                        "100 to 249",
+                        "250 to 499",
+                        "500 to 999",
+                        "1000+",
+                    ]
+                ].values,
             )
             areas_dict[i] = area
         return areas_dict
@@ -256,7 +265,7 @@ class World:
             # create population
             people_dist = PeopleDistributor(area)
             people_dist.populate_area()
-    
+
             # distribute people to households
             household_dist = HouseholdDistributor(area)
             household_dist.distribute_people_to_household()
@@ -271,14 +280,14 @@ class World:
 
             pbar.update(1)
 
-        #print("and make it work ...")
-        #pbar = tqdm(total=len(self.msoareas.keys()))  # progress bar
-        #for msoarea in self.msoareas.values():
-            # TODO: distribute workers to companies
-            # work_dist = WorkDistributor(msoarea)
-            # work_dist.distribute_adults_to_companies()
+        # print("and make it work ...")
+        # pbar = tqdm(total=len(self.msoareas.keys()))  # progress bar
+        # for msoarea in self.msoareas.values():
+        # TODO: distribute workers to companies
+        # work_dist = WorkDistributor(msoarea)
+        # work_dist.distribute_adults_to_companies()
 
-            #pbar.update(1)
+        # pbar.update(1)
 
         pbar.close()
 
@@ -289,34 +298,34 @@ class World:
     def _set_active_members(self, active_groups):
         for group in active_groups:
             group._set_active_members()
+
     def _unset_active_members(self, active_groups):
         for group in active_groups:
             group._unset_active_members()
 
-    def _initialize_infection_selector(self, ):
+    def _initialize_infection_selector(self,):
         Tparams = {}
         Tparams["Transmission:Type"] = "SI"
-        params  = {}
+        params = {}
         Tparams["Transmission:Probability"] = params
         params["Mean"] = beta
         selector = InfectionSelector(Tparams, None)
-        return selector 
-
+        return selector
 
     def _infect(self, group, duration):
         for group_instance in getattr(self, group).keys():
             interaction = Single_Interaction(group_instance, "Superposition")
             selector = self._initialize_infection_selector()
             # one step is one hour
-            for step in range(duration*self.config["world"]["steps_per_hour"]):
+            for step in range(duration * self.config["world"]["steps_per_hour"]):
                 interaction.single_time_step(step, selector)
 
-    def seed_infection(self, n_infected):
+    # def seed_infection(self, n_infected):
 
-    def group_dynamics(self, total_days ):
+    def group_dynamics(self, total_days):
 
         time_steps = self.config["world"]["step_duration"].keys()
-        assert sum(self.config["world"]["step_duration"].values()) == 24 
+        assert sum(self.config["world"]["step_duration"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         self.days = 0
         while self.days <= total_days:
@@ -326,13 +335,12 @@ class World:
                 self._set_active_members(active_groups)
                 # infect people in groups
                 for group in active_groups:
-                        self._infect(group,
-                                self.config["world"]["step_duration"],
-                                )
+                    self._infect(
+                        group, self.config["world"]["step_duration"],
+                    )
                 self._unset_active_members(active_groups)
             self.days += 1
 
-        
 
 if __name__ == "__main__":
 
