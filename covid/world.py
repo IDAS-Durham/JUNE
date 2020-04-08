@@ -26,6 +26,7 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
+        '''
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         self.people = {}
         self.total_people = 0
@@ -41,6 +42,7 @@ class World:
         #self._init_companies(self.inputs.company_df)
         self.populate_world()
         print("Done.")
+        '''
 
     def _compute_age_group_mean(self, agegroup):
         try:
@@ -278,7 +280,47 @@ class World:
 
         pbar.close()
 
+    def _active_groups(self, time):
+
+        return self.config["world"]["step_active_groups"][time]
+
+    def _set_active_members(self, active_groups):
+        for group in active_groups:
+            group._set_active_members()
+    def _unset_active_members(self, active_groups):
+        for group in active_groups:
+            group._unset_active_members()
+
+
+    def _infect(self, group, duration):
+        for ind_group in world:
+            # check there are suceptible (if all infected don't run)
+            # Call Frank
+
+    def seed_infection(self, n_infected):
+
+    def group_dynamics(self, total_days):
+
+        time_steps = self.config["world"]["step_duration"].keys()
+        assert sum(self.config["world"]["step_duration"].values()) == 24 
+        # TODO: move to function that checks the config file (types, values, etc...)
+        self.days = 0
+        while self.days <= total_days:
+            for time in time_steps:
+                active_groups = self._active_groups(time)
+                # update people (where they are according to time)
+                self._set_active_members(active_groups)
+
+                # infect people in groups
+                for group in active_groups:
+                        #self._infect(group,
+#                                self.config["world"]["step_duration"]) # Call infection with how long it lasts
+                self._unset_active_members(active_groups)
+            self.days += 1
+
+        
 
 if __name__ == "__main__":
 
-    world = World()
+    world = World.from_pickle()
+    world.group_dynamics(2)
