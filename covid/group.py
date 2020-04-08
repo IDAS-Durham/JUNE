@@ -77,6 +77,7 @@ class Group:
                 self.infected.append(person)
             if person.is_recovered():
                 self.recovered.append(person)
+                self.infected.remove(person)
 
     def update_status_lists(self,time=0):
         self.susceptible.clear()
@@ -90,7 +91,8 @@ class Group:
                 self.infected.append(person)
             if person.is_recovered():
                 self.recovered.append(person)
-
+                self.infected.remove(person)
+                
     def clear(self,all=True):
         if all:
             self.people.clear();
@@ -128,7 +130,7 @@ class Group:
             age = random.randrange(0,100)
             sex = random.choice(("M","F"))
             self.add(Person.Person(str(i), 0, age, sex, 0, 0))
-        self.output(False,False)
+        #self.output(False,False)
                 
     def output(self,plot=False,full=False):
         print ("==================================================")

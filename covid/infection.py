@@ -42,7 +42,7 @@ class Infection:
 
     def get_symptoms(self):
         return self.symptoms
-        
+    
     def transmission_probability(self,time):
         if self.transmission==None:
             return 0.
@@ -54,12 +54,9 @@ class Infection:
         return self.symptoms.Severity(time)
 
     def still_infected(self,time):
-        transmission_bool = (self.transmission!=None and self.transmission.probability(time)>self.threshold_transmission)
-        # if self.transmission.person.is_infected():
-        #     print(self.transmission.probability(time))
+        transmission_bool = (self.transmission!=None and
+                             self.transmission.probability(time)>self.threshold_transmission)
         symptoms_bool = (self.symptoms!=None and
-                 self.symptoms.severity(time)>self.threshold_symptoms)
-                
-        # print('Transmission = ', transmission_bool)
+                         self.symptoms.severity(time)>self.threshold_symptoms)                
         is_infected = transmission_bool or symptoms_bool
         return is_infected
