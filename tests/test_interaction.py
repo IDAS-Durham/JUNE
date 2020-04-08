@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from covid.person import Person
-from covid.group import Group
+from covid.groups import Group
 from covid.interaction import Interaction
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
