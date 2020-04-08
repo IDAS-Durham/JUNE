@@ -1,4 +1,4 @@
-import covid.person as Person
+from covid.groups.people import Person
 import sys
 import random
 import matplotlib
