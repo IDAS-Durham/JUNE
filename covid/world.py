@@ -14,13 +14,14 @@ mu = 0.005
 n_infections = 2
 Tparams = {}
 Tparams["Transmission:Type"] = "SIR"
-Tparams['Transmission:RecoverCutoff'] = {"Mean": tau}
+Tparams["Transmission:RecoverCutoff"] = {"Mean": tau}
 paramsP = {}
 Tparams["Transmission:Probability"] = paramsP
 paramsP["Mean"] = beta
 paramsR = {}
 Tparams["Transmission:Recovery"] = paramsR
 paramsR["Mean"] = mu
+
 
 class World:
     """
@@ -38,19 +39,14 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
-        # decoders for census variables 
-        self.inputs = Inputs(zone=self.config["world"]["zone"])
+
         self.people = []
         self.total_people = 0
-        self.decoder_sex = {}
-        self.decoder_age = {}
-        self.decoder_household_composition = {}
-        self.encoder_household_composition = {}
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         print("Initializing areas...")
         self.areas = Areas(self)
-        areas_distributor = AreaDistributor(self.areas, self.inputs.household_dict)
+        areas_distributor = AreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
         print("Initializing people...")
         self.people = People(self)
@@ -76,8 +72,8 @@ class World:
             self.distributor.distribute_kids_to_school()
             pbar.update(1)
         pbar.close()
-        #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
-        #self._init_companies(self.inputs.company_df)
+        # self.msoareas = self.read_msoareas_census(self.inputs.company_df)
+        # self._init_companies(self.inputs.company_df)
         print("Done.")
 
     @classmethod
@@ -86,10 +82,11 @@ class World:
         Initializes a world instance from an already populated world.
         """
         import pickle
+
         with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
-    
+
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
@@ -146,8 +143,8 @@ class World:
         school_agegroup_to_global_indices = (
             {}
         )  # stores for each age group the index to the school
-        #areas_dict = {}
-        #for i, area_code in enumerate(company_df["MSOA11CD"].values):
+        # areas_dict = {}
+        # for i, area_code in enumerate(company_df["MSOA11CD"].values):
         #    area = MSOA(
         #        self,
         #        area_code,
@@ -222,12 +219,14 @@ class World:
             for step in range(duration * self.config["world"]["steps_per_hour"]):
                 interaction.single_time_step(step, selector)
 
-    def seed_infections_group(self, group):#, n_infections, selector):
-        
+    def seed_infections_group(self, group):  # , n_infections, selector):
+
         selector = InfectionSelector(Tparams, None)
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
-            group.people[choice].set_infection(selector.make_infection(group.people[choice], 0))
+            group.people[choice].set_infection(
+                selector.make_infection(group.people[choice], 0)
+            )
 
     def do_timestep(self, time, duration):
         active_groups = self._active_groups(time)
@@ -255,5 +254,5 @@ class World:
 
 if __name__ == "__main__":
     world = World()
-    #world = World.from_pickle()
-    #world.group_dynamics(2)
+    # world = World.from_pickle()
+    # world.group_dynamics(2)
