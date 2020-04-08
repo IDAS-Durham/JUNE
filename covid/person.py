@@ -86,7 +86,7 @@ class Person:
             self.susceptible = False
 
     def update_health_status(self,time):
-        if not self.infection == None:
+        if self.infection!=None:
             self.susceptible = False
             if self.infection.still_infected(time):
                 self.infected = True
@@ -104,6 +104,8 @@ class Person:
 
     def set_recovered(self, is_recovered):
         self.recovered = is_recovered
+        if (self.recovered):
+            self.set_infection(None)
 
     def susceptibility(self):
         return self.susceptibility

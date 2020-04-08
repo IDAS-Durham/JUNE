@@ -31,7 +31,7 @@ class Inputs:
         }
 
         self.school_df = self.read_school_census()
-
+        self.company_df = self.read_companysize_census()
 
     def read_df(
         self,
@@ -64,7 +64,6 @@ class Inputs:
         )
         df.set_index(index, inplace=True)
         return df
-
 
     def read_household_composition_people(self, ages_df):
         """
@@ -178,7 +177,6 @@ class Inputs:
 
         return comp_people_df
 
-
     def read_population_df(self, freq: bool = True) -> pd.DataFrame:
         """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
 
@@ -204,8 +202,7 @@ class Inputs:
             "Variable: Females; measures: Value",
         ]
         population_df = pd.read_csv(
-            os.path.join(self.OUTPUT_AREA_DIR, population),
-            usecols=population_usecols,
+            os.path.join(self.OUTPUT_AREA_DIR, population), usecols=population_usecols,
         )
         names_dict = dict(zip(population_usecols, population_column_names))
         population_df.rename(columns=names_dict, inplace=True)
@@ -234,7 +231,6 @@ class Inputs:
             population_df["females"] /= population_df["n_residents"]
         return population_df
 
-
     def read_household_df(self, freq: bool = True) -> pd.DataFrame:
         """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks105ew
 
@@ -261,7 +257,6 @@ class Inputs:
         )
 
         return households_df
-
 
     def read_ages_df(self, freq: bool = True) -> pd.DataFrame:
         """Read ages dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks102ew
@@ -301,7 +296,6 @@ class Inputs:
         if freq:
             ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
         return ages_df
-
 
     def people_compositions2households(self, comp_people_df, freq=True):
 
@@ -373,7 +367,6 @@ class Inputs:
         else:
             return households_df
 
-
     def read_school_census(self):
         """
         Reads school location and sizes, it initializes a KD tree on a sphere,
@@ -394,170 +387,194 @@ class Inputs:
         assert school_df["age_max"].max() < 20
         return school_df
 
+    def read_companysize_census(self):
+        """
+        Gives nr. of companies with nr. of employees per MSOA
+        (NOMIS: UK Business Counts - local units by industry and employment size band)
+        """
+        worksize_filename = os.path.join(
+            self.DATA_DIR, "middle_output_area", zone, "business_counts_northeast_2019.csv"
+        )
+        company_df = pd.read_csv(worksize_filename)
+        company_df = company_df.rename(columns={"mnemonic": "MSOA11CD"})
+        company_df = company_df.drop(columns=["Area"])
 
-	def read_home_work_areacode(DATA_DIR):
-		"""
-		The dataframe derives from:
-		    TableID: WU01EW
-		    https://wicid.ukdataservice.ac.uk/cider/wicid/downloads.php
-		, but is processed to be placed in a pandas.DataFrame.
-		The MSOA area code is used for homes (rows) and work (columns).
-		"""
-		flow_female_file = "flow_female_in_msoa_wu01northeast_2011.csv"
-		flow_male_file = "flow_male_in_msoa_wu01northeast_2011.csv"
+        assert company_df.isnull().values.any() == False
+        return company_df
+    
+    def read_home_work_areacode(DATA_DIR):
+        """
+        The dataframe derives from:
+            TableID: WU01EW
+            https://wicid.ukdataservice.ac.uk/cider/wicid/downloads.php
+        , but is processed to be placed in a pandas.DataFrame.
+        The MSOA area code is used for homes (rows) and work (columns).
+        """
+        flow_female_file = "flow_female_in_msoa_wu01northeast_2011.csv"
+        flow_male_file = "flow_male_in_msoa_wu01northeast_2011.csv"
 
-		flow_female_df = pd.read_csv(DATA_DIR + flow_female_file)
-		flow_female_df = flow_female_df.set_index("residence")
+        flow_female_df = pd.read_csv(DATA_DIR + flow_female_file)
+        flow_female_df = flow_female_df.set_index("residence")
 
-		flow_male_df = pd.read_csv(DATA_DIR + flow_female_file)
-		flow_male_df = flow_male_df.set_index("residence")
+        flow_male_df = pd.read_csv(DATA_DIR + flow_female_file)
+        flow_male_df = flow_male_df.set_index("residence")
 
-    	return flow_female_df, flow_male_df
+        return flow_female_df, flow_male_df
 
+    def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
+        """
+        The dataframe derives from:
+        TableID: QS701UK
+        https://www.nomisweb.co.uk/census/2011/qs701ew
 
-	def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
-		"""
-		The dataframe derives from:
-		    TableID: QS701UK
-		    https://www.nomisweb.co.uk/census/2011/qs701ew
+        Args:
+        DATA_DIR: path to dataset folder (default should be output_area folder) 
 
-		Args:
-		    DATA_DIR: path to dataset folder (default should be output_area folder) 
+        Returns:
+        pandas dataframe with ratio of males and females per output area 
 
-		Returns:
-		    pandas dataframe with ratio of males and females per output area 
+        """
+        travel_df = pd.read_csv(
+            DATA_DIR + "flow_method_oa_qs701northeast_2011.csv",
+            delimiter=",",
+            delim_whitespace=False,
+        )
+        travel_df = travel_df.rename(columns={"geography code": "residence"})
+        travel_df = travel_df.set_index("residence")
 
-		"""
-		travel_df = pd.read_csv(
-		    DATA_DIR + "flow_method_oa_qs701northeast_2011.csv",
-		    delimiter=",",
-		    delim_whitespace=False,
-		)
-		travel_df = travel_df.rename(columns={"geography code": "residence"})
-		travel_df = travel_df.set_index("residence")
+        # re-group dataset
+        travel_df["home"] = travel_df[
+            [c for c in travel_df.columns if " home;" in c]
+        ].sum(axis=1)
+        travel_df = travel_df.drop(
+            columns=[c for c in travel_df.columns if " home;" in c]
+        )
+        travel_df["public"] = travel_df[
+            [
+                c
+                for c in travel_df.columns
+                if "metro" in c or "Train" in c or "coach" in c
+            ]
+        ].sum(axis=1)
+        travel_df = travel_df.drop(
+            columns=[
+                c
+                for c in travel_df.columns
+                if "metro" in c or "Train" in c or "coach" in c
+            ]
+        )
+        travel_df["private"] = travel_df[
+            [
+                c
+                for c in travel_df.columns
+                if "Taxi" in c
+                or "scooter" in c
+                or "car" in c
+                or "Bicycle" in c
+                or "foot" in c
+            ]
+        ].sum(axis=1)
+        travel_df = travel_df.drop(
+            columns=[
+                c
+                for c in travel_df.columns
+                if "Taxi" in c
+                or "scooter" in c
+                or "car" in c
+                or "Bicycle" in c
+                or "foot" in c
+            ]
+        )
+        travel_df = travel_df[["home", "public", "private"]]
 
-		# re-group dataset
-		travel_df["home"] = travel_df[[c for c in travel_df.columns if " home;" in c]].sum(
-		    axis=1
-		)
-		travel_df = travel_df.drop(columns=[c for c in travel_df.columns if " home;" in c])
-		travel_df["public"] = travel_df[
-		    [c for c in travel_df.columns if "metro" in c or "Train" in c or "coach" in c]
-		].sum(axis=1)
-		travel_df = travel_df.drop(
-		    columns=[
-		        c for c in travel_df.columns if "metro" in c or "Train" in c or "coach" in c
-		    ]
-		)
-		travel_df["private"] = travel_df[
-		    [
-		        c
-		        for c in travel_df.columns
-		        if "Taxi" in c
-		        or "scooter" in c
-		        or "car" in c
-		        or "Bicycle" in c
-		        or "foot" in c
-		    ]
-		].sum(axis=1)
-		travel_df = travel_df.drop(
-		    columns=[
-		        c
-		        for c in travel_df.columns
-		        if "Taxi" in c
-		        or "scooter" in c
-		        or "car" in c
-		        or "Bicycle" in c
-		        or "foot" in c
-		    ]
-		)
-		travel_df = travel_df[["home", "public", "private"]]
+        # create dictionary to merge OA into MSOA
+        dirs = (
+            "../data/census_data/area_code_translations/"
+        )
+        dic = pd.read_csv(
+            dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
+            delimiter=",",
+            delim_whitespace=False,
+        )
 
-		# create dictionary to merge OA into MSOA
-		dirs = "/home/christovis/PhD/5_COVID_19/data/census_data/area_code_translations/"
-		dic = pd.read_csv(
-		    dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
-		    delimiter=",",
-		    delim_whitespace=False,
-		)
+        # merge OA into MSOA
+        travel_df = travel_df.merge(
+            dic.drop_duplicates(subset="OA11CD").set_index("OA11CD")["MSOA11CD"],
+            left_index=True,
+            right_index=True,
+        )
+        travel_df = travel_df.groupby(["MSOA11CD"]).sum()
 
-		# merge OA into MSOA
-		travel_df = travel_df.merge(
-		    dic.drop_duplicates(subset="OA11CD").set_index("OA11CD")["MSOA11CD"],
-		    left_index=True,
-		    right_index=True,
-		)
-		travel_df = travel_df.groupby(["MSOA11CD"]).sum()
+        if freq:
+            # Convert to ratios
+            travel_df["home"] /= travel_df.sum(axis=1)
+            travel_df["public"] /= travel_df.sum(axis=1)
+            travel_df["private"] /= travel_df.sum(axis=1)
+        return travel_df
 
-		if freq:
-		    # Convert to ratios
-		    travel_df["home"] /= travel_df.sum(axis=1)
-		    travel_df["public"] /= travel_df.sum(axis=1)
-		    travel_df["private"] /= travel_df.sum(axis=1)
-		return travel_df
+    def create_input_dict(
+        DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
+    ) -> dict:
+        """Reads and formats input dataframe to populate realistic households in England and Wales
 
+        Args:
+            DATA_DIR: path to dataset (csv file)
 
-	def create_input_dict(
-		DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
-	) -> dict:
-		"""Reads and formats input dataframe to populate realistic households in England and Wales
+        Returns:
+            dictionary with frequencies of populations 
+        """
+        flow_female_df, flow_male_df = read_home_work_areacode(DATA_DIR)
+        commute_method_df = read_commute_method(DATA_DIR)
+        workplace_size_df = read_workplace_size(DATA_DIR)
 
-		Args:
-		    DATA_DIR: path to dataset (csv file)
+        home_msoa = (
+            flow_female_df.index
+        )  # flow_female_df&flow_female_df share the same indices
+        female_work_msoa_list = []
+        n_female_work_msoa_list = []
+        male_work_msoa_list = []
+        n_male_work_msoa_list = []
+        for hmsoa in home_msoa:
+            female_work_msoa_list.append(
+                flow_female_df.loc[hmsoa]
+                .dropna()[flow_female_df.loc[hmsoa] != 0.0]
+                .index.values
+            )
+            # Convert to ratios
+            n_female_work_msoa_list.append(
+                flow_female_df.loc[hmsoa]
+                .dropna()[flow_female_df.loc[hmsoa] != 0.0]
+                .values
+                / flow_female_df.loc[hmsoa]
+                .dropna()[flow_female_df.loc[hmsoa] != 0.0]
+                .values.sum()
+            )
+            male_work_msoa_list.append(
+                flow_male_df.loc[hmsoa]
+                .dropna()[flow_male_df.loc[hmsoa] != 0.0]
+                .index.values
+            )
+            # Convert to ratios
+            n_male_work_msoa_list.append(
+                flow_male_df.loc[hmsoa].dropna()[flow_male_df.loc[hmsoa] != 0.0].values
+                / flow_male_df.loc[hmsoa]
+                .dropna()[flow_male_df.loc[hmsoa] != 0.0]
+                .values.sum()
+            )
 
-		Returns:
-		    dictionary with frequencies of populations 
-		"""
-		flow_female_df, flow_male_df = read_home_work_areacode(DATA_DIR)
-		commute_method_df = read_commute_method(DATA_DIR)
-		workplace_size_df = read_workplace_size(DATA_DIR)
+        [] = align_dfs()
+        input_dict = {
+            "home_msoa": home_msoa,
+            "female_work_msoa": female_work_msoa_list,
+            "n_female_work_msoa": n_female_work_msoa_list,
+            "male_work_msoa": male_work_msoa_list,
+            "n_male_work_msoa": n_male_work_msoa_list,
+            "n_home": commute_method_df["home"],
+            "n_public": commute_method_df["public"],
+            "n_private": commute_method_df["private"],
+        }
 
-		home_msoa = (
-		    flow_female_df.index
-		)  # flow_female_df&flow_female_df share the same indices
-		female_work_msoa_list = []
-		n_female_work_msoa_list = []
-		male_work_msoa_list = []
-		n_male_work_msoa_list = []
-		for hmsoa in home_msoa:
-		    female_work_msoa_list.append(
-		        flow_female_df.loc[hmsoa]
-		        .dropna()[flow_female_df.loc[hmsoa] != 0.0]
-		        .index.values
-		    )
-		    # Convert to ratios
-		    n_female_work_msoa_list.append(
-		        flow_female_df.loc[hmsoa].dropna()[flow_female_df.loc[hmsoa] != 0.0].values
-		        / flow_female_df.loc[hmsoa]
-		        .dropna()[flow_female_df.loc[hmsoa] != 0.0]
-		        .values.sum()
-		    )
-		    male_work_msoa_list.append(
-		        flow_male_df.loc[hmsoa]
-		        .dropna()[flow_male_df.loc[hmsoa] != 0.0]
-		        .index.values
-		    )
-		    # Convert to ratios
-		    n_male_work_msoa_list.append(
-		        flow_male_df.loc[hmsoa].dropna()[flow_male_df.loc[hmsoa] != 0.0].values
-		        / flow_male_df.loc[hmsoa]
-		        .dropna()[flow_male_df.loc[hmsoa] != 0.0]
-		        .values.sum()
-		    )
-
-		[] = align_dfs()
-		input_dict = {
-		    "home_msoa": home_msoa,
-		    "female_work_msoa": female_work_msoa_list,
-		    "n_female_work_msoa": n_female_work_msoa_list,
-		    "male_work_msoa": male_work_msoa_list,
-		    "n_male_work_msoa": n_male_work_msoa_list,
-		    "n_home": commute_method_df["home"],
-		    "n_public": commute_method_df["public"],
-		    "n_private": commute_method_df["private"],
-		}
-
-    return input_dict
+        return input_dict
 
 
 if __name__ == "__main__":
