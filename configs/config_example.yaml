@@ -2,6 +2,12 @@ title: Covid configuration example
 
 world:
   zone: NorthEast # available are all UK regions, and EnglandWales together.
+  step_duration: 
+      1: 8 # first time step duration in hours
+      2: 16
+  step_active_groups: 
+    1: ['School', 'Household'] # active groups during first time step
+    2: ['Household']
 
 people:
   adult_threshold: 6 # 18 yo
