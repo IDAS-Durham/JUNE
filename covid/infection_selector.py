@@ -11,7 +11,10 @@ class InfectionSelector:
         self.symptoms_params     = Sparams
 
     def make_infection(self,person,time):
-        transmission = self.select_transmission(person,time)
+        if self.transmission_params!=None:
+            transmission = self.select_transmission(person,time)
+        else:
+            transmission = None
         if self.symptoms_params!=None:
             symptoms = self.select_severity(person,time)
         else:
@@ -22,7 +25,10 @@ class InfectionSelector:
         return infection
         
     def select_transmission(self,person,time):
-        if self.transmission_params["Transmission:Type"]=="SI":
+        transmission=None
+        if self.transmission_params["Transmission:Type"]==None:
+            return None
+        elif self.transmission_params["Transmission:Type"]=="SI":
             names = ["Transmission:Probability"]
             params = self.make_parameters(self.transmission_params,names)
             transmission = Transmission.TransmissionSI(person,params,time)
@@ -46,14 +52,21 @@ class InfectionSelector:
         return transmission
 
     def select_severity(self,person,time):
+        symptoms = None
         if self.symptoms_params["Symptoms:Type"]==None:
             return None
+        elif self.symptoms_params["Symptoms:Type"]=="Constant":
+            names    = ["Symptoms:TimeOffset",
+                        "Symptoms:EndTime",
+                        "Symptoms:Severity"]
+            params   = self.make_parameters(self.symptoms_params,names)
+            symptoms = Symptoms.SymptomsConstant(person,params,time)
         elif self.symptoms_params["Symptoms:Type"]=="Gauss":
-            names = ["Symptoms:MaximalSeverity",
-                     "Symptoms:MeanTime",
-                     "Symptoms:SigmaTime"]
-            params = self.make_parameters(self.symptoms_params,names)
-            symptoms = Symptoms.SymptomsGaussian(person,params, time)
+            names    = ["Symptoms:MaximalSeverity",
+                        "Symptoms:MeanTime",
+                        "Symptoms:SigmaTime"]
+            params   = self.make_parameters(self.symptoms_params,names)
+            symptoms = Symptoms.SymptomsGaussian(person,params,time)
         return symptoms
 
     def make_parameters(self,parameters,names):
@@ -61,11 +74,18 @@ class InfectionSelector:
             mode = None
             if "Mode" in parameters[tag]:
                 mode = parameters[tag]["Mode"]
-            if mode=="Gamma":
+            if mode=="Flat":
+                self.make_parameters_Flat(parameters[tag])
+            elif mode=="Gamma":
                 self.make_parameters_Gamma(parameters[tag])
             else:
                 self.make_parameters_Gaussian(parameters[tag])
         return parameters
+        
+    def make_parameters_Flat(self,parameters):
+        upper = parameters["Upper"]
+        lower = parameters["Lower"]
+        parameters["Value"] = lower + random.random()*(upper-lower)
         
     def make_parameters_Gamma(self,parameters):
         mean   = parameters["Mean"]

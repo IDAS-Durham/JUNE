@@ -63,7 +63,7 @@ class TransmissionSIR(Transmission):
     def init(self,params):
         self.probT = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
         self.probR = min(1.,max(0.,params["Transmission:Recovery"]["Value"]))
-        self.RecoverCutoff = params["Transmission:RecoverCutoff"]["Mean"]
+        self.RecoverCutoff = params["Transmission:RecoverCutoff"]["Value"]
         self.lasttime = self.starttime # last time they had a chance to recover
 
     def calculate(self,time):
