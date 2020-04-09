@@ -52,7 +52,7 @@ class Schools:
         """
         SCHOOL_AGE_THRESHOLD = [1, 7]
         schools = []
-        school_age = list(self.world.decoder_age.values())[
+        school_age = list(self.world.inputs.decoder_age.values())[
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
         ]
         school_trees = {}
