@@ -39,19 +39,7 @@ class CompanyDistributor:
             self.closest_schools_by_age[agegroup] = closest_schools
             self.is_agemean_full[agegroup] = False
 
-    def compute_age_group_mean(self, agegroup):
-        try:
-            age_1, age_2 = agegroup.split("-")
-            if age_2 == "XXX":
-                agemean = 90
-            else:
-                age_1 = float(age_1)
-                age_2 = float(age_2)
-                agemean = (age_2 + age_1) / 2.0
-        except:
-            agemean = int(agegroup)
-        return agemean
-
+    
     def distribute_kids_to_school(self):
         for person in self.area.people:
             if (
