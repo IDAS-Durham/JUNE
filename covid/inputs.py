@@ -23,6 +23,7 @@ class Inputs:
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
+            header=0,
             index_col="output_area",
         )
 
