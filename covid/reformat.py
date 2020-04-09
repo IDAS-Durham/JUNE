@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import os
+from shutil import copyfile
 
 
 def read_df(
@@ -315,17 +316,39 @@ def people_compositions2households(comp_people_df):
 
     return households_df
 
+def read_school_census(DATA_DIR):
+    """
+    Reads school location and sizes, it initializes a KD tree on a sphere,
+    to query the closest schools to a given location.
+    """
+    school_filename = os.path.join(
+        DATA_DIR, "school_data", "uk_schools_data.csv"
+    )
+    school_df = pd.read_csv(school_filename, index_col=0)
+    school_df.dropna(inplace=True)
+    school_df["age_min"].replace(to_replace=np.arange(0, 4), value=4, inplace=True)
+
+    school_df["age_max"].replace(
+        to_replace=np.arange(20, 50), value=19, inplace=True
+    )
+
+    assert school_df["age_min"].min() <= 4
+    assert school_df["age_max"].max() < 20
+    return school_df
+
+
 
 if __name__ == "__main__":
 
     region = "NorthEast"
-    RAW_DATA_DIR = os.path.join("..", "data", "raw", "census_data")
+    RAW_DATA_DIR = os.path.join("..", "data", "census_data")
     RAW_OUTPUT_AREA_DIR = os.path.join(RAW_DATA_DIR, "output_area", region)
 
     residents, sex_df = read_population_df(RAW_OUTPUT_AREA_DIR)
     ages_df = read_ages_df(RAW_OUTPUT_AREA_DIR)
     comp_people_df = read_household_composition_people(RAW_OUTPUT_AREA_DIR, ages_df)
     households_df = people_compositions2households(comp_people_df)
+    school_df = read_school_census(RAW_DATA_DIR)
 
     DATA_DIR = os.path.join("..", "data", "processed", "census_data")
     OUTPUT_AREA_DIR = os.path.join(DATA_DIR, "output_area", region)
@@ -336,3 +359,18 @@ if __name__ == "__main__":
     sex_df.to_csv(os.path.join(OUTPUT_AREA_DIR, "sex.csv"))
     ages_df.to_csv(os.path.join(OUTPUT_AREA_DIR, "age_structure.csv"))
     households_df.to_csv(os.path.join(OUTPUT_AREA_DIR, "household_composition.csv"))
+
+    SCHOOL_DIR = os.path.join(DATA_DIR, "school_data")
+    if not os.path.exists(SCHOOL_DIR):
+        os.makedirs(SCHOOL_DIR)
+
+    school_df.to_csv(os.path.join(DATA_DIR, "school_data", "uk_schools_data.csv"))
+
+    GEO_DIR = os.path.join("..", "data", "processed", "geographical_data")
+
+    if not os.path.exists(GEO_DIR):
+        os.makedirs(GEO_DIR)
+    copyfile(os.path.join("..", "data", "geographical_data", "oa_coorindates.csv"),
+            os.path.join("..", "data", "processed", "geographical_data", "oa_coorindates.csv"))
+
+    
