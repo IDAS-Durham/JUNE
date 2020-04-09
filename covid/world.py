@@ -1,5 +1,7 @@
 from covid.inputs import Inputs
 from covid.groups import *
+#from covid.groups.msoareas.msoarea import MSOAreas
+#from covid.groups.msoareas.msoarea_distributor import MSOAreaDistributor
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
@@ -33,6 +35,9 @@ class World:
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         print("Initializing areas...")
+        self.msoareas = MSOAreas(self)
+        msoareas_distributor = MSOAreaDistributor(self.msoareas)
+        msoareas_distributor.read_msoareas_census()
         self.areas = Areas(self)
         areas_distributor = AreaDistributor(self.areas, self.inputs.household_dict)
         areas_distributor.read_areas_census()
@@ -55,8 +60,8 @@ class World:
         print("Creating schools...")
         self._init_schools(self.inputs.school_df)
         print("Initializing Companies...")
-        self.companies = Companies(self, self.areas, self.inputs.school_df)
-        for area in self.areas.members:
+        self.companies = Companies(self, self.msoareas, self.inputs.companysize_dict)
+        for area in self.msoareas.members:
             self.distributor = CompanyDistributor(self.companies, area)
             self.distributor.distribute_adults_to_companies()
         #self._init_companies(self.inputs.company_df)

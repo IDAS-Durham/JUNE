@@ -33,9 +33,11 @@ class Person:
         self.sex            = sex
         self.health_index   = health_index
         self.econ_index     = econ_index
-        self.area           = area
+        self.area_home      = area
+        self.area_work      = None
         self.household      = None
         self.school         = None
+        self.company        = None
         self.init_health_information()
 
     def is_sane(self, person_id, area, age, sex, health_index, econ_index):
