@@ -46,6 +46,7 @@ class AreaDistributor:
             area = Area(
                 self.areas.world,
                 area_name,
+                self.areas.world.inputs.oa2msoa_df.loc[area_name]["MSOA11CD"],
                 n_residents_df.loc[area_name],
                 0,  # n_households_df.loc[area_name],
                 {

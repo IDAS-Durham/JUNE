@@ -54,6 +54,11 @@ class World:
         #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         print("Creating schools...")
         self._init_schools(self.inputs.school_df)
+        print("Initializing Companies...")
+        self.companies = Companies(self, self.areas, self.inputs.school_df)
+        for area in self.areas.members:
+            self.distributor = CompanyDistributor(self.companies, area)
+            self.distributor.distribute_adults_to_companies()
         #self._init_companies(self.inputs.company_df)
         self.populate_world()
         print("Done.")

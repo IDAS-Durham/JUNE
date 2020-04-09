@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.optimize import curve_fit
 import os
 
 
@@ -38,7 +39,7 @@ class Inputs:
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
         self.workflow_dict = self.create_workflow_dict()
-        self.companysize_df = self.read_companysize_census()
+        self.companysize_dict = self.read_companysize_census()
 
     def read_df(
         self,
@@ -408,6 +409,7 @@ class Inputs:
         assert school_df["age_max"].max() < 20
         return school_df
 
+
     def read_companysize_census(self):
         """
         Gives nr. of companies with nr. of employees per MSOA
@@ -431,27 +433,31 @@ class Inputs:
         )
 
         assert company_df.isnull().values.any() == False
-        return company_df
+
+        def zipf_distr(m,a,c,mmax):
+            # used by Ferguson et al. 2005
+            # to be improved
+            return (((1+mmax/a)/(1+m/a))**c - 1) / ((1+mmax/a)**c - 1)
+
+        # create differential histogram
+        cs_bins = company_df.keys()
+        diff_N_cs = np.zeros_like(cs_bins)
+        for i,k in enumerate(cs_bins):
+            diff_N_cs[i] = np.sum(company_df[k])
+        
+
+        # fit fct. to cumulative distribution function    
+        cum_dN_dcs = np.cumsum(diff_N_cs[::-1])[::-1] / np.sum(diff_N_cs)
+        cdf_bins = np.array([0,10,20,50,100,250,500,1000])  #TODO make flexible
+        zipf_params, Cov = curve_fit(f=zipf_distr,xdata=cdf_bins,ydata=cum_dN_dcs)
+
+        companysize_dict = {
+            "fct": zipf_distr,
+            "params": zipf_params,
+        }
+        return companysize_dict
     
-    def read_home_work_areacode(DATA_DIR):
-        """
-        The dataframe derives from:
-            TableID: WU01EW
-            https://wicid.ukdataservice.ac.uk/cider/wicid/downloads.php
-        , but is processed to be placed in a pandas.DataFrame.
-        The MSOA area code is used for homes (rows) and work (columns).
-        """
-        flow_female_file = "flow_female_in_msoa_wu01northeast_2011.csv"
-        flow_male_file = "flow_male_in_msoa_wu01northeast_2011.csv"
-
-        flow_female_df = pd.read_csv(DATA_DIR + flow_female_file)
-        flow_female_df = flow_female_df.set_index("residence")
-
-        flow_male_df = pd.read_csv(DATA_DIR + flow_female_file)
-        flow_male_df = flow_male_df.set_index("residence")
-
-        return flow_female_df, flow_male_df
-
+    
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
         The dataframe derives from:
