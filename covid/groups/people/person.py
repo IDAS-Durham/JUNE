@@ -34,6 +34,7 @@ class Person:
         self.health_index   = health_index
         self.econ_index     = econ_index
         self.area           = area
+        self.r0             = 0
         self.active_group   = None
         self.household      = None
         self.school         = None
