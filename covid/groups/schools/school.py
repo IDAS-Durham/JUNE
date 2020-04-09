@@ -27,7 +27,7 @@ class Schools:
 
     def __init__(self, world, areas, school_df):
         self.world = world
-        self.members = {}
+        self.members = []
         self.init_schools(school_df)
 
     def _compute_age_group_mean(self, agegroup):
