@@ -215,12 +215,14 @@ class World:
     def _infect(self, group, duration):
         for group_instance in getattr(self, group).members:
             interaction = Single_Interaction(group_instance, "Superposition")
+            group_instance.set_intensity(1.)
             selector = self._initialize_infection_selector()
             # one step is one hour
             if len(group_instance.people) == 0:
                 continue
             for step in range(duration * self.config["world"]["steps_per_hour"]):
                 interaction.single_time_step(step, selector)
+                group_instance.update_status_lists(step)
 
     def seed_infections_group(self, group):  # , n_infections, selector):
 
