@@ -45,7 +45,7 @@ class Infection:
     
     def transmission_probability(self,time):
         if self.transmission==None:
-            return 0.
+            return 0.0
         return self.transmission.probability(time)
 
     def symptom_severity(self,time):
