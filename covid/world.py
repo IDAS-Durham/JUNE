@@ -11,7 +11,7 @@ import os
 tau = 100000
 beta = 0.3
 mu = 0.005
-n_infections = 2
+n_infections =100 
 Tparams = {}
 Tparams["Transmission:Type"] = "SIR"
 Tparams["Transmission:RecoverCutoff"] = {"Mean": tau}
@@ -189,9 +189,12 @@ class World:
         return None
 
     def _active_groups(self, time):
-        return self.config["world"]["step_active_groups"][time]
+        active = self.config["world"]["step_active_groups"][time].copy()
+        # households are always active
+        return active.append('households')
 
     def set_active_group_to_people(self, active_groups):
+
         for group_name in active_groups:
             group = getattr(self, group_name)
             group.set_active_members()
@@ -250,7 +253,6 @@ class World:
                 duration = self.config["world"]["step_duration"][time]
                 self.do_timestep(time, duration)
             self.days += 1
-
 
 if __name__ == "__main__":
     world = World()
