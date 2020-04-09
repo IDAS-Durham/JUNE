@@ -25,27 +25,12 @@ class Company(Group):
 
 class Companies:
 
-    def __init__(self, world, areas, school_df):
+    def __init__(self, world, msoareas, companysize_dict):
         self.world = world
         self.members = {}
-        self.init_schools(school_df)
+        self.init_companies(companysize_dict)
 
-    def _compute_age_group_mean(self, agegroup):
-        """
-        Given a NOMIS age group, calculates the mean age.
-        """
-        try:
-            age_1, age_2 = agegroup.split("-")
-            if age_2 == "XXX":
-                agemean = 90
-            else:
-                age_1 = float(age_1)
-                age_2 = float(age_2)
-                agemean = (age_2 + age_1) / 2.0
-        except:
-            agemean = int(agegroup)
-        return agemean
-
+    
     def init_schools(self, school_df):
         """
         Initializes schools.

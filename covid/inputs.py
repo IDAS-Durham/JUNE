@@ -40,7 +40,7 @@ class Inputs:
         self.oa2msoa_df = self.oa2msoa()
         self.workflow_dict = self.create_workflow_dict()
         self.companysize_dict = self.read_companysize_census()
-
+    
     def read_df(
         self,
         DATA_DIR: str,
@@ -454,6 +454,8 @@ class Inputs:
         companysize_dict = {
             "fct": zipf_distr,
             "params": zipf_params,
+            "msoareas": company_df.index.values,
+            "n_companies": company_df.sum(axis=1).values,
         }
         return companysize_dict
     
@@ -628,5 +630,4 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-
-    print(ip.companysize_df)
+    print(ip.companysize_dict["n_companies"])
