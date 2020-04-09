@@ -45,14 +45,17 @@ class Infection:
     
     def transmission_probability(self,time):
         if self.transmission==None:
-            return 0.
+            return 0.0
         return self.transmission.probability(time)
 
     def symptom_severity(self,time):
         if self.symptoms == None:
             return 0.
-        return self.symptoms.Severity(time)
-
+        return self.symptoms.get_severity(time)
+    
+    def symptom_tag(self,tagno):
+        return self.symptoms.tag(tagno)
+        
     def still_infected(self,time):
         transmission_bool = (self.transmission!=None and
                              self.transmission.probability(time)>self.threshold_transmission)

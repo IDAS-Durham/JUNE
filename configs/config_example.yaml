@@ -7,8 +7,8 @@ world:
       1: 8 # first time step duration in hours
       2: 16
   step_active_groups: 
-    1: ['schools', 'households'] # active groups during first time step
-    2: ['households']
+    1: ['schools'] # active groups during first time step
+    2: []
 
 
 people:
