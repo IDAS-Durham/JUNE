@@ -29,3 +29,13 @@ schools:
 
 companies:
   work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
+
+infection:
+  transmission:
+    type: SIR
+    probability:
+      mean: 0.3
+    recovery:
+      mean: 0.1
+    recover_cutoff:
+      mean: 1000
