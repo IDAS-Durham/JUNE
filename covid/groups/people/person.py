@@ -106,13 +106,7 @@ class Person:
         return self.recovered
 
     def get_symptoms_tag(self,time):
-        symptoms = self.infection.symptom_severity(time)
-        tagno    = 0
-        while symptoms>self.health_index[tagno]: 
-            tagno += 1
-            if tagno==len(self.health_index):
-                break
-        return self.infection.symptom_tag(tagno)
+        return self.infection.symptom_tag(time)
         
     def set_recovered(self, is_recovered):
         self.recovered = is_recovered

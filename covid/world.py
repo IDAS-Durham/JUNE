@@ -1,26 +1,13 @@
 from covid.inputs import Inputs
 from covid.groups import *
 from covid.infection_selector import InfectionSelector
-from covid.interaction import Single_Interaction
+from covid.interaction import Interaction
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
 
-tau = 100000
-beta = 0.3
-mu = 0.005
-n_infections =100 
-Tparams = {}
-Tparams["Transmission:Type"] = "SIR"
-Tparams["Transmission:RecoverCutoff"] = {"Mean": tau}
-paramsP = {}
-Tparams["Transmission:Probability"] = paramsP
-paramsP["Mean"] = beta
-paramsR = {}
-Tparams["Transmission:Recovery"] = paramsR
-paramsR["Mean"] = mu
 
 
 class World:
@@ -203,52 +190,36 @@ class World:
         for person in self.people.members:
             person.active_group = None
 
-    def _initialize_infection_selector(self):
-        Tparams = {}
-        Tparams["Transmission:Type"] = "SI"
-        params = {}
-        Tparams["Transmission:Probability"] = params
-        params["Mean"] = beta
-        selector = InfectionSelector(Tparams, None)
-        return selector
-
-    def _infect(self, group, duration):
-        for group_instance in getattr(self, group).members:
-            interaction = Single_Interaction(group_instance, "Superposition")
-            group_instance.set_intensity(1.)
-            selector = self._initialize_infection_selector()
-            # one step is one hour
-            if len(group_instance.people) == 0:
-                continue
-            for step in range(duration * self.config["world"]["steps_per_hour"]):
-                interaction.single_time_step(step, selector)
-                group_instance.update_status_lists(step)
+            
+    def _initialize_infection_selector_and_interaction(self,config):
+        self.selector    = InfectionSelector(config)
+        self.interaction = Interaction(self.selector)
 
     def seed_infections_group(self, group):  # , n_infections, selector):
-
-        selector = InfectionSelector(Tparams, None)
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
             group.people[choice].set_infection(
-                selector.make_infection(group.people[choice], 0)
+                self.selector.make_infection(group.people[choice], 0)
             )
-
+            
     def do_timestep(self, time, duration):
         active_groups = self._active_groups(time)
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
-        for group in active_groups:
-            self._infect(
-                group, duration,
-            )
+        self.interaction.set_groups(active_groups)
+        self.interaction.set_time(time+duration/24.)
+        self.interaction.time_step()
         self.set_allpeople_free()
 
     def group_dynamics(self, total_days):
-
+        print ("Starting group_dynamics for ",total_days," days")
         time_steps = self.config["world"]["step_duration"].keys()
         assert sum(self.config["world"]["step_duration"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
+        # initialize the interaction class with an infection selector
+        self._initialize_infection_selector_and_interaction(self.config["infection"])
+        self.interaction.set_time(0)
         self.days = 1
         while self.days <= total_days:
             for time in time_steps:
@@ -259,4 +230,4 @@ class World:
 if __name__ == "__main__":
     world = World()
     # world = World.from_pickle()
-    # world.group_dynamics(2)
+    world.group_dynamics(2)
