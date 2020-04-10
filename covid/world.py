@@ -214,20 +214,23 @@ class World:
 
     def group_dynamics(self, total_days):
         print ("Starting group_dynamics for ",total_days," days")
-        time_steps = self.config["world"]["step_duration"].keys()
-        assert sum(self.config["world"]["step_duration"].values()) == 24
+        time_steps = self.config["time"]["step_duration"]["weekday"].keys()
+        print (self.config["time"]["step_duration"]["weekday"])
+        print (self.config["time"]["step_duration"]["weekday"].values())
+        assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
-        self._initialize_infection_selector_and_interaction(self.config["infection"])
+        self._initialize_infection_selector_and_interaction(self.config)
         self.interaction.set_time(0)
         self.days = 1
         while self.days <= total_days:
             for time in time_steps:
-                duration = self.config["world"]["step_duration"][time]
+                print (self.config["time"]["step_duration"]["weekday"].keys(),time)
+                duration = self.config["time"]["step_duration"]["weekday"][time]
                 self.do_timestep(time, duration)
             self.days += 1
 
 if __name__ == "__main__":
     world = World()
-    # world = World.from_pickle()
+    #world = World.from_pickle()
     world.group_dynamics(2)
