@@ -38,7 +38,7 @@ class Inputs:
         #self.company_df = self.read_companysize_census()
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
-        self.workflow_dict = self.create_workflow_dict()
+        #self.workflow_dict = self.create_workflow_dict()
         self.companysize_dict = self.read_companysize_census()
     
     def read_df(
@@ -527,18 +527,11 @@ class Inputs:
         travel_df = travel_df[["home", "public", "private"]]
 
         # create dictionary to merge OA into MSOA
-        dirs = (
-            "../data/census_data/area_code_translations/"
-        )
-        dic = pd.read_csv(
-            dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
-            delimiter=",",
-            delim_whitespace=False,
-        )
+        oa2msoa_df = self.oa2msoa()
 
         # merge OA into MSOA
         travel_df = travel_df.merge(
-            dic.drop_duplicates(subset="OA11CD").set_index("OA11CD")["MSOA11CD"],
+            msoa2oa_df,
             left_index=True,
             right_index=True,
         )

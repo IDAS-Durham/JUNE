@@ -31,20 +31,20 @@ class Companies:
         self.init_companies(companysize_dict)
 
     
-    def init_schools(self, school_df):
+    def init_companies(self, companysize_dict):
         """
-        Initializes schools.
+        Initializes Companies.
         """
-        SCHOOL_AGE_THRESHOLD = [1, 7]
-        schools = []
-        school_age = list(self.world.decoder_age.values())[
-            SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
+        COMPANY_AGE_THRESHOLD = [8, 13]
+        companies = []
+        copmany_age = list(self.world.decoder_age.values())[
+            0] : COMPANY_AGE_THRESHOLD[1]
         ]
-        school_trees = {}
-        school_agegroup_to_global_indices = (
+        copmany_trees = {}
+        copmany_agegroup_to_global_indices = (
             {}
-        )  # stores for each age group the index to the school
-        # create school neighbour trees
+        )  # stores for each gender-ratio group the index to the school
+        # create company neighbour trees
         for agegroup in school_age:
             school_agegroup_to_global_indices[
                 agegroup
