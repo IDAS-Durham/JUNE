@@ -25,10 +25,11 @@ class Symptoms:
     as possible, to have a baseline and to facilitate validation.
     """
     def __init__(self,person,params,time):
-        self.tags      = allowed_symptom_tags
-        self.person    = person
-        self.starttime = time
-        self.severity  = 0.
+        self.tags         = allowed_symptom_tags
+        self.person       = person
+        self.health_index = self.person.get_health_index()
+        self.starttime    = time
+        self.severity     = 0.
         self.init(params)
         
     def set_interval(self,interval):
@@ -50,10 +51,16 @@ class Symptoms:
     def n_tags(self):
         return len(self.tags)
 
-    def tag(self,tagno):
-        if tagno>=self.n_tags():
-            return self.tags[self.n_tags()-1]
-        return self.tags[tagno]
+    def tag(self,time):
+        self.calculate(time)
+        if self.severity<=0.:
+            return "healthy"
+        index = 0
+        while self.severity>self.health_index[index]: 
+            index += 1
+            if index==len(self.health_index):
+                break
+        return self.tags[index]
 
     def tags(self):
         return self.tags
@@ -68,9 +75,9 @@ class Symptoms:
     
 class SymptomsConstant(Symptoms):
     def init(self,params):
-        self.Toffset     = max(0., params["Symptoms:TimeOffset"]["Value"])
-        self.Tend        = max(0., params["Symptoms:EndTime"]["Value"])
-        self.maxseverity = min(1., max(0., params["Symptoms:Severity"]["Value"]))
+        self.Toffset     = max(0., params["time_offset"]["value"])
+        self.Tend        = max(0., params["end_time"]["value"])
+        self.maxseverity = min(1., max(0., params["severity"]["value"]))
 
     def calculate(self,time):
         if time>self.starttime + self.Toffset and time<self.starttime+self.Tend:
@@ -84,9 +91,9 @@ class SymptomsConstant(Symptoms):
 
 class SymptomsGaussian(Symptoms):
     def init(self,params):
-        self.maxseverity = min(1., max(0., params["Symptoms:MaximalSeverity"]["Value"]))
-        self.Tmean = max(0., params["Symptoms:MeanTime"]["Value"])
-        self.sigmaT = max(0.001, params["Symptoms:SigmaTime"]["Value"])
+        self.maxseverity = min(1., max(0., params["maximal_severity"]["value"]))
+        self.Tmean = max(0., params["mean_time"]["value"])
+        self.sigmaT = max(0.001, params["sigma_time"]["value"])
         
     def calculate(self,time):
         dt = time - (self.starttime + self.Tmean)
