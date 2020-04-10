@@ -5,7 +5,7 @@ world:
   steps_per_hour: 10
   step_active_groups: 
     1: ['schools'] # active groups during first time step
-    2: []
+    2: ['households']
 
 time:
   step_duration: 
