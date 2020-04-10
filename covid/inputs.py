@@ -458,6 +458,21 @@ class Inputs:
             "n_companies": company_df.sum(axis=1).values,
         }
         return companysize_dict
+
+    def read_companysector_census(self):
+        """
+        Gives number of companies by type according to NOMIS sector data at the MSOA level
+        TableID: WD601EW
+        https://www.nomisweb.co.uk/census/2011/wd601ew
+        """
+
+        companysector_df = pd.read_csv(self.MIDDLE_OUTPUT_AREA_DIR + '/company_sector_cleaned_msoa.csv')
+
+        companysector_dict = {}
+        for i in companysector_df.columns:
+            companysector_dict[i] = list(companysector_df[i])
+
+        return companysector_dict
     
     
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
