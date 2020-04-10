@@ -181,7 +181,6 @@ class World:
         return active.append('households')
 
     def set_active_group_to_people(self, active_groups):
-
         for group_name in active_groups:
             group = getattr(self, group_name)
             group.set_active_members()
@@ -204,6 +203,9 @@ class World:
             
     def do_timestep(self, time, duration):
         active_groups = self._active_groups(time)
+        if active_groups==None or len(active_groups)==0:
+            print ("==== do_timestep(): no active groups found. ====")
+            return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
@@ -215,8 +217,6 @@ class World:
     def group_dynamics(self, total_days):
         print ("Starting group_dynamics for ",total_days," days")
         time_steps = self.config["time"]["step_duration"]["weekday"].keys()
-        print (self.config["time"]["step_duration"]["weekday"])
-        print (self.config["time"]["step_duration"]["weekday"].values())
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
@@ -225,8 +225,8 @@ class World:
         self.days = 1
         while self.days <= total_days:
             for time in time_steps:
-                print (self.config["time"]["step_duration"]["weekday"].keys(),time)
                 duration = self.config["time"]["step_duration"]["weekday"][time]
+                print ("next step, time = ",time,", duration = ",duration)
                 self.do_timestep(time, duration)
             self.days += 1
 

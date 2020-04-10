@@ -23,12 +23,17 @@ class Interaction:
         self.delta_t = self.time-self.oldtime
         
     def time_step(self):
+        print ("================ BEFORE ====================")
+        print ("=== iterate over ",len(groups)," groups ====")
         for group in self.groups:
             group.update_status_lists(self.time)
+            group.output()
         for group in self.groups:
             self.single_time_step_for_group(group)
+        print ("================ AFTER =====================")
         for group in self.groups:
             group.update_status_lists(self.time)
+            group.output()
             
     def single_time_step_for_group(self,group):
         pass
