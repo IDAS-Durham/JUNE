@@ -12,15 +12,14 @@ class Transmission:
     Currently two forms are implemented:
     - TransmissionSI
     a constant transmission probability, given by the value, with infinite length
-    The only parameter is Transmission::Probability
+    The only parameter is probability
     - TransmissionConstantInterval
     a constant transmission probability, given by the value and the length
     of the transmission period.
-    Parameters are Transmission:Probability and Transmission:EndTime
+    Parameters are probability and end_time
     - TransmissionXNExp
     a probablity of the form $P(t) = P_0 x^n exp(-x/a)$ with parameters given
-    by P_0 = Transmission:Probability, n = Transmission:Exponent, and 
-    a = Transmission:Norm 
+    by P_0 = probability, n = exponent, and a = norm 
 
     TODO: we should try and map this onto the Flute/Imperial models, as far
     as possible, to have a baseline and to facilitate validation.
@@ -50,7 +49,7 @@ class Transmission:
 
 class TransmissionSI(Transmission):
     def init(self,params):
-        self.prob = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
+        self.prob = min(1.,max(0.,params["probability"]["value"]))
 
     def calculate(self,time):
         self.value = self.prob
@@ -61,9 +60,9 @@ class TransmissionSI(Transmission):
 
 class TransmissionSIR(Transmission):
     def init(self,params):
-        self.probT = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
-        self.probR = min(1.,max(0.,params["Transmission:Recovery"]["Value"]))
-        self.RecoverCutoff = params["Transmission:RecoverCutoff"]["Value"]
+        self.probT = min(1.,max(0.,params["probability"]["value"]))
+        self.probR = min(1.,max(0.,params["recovery"]["value"]))
+        self.RecoverCutoff = params["recovery_cutoff"]["value"]
         self.lasttime = self.starttime # last time they had a chance to recover
 
     def calculate(self,time):
@@ -95,8 +94,8 @@ class TransmissionSIR(Transmission):
     
 class TransmissionConstantInterval(Transmission):
     def init(self,params):
-        self.prob    = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
-        self.endtime = params["Transmission:EndTime"]["Value"]
+        self.prob    = min(1.,max(0.,params["probability"]["value"]))
+        self.endtime = params["end_time"]["value"]
         self.value   = 0
         
     def calculate(self,time):
@@ -111,9 +110,9 @@ class TransmissionConstantInterval(Transmission):
 
 class TransmissionXNExp(Transmission):
     def init(self,params):
-        self.prob       = min(1.,max(0.,params["Transmission:Probability"]["Value"]))
-        self.exponent   = max(0.,params["Transmission:Exponent"]["Value"])
-        self.tailfactor = params["Transmission:Norm"]["Value"]
+        self.prob       = min(1.,max(0.,params["probability"]["value"]))
+        self.exponent   = max(0.,params["exponent"]["value"])
+        self.tailfactor = params["norm"]["value"]
         if self.tailfactor  < 0.001:
             self.tailfactor = 0.001
         self.init_norm

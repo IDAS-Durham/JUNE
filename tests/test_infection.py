@@ -7,68 +7,38 @@ from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
 
 
-def trivial_check():
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mean"] = 0.5
-    selector = InfectionSelector(Tparams, None)
+def trivial_check(config):
+    selector = InfectionSelector(config)
     infection = selector.make_infection(Person('test',0,10,'M',0,0),0)
-    print("Tparams = ", Tparams)
+    print("transmission parameters = ", config["infection"]["transmission"])
     print("   * Prob = ", infection.transmission_probability(1))
 
-def distribute_value_Gamma():
+def distribute_value_Gamma(config1,config2):
     import random
     import matplotlib
     import matplotlib.pyplot as plt
 
     person = Person('test',0,10,'M',0,0)
     
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mode"]  = "Gamma"
-    params["Mean"]  = 1.0
-    params["Shape"] = 0.25
-    selector = InfectionSelector(Tparams, None)
+    selector1 = InfectionSelector(config1)
     probs1 = []
     for i in range(1000000):
-        infection = selector.make_infection(person,0)
+        infection = selector1.make_infection(person,0)
         probs1.append(infection.transmission_probability(1))
 
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mode"]  = "Gamma"
-    params["Mean"]  = 1.0
-    params["Shape"] = 0.5
+    selector2 = InfectionSelector(config2)
     probs2 = []
-    selector = InfectionSelector(Tparams, None)
     for i in range(1000000):
-        infection = selector.make_infection(person,0)
+        infection = selector2.make_infection(person,0)
         probs2.append(infection.transmission_probability(1))
 
     fig, axes = plt.subplots()
-    axes.hist(
-        probs1,
-        1000,
-        range=(0, 1),
-        density=True,
-        facecolor="blue",
-        alpha=0.5,
-        label="$\\Gamma(\\alpha = 0.25$, mean = 1.)",
-    )
-    axes.hist(
-        probs2,
-        1000,
-        range=(0, 1),
-        density=True,
-        facecolor="red",
-        alpha=0.5,
-        label="$\\Gamma(\\alpha = 0.50$, mean = 1.)",
+    axes.hist(probs1,1000,range=(0, 1),density=True,
+              facecolor="blue",alpha=0.5,
+              label="$\\Gamma(\\alpha = 0.25$, mean = 1.)")
+    axes.hist(probs2,1000,range=(0, 1),density=True,
+              facecolor="red",alpha=0.5,
+              label="$\\Gamma(\\alpha = 0.50$, mean = 1.)",
     )
     plt.yscale('log')
     axes.set_ylim([0.001,100.0])
@@ -76,92 +46,41 @@ def distribute_value_Gamma():
     plt.show()
 
         
-def distribute_value_Gauss():
+def distribute_value_Gauss(config1,config2):
     import random
     import matplotlib
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots()
 
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mode"]      = "Gauss"
-    params["Mean"]      = 0.5
-    params["WidthPlus"] = 0.3
-    params["Lower"]     = 0.0
-    params["Upper"]     = 1.0
-
-    selector = InfectionSelector(Tparams, None)
+    selector1 = InfectionSelector(config1)
     probs1 = []
     for i in range(1000000):
-        infection = selector.make_infection(Person('test',0,10,'M',0,0),0)
+        infection = selector1.make_infection(Person('test',0,10,'M',0,0),0)
         probs1.append(infection.transmission_probability(1))
 
     probs2 = []
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mode"]       = "Gauss"
-    params["Mean"]       = 0.5
-    params["WidthPlus"]  = 0.2
-    params["WidthMinus"] = 0.1
-    params["Lower"]      = 0.0
-    params["Upper"]      = 1.0
-    selector = InfectionSelector(Tparams, None)
+    selector2 = InfectionSelector(config2)
     for i in range(1000000):
-        infection = selector.make_infection(Person('test',0,10,'M',0,0),0)
+        infection = selector2.make_infection(Person('test',0,10,'M',0,0),0)
         probs2.append(infection.transmission_probability(1))
 
-    axes.hist(
-        probs1,
-        1000,
-        range=(0, 1),
-        density=True,
-        facecolor="blue",
-        alpha=0.5,
-        label="symmetric, width = 0.3",
+    axes.hist(probs1,1000,range=(0, 1),density=True,
+              facecolor="blue",alpha=0.5,
+              label="symmetric, width = 0.3",
     )
-    axes.hist(
-        probs2,
-        1000,
-        range=(0, 1),
-        density=True,
-        facecolor="red",
-        alpha=0.5,
-        label="symmetric, widths = 0.1, 0.2",
-    )
+    axes.hist(probs2,1000,range=(0, 1),density=True,
+              facecolor="red",alpha=0.5,
+              label="symmetric, widths = 0.1, 0.2")
     axes.legend()
     plt.show()
 
-def check_symptom_tags(N):
+def check_symptom_tags(N,config):
     import random
     import matplotlib
     import matplotlib.pyplot as plt
 
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mode"]       = "Gauss"
-    params["Mean"]       = 0.5
-    Sparams = {}
-    Sparams["Symptoms:Type"] = "Constant"
-    MSparams = {}
-    MSparams["Mean"]  = 0.5
-    MSparams["Mode"]  = "Flat"
-    MSparams["Lower"] = 0
-    MSparams["Upper"] = 1
-    Sparams["Symptoms:Severity"]   = MSparams
-    TOparams = {}
-    TOparams["Mean"] = 0.5
-    Sparams["Symptoms:TimeOffset"] = TOparams
-    MTparams = {}
-    MTparams["Mean"] = 12
-    Sparams["Symptoms:EndTime"]    = MTparams
-    selector = InfectionSelector(Tparams, Sparams)
+    selector = InfectionSelector(config)
 
     health_index = [0.4, 0.55, 0.65, 0.8, 0.95]
     severs1  = []
@@ -201,7 +120,39 @@ def check_symptom_tags(N):
         
 
 if __name__ == "__main__":
-    #trivial_check()
-    #distribute_value_Gauss()
-    #distribute_value_Gamma()
-    check_symptom_tags(1000000)
+    import os
+    import yaml
+    
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "tests",
+        "config_infection_test.yaml",
+    )
+    with open(config_file, "r") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    found = False
+
+    if "trivial_check" in config:
+        print ("trivial check")
+        trivial_check(config["trivial_check"])
+        found = True        
+    if ("distribute_value_Gamma1" in config and
+        "distribute_value_Gamma2" in config):
+        print ("gamma distribution")
+        distribute_value_Gamma(config["distribute_value_Gamma1"],
+                               config["distribute_value_Gamma2"])
+        found = True        
+    if ("distribute_value_Gauss1" in config and
+        "distribute_value_Gauss2" in config):
+        print ("gauss distribution")
+        distribute_value_Gauss(config["distribute_value_Gauss1"],
+                               config["distribute_value_Gauss2"])
+        found = True
+    if "symptoms_tag_test" in config:
+        print ("symptoms_tag_test")
+        check_symptom_tags(1000000,config["symptoms_tag_test"])
+        found = True
+    if not found:
+        print ("no keywords found:",config)

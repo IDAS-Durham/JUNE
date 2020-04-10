@@ -62,11 +62,11 @@ class Group:
         return self.intensity #.intensity(time)
 
     def add(self, person):
-        if not isinstance(person, Person.Person):
+        if not isinstance(person, Person):
             print ("Error in Group.Add(",p,") is not a person.")
             print("--> Exit the code.")
             sys.exit()
-        if person in self.people.values():
+        if person in self.people:
             print ("Tried to add already present person",person.Name(),
                    " to group ",self.gname,".")
             print("--> Ignore and proceed.")
@@ -130,7 +130,7 @@ class Group:
         for i in range(number):
             age = random.randrange(0,100)
             sex = random.choice(("M","F"))
-            self.add(Person.Person(str(i), 0, age, sex, 0, 0))
+            self.add(Person(str(i), 0, age, sex, 0, 0))
         #self.output(False,False)
                 
     def output(self,plot=False,full=False):

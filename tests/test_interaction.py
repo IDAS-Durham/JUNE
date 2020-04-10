@@ -4,16 +4,17 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from covid.groups import Group
-from covid.interaction import Interaction
+from covid.interaction import Interaction, CollectiveInteraction
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
 
 def ratio_SI_simulated(beta, N, I_0, times, mode):
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params  = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mean"] = beta
+    config = {}
+    config["infection"]                                            = {}
+    config["infection"]["transmission"]                            = {}
+    config["infection"]["transmission"]["type"]                    = "SI"
+    config["infection"]["transmission"]["probability"]             = {}
+    config["infection"]["transmission"]["probability"]["mean"]     = beta
     selector = InfectionSelector(Tparams, None)
     group = Group("test", "Random", N)
     if mode=='Superposition':
@@ -22,7 +23,7 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
         group.people[i].set_infection(selector.make_infection(group.people[i], 0))
     groups = []
     groups.append(group)
-    interaction = Interaction(groups, 0, mode)
+    interaction = CollectiveInteraction(selector, mode)
     ratio = []
     print("===============================================")
     for time in times:
@@ -30,8 +31,9 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
         if time / 10 == int(time / 10):
             print(time, value)
         ratio.append(value)
-        interaction.single_time_step(time, selector)
-        group.update_status_lists(time)
+        interaction.set_time(time)
+        interaction.set_groups(groups)
+        interaction.time_step()
     return ratio
 
 def ratio_SI_analytic(beta, N, I_0, times):
@@ -45,26 +47,26 @@ def ratio_SI_analytic(beta, N, I_0, times):
     return ratios
 
 def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SIR"
-    paramsP  = {}
-    Tparams["Transmission:Probability"] = paramsP
-    paramsP["Mean"] = beta
-    paramsR  = {}
-    Tparams["Transmission:Recovery"] = paramsR
-    paramsR["Mean"] = gamma
-    paramsRC = {}
-    Tparams["Transmission:RecoverCutoff"] = paramsRC
-    paramsRC["Mean"] = 1000
-    selector = InfectionSelector(Tparams, None)
+    config = {}
+    config["infection"]                                            = {}
+    config["infection"]["transmission"]                            = {}
+    config["infection"]["transmission"]["type"]                    = "SIR"
+    config["infection"]["transmission"]["probability"]             = {}
+    config["infection"]["transmission"]["probability"]["mean"]     = beta
+    config["infection"]["transmission"]["recovery"]                = {}
+    config["infection"]["transmission"]["recovery"]["mean"]        = gamma
+    config["infection"]["transmission"]["recovery_cutoff"]         = {}
+    config["infection"]["transmission"]["recovery_cutoff"]["mean"] = 1000
+    selector = InfectionSelector(config)
     group = Group("test", "Random", N)
     if mode=='Superposition':
         group.set_intensity(group.get_intensity())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], times[0]-1))
+    group.output()
     groups = []
     groups.append(group)
-    interaction = Interaction(groups, 0, mode)
+    interaction = CollectiveInteraction(selector, mode)
     ratio = []
     print("===============================================")
     ratioI_by_N = []
@@ -76,8 +78,9 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
             print(time, valueI, valueR)
         ratioI_by_N.append(valueI)
         ratioR_by_N.append(valueR)
-        interaction.single_time_step(time, selector)
-        group.update_status_lists(time)
+        interaction.set_time(time)
+        interaction.set_groups(groups)
+        interaction.time_step()
     return ratioI_by_N, ratioR_by_N
 
 
@@ -186,7 +189,7 @@ def test_SI():
     plt.show()
 
 
-def test_SIR():
+def test_SIR(config):
     N         = 10000
     N0        = 50
     betas     = [0.300]
@@ -233,6 +236,23 @@ if __name__ == "__main__":
     import matplotlib
     import matplotlib.pyplot as plt
     import itertools
+    import os
+    import yaml
     
-    test_SIR()
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "tests",
+        "config_interaction_test.yaml",
+    )
+    with open(config_file, "r") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        
+    testmode = config["infection"]["testmode"]
+    if testmode=="SIR":
+        test_SIR(config)
+    if testmode=="SI":
+        test_SIR(config)
 
+
+    
