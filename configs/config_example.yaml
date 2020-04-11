@@ -1,7 +1,7 @@
 title: Covid configuration example
 
 world:
-  zone: test # available are all UK regions, and EnglandWales together.
+  zone: NorthEast # available are all UK regions, and EnglandWales together.
   steps_per_hour: 10
   step_active_groups: 
     1: ['schools'] # active groups during first time step
