@@ -335,6 +335,9 @@ class HouseholdDistributor:
             self.populate_area()
         house_id = 0
         aux = False
+        composition_id_array = self.household_rv.rvs(size=self.area.n_residents)
+        i = 0
+        maxi = len(composition_id_array)
         while self.area._men or self.area._women or self.area._oldmen or self.area._oldwomen:
             if not self.area._men and not self.area._women: # 
                 """
@@ -346,7 +349,13 @@ class HouseholdDistributor:
                 household = Household(house_id, composition_id, self.area)
                 household_filled_config = self.populate_household(household)
             else:
-                composition_id = self.household_rv.rvs(size=1)[0]
+                #composition_id = self.household_rv.rvs(size=1)[0]
+                composition_id = composition_id_array[i]
+                i+=1
+                if i >= maxi:
+                    composition_id_array = self.household_rv.rvs(size=self.area.n_residents)
+                    i = 0
+
                 household = Household(house_id, composition_id, self.area)
                 household_filled_config = self.populate_household(household)
             if household_filled_config == -1:  # empty house
