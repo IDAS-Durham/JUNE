@@ -42,4 +42,4 @@ wcwidth==0.1.9
 pytest
 pytest-cov
 scipy
-sklearn==0.22.2
+scikit-learn==0.22.2
