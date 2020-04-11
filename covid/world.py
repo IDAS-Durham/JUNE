@@ -176,9 +176,10 @@ class World:
         return None
 
     def _active_groups(self, time):
-        active = self.config["world"]["step_active_groups"][time].copy()
         # households are always active
-        return active.append('households')
+        always_active = ['households']
+        active = self.config["world"]["step_active_groups"][time]
+        return always_active + active
 
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
