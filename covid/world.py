@@ -9,7 +9,6 @@ import yaml
 import os
 
 
-
 class World:
     """
     Stores global information about the simulation
@@ -112,74 +111,11 @@ class World:
             areas_dict[i] = area
         return areas_dict
 
-    def _init_companies(self, company_df):
-        """
-        Initializes companies.
-        Fit function to company size distribution.
-
-        Input:
-            company_df: pd.DataFrame
-                Contains information on nr. of companies with nr. of employees per MSOA
-        """
-        self.WORK_AGE_THRESHOLD = [8, 13]
-        companies = {}
-        school_age = list(self.decoder_age.values())[
-            SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
-        ]
-        school_trees = {}
-        school_agegroup_to_global_indices = (
-            {}
-        )  # stores for each age group the index to the school
-        # areas_dict = {}
-        # for i, area_code in enumerate(company_df["MSOA11CD"].values):
-        #    area = MSOA(
-        #        self,
-        #        area_code,
-        #        area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
-        #        company_df[company_df["msoa11cd"] == "E02002559"][[
-        #            "Micro (0 to 9)", "10 to 19", "20 to 49", "50 to 99",
-        #            "100 to 249", "250 to 499", "500 to 999", "1000+",
-        #        ]].values
-        #    )
-        #    areas_dict[i] = area
-        # create companies
-        for agegroup in school_age:
-            school_agegroup_to_global_indices[
-                agegroup
-            ] = {}  # this will be used to track school universally
-            mean = self._compute_age_group_mean(agegroup)
-            _school_df_agegroup = school_df[
-                (school_df["age_min"] <= mean) & (school_df["age_max"] >= mean)
-            ]
-            school_trees[agegroup] = self._create_school_tree(_school_df_agegroup)
-        # create schools and put them in the right age group
-        for i, (index, row) in enumerate(school_df.iterrows()):
-            school = School(
-                i,
-                np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
-                row["NOR"],
-                row["age_min"],
-                row["age_max"],
-            )
-            # to which age group does this school belong to?
-            for agegroup in school_age:
-                agemean = self._compute_age_group_mean(agegroup)
-                if school.age_min <= agemean and school.age_max >= agemean:
-                    school_agegroup_to_global_indices[agegroup][
-                        len(school_agegroup_to_global_indices[agegroup])
-                    ] = i
-            schools[i] = school
-        # store variables to class
-        self.schools = schools
-        self.school_trees = school_trees
-        self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
-        return None
-
     def _active_groups(self, time):
         # households are always active
-        always_active = ['households']
+        always_active = ["households"]
         active = self.config["world"]["step_active_groups"][time]
-        return always_active + active
+        return active + always_active #always_active + active
 
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
@@ -190,48 +126,51 @@ class World:
         for person in self.people.members:
             person.active_group = None
 
-            
-    def _initialize_infection_selector_and_interaction(self,config):
-        self.selector    = InfectionSelector(config)
+    def _initialize_infection_selector_and_interaction(self, config):
+        self.selector = InfectionSelector(config)
         self.interaction = Interaction(self.selector)
 
-    def seed_infections_group(self, group):  # , n_infections, selector):
+    def seed_infections_group(self, group, n_infections, selector):
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
             group.people[choice].set_infection(
                 self.selector.make_infection(group.people[choice], 0)
             )
-            
+
     def do_timestep(self, time, duration):
         active_groups = self._active_groups(time)
-        if active_groups==None or len(active_groups)==0:
-            print ("==== do_timestep(): no active groups found. ====")
+        if active_groups == None or len(active_groups) == 0:
+            print("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
-        self.interaction.set_groups(active_groups)
-        self.interaction.set_time(time+duration/24.)
+        groups_instances = [getattr(self, group) for group in active_groups]
+        self.interaction.set_groups(groups_instances)
+        self.interaction.set_time(time + duration / 24.0)
         self.interaction.time_step()
         self.set_allpeople_free()
 
     def group_dynamics(self, total_days):
-        print ("Starting group_dynamics for ",total_days," days")
+        print("Starting group_dynamics for ", total_days, " days")
         time_steps = self.config["time"]["step_duration"]["weekday"].keys()
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
         self._initialize_infection_selector_and_interaction(self.config)
+        for household in self.households.members:
+            self.seed_infections_group(household, 1, self.selector)
         self.interaction.set_time(0)
         self.days = 1
         while self.days <= total_days:
             for time in time_steps:
                 duration = self.config["time"]["step_duration"]["weekday"][time]
-                print ("next step, time = ",time,", duration = ",duration)
+                print("next step, time = ", time, ", duration = ", duration)
                 self.do_timestep(time, duration)
             self.days += 1
 
+
 if __name__ == "__main__":
     world = World()
-    #world = World.from_pickle()
+    # world = World.from_pickle()
     world.group_dynamics(2)
