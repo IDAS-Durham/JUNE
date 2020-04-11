@@ -33,11 +33,11 @@ class Person:
         self.sex            = sex
         self.health_index   = health_index
         self.econ_index     = econ_index
-        self.area_home      = area
-        self.area_work      = None
+        self.area           = area
+        self.r0             = 0
+        self.active_group   = None
         self.household      = None
         self.school         = None
-        self.company        = None
         self.init_health_information()
 
     def is_sane(self, person_id, area, age, sex, health_index, econ_index):
@@ -60,7 +60,7 @@ class Person:
         
     def get_health_index(self):
         return self.health_index
-    
+
     def get_econ_index(self):
         return self.econ_index
     
@@ -105,6 +105,9 @@ class Person:
     def is_recovered(self):
         return self.recovered
 
+    def get_symptoms_tag(self,time):
+        return self.infection.symptom_tag(time)
+        
     def set_recovered(self, is_recovered):
         self.recovered = is_recovered
         if (self.recovered):
