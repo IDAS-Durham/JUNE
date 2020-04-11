@@ -1,7 +1,9 @@
 import sys
 import random
 from covid.infection import Infection
-#from covid.groups.people import PersonDistributor
+
+# from covid.groups.people import PersonDistributor
+
 
 class Person:
     """
@@ -25,30 +27,30 @@ class Person:
     according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
+
     def __init__(self, person_id, area, age, sex, health_index, econ_index):
-        #if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
+        # if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
-        self.id             = person_id
-        self.age            = age
-        self.sex            = sex
-        self.health_index   = health_index
-        self.econ_index     = econ_index
-        self.area           = area
-        self.r0             = 0
-        self.active_group   = None
-        self.household      = None
-        self.school         = None
+        self.id = person_id
+        self.age = age
+        self.sex = sex
+        self.health_index = health_index
+        self.econ_index = econ_index
+        self.area = area
+        self.r0 = 0
+        self.active_group = None
+        self.household = None
+        self.school = None
         self.init_health_information()
 
     def is_sane(self, person_id, area, age, sex, health_index, econ_index):
-        if (age<0 or age>120 or
-            not (sex=="M" or sex=="F") ):
-            print ("Error: tried to initialise person with descriptors out of range: ")
-            print ("Id = ",person_id," age / sex = ",age,"/",sex)
-            print ("economical/health indices: ",econ_index,health_index) 
+        if age < 0 or age > 120 or not (sex == "M" or sex == "F"):
+            print("Error: tried to initialise person with descriptors out of range: ")
+            print("Id = ", person_id, " age / sex = ", age, "/", sex)
+            print("economical/health indices: ", econ_index, health_index)
             sys.exit()
         return True
-        
+
     def get_name(self):
         return self.id
 
@@ -57,45 +59,44 @@ class Person:
 
     def get_sex(self):
         return self.sex
-        
+
     def get_health_index(self):
         return self.health_index
 
     def get_econ_index(self):
         return self.econ_index
-    
+
     def get_susceptibility(self):
         return self.susceptibility
-    
-    def set_household(self,household):
+
+    def set_household(self, household):
         self.household = household
 
     def init_health_information(self):
-        self.susceptibility = 1.
-        self.susceptible    = True
-        self.infected       = False
-        self.infection      = None
-        self.recovered      = False
-        
-    def set_infection(self,infection):
-        if (not isinstance(infection, Infection) and
-            not infection==None):
-            print ("Error in Infection.Add(",infection,") is not an infection")
+        self.susceptibility = 1.0
+        self.susceptible = True
+        self.infected = False
+        self.infection = None
+        self.recovered = False
+
+    def set_infection(self, infection):
+        if not isinstance(infection, Infection) and not infection == None:
+            print("Error in Infection.Add(", infection, ") is not an infection")
             print("--> Exit the code.")
             sys.exit()
-        self.infection  = infection
+        self.infection = infection
         self.infected = True
         if not self.infection == None:
             self.susceptible = False
 
-    def update_health_status(self,time):
-        if self.infection!=None:
+    def update_health_status(self, time):
+        if self.infection != None:
             self.susceptible = False
             if self.infection.still_infected(time):
                 self.infected = True
             else:
                 self.infected = False
-            
+
     def is_susceptible(self):
         return self.susceptible
 
@@ -105,12 +106,12 @@ class Person:
     def is_recovered(self):
         return self.recovered
 
-    def get_symptoms_tag(self,time):
+    def get_symptoms_tag(self, time):
         return self.infection.symptom_tag(time)
-        
+
     def set_recovered(self, is_recovered):
         self.recovered = is_recovered
-        if (self.recovered):
+        if self.recovered:
             self.set_infection(None)
 
     def susceptibility(self):
@@ -118,30 +119,29 @@ class Person:
 
     def set_susceptibility(self, susceptibility):
         self.susceptibility = susceptibility
-    
-    def transmission_probability(self,time):
-        if self.infection==None:
-            return 0.
+
+    def transmission_probability(self, time):
+        if self.infection == None:
+            return 0.0
         return self.infection.transmission_probability(time)
 
-    def symptom_severity(self,time):
-        if self.infection==None:
-            return 0.
+    def symptom_severity(self, time):
+        if self.infection == None:
+            return 0.0
         return self.infection.symptom_severity(time)
 
     def output(self):
-        print ("--------------------------------------------------")
-        print ("Person [",self.pname,"]: age = ",self.age," sex = ",self.sex)
+        print("--------------------------------------------------")
+        print("Person [", self.pname, "]: age = ", self.age, " sex = ", self.sex)
         if self.is_susceptible():
-            print ("-- person is susceptible.")
+            print("-- person is susceptible.")
         if self.is_infected():
-            print ("-- person is infected.")
+            print("-- person is infected.")
         if self.is_recovered():
-            print ("-- person has recovered.")
+            print("-- person has recovered.")
 
 
 class People:
-
     def __init__(self, world):
         self.world = world
         self.members = []
@@ -150,4 +150,3 @@ class People:
     def populate_area(self, area):
         distributor = PersonDistributor(self, area)
         distributor.populate_area()
-

@@ -37,5 +37,5 @@ infection:
       mean: 0.3
     recovery:
       mean: 0.1
-    recover_cutoff:
+    recovery_cutoff:
       mean: 1000
