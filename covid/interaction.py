@@ -8,11 +8,11 @@ import random
 class Interaction:
     def __init__(self, infection_selector, mode="Superposition"):
         self.selector = infection_selector
-        self.mode = mode
-        self.groups = []
-        self.time = 0.0
-        self.oldtime = 0.0
-        self.delta_t = 0.0
+        self.mode     = mode
+        self.groups   = []
+        self.time     = 0.0
+        self.oldtime  = 0.0
+        self.delta_t  = 0.0
         self.transmission_probability = 0.0
 
     def set_groups(self, groups):
@@ -25,25 +25,41 @@ class Interaction:
 
     def time_step(self):
         print("================ BEFORE ====================")
-        print("=== iterate over ", len(self.groups), " groups ====")
+        n_inf0 = 0
+        n_rec0 = 0
+        n_sus0 = 0
         for grouptype in self.groups:
             for group in grouptype.members:
-                if group.size() == 0:
-                    continue
-                group.update_status_lists(self.time)
-                group.output()
+                if group.size() != 0:
+                    group.update_status_lists(self.time)
+                n_inf0 += group.size_infected() 
+                n_rec0 += group.size_recovered() 
+                n_sus0 += group.size_susceptible()
+        print ("Total at time = ",self.oldtime,", ",(n_inf0+n_rec0+n_sus0)," people:")
+        print ("   ",n_inf0,"infected, ",n_rec0," recovered,",n_sus0," healthy people")
+        print ("Start the time step with duration = ",(self.delta_t*24.)," hours") 
         for grouptype in self.groups:
+            print ("=== Iterate over ",len(grouptype.members),"groups")
             for group in grouptype.members:
-                if group.size() == 0:
-                    continue
-                self.single_time_step_for_group(group)
+                if group.size() != 0:
+                    self.single_time_step_for_group(group)
         print("================ AFTER =====================")
+        n_inf1 = 0
+        n_rec1 = 0
+        n_sus1 = 0
         for grouptype in self.groups:
             for group in grouptype.members:
-                if group.size() == 0:
-                    continue
-                group.update_status_lists(self.time)
-                group.output()
+                if group.size() != 0:
+                    group.update_status_lists(self.time)
+                n_inf1 += group.size_infected() 
+                n_rec1 += group.size_recovered() 
+                n_sus1 += group.size_susceptible() 
+        print ("Ended the time step at time = ",self.time,".")
+        print ("Total at time = ",self.oldtime,", ",(n_inf1+n_rec1+n_sus1)," people:")
+        print ("   ",n_inf1,"infected, ",n_rec1," recovered,",n_sus1," healthy people")
+        print ("============================================")
+        print ("============================================")
+        print ("============================================")
 
     def single_time_step_for_group(self, group):
         pass
@@ -88,7 +104,7 @@ class CollectiveInteraction(Interaction):
         logic of the SI/SIR models --- and normalised to the time interval, given in
         units of full days.
         """
-        interaction_intensity = group.get_intensity() / group.size() * self.delta_t
+        interaction_intensity = group.get_intensity() / max(1,group.size()-1) * self.delta_t
         prob_notransmission = 1.0
         for person in group.get_infected():
             prob_notransmission *= (
@@ -96,7 +112,7 @@ class CollectiveInteraction(Interaction):
             )
         return 1.0 - prob_notransmission
 
-    def added_transmission_probability(self):
+    def added_transmission_probability(self,group):
         """
         added probability from product of non-infection probabilities.
         for each time step, the infection probabilities per infected person are given
@@ -105,7 +121,7 @@ class CollectiveInteraction(Interaction):
         logic of the SI/SIR models --- and normalised to the time interval, given in
         units of full days.
         """
-        interaction_intensity = group.get_intensity() / group.size() * self.delta_t
+        interaction_intensity = group.get_intensity() / max(group.size()-1,1) * self.delta_t
         prob_transmission = 0.0
         for person in group.get_infected():
             prob_transmission += person.transmission_probability(self.time)

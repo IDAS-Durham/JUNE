@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from covid.groups import Group
+from covid.groups.group import Group, TestGroups
 from covid.interaction import Interaction, CollectiveInteraction
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
@@ -16,13 +16,12 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     config["infection"]["transmission"]["probability"]             = {}
     config["infection"]["transmission"]["probability"]["mean"]     = beta
     selector = InfectionSelector(Tparams, None)
-    group = Group("test", "Random", N)
+    groups = TestGroup(N)
+    group  = groups.members[0]
     if mode=='Superposition':
         group.set_intensity(group.get_intensity())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], 0))
-    groups = []
-    groups.append(group)
     interaction = CollectiveInteraction(selector, mode)
     ratio = []
     print("===============================================")
@@ -58,15 +57,15 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
     config["infection"]["transmission"]["recovery_cutoff"]         = {}
     config["infection"]["transmission"]["recovery_cutoff"]["mean"] = 1000
     selector = InfectionSelector(config)
-    group = Group("test", "Random", N)
+    groups = TestGroups(N)
+    group  = groups.members[0]
     if mode=='Superposition':
         group.set_intensity(group.get_intensity())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], times[0]-1))
     group.output()
-    groups = []
-    groups.append(group)
     interaction = CollectiveInteraction(selector, mode)
+    interaction.set_groups(groups.members)
     ratio = []
     print("===============================================")
     ratioI_by_N = []
@@ -79,7 +78,7 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
         ratioI_by_N.append(valueI)
         ratioR_by_N.append(valueR)
         interaction.set_time(time)
-        interaction.set_groups(groups)
+        interaction.set_groups(groups.members)
         interaction.time_step()
     return ratioI_by_N, ratioR_by_N
 
