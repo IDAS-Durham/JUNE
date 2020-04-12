@@ -75,9 +75,9 @@ class Person:
     def init_health_information(self):
         self.susceptibility = 1.0
         self.susceptible = True
-        self.infected = False
-        self.infection = None
-        self.recovered = False
+        self.infected    = False
+        self.infection   = None
+        self.recovered   = False
 
     def set_infection(self, infection):
         if not isinstance(infection, Infection) and not infection == None:
@@ -85,17 +85,27 @@ class Person:
             print("--> Exit the code.")
             sys.exit()
         self.infection = infection
-        self.infected = True
-        if not self.infection == None:
+        if self.infection == None:
+            if self.infected:
+                self.recovered   = True
+                self.susceptible = False
+            self.infected        = False
+        else:
+            self.infected    = True
             self.susceptible = False
 
+            
     def update_health_status(self, time):
+        if self.recovered == True:
+            self.infected  = False
+            self.infection = None
         if self.infection != None:
             self.susceptible = False
             if self.infection.still_infected(time):
                 self.infected = True
             else:
-                self.infected = False
+                self.infected  = False
+                self.infection = None
 
     def is_susceptible(self):
         return self.susceptible
@@ -103,16 +113,15 @@ class Person:
     def is_infected(self):
         return self.infected
 
+    def set_recovered(self, is_recovered):
+        if self.infected == True:
+            self.recovered = is_recovered
+            
     def is_recovered(self):
         return self.recovered
 
     def get_symptoms_tag(self, time):
         return self.infection.symptom_tag(time)
-
-    def set_recovered(self, is_recovered):
-        self.recovered = is_recovered
-        if self.recovered:
-            self.set_infection(None)
 
     def susceptibility(self):
         return self.susceptibility

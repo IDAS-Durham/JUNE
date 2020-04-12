@@ -103,9 +103,10 @@ class Group:
                 self.susceptible.append(person)
             if person.is_infected():
                 self.infected.append(person)
-            if person.is_recovered():
+            elif person.is_recovered():
                 self.recovered.append(person)
-                self.infected.remove(person)
+                if person in self.infected:
+                    self.infected.remove(person)
 
     def clear(self, all=True):
         if all:
@@ -148,29 +149,11 @@ class Group:
 
     def output(self, plot=False, full=False):
         print("==================================================")
-        print(
-            "Group ",
-            self.name,
-            ", type = ",
-            self.spec,
-            " with ",
-            len(self.people),
-            " people.",
-        )
-        print(
-            "* ",
-            self.size_susceptible(),
-            "(",
-            round(self.size_susceptible() / self.size() * 100),
-            "%) are susceptible, ",
-            self.size_infected(),
-            "(",
-            round(self.size_infected() / self.size() * 100),
-            "%) are infected,",
-            self.size_recovered(),
-            "(",
-            round(self.size_recovered() / self.size() * 100),
-            "%) have recovered.",
+        print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
+        print("* ",
+            self.size_susceptible(),"(",round(self.size_susceptible() / self.size() * 100),"%) are susceptible, ",
+            self.size_infected(),   "(",round(self.size_infected() / self.size() * 100),   "%) are infected,",
+            self.size_recovered(),  "(",round(self.size_recovered() / self.size() * 100),  "%) have recovered.",
         )
 
         ages = []
@@ -182,23 +165,21 @@ class Group:
                 M += 1
             else:
                 F += 1
-        print(
-            "* ",
-            F,
-            "(",
-            round(F / self.size() * 100.0),
-            "%) females, ",
-            M,
-            "(",
-            round(M / self.size() * 100),
-            "%) males;",
+        print("* ",
+              F,"(",round(F / self.size() * 100.0),"%) females, ",
+              M,"(",round(M / self.size() * 100.0),"%) males;",
         )
         if plot:
             fig, axes = plt.subplots()
-            axes.hist(
-                ages, 20, range=(0, 100), density=True, facecolor="blue", alpha=0.5
-            )
+            axes.hist(ages, 20, range=(0, 100), density=True, facecolor="blue", alpha=0.5)
             plt.show()
         if full:
             for p in self.people:
                 p.Output()
+
+class TestGroups():
+    def __init__(self,N):
+        self.members = []
+        self.members.append([])
+        self.members[0].append(Group("Test","Random",1000))
+        print (self)
