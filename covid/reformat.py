@@ -340,7 +340,7 @@ def read_school_census(DATA_DIR):
 
 if __name__ == "__main__":
 
-    region = "test"
+    region = "EnglandWales"
     RAW_DATA_DIR = os.path.join("..", "data", "census_data")
     RAW_OUTPUT_AREA_DIR = os.path.join(RAW_DATA_DIR, "output_area", region)
 
