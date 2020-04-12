@@ -1,7 +1,7 @@
 from covid.inputs import Inputs
 from covid.groups import *
 from covid.infection_selector import InfectionSelector
-from covid.interaction import Interaction
+from covid.interaction import Interaction, CollectiveInteraction
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
@@ -128,17 +128,17 @@ class World:
 
     def _initialize_infection_selector_and_interaction(self, config):
         self.selector = InfectionSelector(config)
-        self.interaction = Interaction(self.selector)
+        self.interaction = CollectiveInteraction(self.selector)
 
     def seed_infections_group(self, group, n_infections, selector):
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
             group.people[choice].set_infection(
-                self.selector.make_infection(group.people[choice], 0)
+                self.selector.make_infection(group.people[choice], self.time)
             )
 
-    def do_timestep(self, time, duration):
-        active_groups = self._active_groups(time)
+    def do_timestep(self, timetag, duration):
+        active_groups = self._active_groups(timetag)
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -147,26 +147,30 @@ class World:
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.set_groups(groups_instances)
-        self.interaction.set_time(time + duration / 24.0)
+        self.interaction.set_time(self.time + duration)
         self.interaction.time_step()
         self.set_allpeople_free()
 
     def group_dynamics(self, total_days):
-        print("Starting group_dynamics for ", total_days, " days")
+        self.days = 1
+        self.time = 1.*self.days
+        print("Starting group_dynamics for ", total_days, " days at day",self.days)
         time_steps = self.config["time"]["step_duration"]["weekday"].keys()
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
         self._initialize_infection_selector_and_interaction(self.config)
+        print ("Infecting indivuals in their household.")
+        self.interaction.set_time(self.days)
         for household in self.households.members:
-            self.seed_infections_group(household, 1, self.selector)
-        self.interaction.set_time(0)
-        self.days = 1
+            self.seed_infections_group(household, self.days, self.selector)
+        print ("starting the loop ..., at ",self.days," days, to run for ",total_days," days")
         while self.days <= total_days:
-            for time in time_steps:
-                duration = self.config["time"]["step_duration"]["weekday"][time]
-                print("next step, time = ", time, ", duration = ", duration)
-                self.do_timestep(time, duration)
+            for timetag in time_steps:
+                duration = self.config["time"]["step_duration"]["weekday"][timetag]
+                print("next step, time = ", self.time,"(tag = ",timetag,"), duration = ",(duration/24.))
+                self.do_timestep(timetag, duration/24.)
+                self.time += duration/24.
             self.days += 1
 
 

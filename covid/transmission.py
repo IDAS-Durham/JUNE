@@ -72,20 +72,20 @@ class TransmissionSIR(Transmission):
         self.lasttime = self.starttime  # last time they had a chance to recover
 
     def calculate(self, time):
-        if self.probR != 0:
-            if self.probT > 0 and time > self.lasttime:
-                for t in range(self.lasttime, time, 1):
-                    if random.random() < self.probR:
-                        self.person.set_susceptibility(0)  # immune
-                        self.person.set_recovered(True)
-                        break  # can only recover once
-        else:
-            if self.probT > 0 and time > self.lasttime:
-                for t in range(self.lasttime, time, 1):
-                    if time > self.starttime + self.RecoverCutoff:
-                        self.person.set_susceptibility(0)  # immune
-                        self.person.set_recovered(True)
-                        break  # can only recover once
+        if (
+                self.probT > 0 and time > self.lasttime and
+                (
+                    ## this is the probabilistic verion of the SIR model where recovery probability
+                    ## is given by probR
+                    (self.probR > 0 and
+                     random.random() > np.exp(-self.probR*(time-self.lasttime))) or
+                    ## this is the "fixed-time" version of the SIR model where patients recover
+                    ## with certainty after some time
+                    (self.probR==0 and
+                     time > self.starttime + self.RecoverCutoff)
+                ) ):
+            self.person.set_susceptibility(0)  # immune
+            self.person.set_recovered(True)
         self.lasttime = time  # update last time
         self.value = self.probT
 
