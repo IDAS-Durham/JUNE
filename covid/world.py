@@ -1,5 +1,6 @@
 from covid.inputs import Inputs
 from covid.groups import *
+from covid.logger import Logger
 from covid.infection_selector import InfectionSelector
 from covid.interaction import Interaction, CollectiveInteraction
 import pandas as pd
@@ -27,6 +28,7 @@ class World:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
         self.people = []
+        self.logger = Logger(self, self.config["logger"]["save_path"])
         self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
@@ -166,10 +168,11 @@ class World:
             self.seed_infections_group(household, self.days, self.selector)
         print ("starting the loop ..., at ",self.days," days, to run for ",total_days," days")
         while self.days <= total_days:
-            for timetag in time_steps:
+            for shift, timetag in enumerate(time_steps):
                 duration = self.config["time"]["step_duration"]["weekday"][timetag]
                 print("next step, time = ", self.time,"(tag = ",timetag,"), duration = ",(duration/24.))
                 self.do_timestep(timetag, duration/24.)
+                self.logger.log_timestep(self.days, shift)
                 self.time += duration/24.
             self.days += 1
 

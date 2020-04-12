@@ -1,5 +1,8 @@
 title: Covid configuration example
 
+logger:
+  save_path: "results"
+
 world:
   zone: test # available are all UK regions, and EnglandWales together.
   steps_per_hour: 10
