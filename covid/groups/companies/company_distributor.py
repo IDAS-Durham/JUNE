@@ -2,9 +2,6 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
-#from covid.school import SchoolError
-
-EARTH_RADIUS = 6371  # km
 
 """
 This file contains routines to attribute people with different characteristics
@@ -17,35 +14,16 @@ class CompanyDistributor:
     Distributes students to different schools
     """
 
-    def __init__(self, schools, area):
-        self.area = area
-        self.schools = schools
-        self.MAX_SCHOOLS = area.world.config["schools"]["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = area.world.config["schools"]["school_age_range"]
-        self.closest_schools_by_age = {}
-        self.is_agemean_full = {}
-        for agegroup, school_tree in self.schools.school_trees.items():
-            closest_schools = []
-            closest_schools_idx = self.schools.get_closest_schools(
-                agegroup, self.area, self.MAX_SCHOOLS,
-            )
-            for idx in closest_schools_idx:
-                closest_schools.append(
-                    self.schools.members[
-                        self.schools.school_agegroup_to_global_indices[agegroup][idx]
-                    ]
-                )
-            agemean = self.compute_age_group_mean(agegroup)
-            self.closest_schools_by_age[agegroup] = closest_schools
-            self.is_agemean_full[agegroup] = False
+    def __init__(self, msoarea):
+        self.area = msoarea
+        self.MAX_COMPANIES = msoarea.world.config["schools"]["neighbour_schools"]
 
-    
-    def distribute_kids_to_school(self):
-        for person in self.area.people:
+    def distribute_adults_to_companies(self):
+        for person in self.msoarea.people.values():
             if (
-                person.age <= self.SCHOOL_AGE_RANGE[1]
-                and person.age >= self.SCHOOL_AGE_RANGE[0]
-            ):  # person age from 5 up to 19 yo
+                person.age <= self.WORK_AGE_RANGE[1]
+                and person.age >= self.WORK_AGE_RANGE[0]
+            ):  # person age from 20 up to 74 yo
                 agegroup = self.area.world.decoder_age[person.age]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
@@ -71,6 +49,6 @@ class CompanyDistributor:
                         school = self.closest_schools_by_age[agegroup][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.people.append(person)
-                person.school = school
-                school.n_pupils += 1
+                company.employees[company.n_employees] = person
+                person.company = company
+                company.n_pupils += 1

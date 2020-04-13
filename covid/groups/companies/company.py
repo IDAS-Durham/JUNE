@@ -1,36 +1,27 @@
-from sklearn.neighbors import BallTree
-from covid.groups import Group
-import numpy as np
-
-class CopmanyError(BaseException):
-    """Class for throwing school related errors."""
+class CompanyError(BaseException):
+    """Class for throwing company related errors."""
     pass
 
-class Company(Group):
+class Company:
     """
-    The School class represents a household and contains information about 
-    its pupils (6 - 14 years old).
+    The Company class represents a company that contains information about 
+    its workers (19 - 74 years old).
     """
 
-    def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
-        super().__init__("School_%05d"%school_id, "School")
-        self.id = school_id
+    def __init__(self, company_id, msoa, n_employees):
+        self.id = company_id
         self.people = []
-        self.coordinates = coordinates
-        #self.residents = group(self.id,"household")
-        self.n_pupils_max = n_pupils
+        self.msoa = msoa
+        self.n_employees_max = n_employees
         self.n_pupils = 0
-        self.age_min = age_min
-        self.age_max = age_max
 
 class Companies:
-
     def __init__(self, world, msoareas, companysize_dict):
         self.world = world
         self.members = {}
         self.init_companies(companysize_dict)
 
-    
+
     def init_companies(self, companysize_dict):
         """
         Initializes Companies.
@@ -96,3 +87,5 @@ class Companies:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
+
+

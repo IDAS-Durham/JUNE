@@ -51,6 +51,9 @@ class PersonDistributor:
             values=(np.arange(0, len(sex_freq)), sex_freq.values)
         )
 
+        # company data
+        ## TODO add company data intilialisation from dict of distibutions in industry_distibutions.py
+
     def populate_area(self):
         """
         Creates all people living in this area, with the charactersitics
