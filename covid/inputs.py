@@ -36,6 +36,7 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
         self.school_df = pd.read_csv(os.path.join(self.DATA_DIR, 'school_data', 'uk_schools_data.csv'))
+        self.hospital_df = pd.read_csv(os.path.join('..','data','census_data','hospital_data','england_hospitals.csv'))
         self.areas_coordinates_df = self.read_coordinates()
         # self.company_df = self.read_companysize_census()
         # Read census data on low resolution map (MSOA)
@@ -53,7 +54,7 @@ class Inputs:
 
     def read_coordinates(self):
         areas_coordinates_df_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
+            #os.path.dirname(os.path.realpath(filename)),
             "..",
             "data",
             "processed",
