@@ -35,7 +35,7 @@ class Inputs:
             "household_composition_freq": households_df,
         }
         self.school_df = self.read_school_census()
-        #self.company_df = self.read_companysize_census()
+        #self.company_df = self.read_companyize_census()
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
         #self.workflow_dict = self.create_workflow_dict()
@@ -473,7 +473,52 @@ class Inputs:
             companysector_dict[i] = list(companysector_df[i])
 
         return companysector_dict
+
+    def read_companysector_by_sex_censes(self):
+        """
+        Gives number dict of discrete probability distributions by sex of the different industry sectors at the OA level
+        The dict is of the format: {[oa]: {[gender('m'/'f')]: [distribution]}}
+        
+        TableID: KS605EW to KS607EW
+        https://www.nomisweb.co.uk/census/2011/ks605ew
+        """
+
+        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + 'industry_by_sex.csv')
+
+        # define all columns in csv file relateing to males
+        # here each letter corresponds to the industry sector (see metadata)
+        m_columns = ['m A', 'm B', 'm C', 'm D', 'm E', 'm F', 'm G', 'm H', 'm I', 'm J',
+                     'm K', 'm L', 'm M', 'm N', 'm O', 'm P', 'm Q', 'm R', 'm S', 'm T', 'm U']
+
+        m_distributions = []
+        for oa in range(len(industry_by_sex_NorthEast['oareas'])):
+            total = industry_by_sex_NorthEast['m all'][oa]
+            
+            distribution = []
+            for column in m_columns:
+                distribution.append(int(industry_by_sex_NorthEast[column][oa])/total)
+                
+            m_distributions.append(distribution)
+
+        # define all columns in csv file relateing to males
+        f_columns = ['f A', 'f B', 'f C', 'f D', 'f E', 'f F', 'f G', 'f H', 'f I', 'f J',
+                             'f K', 'f L', 'f M', 'f N', 'f O', 'f P', 'f Q', 'f R', 'f S', 'f T', 'f U']
+                
+        f_distributions = []
+        for oa in range(len(industry_by_sex_NorthEast['oareas'])):
+            total = industry_by_sex_NorthEast['f all'][oa]
+            
+            distribution = []
+            for column in f_columns:
+                distribution.append(int(industry_by_sex_NorthEast[column][oa])/total)
+
+            f_distributions.append(distribution)
     
+        industry_by_sex_dict = {}
+        for idx, oa in enumerate(industry_by_sex_NorthEast['oareas']):
+            industry_by_sex_dict[msoa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
+
+        return industry_by_sex_dict
     
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
