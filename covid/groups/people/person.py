@@ -38,8 +38,9 @@ class Person:
         self.active_group   = None
         self.household      = None
         self.school         = None
+        self.company        = None
         self.init_health_information()
-
+        
     def is_sane(self, person_id, area, age, sex, health_index, econ_index):
         if (age<0 or age>120 or
             not (sex=="M" or sex=="F") ):
