@@ -8,20 +8,20 @@ class Company:
     its workers (19 - 74 years old).
     """
 
-    def __init__(self, company_id, msoa, n_employees):
+    def __init__(self, company_id, msoa, n_employees_max, industry):
         self.id = company_id
         self.people = []
         self.msoa = msoa
-        self.n_employees_max = n_employees
-        self.n_employees
-        self.size_mean
-        self.industry
+        # set the max number of employees to be the mean number in a range
+        self.n_employees_max
+        self.n_employees = 0
+        self.industry = industry
 
 class Companies:
-    def __init__(self, world, msoareas, companysize_dict):
+    def __init__(self, world, companysize_dict, companysector_dict):
         self.world = world
         self.members = {}
-        self.init_companies(companysize_dict)
+        self.init_companies(companysize_dict, companysector_dict)
 
 
     def _compute_size_mean(self, sizegroup):
@@ -42,8 +42,10 @@ class Companies:
     
     def init_companies(self, companysize_dict, companysector_dict):
         """
-        Initializes Companies.
+        Initializes all companies across all msoareas
         """
+
+        ## PSEUDO CODE TO DEFINE WHAT IS BEING DONE HERE
         # companysize_dict contains msoarea, and the number of companies of different sizes in that area
         # company_sector_dict contains the number of companies by sector in each msoarea
         # for each msoarea
@@ -71,47 +73,14 @@ class Companies:
             # gives a discrete distribution over the company size per msoarea
             random_variable = rv_discrete(values=(numbers,distribution))
             for column in sector_columns:
-                for company in range(column[msoarea]):
-                    # finish this
-                                          
-                    
-                
-        
+                for i in range(column[msoarea]):
+                    company = Company(
+                        company_id=i,
+                        msoa=companysector_dict['msoarea'][msoarea],
+                        n_employees_max=size_dict[random_variable.rvs(size=1)[0]],
+                        industry=column
+                    )
 
-        
-            {}
-        )  # stores for each gender-ratio group the index to the school
-        # create company neighbour trees
-        for agegroup in school_age:
-            school_agegroup_to_global_indices[
-                agegroup
-            ] = {}  # this will be used to track school universally
-            mean = self._compute_age_group_mean(agegroup)
-            _school_df_agegroup = school_df[
-                (school_df["age_min"] <= mean) & (school_df["age_max"] >= mean)
-            ]
-            school_trees[agegroup] = self._create_school_tree(_school_df_agegroup)
-        # create schools and put them in the right age group
-        for i, (index, row) in enumerate(school_df.iterrows()):
-            school = School(
-                i,
-                np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
-                row["NOR"],
-                row["age_min"],
-                row["age_max"],
-            )
-            # to which age group does this school belong to?
-            for agegroup in school_age:
-                agemean = self._compute_age_group_mean(agegroup)
-                if school.age_min <= agemean and school.age_max >= agemean:
-                    school_agegroup_to_global_indices[agegroup][
-                        len(school_agegroup_to_global_indices[agegroup])
-                    ] = i
-            schools.append(school)
-        # store variables to class
-        self.members = schools
-        self.school_trees = school_trees
-        self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
-        return None
-        
+                    companies.append(company)
 
+        self.members = companies
