@@ -1,5 +1,6 @@
 from covid.inputs import Inputs
-from covid.groups import *
+import covid.groups
+from covid.logger import Logger
 from covid.infection_selector import InfectionSelector
 from covid.interaction import Interaction, CollectiveInteraction
 import pandas as pd
@@ -61,6 +62,7 @@ class World:
         pbar.close()
         # self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         # self._init_companies(self.inputs.company_df)
+        self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")
 
     @classmethod
@@ -164,8 +166,11 @@ class World:
             self.seed_infections_group(household, self.days, self.selector)
         print ("starting the loop ..., at ",self.days," days, to run for ",total_days," days")
         while self.days <= total_days:
-            for timetag in range(shift_iterator.n_shifts-1):
-                self.do_timestep(timetag, shift_iterator.duration/24.)
+            for shift, timetag in enumerate(time_steps):
+                duration = self.config["time"]["step_duration"]["weekday"][timetag]
+                print("next step, time = ", self.time,"(tag = ",timetag,"), duration = ",(duration/24.))
+                self.do_timestep(timetag, duration/24.)
+                self.logger.log_timestep(self.days, shift)
                 self.time += duration/24.
             self.days += 1
 

@@ -17,6 +17,7 @@ allowed_groups = [
     "Shopping",
     "ReferenceGroup",
     "Random",
+    "TestGroup",
 ]
 
 
