@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from covid.groups.group import Group, TestGroups
+from covid.groups.test_groups.test_group import TestGroups
 from covid.interaction import Interaction, CollectiveInteraction
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
@@ -16,7 +16,7 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     config["infection"]["transmission"]["probability"]             = {}
     config["infection"]["transmission"]["probability"]["mean"]     = beta
     selector = InfectionSelector(Tparams, None)
-    groups = TestGroup(N)
+    groups = TestGroups(people_per_group = 5000, total_people = 100000) 
     group  = groups.members[0]
     if mode=='Superposition':
         group.set_intensity(group.get_intensity())
@@ -78,7 +78,7 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
         ratioI_by_N.append(valueI)
         ratioR_by_N.append(valueR)
         interaction.set_time(time)
-        interaction.set_groups(groups.members)
+        interaction.set_groups([groups])
         interaction.time_step()
     return ratioI_by_N, ratioR_by_N
 
