@@ -1,9 +1,12 @@
 title: Covid configuration example
 
+logger:
+  save_path: results
+
 world:
   zone: NorthEast # available are all UK regions, and EnglandWales together.
   steps_per_hour: 10
-  step_active_groups: 
+  step_active_groups:  # households are always active 
     1: ['schools'] # active groups during first time step
     2: []
 
