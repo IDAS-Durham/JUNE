@@ -7,6 +7,7 @@ import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
+from covid import time
 
 
 class World:
@@ -152,13 +153,10 @@ class World:
         self.set_allpeople_free()
 
     def group_dynamics(self, total_days):
-        self.days = 1
-        self.time = 1.*self.days
-        print("Starting group_dynamics for ", total_days, " days at day",self.days)
+        day_iterator =  time.DayIterator(initial_day='Monday')
+        dayshift_iterator =  time.DayShiftIterator(day_iterator, time_config = self.config["time"])
+        print("Starting group_dynamics for ", total_days, " days at day", day_iterator.days)
         time_steps = self.config["time"]["step_duration"]["weekday"].keys()
-        assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
-        # TODO: move to function that checks the config file (types, values, etc...)
-        # initialize the interaction class with an infection selector
         self._initialize_infection_selector_and_interaction(self.config)
         print ("Infecting indivuals in their household.")
         self.interaction.set_time(self.days)
@@ -166,10 +164,8 @@ class World:
             self.seed_infections_group(household, self.days, self.selector)
         print ("starting the loop ..., at ",self.days," days, to run for ",total_days," days")
         while self.days <= total_days:
-            for timetag in time_steps:
-                duration = self.config["time"]["step_duration"]["weekday"][timetag]
-                print("next step, time = ", self.time,"(tag = ",timetag,"), duration = ",(duration/24.))
-                self.do_timestep(timetag, duration/24.)
+            for timetag in range(shift_iterator.n_shifts-1):
+                self.do_timestep(timetag, shift_iterator.duration/24.)
                 self.time += duration/24.
             self.days += 1
 

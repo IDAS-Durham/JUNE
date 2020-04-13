@@ -2,7 +2,7 @@ from collections import Iterator
 import calendar
 
 class DayIterator():
-    def __init__(self, initial_day='Friday'):
+    def __init__(self, initial_day='Monday'):
         self.day = 0
         self.initial_day = initial_day
         self.weekend = self.is_weekend()
@@ -13,7 +13,7 @@ class DayIterator():
         
     def is_weekend(self):
         initial_day_index = list(calendar.day_name).index(self.initial_day)
-        calendar_day = calendar.day_name[(self.day + initial_day_index - 1)%7]
+        calendar_day = calendar.day_name[(self.day + initial_day_index)%7]
         if (calendar_day == 'Saturday') or (calendar_day == 'Sunday'):
             return True
         else:
@@ -24,15 +24,12 @@ class DayIterator():
 
     def get_time_stamp(self):
 
-        return f'{self.day}D '
-
-    def time_stamp2hours(self, time_stamp):
-        return int(time_stamp.split(' ')[0].strip('D'))*24
+        return self.day
 
 class DayShiftIterator():
     def __init__(self, day_iterator, time_config=None):
         self.day_iterator = day_iterator
-        self.shift = 0
+        self.shift = 1
         self.time_config = time_config
         if self.time_config:
             if self.day_iterator.weekend:
@@ -47,31 +44,24 @@ class DayShiftIterator():
 
     def __next__(self):
         self.shift += 1
-        self.duration += self.get_shifts_duration(self.type_day)
+        self.shift_duration = self.get_shifts_duration(self.type_day)
+        self.duration += self.shift_duration
 
     def get_n_shifts(self, type_day):
         return len(self.time_config['step_duration'][type_day].keys())
 
     def get_shifts_duration(self, type_day):
-        return self.time_config['step_duration'][type_day][self.shift+1]
+        return self.time_config['step_duration'][type_day][self.shift]/24.
 
     def get_time_stamp(self):
 
-        return f'{self.day_iterator.day}D {self.duration}H'
-
-    def time_stamp2hours(self, time_stamp):
-        hours = self.day_iterator.time_stamp2hours(time_stamp)
-        hours += int(time_stamp.split(' ')[1].strip('H'))
-        return hours
+        return self.day_iterator.day + self.duration
 
 
     def get_time_ellapsed(self, time_stamp):
 
         current_time_stamp = self.get_time_stamp()
-        current_hours = self.time_stamp2hours(current_time_stamp)
-        time_stamp_hours = self.time_stamp2hours(time_stamp)
-
-        return current_hours - time_stamp_hours
+        return current_time_stamp - time_stamp 
 
 
 
