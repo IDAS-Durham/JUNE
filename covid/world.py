@@ -1,5 +1,5 @@
 from covid.inputs import Inputs
-from covid.groups import *
+import covid.groups
 from covid.logger import Logger
 from covid.infection_selector import InfectionSelector
 from covid.interaction import Interaction, CollectiveInteraction
@@ -28,7 +28,6 @@ class World:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
         self.people = []
-        self.logger = Logger(self, self.config["logger"]["save_path"])
         self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
@@ -62,6 +61,7 @@ class World:
         pbar.close()
         # self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         # self._init_companies(self.inputs.company_df)
+        self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")
 
     @classmethod
