@@ -4,19 +4,23 @@ logger:
   save_path: results
 
 world:
-  zone: NorthEast # available are all UK regions, and EnglandWales together.
-  steps_per_hour: 10
-  step_active_groups:  # households are always active 
-    1: ['schools'] # active groups during first time step
-    2: []
+  zone: test # available are all UK regions, and EnglandWales together.
 
 time:
+  total_days: 10
   step_duration: 
       weekday:
           1: 8 # first time step duration in hours
           2: 16
       weekend:
           1: 24
+  step_active_groups:
+      weekday:
+          1: ['schools'] # active groups during first time step
+          2: [] 
+      weekend:
+          1: [] 
+
 
 people:
   adult_threshold: 6 # 18 yo
