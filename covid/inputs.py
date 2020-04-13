@@ -492,11 +492,11 @@ class Inputs:
 
         m_distributions = []
         for oa in range(len(industry_by_sex_NorthEast['oareas'])):
-            total = industry_by_sex_NorthEast['m all'][oa]
+            total = int(industry_by_sex_NorthEast['m all'][oa])
             
             distribution = []
             for column in m_columns:
-                distribution.append(int(industry_by_sex_NorthEast[column][oa])/total)
+                distribution.append(int(industry_by_sex_df[column][oa])/total)
                 
             m_distributions.append(distribution)
 
@@ -505,17 +505,17 @@ class Inputs:
                              'f K', 'f L', 'f M', 'f N', 'f O', 'f P', 'f Q', 'f R', 'f S', 'f T', 'f U']
                 
         f_distributions = []
-        for oa in range(len(industry_by_sex_NorthEast['oareas'])):
-            total = industry_by_sex_NorthEast['f all'][oa]
+        for oa in range(len(industry_by_sex_df['oareas'])):
+            total = int(industry_by_sex_df['f all'][oa])
             
             distribution = []
             for column in f_columns:
-                distribution.append(int(industry_by_sex_NorthEast[column][oa])/total)
+                distribution.append(int(industry_by_sex_df[column][oa])/total)
 
             f_distributions.append(distribution)
     
         industry_by_sex_dict = {}
-        for idx, oa in enumerate(industry_by_sex_NorthEast['oareas']):
+        for idx, oa in enumerate(industry_by_sex_df['oareas']):
             industry_by_sex_dict[msoa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
 
         return industry_by_sex_dict
