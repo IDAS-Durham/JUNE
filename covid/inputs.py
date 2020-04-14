@@ -41,6 +41,7 @@ class Inputs:
         #self.workflow_dict = self.create_workflow_dict()
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
+        self.companysector_by_sex_df = self.read_companysector_by_sex_census()
    
 
     def read_df(
@@ -494,7 +495,7 @@ class Inputs:
     
         industry_by_sex_dict = {}
         for idx, oa in enumerate(industry_by_sex_df['oareas']):
-            industry_by_sex_dict[msoa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
+            industry_by_sex_dict[oa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
 
         return industry_by_sex_dict
     
