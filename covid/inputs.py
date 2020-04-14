@@ -637,9 +637,9 @@ class Inputs:
         workflow_dict = {
             "home_msoa": home_msoa,
             "female_work_msoa": female_work_msoa_list,
-            "female_work_msoa_dist": female_work_msoa_dist_list,
+            "female_work_dist": female_work_msoa_dist_list,
             "male_work_msoa": male_work_msoa_list,
-            "male_work_msoa_dist": male_work_msoa_dist_list,
+            "male_work_dist": male_work_msoa_dist_list,
         }
 
         return workflow_dict

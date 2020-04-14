@@ -55,6 +55,13 @@ class World:
                 "male_work_msoa": self.inputs.workflow_dict["male_work_msoa"][indx],
                 "male_work_dist": self.inputs.workflow_dict["male_work_dist"][indx],
             }
+            print(
+                "---test---",
+                len(workflow_dict["female_work_msoa"]),
+                len(workflow_dict["female_work_dist"]),
+                len(workflow_dict["male_work_msoa"]),
+                len(workflow_dict["male_work_dist"]),
+            )
             person_distributor = PersonDistributor(
                 self.people,
                 area,
