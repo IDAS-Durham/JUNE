@@ -17,11 +17,15 @@ class Company:
         self.n_employees = 0
         self.industry = industry
 
+
 class Companies:
-    def __init__(self, world, companysize_dict, companysector_dict):
+    def __init__(self, world):
         self.world = world
         self.members = {}
-        self.init_companies(companysize_dict, companysector_dict)
+        self.init_companies(
+            world.inputs.companysize_df,
+            world.inputs.companysector_df,
+        )
 
 
     def _compute_size_mean(self, sizegroup):
@@ -29,7 +33,8 @@ class Companies:
         Given company size group calculates mean
         '''
         
-        # ensure that read_companysize_census() also returns number of companies in each size category
+        # ensure that read_companysize_census() also returns number of companies
+        # in each size category
         size_min, size_max = sizegroup.split('-')
         if age_2 == "XXX":
             agemean = 1500
@@ -40,13 +45,13 @@ class Companies:
 
         return size_mean
     
-    def init_companies(self, companysize_dict, companysector_dict):
+    def init_companies(self, companysize_df, companysector_df):
         """
         Initializes all companies across all msoareas
         """
 
         ## PSEUDO CODE TO DEFINE WHAT IS BEING DONE HERE
-        # companysize_dict contains msoarea, and the number of companies of different sizes in that area
+        # companysize_df contains msoarea, and the number of companies of different sizes in that area
         # company_sector_dict contains the number of companies by sector in each msoarea
         # for each msoarea
             # compute a probability distribution over company sizes
@@ -63,11 +68,12 @@ class Companies:
         for idx, column in enumerate(size_columns):
             size_dict[idx+1] = self._compute_size_mean(column)
         
-        for msoarea in range(len(companysector_dict['msoarea'])):
-            company_total = int(companysector_dict['n_companies'][msoarea])
+        for msoarea in range(len(companysector_df.index.values)):
             distribution = []
             for column in size_columns:
-                distribution.append(int(companysize_dict[column][msoarea])/total)
+                distribution.append(
+                    companysize_df.loc[msoarea][column]/company_total.loc[msoarea].sum()
+                )
 
             numbers = np.arange(1,9)
             # gives a discrete distribution over the company size per msoarea
