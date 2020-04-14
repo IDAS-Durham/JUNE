@@ -63,7 +63,7 @@ class World:
             self.distributor.distribute_kids_to_school()
             pbar.update(1)
         pbar.close()
-        #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
+        self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         print("Initializing Companies...")
         self.companies = Companies(self)
         for area in self.msoareas.members:
