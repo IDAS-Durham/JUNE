@@ -61,7 +61,7 @@ class PersonDistributor:
         '''
         :param gender: (string) male/female
         :param employed: (bool) - for now we assume all people are employed
-        Note: in this script self.area is used and assumed to be (string) OArea code
+        Note: in this script self.area.name is used and assumed to be (string) OArea code
         THIS MIGHT NEED CHANGING
 
         :returns: (string) letter of inductry sector
@@ -80,9 +80,9 @@ class PersonDistributor:
                 # MAY NEED TO CHANGE THE USE OF self.area TO BE CORRECT LOOKUP VALUE
                 # ADD try/except statements in to allow for an area not existing (after testing though)
                 # ADD industry_dict to self.area as in populate_area()
-                distribution = self.companysector_by_sex_df[self.area]['m']
+                distribution = self.companysector_by_sex_df[self.area.name]['m']
             else:
-                distribution = self.companysector_by_sex_df[self.area]['f']
+                distribution = self.companysector_by_sex_df[self.area.name]['f']
                 
                 # assign industries to numbers A->U = 1-> 21
                 industry_dict = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H',9:'I',10:'J',
@@ -142,7 +142,7 @@ class PersonDistributor:
                     self.area._oldwomen[i] = person
             # assign person to an industry
             # add some conditions to allow for employed != True - wither age and/or from a database
-            person.industry = self._assign_industry(sex_random)
+            person.industry = self._assign_industry(sex=sex_random)
             
         try:
             assert (
