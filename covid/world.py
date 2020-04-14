@@ -45,7 +45,7 @@ class World:
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-            person_distributor = PersonDistributor(self.people, area)
+            person_distributor = PersonDistributor(self.people, area, self.inputs.companysector_by_sex_df)
             person_distributor.populate_area()
             pbar.update(1)
         pbar.close()
