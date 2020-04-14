@@ -25,7 +25,7 @@ class Person:
     according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
-    def __init__(self, person_id, area, age, sex, health_index, econ_index):
+    def __init__(self, person_id, area, work_msoa, age, sex, health_index, econ_index):
         #if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
         self.id             = person_id
@@ -34,6 +34,7 @@ class Person:
         self.health_index   = health_index
         self.econ_index     = econ_index
         self.area           = area
+        self.work_msoarea   = work_msoa
         self.r0             = 0
         self.active_group   = None
         self.household      = None

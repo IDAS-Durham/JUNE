@@ -19,7 +19,7 @@ class MSOAreaDistributor:
             msoarea = MSOArea(
                 self.msoareas.world,
                 msoa,
-                self.msoareas.world.inputs.companysize_df.loc[msoa].sum(),
+                self.msoareas.world.inputs.companysize_df.loc[msoa].values.sum(),
             )
             msoareas_list.append(msoarea)
         self.msoareas.members = msoareas_list 
