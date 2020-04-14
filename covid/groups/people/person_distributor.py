@@ -10,7 +10,7 @@ class PersonDistributor:
     Creates the population of the given area with sex and age given
     by the census statistics
     """
-    def __init__(self, people, area):
+    def __init__(self, people, area, companysector_by_sex_df):
         self.area = area
         self.people = people
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
@@ -19,6 +19,8 @@ class PersonDistributor:
         self._init_random_variables()
         self.no_kids_area = False
         self.no_students_area = False
+        self.companysector_by_sex = companysector_by_sex_df
+        
 
     def _init_random_variables(self):
         """
@@ -53,6 +55,48 @@ class PersonDistributor:
 
         # company data
         ## TODO add company data intilialisation from dict of distibutions in industry_distibutions.py
+
+
+    def _assign_industry(self, sex, employed = True):
+        '''
+        :param gender: (string) male/female
+        :param employed: (bool) - for now we assume all people are employed
+        Note: in this script self.area is used and assumed to be (string) OArea code
+        THIS MIGHT NEED CHANGING
+
+        :returns: (string) letter of inductry sector
+        
+        Given a person's sex, their employment status, their msoarea,
+        use the industry_by_sex_dict to assign each person an industry
+        according to the generated probability distribution
+        '''
+        
+        if employed == False:
+            industry = 'NA'
+
+        else:
+            # access relevant probability distribtion according to the person's sex
+            if sex == 'male':
+                # MAY NEED TO CHANGE THE USE OF self.area TO BE CORRECT LOOKUP VALUE
+                # ADD try/except statements in to allow for an area not existing (after testing though)
+                # ADD industry_dict to self.area as in populate_area()
+                distribution = self.companysector_by_sex_df[self.area]['m']
+            else:
+                distribution = self.companysector_by_sex_df[self.area]['f']
+                
+                # assign industries to numbers A->U = 1-> 21
+                industry_dict = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H',9:'I',10:'J',
+                                 11:'K',12:'L',13:'M',14:'N',15:'O',16:'P',17:'Q',18:'R',19:'S',20:'T',21:'U'}
+
+                numbers = np.arange(1,22)
+                # create discrete probability distribution
+                random_variable = rv_discrete(values=(numbers,distribution))
+                # generate sample from distribution
+                industry_id = random_variable.rvs(size=1)
+                # accss relevant indudtry label
+                industry = industry_dict[industry_id[0]]
+        
+        return industry
 
     def populate_area(self):
         """
@@ -96,6 +140,10 @@ class PersonDistributor:
                     self.area._oldmen[i] = person
                 else:
                     self.area._oldwomen[i] = person
+            # assign person to an industry
+            # add some conditions to allow for employed != True - wither age and/or from a database
+            person.industry = self._assign_industry(sex_random)
+            
         try:
             assert (
                 sum(
