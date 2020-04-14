@@ -38,7 +38,7 @@ class Inputs:
         #self.company_df = self.read_companyize_census()
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
-        #self.workflow_dict = self.create_workflow_dict()
+        self.workflow_dict = self.create_workflow_dict()
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
         self.companysector_by_sex_df = self.read_companysector_by_sex_census()
@@ -462,7 +462,7 @@ class Inputs:
         https://www.nomisweb.co.uk/census/2011/ks605ew
         """
 
-        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + 'industry_by_sex_cleaned.csv')
+        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + '/industry_by_sex_cleaned.csv')
 
         # define all columns in csv file relateing to males
         # here each letter corresponds to the industry sector (see metadata)
@@ -470,8 +470,8 @@ class Inputs:
                      'm K', 'm L', 'm M', 'm N', 'm O', 'm P', 'm Q', 'm R', 'm S', 'm T', 'm U']
 
         m_distributions = []
-        for oa in range(len(industry_by_sex_NorthEast['oareas'])):
-            total = int(industry_by_sex_NorthEast['m all'][oa])
+        for oa in range(len(industry_by_sex_df['oareas'])):
+            total = int(industry_by_sex_df['m all'][oa])
             
             distribution = []
             for column in m_columns:
@@ -604,7 +604,7 @@ class Inputs:
         flow_female_file = "flow_female_in_msoa_wu01northeast_2011.csv"
         flow_male_file = "flow_male_in_msoa_wu01northeast_2011.csv"
         flow_dirname = os.path.join(
-            self.DATA_DIR, "middle_output_area", "NorthEast"
+            self.DATA_DIR, "middle_output_area", self.zone
         )
 
         flow_female_df = pd.read_csv(os.path.join(flow_dirname, flow_female_file))
@@ -614,46 +614,32 @@ class Inputs:
         flow_male_df = flow_male_df.set_index("residence")
         
         home_msoa = (
-            flow_female_df.index
-        )  # flow_female_df&flow_female_df share the same indices
+            flow_female_df.index.values
+        )  # the same for female & male
         female_work_msoa_list = []
-        n_female_work_msoa_list = []
+        female_work_msoa_dist_list = []
         male_work_msoa_list = []
-        n_male_work_msoa_list = []
+        male_work_msoa_dist_list = []
         for hmsoa in home_msoa:
             # Where do woman go to work in ratios
-            female_work_msoa_list.append(
-                flow_female_df.loc[hmsoa]
-                .dropna()[flow_female_df.loc[hmsoa] != 0.0]
-                .index.values
-            )
-            n_female_work_msoa_list.append(
-                flow_female_df.loc[hmsoa]
-                .dropna()[flow_female_df.loc[hmsoa] != 0.0]
-                .values
-                / flow_female_df.loc[hmsoa]
-                .dropna()[flow_female_df.loc[hmsoa] != 0.0]
-                .values.sum()
+            female_work_msoa = flow_female_df.loc[hmsoa].dropna()[flow_female_df.loc[hmsoa] != 0.0]
+            female_work_msoa_list.append(female_work_msoa.index.values)
+            female_work_msoa_dist_list.append(
+                female_work_msoa.values / female_work_msoa.values.sum()
             )
             # Where do man go to work in ratios
-            male_work_msoa_list.append(
-                flow_male_df.loc[hmsoa]
-                .dropna()[flow_male_df.loc[hmsoa] != 0.0]
-                .index.values
-            )
-            n_male_work_msoa_list.append(
-                flow_male_df.loc[hmsoa].dropna()[flow_male_df.loc[hmsoa] != 0.0].values
-                / flow_male_df.loc[hmsoa]
-                .dropna()[flow_male_df.loc[hmsoa] != 0.0]
-                .values.sum()
+            male_work_msoa = flow_male_df.loc[hmsoa].dropna()[flow_male_df.loc[hmsoa] != 0.0]
+            male_work_msoa_list.append(male_work_msoa.index.values)
+            male_work_msoa_dist_list.append(
+                male_work_msoa.values / male_work_msoa.values.sum()
             )
 
         workflow_dict = {
             "home_msoa": home_msoa,
             "female_work_msoa": female_work_msoa_list,
-            "n_female_work_msoa": n_female_work_msoa_list,
+            "female_work_msoa_dist": female_work_msoa_dist_list,
             "male_work_msoa": male_work_msoa_list,
-            "n_male_work_msoa": n_male_work_msoa_list,
+            "male_work_msoa_dist": male_work_msoa_dist_list,
         }
 
         return workflow_dict
@@ -662,4 +648,4 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.companysize_dict["n_companies"])
+    print(ip.companysize_df)

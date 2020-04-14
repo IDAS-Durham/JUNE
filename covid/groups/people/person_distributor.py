@@ -10,7 +10,7 @@ class PersonDistributor:
     Creates the population of the given area with sex and age given
     by the census statistics
     """
-    def __init__(self, people, area, companysector_by_sex_df):
+    def __init__(self, people, area, companysector_by_sex_df, workflow_dict):
         self.area = area
         self.people = people
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
@@ -20,12 +20,14 @@ class PersonDistributor:
         self.no_kids_area = False
         self.no_students_area = False
         self.companysector_by_sex = companysector_by_sex_df
+        self.workflow_dict = workflow_dict
         
 
     def _init_random_variables(self):
         """
-        Reads the frequencies for different attributes based on the census data,
-        and initializes random variables following the discrete distributions.
+        Reads the frequencies for this area for different attributes based on
+        the census data, and initializes random variables following
+        the discrete distributions.
         """
         # age data
         age_freq = self.area.census_freq["age_freq"]
@@ -51,6 +53,20 @@ class PersonDistributor:
         sex_freq = self.area.census_freq["sex_freq"]
         self.area.sex_rv = stats.rv_discrete(
             values=(np.arange(0, len(sex_freq)), sex_freq.values)
+        )
+        
+        # work msoa area/flow data
+        self.area.work_msoa_man_rv = stats.rv_discrete(
+            values=(
+                np.arange(0, len(self.workflow_dict["female_work_msoa"])),
+                self.workflow_dict["female_work_dist"]
+            )
+        )
+        self.area.work_msoa_woman_rv = stats.rv_discrete(
+            values=(
+                np.arange(0, len(self.workflow_dict["male_work_msoa"])),
+                self.workflow_dict["male_work_dist"]
+            )
         )
 
         # company data
@@ -98,6 +114,29 @@ class PersonDistributor:
         
         return industry
 
+
+    def assign_work_msoarea(self, age, sex):
+        #TODO: Maybe we can put this function somewhere else?
+        if age < self.ADULT_THRESHOLD:
+            # too young to work
+            return None
+        elif age > self.OLD_THRESHOLD:
+            # too old to work
+            return None
+        else:
+            if sex == 1:
+                return self.workflow_dict["female_work_msoa"][
+                    self.area.work_msoa_woman_rv(size=1)[0]
+                ]
+            elif sex == 0:
+                return self.workflow_dict["male_work_msoa"][
+                    self.area.work_msoa_man_rv(size=1)[0]
+                ]
+            else:
+                print("We are not yet able take care of non-binary people :-(")
+
+
+
     def populate_area(self):
         """
         Creates all people living in this area, with the charactersitics
@@ -119,8 +158,9 @@ class PersonDistributor:
         for i in range(0, self.area.n_residents):
             age_random = self.area.age_rv.rvs(size=1)[0]
             sex_random = self.area.sex_rv.rvs(size=1)[0]
+            work_msoa_rnd = self.assign_work_msoarea(age_random, sex_random)
             person = Person(
-                self.people.total_people, self.area, age_random, sex_random, 0, 0
+                self.people.total_people, self.area, work_msoa_rnd, age_random, sex_random, 0, 0
             )
             self.people.members.append(person)
             self.area.people.append(person)

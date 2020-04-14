@@ -45,7 +45,22 @@ class World:
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-            person_distributor = PersonDistributor(self.people, area, self.inputs.companysector_by_sex_df)
+            # get msoa flow data for this oa area
+            indx = np.where(
+                self.inputs.workflow_dict["home_msoa"] == area.msoarea
+            )[0][0]
+            workflow_dict = {
+                "female_work_msoa": self.inputs.workflow_dict["female_work_msoa"][indx],
+                "female_work_dist": self.inputs.workflow_dict["female_work_dist"][indx],
+                "male_work_msoa": self.inputs.workflow_dict["male_work_msoa"][indx],
+                "male_work_dist": self.inputs.workflow_dict["male_work_dist"][indx],
+            }
+            person_distributor = PersonDistributor(
+                self.people,
+                area,
+                self.inputs.companysector_by_sex_df,
+                workflow_dict,
+            )
             person_distributor.populate_area()
             pbar.update(1)
         pbar.close()
