@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 from covid.groups.people import Person
+from covid.groups.people.health_index import HealthIndex
 
 class PersonError(BaseException):
     pass
@@ -14,11 +15,11 @@ class PersonDistributor:
         self.area = area
         self.people = people
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
+        self.ADULT_THRESHOLD   = area.world.config["people"]["adult_threshold"]
+        self.OLD_THRESHOLD     = area.world.config["people"]["old_threshold"]
         self._init_random_variables()
-        self.no_kids_area = False
-        self.no_students_area = False
+        self.no_kids_area      = False
+        self.no_students_area  = False
 
     def _init_random_variables(self):
         """

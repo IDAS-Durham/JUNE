@@ -16,8 +16,8 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     config["infection"]["transmission"]["probability"]             = {}
     config["infection"]["transmission"]["probability"]["mean"]     = beta
     selector = InfectionSelector(Tparams, None)
-    groups = TestGroups(people_per_group = 5000, total_people = 100000) 
-    group  = groups.members[0]
+    groups   = TestGroups(people_per_group = N, total_people = N) 
+    group    = groups.members[0]
     if mode=='Superposition':
         group.set_intensity(group.get_intensity())
     for i in range(I_0):
@@ -31,7 +31,7 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
             print(time, value)
         ratio.append(value)
         interaction.set_time(time)
-        interaction.set_groups(groups)
+        interaction.set_groups([groups])
         interaction.time_step()
     return ratio
 
@@ -57,15 +57,15 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
     config["infection"]["transmission"]["recovery_cutoff"]         = {}
     config["infection"]["transmission"]["recovery_cutoff"]["mean"] = 1000
     selector = InfectionSelector(config)
-    groups = TestGroups(N)
-    group  = groups.members[0]
+    groups   =  TestGroups(people_per_group = N, total_people = N) 
+    group    = groups.members[0]
     if mode=='Superposition':
         group.set_intensity(group.get_intensity())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], times[0]-1))
     group.output()
     interaction = CollectiveInteraction(selector, mode)
-    interaction.set_groups(groups.members)
+    interaction.set_groups([groups])
     ratio = []
     print("===============================================")
     ratioI_by_N = []

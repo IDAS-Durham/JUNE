@@ -38,6 +38,7 @@ companies:
   work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
 
 infection:
+  asymptomatic_ratio: 0.4	
   transmission:
     type: SIR
     probability:
@@ -46,3 +47,20 @@ infection:
       mean: 0.1
     recovery_cutoff:
       mean: 1000
+  symptoms:
+    onset_time:
+      mean:       5.
+      widthPlus:  2.
+      lower:      3.
+      upper:      8.
+    max_time:
+      mean:       10.
+      widthPlus:  1.
+      lower:      8.
+      upper:      12.
+    end_time:
+      mean:       14.
+      widthMinus: 1.
+      widthPlus:  2.
+      lower:      12.
+      upper:      21.
