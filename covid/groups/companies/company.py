@@ -36,8 +36,8 @@ class Companies:
         # ensure that read_companysize_census() also returns number of companies
         # in each size category
         size_min, size_max = sizegroup.split('-')
-        if age_2 == "XXX":
-            agemean = 1500
+        if size_max == "XXX" or size_max == 'xxx':
+            size_mean = 1500
         else:
             size_min = float(size_min)
             size_max = float(size_max)
