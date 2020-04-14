@@ -22,16 +22,15 @@ class Hospitals:
         hospital_trees = self._create_hospital_tree(hospital_df)
         self.hospital_trees = hospital_trees
         
-    def get_closest_hospital(self,area,k):
-        hospital_tree = self.hospital_trees
-        distances,neighbours = hospital_tree.query(
-            np.deg2rad(area.coordinates.reshape(1,-1)),k = k,sort_results=True
-            )
-        return neighbours
         
     def _create_hospital_tree(self,hospital_df):
         hospital_tree = BallTree(
             np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
             )
         return hospital_tree
-    
+    def get_closest_hospital(self,area,k):
+        hospital_tree = self.hospital_trees
+        distances,neighbours = hospital_tree.query(
+            np.deg2rad(area.coordinates),k = k,sort_results=True
+            )
+        return neighbours
