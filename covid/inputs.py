@@ -39,8 +39,10 @@ class Inputs:
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
         #self.workflow_dict = self.create_workflow_dict()
-        self.companysize_dict = self.read_companysize_census()
-    
+        self.companysize_df = self.read_companysize_census()
+        self.companysector_df = self.read_companysector_census()
+   
+
     def read_df(
         self,
         DATA_DIR: str,
@@ -427,37 +429,14 @@ class Inputs:
             "500-999",
             "1000-xxx",
         ]
-        company_df = self.read_df(
+        companysize_df = self.read_df(
             self.MIDDLE_OUTPUT_AREA_DIR, "business_counts_northeast_2019.csv",
             column_names, usecols, "MSOA11CD"
         )
 
-        assert company_df.isnull().values.any() == False
+        assert companysize_df.isnull().values.any() == False
 
-        def zipf_distr(m,a,c,mmax):
-            # used by Ferguson et al. 2005
-            # to be improved
-            return (((1+mmax/a)/(1+m/a))**c - 1) / ((1+mmax/a)**c - 1)
-
-        # create differential histogram
-        cs_bins = company_df.keys()
-        diff_N_cs = np.zeros_like(cs_bins)
-        for i,k in enumerate(cs_bins):
-            diff_N_cs[i] = np.sum(company_df[k])
-        
-
-        # fit fct. to cumulative distribution function    
-        cum_dN_dcs = np.cumsum(diff_N_cs[::-1])[::-1] / np.sum(diff_N_cs)
-        cdf_bins = np.array([0,10,20,50,100,250,500,1000])  #TODO make flexible
-        zipf_params, Cov = curve_fit(f=zipf_distr,xdata=cdf_bins,ydata=cum_dN_dcs)
-
-        companysize_dict = {
-            "fct": zipf_distr,
-            "params": zipf_params,
-            "msoareas": company_df.index.values,
-            "n_companies": company_df.sum(axis=1).values,
-        }
-        return companysize_dict
+        return companysize_df
 
     def read_companysector_census(self):
         """
@@ -466,15 +445,14 @@ class Inputs:
         https://www.nomisweb.co.uk/census/2011/wd601ew
         """
 
-        companysector_df = pd.read_csv(self.MIDDLE_OUTPUT_AREA_DIR + '/company_sector_cleaned_msoa.csv')
+        companysector_df = pd.read_csv(
+            self.MIDDLE_OUTPUT_AREA_DIR + '/company_sector_cleaned_msoa.csv',
+            index_col=0,
+        )
+        
+        return companysector_df
 
-        companysector_dict = {}
-        for i in companysector_df.columns:
-            companysector_dict[i] = list(companysector_df[i])
-
-        return companysector_dict
-
-    def read_companysector_by_sex_censes(self):
+    def read_companysector_by_sex_census(self):
         """
         Gives number dict of discrete probability distributions by sex of the different industry sectors at the OA level
         The dict is of the format: {[oa]: {[gender('m'/'f')]: [distribution]}}

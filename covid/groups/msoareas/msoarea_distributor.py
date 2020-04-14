@@ -15,11 +15,11 @@ class MSOAreaDistributor:
         This is all on the MSOA layer.
         """
         msoareas_list = []
-        for i, msoa in enumerate(self.msoareas.world.inputs.companysize_dict["msoareas"]):
+        for i, msoa in enumerate(self.msoareas.world.inputs.companysize_df.index.values):
             msoarea = MSOArea(
                 self.msoareas.world,
                 msoa,
-                self.msoareas.world.inputs.companysize_dict["n_companies"][i],
+                self.msoareas.world.inputs.companysize_df.loc[msoa].sum(),
             )
             msoareas_list.append(msoarea)
         self.msoareas.members = msoareas_list 
