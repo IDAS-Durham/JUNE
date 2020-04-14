@@ -19,8 +19,8 @@ class Infection:
     """
 
     def __init__(self, time, transmission=None, symptoms=None):
-        self.threshold_transmission = 0.00
-        self.threshold_symptoms = 0.01
+        self.threshold_transmission = 0.001
+        self.threshold_symptoms     = 0.001
         self.starttime = time
         self.transmission = transmission
         self.symptoms = symptoms
@@ -69,7 +69,7 @@ class Infection:
         )
         symptoms_bool = (
             self.symptoms != None
-            and self.symptoms.severity(time) > self.threshold_symptoms
+            and self.symptoms.get_severity(time) > self.threshold_symptoms
         )
         is_infected = transmission_bool or symptoms_bool
         return is_infected
