@@ -17,11 +17,11 @@ class PersonDistributor:
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
-        self._init_random_variables()
         self.no_kids_area = False
         self.no_students_area = False
         self.companysector_by_sex_df = companysector_by_sex_df
         self.workflow_dict = workflow_dict
+        self._init_random_variables()
 
 
     def _init_random_variables(self):
@@ -57,13 +57,13 @@ class PersonDistributor:
         )
         
         # work msoa area/flow data
-        self.area.work_msoa_man_rv = stats.rv_discrete(
+        self.area.work_msoa_female_rv = stats.rv_discrete(
             values=(
                 np.arange(0, len(self.workflow_dict["female_work_msoa"])),
                 self.workflow_dict["female_work_dist"]
             )
         )
-        self.area.work_msoa_woman_rv = stats.rv_discrete(
+        self.area.work_msoa_male_rv = stats.rv_discrete(
             values=(
                 np.arange(0, len(self.workflow_dict["male_work_msoa"])),
                 self.workflow_dict["male_work_dist"]
@@ -127,15 +127,14 @@ class PersonDistributor:
         else:
             if sex == 1:
                 return self.workflow_dict["female_work_msoa"][
-                    self.area.work_msoa_woman_rv(size=1)[0]
+                    self.area.work_msoa_female_rv.rvs(size=1)[0]
                 ]
             elif sex == 0:
                 return self.workflow_dict["male_work_msoa"][
-                    self.area.work_msoa_man_rv(size=1)[0]
+                    self.area.work_msoa_male_rv.rvs(size=1)[0]
                 ]
             else:
                 print("We are not yet able take care of non-binary people :-(")
-
 
 
     def populate_area(self):
