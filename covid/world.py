@@ -65,7 +65,7 @@ class World:
         pbar.close()
         #self.msoareas = self.read_msoareas_census(self.inputs.company_df)
         print("Initializing Companies...")
-        self.companies = Companies(self, self.msoareas, self.inputs.companysize_dict)
+        self.companies = Companies(self)
         for area in self.msoareas.members:
             self.distributor = CompanyDistributor(self.companies, area)
             self.distributor.distribute_adults_to_companies()
