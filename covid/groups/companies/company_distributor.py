@@ -14,8 +14,7 @@ class CompanyDistributor:
     Distributes students to different schools
     """
 
-    def __init__(self, msoarea):
-        self.area = msoareadef __init__(self, msoarea, companies):
+    def __init__(self, msoarea, companies):
         self.area = msoarea
         self.companies_all = companies
         # gather call companies in a given msoarea

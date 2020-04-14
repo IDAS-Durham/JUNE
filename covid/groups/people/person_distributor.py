@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 from covid.groups.people import Person
+from scipy.stats import rv_discrete
 
 class PersonError(BaseException):
     pass
@@ -19,7 +20,7 @@ class PersonDistributor:
         self._init_random_variables()
         self.no_kids_area = False
         self.no_students_area = False
-        self.companysector_by_sex = companysector_by_sex_df
+        self.companysector_by_sex_df = companysector_by_sex_df
         
 
     def _init_random_variables(self):
@@ -83,18 +84,18 @@ class PersonDistributor:
                 distribution = self.companysector_by_sex_df[self.area.name]['m']
             else:
                 distribution = self.companysector_by_sex_df[self.area.name]['f']
-                
-                # assign industries to numbers A->U = 1-> 21
-                industry_dict = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H',9:'I',10:'J',
+
+            # assign industries to numbers A->U = 1-> 21
+            industry_dict = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H',9:'I',10:'J',
                                  11:'K',12:'L',13:'M',14:'N',15:'O',16:'P',17:'Q',18:'R',19:'S',20:'T',21:'U'}
 
-                numbers = np.arange(1,22)
-                # create discrete probability distribution
-                random_variable = rv_discrete(values=(numbers,distribution))
-                # generate sample from distribution
-                industry_id = random_variable.rvs(size=1)
-                # accss relevant indudtry label
-                industry = industry_dict[industry_id[0]]
+            numbers = np.arange(1,22)
+            # create discrete probability distribution
+            random_variable = rv_discrete(values=(numbers,distribution))
+            # generate sample from distribution
+            industry_id = random_variable.rvs(size=1)
+            # accss relevant indudtry label
+            industry = industry_dict[industry_id[0]]
         
         return industry
 
