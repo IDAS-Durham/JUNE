@@ -461,7 +461,7 @@ class Inputs:
         https://www.nomisweb.co.uk/census/2011/ks605ew
         """
 
-        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + 'industry_by_sex.csv')
+        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + 'industry_by_sex_cleaned.csv')
 
         # define all columns in csv file relateing to males
         # here each letter corresponds to the industry sector (see metadata)
