@@ -462,7 +462,7 @@ class Inputs:
         https://www.nomisweb.co.uk/census/2011/ks605ew
         """
 
-        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + 'industry_by_sex_cleaned.csv')
+        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + '/industry_by_sex_cleaned.csv')
 
         # define all columns in csv file relateing to males
         # here each letter corresponds to the industry sector (see metadata)
@@ -470,8 +470,8 @@ class Inputs:
                      'm K', 'm L', 'm M', 'm N', 'm O', 'm P', 'm Q', 'm R', 'm S', 'm T', 'm U']
 
         m_distributions = []
-        for oa in range(len(industry_by_sex_NorthEast['oareas'])):
-            total = int(industry_by_sex_NorthEast['m all'][oa])
+        for oa in range(len(industry_by_sex_df['oareas'])):
+            total = int(industry_by_sex_df['m all'][oa])
             
             distribution = []
             for column in m_columns:
