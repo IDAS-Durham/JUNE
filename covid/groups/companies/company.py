@@ -1,3 +1,7 @@
+import numpy as np
+from scipy.stats import rv_discrete
+from tqdm.auto import tqdm
+
 class CompanyError(BaseException):
     """Class for throwing company related errors."""
     pass
@@ -13,7 +17,7 @@ class Company:
         self.people = []
         self.msoa = msoa
         # set the max number of employees to be the mean number in a range
-        self.n_employees_max
+        self.n_employees_max = n_employees_max
         self.n_employees = 0
         self.industry = industry
 
@@ -43,7 +47,13 @@ class Companies:
             size_max = float(size_max)
             size_mean = (size_max - size_min)/2.0
 
-        return size_mean
+        return int(size_mean)
+
+    def _sum_str_elements(self, df_loc, columns):
+        total = 0
+        for column in columns:
+            total += float(df_loc[column])
+        return total
     
     def init_companies(self, companysize_df, companysector_df):
         """
@@ -68,25 +78,32 @@ class Companies:
         for idx, column in enumerate(size_columns):
             size_dict[idx+1] = self._compute_size_mean(column)
         
-        for msoarea in range(len(companysector_df.index.values)):
-            distribution = []
-            for column in size_columns:
-                distribution.append(
-                    companysize_df.loc[msoarea][column]/company_total.loc[msoarea].sum()
-                )
 
-            numbers = np.arange(1,9)
-            # gives a discrete distribution over the company size per msoarea
-            random_variable = rv_discrete(values=(numbers,distribution))
-            for column in sector_columns:
-                for i in range(column[msoarea]):
-                    company = Company(
-                        company_id=i,
-                        msoa=companysector_dict['msoarea'][msoarea],
-                        n_employees_max=size_dict[random_variable.rvs(size=1)[0]],
-                        industry=column
+        pbar = tqdm(total=len(companysector_df['msoareas']))
+        for idx, msoarea in enumerate(companysector_df['msoareas']):
+            try:
+                companysize_df.loc[msoarea]
+                
+                distribution = []
+                for column in size_columns:
+                    distribution.append(
+                        float(companysize_df.loc[msoarea][column])/(self._sum_str_elements(companysize_df.loc[msoarea],size_columns))
                     )
-
-                    companies.append(company)
+                numbers = np.arange(1,9)
+                random_variable = rv_discrete(values=(numbers,distribution))
+                for column in sector_columns:
+                    for i in range(int(companysector_df[column][idx])):
+                        company = Company(
+                            company_id=i,
+                            msoa=msoarea,
+                            n_employees_max=size_dict[random_variable.rvs(size=1)[0]],
+                            industry=column
+                        )
+                            
+                companies.append(company)
+            except:
+                pass
+            pbar.update(1)
+        pbar.close()
 
         self.members = companies
