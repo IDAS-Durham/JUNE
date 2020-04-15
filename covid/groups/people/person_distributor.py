@@ -117,7 +117,7 @@ class PersonDistributor:
         return industry
 
 
-    def assign_work_msoarea(self, age, sex):
+    def assign_work_msoarea(self, i, sex, age, msoa_male, msoa_female):
         #TODO: Maybe we can put this function somewhere else?
         if age < self.ADULT_THRESHOLD:
             # too young to work
@@ -127,15 +127,9 @@ class PersonDistributor:
             return None
         else:
             if sex == 1:
-                return self.workflow_dict["female_work_msoa"][
-                    self.work_msoa_female_rv.rvs(size=1)[0]
-                ]
-            elif sex == 0:
-                return self.workflow_dict["male_work_msoa"][
-                    self.work_msoa_male_rv.rvs(size=1)[0]
-                ]
+                return msoa_female[i]
             else:
-                print("We are not yet able take care of non-binary people :-(")
+                return msoa_male[i]
 
 
     def populate_area(self):
@@ -158,16 +152,23 @@ class PersonDistributor:
         #        d[i] = {}
         age_random_array = self.area.age_rv.rvs(size=self.area.n_residents)
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
+        work_msoa_male_rnd_array = self.work_msoa_male_rv.rvs(size=self.area.n_residents)
+        work_msoa_female_rnd_array = self.work_msoa_female_rv.rvs(size=self.area.n_residents)
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
-            work_msoa_rnd = self.assign_work_msoarea(age_random, sex_random)
+            work_msoa_rnd = self.assign_work_msoarea(
+                i,
+                sex_random,
+                age_random,
+                work_msoa_male_rnd_array,
+                work_msoa_female_rnd_array,
+            )
             person = Person(
                 self.people.total_people, self.area, work_msoa_rnd, age_random, sex_random, 0, 0
             )
             self.people.members.append(person)
             self.area.people.append(person)
-            # TODO: causes this function to need approx. 1h10min to run
             idx = [idx for idx, msoa in enumerate(self.msoareas.members) if msoa.id == self.area.msoarea][0]
             self.msoareas.members[idx].work_people.append(person)
             self.people.total_people += 1
