@@ -21,6 +21,16 @@ class PersonDistributor:
         self.no_kids_area      = False
         self.no_students_area  = False
 
+    def _get_age_brackets(self, nomis_age_bin):
+        try:
+            age_1, age_2 = nomis_age_bin.split("-")
+            if age_2 == "XXX":
+                age_2 = 100
+        except:
+            age_1 = int(nomis_age_bin)
+            age_2 = age_1
+        return int(age_1), int(age_2)
+
     def _init_random_variables(self):
         """
         Reads the frequencies for different attributes based on the census data,
@@ -38,12 +48,12 @@ class PersonDistributor:
             self.area.kid_age_rv = stats.rv_discrete(
                 values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm)
             )
-        age_adults_freq = age_freq.values[self.ADULT_THRESHOLD :]
-        adult_freqs_norm = age_adults_freq / np.sum(age_adults_freq)
-        self.area.adult_age_rv = stats.rv_discrete(
-            values=(np.arange(self.ADULT_THRESHOLD, len(age_freq)), adult_freqs_norm)
-        )
-        self.area.age_rv = stats.rv_discrete(
+        #age_adults_freq = age_freq.values[self.ADULT_THRESHOLD :]
+        #adult_freqs_norm = age_adults_freq / np.sum(age_adults_freq)
+        #self.area.adult_age_rv = stats.rv_discrete(
+        #    values=(np.arange(self.ADULT_THRESHOLD, len(age_freq)), adult_freqs_norm)
+        #)
+        self.area.nomis_bin_rv = stats.rv_discrete(
             values=(np.arange(0, len(age_freq)), age_freq.values)
         )
         # sex data
@@ -70,26 +80,32 @@ class PersonDistributor:
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
         #        d[i] = {}
-        age_random_array = self.area.age_rv.rvs(size=self.area.n_residents)
+        nomis_bin_random_array = self.area.nomis_bin_rv.rvs(size=self.area.n_residents)
+        age_random_array = []
+        for nomis in nomis_bin_random_array:
+            age_1, age_2 = self._get_age_brackets(self.area.world.inputs.decoder_age[nomis])
+            age = np.random.randint(age_1, age_2+1, 1)[0]
+            age_random_array.append(age)
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
+            nomis_bin = nomis_bin_random_array[i]
             person = Person(
-                self.people.total_people, self.area, age_random, sex_random, 0, 0
+                self.people.total_people, self.area, age_random, nomis_bin, sex_random, 0, 0
             )
             self.people.members.append(person)
             self.area.people.append(person)
             self.people.total_people += 1
             # assign person to the right group:
-            if age_random < self.ADULT_THRESHOLD:
+            if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
-            elif age_random < self.OLD_THRESHOLD:
+            elif nomis_bin < self.OLD_THRESHOLD:
                 if sex_random == 0:
                     self.area._men[i] = person
                 else:
                     self.area._women[i] = person
-                if person.age in [6, 7]:  # that person can be a student
+                if person.nomis_bin in [6, 7]:  # that person can be a student
                     self.area._student_keys[i] = person
             else:
                 if sex_random == 0:

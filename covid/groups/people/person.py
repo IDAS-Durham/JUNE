@@ -25,11 +25,12 @@ class Person:
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
 
-    def __init__(self, person_id, area, age, sex, health_index, econ_index):
+    def __init__(self, person_id, area, age, nomis_bin, sex, health_index, econ_index):
         # if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
         self.id = person_id
         self.age = age
+        self.nomis_bin = nomis_bin
         self.sex = sex
         self.health_index = health_index
         self.econ_index = econ_index
