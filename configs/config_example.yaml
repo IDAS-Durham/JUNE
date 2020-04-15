@@ -1,14 +1,25 @@
 title: Covid configuration example
 
+logger:
+  save_path: results
+
 world:
-  zone: NorthEast # available are all UK regions, and EnglandWales together.
-  steps_per_hour: 10
+  zone: test # available are all UK regions, and EnglandWales together.
+
+time:
+  total_days: 10
   step_duration: 
-      1: 8 # first time step duration in hours
-      2: 16
-  step_active_groups: 
-    1: ['schools', 'households'] # active groups during first time step
-    2: ['households']
+      weekday:
+          1: 8 # first time step duration in hours
+          2: 16
+      weekend:
+          1: 24
+  step_active_groups:
+      weekday:
+          1: ['schools'] # active groups during first time step
+          2: [] 
+      weekend:
+          1: [] 
 
 
 people:
@@ -25,3 +36,35 @@ schools:
 
 companies:
   work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
+
+interaction:
+  type: collective
+  mode: probabilistic
+
+infection:
+  asymptomatic_ratio: 0.4	
+  transmission:
+    type: SIR
+    probability:
+      mean: 0.3
+    recovery:
+      mean: 0.1
+    recovery_cutoff:
+      mean: 1000
+  symptoms:
+    onset_time:
+      mean:       5.
+      widthPlus:  2.
+      lower:      3.
+      upper:      8.
+    max_time:
+      mean:       10.
+      widthPlus:  1.
+      lower:      8.
+      upper:      12.
+    end_time:
+      mean:       14.
+      widthMinus: 1.
+      widthPlus:  2.
+      lower:      12.
+      upper:      21.

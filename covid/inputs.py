@@ -20,6 +20,7 @@ class Inputs:
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
+            header=0,
             index_col="output_area",
         )
 
@@ -31,7 +32,7 @@ class Inputs:
         self.encoder_household_composition = {}
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
-        self.school_df = self.read_school_census()
+        self.school_df = pd.read_csv(os.path.join(self.DATA_DIR, 'school_data', 'uk_schools_data.csv'))
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
             os.path.join(
@@ -60,26 +61,6 @@ class Inputs:
         areas_coordinates_df = pd.read_csv(areas_coordinates_df_path)
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         return areas_coordinates_df
-
-    def read_school_census(self):
-        """
-        Reads school location and sizes, it initializes a KD tree on a sphere,
-        to query the closest schools to a given location.
-        """
-        school_filename = os.path.join(
-            self.DATA_DIR, "school_data", "uk_schools_data.csv"
-        )
-        school_df = pd.read_csv(school_filename, index_col=0)
-        school_df.dropna(inplace=True)
-        school_df["age_min"].replace(to_replace=np.arange(0, 4), value=4, inplace=True)
-
-        school_df["age_max"].replace(
-            to_replace=np.arange(20, 50), value=19, inplace=True
-        )
-
-        assert school_df["age_min"].min() <= 4
-        assert school_df["age_max"].max() < 20
-        return school_df
 
     def oa2msoa(self):
         """
