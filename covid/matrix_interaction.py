@@ -51,8 +51,6 @@ class MatrixInteraction(Interaction):
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
             for i in range(Ncontacts):
                 recipient = self.make_single_contact(infecter,group)
-                if recipient == infecter:
-                    continue
                 if check_type = "matrix_test":
                     test_matrix[infecter.get_age()][recipient.get_age()] += 1
                     test_matrix[recipient.get_age()][infecter.get_age()] += 1
@@ -65,12 +63,15 @@ class MatrixInteraction(Interaction):
                         )
 
     def make_single_contact(self,infecter,group):
-        disc  = random.random()
-        index = 0
-        while disc>=0. and index<len(self.options)-1:
-            disc  -= self.options[index][1]
-            index += 1
-        return self.options[index][0]
+        disc      = random.random()
+        index     = 0
+        recipient = infecter
+        while recipient==infecter:
+            while disc>=0. and index<len(self.options)-1:
+                disc  -= self.options[index][1]
+                index += 1
+            recipient  = self.options[index][0]
+        return recipient
 
     def calculate_single_transmission_probability(self,infecter):
         intensity   = group.get_intensity(self.time)
