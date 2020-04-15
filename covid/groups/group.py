@@ -62,6 +62,12 @@ class Group:
             return False
         return True
 
+    def get_name(self):
+        return self.name
+    
+    def get_spec(self):
+        return self.spec
+        
     def set_intensity(self, intensity):
         self.intensity = intensity
 
