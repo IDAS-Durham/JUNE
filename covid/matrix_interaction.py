@@ -47,7 +47,7 @@ class MatrixInteraction(Interaction):
             people = group.get_people():
         for infecter in people:
             transmission_probability = self.calculate_single_transmission_probability(infecter) 
-            Naverage  = self.calculate_average_Ncontacts(infecter.get_age())
+            Naverage  = self.calculate_average_Ncontacts(infecter)
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
             for i in range(Ncontacts):
                 recipient = self.make_single_contact(infecter,group)
@@ -63,10 +63,10 @@ class MatrixInteraction(Interaction):
                         )
 
     def make_single_contact(self,infecter,group):
-        disc      = random.random()
-        index     = 0
         recipient = infecter
         while recipient==infecter:
+            disc      = random.random()
+            index     = 0
             while disc>=0. and index<len(self.options)-1:
                 disc  -= self.options[index][1]
                 index += 1
@@ -85,14 +85,20 @@ class MatrixInteraction(Interaction):
             probability *= (1.+self.omega*person.get_severity(self.time))
         return probability * intensity * self.delta_t
     
-    def calculate_average_Ncontacts(self,age):
-        age = max(age,99)
+    def calculate_average_Ncontacts(self,infecter):
+        age = max(infecter.get_age(),99)
         sum = 0.
         for j in self.matrix[age]:
             sum += self.matrix[age][j]
         self.options = []
+        norm = 0.
         for partner in group.people():
-            self.options.append([partner,self.matrix[age][partner.get_age()]/sum])
+            if partner!=infecter:
+                entry = self.matrix[age][partner.get_age()]
+                norm += entry
+                self.options.append([partner,entry])
+            for pair in options:
+                pair[1] /= norm
         return sum
 
     def calculate_actual_Ncontacts(self,Nave):
