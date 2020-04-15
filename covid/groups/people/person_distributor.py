@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 from covid.groups.people import Person
+from covid.groups.people.health_index import HealthIndex
 
 class PersonError(BaseException):
     pass
@@ -14,11 +15,11 @@ class PersonDistributor:
         self.area = area
         self.people = people
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
+        self.ADULT_THRESHOLD   = area.world.config["people"]["adult_threshold"]
+        self.OLD_THRESHOLD     = area.world.config["people"]["old_threshold"]
         self._init_random_variables()
-        self.no_kids_area = False
-        self.no_students_area = False
+        self.no_kids_area      = False
+        self.no_students_area  = False
 
     def _init_random_variables(self):
         """
@@ -69,9 +70,11 @@ class PersonDistributor:
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
         #        d[i] = {}
+        age_random_array = self.area.age_rv.rvs(size=self.area.n_residents)
+        sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         for i in range(0, self.area.n_residents):
-            age_random = self.area.age_rv.rvs(size=1)[0]
-            sex_random = self.area.sex_rv.rvs(size=1)[0]
+            sex_random = sex_random_array[i]
+            age_random = age_random_array[i]
             person = Person(
                 self.people.total_people, self.area, age_random, sex_random, 0, 0
             )
