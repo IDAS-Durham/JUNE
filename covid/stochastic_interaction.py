@@ -63,7 +63,7 @@ class StochasticInteraction(Interaction):
     def single_time_step_for_recipient(self,recipient,transmission_probability):
         recipient_probability = recipient.get_susceptibility()
         if recipient_probability > 0.0:
-            if random.random() <= np.exp(-transmission_probability * recipient_probability):
+            if random.random() <= 1.-np.exp(-transmission_probability * recipient_probability):
                 recipient.set_infection(
                     self.selector.make_infection(recipient, self.time)
                 )
