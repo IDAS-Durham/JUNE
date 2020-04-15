@@ -152,11 +152,11 @@ class Inputs:
 
         m_distributions = []
         for oa in range(len(industry_by_sex_df['oareas'])):
-            total = int(industry_by_sex_df['m all'][oa])
+            total = float(industry_by_sex_df['m all'][oa])
             
             distribution = []
             for column in m_columns:
-                distribution.append(int(industry_by_sex_df[column][oa])/total)
+                distribution.append(float(industry_by_sex_df[column][oa])/total)
                 
             m_distributions.append(distribution)
 
