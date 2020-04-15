@@ -25,7 +25,7 @@ class PersonDistributor:
         try:
             age_1, age_2 = nomis_age_bin.split("-")
             if age_2 == "XXX":
-                age_2 = 100
+                age_2 = 99
         except:
             age_1 = int(nomis_age_bin)
             age_2 = age_1
