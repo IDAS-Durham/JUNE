@@ -9,12 +9,16 @@ import yaml
 
 from covid.groups.people import Person
 from covid.groups.test_groups.test_group import TestGroups
-from covid.interaction import Interaction, CollectiveInteraction
+from covid.interaction import Interaction
+from covid.collective_interaction import CollectiveInteraction
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
 
 def check_symptoms():
     config = {}
+    config["interaction"]                                          = {}
+    config["interaction"]["type"]                                  = "collective"
+    config["interaction"]["mode"]                                  = "probabilistic"
     config["infection"]                                            = {}
     config["infection"]["asymptomatic_ratio"]                      = 0.4
     config["infection"]["transmission"]                            = {}
@@ -42,6 +46,9 @@ def check_symptoms():
     
 def make_config(beta):
     config = {}
+    config["interaction"]                                          = {}
+    config["interaction"]["type"]                                  = "collective"
+    config["interaction"]["mode"]                                  = "probabilistic"
     config["infection"]                                            = {}
     config["infection"]["asymptomatic_ratio"]                      = 0.4
     config["infection"]["transmission"]                            = {}

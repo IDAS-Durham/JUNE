@@ -84,10 +84,13 @@ class InfectionSelector:
         parameters["value"] = lower + random.random() * (upper - lower)
 
     def make_parameters_Gamma(self, parameters):
-        mean = parameters["mean"]
-        alpha = parameters["shape"]
-        beta = alpha / mean
-        parameters["value"] = random.gammavariate(alpha, beta)
+        mean  = parameters["mean"]
+        alpha = parameters["width"]**2
+        beta  = alpha/mean
+        #print ("gamma(",alpha,", ",beta,") --> ",
+        #       "mean = ",(alpha/beta)," width = ",(np.sqrt(alpha)/beta),".")
+        value = np.random.gamma(alpha, 1./beta)
+        parameters["value"] = value
 
     def make_parameters_Gaussian(self, parameters):
         mean = parameters["mean"]

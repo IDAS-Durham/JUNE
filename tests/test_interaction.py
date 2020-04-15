@@ -4,12 +4,16 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from covid.groups.test_groups.test_group import TestGroups
-from covid.interaction import Interaction, CollectiveInteraction
+from covid.interaction import Interaction
+from covid.collective_interaction import CollectiveInteraction
 from covid.infection import Infection
 from covid.infection_selector import InfectionSelector
 
 def ratio_SI_simulated(beta, N, I_0, times, mode):
     config = {}
+    config["interaction"]                                          = {}
+    config["interaction"]["type"]                                  = "collective"
+    config["interaction"]["mode"]                                  = mode
     config["infection"]                                            = {}
     config["infection"]["transmission"]                            = {}
     config["infection"]["transmission"]["type"]                    = "SI"
@@ -18,11 +22,11 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     selector = InfectionSelector(Tparams, None)
     groups   = TestGroups(people_per_group = N, total_people = N) 
     group    = groups.members[0]
-    if mode=='Superposition':
+    if mode=='superposition':
         group.set_intensity(group.get_intensity())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], 0))
-    interaction = CollectiveInteraction(selector, mode)
+    interaction = CollectiveInteraction(selector,config)
     ratio = []
     print("===============================================")
     for time in times:
@@ -47,6 +51,9 @@ def ratio_SI_analytic(beta, N, I_0, times):
 
 def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
     config = {}
+    config["interaction"]                                          = {}
+    config["interaction"]["type"]                                  = "collective"
+    config["interaction"]["probmode"]                              = mode
     config["infection"]                                            = {}
     config["infection"]["transmission"]                            = {}
     config["infection"]["transmission"]["type"]                    = "SIR"
@@ -64,7 +71,7 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], times[0]-1))
     group.output()
-    interaction = CollectiveInteraction(selector, mode)
+    interaction = CollectiveInteraction(selector, config)
     interaction.set_groups([groups])
     ratio = []
     print("===============================================")
