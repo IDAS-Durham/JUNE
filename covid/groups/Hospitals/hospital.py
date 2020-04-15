@@ -33,4 +33,5 @@ class Hospitals:
         distances,neighbours = hospital_tree.query(
             np.deg2rad(area.coordinates),k = k,sort_results=True
             )
+        
         return neighbours
