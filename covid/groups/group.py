@@ -62,6 +62,12 @@ class Group:
             return False
         return True
 
+    def get_name(self):
+        return self.name
+    
+    def get_spec(self):
+        return self.spec
+        
     def set_intensity(self, intensity):
         self.intensity = intensity
 
@@ -148,7 +154,7 @@ class Group:
             self.add(Person(str(i), 0, age, sex, 0, 0))
         # self.output(False,False)
 
-    def output(self, plot=False, full=False):
+    def output(self, plot=False, full=False,time = 0):
         print("==================================================")
         print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
         print("* ",
@@ -176,7 +182,7 @@ class Group:
             plt.show()
         if full:
             for p in self.people:
-                p.Output()
+                p.output(time)
 
 class TestGroups():
     def __init__(self,N):

@@ -1,13 +1,16 @@
 from covid.inputs import Inputs
-import covid.groups
+from covid.groups import *
 from covid.logger import Logger
 from covid.infection_selector import InfectionSelector
-from covid.interaction import Interaction, CollectiveInteraction
+from covid.interaction import Interaction
+from covid.collective_interaction import CollectiveInteraction
+from covid.time import DayIterator
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
+from covid import time
 
 
 class World:
@@ -113,12 +116,6 @@ class World:
             areas_dict[i] = area
         return areas_dict
 
-    def _active_groups(self, time):
-        # households are always active
-        always_active = ["households"]
-        active = self.config["world"]["step_active_groups"][time]
-        return active + always_active #always_active + active
-
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
             group = getattr(self, group_name)
@@ -129,18 +126,19 @@ class World:
             person.active_group = None
 
     def _initialize_infection_selector_and_interaction(self, config):
-        self.selector = InfectionSelector(config)
-        self.interaction = CollectiveInteraction(self.selector)
+        self.selector    = InfectionSelector(config)
+        if config["interaction"]["type"] == "collective":
+            self.interaction = CollectiveInteraction(self.selector,config)
 
-    def seed_infections_group(self, group, n_infections, selector):
+    def seed_infections_group(self, group, n_infections, selector, time):
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
             group.people[choice].set_infection(
-                self.selector.make_infection(group.people[choice], self.time)
+                self.selector.make_infection(group.people[choice], time)
             )
 
-    def do_timestep(self, timetag, duration):
-        active_groups = self._active_groups(timetag)
+    def do_timestep(self, day_iter):
+        active_groups = day_iter.active_groups()
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -149,35 +147,28 @@ class World:
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.set_groups(groups_instances)
-        self.interaction.set_time(self.time + duration)
+        self.interaction.set_time(day_iter.day)
         self.interaction.time_step()
         self.set_allpeople_free()
 
-    def group_dynamics(self, total_days):
-        self.days = 1
-        self.time = 1.*self.days
-        print("Starting group_dynamics for ", total_days, " days at day",self.days)
-        time_steps = self.config["time"]["step_duration"]["weekday"].keys()
+    def group_dynamics(self):
+        day_iter = DayIterator(self.config["time"])
+        print("Starting group_dynamics for ", day_iter.total_days, " days at day",day_iter.day)
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
         self._initialize_infection_selector_and_interaction(self.config)
         print ("Infecting indivuals in their household.")
-        self.interaction.set_time(self.days)
+        self.interaction.set_time(day_iter.day)
         for household in self.households.members:
-            self.seed_infections_group(household, self.days, self.selector)
-        print ("starting the loop ..., at ",self.days," days, to run for ",total_days," days")
-        while self.days <= total_days:
-            for shift, timetag in enumerate(time_steps):
-                duration = self.config["time"]["step_duration"]["weekday"][timetag]
-                print("next step, time = ", self.time,"(tag = ",timetag,"), duration = ",(duration/24.))
-                self.do_timestep(timetag, duration/24.)
-                self.logger.log_timestep(self.days, shift)
-                self.time += duration/24.
-            self.days += 1
+            self.seed_infections_group(household, day_iter.day, self.selector, 0.)
+        print ("starting the loop ..., at ",day_iter.day," days, to run for ",day_iter.total_days," days")
+        while day_iter.day <= day_iter.total_days:
+            self.do_timestep(day_iter)
+            next(day_iter)
 
 
 if __name__ == "__main__":
     world = World()
     # world = World.from_pickle()
-    world.group_dynamics(2)
+    world.group_dynamics()

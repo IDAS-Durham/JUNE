@@ -53,7 +53,7 @@ class Transmission:
 
 class TransmissionSI(Transmission):
     def init(self, params):
-        self.prob = min(1.0, max(0.0, params["probability"]["value"]))
+        self.prob = max(0.0, params["probability"]["value"])
 
     def calculate(self, time):
         self.value = self.prob
@@ -66,8 +66,8 @@ class TransmissionSI(Transmission):
 
 class TransmissionSIR(Transmission):
     def init(self, params):
-        self.probT = min(1.0, max(0.0, params["probability"]["value"]))
-        self.probR = min(1.0, max(0.0, params["recovery"]["value"]))
+        self.probT = max(0.0, params["probability"]["value"])
+        self.probR = max(0.0, params["recovery"]["value"])
         self.RecoverCutoff = params["recovery_cutoff"]["value"]
         self.lasttime = self.starttime  # last time they had a chance to recover
 
@@ -97,7 +97,7 @@ class TransmissionSIR(Transmission):
 
 class TransmissionConstantInterval(Transmission):
     def init(self, params):
-        self.prob = min(1.0, max(0.0, params["probability"]["value"]))
+        self.prob = max(0.0, params["probability"]["value"])
         self.endtime = params["end_time"]["value"]
         self.value = 0
 
@@ -113,10 +113,31 @@ class TransmissionConstantInterval(Transmission):
 #################################################################################
 
 
+class TransmissionLogNormal(Transmission):
+    def init(self, params):
+        self.prob          = params["probability"]["value"]
+        self.mean_time     = params["mean_time"]["value"]
+        self.std_variation = params["width_time"]["value"]
+        self.end_time      = params["end_time"]["value"]
+        self.value = 0
+
+    def calculate(self, time):
+        if (time >= self.starttime and
+            time <= self.starttime+self.endtime):
+            self.value = self.prob*random.lognormal(self.mean_time,self.std_variation)
+        else:
+            self.value = 0.0
+
+
+#################################################################################
+#################################################################################
+#################################################################################
+
+
 class TransmissionXNExp(Transmission):
     def init(self, params):
-        self.prob = min(1.0, max(0.0, params["probability"]["value"]))
-        self.exponent = max(0.0, params["exponent"]["value"])
+        self.prob       = max(0.0, params["probability"]["value"])
+        self.exponent   = max(0.0, params["exponent"]["value"])
         self.tailfactor = params["norm"]["value"]
         if self.tailfactor < 0.001:
             self.tailfactor = 0.001

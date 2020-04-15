@@ -2,9 +2,6 @@ import sys
 import random
 from covid.infection import Infection
 
-# from covid.groups.people import PersonDistributor
-
-
 class Person:
     """
     Primitive version of class person.  This needs to be connected to the full class 
@@ -68,6 +65,9 @@ class Person:
 
     def get_susceptibility(self):
         return self.susceptibility
+
+    def get_infection(self):
+        return self.infection
 
     def set_household(self, household):
         self.household = household
@@ -139,13 +139,18 @@ class Person:
             return 0.0
         return self.infection.symptom_severity(time)
 
-    def output(self):
+    def output(self,time = 0):
         print("--------------------------------------------------")
-        print("Person [", self.pname, "]: age = ", self.age, " sex = ", self.sex)
+        if self.health_index!=0:
+            print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex,
+                  "health: ",self.health_index)
+        else:
+            print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
         if self.is_susceptible():
             print("-- person is susceptible.")
         if self.is_infected():
-            print("-- person is infected.")
+            print("-- person is infected: ",self.get_symptoms_tag(time+5),
+                  "[",self.infection.symptom_severity(time+5),"]")
         if self.is_recovered():
             print("-- person has recovered.")
 
@@ -159,3 +164,4 @@ class People:
     def populate_area(self, area):
         distributor = PersonDistributor(self, area)
         distributor.populate_area()
+
