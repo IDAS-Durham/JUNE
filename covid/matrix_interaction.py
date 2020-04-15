@@ -63,10 +63,10 @@ class MatrixInteraction(Interaction):
                         )
 
     def make_single_contact(self,infecter,group):
-        disc      = random.random()
-        index     = 0
         recipient = infecter
         while recipient==infecter:
+            disc      = random.random()
+            index     = 0
             while disc>=0. and index<len(self.options)-1:
                 disc  -= self.options[index][1]
                 index += 1
