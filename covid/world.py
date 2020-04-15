@@ -254,5 +254,5 @@ class World:
 
 if __name__ == "__main__":
     world = World()
-    # world = World.from_pickle()
-    # world.group_dynamics(2)
+    world = World.from_pickle()
+    world.group_dynamics(2)
