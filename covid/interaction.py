@@ -126,3 +126,25 @@ class CollectiveInteraction(Interaction):
         for person in group.get_infected():
             prob_transmission += person.transmission_probability(self.time)
         return prob_transmission * interaction_intensity
+
+    def pair_sampling_transmission_probability(self, group, grouptype):
+        """
+        For this method, given a group of size N, we assume there are a total of M interacions
+        at a given time step inside the group. We then use the social interaction matrices
+        from the BBC pandemic project to sample M age pairs. For this M age pairs, we compute
+        the probability of infecting each other, and update accordingly.
+        """
+        pass
+#        N = 50 #TODO
+#        pairs_xi = grouptype.pairs_distribution.rvs(N)
+
+
+
+
+
+
+
+
+
+
+
