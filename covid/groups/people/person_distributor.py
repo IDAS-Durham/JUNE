@@ -165,6 +165,7 @@ class PersonDistributor:
             )
             self.people.members.append(person)
             self.area.people.append(person)
+            # TODO: causes this function to need approx. 1h10min to run
             idx = [idx for idx, msoa in enumerate(self.msoareas.members) if msoa.id == self.area.msoarea][0]
             self.msoareas.members[idx].work_people.append(person)
             self.people.total_people += 1
