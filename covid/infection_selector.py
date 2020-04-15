@@ -52,13 +52,17 @@ class InfectionSelector:
     def select_severity(self, person, time):
         if "type" in self.symptoms_params:
             if self.symptoms_params["type"] == "Constant":
-                keys = ["time_offset", "end_time", "severity"]
+                keys = ["time_offset", "end_time"]
                 params = self.make_parameters(self.symptoms_params, keys)
                 return Symptoms.SymptomsConstant(person, params, time)
             elif self.symptoms_params["type"] == "Gauss":
-                keys = ["maximal_severity", "mean_time", "sigma_time"]
+                keys = ["mean_time", "sigma_time"]
                 params = self.make_parameters(self.symptoms_params, keys)
                 return Symptoms.SymptomsGaussian(person, params, time)
+            elif self.symptoms_params["type"] == "Tanh":
+                keys = ["max_time", "onset_time", "end_time"]
+                params = self.make_parameters(self.symptoms_params, keys)
+                return Symptoms.SymptomsTanh(person, params, time)
         return None
 
     def make_parameters(self, parameters, names):
@@ -80,10 +84,13 @@ class InfectionSelector:
         parameters["value"] = lower + random.random() * (upper - lower)
 
     def make_parameters_Gamma(self, parameters):
-        mean = parameters["mean"]
-        alpha = parameters["shape"]
-        beta = alpha / mean
-        parameters["value"] = random.gammavariate(alpha, beta)
+        mean  = parameters["mean"]
+        alpha = parameters["width"]**2
+        beta  = alpha/mean
+        #print ("gamma(",alpha,", ",beta,") --> ",
+        #       "mean = ",(alpha/beta)," width = ",(np.sqrt(alpha)/beta),".")
+        value = np.random.gamma(alpha, 1./beta)
+        parameters["value"] = value
 
     def make_parameters_Gaussian(self, parameters):
         mean = parameters["mean"]

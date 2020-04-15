@@ -14,7 +14,7 @@ distribute_value_Gamma1:
       probability:
         mode:  Gamma
         mean:  1.0
-        shape: 0.25
+        width: 4.
 
 distribute_value_Gamma2:
   infection:
@@ -23,7 +23,7 @@ distribute_value_Gamma2:
       probability:
         mode:  Gamma
         mean:  1.0
-        shape: 0.50
+        width: 1.
 
 distribute_value_Gauss1:
   infection:

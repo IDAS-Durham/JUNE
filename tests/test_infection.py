@@ -1,9 +1,7 @@
 import sys
-
-sys.path.append("../covid")
-from covid.transmission import Transmission
+from covid.transmission  import Transmission
 from covid.groups.people import Person
-from covid.infection import Infection
+from covid.infection     import Infection
 from covid.infection_selector import InfectionSelector
 
 
@@ -33,12 +31,12 @@ def distribute_value_Gamma(config1,config2):
         probs2.append(infection.transmission_probability(1))
 
     fig, axes = plt.subplots()
-    axes.hist(probs1,1000,range=(0, 1),density=True,
+    axes.hist(probs1,1000,range=(0, 5.),density=True,
               facecolor="blue",alpha=0.5,
-              label="$\\Gamma(\\alpha = 0.25$, mean = 1.)")
-    axes.hist(probs2,1000,range=(0, 1),density=True,
+              label="$\\Gamma$($d^2$ = 4.$, $\\bar\\mu$ = 1.)")
+    axes.hist(probs2,1000,range=(0, 5.),density=True,
               facecolor="red",alpha=0.5,
-              label="$\\Gamma(\\alpha = 0.50$, mean = 1.)",
+              label="$\\Gamma$($d^2$ = 1.$, $\\bar\\mu$ = 1.)",
     )
     plt.yscale('log')
     axes.set_ylim([0.001,100.0])
@@ -134,16 +132,19 @@ if __name__ == "__main__":
 
     found = False
 
+    """
     if "trivial_check" in config:
         print ("trivial check")
         trivial_check(config["trivial_check"])
         found = True        
+    """
     if ("distribute_value_Gamma1" in config and
         "distribute_value_Gamma2" in config):
         print ("gamma distribution")
         distribute_value_Gamma(config["distribute_value_Gamma1"],
                                config["distribute_value_Gamma2"])
-        found = True        
+        found = True
+    """
     if ("distribute_value_Gauss1" in config and
         "distribute_value_Gauss2" in config):
         print ("gauss distribution")
@@ -154,5 +155,6 @@ if __name__ == "__main__":
         print ("symptoms_tag_test")
         check_symptom_tags(1000000,config["symptoms_tag_test"])
         found = True
+    """
     if not found:
         print ("no keywords found:",config)
