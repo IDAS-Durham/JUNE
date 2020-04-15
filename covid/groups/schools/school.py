@@ -27,7 +27,7 @@ class Schools:
 
     def __init__(self, world, areas, school_df):
         self.world = world
-        self.members = {}
+        self.members = []
         self.init_schools(school_df)
 
     def _compute_age_group_mean(self, agegroup):
@@ -52,7 +52,7 @@ class Schools:
         """
         SCHOOL_AGE_THRESHOLD = [1, 7]
         schools = []
-        school_age = list(self.world.decoder_age.values())[
+        school_age = list(self.world.inputs.decoder_age.values())[
             SCHOOL_AGE_THRESHOLD[0] : SCHOOL_AGE_THRESHOLD[1]
         ]
         school_trees = {}
@@ -111,3 +111,11 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
+
+    def set_active_members(self):
+        for school in self.members:
+            for person in school.people:
+                if person.active_group != None:
+                    raise SchoolError("Trying to set an already active person")
+                else:
+                    person.active_group = "school"
