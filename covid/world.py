@@ -1,5 +1,6 @@
 from covid.inputs import Inputs
 import covid.groups
+from covid.groups import *
 from covid.logger import Logger
 from covid.infection_selector import InfectionSelector
 from covid.interaction import Interaction, CollectiveInteraction

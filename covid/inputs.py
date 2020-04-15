@@ -80,13 +80,12 @@ class Inputs:
         """
         usecols = [0, 1]
         column_names = ["OA11CD", "MSOA11CD"]
-        oa2msoa_df = self.read_df(
-            os.path.join(self.DATA_DIR, "area_code_translations"),
-            "oa_msoa_englandwales_2011.csv",
-            column_names,
-            usecols,
-            "OA11CD",
+        oa2msoa_df = pd.read_csv(
+            "../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv",
+            names=column_names,
+            usecols=usecols,
         )
+        oa2msoa_df = oa2msoa_df.set_index("OA11CD")
 
         return oa2msoa_df
 
@@ -108,13 +107,12 @@ class Inputs:
             "500-999",
             "1000-xxx",
         ]
-        companysize_df = self.read_df(
-            self.MIDDLE_OUTPUT_AREA_DIR,
-            "business_counts_northeast_2019.csv",
-            column_names,
-            usecols,
-            "MSOA11CD"
+        companysize_df = pd.read_csv(
+            "../data/census_data/middle_output_area/NorthEast/business_counts_northeast_2019.csv",
+            names=column_names,
+            usecols=usecols,
         )
+        companysize_df = companysize_df.set_index("MSOA11CD")
 
         assert companysize_df.isnull().values.any() == False
 
@@ -128,7 +126,7 @@ class Inputs:
         """
 
         companysector_df = pd.read_csv(
-            self.MIDDLE_OUTPUT_AREA_DIR + '/company_sector_cleaned_msoa.csv',
+            '../data/census_data/middle_output_area/NorthEast/company_sector_cleaned_msoa.csv',
             index_col=0,
         )
         
@@ -143,7 +141,9 @@ class Inputs:
         https://www.nomisweb.co.uk/census/2011/ks605ew
         """
 
-        industry_by_sex_df = pd.read_csv(self.OUTPUT_AREA_DIR + '/industry_by_sex_cleaned.csv')
+        industry_by_sex_df = pd.read_csv(
+            "../data/census_data/output_area/NorthEast/industry_by_sex_cleaned.csv"
+        )
 
         # define all columns in csv file relateing to males
         # here each letter corresponds to the industry sector (see metadata)
@@ -194,7 +194,7 @@ class Inputs:
 
         """
         travel_df = pd.read_csv(
-            DATA_DIR + "flow_method_oa_qs701northeast_2011.csv",
+            "../data/census_data/middle_output_area/NorthEast/flow_method_oa_qs701northeast_2011.csv",
             delimiter=",",
             delim_whitespace=False,
         )
@@ -287,16 +287,14 @@ class Inputs:
         Returns:
             dictionary with frequencies of populations 
         """
+        dirs = "../data/census_data/middle_output_area/NorthEast/"
         flow_female_file = "flow_female_in_msoa_wu01northeast_2011.csv"
         flow_male_file = "flow_male_in_msoa_wu01northeast_2011.csv"
-        flow_dirname = os.path.join(
-            self.DATA_DIR, "middle_output_area", self.zone
-        )
 
-        flow_female_df = pd.read_csv(os.path.join(flow_dirname, flow_female_file))
+        flow_female_df = pd.read_csv(dirs + flow_female_file)
         flow_female_df = flow_female_df.set_index("residence")
 
-        flow_male_df = pd.read_csv(os.path.join(flow_dirname, flow_male_file))
+        flow_male_df = pd.read_csv(dirs + flow_male_file)
         flow_male_df = flow_male_df.set_index("residence")
 
         home_msoa = (
