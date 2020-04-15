@@ -16,10 +16,7 @@ class Inputs:
         self.zone = zone
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
-        # self.MIDDLE_OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "middle_output_area", zone)
-        # oa2msoa_df = self.oa2msoa()
 
-        # Read census data on high resolution map (OA)
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
@@ -36,11 +33,12 @@ class Inputs:
             self.encoder_household_composition[column] = i
         self.school_df = self.read_school_census()
         self.areas_coordinates_df = self.read_coordinates()
-        # self.company_df = self.read_companysize_census()
-        # Read census data on low resolution map (MSOA)
-        # self.oa2msoa_df = self.oa2msoa()
-        # self.workflow_dict = self.create_workflow_dict()
-        # self.companysize_df = self.read_companysize_census()
+        self.contact_matrix = np.genfromtxt(
+            os.path.join(
+                self.DATA_DIR, "..", "social_mixing", "POLYMOD", "extended_polymod_UK.csv"
+            ),
+            delimiter =',',
+        )
 
     def read(self, filename):
         df = pd.read_csv(
@@ -311,8 +309,4 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.age_freq)
-    print(ip.decoder_age)
-    print(ip.decoder_sex)
-    print(ip.decoder_household_composition)
-    print(ip.areas_coordinates_df)
+    print(ip.contact_matrix.shape)
