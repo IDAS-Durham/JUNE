@@ -60,7 +60,7 @@ class CollectiveInteraction(Interaction):
         prob_notransmission = 1.0
         for person in group.get_infected():
             prob_notransmission *= (
-                1.0 - person.transmission_probability(self.time) * interaction_intensity
+                max(0., 1.0 - person.transmission_probability(self.time) * interaction_intensity)
             )
         return 1.0 - prob_notransmission
 
