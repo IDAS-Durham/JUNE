@@ -37,6 +37,10 @@ schools:
 companies:
   work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
 
+interaction:
+  type: collective
+  mode: probabilistic
+
 infection:
   asymptomatic_ratio: 0.4	
   transmission:
