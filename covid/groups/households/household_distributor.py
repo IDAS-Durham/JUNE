@@ -22,11 +22,10 @@ class HouseholdDistributor:
     Note: in this class student refers to an adult age 18-25, independently of they being a student or not.
     """
 
-    def __init__(self, world, households, area):
+    def __init__(self, world, area):
         self.world = world
-        self.households = households
         self.SAME_SEX_COUPLE_RATIO = area.world.config["households"]["same_sex_couple_ratio"]
-        self.area = households.area
+        self.area = area
         self._init_random_variables()
 
     def _init_random_variables(self):
@@ -81,7 +80,7 @@ class HouseholdDistributor:
         and in one upper or lower group with another probability. (Default is 60/40)
         """
         age_variation = self.age_groups_rv.rvs(size=1)[0]
-        if first_adult_age == len(self.world.decoder_age) - 1:
+        if first_adult_age == len(self.world.inputs.decoder_age) - 1:
             age = first_adult_age - abs(age_variation)
         elif first_adult_age == self.ADULT_THRESHOLD:
             age = first_adult_age + abs(age_variation)
@@ -289,7 +288,7 @@ class HouseholdDistributor:
         Given a household with a certain household composition, fills it from the available 
         people pool.
         """
-        household_composition_decoded = self.world.decoder_household_composition[
+        household_composition_decoded = self.world.inputs.decoder_household_composition[
             household.household_composition
         ]
         n_kids, n_students, n_adults, n_old = map(
@@ -336,6 +335,9 @@ class HouseholdDistributor:
             self.populate_area()
         house_id = 0
         aux = False
+        composition_id_array = self.household_rv.rvs(size=self.area.n_residents)
+        i = 0
+        maxi = len(composition_id_array)
         while self.area._men or self.area._women or self.area._oldmen or self.area._oldwomen:
             if not self.area._men and not self.area._women: # 
                 """
@@ -343,11 +345,17 @@ class HouseholdDistributor:
                 problems in areas where old people live but no household composition 
                 exists for them
                 """
-                composition_id = self.world.encoder_household_composition["0 0 0 2"]
+                composition_id = self.world.inputs.encoder_household_composition["0 0 0 2"]
                 household = Household(house_id, composition_id, self.area)
                 household_filled_config = self.populate_household(household)
             else:
-                composition_id = self.household_rv.rvs(size=1)[0]
+                #composition_id = self.household_rv.rvs(size=1)[0]
+                composition_id = composition_id_array[i]
+                i+=1
+                if i >= maxi:
+                    composition_id_array = self.household_rv.rvs(size=self.area.n_residents)
+                    i = 0
+
                 household = Household(house_id, composition_id, self.area)
                 household_filled_config = self.populate_household(household)
             if household_filled_config == -1:  # empty house
@@ -355,18 +363,19 @@ class HouseholdDistributor:
             else:
                 # store actual household config
                 try: # the key might not exist yet
-                    household.household_composition = self.world.encoder_household_composition[
+                    household.household_composition = self.world.inputs.encoder_household_composition[
                         household_filled_config
                     ]
                 except KeyError:
                     aux = True
-                    lastkey = len(self.world.decoder_household_composition)
-                    self.world.decoder_household_composition[lastkey] = household_filled_config
-                    self.world.encoder_household_composition[household_filled_config] = lastkey 
-                    household.household_composition = self.world.encoder_household_composition[
+                    lastkey = len(self.world.inputs.decoder_household_composition)
+                    self.world.inputs.decoder_household_composition[lastkey] = household_filled_config
+                    self.world.inputs.encoder_household_composition[household_filled_config] = lastkey 
+                    household.household_composition = self.world.inputs.encoder_household_composition[
                         household_filled_config
                     ]
-            self.households.members.append(household)
+            self.world.households.members.append(household)
+            self.area.households.append(household)
             house_id += 1
         self.kids_left = len(self.area._kids)
 

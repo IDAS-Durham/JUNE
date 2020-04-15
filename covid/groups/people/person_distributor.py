@@ -156,9 +156,11 @@ class PersonDistributor:
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
         #        d[i] = {}
+        age_random_array = self.area.age_rv.rvs(size=self.area.n_residents)
+        sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         for i in range(0, self.area.n_residents):
-            age_random = self.area.age_rv.rvs(size=1)[0]
-            sex_random = self.area.sex_rv.rvs(size=1)[0]
+            sex_random = sex_random_array[i]
+            age_random = age_random_array[i]
             work_msoa_rnd = self.assign_work_msoarea(age_random, sex_random)
             person = Person(
                 self.people.total_people, self.area, work_msoa_rnd, age_random, sex_random, 0, 0

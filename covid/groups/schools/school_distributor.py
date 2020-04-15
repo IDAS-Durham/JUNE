@@ -58,7 +58,7 @@ class SchoolDistributor:
                 person.age <= self.SCHOOL_AGE_RANGE[1]
                 and person.age >= self.SCHOOL_AGE_RANGE[0]
             ):  # person age from 5 up to 19 yo
-                agegroup = self.area.world.decoder_age[person.age]
+                agegroup = self.area.world.inputs.decoder_age[person.age]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
                     agegroup

@@ -12,69 +12,67 @@ class Inputs:
     def __init__(
         self,
         zone="NorthEast",
-        DATA_DIR: str = os.path.join("..", "data", "census_data"),
+        DATA_DIR: str = os.path.join("..", "data", "processed", "census_data"),
     ):
         self.zone = zone
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
         self.MIDDLE_OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "middle_output_area", zone)
-        oa2msoa_df = self.oa2msoa()
         
         # Read census data on high resolution map (OA)
-        population_df = self.read_population_df()
-        # n_households_df = self.read_household_df()
-        ages_df = self.read_ages_df()
-        comp_people_df = self.read_household_composition_people(ages_df)
-        households_df = self.people_compositions2households(comp_people_df)
+        self.n_residents = pd.read_csv(
+            os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
+            names=["output_area", "n_residents"],
+            header=0,
+            index_col="output_area",
+        )
 
-        self.household_dict = {
-            "n_residents": population_df["n_residents"],
-            # "n_households": n_households_df["n_households"],
-            "age_freq": ages_df,
-            "sex_freq": population_df[["males", "females"]],
-            "household_composition_freq": households_df,
-        }
-        self.school_df = self.read_school_census()
-        #self.company_df = self.read_companyize_census()
+        self.age_freq, self.decoder_age = self.read("age_structure.csv")
+        self.sex_freq, self.decoder_sex = self.read("sex.csv")
+        self.household_composition_freq, self.decoder_household_composition = self.read(
+            "household_composition.csv"
+        )
+        self.encoder_household_composition = {}
+        for i, column in enumerate(self.household_composition_freq.columns):
+            self.encoder_household_composition[column] = i
+        
+        self.school_df = pd.read_csv(
+            os.path.join(self.DATA_DIR, 'school_data', 'uk_schools_data.csv')
+        )
+        self.hospital_df = pd.read_csv(
+            os.path.join('..','data','census_data','hospital_data','england_hospitals.csv')
+        )
+        self.areas_coordinates_df = self.read_coordinates()
+
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa()
         self.workflow_dict = self.create_workflow_dict()
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
         self.companysector_by_sex_df = self.read_companysector_by_sex_census()
-   
 
-    def read_df(
-        self,
-        DATA_DIR: str,
-        filename: str,
-        column_names: list,
-        usecols: list,
-        index: str,
-    ) -> pd.DataFrame:
-        """Read dataframe and format
 
-        Args:
-            DATA_DIR: path to dataset folder (default should be output_area folder) 
-            filename:
-            column_names: names of columns for output dataframe 
-            usecols: ids of columns to read
-            index: index of output dataframe
-
-        Returns:
-            df: formatted df
-
-        """
-
-        #df = pd.read_csv(os.path.join(DATA_DIR, filename), header=0,)
+    def read(self, filename):
         df = pd.read_csv(
-            os.path.join(DATA_DIR, filename),
-            names=column_names,
-            usecols=usecols,
-            header=0,
+            os.path.join(self.OUTPUT_AREA_DIR, filename), index_col="output_area"
         )
-        df.set_index(index, inplace=True)
-        return df
+        freq = df.div(df.sum(axis=1), axis=0)
+        decoder = {i: df.columns[i] for i in range(df.shape[-1])}
+        return freq, decoder
+
+
+    def read_coordinates(self):
+        areas_coordinates_df_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "data",
+            "processed",
+            "geographical_data",
+            "oa_coorindates.csv",
+        )
+        areas_coordinates_df = pd.read_csv(areas_coordinates_df_path)
+        areas_coordinates_df.set_index("OA11CD", inplace=True)
+        return areas_coordinates_df
 
     def oa2msoa(self):
         """
@@ -85,332 +83,12 @@ class Inputs:
         oa2msoa_df = self.read_df(
             os.path.join(self.DATA_DIR, "area_code_translations"),
             "oa_msoa_englandwales_2011.csv",
-            column_names, usecols, "OA11CD"
+            column_names,
+            usecols,
+            "OA11CD",
         )
 
         return oa2msoa_df
-
-    def read_household_composition_people(self, ages_df):
-        """
-        TableID: QS112EW
-        https://www.nomisweb.co.uk/census/2011/qs112ew
-
-        """
-        household_people = "household_composition_people.csv"
-        usecols = [
-            2,
-            6,
-            7,
-            9,
-            11,
-            12,
-            13,
-            14,
-            16,
-            17,
-            18,
-            19,
-            21,
-            22,
-            23,
-            24,
-            26,
-            27,
-            28,
-            30,
-            31,
-            32,
-            33,
-            34,
-        ]
-        column_names = [
-            "output_area",
-            "Person_old",
-            "Person",
-            "Old_Family",
-            "Family_0k",
-            "Family_1k",
-            "Family_2k",
-            "Family_adult_children",
-            "SS_Family_0k",
-            "SS_Family_1k",
-            "SS_Family_2k",
-            "SS_Family_adult_children",
-            "Couple_Family_0k",
-            "Couple_Family_1k",
-            "Couple_Family_2k",
-            "Couple_Family_adult_children",
-            "Lone_1k",
-            "Lone_2k",
-            "Lone_adult_children",
-            "Other_1k",
-            "Other_2k",
-            "Students",
-            "Old_Unclassified",
-            "Other",
-        ]
-        OLD_THRESHOLD = 12
-        comp_people_df = self.read_df(
-            self.OUTPUT_AREA_DIR, household_people, column_names, usecols, "output_area"
-        )
-
-        # Combine equivalent fields
-        comp_people_df["Family_0k"] += (
-            comp_people_df["SS_Family_0k"] + comp_people_df["Couple_Family_0k"]
-        )
-        comp_people_df["Family_1k"] += (
-            comp_people_df["SS_Family_1k"]
-            + comp_people_df["Couple_Family_1k"]
-            + comp_people_df["Other_1k"]
-        )
-        comp_people_df["Family_2k"] += (
-            comp_people_df["SS_Family_2k"]
-            + comp_people_df["Couple_Family_2k"]
-            + comp_people_df["Other_2k"]
-        )
-        comp_people_df["Family_adult_children"] += (
-            comp_people_df["SS_Family_adult_children"]
-            + comp_people_df["Couple_Family_adult_children"]
-        )
-
-        # Since other contains some old, give it some probability when there are old people in the area
-        areas_with_old = ages_df[ages_df.columns[OLD_THRESHOLD:]].sum(axis=1) > 0
-        areas_no_house_old = (
-            comp_people_df["Person_old"]
-            + comp_people_df["Old_Family"]
-            + comp_people_df["Old_Unclassified"]
-            == 0
-        )
-
-        comp_people_df["Family_0k"].loc[
-            ~((areas_no_house_old) & (areas_with_old))
-        ] += comp_people_df["Other"].loc[~((areas_no_house_old) & (areas_with_old))]
-
-        comp_people_df["Old_Family"].loc[(areas_no_house_old) & (areas_with_old)] += (
-            comp_people_df["Other"].loc[(areas_no_house_old) & (areas_with_old)]
-            + 0.4
-            * comp_people_df["Other_1k"].loc[(areas_no_house_old) & (areas_with_old)]
-        )
-
-        comp_people_df = comp_people_df.drop(
-            columns=[
-                c
-                for c in comp_people_df.columns
-                if "SS" in c or "Couple" in c or "Other" in c
-            ]
-        )
-
-        return comp_people_df
-
-    def read_population_df(self, freq: bool = True) -> pd.DataFrame:
-        """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
-
-        Args:
-
-        Returns:
-            pandas dataframe with ratio of males and females per output area 
-
-        """
-        # TODO: column names need to be more general for other datasets.
-        population = "usual_resident_population.csv"
-        population_column_names = [
-            "output_area",
-            "n_residents",
-            "males",
-            "females",
-        ]
-        # population_usecols = [2, 5, 6, 7]
-        population_usecols = [
-            "geography code",
-            "Variable: All usual residents; measures: Value",
-            "Variable: Males; measures: Value",
-            "Variable: Females; measures: Value",
-        ]
-        population_df = pd.read_csv(
-            os.path.join(self.OUTPUT_AREA_DIR, population), usecols=population_usecols,
-        )
-        names_dict = dict(zip(population_usecols, population_column_names))
-        population_df.rename(columns=names_dict, inplace=True)
-        population_df.set_index("output_area", inplace=True)
-
-        # population_df = self.read_df(
-        #    self.OUTPUT_AREA_DIR,
-        #    population,
-        #    population_column_names,
-        #    population_usecols,
-        #    "output_area",
-        # )
-        try:
-            pd.testing.assert_series_equal(
-                population_df["n_residents"],
-                population_df["males"] + population_df["females"],
-                check_names=False,
-            )
-        except AssertionError:
-            print("males: ", len(population_df["males"]))
-            print("females: ", len(population_df["females"]))
-            raise AssertionError
-        if freq:
-            # Convert to ratios
-            population_df["males"] /= population_df["n_residents"]
-            population_df["females"] /= population_df["n_residents"]
-        return population_df
-
-    def read_household_df(self, freq: bool = True) -> pd.DataFrame:
-        """Read household dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks105ew
-
-        Args:
-
-        Returns:
-            pandas dataframe with number of households per output area 
-
-        """
-
-        households = "household_composition.csv"
-        households_names = [
-            "output_area",
-            "n_households",
-        ]
-        households_usecols = [2, 4]
-
-        households_df = self.read_df(
-            self.OUTPUT_AREA_DIR,
-            households,
-            households_names,
-            households_usecols,
-            "output_area",
-        )
-
-        return households_df
-
-    def read_ages_df(self, freq: bool = True) -> pd.DataFrame:
-        """Read ages dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks102ew
-
-        Args:
-
-        Returns:
-            pandas dataframe with age profiles per output area 
-
-        """
-        ages = "age_structure.csv"
-        ages_names = [
-            "output_area",
-            "0-4",
-            "5-7",
-            "8-9",
-            "10-14",
-            "15",
-            "16-17",
-            "18-19",
-            "20-24",
-            "25-29",
-            "30-44",
-            "45-59",
-            "60-64",
-            "65-74",
-            "75-84",
-            "85-89",
-            "90-XXX",
-        ]
-
-        ages_usecols = [2,] + list(range(5, 21))
-
-        ages_df = self.read_df(
-            self.OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area"
-        )
-        if freq:
-            ages_df = ages_df.div(ages_df.sum(axis=1), axis=0)
-        return ages_df
-
-    def people_compositions2households(self, comp_people_df, freq=True):
-
-        households_df = pd.DataFrame()
-
-        # SINGLES
-        households_df["0 0 0 1"] = comp_people_df["Person_old"]
-        households_df["0 0 1 0"] = comp_people_df["Person"]
-
-        # COUPLES NO KIDS
-        households_df["0 0 0 2"] = comp_people_df["Old_Family"] // 2
-        households_df["0 0 2 0"] = comp_people_df["Family_0k"] // 2
-
-        # COUPLES 1 DEPENDENT KID
-        households_df["1 0 2 0"] = (
-            comp_people_df["Family_1k"] // 3 - comp_people_df["Family_1k"] % 3
-        ).apply(lambda x: max(x, 0))
-        # i) Assumption: there can be only one independent child, and is a young adult
-        households_df["1 1 2 0"] = comp_people_df["Family_1k"] % 3
-
-        # COUPLES >2 DEPENDENT KIDS
-        households_df["2 0 2 0"] = (
-            comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4
-        ).apply(lambda x: max(x, 0))
-        # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
-        households_df["3 0 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
-        households_df["2 1 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
-
-        # COUPLES WITH ONLY INDEPENDENT CHILDREN
-        # iii) Assumption: either one or two children (no more than two)
-        households_df["0 1 2 0"] = (
-            comp_people_df["Family_adult_children"] // 3
-            - comp_people_df["Family_adult_children"] % 3
-        ).apply(lambda x: max(x, 0))
-        households_df["0 2 2 0"] = comp_people_df["Family_adult_children"] % 3
-
-        # LONE PARENTS 1 DEPENDENT KID
-        households_df["1 0 1 0"] = (
-            comp_people_df["Lone_1k"] // 2 - comp_people_df["Lone_1k"] % 2
-        ).apply(lambda x: max(x, 0))
-        # i) Assumption: there can be only one independent child, and is a young adult
-        households_df["1 1 1 0"] = comp_people_df["Lone_1k"] % 2
-
-        households_df["2 0 1 0"] = (
-            comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3
-        ).apply(lambda x: max(x, 0))
-        # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
-        households_df["3 0 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
-        households_df["2 1 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
-
-        # STUDENTS
-        # iv) Students live in houses of 3 or 4
-        households_df[f"0 3 0 0"] = (
-            comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3
-        ).apply(lambda x: max(x, 0))
-
-        households_df[f"0 4 0 0"] = comp_people_df["Students"] % 3
-
-        # OLD OTHER
-        # v) old other live in houses of 2 or 3
-        households_df[f"0 0 0 2"] += (
-            comp_people_df["Old_Unclassified"] // 2
-            - comp_people_df["Old_Unclassified"] % 2
-        ).apply(lambda x: max(x, 0))
-        households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
-
-        if freq:
-            return households_df.div(households_df.sum(axis=1), axis=0)
-        else:
-            return households_df
-
-    def read_school_census(self):
-        """
-        Reads school location and sizes, it initializes a KD tree on a sphere,
-        to query the closest schools to a given location.
-        """
-        school_filename = os.path.join(
-            self.DATA_DIR, "school_data", "uk_schools_data.csv"
-        )
-        school_df = pd.read_csv(school_filename, index_col=0)
-        school_df.dropna(inplace=True)
-        school_df["age_min"].replace(to_replace=np.arange(0, 4), value=4, inplace=True)
-
-        school_df["age_max"].replace(
-            to_replace=np.arange(20, 50), value=19, inplace=True
-        )
-
-        assert school_df["age_min"].min() <= 4
-        assert school_df["age_max"].max() < 20
-        return school_df
 
 
     def read_companysize_census(self):
@@ -431,8 +109,11 @@ class Inputs:
             "1000-xxx",
         ]
         companysize_df = self.read_df(
-            self.MIDDLE_OUTPUT_AREA_DIR, "business_counts_northeast_2019.csv",
-            column_names, usecols, "MSOA11CD"
+            self.MIDDLE_OUTPUT_AREA_DIR,
+            "business_counts_northeast_2019.csv",
+            column_names,
+            usecols,
+            "MSOA11CD"
         )
 
         assert companysize_df.isnull().values.any() == False
@@ -566,7 +247,12 @@ class Inputs:
         travel_df = travel_df[["home", "public", "private"]]
 
         # create dictionary to merge OA into MSOA
-        oa2msoa_df = self.oa2msoa()
+        dirs = "../data/census_data/area_code_translations/"
+        dic = pd.read_csv(
+            dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
+            delimiter=",",
+            delim_whitespace=False,
+        )
 
         # merge OA into MSOA
         travel_df = travel_df.merge(
@@ -582,10 +268,10 @@ class Inputs:
             travel_df["public"] /= travel_df.sum(axis=1)
             travel_df["private"] /= travel_df.sum(axis=1)
         return travel_df
-    
+
+
     def create_workflow_dict(
-        self,
-        DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
+        self, DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
     ) -> dict:
         """
         Workout where people go to work.
@@ -612,7 +298,7 @@ class Inputs:
 
         flow_male_df = pd.read_csv(os.path.join(flow_dirname, flow_male_file))
         flow_male_df = flow_male_df.set_index("residence")
-        
+
         home_msoa = (
             flow_female_df.index.values
         )  # the same for female & male
@@ -649,3 +335,8 @@ if __name__ == "__main__":
 
     ip = Inputs()
     print(ip.companysize_df)
+    print(ip.age_freq)
+    print(ip.decoder_age)
+    print(ip.decoder_sex)
+    print(ip.decoder_household_composition)
+    print(ip.areas_coordinates_df)
