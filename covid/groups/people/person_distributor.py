@@ -11,8 +11,9 @@ class PersonDistributor:
     Creates the population of the given area with sex and age given
     by the census statistics
     """
-    def __init__(self, people, area, companysector_by_sex_df, workflow_dict):
+    def __init__(self, people, area, msoareas, companysector_by_sex_df, workflow_dict):
         self.area = area
+        self.msoareas = msoareas
         self.people = people
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
@@ -57,13 +58,13 @@ class PersonDistributor:
         )
         
         # work msoa area/flow data
-        self.area.work_msoa_female_rv = stats.rv_discrete(
+        self.work_msoa_female_rv = stats.rv_discrete(
             values=(
                 np.arange(0, len(self.workflow_dict["female_work_msoa"])),
                 self.workflow_dict["female_work_dist"]
             )
         )
-        self.area.work_msoa_male_rv = stats.rv_discrete(
+        self.work_msoa_male_rv = stats.rv_discrete(
             values=(
                 np.arange(0, len(self.workflow_dict["male_work_msoa"])),
                 self.workflow_dict["male_work_dist"]
@@ -127,11 +128,11 @@ class PersonDistributor:
         else:
             if sex == 1:
                 return self.workflow_dict["female_work_msoa"][
-                    self.area.work_msoa_female_rv.rvs(size=1)[0]
+                    self.work_msoa_female_rv.rvs(size=1)[0]
                 ]
             elif sex == 0:
                 return self.workflow_dict["male_work_msoa"][
-                    self.area.work_msoa_male_rv.rvs(size=1)[0]
+                    self.work_msoa_male_rv.rvs(size=1)[0]
                 ]
             else:
                 print("We are not yet able take care of non-binary people :-(")
@@ -164,6 +165,8 @@ class PersonDistributor:
             )
             self.people.members.append(person)
             self.area.people.append(person)
+            idx = [idx for idx, msoa in enumerate(self.msoareas.members) if msoa.id == self.area.msoarea][0]
+            self.msoareas.members[idx].work_people.append(person)
             self.people.total_people += 1
             # assign person to the right group:
             if age_random < self.ADULT_THRESHOLD:

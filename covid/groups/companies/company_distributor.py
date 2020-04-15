@@ -15,7 +15,7 @@ class CompanyDistributor:
     """
 
     def __init__(self, msoarea, companies):
-        self.area = msoarea
+        self.msoarea = msoarea
         self.companies_all = companies
         # gather call companies in a given msoarea
         self.companies_msoarea = []
@@ -29,7 +29,7 @@ class CompanyDistributor:
 
     def distribute_adults_to_companies(self):
         # this assumes that self.msoarea.people.values() gives the people who WORK in that area
-        for person in self.msoarea.people.values():
+        for person in self.msooarea.work_people:
             if (
                     person.age <= self.WORK_AGE_RANGE[1] # if we already assume the first comment, this seems redundant
                 and person.age >= self.WORK_AGE_RANGE[0]

@@ -22,9 +22,10 @@ class MSOArea:
         '''
         
         self.world = world
-        self.name = name
-        #self.small_areas = oares
+        self.id = name
         self.n_companies = n_companies
+        self.oarea = []
+        self.work_people = []
         #self.n_companies_a = n_companies_a
         #self.n_companies_a = n_companies_b
         #self.n_companies_a = n_companies_c
