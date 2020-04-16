@@ -52,7 +52,7 @@ class Logger:
         day_array = []
         first_area = list(self.data_dict.keys())[0]
         days = self.data_dict[first_area].keys()
-        for day in days: 
+        for day in days:
             day_array.append(day)
             n_inf = 0
             n_susc = 0
