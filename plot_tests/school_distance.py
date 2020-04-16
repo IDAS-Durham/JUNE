@@ -1,6 +1,7 @@
 from collections import Counter
 import pandas as pd
 from covid.inputs import Inputs 
+from covid.world import World
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
@@ -8,13 +9,6 @@ import numpy as np
 import math
 
 sns.set_context('paper')
-
-
-def load_world(path2world):
-
-    with open(path2world, 'rb') as f:
-        world = pickle.load(f)
-    return world
 
 
 def distance(origin, destination):
@@ -36,13 +30,13 @@ def kids_school_distance(world, KIDS_LOW=1, KIDS_UP=6):
 
     distance_school = []
     lost_kids = 0 
-    for i in world.areas.keys():
-        for j in world.areas[i].people.keys():
-            if (world.areas[i].people[j].age >= KIDS_LOW) and (world.areas[i].people[j].age <= KIDS_UP):
+    for i in range(len(world.areas.members)):
+        for j in range(len(world.areas.members[i].people):
+            if (world.areas.members[i].people[j].age >= KIDS_LOW) and (world.areas.members[i].people[j].age <= KIDS_UP):
                 try:
-                    school_coordinates = world.areas[i].people[j].school.coordinates
+                    school_coordinates = world.areas.members[i].people[j].school.coordinates
                     distance_school.append(
-                                    distance(world.areas[i].coordinates,
+                                    distance(world.areas.members[i].coordinates,
                                         school_coordinates)
                                     )
                 except:
@@ -52,9 +46,7 @@ def kids_school_distance(world, KIDS_LOW=1, KIDS_UP=6):
 
 if __name__=='__main__':
 
-    WORLD_PATH = '/cosma7/data/dp004/dc-quer1/world.pkl'
-    with open(WORLD_PATH, 'rb') as f:
-            world = pickle.load(f)
+    world = World.from_pickle()
 
     distance_school = kids_school_distance(world)
     distance_young = kids_school_distance(world, 1, 3)
