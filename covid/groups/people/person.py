@@ -2,6 +2,7 @@ import sys
 import random
 from covid.infection import Infection
 
+
 class Person:
     """
     Primitive version of class person.  This needs to be connected to the full class 
@@ -25,7 +26,9 @@ class Person:
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
 
-    def __init__(self, person_id, area, age, nomis_bin, sex, health_index, econ_index):
+    def __init__(
+        self, person_id, area, work_msoa, age, nomis_bin, sex, health_index, econ_index
+    ):
         # if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
         self.id = person_id
@@ -35,10 +38,12 @@ class Person:
         self.health_index = health_index
         self.econ_index = econ_index
         self.area = area
+        self.work_msoarea = work_msoa
         self.r0 = 0
         self.active_group = None
         self.household = None
         self.school = None
+        self.industry = None
         self.init_health_information()
 
     def is_sane(self, person_id, area, age, sex, health_index, econ_index):
@@ -76,9 +81,9 @@ class Person:
     def init_health_information(self):
         self.susceptibility = 1.0
         self.susceptible = True
-        self.infected    = False
-        self.infection   = None
-        self.recovered   = False
+        self.infected = False
+        self.infection = None
+        self.recovered = False
 
     def set_infection(self, infection):
         if not isinstance(infection, Infection) and not infection == None:
@@ -88,24 +93,23 @@ class Person:
         self.infection = infection
         if self.infection == None:
             if self.infected:
-                self.recovered   = True
+                self.recovered = True
                 self.susceptible = False
-            self.infected        = False
+            self.infected = False
         else:
-            self.infected    = True
+            self.infected = True
             self.susceptible = False
 
-            
     def update_health_status(self, time):
         if self.recovered == True:
-            self.infected  = False
+            self.infected = False
             self.infection = None
         if self.infection != None:
             self.susceptible = False
             if self.infection.still_infected(time):
                 self.infected = True
             else:
-                self.infected  = False
+                self.infected = False
                 self.infection = None
 
     def is_susceptible(self):
@@ -117,7 +121,7 @@ class Person:
     def set_recovered(self, is_recovered):
         if self.infected == True:
             self.recovered = is_recovered
-            
+
     def is_recovered(self):
         return self.recovered
 
@@ -140,18 +144,31 @@ class Person:
             return 0.0
         return self.infection.symptom_severity(time)
 
-    def output(self,time = 0):
+    def output(self, time=0):
         print("--------------------------------------------------")
-        if self.health_index!=0:
-            print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex,
-                  "health: ",self.health_index)
+        if self.health_index != 0:
+            print(
+                "Person [",
+                self.id,
+                "]: age = ",
+                self.age,
+                " sex = ",
+                self.sex,
+                "health: ",
+                self.health_index,
+            )
         else:
             print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
         if self.is_susceptible():
             print("-- person is susceptible.")
         if self.is_infected():
-            print("-- person is infected: ",self.get_symptoms_tag(time+5),
-                  "[",self.infection.symptom_severity(time+5),"]")
+            print(
+                "-- person is infected: ",
+                self.get_symptoms_tag(time + 5),
+                "[",
+                self.infection.symptom_severity(time + 5),
+                "]",
+            )
         if self.is_recovered():
             print("-- person has recovered.")
 
@@ -165,4 +182,3 @@ class People:
     def populate_area(self, area):
         distributor = PersonDistributor(self, area)
         distributor.populate_area()
-
