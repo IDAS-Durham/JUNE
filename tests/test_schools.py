@@ -10,22 +10,20 @@ sns.set_context('paper')
 
 def test_number_schools():
 
-    #world = load_world('/cosma7/data/dp004/dc-quer1/world.pkl')
-    world = World()
+    world = World.from_pickle()
     inputs = Inputs()
-    assert len(world.schools) ==  len(inputs.school_df)
+    assert len(world.schools.members) ==  len(inputs.school_df)
 
 def test_all_kids_school():
     
-    #world = load_world('/cosma7/data/dp004/dc-quer1/world.pkl')
-    world = World()
+    world = World.from_pickle()
     KIDS_LOW = 1
     KIDS_UP = 5
     lost_kids = 0
-    for i in world.areas.members:
-        for j in world.areas[i].people.members:
-            if (world.areas[i].people[j].age >= KIDS_LOW) and (world.areas[i].people[j].age <= KIDS_UP):
-                if world.areas[i].people[j].school is None:
+    for i in range(len(world.areas.members)):
+        for j in range(len(world.areas.members[i].people)):
+            if (world.areas.members[i].people[j].age >= KIDS_LOW) and (world.areas.members[i].people[j].age <= KIDS_UP):
+                if world.areas.members[i].people[j].school is None:
                     lost_kids += 1
 
 
