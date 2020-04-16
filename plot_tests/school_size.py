@@ -1,6 +1,7 @@
 from collections import Counter
 import pandas as pd
 from covid.inputs import Inputs 
+from covid.world import World
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
@@ -8,26 +9,18 @@ import pickle
 sns.set_context('paper')
 
 
-def load_world(path2world):
-
-    with open(path2world, 'rb') as f:
-        world = pickle.load(f)
-    return world
 
 def school_size(world):
     sizes, sizes_est = [], []
-    for i in world.schools.keys():
-        if len(world.schools[i].pupils) >0:
-            sizes.append(world.schools[i].n_pupils_max)
-            sizes_est.append(len(world.schools[i].pupils))
+    for i in range(len(world.schools.members)):
+        if len(world.schools.members[i].people) >0:
+            sizes.append(world.schools.members[i].n_pupils_max)
+            sizes_est.append(len(world.schools.members[i].people))
 
     return sizes, sizes_est
 
 if __name__=='__main__':
-    WORLD_PATH = '/cosma7/data/dp004/dc-quer1/world.pkl'
-    with open(WORLD_PATH, 'rb') as f:
-            world = pickle.load(f)
-
+    world = World.from_pickle()
     size_school, size_school_est = school_size(world)
 
     bins =plt.hist(size_school, 
