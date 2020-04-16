@@ -53,3 +53,4 @@ class MSOAreas:
     def __init__(self, world):
         self.world = world
         self.members = []
+        self.ids_in_order = None

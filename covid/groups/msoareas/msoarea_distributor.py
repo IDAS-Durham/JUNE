@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import os
 from covid.groups.msoareas import MSOArea
@@ -15,7 +16,8 @@ class MSOAreaDistributor:
         This is all on the MSOA layer.
         """
         msoareas_list = []
-        for i, msoa in enumerate(self.msoareas.world.inputs.companysize_df.index.values):
+        msoa11cd = np.unique(self.msoareas.world.inputs.oa2msoa_df["MSOA11CD"].values)
+        for i, msoa in enumerate(msoa11cd):
             msoarea = MSOArea(
                 self.msoareas.world,
                 msoa,
@@ -23,3 +25,4 @@ class MSOAreaDistributor:
             )
             msoareas_list.append(msoarea)
         self.msoareas.members = msoareas_list 
+        self.msoareas.ids_in_order = msoa11cd

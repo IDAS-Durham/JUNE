@@ -11,7 +11,7 @@ class PersonDistributor:
     Creates the population of the given area with sex and age given
     by the census statistics
     """
-    def __init__(self, people, area, msoareas, companysector_by_sex_df, workflow_dict):
+    def __init__(self, people, area, msoareas, companysector_by_sex_df, workflow_df):
         self.area = area
         self.msoareas = msoareas
         self.people = people
@@ -21,7 +21,7 @@ class PersonDistributor:
         self.no_kids_area = False
         self.no_students_area = False
         self.companysector_by_sex_df = companysector_by_sex_df
-        self.workflow_dict = workflow_dict
+        self.workflow_df = workflow_df
         self._init_random_variables()
 
 
@@ -58,16 +58,16 @@ class PersonDistributor:
         )
         
         # work msoa area/flow data
-        self.work_msoa_female_rv = stats.rv_discrete(
+        self.work_msoa_woman_rv = stats.rv_discrete(
             values=(
-                np.arange(0, len(self.workflow_dict["female_work_msoa"])),
-                self.workflow_dict["female_work_dist"]
+                np.arange(0, len(self.workflow_df.index.values)),
+                self.workflow_df["n_woman"].values
             )
         )
-        self.work_msoa_male_rv = stats.rv_discrete(
+        self.work_msoa_man_rv = stats.rv_discrete(
             values=(
-                np.arange(0, len(self.workflow_dict["male_work_msoa"])),
-                self.workflow_dict["male_work_dist"]
+                np.arange(0, len(self.workflow_df.index.values)),
+                self.workflow_df["n_man"].values
             )
         )
 
@@ -117,8 +117,11 @@ class PersonDistributor:
         return industry
 
 
-    def assign_work_msoarea(self, i, sex, age, msoa_male, msoa_female):
-        #TODO: Maybe we can put this function somewhere else?
+    def assign_work_msoarea(self, i, sex, age, msoa_man, msoa_woman):
+        """
+        Return: str,
+            MOSA11CD area code
+        """
         if age < self.ADULT_THRESHOLD:
             # too young to work
             return None
@@ -127,9 +130,9 @@ class PersonDistributor:
             return None
         else:
             if sex == 1:
-                return msoa_female[i]
+                return self.workflow_df.index.values[msoa_woman[i]]
             else:
-                return msoa_male[i]
+                return self.workflow_df.index.values[msoa_man[i]]
 
 
     def populate_area(self):
@@ -152,8 +155,8 @@ class PersonDistributor:
         #        d[i] = {}
         age_random_array = self.area.age_rv.rvs(size=self.area.n_residents)
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
-        work_msoa_male_rnd_array = self.work_msoa_male_rv.rvs(size=self.area.n_residents)
-        work_msoa_female_rnd_array = self.work_msoa_female_rv.rvs(size=self.area.n_residents)
+        work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
+        work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(size=self.area.n_residents)
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
@@ -161,8 +164,8 @@ class PersonDistributor:
                 i,
                 sex_random,
                 age_random,
-                work_msoa_male_rnd_array,
-                work_msoa_female_rnd_array,
+                work_msoa_man_rnd_array,
+                work_msoa_woman_rnd_array,
             )
             person = Person(
                 self.people.total_people, self.area, work_msoa_rnd, age_random, sex_random, 0, 0
@@ -174,8 +177,13 @@ class PersonDistributor:
             if age_random < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
             elif age_random < self.OLD_THRESHOLD:
-                idx = [idx for idx, msoa in enumerate(self.msoareas.members) if msoa.id == self.area.msoarea][0]
-                self.msoareas.members[idx].work_people.append(person)
+                idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
+                if len(idx) != 0:
+                    self.msoareas.members[idx[0]].work_people.append(person)
+                else:
+                    #TODO count people who work outside of the region
+                    # we currently simulate
+                    pass
                 if sex_random == 0:
                     self.area._men[i] = person
                 else:
