@@ -169,13 +169,13 @@ class PersonDistributor:
             )
             self.people.members.append(person)
             self.area.people.append(person)
-            idx = [idx for idx, msoa in enumerate(self.msoareas.members) if msoa.id == self.area.msoarea][0]
-            self.msoareas.members[idx].work_people.append(person)
             self.people.total_people += 1
             # assign person to the right group:
             if age_random < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
             elif age_random < self.OLD_THRESHOLD:
+                idx = [idx for idx, msoa in enumerate(self.msoareas.members) if msoa.id == self.area.msoarea][0]
+                self.msoareas.members[idx].work_people.append(person)
                 if sex_random == 0:
                     self.area._men[i] = person
                 else:
