@@ -44,7 +44,7 @@ class MatrixInteraction(Interaction):
             return
         self.matrix = self.matrices[group.get_spec()]
         people = group.get_infected()
-        if check_type == "matrix_test":
+        if self.check_type == "matrix_test":
             self.test_matrix = self.test_matrices[group.get_spec()]
             people = group.get_people()
         for infecter in people:
@@ -53,11 +53,11 @@ class MatrixInteraction(Interaction):
             )
             Naverage = self.calculate_average_Ncontacts(infecter)
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
-            for i in range(Ncontacts):
+            for _ in range(Ncontacts):
                 recipient = self.make_single_contact(infecter, group)
-                if check_type == "matrix_test":
-                    test_matrix[infecter.get_age()][recipient.get_age()] += 1
-                    test_matrix[recipient.get_age()][infecter.get_age()] += 1
+                if self.check_type == "matrix_test":
+                    self.test_matrix[infecter.get_age()][recipient.get_age()] += 1
+                    self.test_matrix[recipient.get_age()][infecter.get_age()] += 1
                 if not (recipient.is_infected()) and recipient.susceptibility > 0.0:
                     if random.random() <= 1.0 - np.exp(
                         -transmission_probability * recipient.susceptibility()
