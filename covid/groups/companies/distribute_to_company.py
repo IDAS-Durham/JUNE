@@ -1,25 +1,27 @@
 import numpy as np
-from random import uniform
-from scipy import stats
-import warnings
 
-"""
-This file contains routines to attribute people with different characteristics
-according to census data.
-"""
+def assign_adults_to_company(person,live_oarea, work_msoarea, industry):
+
+    # for person who works in msoarea - already done in the function inside which this will be called
+        # get industry of person
+        # randomly sample from all compaies who are in a given industry until find one that isn't full?
+        # could also do this the other way around???
+        # company = randomly choose company based on size distribution(?)
+        # assign person to company
 
 
 class CompanyDistributor:
     """
-    Distributes people to different companies
+    Distributes students to different schools
     """
 
-    def __init__(self, companies, msoarea):
-        self.msoarea = msoarea
+    def __init__(self, msoarea):
+        self.area = msoareadef __init__(self, msoarea, companies):
+        self.area = msoarea
         self.companies_all = companies
         # gather call companies in a given msoarea
         self.companies_msoarea = []
-        for company in self.companies_all.members:
+        for company in self.companies.members:
             if company.msoa == msoarea:
                 self.companies_msoarea.append(company)
 
@@ -28,15 +30,11 @@ class CompanyDistributor:
         return self.companies_msoarea[index]
 
     def distribute_adults_to_companies(self):
-        STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
-        
         # this assumes that self.msoarea.people.values() gives the people who WORK in that area
-        for person in self.msoarea.work_people:
+        for person in self.msoarea.people.values():
             if (
-                    person.age <= OLD_THRESHOLD # if we already assume the first comment, this seems redundant
-                and person.age >= STUDENT_THRESHOLD 
+                    person.age <= self.WORK_AGE_RANGE[1] # if we already assume the first comment, this seems redundant
+                and person.age >= self.WORK_AGE_RANGE[0]
             ):  # person age from 20 up to 74 yo
                 person_industry = person.industry
                 assigned = False
@@ -50,3 +48,4 @@ class CompanyDistributor:
                     else:
                         company.n_employees +=1
                         assigned = True
+    
