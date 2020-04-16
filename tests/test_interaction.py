@@ -14,6 +14,7 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     config["interaction"]                                          = {}
     config["interaction"]["type"]                                  = "collective"
     config["interaction"]["mode"]                                  = mode
+    config["interaction"]["parameters"]                            = {}
     config["infection"]                                            = {}
     config["infection"]["transmission"]                            = {}
     config["infection"]["transmission"]["type"]                    = "SI"
@@ -54,6 +55,7 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
     config["interaction"]                                          = {}
     config["interaction"]["type"]                                  = "collective"
     config["interaction"]["probmode"]                              = mode
+    config["interaction"]["parameters"]                            = {}
     config["infection"]                                            = {}
     config["infection"]["transmission"]                            = {}
     config["infection"]["transmission"]["type"]                    = "SIR"

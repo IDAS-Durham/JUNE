@@ -9,7 +9,7 @@ import covid.infection as Infection
 class InfectionSelector:
     def __init__(self, config):
         self.transmission_params = None
-        self.symptoms_params = None
+        self.symptoms_params     = None
         if "transmission" in config["infection"]:
             self.transmission_params = config["infection"]["transmission"]
         if "symptoms" in config["infection"]:
@@ -40,10 +40,14 @@ class InfectionSelector:
                 params = self.make_parameters(self.transmission_params, keys)
                 return Transmission.TransmissionSIR(person, params, time)
             elif self.transmission_params["type"] == "XNExp":
-                keys = ["probability", "exponent", "norm"]
+                keys = ["probability", "relaxation", "mean_time", "end_time"]
                 params = self.make_parameters(self.transmission_params, keys)
                 return Transmission.TransmissionXNExp(person, params, time)
-            elif self.transmission_params["Transmission:Type"] == "Box":
+            elif self.transmission_params["type"] == "LogNormal":
+                keys = ["probability", "mean_time", "width_time", "end_time"]
+                params = self.make_parameters(self.transmission_params, keys)
+                return Transmission.TransmissionLogNormal(person, params, time)
+            elif self.transmission_params["type"] == "Box":
                 keys = ["probability", "end_time"]
                 params = self.make_parameters(self.transmission_params, keys)
                 return Transmission.TransmissionConstantInterval(person, params, time)
