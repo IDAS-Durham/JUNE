@@ -31,8 +31,8 @@ class CompanyDistributor:
         # this assumes that self.msoarea.people.values() gives the people who WORK in that area
         for person in self.msoarea.work_people:
             if (
-                    person.age <= self.WORK_AGE_RANGE[1] # if we already assume the first comment, this seems redundant
-                and person.age >= self.WORK_AGE_RANGE[0]
+                    person.age <= self.msoarea.world.config["people"]["adult_threshold"][1] # if we already assume the first comment, this seems redundant
+                and person.age >= self.msoarea.world.config["people"]["adult_threshold"][0]
             ):  # person age from 20 up to 74 yo
                 person_industry = person.industry
                 assigned = False
