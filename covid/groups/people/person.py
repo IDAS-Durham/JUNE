@@ -2,36 +2,36 @@ import sys
 import random
 from covid.infection import Infection
 
-class Counter:
-    def __init__(self,person):
-        self.person = person
-        self.number_of_infected     = 0
-        self.maximal_symptoms       = 0
-        self.maximal_symptoms_time  = -1
-        self.maximal_symptoms_tag   = "none"
-        self.time_of_infection      = -1
-        self.grouptype_of_infection = "none"
-        self.length_of_infection    = -1
 
-    def update_symptoms(self,symptoms,time):
+class Counter:
+    def __init__(self, person):
+        self.person = person
+        self.number_of_infected = 0
+        self.maximal_symptoms = 0
+        self.maximal_symptoms_time = -1
+        self.maximal_symptoms_tag = "none"
+        self.time_of_infection = -1
+        self.grouptype_of_infection = "none"
+        self.length_of_infection = -1
+
+    def update_symptoms(self, symptoms, time):
         if symptoms > self.maximal_symptoms:
-            self.maximal_symptoms      = symptoms
-            self.maximal_symptoms_tag  = person.get_symptoms_tag(symptoms) 
+            self.maximal_symptoms = symptoms
+            self.maximal_symptoms_tag = self.person.get_symptoms_tag(symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
-    def update_infection_data(self,time,grouptype=None):
+    def update_infection_data(self, time, grouptype=None):
         self.time_of_infection = time
         if grouptype != None:
             self.grouptype_of_infection = grouptype
 
-    def set_length_of_infection(self,endtime):
+    def set_length_of_infection(self, endtime):
         self.length_of_infection = endtime - self.time_of_infection
 
     def increment_infected(self):
         self.number_of_infected += 1
 
-        
-        
+
 class Person:
     """
     Primitive version of class person.  This needs to be connected to the full class 
@@ -60,18 +60,16 @@ class Person:
     ):
         # if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
-        self.id           = person_id
-        self.age          = age
-        self.nomis_bin    = nomis_bin
-        self.sex          = sex
+        self.id = person_id
+        self.age = age
+        self.nomis_bin = nomis_bin
+        self.sex = sex
         self.health_index = health_index
         self.econ_index = econ_index
         self.area = area
         self.work_msoarea = work_msoa
-        self.r0 = 0
-        self.econ_index   = econ_index
-        self.area         = area
-        self.r0           = 0
+        self.econ_index = econ_index
+        self.area = area
         self.active_group = None
         self.household = None
         self.school = None
@@ -89,10 +87,10 @@ class Person:
 
     def init_counter(self):
         self.counter = Counter(self)
-    
+
     def get_counter(self):
         return self.counter
-    
+
     def get_name(self):
         return self.id
 

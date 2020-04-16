@@ -55,11 +55,6 @@ class PersonDistributor:
             self.area.kid_age_rv = stats.rv_discrete(
                 values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm)
             )
-        # age_adults_freq = age_freq.values[self.ADULT_THRESHOLD :]
-        # adult_freqs_norm = age_adults_freq / np.sum(age_adults_freq)
-        # self.area.adult_age_rv = stats.rv_discrete(
-        #    values=(np.arange(self.ADULT_THRESHOLD, len(age_freq)), adult_freqs_norm)
-        # )
         self.area.nomis_bin_rv = stats.rv_discrete(
             values=(np.arange(0, len(age_freq)), age_freq.values)
         )
@@ -85,6 +80,34 @@ class PersonDistributor:
 
         # company data
         ## TODO add company data intilialisation from dict of distibutions in industry_distibutions.py
+        self.industry_dict = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+            7: "G",
+            8: "H",
+            9: "I",
+            10: "J",
+            11: "K",
+            12: "L",
+            13: "M",
+            14: "N",
+            15: "O",
+            16: "P",
+            17: "Q",
+            18: "R",
+            19: "S",
+            20: "T",
+            21: "U",
+        }
+        numbers = np.arange(1, 22)
+        distribution_male = self.companysector_by_sex_df[self.area.name]["m"]
+        self.sector_distribution_male = stats.rv_discrete(values=(numbers, distribution_male))
+        distribution_female = self.companysector_by_sex_df[self.area.name]["f"]
+        self.sector_distribution_female = stats.rv_discrete(values=(numbers, distribution_female))
 
     def _assign_industry(self, sex, employed=True):
         """
@@ -139,11 +162,11 @@ class PersonDistributor:
             }
 
             numbers = np.arange(1, 22)
-            # create discrete probability distribution
+            ## create discrete probability distribution
             random_variable = stats.rv_discrete(values=(numbers, distribution))
-            # generate sample from distribution
+            ## generate sample from distribution
             industry_id = random_variable.rvs(size=1)
-            # accss relevant indudtry label
+            ## accss relevant indudtry label
             industry = industry_dict[industry_id[0]]
 
         return industry
@@ -196,6 +219,8 @@ class PersonDistributor:
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(
             size=self.area.n_residents
         )
+        industry_male_array = self.sector_distribution_male.rvs(size=self.area.n_residents)
+        industry_female_array = self.sector_distribution_female.rvs(size=self.area.n_residents)
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
@@ -244,7 +269,11 @@ class PersonDistributor:
                     self.area._oldwomen[i] = person
             # assign person to an industry
             # add some conditions to allow for employed != True - wither age and/or from a database
-            person.industry = self._assign_industry(sex=sex_random)
+            #person.industry = self._assign_industry(sex=sex_random)
+            if sex_random == 0:
+                person.industry = industry_male_array[i]
+            else:
+                person.industry = industry_female_array[i]
 
         try:
             assert (
