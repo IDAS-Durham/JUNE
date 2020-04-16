@@ -1,104 +1,124 @@
 import sys
-
 sys.path.append("../covid")
-import transmission as Transmission
-import infection as Infection
-import symptoms as Symptoms
+import numpy as np
+import os
+import yaml
+
+from infection import Infection
+from infection_selector import InfectionSelector
+from transmission import Transmission
+from symptoms import Symptoms
+from covid.groups.people import Person
 
 
-def trivial_check():
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    tparams = {}
-    Tparams["Transmission:Probability"] = tparams
-    tparams["Mean"] = 0.5
-
-    Sparams = {}
-    Sparams["Symptoms:Type"] = "Gauss"
-    params_MS = {}
-    params_MT = {}
-    params_ST = {}
-    Sparams["Symptoms:MaximalSeverity"] = params_MS
-    Sparams["Symptoms:MeanTime"] = params_MT
-    Sparams["Symptoms:SigmaTime"] = params_ST
-    params_MS["Mean"] = 0.8
-    params_MT["Mean"] = 7.0
-    params_ST["Mean"] = 10.0
-    selector = Infection.InfectionSelector(Tparams, Sparams)
-    infection = selector.make_infection(0)
-    print("Tparams = ", Tparams)
-    print("Sparams = ", Sparams)
+def trivial_check(config):
+    selector  = InfectionSelector(config)
+    infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
     print("   * Symptom severity = ", infection.symptom_severity(1))
 
 
-def distribute_value():
+def distribute_values(config):
     import random
     import matplotlib.pyplot as plt
 
-    # fix transmission params to be constant
-    Tparams = {}
-    Tparams["Transmission:Type"] = "SI"
-    params = {}
-    Tparams["Transmission:Probability"] = params
-    params["Mean"] = 0.5
+    fig, ax = plt.subplots(1, 1, figsize=(9, 4))
+    ax.set_title("10 examples for Gaussian evolution of symptom severity over time")
+    selector = InfectionSelector(config)
+    times    = np.arange(0.,20.,0.1)
+    for i in range(10):
+        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
+        severities = []
+        for t in times:
+            severities.append(infection.symptom_severity(t))
+        ax.plot(times,severities)
+    plt.show()
 
-    Sparams = {}
-    Sparams["Symptoms:Type"] = "Gauss"
-    params_MS = {}
-    params_MT = {}
-    params_ST = {}
-    Sparams["Symptoms:MaximalSeverity"] = params_MS
-    Sparams["Symptoms:MeanTime"] = params_MT
-    Sparams["Symptoms:SigmaTime"] = params_ST
-    params_MS["Mean"] = 0.8
-    params_MS["WidthPlus"] = 0.2
-    params_MS["WidthMinus"] = 0.2
-    params_MT["Mean"] = 5.0
-    params_MT["WidthPlus"] = 2.0
-    params_MT["WidthMinus"] = 1.0
-    params_ST["Mean"] = 7.0
-    params_ST["WidthPlus"] = 3.0
-    params_ST["WidthMinus"] = 2.0
+def distribute_values_Tanh(config):
+    import random
+    import matplotlib.pyplot as plt
 
-    selector = Infection.InfectionSelector(Tparams, Sparams)
-    severities1 = []
-    severity_t = []
-    for i in range(100000):
-        infection = selector.make_infection(0)
-        severities1.append(infection.symptom_severity(1))
-        if i == 0:
-            for t in range(20):
-                severity_t.append(infection.symptom_severity(t))
+    fig, ax = plt.subplots(1, 1, figsize=(9, 4))
+    ax.set_title("10 examples for plateau'ed evolution of symptom severity over time")
+    selector = InfectionSelector(config)
+    times    = np.arange(0.,20.,0.1)
+    for i in range(10):
+        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
+        severities = []
+        for t in times:
+            severities.append(infection.symptom_severity(t))
+        ax.plot(times,severities)
+    plt.show()
 
-    params_MS["Mean"] = 0.8
-    params_MS["WidthPlus"] = 0.2
-    params_MS["WidthMinus"] = 0.2
-    params_MT["Mean"] = 10.0
-    params_MT["WidthPlus"] = 2.0
-    params_MT["WidthMinus"] = 1.0
-    params_ST["Mean"] = 14.0
-    params_ST["WidthPlus"] = 3.0
-    params_ST["WidthMinus"] = 2.0
+def check_symptom_tags(N,config):
+    import random
+    import matplotlib
+    import matplotlib.pyplot as plt
 
-    severities2 = []
-    for _ in range(100000):
-        infection = selector.make_infection(0)
-        severities2.append(infection.symptom_severity(1))
+    selector = InfectionSelector(config)
 
-    fig, ax = plt.subplots(1, 2, figsize=(9, 4))
-    ax[0].set_title("Two different parameter sets")
-    ax[0].hist(
-        severities1, bins=100, density=True, alpha=0.5, color="C0", label="Param set 1"
+    health_index = [0.4, 0.55, 0.65, 0.8, 0.95]
+    severs1  = []
+    tags     = [0,   0,    0,    0,    0,    0]
+    expected = [0.4, 0.15, 0.10, 0.15, 0.15, 0.05]
+    allowed  = ["none","influenza-like illness", "pneumonia",
+                "hospitalised", "intensive care",
+                "dead"]
+    for i in range(N):
+        person    = Person('test',0,10,0,'M',health_index,0)
+        infection = selector.make_infection(person,0)
+        person.set_infection(infection)
+        severity  = infection.symptom_severity(1)
+        severs1.append(severity)
+        tag = person.get_symptoms_tag(severity)
+        for j in range(0,len(allowed)):
+            if tag==allowed[j]:
+                tags[j] += 1
+                break
+    for i in range(len(tags)):
+        tags[i] = tags[i]/N
+    print (tags)
+        
+    fig, axes = plt.subplots(2,1)
+    axes[0].hist(severs1,20,range=(0, 1),
+        density=True,facecolor="blue",alpha=0.5,
+        label="flat distribution of severity",
     )
-    ax[0].hist(
-        severities2, bins=100, density=True, alpha=0.5, color="C1", label="Param set 2"
-    )
-    ax[1].set_title("Evolution of symptom severity over time")
-    ax[1].plot(severity_t)
-    plt.tight_layout()
+    axes[0].legend(loc='lower left')
+    axes[1].bar(allowed,tags,
+                color="blue",alpha=0.5,
+                label="severity tag distribution")
+    axes[1].scatter(allowed,expected,
+                    color="black",
+                    label="expected severity tag distribution")
     plt.show()
 
 
 if __name__ == "__main__":
-    trivial_check()
-    distribute_value()
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "tests",
+        "config_symptoms_test.yaml",
+    )
+    with open(config_file, "r") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    found = False
+
+    if "trivial_check" in config:
+        print ("trivial check")
+        print (config["trivial_check"])
+        trivial_check(config["trivial_check"])
+        found = True        
+    if "distribute_values" in config:
+        print ("distribute values Gaussian shape")
+        distribute_values(config["distribute_values"])
+        found = True        
+    if "distribute_values_Tanh" in config:
+        print ("distribute values tanh shape")
+        distribute_values_Tanh(config["distribute_values_Tanh"])
+        found = True        
+    if "symptoms_tag_test" in config:
+        print ("symptoms_tag_test")
+        check_symptom_tags(1000000,config["symptoms_tag_test"])
+        found = True
