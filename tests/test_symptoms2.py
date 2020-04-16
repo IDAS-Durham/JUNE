@@ -34,7 +34,7 @@ def check_symptoms():
     config["infection"]["symptoms"]["end_time"]                    = {}
     config["infection"]["symptoms"]["end_time"]["mean"]            = 14.
     selector  = InfectionSelector(config)
-    infection = selector.make_infection(Person("test", None, 40., "F", [0.,0.5], 0),0.)
+    infection = selector.make_infection(Person("test", None, 40., 0, "F", [0.,0.5], 0),0.)
     times  = np.arange(0.,20.,.02)
     values = []
     for time in times:
@@ -49,6 +49,7 @@ def make_config(beta):
     config["interaction"]                                          = {}
     config["interaction"]["type"]                                  = "collective"
     config["interaction"]["mode"]                                  = "probabilistic"
+    config["interaction"]["parameters"]                            = {}
     config["infection"]                                            = {}
     config["infection"]["asymptomatic_ratio"]                      = 0.4
     config["infection"]["transmission"]                            = {}
@@ -78,6 +79,11 @@ def make_config(beta):
 def make_selector(config):
     return InfectionSelector(config)
 
+def make_interaction(selector, config, groups):
+    interaction = CollectiveInteraction(selector,config)
+    interaction.set_groups([groups])
+    return interaction
+    
 def check_infection_selector_for_ICmodel(selector,N,config):
     groups   = TestGroups(people_per_group = N, total_people = N,config = config) 
     group    = groups.members[0]
@@ -85,16 +91,12 @@ def check_infection_selector_for_ICmodel(selector,N,config):
         group.people[i].set_infection(selector.make_infection(group.people[i], 0))
     return groups
     
-def check_infection_progress(selector,groups,endtime):
-    #print ("check this:",len(groups.members))
-    #print (groups.members[0])
+def check_infection_progress(interaction,groups,endtime):
     group = groups.members[0]
     severities  = []
     for person in group.people:
         severities.append(0.)
         
-    interaction = CollectiveInteraction(selector)
-    interaction.set_groups([groups])
     for time in range(1,endtime):
         #groups.members[0].output(False,True)
         interaction.set_time(time)
@@ -139,8 +141,9 @@ def check_infection_progress(selector,groups,endtime):
         
 if __name__ == "__main__":
     #check_symptoms()
-    N        = 100000
-    config   = make_config(0.3)
-    selector = make_selector(config)
-    groups   = check_infection_selector_for_ICmodel(selector, N, config)
-    check_infection_progress(selector,groups,20)
+    N           = 100000
+    config      = make_config(0.3)
+    selector    = make_selector(config)
+    groups      = check_infection_selector_for_ICmodel(selector, N, config)
+    interaction = make_interaction(selector,config,groups)
+    check_infection_progress(interaction,groups,20)
