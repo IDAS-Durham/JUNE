@@ -5,22 +5,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-allowed_groups = [
-    "Household",
-    "School",
-    "Work:Outdoor",
-    "Work:Indoor",
-    "Commute:Public",
-    "Commute:Private",
-    "Leisure:Outdoor",
-    "Leisure:Indoor",
-    "Shopping",
-    "ReferenceGroup",
-    "Random",
-    "TestGroup",
-]
-
-
 class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
@@ -43,6 +27,22 @@ class Group:
     default intensities (maybe mean+width with a pre-described range?).
     """
 
+    allowed_groups = [
+        "Household",
+        "School",
+        "Work_Outdoor",
+        "Work_Indoor",
+        "Commute_Public",
+        "Commute_Private",
+        "Leisure_Outdoor",
+        "Leisure_Indoor",
+        "Shopping",
+        "ReferenceGroup",
+        "Random",
+        "TestGroup",
+    ]
+
+    
     def __init__(self, name, spec, number=-1):
         if not self.sane(name, spec):
             return
@@ -57,7 +57,7 @@ class Group:
             self.fill_random_group(number)
 
     def sane(self, name, spec):
-        if not spec in allowed_groups:
+        if not spec in self.allowed_groups:
             print("Error: tried to initialise group with wrong specification:", spec)
             return False
         return True

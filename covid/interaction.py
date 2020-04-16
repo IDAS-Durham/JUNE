@@ -6,6 +6,8 @@ import random
 
 
 class Interaction:
+    allowed_severe_tags = ["none", "constant", "differential"]
+    
     def __init__(self, infection_selector, config):
         self.selector = infection_selector
         self.params   = config["interaction"]
@@ -13,12 +15,31 @@ class Interaction:
         self.time     = 0.0
         self.oldtime  = 0.0
         self.delta_t  = 0.0
-        self.transmission_probability = 0.0
         self.init()
+        self.init_severe_treatment()
 
     def init(self):
         pass
-        
+                
+    def init_severe_treatment(self):
+        if "severe_treatment" in self.params["parameters"]:
+            if "type" in self.params["parameters"]["severe_treatment"]:
+                self.severe = self.params["parameters"]["severe_treatment"]["type"]
+                if not (self.severe in allowed_severe_tags):
+                    self.severe = "constant"
+                ### in the IC model this is a constant
+            if "omega" in self.params["parameters"]["severe_treatment"]:
+                self.omega  = self.params["parameters"]["severe_treatment"]["omega"]
+        self.psi      = {}
+        for grouptype in Group.allowed_groups:
+            value = 1.
+            if "severe_treatment" in self.params["parameters"]:
+                if grouptype in self.params["parameters"]["severe_treatment"]:
+                    label = grouptype+"_severity_factor"
+                    value = self.params["parameters"]["severe_treatment"][label]
+            self.psi[grouptype] = value
+                
+            
     def set_groups(self, groups):
         self.groups = groups
 
@@ -63,6 +84,17 @@ class Interaction:
         #print ("============================================")
         #print ("============================================")
         #print ("============================================")
+
+    def severity_multiplier(self, grouptype):
+        factor = 1.
+        if self.severe=="constant":
+            tag = person.get_symptons_tag()
+            if (tag=="influenza-like illness" or tag=="pneumonia" or
+                tag=="hospitalised" or tag=="intensive care"):
+                factor *= (self.omega * self.psi[grouptype] - 1.)
+        elif self.severe=="differential":
+                factor *= (1.+self.omega*self.psi[grouptype]*person.get_severity(self.time))
+        return factor
 
     def single_time_step_for_group(self, group):
         pass

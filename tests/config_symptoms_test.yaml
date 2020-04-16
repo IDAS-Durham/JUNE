@@ -1,0 +1,79 @@
+trivial_check:
+  infection:
+    transmission:
+      type: SI
+      probability:
+        mean: 0.5
+    symptoms:
+      type: Constant
+      time_offset:
+        mean: 0.5
+      end_time:
+        mean: 10.
+
+distribute_values:
+  infection:
+    transmission:
+      type: SI
+      probability:
+        mean: 0.5
+    symptoms:
+      type: Gauss
+      mean_time:
+        mean:       10.
+        mode:       Gauss
+        widthPlus:  2.
+        widthMinus: 3.
+      sigma_time:
+        mean:       2.
+        mode:       Gauss
+        widthPlus:  1.
+
+distribute_values_Tanh:
+  infection:
+    transmission:
+      type: SI
+      probability:
+        mean: 0.5
+    symptoms:
+      type: Tanh
+      max_time:
+        mean:       10.
+        mode:       Gauss
+        widthPlus:  2.
+        widthMinus: 3.
+        lower:      7.
+        upper:      14.
+      onset_time:
+        mean:       5.
+        mode:       Gauss
+        widthPlus:  1.
+        lower:      1.
+        upper:      7.
+      end_time:
+        mean:       15.
+        mode:       Gauss
+        widthPlus:  1.
+        lower:      14.
+        upper:      20.
+
+symptoms_tag_test:
+  infection:
+    transmission:
+      type: SI
+      probability:
+        mode: Gauss
+        mean: 0.5
+    symptoms:
+      type: Constant
+      severity:
+        mode:  Flat
+        mean:  0.5
+        lower: 0.0
+        upper: 1.0
+      time_offset:
+        mean: 0.5
+      end_time:
+        mean: 12
+
+
