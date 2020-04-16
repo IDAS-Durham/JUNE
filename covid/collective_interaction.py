@@ -7,19 +7,18 @@ import random
 
 
 class CollectiveInteraction(Interaction):
-    
     def init(self):
         self.severe = "none"
         if "probmode" in self.params:
             self.mode = self.params["probmode"]
             if self.mode != "superposition" and self.mode != "probabilistic":
-                print ("CollectiveInteraction model with illegal mode", self.mode)
-                print ("--> will move to 'Superposition'")
+                print("CollectiveInteraction model with illegal mode", self.mode)
+                print("--> will move to 'Superposition'")
                 self.mode = "superposition"
         else:
-                self.mode = "superposition"
-        
-    def single_time_step_for_group(self,group):
+            self.mode = "superposition"
+
+    def single_time_step_for_group(self, group):
         self.group = group
         if (
             self.group.size() <= 1
@@ -40,14 +39,15 @@ class CollectiveInteraction(Interaction):
                 recipient.set_infection(
                     self.selector.make_infection(recipient, self.time)
                 )
-                recipient.get_counter().update_infection_data(self.time,self.group.get_spec())
+                recipient.get_counter().update_infection_data(
+                    self.time, self.group.get_spec()
+                )
                 disc = random.random()
-                i    = 0
-                while disc>0. and i<len(self.weights)-1:
+                i = 0
+                while disc > 0.0 and i < len(self.weights) - 1:
                     i += 1
                 self.weights[i][0].get_counter().increment_infected()
 
-                
     def calculate_transmission_probability(self):
         transmission_probability = 0.0
         self.weights = []
@@ -66,13 +66,17 @@ class CollectiveInteraction(Interaction):
         logic of the SI/SIR models --- and normalised to the time interval, given in
         units of full days.
         """
-        interaction_intensity = self.group.get_intensity() / max(1,self.group.size()-1) * self.delta_t
+        interaction_intensity = (
+            self.group.get_intensity() / max(1, self.group.size() - 1) * self.delta_t
+        )
         prob_notransmission = 1.0
         for person in self.group.get_infected():
-            prob_notransmission *= (
-                max(0., 1.0 - person.transmission_probability(self.time) * interaction_intensity)
+            prob_notransmission *= max(
+                0.0,
+                1.0
+                - person.transmission_probability(self.time) * interaction_intensity,
             )
-            self.weights.append([person,probability])
+            self.weights.append([person, probability])
         for i in len(self.weights):
             self.weights[i][1] /= summed_prob
         return 1.0 - prob_notransmission
@@ -89,8 +93,10 @@ class CollectiveInteraction(Interaction):
         prob_transmission = 0.0
         for person in self.group.get_infected():
             prob_transmission += person.transmission_probability(self.time)
-            self.weights.append([person,probability])
+            self.weights.append([person, probability])
         for i in len(self.weights):
             self.weights[i][1] /= summed_prob
-        interaction_intensity = self.group.get_intensity() / max(self.group.size()-1,1) * self.delta_t
+        interaction_intensity = (
+            self.group.get_intensity() / max(self.group.size() - 1, 1) * self.delta_t
+        )
         return prob_transmission * interaction_intensity
