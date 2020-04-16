@@ -49,7 +49,7 @@ class TestGroups:
                 health_index = 0
             else:
                 health_index = self.health_index_constructor.get_index_for_age(age_random[i])
-            person = Person(i, None, age_random[i], sex_random[i], health_index, 0)
+            person = Person(i, None, age_random[i], 0, sex_random[i], health_index, 0)
             group.people.append(person)
 
     def set_active_members(self):
