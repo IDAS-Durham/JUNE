@@ -11,6 +11,7 @@ class Logger:
         self.world = world
         self.data_dict = {}
         self.save_path = save_path
+        self.r0_dict = {}
         if not os.path.exists(self.save_path):
             os.mkdir(self.save_path)
         self.init_logger()
@@ -18,6 +19,7 @@ class Logger:
     def init_logger(self):
         for area in self.world.areas.members:
             self.data_dict[area.name] = {}
+            self.r0_dict[area.name] = {}
 
     def log_timestep(self, day, dayshift):
         for area in self.world.areas.members:
@@ -88,6 +90,30 @@ class Logger:
         ax.set_title("Infection curves")
         fig.legend()
         fig.savefig(os.path.join(self.save_path, "infection_curves.png"), dpi=300)
+
+
+    def log_r0(self, day):
+        """
+        Computes r0 from individual data.
+        """
+        r0_global = 0
+        global_counter = 0
+        for area in self.world.areas:
+            self.r0_dict[area.name][day] = {}
+            r0_area = 0
+            area_counter = 0
+            for person in area.people:
+                if person.infected == True:
+                    r0_area += person.counter.number_of_infected
+                    r0_global += person.counter.number_of_infected
+                    area_counter += 1
+                    global_counter += 1
+            self.r0_dict[area.name][day] = r0_area / area_counter
+        self.r0_dict["world"][day] = r0_global / global_counter
+
+
+
+
 
 
 
