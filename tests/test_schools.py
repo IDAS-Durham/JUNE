@@ -25,8 +25,8 @@ def test_all_kids_school():
     KIDS_LOW = 1
     KIDS_UP = 5
     lost_kids = 0
-    for i in world.areas.keys():
-        for j in world.areas[i].people.keys():
+    for i in world.areas.members:
+        for j in world.areas[i].people.members:
             if (world.areas[i].people[j].age >= KIDS_LOW) and (world.areas[i].people[j].age <= KIDS_UP):
                 if world.areas[i].people[j].school is None:
                     lost_kids += 1
