@@ -45,8 +45,8 @@ class Inputs:
         self.areas_coordinates_df = self.read_coordinates()
 
         # Read census data on low resolution map (MSOA)
-        self.oa2msoa_df = self.oa2msoa()
-        self.workflow_dict = self.create_workflow_dict()
+        self.oa2msoa_df = self.oa2msoa(self.n_residents.index.values)
+        self.workflow_df = self.create_workflow_df(self.oa2msoa_df["MSOA11CD"].values)
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
         self.companysector_by_sex_df = self.read_companysector_by_sex_census()
@@ -74,7 +74,8 @@ class Inputs:
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         return areas_coordinates_df
 
-    def oa2msoa(self):
+
+    def oa2msoa(self, oa_id):
         """
         Creat link between OA and MSOA layers.
         """
@@ -86,7 +87,9 @@ class Inputs:
             usecols=usecols,
         )
         oa2msoa_df = oa2msoa_df.set_index("OA11CD")
-
+        # filter out OA areas that are simulated
+        oa2msoa_df = oa2msoa_df[oa2msoa_df.index.isin(list(oa_id))]
+        
         return oa2msoa_df
 
 
@@ -270,8 +273,8 @@ class Inputs:
         return travel_df
 
 
-    def create_workflow_dict(
-        self, DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
+    def create_workflow_df(
+        self, msoa, DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
     ) -> dict:
         """
         Workout where people go to work.
@@ -287,46 +290,30 @@ class Inputs:
         Returns:
             dictionary with frequencies of populations 
         """
-        dirs = "../data/census_data/middle_output_area/NorthEast/"
-        flow_female_file = "flow_female_in_msoa_wu01northeast_2011.csv"
-        flow_male_file = "flow_male_in_msoa_wu01northeast_2011.csv"
+        dirs = "../data/census_data/middle_output_area/EnglandWales/"
+        wf_df = pd.read_csv(
+            dirs + "flow_in_msoa_wu01ew_2011.csv",
+            delimiter=',',
+            delim_whitespace=False,
+            skiprows=1,
+            usecols=[0,1,3,4],
+            names=["home_msoa11cd", "work_msoa11cd", "n_man", "n_woman"],
+        )
+        # filter out MSOA areas that are simulated
+        wf_df = wf_df[wf_df["home_msoa11cd"].isin(list(msoa))]
+        # convert into ratios
+        wf_df = wf_df.groupby(
+            ['home_msoa11cd', 'work_msoa11cd']
+        ).agg({'n_man': 'sum', 'n_woman': 'sum'})
+        
+        wf_df['n_man'] = wf_df.groupby(level=0)['n_man'].apply(
+            lambda x: x / float(x.sum(axis=0))
+        ).values
+        wf_df['n_woman'] = wf_df.groupby(level=0)['n_woman'].apply(
+            lambda x: x / float(x.sum(axis=0))
+        ).values
 
-        flow_female_df = pd.read_csv(dirs + flow_female_file)
-        flow_female_df = flow_female_df.set_index("residence")
-
-        flow_male_df = pd.read_csv(dirs + flow_male_file)
-        flow_male_df = flow_male_df.set_index("residence")
-
-        home_msoa = (
-            flow_female_df.index.values
-        )  # the same for female & male
-        female_work_msoa_list = []
-        female_work_msoa_dist_list = []
-        male_work_msoa_list = []
-        male_work_msoa_dist_list = []
-        for hmsoa in home_msoa:
-            # Where do woman go to work in ratios
-            female_work_msoa = flow_female_df.loc[hmsoa].dropna()[flow_female_df.loc[hmsoa] != 0.0]
-            female_work_msoa_list.append(female_work_msoa.index.values)
-            female_work_msoa_dist_list.append(
-                female_work_msoa.values / female_work_msoa.values.sum()
-            )
-            # Where do man go to work in ratios
-            male_work_msoa = flow_male_df.loc[hmsoa].dropna()[flow_male_df.loc[hmsoa] != 0.0]
-            male_work_msoa_list.append(male_work_msoa.index.values)
-            male_work_msoa_dist_list.append(
-                male_work_msoa.values / male_work_msoa.values.sum()
-            )
-
-        workflow_dict = {
-            "home_msoa": home_msoa,
-            "female_work_msoa": female_work_msoa_list,
-            "female_work_dist": female_work_msoa_dist_list,
-            "male_work_msoa": male_work_msoa_list,
-            "male_work_dist": male_work_msoa_dist_list,
-        }
-
-        return workflow_dict
+        return wf_df
 
 
 if __name__ == "__main__":
