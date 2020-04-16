@@ -35,6 +35,9 @@ class World:
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         print("Initializing areas...")
+        self.msoareas = MSOAreas(self)
+        msoareas_distributor = MSOAreaDistributor(self.msoareas)
+        msoareas_distributor.read_msoareas_census()
         self.areas = Areas(self)
         areas_distributor = AreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
@@ -42,7 +45,15 @@ class World:
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-            person_distributor = PersonDistributor(self.people, area)
+            # get msoa flow data for this oa area
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea, )]
+            person_distributor = PersonDistributor(
+                self.people,
+                area,
+                self.msoareas,
+                self.inputs.companysector_by_sex_df,
+                wf_area_df,
+            )
             person_distributor.populate_area()
             pbar.update(1)
         pbar.close()
@@ -62,8 +73,14 @@ class World:
             self.distributor.distribute_kids_to_school()
             pbar.update(1)
         pbar.close()
-        # self.msoareas = self.read_msoareas_census(self.inputs.company_df)
-        # self._init_companies(self.inputs.company_df)
+        #print("Initializing Companies...")
+        #self.companies = Companies(self)
+        #pbar = tqdm(total=len(self.msoareas.members))
+        #for area in self.msoareas.members:
+        #    self.distributor = CompanyDistributor(self.companies, area)
+        #    self.distributor.distribute_adults_to_companies()
+        #    pbar.update(1)
+        #pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")
 
