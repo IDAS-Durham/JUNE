@@ -119,12 +119,17 @@ class TransmissionLogNormal(Transmission):
         self.mean_time     = params["mean_time"]["value"]
         self.std_variation = params["width_time"]["value"]
         self.end_time      = params["end_time"]["value"]
+        self.norm          = 1. #self.prob/(self.std_variation*np.sqrt(2.*np.pi))
+        self.mu            = np.log(self.mean_time)
+        self.expnorm       = 1./(2.*self.std_variation**2)
         self.value = 0
 
     def calculate(self, time):
         if (time >= self.starttime and
-            time <= self.starttime+self.endtime):
-            self.value = self.prob*random.lognormal(self.mean_time,self.std_variation)
+            time <= self.starttime+self.end_time):
+            delta_t = time-self.starttime
+            self.value = ((self.norm) *
+                          np.exp( -self.expnorm * (np.log(delta_t)-self.mu)**2))
         else:
             self.value = 0.0
 
@@ -137,19 +142,19 @@ class TransmissionLogNormal(Transmission):
 class TransmissionXNExp(Transmission):
     def init(self, params):
         self.prob       = max(0.0, params["probability"]["value"])
-        self.exponent   = max(0.0, params["exponent"]["value"])
-        self.tailfactor = params["norm"]["value"]
-        if self.tailfactor < 0.001:
-            self.tailfactor = 0.001
-        self.init_norm
+        self.relaxation = max(0.0001, 1./params["relaxation"]["value"])
+        self.mean_time  = max(0.0, params["mean_time"]["value"])
+        self.end_time   = max(0.0, params["end_time"]["value"])
+        self.init_norm()
 
     def init_norm(self):
-        x0 = self.exponent * self.tailfactor
-        self.norm = x0 ** self.exponent * np.exp(-x0 / self.tailfactor)
+        self.exponent = self.mean_time * self.relaxation
+        self.norm = self.mean_time**self.exponent*np.exp(-self.mean_time*self.relaxation)
         self.norm = 1.0 / self.norm
+        print (self.prob,self.relaxation,self.mean_time,"->",self.norm)
 
     def calculate(self, time):
         dt = time - self.starttime
         self.value = (
-            self.norm * self.prob * dt ** self.exponent * np.exp(-dt / self.tailfactor)
+            self.norm * self.prob * dt ** self.exponent * np.exp(-dt * self.relaxation)
         )
