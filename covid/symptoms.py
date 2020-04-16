@@ -2,6 +2,7 @@ import numpy as np
 import random
 
 allowed_symptom_tags = [
+    "none",  # this is only for people who are not ill                        
     "asymptomatic",
     "influenza-like illness",
     "pneumonia",
