@@ -49,23 +49,5 @@ distribute_value_Gauss2:
         upper:      1.0
 
 
-symptoms_tag_test:
-  infection:
-    transmission:
-      type: SI
-      probability:
-        mode: Gauss
-        mean: 0.5
-    symptoms:
-      type: Constant
-      severity:
-        mode:  Flat
-        mean:  0.5
-        lower: 0.0
-        upper: 1.0
-      time_offset:
-        mean: 0.5
-      end_time:
-        mean: 12
 
 
