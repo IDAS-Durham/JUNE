@@ -7,57 +7,44 @@ import random
 
 
 class StochasticInteraction(Interaction):
-    self.allowed_severe_tags = ["none", "constant", "differential"]
-
     def init(self):
         self.fill_defaults()
-        if "severe_treatment" in self.params["parameters"]:
-            self.severe = self.params["parameters"]["severe_treatment"]
-            if not (self.severe in allowed_severe_tags):
-                self.severe = "constant"
-        ### in the IC model this is a constant
-        if "omega" in self.params["parameters"]:
-            self.omega  = self.params["parameters"]["omega"]
-
                 
     def single_time_step_for_group(self, group):
-        if (group.size() <= 1 or
-            group.size_infected() == 0 or
-            group.size_susceptible() == 0):
+        self.group = group
+        if (self.group.size() <= 1 or
+            self.group.size_infected() == 0 or
+            self.group.size_susceptible() == 0):
             return
-        transmission_probability = self.calculate_transmission_probability(group)
+        transmission_probability = self.calculate_transmission_probability()
         if (transmission_probability>0.001): 
-            for recipient in group.get_susceptible():
+            for recipient in self.group.get_susceptible():
                 self.single_time_step_for_recipient(recipient, transmission_probability)
 
-    def calculate_transmission_probability(self,group):
-        spec = group.get_spec() 
+    def calculate_transmission_probability(self):
+        spec = self.group.get_spec() 
         if spec=="Household" or spec=="TestGroup":
-            return self.calculate_localised_transmission_probability(group)
+            return self.calculate_localised_transmission_probability()
         elif spec=="School":
-            psitag = 0
-            return self.calculate_localised_transmisson_probability(group,psitag)
-        elif spec=="Work:Outdoor" or spec=="Work:Indoor":
-            psitag = 3
-            return self.calculate_localised_transmission_probability(group,psitag)
+            return self.calculate_localised_transmisson_probability()
+        elif spec=="Work_Outdoor" or spec=="Work_Indoor":
+            return self.calculate_localised_transmission_probability()
         else:
             return 0.
 
-    def calculate_localised_transmission_probability(self,group,psitag):
-        intensity      = group.get_intensity(self.time)
-        if psitag==0:
-            intensity /= group.get_size()**self.alpha
-        summed_prob = 0.
-        for person in group.get_infected():
-            probability = person.transmission_probability(self.time)
-            if self.severe=="constant":
-                tag = person.get_symptons_tag()
-                if (tag=="influenza-like illness" or tag=="pneumonia" or
-                    tag=="hospitalised" or tag=="intensive care"):
-                    probability *= (self.omega * self.psi[psitag] - 1.)
-            elif self.severe=="differential":
-                probability *= (1.+self.omega*person.get_severity(self.time))
+    def calculate_localised_transmission_probability(self):
+        intensity      = self.group.get_intensity(self.time)
+        if self.group.get_spec()=="household":
+            intensity /= self.group.get_size()**self.alpha
+        summed_prob  = 0.
+        self.weights = []
+        for person in self.group.get_infected():
+            probability  = person.transmission_probability(self.time)
+            probability *= self.severity_multiplier(self.group.get_spec())
             summed_prob += probability
+            self.weights.append([person,probability])
+        for i in len(self.weights):
+            self.weights[i][1] /= summed_prob
         return intensity * summed_prob * self.delta_t
 
     def single_time_step_for_recipient(self,recipient,transmission_probability):
@@ -67,6 +54,12 @@ class StochasticInteraction(Interaction):
                 recipient.set_infection(
                     self.selector.make_infection(recipient, self.time)
                 )
+                recipient.get_counter().update_infection_data(self.time,self.group.get_spec())
+                disc = random.random()
+                i    = 0
+                while disc>0. and i<len(self.weights)-1:
+                    i += 1
+                self.weights[i][0].get_counter().increment_infected()
                 
     def fill_defaults(self):
         # infection modifiers for non-asymptomatic cases

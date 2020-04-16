@@ -46,7 +46,7 @@ class MatrixInteraction(Interaction):
             self.test_matrix = self.test_matrices[group.get_spec()]
             people = group.get_people():
         for infecter in people:
-            transmission_probability = self.calculate_single_transmission_probability(infecter) 
+            transmission_probability = self.calculate_single_transmission_probability(infecter,group) 
             Naverage  = self.calculate_average_Ncontacts(infecter)
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
             for i in range(Ncontacts):
@@ -73,16 +73,10 @@ class MatrixInteraction(Interaction):
             recipient  = self.options[index][0]
         return recipient
 
-    def calculate_single_transmission_probability(self,infecter):
-        intensity   = group.get_intensity(self.time)
-        probability = infecter.transmission_probability(self.time)
-        if self.severe=="constant":
-            tag = person.get_symptons_tag()
-            if (tag=="influenza-like illness" or tag=="pneumonia" or
-                tag=="hospitalised" or tag=="intensive care"):
-                probability *= (self.omega * self.psi[psitag] - 1.)
-        elif self.severe=="differential":
-            probability *= (1.+self.omega*person.get_severity(self.time))
+    def calculate_single_transmission_probability(self,infecter,group):
+        intensity    = group.get_intensity(self.time)
+        probability  = infecter.transmission_probability(self.time)
+        probability *= self.severity_multiplier(group.get_spec())
         return probability * intensity * self.delta_t
     
     def calculate_average_Ncontacts(self,infecter):
@@ -106,7 +100,7 @@ class MatrixInteraction(Interaction):
             N = np.random.poisson(Nave)
         Nint  = int(N)
         Nover = N-Nint
-        if np.random.random<Nover:
+        if np.random.random() < Nover:
             Nint += 1
         return Nint
 
