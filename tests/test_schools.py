@@ -17,8 +17,8 @@ def test_number_schools():
 def test_all_kids_school():
     
     world = World.from_pickle()
-    KIDS_LOW = 1
-    KIDS_UP = 5
+    KIDS_LOW = 5
+    KIDS_UP = 17 
     lost_kids = 0
     for i in range(len(world.areas.members)):
         for j in range(len(world.areas.members[i].people)):
