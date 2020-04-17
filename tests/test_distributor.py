@@ -35,7 +35,7 @@ def compute_n_samples(world, attribute):
     print(attribute)
     frequencies = []
     decoder = getattr(world.inputs, "decoder_" + attribute)
-    for i in range(len(world.areas.members):
+    for i in range(len(world.areas.members)):
         freq = np.zeros(len(decoder))
         if "house" not in attribute:
             for j in range(len(world.areas.members[i].people)):

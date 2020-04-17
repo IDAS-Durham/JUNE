@@ -151,7 +151,7 @@ class TransmissionXNExp(Transmission):
         self.exponent = self.mean_time * self.relaxation
         self.norm = self.mean_time**self.exponent*np.exp(-self.mean_time*self.relaxation)
         self.norm = 1.0 / self.norm
-        print (self.prob,self.relaxation,self.mean_time,"->",self.norm)
+        #print (self.prob,self.relaxation,self.mean_time,"->",self.norm)
 
     def calculate(self, time):
         dt = time - self.starttime
