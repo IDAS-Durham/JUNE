@@ -4,7 +4,6 @@ import numpy as np
 import sys
 import random
 
-
 class Interaction:
     allowed_severe_tags = ["none", "constant", "differential"]
     
@@ -25,7 +24,7 @@ class Interaction:
         if "severe_treatment" in self.params["parameters"]:
             if "type" in self.params["parameters"]["severe_treatment"]:
                 self.severe = self.params["parameters"]["severe_treatment"]["type"]
-                if not (self.severe in allowed_severe_tags):
+                if not (self.severe in self.allowed_severe_tags):
                     self.severe = "constant"
                 ### in the IC model this is a constant
             if "omega" in self.params["parameters"]["severe_treatment"]:
