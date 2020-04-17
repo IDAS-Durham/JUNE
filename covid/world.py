@@ -183,6 +183,7 @@ class World:
         print ("starting the loop ..., at ",day_iter.day," days, to run for ",day_iter.total_days," days")
         while day_iter.day <= day_iter.total_days:
             self.do_timestep(day_iter)
+            self.logger.log_timestep(day_iter.day)
             next(day_iter)
 
 
