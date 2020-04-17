@@ -70,12 +70,11 @@ class CollectiveInteraction(Interaction):
             self.group.get_intensity() / max(1, self.group.size() - 1) * self.delta_t
         )
         prob_notransmission = 1.0
+        summed_prob  = 0.
         for person in self.group.get_infected():
-            prob_notransmission *= max(
-                0.0,
-                1.0
-                - person.transmission_probability(self.time) * interaction_intensity,
-            )
+            probability = max(0., 1.-person.transmission_probability(self.time) * interaction_intensity)
+            prob_notransmission *= probability
+            summed_prob         += probability
             self.weights.append([person, probability])
         for i in len(self.weights):
             self.weights[i][1] /= summed_prob
@@ -92,10 +91,11 @@ class CollectiveInteraction(Interaction):
         """
         prob_transmission = 0.0
         for person in self.group.get_infected():
-            prob_transmission += person.transmission_probability(self.time)
+            probability        = person.transmission_probability(self.time)
+            prob_transmission += probability
             self.weights.append([person, probability])
         for i in len(self.weights):
-            self.weights[i][1] /= summed_prob
+            self.weights[i][1] /= prob_transmission
         interaction_intensity = (
             self.group.get_intensity() / max(self.group.size() - 1, 1) * self.delta_t
         )

@@ -51,7 +51,7 @@ class MatrixInteraction(Interaction):
             transmission_probability = self.calculate_single_transmission_probability(
                 infecter, group
             )
-            Naverage = self.calculate_average_Ncontacts(infecter)
+            Naverage  = self.calculate_average_Ncontacts(infecter)
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
             for _ in range(Ncontacts):
                 recipient = self.make_single_contact(infecter, group)
