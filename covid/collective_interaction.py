@@ -76,7 +76,7 @@ class CollectiveInteraction(Interaction):
             prob_notransmission *= probability
             summed_prob         += probability
             self.weights.append([person, probability])
-        for i in len(self.weights):
+        for i in range(len(self.weights)):
             self.weights[i][1] /= summed_prob
         return 1.0 - prob_notransmission
 
@@ -94,7 +94,7 @@ class CollectiveInteraction(Interaction):
             probability        = person.transmission_probability(self.time)
             prob_transmission += probability
             self.weights.append([person, probability])
-        for i in len(self.weights):
+        for i in range(len(self.weights)):
             self.weights[i][1] /= prob_transmission
         interaction_intensity = (
             self.group.get_intensity() / max(self.group.size() - 1, 1) * self.delta_t

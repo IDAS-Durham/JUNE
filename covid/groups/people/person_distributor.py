@@ -25,6 +25,7 @@ class PersonDistributor:
         self.no_students_area = False
         self.companysector_by_sex_df = companysector_by_sex_df
         self.workflow_df = workflow_df
+        self.health_index = HealthIndex(self.area.world.config)
         self._init_random_variables()
 
     def _get_age_brackets(self, nomis_age_bin):
@@ -225,6 +226,7 @@ class PersonDistributor:
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
+            health_index = self.health_index.get_index_for_age(age_random)
             work_msoa_rnd = self.assign_work_msoarea(
                 i,
                 sex_random,
@@ -239,7 +241,7 @@ class PersonDistributor:
                 age_random,
                 nomis_bin,
                 sex_random,
-                0,
+                health_index,
                 0,
             )
             self.people.members.append(person)

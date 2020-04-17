@@ -15,8 +15,8 @@ class Counter:
         self.length_of_infection = -1
 
     def update_symptoms(self, symptoms, time):
-        if symptoms > self.maximal_symptoms:
-            self.maximal_symptoms = symptoms
+        if symptoms.severity > self.maximal_symptoms:
+            self.maximal_symptoms = symptoms.severity
             self.maximal_symptoms_tag = self.person.get_symptoms_tag(symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
@@ -145,11 +145,13 @@ class Person:
             self.susceptible = False
             if self.infection.still_infected(time):
                 self.infected = True
+                if self.infection.symptoms == None:
+                    print("error!")
+                self.counter.update_symptoms(self.infection.symptoms, time)
             else:
                 self.infected = False
                 self.infection = None
-                self.set_length_of_infection(time)
-            self.counter.update_symptoms(time)
+                self.counter.set_length_of_infection(time)
 
     def is_susceptible(self):
         return self.susceptible
@@ -164,8 +166,8 @@ class Person:
     def is_recovered(self):
         return self.recovered
 
-    def get_symptoms_tag(self, severity):
-        return self.infection.get_symptoms().fix_tag(severity)
+    def get_symptoms_tag(self, symptoms):
+        return self.infection.get_symptoms().fix_tag(symptoms.severity)
 
     def susceptibility(self):
         return self.susceptibility
