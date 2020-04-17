@@ -3,7 +3,7 @@ from covid.groups import *
 from covid.logger import Logger
 from covid.infection_selector import InfectionSelector
 from covid.interaction import Interaction
-from covid.collective_interaction import CollectiveInteraction
+from covid.interaction_selector import InteractionSelector
 from covid.time import DayIterator
 import pandas as pd
 import numpy as np
@@ -143,11 +143,12 @@ class World:
             person.active_group = None
 
     def _initialize_infection_selector_and_interaction(self, config):
-        self.selector    = InfectionSelector(config)
-        if config["interaction"]["type"] == "collective":
-            self.interaction = CollectiveInteraction(self.selector,config)
+        self.selector        = InfectionSelector(config)
+        interaction_selector = InteractionSelector(config)
+        self.interaction     = interaction_selector.get(self.selector,config)
 
     def seed_infections_group(self, group, n_infections, selector, time):
+        print (n_infections,group.people)
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
             group.people[choice].set_infection(
