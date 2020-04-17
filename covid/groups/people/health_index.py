@@ -46,7 +46,7 @@ RKIdata = [
 
 class HealthIndex:
     def __init__(self, config):
-        print ("Init health index calculator")
+        #print ("Init health index calculator")
         if config==None or "health_datafiles" not in config:
             self.ICdata  = ICdata
             self.RKIdata = RKIdata
@@ -88,8 +88,8 @@ class HealthIndex:
             for hosp in hospindex:
                 hospdiff += hosp
                 age_list.append(self.ratio+nohosp+hospdiff)
-            if age%5==False:
-                print ("HI for ",age,":",age_list)
+            #if age%5==False:
+                #print ("HI for ",age,":",age_list)
             self.index_list.append([age, age_list])
                 
     def get_index_for_age(self,age):

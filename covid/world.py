@@ -148,7 +148,7 @@ class World:
         self.interaction     = interaction_selector.get(self.selector,config)
 
     def seed_infections_group(self, group, n_infections, selector, time):
-        print (n_infections,group.people)
+    #    print (n_infections,group.people)
         choices = np.random.choice(group.size(), n_infections)
         for choice in choices:
             group.people[choice].set_infection(
