@@ -26,19 +26,20 @@ def distance(origin, destination):
     return d # km
 
 
-def kids_school_distance(world, KIDS_LOW=1, KIDS_UP=6):
+def kids_school_distance(world, KIDS_LOW=5, KIDS_UP=19):
 
     distance_school = []
     lost_kids = 0 
     for i in range(len(world.areas.members)):
-        for j in range(len(world.areas.members[i].people):
+        for j in range(len(world.areas.members[i].people)):
             if (world.areas.members[i].people[j].age >= KIDS_LOW) and (world.areas.members[i].people[j].age <= KIDS_UP):
+
                 try:
                     school_coordinates = world.areas.members[i].people[j].school.coordinates
                     distance_school.append(
-                                    distance(world.areas.members[i].coordinates,
-                                        school_coordinates)
-                                    )
+                                distance(world.areas.members[i].coordinates,
+                                    school_coordinates)
+                                )
                 except:
                     lost_kids += 1
     print(f'CAREFUL! There are {lost_kids} lost kids')
@@ -49,8 +50,8 @@ if __name__=='__main__':
     world = World.from_pickle()
 
     distance_school = kids_school_distance(world)
-    distance_young = kids_school_distance(world, 1, 3)
-    distance_old = kids_school_distance(world, 4, 6)
+    distance_young = kids_school_distance(world, 5, 11) 
+    distance_old = kids_school_distance(world, 12, 19)
 
     fig = plt.figure()
     plt.hist(
@@ -62,13 +63,13 @@ if __name__=='__main__':
     plt.hist(
             distance_young, 
             log=True,
-            label = '5 - 14 years old',
+            label = '5 - 11 years old',
             alpha=0.3,
             )
     plt.hist(
             distance_old, 
             log=True,
-            label = '15 - 19 years old',
+            label = '12 - 19 years old',
             alpha=0.3,
             )
     plt.legend()
