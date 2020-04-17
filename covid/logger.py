@@ -3,6 +3,7 @@ Class to log all important information at each timestep.
 """
 import json
 import os
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -11,7 +12,6 @@ class Logger:
         self.world = world
         self.data_dict = {}
         self.save_path = save_path
-        self.r0_dict = {}
         if not os.path.exists(self.save_path):
             os.mkdir(self.save_path)
         self.init_logger()
@@ -19,17 +19,28 @@ class Logger:
     def init_logger(self):
         for area in self.world.areas.members:
             self.data_dict[area.name] = {}
-            self.r0_dict[area.name] = {}
+            self.data_dict["world"] = {}
 
-    def log_timestep(self, day, dayshift):
+    def log_timestep(self, day):
+        susceptible_world = 0
+        infected_world = 0
+        recovered_world = 0
         for area in self.world.areas.members:
             if day not in self.data_dict[area.name]:
                 self.data_dict[area.name][day] = {}
-            self.data_dict[area.name][day][dayshift] = {}
+            self.data_dict[area.name][day] = {}
             susceptible, infected, recovered = self.get_infected_people_area(area)
-            self.data_dict[area.name][day][dayshift]["susceptible"] = susceptible
-            self.data_dict[area.name][day][dayshift]["infected"] = infected
-            self.data_dict[area.name][day][dayshift]["recovered"] = recovered
+            susceptible_world += susceptible
+            infected_world += infected
+            recovered_world += recovered
+            self.data_dict[area.name][day]["susceptible"] = susceptible
+            self.data_dict[area.name][day]["infected"] = infected
+            self.data_dict[area.name][day]["recovered"] = recovered
+        self.data_dict["world"][day] = {}
+        self.data_dict["world"][day]["susceptible"] = susceptible
+        self.data_dict["world"][day]["infected"] = infected
+        self.data_dict["world"][day]["recovered"] = recovered
+        self.log_r0(day)
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
             json.dump(self.data_dict, f)
@@ -62,19 +73,19 @@ class Logger:
             for area in self.world.areas.members:
                 n_inf += sum(
                     [
-                        self.data_dict[area.name][day][shift]["infected"]
+                        self.data_dict[area.name][day]["infected"]
                         for shift in self.data_dict[area.name][day].keys()
                     ]
                 )
                 n_susc += sum(
                     [
-                        self.data_dict[area.name][day][shift]["susceptible"]
+                        self.data_dict[area.name][day]["susceptible"]
                         for shift in self.data_dict[area.name][day].keys()
                     ]
                 )
                 n_rec += sum(
                     [
-                        self.data_dict[area.name][day][shift]["recovered"]
+                        self.data_dict[area.name][day]["recovered"]
                         for shift in self.data_dict[area.name][day].keys()
                     ]
                 )
@@ -98,8 +109,7 @@ class Logger:
         """
         r0_global = 0
         global_counter = 0
-        for area in self.world.areas:
-            self.r0_dict[area.name][day] = {}
+        for area in self.world.areas.members:
             r0_area = 0
             area_counter = 0
             for person in area.people:
@@ -108,8 +118,31 @@ class Logger:
                     r0_global += person.counter.number_of_infected
                     area_counter += 1
                     global_counter += 1
-            self.r0_dict[area.name][day] = r0_area / area_counter
-        self.r0_dict["world"][day] = r0_global / global_counter
+            if area_counter == 0:
+                self.data_dict[area.name][day]["r0"] = 0
+            else:
+                self.data_dict[area.name][day]["r0"] = r0_area / area_counter
+        if global_counter == 0: 
+            self.data_dict["world"][day]["r0"] = 0
+        else:
+            self.data_dict["world"][day]["r0"] = r0_global / global_counter
+
+    def plot_r0(self):
+        import matplotlib.pyplot as plt
+        days = []
+        r0s = []
+        for day in self.data_dict["world"].keys():
+            days.append(day)
+            r0s.append(self.data_dict["world"][day]["r0"])
+        idx_sorted = np.argsort(days)
+        days = np.array(days)[idx_sorted]
+        r0s = np.array(r0s)[idx_sorted]
+        fig, ax = plt.subplots()
+        ax.plot(days, r0s)
+        ax.set_xlabel("Days")
+        ax.set_ylabel("R0")
+        return fig, ax
+
 
 
 
