@@ -45,23 +45,38 @@ interaction:
       type: constant
       omega: 2
 
-infection:
-  asymptomatic_ratio: 0.4
-  transmission:
-    type:         XNExp
+transmission:
+  type: XNExp
+  parameters:
     probability:
-      mean:       0.8
+      distribution: constant  # constant != uniform!
+      parameters:
+        value: 0.8
     relaxation:
-      mean:       2.
+      distribution: constant
+      parameters:
+        value : 2.0
     mean_time:
-      mean:       10.
+      distribution: constant
+      parameters:
+        value: 10.0
     end_time:
-      mean:       20.
-  symptoms:
-    type:         Tanh
+      distributon: constant
+      parameters:
+        value: 20.0
+
+symptoms:
+  type: Tanh
+  parameters:
     onset_time:
-      mean:       5.
+      distribution: constant
+      parameters:
+        value:       5.0
     max_time:
-      mean:       10.
+      distribution: constant
+      parameters:
+        value:       10.0
     end_time:
-      mean:       20.
+      distribution: constant
+      parameters:
+        value:       20.0
