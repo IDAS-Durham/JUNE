@@ -16,10 +16,10 @@ allowed_symptom_tags = [
 
 class Symptoms(ParameterInitializer):
     def __init__(self, infection, user_parameters, required_parameters):
+        self.infection = infection
         super().__init__("symptoms", required_parameters)
         self.initialize_parameters(user_parameters)
         #self.infection = self.set_infection(infection)
-        self.infection = infection
         self.maxseverity = random.random()
         self.tags = allowed_symptom_tags
         #self.health_index = self.infection.person.get_health_index()
