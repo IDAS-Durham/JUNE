@@ -1,15 +1,24 @@
-from covid.parameters import ParameterInitializer
+from covid.transmission import Transmission
 
-class TransmissionConstant(ParameterInitializer):
-    def __init__(self, transmission_parameters={}):
-        required_parameters = ["probability_transmission"]
-        super().__init__("transmission", required_parameters)
-        self.initialize_parameters(transmission_parameters)
+class TransmissionConstant(Transmission):
+    def __init__(self, user_parameters):
+        required_parameters = ["transmission_probability"]
+        super().__init__(user_parameters, required_parameters)
 
     @property
     def probability(self):
-        return self.probability_transmission
+        return self.transmission_probability
+
 
 if __name__ == "__main__":
     trans = TransmissionConstant()
+    print(trans.probability)
+    user_config = {
+        "transmission_probability": {
+            "distribution": "gaussian",
+            "parameters": {"mean": 0.3,
+                "width_minus" : 0.5},
+        }
+    }
+    trans = TransmissionConstant(user_config)
     print(trans.probability)
