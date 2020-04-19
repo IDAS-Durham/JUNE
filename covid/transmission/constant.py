@@ -1,10 +1,9 @@
-from covid.transmission import Transmission
+from covid.parameters import ParameterInitializer
 
-
-class TransmissionConstant(Transmission):
+class TransmissionConstant(ParameterInitializer):
     def __init__(self, transmission_parameters={}):
         required_parameters = ["probability_transmission"]
-        super().__init__(required_parameters)
+        super().__init__("transmission", required_parameters)
         self.initialize_parameters(transmission_parameters)
 
     @property
