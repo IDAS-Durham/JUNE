@@ -2,7 +2,7 @@ import numpy as np
 import random
 import sys
 from covid.transmission import Transmission
-from covid.symptoms import Symptoms
+from covid.infection_initializer import InfectionInitializer
 
 
 class Infection(InfectionInitializer):
@@ -18,24 +18,24 @@ class Infection(InfectionInitializer):
     can be added/modified a posteriori.
     """
 
-    def __init__(self, person, timer, user_params):
-
+    def __init__(self, person, timer, user_config):
+        super().__init__(user_config)
         self.threshold_transmission = 0.001
         self.threshold_symptoms     = 0.001
-        self.starttime = timer.now
-        self.params = params
+        #self.starttime = timer.now
+        self.user_config = user_config
         self.person = person
 
         #self.transmission = self.set_transmission(transmission)
         #self.symptoms = self.set_symptoms(symptoms)
-        self.transmission = TransmissionConstant()
-        self.symptoms = SymptomsConstant(self) 
+        #self.transmission = TransmissionConstant()
+        #self.symptoms = SymptomsConstant(self) 
 
     def infect(self, person_to_infect):
 
         person_to_infect.infection = self.__init__(person_to_infect,
                 self.timer,
-                self.params)
+                self.user_config)
 
 
     def set_transmission(self, transmission):
@@ -91,3 +91,5 @@ if __name__ == "__main__":
             "symptoms" : {"type" : "constant"}
             }
     inf = Infection(None, None, user_params)
+    print(inf.transmission)
+    print(inf.symptoms)
