@@ -170,7 +170,7 @@ class Person:
         return self.recovered
 
     def get_symptoms_tag(self, symptoms):
-        return self.infection.get_symptoms().fix_tag(symptoms.severity)
+        return self.infection.symptoms.fix_tag(symptoms.severity)
 
     def susceptibility(self):
         return self.susceptibility
