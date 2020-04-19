@@ -1,5 +1,4 @@
 from covid.parameters import ParameterInitializer
-#from covid.infection import Infection
 import numpy as np
 import random
 
@@ -18,20 +17,10 @@ class Symptoms(ParameterInitializer):
     def __init__(self, infection, user_parameters, required_parameters):
         super().__init__("symptoms", required_parameters)
         self.initialize_parameters(user_parameters)
-        #self.infection = self.set_infection(infection)
         self.infection = infection
         self.maxseverity = random.random()
         self.tags = allowed_symptom_tags
         #self.health_index = self.infection.person.get_health_index()
-
-    def set_infection(self, infection):
-        if not isinstance(infection, Infection):
-            print(
-                "Error in Symptoms.set_infection(", infection, ") is not an infection.",
-            )
-            print("--> Exit the code.")
-            sys.exit()
-        self.infection = infection
 
     @property
     def severity(self):
@@ -53,9 +42,7 @@ class Symptoms(ParameterInitializer):
     def fix_tag(self, severity):
         if severity <= 0.0:
             return "healthy"
-        index = len(self.health_index) - 1
-        while severity <= self.health_index[index] and index >= 0:
-            index -= 1
+        index = np.searchsorted(severity, self.health_index)
         return self.tags[index + 1]
 
     def tags(self):
