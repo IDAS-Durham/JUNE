@@ -2,7 +2,6 @@ import numpy as np
 import random
 import sys
 from covid.transmission import Transmission
-from covid.symptoms import Symptoms
 
 
 class Infection(TypeInitializer, ParametersInitializer):
