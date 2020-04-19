@@ -1,4 +1,6 @@
+import os
 import random
+import yaml
 
 class ParametersError(BaseException):
     def __init__(self, distribution, key):
@@ -7,28 +9,73 @@ class ParametersError(BaseException):
         super().__init__(message)
 
 
-def parameter_initializer(parameter_config):
-    try:
-        distribution = parameter_config["distribution"]
-    except KeyError:
-        raise BaseException(f"I need the distribution name")
-    try:
-        parameters = parameter_config["parameters"]
-    except KeyError:
-        raise BaseException(f"I need the parameters for {distribution}")
-    if distribution == "constant":
-        parameter = ConstantParameter(parameters)
-        return parameter.value
-    elif distribution == "gaussian":
-        parameter = GaussianParameter(parameters)
-        return parameter.value
-    elif distribution == "uniform":
-        parameter = UniformParameter(parameters)
-        return parameter.value
-    else:
-        raise NotImplementedError(
-            f"Parameter distribution {distribution} not implemented"
+class ParameterInitializer:
+    """
+    Given a list of required parameters, initializes the (child) class
+    with the parameter values by reading the user config file or the defaults.
+    The classtype arguments is the kind of class (transmission, symptoms, etc.)
+    you are initializing, so it can look the defaults at the right place.
+    """
+    def __init__(self, classtype, required_parameters):
+        self.classtype = classtype
+        self.required_parameters = required_parameters
+        self.tranmission_type = type(self).__name__
+        self.default_parameters = self.read_default_parameters()
+
+    def read_default_parameters(self):
+        default_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "configs",
+            "defaults",
+            self.classtype,
+            self.tranmission_type + ".yaml",
         )
+        try:
+            with open(default_path, "r") as f:
+                default_params = yaml.load(f, Loader=yaml.FullLoader)
+        except FileNotFoundError:
+            raise FileNotFoundError("Default parameter config file not found")
+        return default_params
+
+    def initialize_parameters(self, user_parameters):
+        parameter_values_dict = {}
+        for parameter in self.required_parameters:
+            if parameter not in user_parameters:
+                parameter_values_dict[parameter] = self.calculate_parameter(
+                    self.default_parameters[parameter]
+                )
+            else:
+                parameter_values_dict[parameter] = self.calculate_parameter(
+                    user_parameters[parameter]
+                )
+        for parameter, value in parameter_values_dict.items():
+            setattr(self, parameter, value)
+
+
+
+    def calculate_parameter(self, parameter_config):
+        try:
+            distribution = parameter_config["distribution"]
+        except KeyError:
+            raise BaseException(f"I need the distribution name")
+        try:
+            parameters = parameter_config["parameters"]
+        except KeyError:
+            raise BaseException(f"I need the parameters for {distribution}")
+        if distribution == "constant":
+            parameter = ConstantParameter(parameters)
+            return parameter.value
+        elif distribution == "gaussian":
+            parameter = GaussianParameter(parameters)
+            return parameter.value
+        elif distribution == "uniform":
+            parameter = UniformParameter(parameters)
+            return parameter.value
+        else:
+            raise NotImplementedError(
+                f"Parameter distribution {distribution} not implemented"
+            )
 
 
 class ParameterDistribution:
