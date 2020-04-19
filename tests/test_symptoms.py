@@ -86,6 +86,8 @@ def check_symptom_tags(N,world):
             if tag==allowed[j]:
                 tags[j] += 1
                 break
+            #else:
+            #    tags[0] += 1
     for i in range(len(tags)):
         tags[i] = tags[i]/N
     print (tags)
@@ -99,9 +101,11 @@ def check_symptom_tags(N,world):
     axes[1].bar(allowed,tags,
                 color="blue",alpha=0.5,
                 label="severity tag distribution")
+    
     axes[1].scatter(allowed,expected,
                     color="black",
                     label="expected severity tag distribution")
+    plt.xticks(rotation=45)
     plt.show()
 
 
