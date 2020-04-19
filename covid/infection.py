@@ -74,6 +74,7 @@ class Infection(InfectionInitializer):
     """
 
     def __init__(self, person, timer, user_config):
+        self.person = person
         super().__init__(user_config)
         self.threshold_transmission = 0.001
         self.threshold_symptoms = 0.001
@@ -84,7 +85,6 @@ class Infection(InfectionInitializer):
             print("is this a test? otherwise check the time!")
             pass
         self.user_config = user_config
-        self.person = person
 
     def infect(self, person_to_infect):
         person_to_infect.infection = Infection(
