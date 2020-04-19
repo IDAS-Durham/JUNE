@@ -7,11 +7,10 @@ import random
 
 class Interaction(ParameterInitializer):
 
-    def __init__(self, infection_selector, config):
-        self.selector = infection_selector
+    def __init__(self, user_parameters, required_parameters):
+        super().__init__("interaction", required_parameters)
+        self.initialize_parameters(user_parameters)
         self.groups   = []
-        self.oldtime  = 0.0
-        self.delta_t  = 0.0
 
     def time_step(self):
         for grouptype in self.groups:
