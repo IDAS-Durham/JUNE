@@ -18,6 +18,7 @@ class Infection:
     can be added/modified a posteriori.
     """
 
+    # person, timer, startime -> call timer.now, 
     def __init__(self, time, transmission=None, symptoms=None):
         self.threshold_transmission = 0.001
         self.threshold_symptoms     = 0.001
