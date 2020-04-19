@@ -59,6 +59,7 @@ class InfectionInitializer:
         return symptoms
 
 
+
 class Infection(InfectionInitializer):
     """
     The description of the infection, with two time dependent characteristics,
@@ -134,6 +135,8 @@ class Infection(InfectionInitializer):
         )
         is_infected = transmission_bool or symptoms_bool
         return is_infected
+
+
 
 
 if __name__ == "__main__":
