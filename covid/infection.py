@@ -1,11 +1,11 @@
 import numpy as np
 import random
 import sys
-import covid.transmission as Transmission
-import covid.symptoms as Symptoms
+from covid.transmission import Transmission
+from covid.symptoms import Symptoms
 
 
-class Infection:
+class Infection(TypeInitializer):
     """
     The description of the infection, with two time dependent characteristics,
     which may vary by individual:
@@ -18,16 +18,28 @@ class Infection:
     can be added/modified a posteriori.
     """
 
-    # person, timer, startime -> call timer.now, 
-    def __init__(self, time, transmission=None, symptoms=None):
+    def __init__(self, person, timer, user_params):
+
         self.threshold_transmission = 0.001
         self.threshold_symptoms     = 0.001
-        self.starttime = time
-        self.transmission = transmission
-        self.symptoms = symptoms
+        self.starttime = timer.now
+        self.params = params
+        self.person = person
+
+        #self.transmission = self.set_transmission(transmission)
+        #self.symptoms = self.set_symptoms(symptoms)
+        self.transmission = TransmissionConstant()
+        self.symptoms = SymptomsConstant(self) 
+
+    def infect(self, person_to_infect):
+
+        person_to_infect.infection = self.__init__(person_to_infect,
+                self.timer,
+                self.params)
+
 
     def set_transmission(self, transmission):
-        if not isinstance(transmission, Transmission.Transmission):
+        if not isinstance(transmission, Transmission):
             print(
                 "Error in Infection.set_transmission(",
                 transmission,
@@ -37,40 +49,38 @@ class Infection:
             sys.exit()
         self.transmission = transmission
 
-    def get_transmission(self):
-        return self.transmission
 
     def set_symptoms(self, symptoms):
-        if symptoms != None and not isinstance(symptoms, Symptoms.Symptoms):
+        if symptoms != None and not isinstance(symptoms, Symptoms):
             print("Error in Infection.set_symptoms(", symptoms, ") is not a symptoms.")
             print("--> Exit the code.")
             sys.exit()
         self.symptoms = symptoms
 
-    def get_symptoms(self):
-        return self.symptoms
-
-    def transmission_probability(self, time):
+    @property
+    def transmission_probability(self):
         if self.transmission == None:
             return 0.0
-        return self.transmission.probability(time)
+        return self.transmission.probability
 
-    def symptom_severity(self, time):
+    @property
+    def symptom_severity(self):
         if self.symptoms == None:
             return 0.0
-        return self.symptoms.get_severity(time)
+        return self.symptoms.severity
 
     def symptom_tag(self, tagno):
-        return self.symptoms.tag(tagno)
+        return self.symptoms.tag
 
-    def still_infected(self, time):
+    @property
+    def still_infected(self):
         transmission_bool = (
             self.transmission != None
-            and self.transmission.probability(time) > self.threshold_transmission
+            and self.transmission.probability > self.threshold_transmission
         )
         symptoms_bool = (
             self.symptoms != None
-            and self.symptoms.get_severity(time) > self.threshold_symptoms
+            and self.symptoms.severity > self.threshold_symptoms
         )
         is_infected = transmission_bool or symptoms_bool
         return is_infected
