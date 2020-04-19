@@ -31,6 +31,7 @@ class Symptoms:
     as possible, to have a baseline and to facilitate validation.
     """
 
+    # infection
     def __init__(self, person, params, time):
         self.tags         = allowed_symptom_tags
         self.person       = person
