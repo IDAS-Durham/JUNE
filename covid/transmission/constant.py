@@ -1,9 +1,9 @@
 from covid.transmission import Transmission
 
 class TransmissionConstant(Transmission):
-    def __init__(self, user_parameters={}):
+    def __init__(self, infection, user_parameters={}):
         required_parameters = ["transmission_probability"]
-        super().__init__(user_parameters, required_parameters)
+        super().__init__(infection, user_parameters, required_parameters)
 
     @property
     def probability(self):

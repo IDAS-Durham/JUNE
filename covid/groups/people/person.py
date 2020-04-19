@@ -146,7 +146,7 @@ class Person:
             self.infection = None
         if self.infection != None:
             self.susceptible = False
-            if self.infection.still_infected(time):
+            if self.infection.still_infected:
                 self.infected = True
                 if self.infection.symptoms == None:
                     print("error!")

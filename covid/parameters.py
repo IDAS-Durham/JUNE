@@ -59,6 +59,8 @@ class ParameterInitializer:
             distribution = parameter_config["distribution"]
         except KeyError:
             raise BaseException(f"I need the distribution name")
+        except TypeError:
+            return parameter_config # for a parameter that does not require sampling
         try:
             parameters = parameter_config["parameters"]
         except KeyError:

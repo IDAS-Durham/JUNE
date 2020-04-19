@@ -41,8 +41,9 @@ class InfectionInitializer:
                 transmission_parameters = {}
         else:
             transmission_type = default_types["transmission"]["type"]
+            transmission_parameters = {}
         transmission_class_name = "Transmission" + transmission_type.capitalize()
-        transmission = globals()[transmission_class_name](transmission_parameters)
+        transmission = globals()[transmission_class_name](self, transmission_parameters)
         return transmission
 
     def initialize_symptoms(self, default_types, user_config):
@@ -54,8 +55,9 @@ class InfectionInitializer:
                 symptoms_parameters = {}
         else:
             symptoms_type = default_types["symptoms"]["type"]
+            symptoms_parameters = {}
         symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-        symptoms = globals()[symptoms_class_name](symptoms_parameters)
+        symptoms = globals()[symptoms_class_name](self, symptoms_parameters)
         return symptoms
 
 
