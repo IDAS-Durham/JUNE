@@ -46,24 +46,24 @@ interaction:
       omega: 2
 
 transmission:
-  type: XNExp
+  type: constant
   parameters:
     probability:
       distribution: constant  # constant != uniform!
       parameters:
         value: 0.8
-    relaxation:
-      distribution: constant
-      parameters:
-        value : 2.0
-    mean_time:
-      distribution: constant
-      parameters:
-        value: 10.0
-    end_time:
-      distributon: constant
-      parameters:
-        value: 20.0
+        #relaxation:
+        #  distribution: constant
+        #  parameters:
+        #    value : 2.0
+        #mean_time:
+        #  distribution: constant
+        #  parameters:
+        #    value: 10.0
+        #end_time:
+        #  distributon: constant
+        #  parameters:
+        #    value: 20.0
 
 symptoms:
   type: Tanh
