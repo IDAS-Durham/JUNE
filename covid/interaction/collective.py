@@ -35,7 +35,7 @@ class InteractionCollective(Interaction):
         if recipient_probability > 0.0:
             if random.random() <= transmission_probability * recipient_probability:
                 # TODO fix this
-                infecter.infect(recipient)
+                infecter.infection.infect(recipient)
                 recipient.get_counter().update_infection_data(
                     self.world.timer.now, group.get_spec()
                 )
@@ -66,14 +66,14 @@ class InteractionCollective(Interaction):
         interaction_intensity = (
             group.get_intensity()
             / max(1, group.size() - 1)
-            * (self.world.timer.now - self.world.timer.before)
+            * (self.world.timer.now - self.world.timer.previous)
         )
         prob_notransmission = 1.0
         summed_prob = 0.0
         for person in group.get_infected():
             probability = max(
                 0.0,
-                1.0 - person.infection.transmission.probabilty * interaction_intensity,
+                1.0 - person.infection.transmission.probability * interaction_intensity,
             )
             prob_notransmission *= probability
             summed_prob += probability
@@ -101,6 +101,6 @@ class InteractionCollective(Interaction):
         interaction_intensity = (
             group.get_intensity()
             / max(group.size() - 1, 1)
-            * (self.world.timer.now - self.world.timer.before)
+            * (self.world.timer.now - self.world.timer.previous)
         )
         return prob_transmission * interaction_intensity
