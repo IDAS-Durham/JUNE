@@ -22,14 +22,13 @@ class Infection(InfectionInitializer):
         super().__init__(user_config)
         self.threshold_transmission = 0.001
         self.threshold_symptoms     = 0.001
-        #self.starttime = timer.now
+        try:
+            self.starttime = timer.now
+        except:
+            print("is this a test? otherwise check the time!")
+            pass
         self.user_config = user_config
         self.person = person
-
-        #self.transmission = self.set_transmission(transmission)
-        #self.symptoms = self.set_symptoms(symptoms)
-        #self.transmission = TransmissionConstant()
-        #self.symptoms = SymptomsConstant(self) 
 
     def infect(self, person_to_infect):
 
