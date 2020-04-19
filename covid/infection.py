@@ -73,7 +73,7 @@ class Infection(InfectionInitializer):
     can be added/modified a posteriori.
     """
 
-    def __init__(self, person, timer, user_config):
+    def __init__(self, person, timer, user_config={}):
         self.person = person
         super().__init__(user_config)
         self.threshold_transmission = 0.001

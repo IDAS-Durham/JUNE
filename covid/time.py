@@ -1,7 +1,21 @@
 import calendar
 
 class Timer():
-    def __init__(self, time_config, initial_day='Friday'):
+    def __init__(self, time_config, initial_day='Monday'):
+        if time_config is None:
+            import os
+            import yaml
+            config_file = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "configs",
+                "config_example.yaml",
+            )
+            with open(config_file, "r") as f:
+                config = yaml.load(f, Loader=yaml.FullLoader)
+
+            time_config = config['time']
+
         self.day = 1
         self.previous_day = 0
         self.shift = 0
