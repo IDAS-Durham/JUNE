@@ -5,7 +5,7 @@ from covid.transmission import Transmission
 from covid.symptoms import Symptoms
 
 
-class Infection(TypeInitializer):
+class Infection(TypeInitializer, ParametersInitializer):
     """
     The description of the infection, with two time dependent characteristics,
     which may vary by individual:
