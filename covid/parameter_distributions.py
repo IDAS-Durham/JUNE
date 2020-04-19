@@ -1,6 +1,5 @@
 import random
 
-
 class ParametersError(BaseException):
     def __init__(self, distribution, key):
         message = f"""Parameter distribution {type(distribution).__name__} 

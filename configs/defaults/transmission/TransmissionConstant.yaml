@@ -1,5 +1,4 @@
-parameters:
-  probability:
-    distribution: constant
-    parameters:
-      value: 0.3
+probability_transmission:
+  distribution: constant
+  parameters:
+    value: 0.3
