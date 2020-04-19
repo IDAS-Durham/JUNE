@@ -5,7 +5,7 @@ from covid.transmission import Transmission
 from covid.symptoms import Symptoms
 
 
-class Infection(TypeInitializer):
+class Infection(InfectionInitializer):
     """
     The description of the infection, with two time dependent characteristics,
     which may vary by individual:
@@ -84,3 +84,10 @@ class Infection(TypeInitializer):
         )
         is_infected = transmission_bool or symptoms_bool
         return is_infected
+
+if __name__ == "__main__":
+    user_params = {
+            "transmission" : {"type" : "constant"},
+            "symptoms" : {"type" : "constant"}
+            }
+    inf = Infection(None, None, user_params)
