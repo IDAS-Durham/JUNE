@@ -18,12 +18,10 @@ class Symptoms(ParameterInitializer):
         self.infection = infection
         super().__init__("symptoms", required_parameters)
         self.initialize_parameters(user_parameters)
-        #self.infection = self.set_infection(infection)
-        #self.infection = self.set_infection(infection)
         self.infection = infection
         self.maxseverity = random.random()
         self.tags = allowed_symptom_tags
-        self.health_index = self.infection.person.get_health_index()
+        #self.health_index = self.infection.person.get_health_index()
 
     @property
     def severity(self):
@@ -45,7 +43,7 @@ class Symptoms(ParameterInitializer):
     def fix_tag(self, severity):
         if severity <= 0.0:
             return "healthy"
-        index = np.searchsorted(severity, self.health_index)
+        index = np.searchsorted(self.infection.person.health_index, severity)
         return self.tags[index + 1]
 
     def tags(self):
