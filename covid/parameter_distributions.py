@@ -8,7 +8,7 @@ class ParametersError(BaseException):
         super().__init__(message)
 
 
-def parameter_calculator(parameter_config):
+def parameter_initializer(parameter_config):
     try:
         distribution = parameter_config["distribution"]
     except KeyError:
