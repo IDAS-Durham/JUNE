@@ -1,6 +1,6 @@
 import calendar
 
-class DayIterator():
+class Timer():
     def __init__(self, time_config, initial_day='Friday'):
         self.day = 1
         self.previous_day = 0
@@ -19,7 +19,14 @@ class DayIterator():
             self.shift = 0
         self.weekend = self.is_weekend()
         self.duration = self.get_shifts_duration(self.weekend)
-   
+
+    @property
+    def now(self):
+        return self.day
+    @property
+    def previous(self):
+        return self.previous_day
+
     def get_shifts_duration(self, weekend):
         self.type_day = 'weekend' if weekend else 'weekday'
         return self.time_config['step_duration'][self.type_day][self.shift+1]/24.
@@ -44,8 +51,6 @@ class DayIterator():
         active = self.time_config["step_active_groups"][self.type_day][self.shift+1]
         return active + always_active 
 
-
-
 if __name__ == '__main__':
 
     import yaml
@@ -59,12 +64,12 @@ if __name__ == '__main__':
     with open(config_file, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    day_iter = DayIterator(config['time'])
+    day_iter = Timer(config['time'])
 
     while day_iter.day <= day_iter.total_days:
 
-        print('Current time : ', day_iter.get_time_stamp())
-        print('Previous time : ', day_iter.previous_day)
+        print('Current time : ', day_iter.now)
+        print('Previous time : ', day_iter.previous)
         print('Day of the week ', day_iter.day_of_week())
         print('Active groups : ', day_iter.active_groups())
         
