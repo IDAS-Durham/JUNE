@@ -19,7 +19,7 @@ class ParameterInitializer:
     def __init__(self, classtype, required_parameters):
         self.classtype = classtype
         self.required_parameters = required_parameters
-        self.tranmission_type = type(self).__name__
+        self.class_name = type(self).__name__
         self.default_parameters = self.read_default_parameters()
 
     def read_default_parameters(self):
@@ -29,7 +29,7 @@ class ParameterInitializer:
             "configs",
             "defaults",
             self.classtype,
-            self.tranmission_type + ".yaml",
+            self.class_name + ".yaml",
         )
         try:
             with open(default_path, "r") as f:
