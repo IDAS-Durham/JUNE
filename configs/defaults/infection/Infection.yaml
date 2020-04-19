@@ -2,4 +2,4 @@ transmission:
   type: Constant
 
 symptoms:
-  type: Constant
+  type: Constant 
