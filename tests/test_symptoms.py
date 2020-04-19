@@ -1,60 +1,68 @@
 import sys
-sys.path.append("../covid")
 import numpy as np
 import os
 import yaml
-
-from infection import Infection
-from infection_selector import InfectionSelector
-from transmission import Transmission
-from symptoms import Symptoms
+from covid.world import World
+from covid.time import Timer
+from covid.infection import Infection
 from covid.groups.people import Person
 
 
-def trivial_check(config):
-    selector  = InfectionSelector(config)
-    infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
-    print("   * Symptom severity = ", infection.symptom_severity(1))
+def test_trivial_check():
+    world = World()
+    infection = Infection(world.people.members[0], world.timer)
+    assert infection.symptom_severity == 0.
 
 
-def distribute_values(config):
+#TODO: move plot and non-automatic tests to plot_tests folder
+def distribute_values(world):
     import random
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(1, 1, figsize=(9, 4))
     ax.set_title("10 examples for Gaussian evolution of symptom severity over time")
-    selector = InfectionSelector(config)
-    times    = np.arange(0.,20.,0.1)
+    infection = Infection(world.people.members[0], world.timer)
     for i in range(10):
-        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
         severities = []
-        for t in times:
-            severities.append(infection.symptom_severity(t))
-        ax.plot(times,severities)
+        times = []
+        infection.infect(world.people.members[i+1])
+        while infection.timer.day <= infection.timer.total_days:
+            severities.append(world.people.members[i+1].infection.symptom_severity)
+            times.append(infection.timer.now)
+            next(infection.timer)
+        ax.plot(times,severities, label=f'Age = {world.people.members[i+1].age}')
+        infection.timer = Timer(world.config['time'])
+    plt.legend()
     plt.show()
 
-def distribute_values_Tanh(config):
+def distribute_values_Tanh(world):
     import random
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(1, 1, figsize=(9, 4))
     ax.set_title("10 examples for plateau'ed evolution of symptom severity over time")
-    selector = InfectionSelector(config)
-    times    = np.arange(0.,20.,0.1)
+    #TODO: how do we set symtomps parameters from here ?? 
+    infection = Infection(world.people.members[0], world.timer)
+
     for i in range(10):
-        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
+        infection.infect(world.people.members[i+1])
         severities = []
-        for t in times:
-            severities.append(infection.symptom_severity(t))
-        ax.plot(times,severities)
+        times = []
+        while infection.timer.day <= infection.timer.total_days:
+            severities.append(world.people.members[i+1].infection.symptom_severity)
+            times.append(infection.timer.now)
+            next(infection.timer)
+        ax.plot(times,severities, label=f'Age = {world.people.members[i+1].age}')
+        infection.timer = Timer(world.config['time'])
+    plt.legend()
     plt.show()
 
-def check_symptom_tags(N,config):
+def check_symptom_tags(N,world):
     import random
     import matplotlib
     import matplotlib.pyplot as plt
 
-    selector = InfectionSelector(config)
+    infection = Infection(world.people.members[0], world.timer)
 
     health_index = [0.4, 0.55, 0.65, 0.8, 0.95]
     severs1  = []
@@ -63,13 +71,17 @@ def check_symptom_tags(N,config):
     allowed  = ["none","influenza-like illness", "pneumonia",
                 "hospitalised", "intensive care",
                 "dead"]
+    person = world.people.members[0]
     for i in range(N):
-        person    = Person('test',0,10,0,'M',health_index,0)
-        infection = selector.make_infection(person,0)
-        person.set_infection(infection)
-        severity  = infection.symptom_severity(1)
+        person.health_index = health_index
+        # reset timer
+        infection.timer = Timer(world.config['time'])
+        infection.infect(person)
+        next(infection.timer)
+        next(infection.timer)
+        severity  = world.people.members[0].infection.symptom_severity
         severs1.append(severity)
-        tag = person.get_symptoms_tag(severity)
+        tag = world.people.members[0].infection.symptoms.tag
         for j in range(0,len(allowed)):
             if tag==allowed[j]:
                 tags[j] += 1
@@ -94,31 +106,9 @@ def check_symptom_tags(N,config):
 
 
 if __name__ == "__main__":
-    config_file = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "tests",
-        "config_symptoms_test.yaml",
-    )
-    with open(config_file, "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-    found = False
-
-    if "trivial_check" in config:
-        print ("trivial check")
-        print (config["trivial_check"])
-        trivial_check(config["trivial_check"])
-        found = True        
-    if "distribute_values" in config:
-        print ("distribute values Gaussian shape")
-        distribute_values(config["distribute_values"])
-        found = True        
-    if "distribute_values_Tanh" in config:
-        print ("distribute values tanh shape")
-        distribute_values_Tanh(config["distribute_values_Tanh"])
-        found = True        
-    if "symptoms_tag_test" in config:
-        print ("symptoms_tag_test")
-        check_symptom_tags(1000000,config["symptoms_tag_test"])
-        found = True
+    world = World()
+    #print ("distribute values Gaussian shape")
+    #distribute_values(world)
+    print ("distribute values tanh shape")
+    distribute_values_Tanh(world)
+    check_symptom_tags(100000,world)

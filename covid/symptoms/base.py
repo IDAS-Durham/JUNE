@@ -37,7 +37,6 @@ class Symptoms(ParameterInitializer):
 
     @property
     def tag(self):
-        self.calculate(self.timer.now)
         return self.fix_tag(self.severity)
 
     def fix_tag(self, severity):
