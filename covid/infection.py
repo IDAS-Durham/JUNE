@@ -60,8 +60,6 @@ class InfectionInitializer:
         symptoms = globals()[symptoms_class_name](self, symptoms_parameters)
         return symptoms
 
-
-
 class Infection(InfectionInitializer):
     """
     The description of the infection, with two time dependent characteristics,
@@ -148,4 +146,5 @@ if __name__ == "__main__":
     }
     inf = Infection(None, None, user_params)
     print(inf.transmission)
-    print(inf.symptoms)
+    print(inf.symptoms.infection)
+    print(inf.transmission.probability)
