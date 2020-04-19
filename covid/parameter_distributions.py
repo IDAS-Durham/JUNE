@@ -1,17 +1,41 @@
 import random
 
+
 class ParametersError(BaseException):
     def __init__(self, distribution, key):
-        message = (
-            f"""Parameter distribution {type(distribution).__name__} 
+        message = f"""Parameter distribution {type(distribution).__name__} 
                 missing parameter {key}"""
-        )
         super().__init__(message)
+
+
+def parameter_calculator(parameter_config):
+    try:
+        distribution = parameter_config["distribution"]
+    except KeyError:
+        raise BaseException(f"I need the distribution name")
+    try:
+        parameters = parameter_config["parameters"]
+    except KeyError:
+        raise BaseException(f"I need the parameters for {distribution}")
+    if distribution == "constant":
+        parameter = ConstantParameter(parameters)
+        return parameter.value
+    elif distribution == "gaussian":
+        parameter = GaussianParameter(parameters)
+        return parameter.value
+    elif distribution == "uniform":
+        parameter = UniformParameter(parameters)
+        return parameter.value
+    else:
+        raise NotImplementedError(
+            f"Parameter distribution {distribution} not implemented"
+        )
 
 
 class ParameterDistribution:
     def __init__(self):
         pass
+
     def value(self):
         pass
 
@@ -80,6 +104,7 @@ class GaussianParameter(ParameterDistribution):
                 break
         return value
 
+
 class UniformParameter:
     def __init__(self, parameters_dict):
         try:
@@ -98,12 +123,9 @@ class UniformParameter:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    params_dict1 = {"lower" :0, "upper" : 1}
-    parameters_dict = {
-            "value" : 0.5,
-            "mean" : 0.3,
-            "width_mins" : 1,
-            "width_plus" : 1}
+
+    params_dict1 = {"lower": 0, "upper": 1}
+    parameters_dict = {"value": 0.5, "mean": 0.3, "width_mins": 1, "width_plus": 1}
 
     constant = ConstantParameter(parameters_dict)
     gaussian = GaussianParameter(parameters_dict)
@@ -116,7 +138,7 @@ if __name__ == "__main__":
         constant_values.append(constant.value)
         gaussian_values.append(gaussian.value)
         uniform_values.append(uniform.value)
-    fig, ax = plt.subplots(1, 3, figsize=(7,3), sharex=True, sharey=True)
+    fig, ax = plt.subplots(1, 3, figsize=(7, 3), sharex=True, sharey=True)
     ax[0].hist(constant_values)
     ax[0].set_title("constant")
     ax[1].hist(gaussian_values)
@@ -125,6 +147,3 @@ if __name__ == "__main__":
     ax[2].set_title("uniform")
     plt.subplots_adjust(wspace=0, hspace=0)
     plt.show()
-
-    
-    
