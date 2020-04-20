@@ -17,10 +17,7 @@ class Inputs:
         self.zone = zone
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
-        # self.MIDDLE_OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "middle_output_area", zone)
-        # oa2msoa_df = self.oa2msoa()
 
-        # Read census data on high resolution map (OA)
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
