@@ -8,9 +8,8 @@ import random
 
 class InteractionCollective(Interaction):
     def __init__(self, user_parameters, world):
-        self.world = world
         required_parameters = ["mode"]
-        super().__init__(user_parameters, required_parameters)
+        super().__init__(user_parameters, required_parameters, world)
 
     def single_time_step_for_group(self, group):
         if (
@@ -34,7 +33,6 @@ class InteractionCollective(Interaction):
         recipient_probability = recipient.get_susceptibility()
         if recipient_probability > 0.0:
             if random.random() <= transmission_probability * recipient_probability:
-                # TODO fix this
                 infecter.infection.infect(recipient)
                 recipient.get_counter().update_infection_data(
                     self.world.timer.now, group.get_spec()
