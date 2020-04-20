@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("../covid")
 import numpy as np
 import os
@@ -16,16 +17,19 @@ def distribute_values(config):
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(1, 1, figsize=(9, 4))
-    ax.set_title("10 exampels for lognormal distribution of transmission probability over time")
+    ax.set_title(
+        "10 exampels for lognormal distribution of transmission probability over time"
+    )
     selector = InfectionSelector(config)
-    times    = np.arange(0.,20.,0.1)
+    times = np.arange(0.0, 20.0, 0.1)
     for i in range(10):
-        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
+        infection = selector.make_infection(Person("test", 0, 10, 0, "M", 0, 0), 0)
         probs = []
         for t in times:
             probs.append(infection.transmission_probability(t))
-        ax.plot(times,probs)
+        ax.plot(times, probs)
     plt.show()
+
 
 def distribute_values_Constant(config):
     import random
@@ -34,13 +38,13 @@ def distribute_values_Constant(config):
     fig, ax = plt.subplots(1, 1, figsize=(9, 4))
     ax.set_title("10 exampels for constant transmission probability over time")
     selector = InfectionSelector(config)
-    times    = np.arange(0.,20.,0.1)
+    times = np.arange(0.0, 20.0, 0.1)
     for i in range(10):
-        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
+        infection = selector.make_infection(Person("test", 0, 10, 0, "M", 0, 0), 0)
         probs = []
         for t in times:
             probs.append(infection.transmission_probability(t))
-        ax.plot(times,probs)
+        ax.plot(times, probs)
     plt.show()
 
 
@@ -51,13 +55,13 @@ def distribute_values_XNExp(config):
     fig, ax = plt.subplots(1, 1, figsize=(9, 4))
     ax.set_title("10 exampels for xnexp distribution over time")
     selector = InfectionSelector(config)
-    times    = np.arange(0.,20.,0.1)
+    times = np.arange(0.0, 20.0, 0.1)
     for i in range(10):
-        infection = selector.make_infection(Person('test',0,10,0,'M',0,0),0)
+        infection = selector.make_infection(Person("test", 0, 10, 0, "M", 0, 0), 0)
         probs = []
         for t in times:
             probs.append(infection.transmission_probability(t))
-        ax.plot(times,probs)
+        ax.plot(times, probs)
     plt.show()
 
 
@@ -74,14 +78,14 @@ if __name__ == "__main__":
     found = False
 
     if "distribute_values" in config:
-        print ("distribute values Gaussian shape")
+        print("distribute values Gaussian shape")
         distribute_values(config["distribute_values"])
-        found = True        
+        found = True
     if "distribute_values_Constant" in config:
-        print ("distribute values tanh shape")
+        print("distribute values tanh shape")
         distribute_values_Constant(config["distribute_values_Constant"])
-        found = True        
+        found = True
     if "distribute_values_XNExp" in config:
-        print ("distribute values xnexp shape")
+        print("distribute values xnexp shape")
         distribute_values_Constant(config["distribute_values_XNExp"])
-        found = True        
+        found = True
