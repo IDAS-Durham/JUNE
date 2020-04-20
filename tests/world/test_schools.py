@@ -12,7 +12,6 @@ def test_number_schools():
     """ 
     Check the number of schools is right
     """
-
     world = World.from_pickle()
     inputs = Inputs()
     assert len(world.schools.members) == len(inputs.school_df)
