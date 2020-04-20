@@ -2,6 +2,7 @@ import os
 import random
 import yaml
 
+
 class ParametersError(BaseException):
     def __init__(self, distribution, key):
         message = f"""Parameter distribution {type(distribution).__name__} 
@@ -16,6 +17,7 @@ class ParameterInitializer:
     The classtype arguments is the kind of class (transmission, symptoms, etc.)
     you are initializing, so it can look the defaults at the right place.
     """
+
     def __init__(self, classtype, required_parameters):
         self.classtype = classtype
         self.required_parameters = required_parameters
@@ -41,18 +43,30 @@ class ParameterInitializer:
     def initialize_parameters(self, user_parameters):
         parameter_values_dict = {}
         for parameter in self.required_parameters:
-            if parameter not in user_parameters:
-                parameter_values_dict[parameter] = self.calculate_parameter(
-                    self.default_parameters[parameter]
-                )
+            if parameter not in user_parameters: # if parameter is not specified by user, take it from defaults
+                parameter_config = self.default_parameters[parameter]
+                if type(parameter_config) != dict:
+                    parameter_values_dict[parameter] = parameter_config
+                    continue
+                elif "distribution" in parameter_config.keys():
+                    parameter_values_dict[parameter] = self.calculate_parameter(
+                        parameter_config
+                    )
+                else:
+                    parameter_values_dict[parameter] = parameter_config
             else:
-                parameter_values_dict[parameter] = self.calculate_parameter(
-                    user_parameters[parameter]
-                )
+                parameter_config = user_parameters[parameter]
+                if type(parameter_config) != dict:
+                    parameter_values_dict[parameter] = parameter_config
+                    continue
+                elif "distribution" in parameter_config.keys():
+                    parameter_values_dict[parameter] = self.calculate_parameter(
+                        parameter_config
+                    )
+                else:
+                    parameter_values_dict[parameter] = parameter_config
         for parameter, value in parameter_values_dict.items():
             setattr(self, parameter, value)
-
-
 
     def calculate_parameter(self, parameter_config):
         try:
@@ -60,7 +74,7 @@ class ParameterInitializer:
         except KeyError:
             raise BaseException(f"I need the distribution name")
         except TypeError:
-            return parameter_config # for a parameter that does not require sampling
+            return parameter_config  # for a parameter that does not require sampling
         try:
             parameters = parameter_config["parameters"]
         except KeyError:

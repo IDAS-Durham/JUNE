@@ -7,10 +7,11 @@ import random
 
 class Interaction(ParameterInitializer):
 
-    def __init__(self, user_parameters, required_parameters):
+    def __init__(self, user_parameters, required_parameters, world):
         super().__init__("interaction", required_parameters)
         self.initialize_parameters(user_parameters)
         self.groups   = []
+        self.world = world
 
     def time_step(self):
         for grouptype in self.groups:
