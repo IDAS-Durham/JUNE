@@ -184,6 +184,24 @@ class Group:
             for p in self.people:
                 p.output(time)
 
+    def get_contact_matrix(self):
+        inputs = Inputs()
+        return symmetrize_matrix(inputs.contact_matrix)
+
+    def get_reciprocal_matrix(self):
+        inputs = Inputs()
+        demography = np.array([len(pool) for pool in self.age_pool])
+        return reciprocal_matrix(inputs.contact_matrix, demography)
+
+
+def symmetrize_matrix(matrix):
+    return (matrix + matrix.T) / 2
+
+
+def reciprocal_matrix(matrix, demography):
+    demography_matrix = demography.reshape(-1, 1) / demography.reshape(1, -1)
+    return (matrix + matrix.T * demography_matrix) / 2
+
 class TestGroups():
     def __init__(self,N):
         self.members = []
