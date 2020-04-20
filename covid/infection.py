@@ -142,7 +142,7 @@ class Infection(InfectionInitializer):
 if __name__ == "__main__":
     user_params = {
         "transmission": {"type": "constant"},
-        "symptoms": {"type": "constant"},
+        "symptoms": {"type": "tanh"},
     }
     inf = Infection(None, None, user_params)
     print(inf.transmission)
