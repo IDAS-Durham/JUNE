@@ -1,15 +1,44 @@
+import numpy as np
+import os
+from covid.inputs import Inputs 
+from covid.world import World
 
-def test_homeless_children():
+
+def test_no_lonely_children():
     '''
-    Check that there are no houses without adults
+    Check there ar eno children living without adults
     '''
 
+    world = World.from_pickle()
 
-def test_homeless():
+    attribute = "nomis_bin"
+    decoder = world.inputs.decoder_age
+    only_children = 0
+    for i in range(len(world.areas.members)):
+        for j in range(len(world.areas.members[i].households)):
+            freq = np.zeros(len(decoder))
+            for k in range(len(world.areas.members[i].households[j].people)):
+                freq[getattr(world.areas.members[i].households[j].people[k], attribute)] += 1
+                # if no adults, but at least one child
+                if (np.sum(freq[5:]) == 0.0) & (np.sum(freq[:5]) > 0.0):
+                    only_children += 1
+
+    assert only_children == 0
+
+
+
+def test_no_homeless():
     '''
     Check that no one belonging to an are is left without a house
     '''
+    world = World.from_pickle()
+    total_in_households = 0
+    for i in range(len(world.areas.members)):
+        for j in range(len(world.areas.members[i].households)):
+            total_in_households += len(world.areas.members[i].households[j].people)
 
+    assert total_in_households == len(world.people.members)
+ 
 def test_enough_houses():
     '''
     Check that we don't have areas with no children in allowed household compositions, but children living
