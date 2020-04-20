@@ -32,13 +32,15 @@ class MatrixInteraction(Interaction):
             or group.size_susceptible() == 0
         ):
             return
- 
+
         self.matrix = group.get_contact_matrix()
         self.matrix = self.reduce_matrix(group)
         self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
 
         for infecter in group.get_infected():
-            transmission_probability = self.calculate_single_transmission_probability(infecter,group) 
+            transmission_probability = self.calculate_single_transmission_probability(
+                infecter, group
+            )
             Naverage = self.contacts[infecter.age]
             # find column infecter, and sum
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
@@ -49,24 +51,25 @@ class MatrixInteraction(Interaction):
             for i in range(Ncontacts):
                 # randomly select someone with that age
                 recipient = self.make_single_contact(infecter, group, contact_ages[i])
-                if recipient and (not(recipient.is_infected()) and
-                    recipient.susceptibility>0.):
-                    if random.random() <= 1.-np.exp(-transmission_probability *
-                                                    recipient.susceptibility()):
+                if recipient and (
+                    not (recipient.is_infected()) and recipient.susceptibility > 0.0
+                ):
+                    if random.random() <= 1.0 - np.exp(
+                        -transmission_probability * recipient.susceptibility()
+                    ):
                         infecter.infection.infect(recipient)
                         recipient.get_counter().update_infection_data(
                             self.world.timer.now, group.get_spec()
                         )
                         infecter.get_counter().increment_infected()
 
-
-
     def calculate_single_transmission_probability(self, infecter, group):
         intensity = group.get_intensity(self.time)
         probability = infecter.transmission.transmission_probability
-        #probability *= self.severity_multiplier(group.get_spec())
-        return probability * intensity * (self.world.timer.now - self.world.timer.before)
-
+        # probability *= self.severity_multiplier(group.get_spec())
+        return (
+            probability * intensity * (self.world.timer.now - self.world.timer.before)
+        )
 
     def test_single_time_step_for_group(self, group):
 
@@ -91,7 +94,6 @@ class MatrixInteraction(Interaction):
                 if recipient:
                     self.test_matrix[infecter.age][recipient.age] += 1 / 2
                     self.test_matrix[recipient.age][infecter.age] += 1 / 2
-
 
     def test_single_time_step_for_group(self, group):
 
@@ -145,9 +147,9 @@ class MatrixInteraction(Interaction):
         return mean_contacts, np.cumsum(probability, axis=0)
 
     def make_single_contact(self, infecter, group, contact_age):
-        #TODO: Think about implications for very small groups, this will lower the number of interactions 
+        # TODO: Think about implications for very small groups, this will lower the number of interactions
         if infecter.age == contact_age and len(group.age_pool[contact_age]) == 1:
-            return None 
+            return None
         recipient = infecter
         while recipient == infecter:
             recipient = np.random.choice(group.age_pool[contact_age])
@@ -161,7 +163,8 @@ class MatrixInteraction(Interaction):
             Nint += 1
         return Nint
 
-if __name__=='__main__':
+
+if __name__ == "__main__":
     world = World()
     mi = MatrixInteraction(world)
     mi.single_time_step_for_group(world.households.members[0])
