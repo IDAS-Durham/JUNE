@@ -21,7 +21,6 @@ class Symptoms(ParameterInitializer):
         self.infection = infection
         self.maxseverity = random.random()
         self.tags = allowed_symptom_tags
-        #self.health_index = self.infection.person.get_health_index()
 
     @property
     def severity(self):
