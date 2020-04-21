@@ -40,11 +40,11 @@ def test_only_kids_school():
     Check that all kids in ages between 5 and 17 are assigned a school 
     """
     world = World.from_pickle()
-    ADULTS_LOW = 18
+    ADULTS_LOW = 20 
     schooled_adults = 0
     for i in range(len(world.areas.members)):
         for j in range(len(world.areas.members[i].people)):
-            if world.areas.members[i].people[j].age > ADULTS_LOW:
+            if world.areas.members[i].people[j].age >= ADULTS_LOW:
                 if world.areas.members[i].people[j].school is not None:
                     schooled_adults += 1
 
