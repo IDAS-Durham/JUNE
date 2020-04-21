@@ -37,6 +37,7 @@ class ParameterInitializer:
             with open(default_path, "r") as f:
                 default_params = yaml.load(f, Loader=yaml.FullLoader)
         except FileNotFoundError:
+            print(default_path)
             raise FileNotFoundError("Default parameter config file not found")
         return default_params
 
