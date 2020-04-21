@@ -337,7 +337,8 @@ class Inputs:
         self, msoa, DATA_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "census_data", "flow/")
     ) -> dict:
         """
-        Workout where people go to work.
+        Workout where people go to work. It is for the whole of England & Wales
+        and can easily be stripped to get single regions.
         The MSOA area code is used for homes (rows) and work (columns).
         The dataframe from NOMIS:
             TableID: WU01EW
