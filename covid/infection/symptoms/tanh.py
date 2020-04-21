@@ -13,7 +13,6 @@ class SymptomsTanh(Symptoms):
         self.delta_end   = (self.Tend-self.Tmax)
 
     def _calculate_severity(self,time):
-        self.severity = 0.
         time_since_start = time - self.starttime
         if time_since_start<=self.Tmax:
             severity = (1.+np.tanh(3.14*(time_since_start-self.Tonset)/self.delta_onset))/2.
