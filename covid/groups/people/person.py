@@ -43,6 +43,7 @@ class Person:
         self.household = None
         self.school = None
         self.industry = None
+        self.industry_specific = None
         self.init_health_information()
        
 
