@@ -177,7 +177,7 @@ class PersonDistributor:
       
     def _assign_industry_specific(self, ratio, distribution):
         MC_random = np.random.uniform()
-        industry_specific = None
+        industry_specific_id = None
 
         # Check if person should be assigned any specific industry given their sector
         if MC_random < ratio:
@@ -185,7 +185,7 @@ class PersonDistributor:
         else:
             # Assign specific industry according to distribution
             numbers = np.arange(len(distribution))
-            random_variable = rv_discrete(values=(numbers,distribution))
+            random_variable = stats.rv_discrete(values=(numbers,distribution))
             industry_specific_id = random_variable.rvs(size=1)
             
         return industry_specific_id
