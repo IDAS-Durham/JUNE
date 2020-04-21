@@ -29,7 +29,7 @@ class Timer():
         self.previous_day = self.day
         self.day += self.duration
         self.shift += 1
-        if int(self.day) == self.day:
+        if int(self.day) - self.day < 1.e-6 :
             self.shift = 0
         self.weekend = self.is_weekend()
         self.duration = self.get_shifts_duration(self.weekend)
@@ -87,4 +87,5 @@ if __name__ == '__main__':
         print('Day of the week ', day_iter.day_of_week())
         print('Active groups : ', day_iter.active_groups())
         
+        print('**********************************')
         next(day_iter)
