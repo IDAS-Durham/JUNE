@@ -53,8 +53,8 @@ class Inputs:
         self.workflow_df = self.create_workflow_df(self.oa2msoa_df["MSOA11CD"].values)
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
-        self.companysector_by_sex_df = self.read_companysector_by_sex_census()
-        self.companysector_specific_by_sex_df = self.read_companysector_specifc_by_sex()
+        self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_companysector_by_sex_census()
+        self.companysector_specific_by_sex_df = self.read_companysector_specific_by_sex()
 
 
     def read(self, filename):
@@ -218,7 +218,7 @@ class Inputs:
         for idx, oa in enumerate(industry_by_sex_df['oareas']):
             industry_by_sex_dict[oa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
 
-        return industry_by_sex_dict
+        return industry_by_sex_dict, industry_by_sex_df
 
     def read_companysector_specific_by_sex(self):
         """

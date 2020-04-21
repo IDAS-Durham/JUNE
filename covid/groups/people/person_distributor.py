@@ -14,7 +14,7 @@ class PersonDistributor:
     by the census statistics
     """
 
-    def __init__(self, people, area, msoareas, companysector_by_sex_df, workflow_df, companysector_specific_by_sex_df):
+    def __init__(self, people, area, msoareas, companysector_by_sex_dict, companysector_by_sex_df, workflow_df, companysector_specific_by_sex_df):
         self.area = area
         self.msoareas = msoareas
         self.people = people
@@ -23,6 +23,7 @@ class PersonDistributor:
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self.no_kids_area = False
         self.no_students_area = False
+        self.companysector_by_sex_dict = companysector_by_sex_dict
         self.companysector_by_sex_df = companysector_by_sex_df
         self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.area.world.config)
@@ -106,9 +107,9 @@ class PersonDistributor:
             21: "U",
         }
         numbers = np.arange(1, 22)
-        distribution_male = self.companysector_by_sex_df[self.area.name]["m"]
+        distribution_male = self.companysector_by_sex_dict[self.area.name]["m"]
         self.sector_distribution_male = stats.rv_discrete(values=(numbers, distribution_male))
-        distribution_female = self.companysector_by_sex_df[self.area.name]["f"]
+        distribution_female = self.companysector_by_sex_dict[self.area.name]["f"]
         self.sector_distribution_female = stats.rv_discrete(values=(numbers, distribution_female))
 
     def _assign_industry(self, sex, employed=True):
@@ -134,9 +135,9 @@ class PersonDistributor:
                 # MAY NEED TO CHANGE THE USE OF self.area TO BE CORRECT LOOKUP VALUE
                 # ADD try/except statements in to allow for an area not existing (after testing though)
                 # ADD industry_dict to self.area as in populate_area()
-                distribution = self.companysector_by_sex_df[self.area.name]["m"]
+                distribution = self.companysector_by_sex_dict[self.area.name]["m"]
             else:
-                distribution = self.companysector_by_sex_df[self.area.name]["f"]
+                distribution = self.companysector_by_sex_dict[self.area.name]["f"]
 
             # assign industries to numbers A->U = 1-> 21
             industry_dict = {
@@ -238,11 +239,29 @@ class PersonDistributor:
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(size=self.area.n_residents)
 
         # this won't work with this as this df is actually a dict - but this can be fixed
-        total_healthcare = np.sum(self.companysector_by_sex_df['all Q'])
-        total_education = np.sum(self.companysector_by_sex_df['all P'])
-        total_healthcare_specific = np.sum(self.companysector_specific_by_sex_df['total'][4:])
-        total_education_specific = np.sum(self.companysector_specific_by_sex_df['total'][:4])
-        
+        healthcare_specific_slice = self.companysector_specific_by_sex_df[:4]
+        education_specific_slice = self.companysector_specific_by_sex_df[:4]
+
+        male_education_specific = np.sum(education_specific_slice['males'])
+        male_hospital_specific = np.sum(healthcare_specific_slice['males'])
+        female_education_specific = np.sum(education_specific_slice['females'])
+        female_hospital_specific = np.sum(healthcare_specific_slice['females'])
+
+        male_education = np.sum(self.companysector_by_sex_df['m P'])
+        male_healthcare = np.sum(self.companysector_by_sex_df['m Q'])
+        female_education = np.sum(self.companysector_by_sex_df['f P'])
+        female_healthcare = np.sum(self.companysector_by_sex_df['f Q'])
+
+        male_healthcare_ratio = male_healthcare_specific/male_healthcare
+        male_education_ratio = male_education_specific/male_education
+        female_healthcare_ratio = female_healthcare_specific/female_healthcare
+        female_education_ratio = female_education_specific/female_education
+
+        male_healthcare_distribution = np.array(healthcare_specific_slice['males'])/male_healthcare_specific
+        male_education_distribution = np.array(education_specific_slice['males'])/male_education_specific
+        female_healthcare_distribution = np.array(healthcare_specific_slice['females'])/female_healthcare_specific
+        female_education_distribution = np.array(education_specific_slice['females'])/female_education_specific
+                
         try:
             healthcare_ratio = total_healthcare_specific/total_healthcare
         except:
@@ -307,14 +326,36 @@ class PersonDistributor:
 
             person.industry = self._assign_industry(sex=sex_random)
 
-            # assign specific industry if relevant
+            # assign specific industry if relevant based on sex
 
             if person.industry == 'Q': #Healthcare
-                industry_specific_id = self._assign_industry_specific(healthcare_ratio, healthcare_distribution)
-                industry_specific_code = 
-            elif person.industry == 'P': # Education
-                industry_specific_id = self._assign_industry_specific(education_ratio, education_distribution)
+                if sex_random == 'male':
+                    industry_specific_id = self._assign_industry_specific(male_healthcare_ratio, male_healthcare_distribution)
+                    if industry_specific_id is not None:
+                        industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
+                        person.industry_specific = industry_specific_code
+                elif sex_random == 'female':
+                    industry_specific_id = self._assign_industry_specific(female_healthcare_ratio, female_healthcare_distribution)
+                    if industry_specific_id is not None:
+                        industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
+                        person.industry_specific = industry_specific_code
+                else:
+                    raise ValueError('sex must be with male or female. Instead got {}'.format(sex_random))
 
+            elif person.industry == 'P': # Education
+                if sex_random == 'male':
+                    industry_specific_id = self._assign_industry_specific(male_education_ratio, male_education_distribution)
+                    if industry_specific_id is not None:
+                        industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
+                        person.industry_specific = industry_specific_code
+                elif sex_random == 'female':
+                    industry_specific_id = self._assign_industry_specific(female_education_ratio, female_education_distribution)
+                    if industry_specific_id is not None:
+                        industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
+                        person.industry_specific = industry_specific_code
+                else:
+                    raise ValueError('sex must be with male or female. Instead got {}'.format(sex_random))
+                
         try:
             assert (
                 sum(
