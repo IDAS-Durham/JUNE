@@ -71,7 +71,7 @@ class InteractionCollective(Interaction):
         for person in group.get_infected():
             probability = max(
                 0.0,
-                1.0 - person.infection.transmission.probability * interaction_intensity,
+                1.0 - person.infection.infection_probability * interaction_intensity,
             )
             prob_notransmission *= probability
             summed_prob += probability

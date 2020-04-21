@@ -18,11 +18,13 @@ class ParameterInitializer:
     you are initializing, so it can look the defaults at the right place.
     """
 
-    def __init__(self, classtype, required_parameters):
+    def __init__(self, classtype, user_parameters, required_parameters):
         self.classtype = classtype
         self.required_parameters = required_parameters
+        self.user_parameters = user_parameters
         self.class_name = type(self).__name__
         self.default_parameters = self.read_default_parameters()
+        self.initialize_parameters()
 
     def read_default_parameters(self):
         default_path = os.path.join(
@@ -41,10 +43,10 @@ class ParameterInitializer:
             raise FileNotFoundError("Default parameter config file not found")
         return default_params
 
-    def initialize_parameters(self, user_parameters):
+    def initialize_parameters(self):
         parameter_values_dict = {}
         for parameter in self.required_parameters:
-            if parameter not in user_parameters: # if parameter is not specified by user, take it from defaults
+            if parameter not in self.user_parameters: # if parameter is not specified by user, take it from defaults
                 parameter_config = self.default_parameters[parameter]
                 if type(parameter_config) != dict:
                     parameter_values_dict[parameter] = parameter_config
@@ -56,7 +58,7 @@ class ParameterInitializer:
                 else:
                     parameter_values_dict[parameter] = parameter_config
             else:
-                parameter_config = user_parameters[parameter]
+                parameter_config = self.user_parameters[parameter]
                 if type(parameter_config) != dict:
                     parameter_values_dict[parameter] = parameter_config
                     continue

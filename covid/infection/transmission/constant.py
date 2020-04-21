@@ -9,7 +9,6 @@ class TransmissionConstant(Transmission):
     def update_probability(self):
         time = self.timer.now
         self.last_time_updated = time
-        return None
 
 
 if __name__ == "__main__":
