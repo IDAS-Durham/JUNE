@@ -4,21 +4,23 @@ import sys
 import os
 import yaml
 import importlib
-from covid.transmission import *
-from covid.symptoms import *
+from covid.infection.transmission import *
+from covid.infection.symptoms import *
 
 
 class InfectionInitializer:
-    def __init__(self, user_config):
+    def __init__(self, timer, health_index, user_config):
         infection_name = type(self).__name__
+        self.timer = timer
         user_config = user_config
         default_types = self.read_default_config(infection_name)
         self.transmission = self.initialize_transmission(default_types, user_config)
-        self.symptoms = self.initialize_symptoms(default_types, user_config)
+        self.symptoms = self.initialize_symptoms(health_index, default_types, user_config)
 
     def read_default_config(self, infection_name):
         default_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
+            "..",
             "..",
             "configs",
             "defaults",
@@ -29,6 +31,7 @@ class InfectionInitializer:
             with open(default_path, "r") as f:
                 default_params = yaml.load(f, Loader=yaml.FullLoader)
         except FileNotFoundError:
+            print(default_path)
             raise FileNotFoundError("Default parameter config file not found")
         return default_params
 
@@ -43,10 +46,10 @@ class InfectionInitializer:
             transmission_type = default_types["transmission"]["type"]
             transmission_parameters = {}
         transmission_class_name = "Transmission" + transmission_type.capitalize()
-        transmission = globals()[transmission_class_name](self, transmission_parameters)
+        transmission = globals()[transmission_class_name](self.timer, transmission_parameters)
         return transmission
 
-    def initialize_symptoms(self, default_types, user_config):
+    def initialize_symptoms(self, health_index, default_types, user_config):
         if "symptoms" in user_config:
             symptoms_type = user_config["symptoms"]["type"]
             if "parameters" in user_config["symptoms"]:
@@ -57,7 +60,7 @@ class InfectionInitializer:
             symptoms_type = default_types["symptoms"]["type"]
             symptoms_parameters = {}
         symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-        symptoms = globals()[symptoms_class_name](self, symptoms_parameters)
+        symptoms = globals()[symptoms_class_name](self.timer, health_index, symptoms_parameters)
         return symptoms
 
 class Infection(InfectionInitializer):
@@ -75,10 +78,12 @@ class Infection(InfectionInitializer):
 
     def __init__(self, person, timer, user_config={}):
         self.person = person
-        super().__init__(user_config)
+        if person == None:
+            super().__init__(timer, None, user_config)
+        else:
+            super().__init__(timer, self.person.health_index, user_config)
         self.threshold_transmission = 0.001
         self.threshold_symptoms = 0.001
-        self.timer = timer
         try:
             self.starttime = timer.now
         except:
