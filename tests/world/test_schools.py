@@ -49,3 +49,4 @@ def test_only_kids_school():
                     schooled_adults += 1
 
     assert schooled_adults == 0
+
