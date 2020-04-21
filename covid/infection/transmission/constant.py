@@ -4,6 +4,7 @@ class TransmissionConstant(Transmission):
     def __init__(self, timer, user_parameters={}):
         required_parameters = ["transmission_probability"]
         super().__init__(timer, user_parameters, required_parameters)
+        print('***TRANSMISSION PROBABILITY = ',self.transmission_probability)
 
     @property
     def probability(self):
