@@ -1,10 +1,14 @@
 from sklearn.neighbors import BallTree
+from scipy import stats
 from covid.groups import Group
 import numpy as np
 
+
 class SchoolError(BaseException):
     """Class for throwing school related errors."""
+
     pass
+
 
 class School(Group):
     """
@@ -13,18 +17,18 @@ class School(Group):
     """
 
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
-        super().__init__("School_%05d"%school_id, "School")
+        super().__init__("School_%05d" % school_id, "School")
         self.id = school_id
         self.people = []
         self.coordinates = coordinates
-        #self.residents = group(self.id,"household")
+        # self.residents = group(self.id,"household")
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
 
-class Schools:
 
+class Schools:
     def __init__(self, world, areas, school_df):
         self.world = world
         self.members = []
@@ -119,3 +123,36 @@ class Schools:
                     raise SchoolError("Trying to set an already active person")
                 else:
                     person.active_group = "school"
+
+    def create_interaction_poisson_distributions(self, school_interaction_matrix):
+        """
+        Creates 6*5/2 = different 15 Poisson distributions, that model the probability of interaction
+        between two different age groups in a school.
+        """
+        self.age_interaction_prob = np.empty(
+            (6, 6), dtype=stats._discrete_distns.poisson_gen
+        )
+        for i in range(0, 6):
+            for j in range(0, i):
+                mu = interaction_matrix[i, j]
+                poisson = stats.poisson(mu)
+                self.age_interaction_prob[i, j] = poisson
+                self.age_interaction_prob[j, i] = poisson
+
+    def _linear_to_indices(self, xi):
+        i = np.ceil(0.5 * (-3 + np.sqrt(9 + 8 * xi)))
+        j = xi - i * i(+1) / 2
+        return [i, j]
+
+    def _indices_to_linear(self, i, j):
+        xi = i * (i + 1) / 2 + j
+        return xi
+
+    def create_age_pairs_distribution(self, school_interaction_matrix):
+        pairs_counts = []
+        for i in range(0, 7):
+            for j in range(0, i):
+                pairs_counts.append(school_interaction_matrix[i, j])
+        self.pairs_distribution = stats.rv_discrete(
+            values=(np.arange(0, len(pairs_array)), pairs_array)
+        )

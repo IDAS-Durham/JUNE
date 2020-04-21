@@ -4,41 +4,22 @@ logger:
   save_path: results
 
 world:
-  zone: NorthEast # available are all UK regions, and EnglandWales together.
-  steps_per_hour: 10
-  step_active_groups:  # households are always active 
-    1: ['schools'] # active groups during first time step
-    2: []
+  zone: test # NorthEast # available are all UK regions, and EnglandWales together.
 
 time:
+  total_days: 20
   step_duration: 
       weekday:
           1: 8 # first time step duration in hours
           2: 16
       weekend:
           1: 24
-
-people:
-  adult_threshold: 6 # 18 yo
-  student_age_group: 7
-  old_threshold: 12 # 12 corresponds to +65 yo
-
-households:
-  same_sex_couple_ratio: 0.1
-
-schools:
-  school_age_range: [1,6] # numbers correspond to age groups defined by NOMIS dataset.
-  neighbour_schools: 6
-
-companies:
-  work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
+  step_active_groups:
+      weekday:
+          1: ['schools'] # active groups during first time step
+          2: [] 
+      weekend:
+          1: [] 
 
 infection:
-  transmission:
-    type: SIR
-    probability:
-      mean: 0.3
-    recovery:
-      mean: 0.1
-    recovery_cutoff:
-      mean: 1000
+  asymptomatic_ratio: 0.4

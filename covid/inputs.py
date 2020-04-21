@@ -12,14 +12,12 @@ class Inputs:
     def __init__(
         self,
         zone="NorthEast",
-        DATA_DIR: str = os.path.join("..", "data", "processed", "census_data"),
+        DATA_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "processed", "census_data"),
     ):
         self.zone = zone
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
-        self.MIDDLE_OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "middle_output_area", zone)
-        
-        # Read census data on high resolution map (OA)
+
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
@@ -40,9 +38,15 @@ class Inputs:
             os.path.join(self.DATA_DIR, 'school_data', 'uk_schools_data.csv')
         )
         self.hospital_df = pd.read_csv(
-            os.path.join('..','data','census_data','hospital_data','england_hospitals.csv')
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','data','census_data','hospital_data','england_hospitals.csv')
         )
         self.areas_coordinates_df = self.read_coordinates()
+        self.contact_matrix = np.genfromtxt(
+            os.path.join(
+                self.DATA_DIR, "..", "social_mixing", "POLYMOD", "extended_polymod_UK.csv"
+            ),
+            delimiter =',',
+        )
 
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa(self.n_residents.index.values)
@@ -83,7 +87,15 @@ class Inputs:
         usecols = [0, 1]
         column_names = ["OA11CD", "MSOA11CD"]
         oa2msoa_df = pd.read_csv(
-            "../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv",
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "census_data",
+                "area_code_translations",
+                "oa_msoa_englandwales_2011.csv",
+                )
+            ,
             names=column_names,
             usecols=usecols,
         )
@@ -112,7 +124,15 @@ class Inputs:
             "1000-xxx",
         ]
         companysize_df = pd.read_csv(
-            "../data/census_data/middle_output_area/NorthEast/business_counts_northeast_2019.csv",
+                os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "census_data",
+                "middle_output_area",
+                "NorthEast",
+                "business_counts_northeast_2019.csv"
+                ),
             names=column_names,
             usecols=usecols,
         )
@@ -130,7 +150,15 @@ class Inputs:
         """
 
         companysector_df = pd.read_csv(
-            '../data/census_data/middle_output_area/NorthEast/company_sector_cleaned_msoa.csv',
+                os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                '..',
+                'data',
+                'census_data',
+                'middle_output_area',
+                'NorthEast',
+                'company_sector_cleaned_msoa.csv',
+                ),
             index_col=0,
         )
         
@@ -146,7 +174,15 @@ class Inputs:
         """
 
         industry_by_sex_df = pd.read_csv(
-            "../data/census_data/output_area/NorthEast/industry_by_sex_cleaned.csv"
+                os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)),
+                    '..',
+                    'data',
+                    'census_data',
+                    'output_area',
+                    'NorthEast',
+                    'industry_by_sex_cleaned.csv'
+                    )
         )
 
         # define all columns in csv file relateing to males
@@ -213,7 +249,15 @@ class Inputs:
 
         """
         travel_df = pd.read_csv(
-            "../data/census_data/middle_output_area/NorthEast/flow_method_oa_qs701northeast_2011.csv",
+                os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)),
+                    '..',
+                    'data',
+                    'census_data',
+                    'middle_output_area',
+                    'NorthEast',
+                    'flow_method_oa_qs701northeast_2011.csv',
+                ),
             delimiter=",",
             delim_whitespace=False,
         )
@@ -266,7 +310,7 @@ class Inputs:
         travel_df = travel_df[["home", "public", "private"]]
 
         # create dictionary to merge OA into MSOA
-        dirs = "../data/census_data/area_code_translations/"
+        dirs = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..","data","census_data","area_code_translations")
         dic = pd.read_csv(
             dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
             delimiter=",",
@@ -290,7 +334,7 @@ class Inputs:
 
 
     def create_workflow_df(
-        self, msoa, DATA_DIR: str = os.path.join("..", "data", "census_data", "flow/",)
+        self, msoa, DATA_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "census_data", "flow/")
     ) -> dict:
         """
         Workout where people go to work.
@@ -306,7 +350,7 @@ class Inputs:
         Returns:
             dictionary with frequencies of populations 
         """
-        dirs = "../data/census_data/middle_output_area/EnglandWales/"
+        dirs = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", 'data', 'census_data', 'middle_output_area', 'EnglandWales/')
         wf_df = pd.read_csv(
             dirs + "flow_in_msoa_wu01ew_2011.csv",
             delimiter=',',
@@ -335,7 +379,7 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.companysize_df)
+    print(ip.contact_matrix.shape)
     print(ip.age_freq)
     print(ip.decoder_age)
     print(ip.decoder_sex)
