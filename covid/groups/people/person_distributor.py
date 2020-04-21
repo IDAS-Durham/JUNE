@@ -11,7 +11,7 @@ class PersonDistributor:
     Creates the population of the given area with sex and age given
     by the census statistics
     """
-    def __init__(self, people, area, msoareas, companysector_by_sex_df, workflow_df):
+    def __init__(self, people, area, msoareas, companysector_by_sex_df, workflow_df, companysector_specific_by_sex_df):
         self.area = area
         self.msoareas = msoareas
         self.people = people
@@ -22,6 +22,7 @@ class PersonDistributor:
         self.no_students_area = False
         self.companysector_by_sex_df = companysector_by_sex_df
         self.workflow_df = workflow_df
+        self.companysector_specific_by_sex_df = companysector_specific_by_sex_df
         self._init_random_variables()
 
 
@@ -113,9 +114,25 @@ class PersonDistributor:
             industry_id = random_variable.rvs(size=1)
             # accss relevant indudtry label
             industry = industry_dict[industry_id[0]]
-        
+            
         return industry
 
+    def _assign_industry_specific(self, ratio, distribution):
+        MC_random = np.random.uniform()
+        industry_specific = None
+
+        # Check if person should be assigned any specific industry given their sector
+        if MC_random < ratio:
+            pass
+        else:
+            # Assign specific industry according to distribution
+            numbers = np.arange(len(distribution))
+            random_variable = rv_discrete(values=(numbers,distribution))
+            industry_specific_id = random_variable.rvs(size=1)
+            
+        return industry_specific_id
+            
+            
 
     def assign_work_msoarea(self, i, sex, age, msoa_man, msoa_woman):
         """
@@ -157,6 +174,25 @@ class PersonDistributor:
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(size=self.area.n_residents)
+
+        # this won't work with this as this df is actually a dict - but this can be fixed
+        total_healthcare = np.sum(self.companysector_by_sex_df['all Q'])
+        total_education = np.sum(self.companysector_by_sex_df['all P'])
+        total_healthcare_specific = np.sum(self.companysector_specific_by_sex_df['total'][4:])
+        total_education_specific = np.sum(self.companysector_specific_by_sex_df['total'][:4])
+        
+        try:
+            healthcare_ratio = total_healthcare_specific/total_healthcare
+        except:
+            healthcare_ratio = 0
+        try:
+            education_ratio = total_education_specific/total_education
+        except:
+            education_ratio = 0
+
+        healthcare_distribution = np.array(self.companysector_specific_by_sex_df['total'][:4])/total_healthcare
+        education_distribution = np.array(self.companysector_specific_by_sex_df['total'][4:])/total_education
+
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
@@ -198,6 +234,15 @@ class PersonDistributor:
             # assign person to an industry
             # add some conditions to allow for employed != True - wither age and/or from a database
             person.industry = self._assign_industry(sex=sex_random)
+
+            # assign specific industry if relevant
+
+            if person.industry == 'Q': #Healthcare
+                industry_specific_id = self._assign_industry_specific(healthcare_ratio, healthcare_distribution)
+                industry_specific_code = 
+            elif person.industry == 'P': # Education
+                industry_specific_id = self._assign_industry_specific(education_ratio, education_distribution)
+                
         
         try:
             assert (
