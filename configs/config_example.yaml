@@ -22,6 +22,7 @@ time:
           1: [] 
 
 infection:
+  asymptomatic_ratio: 0.4
   transmission:
     type: constant
     parameters:
