@@ -29,6 +29,7 @@ class PersonDistributor:
         self.health_index = HealthIndex(self.area.world.config)
         self.companysector_specific_by_sex_df = companysector_specific_by_sex_df
         self._init_random_variables()
+        
 
     def _get_age_brackets(self, nomis_age_bin):
         try:
@@ -112,7 +113,7 @@ class PersonDistributor:
         distribution_female = self.companysector_by_sex_dict[self.area.name]["f"]
         self.sector_distribution_female = stats.rv_discrete(values=(numbers, distribution_female))
 
-    def _assign_industry(self, sex, employed=True):
+    def _assign_industry(self, i, sex, age, sector_man, sector_woman, employed=True):
         """
         :param gender: (string) male/female
         :param employed: (bool) - for now we assume all people are employed
@@ -126,53 +127,28 @@ class PersonDistributor:
         according to the generated probability distribution
         """
 
-        if employed == False:
-            industry = "NA"
+        if age < self.ADULT_THRESHOLD:
+            # too young to work
+            return None
+        elif age > self.OLD_THRESHOLD:
+            # too old to work
+            return None
 
         else:
-            # access relevant probability distribtion according to the person's sex
-            if sex == 0:
-                # MAY NEED TO CHANGE THE USE OF self.area TO BE CORRECT LOOKUP VALUE
-                # ADD try/except statements in to allow for an area not existing (after testing though)
-                # ADD industry_dict to self.area as in populate_area()
-                distribution = self.companysector_by_sex_dict[self.area.name]["m"]
+        
+            if employed == False:
+                industry = "NA"
             else:
-                distribution = self.companysector_by_sex_dict[self.area.name]["f"]
+                ## accss relevant indudtry label
+                if sex == 0: # Male
+                    industry_id = sector_man[i]
+                elif sex == 1: # Female
+                    industry_id = sector_woman[i]
+                else:
+                    raise ValueError('sex must be with male or female. Intead got {}'.format(sex_random))
+                industry = industry_dict[industry_id]
 
-            # assign industries to numbers A->U = 1-> 21
-            industry_dict = {
-                1: "A",
-                2: "B",
-                3: "C",
-                4: "D",
-                5: "E",
-                6: "F",
-                7: "G",
-                8: "H",
-                9: "I",
-                10: "J",
-                11: "K",
-                12: "L",
-                13: "M",
-                14: "N",
-                15: "O",
-                16: "P",
-                17: "Q",
-                18: "R",
-                19: "S",
-                20: "T",
-                21: "U",
-            }
-
-            numbers = np.arange(1, 22)
-            ## create discrete probability distribution
-            random_variable = stats.rv_discrete(values=(numbers, distribution))
-            ## generate sample from distribution
-            industry_id = random_variable.rvs(size=1)
-            ## accss relevant indudtry label
-            industry = industry_dict[industry_id[0]]
-
-        return industry
+            return industry
 
       
     def _assign_industry_specific(self, ratio, distribution):
@@ -237,6 +213,8 @@ class PersonDistributor:
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(size=self.area.n_residents)
+        companysector_male_rnd_array = self.sector_distribution_male.rvs(size=self.n_residents)
+        companysector_female_rnd_array = self.sector_distribution_female.rvs(size=self.n_residents)
 
         # this won't work with this as this df is actually a dict - but this can be fixed
         healthcare_specific_slice = self.companysector_specific_by_sex_df[:4]
@@ -261,7 +239,7 @@ class PersonDistributor:
         male_education_distribution = np.array(education_specific_slice['males'])/male_education_specific
         female_healthcare_distribution = np.array(healthcare_specific_slice['females'])/female_healthcare_specific
         female_education_distribution = np.array(education_specific_slice['females'])/female_education_specific
-                
+
 
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
@@ -313,7 +291,12 @@ class PersonDistributor:
             # assign person to an industry
             # add some conditions to allow for employed != True - wither age and/or from a database
 
-            person.industry = self._assign_industry(sex=sex_random)
+            person.industry = self._assign_industry(
+                i,
+                sex_random,
+                age_random,
+                companysector_male_rnd_array,
+                companysector_female_rnd_array)
 
             # assign specific industry if relevant based on sex
 
