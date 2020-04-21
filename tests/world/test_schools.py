@@ -34,3 +34,19 @@ def test_all_kids_school():
                     lost_kids += 1
 
     assert lost_kids == 0
+
+def test_only_kids_go2shool():
+    '''
+    Check that no one older than 18 goes to school
+    '''
+    world = World.from_pickle()
+    ADULTS_LOW = 18
+    schooled_adults = 0
+    for i in range(len(world.areas.members)):
+        for j in range(len(world.areas.members[i].people)):
+            if world.areas.members[i].people[j].age > ADULTS_LOW:
+                if world.areas.members[i].people[j].school is not None:
+                    schooled_adults += 1
+
+    assert schooled_adults == 0
+
