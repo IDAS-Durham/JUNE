@@ -311,7 +311,7 @@ class PersonDistributor:
 
             if person.industry == 'Q': #Healthcare
                 industry_specific_id = self._assign_industry_specific(healthcare_ratio, healthcare_distribution)
-                industry_specific_code = 
+                #industry_specific_code = 
             elif person.industry == 'P': # Education
                 industry_specific_id = self._assign_industry_specific(education_ratio, education_distribution)
 
