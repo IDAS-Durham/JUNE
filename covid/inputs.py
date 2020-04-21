@@ -54,6 +54,7 @@ class Inputs:
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
         self.companysector_by_sex_df = self.read_companysector_by_sex_census()
+        self.companysector_specific_by_sex_df = self.read_companysector_specifc_by_sex()
 
 
     def read(self, filename):
@@ -218,6 +219,21 @@ class Inputs:
             industry_by_sex_dict[oa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
 
         return industry_by_sex_dict
+
+    def read_companysector_specific_by_sex(self):
+        """
+        Specifies the number of people in a given REGION who work in specific hospital roles 
+        and educational roles
+
+        Derives from the NOMIS annual occupational survey
+        https://www.nomisweb.co.uk/query/construct/summary.asp?mode=construct&version=0&dataset=168
+        """
+
+        industrysector_specic_by_sex_df = pd.read_csv(
+            "../data/census_data/output_area/NorthEast/health_education_by_sex_NorthEast.csv"
+        )
+
+        return industrysector_specic_by_sex_df
     
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
