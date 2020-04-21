@@ -56,7 +56,7 @@ class World:
                 area,
                 self.msoareas,
                 self.inputs.companysector_by_sex_dict,
-                self.inpute.companysector_by_sex_df
+                self.inpute.companysector_by_sex_df,
                 wf_area_df,
                 self.inputs.companysector_specific_by_sex_df
             )

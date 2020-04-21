@@ -54,7 +54,7 @@ class Inputs:
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
         self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_companysector_by_sex_census()
-        self.companysector_specific_by_sex_df = self.read_companysector_specifc_by_sex()
+        self.companysector_specific_by_sex_df = self.read_companysector_specific_by_sex()
 
 
     def read(self, filename):
