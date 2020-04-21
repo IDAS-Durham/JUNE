@@ -6,6 +6,7 @@ import yaml
 import importlib
 from covid.infection.transmission import *
 from covid.infection.symptoms import *
+from covid.parameters import ParameterInitializer
 
 
 class InfectionInitializer:
@@ -15,7 +16,9 @@ class InfectionInitializer:
         user_config = user_config
         default_types = self.read_default_config(infection_name)
         self.transmission = self.initialize_transmission(default_types, user_config)
-        self.symptoms = self.initialize_symptoms(health_index, default_types, user_config)
+        self.symptoms = self.initialize_symptoms(
+            health_index, default_types, user_config
+        )
 
     def read_default_config(self, infection_name):
         default_path = os.path.join(
@@ -39,31 +42,36 @@ class InfectionInitializer:
         if "transmission" in user_config:
             transmission_type = user_config["transmission"]["type"]
             if "parameters" in user_config["transmission"]:
-                transmission_parameters = user_config["parameters"]
+                transmission_parameters = user_config["transmission"]["parameters"]
             else:
                 transmission_parameters = {}
         else:
             transmission_type = default_types["transmission"]["type"]
             transmission_parameters = {}
         transmission_class_name = "Transmission" + transmission_type.capitalize()
-        transmission = globals()[transmission_class_name](self.timer, transmission_parameters)
+        transmission = globals()[transmission_class_name](
+            self.timer, transmission_parameters
+        )
         return transmission
 
     def initialize_symptoms(self, health_index, default_types, user_config):
         if "symptoms" in user_config:
             symptoms_type = user_config["symptoms"]["type"]
             if "parameters" in user_config["symptoms"]:
-                symptoms_parameters = user_config["parameters"]
+                symptoms_parameters = user_config["symptoms"]["parameters"]
             else:
                 symptoms_parameters = {}
         else:
             symptoms_type = default_types["symptoms"]["type"]
             symptoms_parameters = {}
         symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-        symptoms = globals()[symptoms_class_name](self.timer, health_index, symptoms_parameters)
+        symptoms = globals()[symptoms_class_name](
+            self.timer, health_index, symptoms_parameters
+        )
         return symptoms
 
-class Infection(InfectionInitializer):
+
+class Infection(InfectionInitializer, ParameterInitializer):
     """
     The description of the infection, with two time dependent characteristics,
     which may vary by individual:
@@ -76,20 +84,21 @@ class Infection(InfectionInitializer):
     can be added/modified a posteriori.
     """
 
-    def __init__(self, person, timer, user_config={}):
+    def __init__(self, person, timer, user_config, required_parameters):
         self.person = person
         if person == None:
-            super().__init__(timer, None, user_config)
+            InfectionInitializer.__init__(timer, None, user_config)
         else:
-            super().__init__(timer, self.person.health_index, user_config)
-        self.threshold_transmission = 0.001
-        self.threshold_symptoms = 0.001
+            InfectionInitializer.__init__(timer, self.person.health_index, user_config)
+        ParameterInitializer.__init__("infection", required_parameters)
         try:
             self.starttime = timer.now
         except:
             print("is this a test? otherwise check the time!")
             pass
         self.user_config = user_config
+        self.last_time_updated = self.timer.now  # testing
+        self.infection_probability = 0.0
 
     def infect(self, person_to_infect):
         person_to_infect.infection = Infection(
@@ -114,18 +123,6 @@ class Infection(InfectionInitializer):
             sys.exit()
         self.symptoms = symptoms
 
-    @property
-    def transmission_probability(self):
-        if self.transmission == None:
-            return 0.0
-        return self.transmission.probability
-
-    @property
-    def symptom_severity(self):
-        if self.symptoms == None:
-            return 0.0
-        return self.symptoms.severity
-
     def symptom_tag(self, tagno):
         return self.symptoms.tag
 
@@ -141,7 +138,9 @@ class Infection(InfectionInitializer):
         is_infected = transmission_bool or symptoms_bool
         return is_infected
 
-
+    def update_infection_probability(self):
+        self.last_time_updated = self.timer.now
+        # do something here to realte transmission probability and symptoms
 
 
 if __name__ == "__main__":
