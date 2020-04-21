@@ -183,12 +183,23 @@ class World:
         for person in self.people.members:
             person.active_group = None
 
+    def initialize_infection(self, person):
+        infection_name = self.config["infection"]["type"]
+        infection_name = "Infection" + infection_name.capitalize()
+        if "parameters" in self.config["infection"]:
+            infection_parameters = self.config["infection"]["parameters"]
+        else:
+            infection_parameters = {}
+        infection = globals()[infection_name](person, self.timer, infection_parameters)
+        return infection
+
     def seed_infections_group(self, group, n_infections):
         #    print (n_infections,group.people)
         choices = np.random.choice(group.size(), n_infections)
         infecter_reference = Infection(None, self.timer, self.config)
         for choice in choices:
             infecter_reference.infect(group.people[choice])
+
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
