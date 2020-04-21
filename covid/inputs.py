@@ -53,8 +53,8 @@ class Inputs:
         self.workflow_df = self.create_workflow_df(self.oa2msoa_df["MSOA11CD"].values)
         self.companysize_df = self.read_companysize_census()
         self.companysector_df = self.read_companysector_census()
-        self.companysector_by_sex_df = self.read_companysector_by_sex_census()
-        self.companysector_specific_by_sex_df = self.read_companysector_specifc_by_sex()
+        self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_companysector_by_sex_census()
+        self.companysector_specific_by_sex_df = self.read_companysector_specific_by_sex()
 
 
     def read(self, filename):
@@ -218,7 +218,7 @@ class Inputs:
         for idx, oa in enumerate(industry_by_sex_df['oareas']):
             industry_by_sex_dict[oa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
 
-        return industry_by_sex_dict
+        return industry_by_sex_dict, industry_by_sex_df
 
     def read_companysector_specific_by_sex(self):
         """
@@ -337,7 +337,8 @@ class Inputs:
         self, msoa, DATA_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "census_data", "flow/")
     ) -> dict:
         """
-        Workout where people go to work.
+        Workout where people go to work. It is for the whole of England & Wales
+        and can easily be stripped to get single regions.
         The MSOA area code is used for homes (rows) and work (columns).
         The dataframe from NOMIS:
             TableID: WU01EW
