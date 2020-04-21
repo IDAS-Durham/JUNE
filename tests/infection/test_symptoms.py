@@ -87,8 +87,8 @@ def check_symptom_tags(N, world):
         # reset timer
         infection.timer = Timer(world.config["time"])
         infection.infect(person)
-        next(infection.timer)
-        next(infection.timer)
+        while infection.timer.now < 1.5:
+            next(infection.timer)
         severity = world.people.members[0].infection.symptom_severity
         severs1.append(severity)
         tag = world.people.members[0].infection.symptoms.tag
@@ -96,8 +96,6 @@ def check_symptom_tags(N, world):
             if tag == allowed[j]:
                 tags[j] += 1
                 break
-            # else:
-            #    tags[0] += 1
     for i in range(len(tags)):
         tags[i] = tags[i] / N
     print(tags)
