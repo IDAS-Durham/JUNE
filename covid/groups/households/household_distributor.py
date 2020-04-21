@@ -378,5 +378,11 @@ class HouseholdDistributor:
             self.area.households.append(household)
             house_id += 1
         self.kids_left = len(self.area._kids)
+        if self.kids_left > 0:
+            random_houses = np.random.choice(self.area.households, size=self.kids_left) 
+            for i, kid in enumerate(self.area._kids.values()):
+                random_houses[i].people.append(kid)
+                
+
 
 
