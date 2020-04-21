@@ -72,13 +72,13 @@ class World:
             pbar.update(1)
         pbar.close()
         print("Initializing schools...")
-        self.schools = Schools(self, self.areas, self.inputs.school_df)
-        pbar = tqdm(total=len(self.areas.members))
-        for area in self.areas.members:
-            self.distributor = SchoolDistributor(self.schools, area)
-            self.distributor.distribute_kids_to_school()
-            pbar.update(1)
-        pbar.close()
+        #self.schools = Schools(self, self.areas, self.inputs.school_df)
+        #pbar = tqdm(total=len(self.areas.members))
+        #for area in self.areas.members:
+        #    self.distributor = SchoolDistributor(self.schools, area)
+        #    self.distributor.distribute_kids_to_school()
+        #    pbar.update(1)
+        #pbar.close()
         self.interaction = self.initialize_interaction()
         # print("Initializing Companies...")
         # self.companies = Companies(self)
@@ -190,7 +190,7 @@ class World:
             infection_parameters = self.config["infection"]["parameters"]
         else:
             infection_parameters = {}
-        infection = globals()[infection_name](person, self.timer, infection_parameters)
+        infection = globals()[infection_name](person, self.timer, self.config, infection_parameters)
         return infection
 
     def seed_infections_group(self, group, n_infections):
@@ -199,6 +199,7 @@ class World:
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
             infecter_reference.infect(group.people[choice])
+        group.update_status_lists()
 
 
     def do_timestep(self, day_iter):

@@ -38,10 +38,11 @@ class InfectionInitializer:
         return default_params
 
     def initialize_transmission(self, default_types, user_config):
-        if "transmission" in user_config:
-            transmission_type = user_config["transmission"]["type"]
-            if "parameters" in user_config["transmission"]:
-                transmission_parameters = user_config["transmission"]["parameters"]
+        infection_config = user_config["infection"]
+        if "transmission" in infection_config:
+            transmission_type = infection_config["transmission"]["type"]
+            if "parameters" in infection_config["transmission"]:
+                transmission_parameters = infection_config["transmission"]["parameters"]
             else:
                 transmission_parameters = {}
         else:
@@ -83,26 +84,31 @@ class Infection(InfectionInitializer, ParameterInitializer):
     can be added/modified a posteriori.
     """
 
-    def __init__(self, person, timer, user_config, required_parameters):
+    def __init__(self, person, timer, user_config, infection_parameters, required_parameters):
         self.person = person
         self.required_parameters = required_parameters
         if person == None:
             InfectionInitializer.__init__(self, timer, None, user_config)
         else:
-            InfectionInitializer.__init__(self, timer, self.person.health_index, user_config)
-        ParameterInitializer.__init__(self, "infection", user_config, required_parameters)
+            InfectionInitializer.__init__(
+                self, timer, self.person.health_index, user_config
+            )
+        ParameterInitializer.__init__(
+            self, "infection", infection_parameters, required_parameters
+        )
         try:
             self.starttime = timer.now
         except:
             print("is this a test? otherwise check the time!")
             pass
         self.user_config = user_config
+        self.user_parameters = infection_parameters 
         self.last_time_updated = self.timer.now  # testing
         self.infection_probability = 0.0
 
     def infect(self, person_to_infect):
         person_to_infect.infection = self.__class__(
-            person_to_infect, self.timer, self.user_config
+            person_to_infect, self.timer, self.user_config, self.user_parameters
         )
 
     def set_transmission(self, transmission):
