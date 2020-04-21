@@ -1,9 +1,10 @@
-from covid.symptoms import Symptoms 
+from covid.infection.symptoms import Symptoms 
+import numpy as np
 
 class SymptomsTanh(Symptoms):
-    def __init__(self, infection, user_parameters={}):
+    def __init__(self, timer, health_index, user_parameters={}):
         required_parameters = ["max_time", "onset_time", "end_time"]
-        super().__init__(infection, user_parameters, required_parameters)
+        super().__init__(timer, health_index, user_parameters, required_parameters)
 
         self.Tmax        = max(0.0, self.max_time)
         self.Tonset      = max(0.0, self.onset_time)
@@ -13,7 +14,7 @@ class SymptomsTanh(Symptoms):
 
     def _calculate_severity(self,time):
         self.severity = 0.
-        time_since_start = time - self.infection.starttime
+        time_since_start = time - self.starttime
         if time_since_start<=self.Tmax:
             severity = (1.+np.tanh(3.14*(time_since_start-self.Tonset)/self.delta_onset))/2.
         elif time_since_start>self.Tmax:

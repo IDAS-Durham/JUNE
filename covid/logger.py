@@ -112,24 +112,9 @@ class Logger:
             n_susc = 0
             n_rec = 0
             for area in self.world.areas.members:
-                n_inf += sum(
-                    [
-                        self.data_dict[area.name][day]["infected"]
-                        for shift in self.data_dict[area.name][day].keys()
-                    ]
-                )
-                n_susc += sum(
-                    [
-                        self.data_dict[area.name][day]["susceptible"]
-                        for shift in self.data_dict[area.name][day].keys()
-                    ]
-                )
-                n_rec += sum(
-                    [
-                        self.data_dict[area.name][day]["recovered"]
-                        for shift in self.data_dict[area.name][day].keys()
-                    ]
-                )
+                n_inf += self.data_dict[area.name][day]["infected"]
+                n_susc += self.data_dict[area.name][day]["susceptible"]
+                n_rec += self.data_dict[area.name][day]["recovered"]
             infected.append(n_inf)
             susceptible.append(n_susc)
             recovered.append(n_rec)

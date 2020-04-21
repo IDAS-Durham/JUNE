@@ -14,18 +14,19 @@ allowed_symptom_tags = [
 
 
 class Symptoms(ParameterInitializer):
-    def __init__(self, infection, user_parameters, required_parameters):
-        self.infection = infection
+    def __init__(self, timer, health_index, user_parameters, required_parameters):
         super().__init__("symptoms", required_parameters)
         self.initialize_parameters(user_parameters)
-        self.infection = infection
+        self.timer = timer
+        self.starttime = self.timer.now
+        self.health_index = health_index
         self.maxseverity = random.random()
         self.tags = allowed_symptom_tags
 
     @property
     def severity(self):
-        if self.infection.timer.now >= self.infection.starttime:
-            severity  = self._calculate_severity(self.infection.timer.now)
+        if self.timer.now >= self.starttime:
+            severity  = self._calculate_severity(self.timer.now)
         else:
             severity = 0.0
         return max(0.0, severity)
@@ -41,7 +42,7 @@ class Symptoms(ParameterInitializer):
     def fix_tag(self, severity):
         if severity <= 0.0:
             return "healthy"
-        index = np.searchsorted(self.infection.person.health_index, severity)
+        index = np.searchsorted(self.health_index, severity)
         return self.tags[index + 1]
 
     def tags(self):
