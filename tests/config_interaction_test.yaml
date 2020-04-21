@@ -1,5 +1,0 @@
-title: configuration file for test_interaction
-
-infection:
-  testmode: SIR
-

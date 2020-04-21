@@ -338,6 +338,74 @@ def read_school_census(DATA_DIR):
 
 
 
+def downsample_social_matrix(matrix):
+    #low_res_matrix = pd.DataFrame()
+
+    '''
+    print(matrix)
+
+    low_res_matrix["0-4"] = matrix["0-4"]
+    low_res_matrix["5-9"] = matrix["5-9"]
+    low_res_matrix.loc["10-14"] = matrix.loc["10-12"] + matrix.loc["13-14"]
+    low_res_matrix["10-14"] = matrix["10-12"] + matrix["13-14"]
+    print(matrix.loc["10-12"])
+    print(matrix.loc["13-14"])
+    low_res_matrix["15-17"] = matrix["15-17"]
+    low_res_matrix["18-19"] = matrix["18-19"]
+    low_res_matrix["20-24"] = matrix["20-21"] + matrix["22-24"]
+    low_res_matrix.loc["20-24"] = matrix.loc["20-21"] + matrix.loc["22-24"]
+    low_res_matrix["25-29"] = matrix["25-29"]
+    low_res_matrix["30-44"] = matrix["30-34"] + matrix["35-39"] + matrix["40-44"]
+    low_res_matrix.loc["30-44"] = (
+        matrix.loc["30-34"] + matrix.loc["35-39"] + matrix.loc["40-44"]
+    )
+    low_res_matrix["45-59"] = matrix["45-49"] + matrix["50-54"] + matrix["55-59"]
+    low_res_matrix.loc["45-59"] = (
+        matrix.loc["45-49"] + matrix.loc["50-54"] + matrix.loc["55-59"]
+    )
+    low_res_matrix["60-64"] = matrix["60-64"]
+    low_res_matrix["65-74"] = matrix["65-69"] + matrix["70-74"]
+    low_res_matrix.loc["65-74"] = matrix.loc["65-69"] + matrix.loc["70-74"]
+
+    low_res_matrix.drop(
+        [
+            "10-12",
+            "13-14",
+            "20-21",
+            "22-24",
+            "30-34",
+            "35-39",
+            "40-44",
+            "45-49",
+            "50-54",
+            "55-59",
+            "65-69",
+            "70-74",
+        ], inplace=True
+    )
+    '''
+
+
+    return matrix 
+
+
+def reformat_social_matrices(raw_mixing_dir, processed_mixing_dir):
+    social_matrices = ["all_school", "physical_school", "conversational_school"]
+
+    reformat_social_matrices = []
+    for sm in social_matrices:
+        matrix = pd.read_excel(
+            os.path.join(
+                raw_mixing_dir, "BBC_repriprocal_matrices_by_type_context.xls"
+            ),
+            sheet_name=sm,
+            index_col=0,
+        )
+        matrix.fillna(0.0, inplace=True)
+        low_res_matrix = downsample_social_matrix(matrix)
+        low_res_matrix.to_csv(os.path.join(processed_mixing_dir, f"{sm}.csv"))
+
+
 if __name__ == "__main__":
 
     region = "EnglandWales"

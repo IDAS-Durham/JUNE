@@ -5,22 +5,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-allowed_groups = [
-    "Household",
-    "School",
-    "Work:Outdoor",
-    "Work:Indoor",
-    "Commute:Public",
-    "Commute:Private",
-    "Leisure:Outdoor",
-    "Leisure:Indoor",
-    "Shopping",
-    "ReferenceGroup",
-    "Random",
-    "TestGroup",
-]
-
-
 class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
@@ -43,6 +27,22 @@ class Group:
     default intensities (maybe mean+width with a pre-described range?).
     """
 
+    allowed_groups = [
+        "Household",
+        "School",
+        "Work_Outdoor",
+        "Work_Indoor",
+        "Commute_Public",
+        "Commute_Private",
+        "Leisure_Outdoor",
+        "Leisure_Indoor",
+        "Shopping",
+        "ReferenceGroup",
+        "Random",
+        "TestGroup",
+    ]
+
+    
     def __init__(self, name, spec, number=-1):
         if not self.sane(name, spec):
             return
@@ -57,11 +57,17 @@ class Group:
             self.fill_random_group(number)
 
     def sane(self, name, spec):
-        if not spec in allowed_groups:
+        if not spec in self.allowed_groups:
             print("Error: tried to initialise group with wrong specification:", spec)
             return False
         return True
 
+    def get_name(self):
+        return self.name
+    
+    def get_spec(self):
+        return self.spec
+        
     def set_intensity(self, intensity):
         self.intensity = intensity
 
@@ -148,7 +154,7 @@ class Group:
             self.add(Person(str(i), 0, age, sex, 0, 0))
         # self.output(False,False)
 
-    def output(self, plot=False, full=False):
+    def output(self, plot=False, full=False,time = 0):
         print("==================================================")
         print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
         print("* ",
@@ -176,7 +182,25 @@ class Group:
             plt.show()
         if full:
             for p in self.people:
-                p.Output()
+                p.output(time)
+
+    def get_contact_matrix(self):
+        inputs = Inputs()
+        return symmetrize_matrix(inputs.contact_matrix)
+
+    def get_reciprocal_matrix(self):
+        inputs = Inputs()
+        demography = np.array([len(pool) for pool in self.age_pool])
+        return reciprocal_matrix(inputs.contact_matrix, demography)
+
+
+def symmetrize_matrix(matrix):
+    return (matrix + matrix.T) / 2
+
+
+def reciprocal_matrix(matrix, demography):
+    demography_matrix = demography.reshape(-1, 1) / demography.reshape(1, -1)
+    return (matrix + matrix.T * demography_matrix) / 2
 
 class TestGroups():
     def __init__(self,N):
