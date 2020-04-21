@@ -10,16 +10,14 @@ time:
   total_days: 20
   step_duration: 
       weekday:
-          1: 2 # first time step duration in hours
-          2: 14 
-          3: 8
+          1: 8
+          2: 16
       weekend:
           1: 24
   step_active_groups:
       weekday:
-          1: ['schools'] # active groups during first time step
+          1: [] # active groups during first time step
           2: [] 
-          3: []
       weekend:
           1: [] 
 
@@ -37,4 +35,4 @@ infection:
       transmission_probability:
         distribution: constant
         parameters:
-          value: 0.3
+          value: 0.2
