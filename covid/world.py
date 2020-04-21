@@ -91,6 +91,16 @@ class World:
         self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")
 
+    def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
+        """
+        Write the world to file. Comes in handy when setting up the world
+        takes a long time.
+        """
+        import pickle
+
+        with open(pickle_obj, "wb") as f:
+            pickle.dump(self, f)
+    
     @classmethod
     def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
         """
@@ -101,7 +111,7 @@ class World:
         with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
-
+    
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
