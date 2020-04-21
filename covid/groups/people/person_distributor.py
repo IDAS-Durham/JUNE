@@ -331,12 +331,12 @@ class PersonDistributor:
             if person.industry == 'Q': #Healthcare
                 if sex_random == 'male':
                     industry_specific_id = self._assign_industry_specific(male_healthcare_ratio, male_healthcare_distribution)
-                    if industry_specific_id not None:
+                    if industry_specific_id is not None:
                         industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 elif sex_random == 'female':
                     industry_specific_id = self._assign_industry_specific(female_healthcare_ratio, female_healthcare_distribution)
-                    if industry_specific_id not None:
+                    if industry_specific_id is not None:
                         industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 else:
@@ -345,12 +345,12 @@ class PersonDistributor:
             elif person.industry == 'P': # Education
                 if sex_random == 'male':
                     industry_specific_id = self._assign_industry_specific(male_education_ratio, male_education_distribution)
-                    if industry_specific_id not None:
+                    if industry_specific_id is not None:
                         industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 elif sex_random == 'female':
                     industry_specific_id = self._assign_industry_specific(female_education_ratio, female_education_distribution)
-                    if industry_specific_id not None:
+                    if industry_specific_id is not None:
                         industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 else:
