@@ -117,7 +117,7 @@ class PersonDistributor:
             
         return industry
 
-    def _assign_industry_specific(self, ratio):
+    def _assign_industry_specific(self, ratio, distribution):
         MC_random = np.random.uniform()
         industry_specific = None
 
@@ -126,8 +126,11 @@ class PersonDistributor:
             pass
         else:
             # Assign specific industry according to distribution
-            pass
-        return 0
+            numbers = np.arange(len(distribution))
+            random_variable = rv_discrete(values=(numbers,distribution))
+            industry_specific_id = random_variable.rvs(size=1)
+            
+        return industry_specific_id
             
             
 
@@ -173,10 +176,10 @@ class PersonDistributor:
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(size=self.area.n_residents)
 
         # this won't work with this as this df is actually a dict - but this can be fixed
-        total_healthcare = np.sum(self.companysector_by_sex_df['all P'])
-        total_education = np.sum(self.companysector_by_sex_df['all Q'])
-        total_healthcare_specific = np.sum(companysector_specific_by_sex_df['total'][4:])
-        total_education_specific = np.sum(companysector_specific_by_sex_df['total'][:4])
+        total_healthcare = np.sum(self.companysector_by_sex_df['all Q'])
+        total_education = np.sum(self.companysector_by_sex_df['all P'])
+        total_healthcare_specific = np.sum(self.companysector_specific_by_sex_df['total'][4:])
+        total_education_specific = np.sum(self.companysector_specific_by_sex_df['total'][:4])
         
         try:
             healthcare_ratio = total_healthcare_specific/total_healthcare
@@ -187,10 +190,8 @@ class PersonDistributor:
         except:
             education_ratio = 0
 
-        healthcare_distribution = np.array(self.companysector_by_sex_df['all P'])/total_healthcare_specific
-        #healthcare_distribution = 
-
-
+        healthcare_distribution = np.array(self.companysector_specific_by_sex_df['total'][:4])/total_healthcare
+        education_distribution = np.array(self.companysector_specific_by_sex_df['total'][4:])/total_education
 
         for i in range(0, self.area.n_residents):
             sex_random = sex_random_array[i]
@@ -236,10 +237,11 @@ class PersonDistributor:
 
             # assign specific industry if relevant
 
-            if person.industry == 'P': #Healthcare
-                person.industry_specific = self._assign_industry_specific(healthcare_ratio)
-            elif person.industry == 'Q': # Education
-                person.industry_specific = self._assign_industry_specific(education_ratio)
+            if person.industry == 'Q': #Healthcare
+                industry_specific_id = self._assign_industry_specific(healthcare_ratio, healthcare_distribution)
+                industry_specific_code = 
+            elif person.industry == 'P': # Education
+                industry_specific_id = self._assign_industry_specific(education_ratio, education_distribution)
                 
         
         try:
