@@ -1,14 +1,19 @@
 from covid.inputs import Inputs
-import covid.groups
 from covid.groups import *
+from covid.interaction import *
+from covid.infection import Infection
 from covid.logger import Logger
-from covid.infection_selector import InfectionSelector
-from covid.interaction import Interaction, CollectiveInteraction
+from covid.time import Timer
+
+# from covid.interaction import Interaction
+# from covid.interaction_selector import InteractionSelector
+# from covid.time import DayIterator
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
 import os
+from covid import time
 
 
 class World:
@@ -27,7 +32,8 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
-
+        self.read_defaults()
+        self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
         print("Reading inputs...")
@@ -44,7 +50,7 @@ class World:
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea, )]
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
             person_distributor = PersonDistributor(
                 self.people,
                 area,
@@ -72,14 +78,15 @@ class World:
             self.distributor.distribute_kids_to_school()
             pbar.update(1)
         pbar.close()
-        #print("Initializing Companies...")
-        #self.companies = Companies(self)
-        #pbar = tqdm(total=len(self.msoareas.members))
-        #for area in self.msoareas.members:
+        self.interaction = self.initialize_interaction()
+        # print("Initializing Companies...")
+        # self.companies = Companies(self)
+        # pbar = tqdm(total=len(self.msoareas.members))
+        # for area in self.msoareas.members:
         #    self.distributor = CompanyDistributor(self.companies, area)
         #    self.distributor.distribute_adults_to_companies()
         #    pbar.update(1)
-        #pbar.close()
+        # pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")
 
@@ -97,6 +104,30 @@ class World:
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
+
+    def read_defaults(self):
+        default_config_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "configs",
+            "defaults",
+            "world.yaml",
+        )
+        with open(default_config_path, "r") as f:
+            default_config = yaml.load(f, Loader=yaml.FullLoader)
+        for key in default_config.keys():
+            if key not in self.config:
+                self.config[key] = default_config[key]
+
+    def initialize_interaction(self):
+        interaction_type = self.config["interaction"]["type"]
+        if "parameters" in self.config["interaction"]:
+            interaction_parameters = self.config["interaction"]["parameters"]
+        else:
+            interaction_parameters = {}
+        interaction_class_name = "Interaction" + interaction_type.capitalize()
+        interaction = globals()[interaction_class_name](interaction_parameters, self)
+        return interaction
 
     def read_msoareas_census(self, company_df):
         """
@@ -132,12 +163,6 @@ class World:
             areas_dict[i] = area
         return areas_dict
 
-    def _active_groups(self, time):
-        # households are always active
-        always_active = ["households"]
-        active = self.config["world"]["step_active_groups"][time]
-        return active + always_active #always_active + active
-
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
             group = getattr(self, group_name)
@@ -147,19 +172,15 @@ class World:
         for person in self.people.members:
             person.active_group = None
 
-    def _initialize_infection_selector_and_interaction(self, config):
-        self.selector = InfectionSelector(config)
-        self.interaction = CollectiveInteraction(self.selector)
-
-    def seed_infections_group(self, group, n_infections, selector):
+    def seed_infections_group(self, group, n_infections):
+        #    print (n_infections,group.people)
         choices = np.random.choice(group.size(), n_infections)
+        infecter_reference = Infection(None, self.timer, self.config)
         for choice in choices:
-            group.people[choice].set_infection(
-                self.selector.make_infection(group.people[choice], self.time)
-            )
+            infecter_reference.infect(group.people[choice])
 
-    def do_timestep(self, timetag, duration):
-        active_groups = self._active_groups(timetag)
+    def do_timestep(self, day_iter):
+        active_groups = self.timer.active_groups()
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -167,36 +188,37 @@ class World:
         self.set_active_group_to_people(active_groups)
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
-        self.interaction.set_groups(groups_instances)
-        self.interaction.set_time(self.time + duration)
+        self.interaction.groups = groups_instances
         self.interaction.time_step()
         self.set_allpeople_free()
 
-    def group_dynamics(self, total_days):
-        self.days = 1
-        self.time = 1.*self.days
-        print("Starting group_dynamics for ", total_days, " days at day",self.days)
-        time_steps = self.config["time"]["step_duration"]["weekday"].keys()
+    def group_dynamics(self):
+        print(
+            "Starting group_dynamics for ",
+            self.timer.total_days,
+            " days at day",
+            self.timer.day,
+        )
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
-        self._initialize_infection_selector_and_interaction(self.config)
-        print ("Infecting indivuals in their household.")
-        self.interaction.set_time(self.days)
+        print("Infecting indivuals in their household.")
         for household in self.households.members:
-            self.seed_infections_group(household, self.days, self.selector)
-        print ("starting the loop ..., at ",self.days," days, to run for ",total_days," days")
-        while self.days <= total_days:
-            for shift, timetag in enumerate(time_steps):
-                duration = self.config["time"]["step_duration"]["weekday"][timetag]
-                print("next step, time = ", self.time,"(tag = ",timetag,"), duration = ",(duration/24.))
-                self.do_timestep(timetag, duration/24.)
-                self.logger.log_timestep(self.days, shift)
-                self.time += duration/24.
-            self.days += 1
+            self.seed_infections_group(household, 1)
+        print(
+            "starting the loop ..., at ",
+            self.timer.day,
+            " days, to run for ",
+            self.timer.total_days,
+            " days",
+        )
+        while self.timer.day <= self.timer.total_days:
+            self.do_timestep(self.timer)
+            self.logger.log_timestep(self.timer.day)
+            next(self.timer)
 
 
 if __name__ == "__main__":
     world = World()
     # world = World.from_pickle()
-    world.group_dynamics(2)
+    world.group_dynamics()
