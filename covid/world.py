@@ -239,9 +239,10 @@ class World:
             self.timer.total_days,
             " days",
         )
+
         while self.timer.day <= self.timer.total_days:
-            self.do_timestep(self.timer)
             self.logger.log_timestep(self.timer.day)
+            self.do_timestep(self.timer)
             next(self.timer)
 
 
