@@ -55,15 +55,15 @@ class SchoolDistributor:
     def distribute_kids_to_school(self):
         for person in self.area.people:
             if (
-                person.age <= self.SCHOOL_AGE_RANGE[1]
-                and person.age >= self.SCHOOL_AGE_RANGE[0]
-            ):  # person age from 5 up to 19 yo
-                agegroup = self.area.world.inputs.decoder_age[person.age]
+                person.nomis_bin <= self.SCHOOL_AGE_RANGE[1]
+                and person.nomis_bin >= self.SCHOOL_AGE_RANGE[0]
+            ):  # person.nomis_bin from 5 up to 19 yo
+                agegroup = self.area.world.inputs.decoder_age[person.nomis_bin]
                 agemean = self.compute_age_group_mean(agegroup)
                 if self.is_agemean_full[
                     agegroup
                 ]:  # if all schools at that age are full, assign one randomly
-                    if person.age == 6:  # if it is 18-19 yo, then do not fill
+                    if person.nomis_bin == 6:  # if it is 18-19 yo, then do not fill
                         continue
                     random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
                     school = self.closest_schools_by_age[agegroup][random_number]

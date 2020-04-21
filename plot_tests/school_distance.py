@@ -1,6 +1,7 @@
 from collections import Counter
 import pandas as pd
 from covid.inputs import Inputs 
+from covid.world import World
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
@@ -8,13 +9,6 @@ import numpy as np
 import math
 
 sns.set_context('paper')
-
-
-def load_world(path2world):
-
-    with open(path2world, 'rb') as f:
-        world = pickle.load(f)
-    return world
 
 
 def distance(origin, destination):
@@ -32,19 +26,20 @@ def distance(origin, destination):
     return d # km
 
 
-def kids_school_distance(world, KIDS_LOW=1, KIDS_UP=6):
+def kids_school_distance(world, KIDS_LOW=5, KIDS_UP=19):
 
     distance_school = []
     lost_kids = 0 
-    for i in world.areas.keys():
-        for j in world.areas[i].people.keys():
-            if (world.areas[i].people[j].age >= KIDS_LOW) and (world.areas[i].people[j].age <= KIDS_UP):
+    for i in range(len(world.areas.members)):
+        for j in range(len(world.areas.members[i].people)):
+            if (world.areas.members[i].people[j].age >= KIDS_LOW) and (world.areas.members[i].people[j].age <= KIDS_UP):
+
                 try:
-                    school_coordinates = world.areas[i].people[j].school.coordinates
+                    school_coordinates = world.areas.members[i].people[j].school.coordinates
                     distance_school.append(
-                                    distance(world.areas[i].coordinates,
-                                        school_coordinates)
-                                    )
+                                distance(world.areas.members[i].coordinates,
+                                    school_coordinates)
+                                )
                 except:
                     lost_kids += 1
     print(f'CAREFUL! There are {lost_kids} lost kids')
@@ -52,13 +47,11 @@ def kids_school_distance(world, KIDS_LOW=1, KIDS_UP=6):
 
 if __name__=='__main__':
 
-    WORLD_PATH = '/cosma7/data/dp004/dc-quer1/world.pkl'
-    with open(WORLD_PATH, 'rb') as f:
-            world = pickle.load(f)
+    world = World.from_pickle()
 
     distance_school = kids_school_distance(world)
-    distance_young = kids_school_distance(world, 1, 3)
-    distance_old = kids_school_distance(world, 4, 6)
+    distance_young = kids_school_distance(world, 5, 11) 
+    distance_old = kids_school_distance(world, 12, 19)
 
     fig = plt.figure()
     plt.hist(
@@ -70,13 +63,13 @@ if __name__=='__main__':
     plt.hist(
             distance_young, 
             log=True,
-            label = '5 - 14 years old',
+            label = '5 - 11 years old',
             alpha=0.3,
             )
     plt.hist(
             distance_old, 
             log=True,
-            label = '15 - 19 years old',
+            label = '12 - 19 years old',
             alpha=0.3,
             )
     plt.legend()

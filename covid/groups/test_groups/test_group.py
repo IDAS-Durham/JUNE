@@ -1,5 +1,6 @@
 from covid.groups import Group
 from covid.groups import Person
+from covid.groups.people import HealthIndex
 from scipy import stats
 import numpy as np
 
@@ -11,10 +12,14 @@ class TestGroup(Group):
 
 
 class TestGroups:
-    def __init__(self, people_per_group=5000, total_people=100000):
+    def __init__(self, people_per_group=5000, total_people=100000,config=None):
         self.members = []
         self.total_people = total_people
         self.people_per_group = people_per_group
+        if config != None:
+            self.health_index_constructor = HealthIndex(config)
+        else:
+            self.health_index_constructor = None
         self.initialize_test_groups()
 
     def initialize_test_groups(self):
@@ -36,11 +41,15 @@ class TestGroups:
         self.members.append(group)
 
     def fill_group_with_random_people(self, group, group_size):
-        sex_random = np.random.randint(0, 1, group_size)
-        age_random = np.random.randint(0, 16, group_size)
+        sex_random = np.random.randint(0, 2, group_size)
+        age_random = np.random.randint(0, 80, group_size)
 
         for i in range(0, group_size):
-            person = Person(i, None, age_random[i], sex_random[i], 0, 0)
+            if self.health_index_constructor == None:
+                health_index = 0
+            else:
+                health_index = self.health_index_constructor.get_index_for_age(age_random[i])
+            person = Person(i, None, age_random[i], 0, sex_random[i], health_index, 0)
             group.people.append(person)
 
     def set_active_members(self):
