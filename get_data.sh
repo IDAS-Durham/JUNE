@@ -1,7 +1,7 @@
 #!/bin/sh
 
-#https://drive.google.com/open?id=1vNMaEYmPgvDvG6HTFrX_hhV_zH3HgALM
-fileId=1vNMaEYmPgvDvG6HTFrX_hhV_zH3HgALM
+#https://drive.google.com/open?id=1QnZ1MsrlCh0KbNJfBQCifaUnnfux5gV-
+fileId=1QnZ1MsrlCh0KbNJfBQCifaUnnfux5gV-
 fileName=data.zip
 curl -sc cookie "https://drive.google.com/uc?export=download&id=${fileId}" > /dev/null
 code="$(awk '/_warning_/ {print $NF}' cookie)"  
