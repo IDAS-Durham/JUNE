@@ -21,18 +21,9 @@ time:
       weekend:
           1: [] 
 
-interaction:
-  type: collective
-  parameters:
-    mode: probabilistic 
-
 infection:
-  type: constant
   asymptomatic_ratio: 0.4
-  transmission:
-    type: constant
-    parameters:
-      transmission_probability:
-        distribution: constant
-        parameters:
-          value: 0.3
+
+interaction:
+  type: stochastic
+
