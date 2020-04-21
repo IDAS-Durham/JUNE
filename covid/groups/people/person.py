@@ -149,6 +149,7 @@ class Person:
             self.susceptible = False
             if self.infection.still_infected:
                 self.infected = True
+                self.infection.update_infection_probability()
                 if self.infection.symptoms == None:
                     print("error!")
                 self.counter.update_symptoms()

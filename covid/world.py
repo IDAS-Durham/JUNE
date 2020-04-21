@@ -1,7 +1,7 @@
 from covid.inputs import Inputs
 from covid.groups import *
 from covid.interaction import *
-from covid.infection import Infection
+from covid.infection import *
 from covid.logger import Logger
 from covid.time import Timer
 
@@ -196,7 +196,7 @@ class World:
     def seed_infections_group(self, group, n_infections):
         #    print (n_infections,group.people)
         choices = np.random.choice(group.size(), n_infections)
-        infecter_reference = Infection(None, self.timer, self.config)
+        infecter_reference = self.initialize_infection(None)
         for choice in choices:
             infecter_reference.infect(group.people[choice])
 
@@ -227,6 +227,11 @@ class World:
         print("Infecting indivuals in their household.")
         for household in self.households.members:
             self.seed_infections_group(household, 1)
+        #i = 0
+        #for person in self.people.members:
+        #    i += 1
+        #    if person.infection != None: 
+        #        print(person.infection.threshold_transmission)
         print(
             "starting the loop ..., at ",
             self.timer.day,

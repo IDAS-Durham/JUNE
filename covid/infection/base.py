@@ -13,7 +13,6 @@ class InfectionInitializer:
     def __init__(self, timer, health_index, user_config):
         infection_name = type(self).__name__
         self.timer = timer
-        user_config = user_config
         default_types = self.read_default_config(infection_name)
         self.transmission = self.initialize_transmission(default_types, user_config)
         self.symptoms = self.initialize_symptoms(
@@ -86,11 +85,12 @@ class Infection(InfectionInitializer, ParameterInitializer):
 
     def __init__(self, person, timer, user_config, required_parameters):
         self.person = person
+        self.required_parameters = required_parameters
         if person == None:
-            InfectionInitializer.__init__(timer, None, user_config)
+            InfectionInitializer.__init__(self, timer, None, user_config)
         else:
-            InfectionInitializer.__init__(timer, self.person.health_index, user_config)
-        ParameterInitializer.__init__("infection", required_parameters)
+            InfectionInitializer.__init__(self, timer, self.person.health_index, user_config)
+        ParameterInitializer.__init__(self, "infection", user_config, required_parameters)
         try:
             self.starttime = timer.now
         except:
@@ -101,7 +101,7 @@ class Infection(InfectionInitializer, ParameterInitializer):
         self.infection_probability = 0.0
 
     def infect(self, person_to_infect):
-        person_to_infect.infection = Infection(
+        person_to_infect.infection = self.__class__(
             person_to_infect, self.timer, self.user_config
         )
 
@@ -128,15 +128,7 @@ class Infection(InfectionInitializer, ParameterInitializer):
 
     @property
     def still_infected(self):
-        transmission_bool = (
-            self.transmission != None
-            and self.transmission.probability > self.threshold_transmission
-        )
-        symptoms_bool = (
-            self.symptoms != None and self.symptoms.severity > self.threshold_symptoms
-        )
-        is_infected = transmission_bool or symptoms_bool
-        return is_infected
+        pass
 
     def update_infection_probability(self):
         self.last_time_updated = self.timer.now
