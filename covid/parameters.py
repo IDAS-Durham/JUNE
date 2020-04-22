@@ -14,11 +14,10 @@ class ParameterInitializer:
     """
     Given a list of required parameters, initializes the (child) class
     with the parameter values by reading the user config file or the defaults.
-    The classtype arguments is the kind of class (transmission, symptoms, etc.)
+    The classtype argument is the kind of class (transmission, symptoms, etc.)
     you are initializing, so it can look the defaults at the right place.
     """
-
-    def __init__(self, classtype, user_parameters, required_parameters):
+    def __init__(self, classtype:str, user_parameters:dict, required_parameters:dict) -> None:
         self.classtype = classtype
         self.required_parameters = required_parameters
         self.user_parameters = user_parameters
@@ -26,7 +25,7 @@ class ParameterInitializer:
         self.default_parameters = self.read_default_parameters()
         self.initialize_parameters()
 
-    def read_default_parameters(self):
+    def read_default_parameters(self)->dict:
         default_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
@@ -43,7 +42,7 @@ class ParameterInitializer:
             raise FileNotFoundError("Default parameter config file not found")
         return default_params
 
-    def initialize_parameters(self):
+    def initialize_parameters(self) ->None:
         parameter_values_dict = {}
         for parameter in self.required_parameters:
             if parameter not in self.user_parameters: # if parameter is not specified by user, take it from defaults
@@ -71,13 +70,11 @@ class ParameterInitializer:
         for parameter, value in parameter_values_dict.items():
             setattr(self, parameter, value)
 
-    def calculate_parameter(self, parameter_config):
+    def calculate_parameter(self, parameter_config: dict)->float:
         try:
             distribution = parameter_config["distribution"]
         except KeyError:
             raise BaseException(f"I need the distribution name")
-        except TypeError:
-            return parameter_config  # for a parameter that does not require sampling
         try:
             parameters = parameter_config["parameters"]
         except KeyError:
@@ -106,7 +103,7 @@ class ParameterDistribution:
 
 
 class ConstantParameter(ParameterDistribution):
-    def __init__(self, parameters_dict):
+    def __init__(self, parameters_dict: dict) -> None:
         try:
             self.value0 = parameters_dict["value"]
         except KeyError:
@@ -118,7 +115,7 @@ class ConstantParameter(ParameterDistribution):
 
 
 class GaussianParameter(ParameterDistribution):
-    def __init__(self, parameters_dict):
+    def __init__(self, parameters_dict: dict) -> None:
         try:
             self.mean = parameters_dict["mean"]
         except KeyError:
@@ -145,7 +142,7 @@ class GaussianParameter(ParameterDistribution):
             self.upper = None
 
     @property
-    def value(self):
+    def value(self) -> float:
         if self.width_minus == None and self.width_plus == None:
             return self.mean
         if self.width_minus == None:
@@ -171,7 +168,7 @@ class GaussianParameter(ParameterDistribution):
 
 
 class UniformParameter:
-    def __init__(self, parameters_dict):
+    def __init__(self, parameters_dict: dict) -> None:
         try:
             self.lower = parameters_dict["lower"]
         except KeyError:
@@ -182,7 +179,7 @@ class UniformParameter:
             raise ParametersError(self, "upper")
 
     @property
-    def value(self):
+    def value(self) -> float:
         return self.lower + random.random() * (self.upper - self.lower)
 
 
