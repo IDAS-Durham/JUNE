@@ -19,9 +19,9 @@ def make_commute_generator():
 
 
 @pytest.fixture(
-    name="code"
+    name="msoarea"
 )
-def make_code():
+def make_msoarea():
     return "E00062207"
 
 
@@ -30,10 +30,10 @@ def make_code():
 )
 def make_regional_generator(
         commute_generator,
-        code
+        msoarea
 ):
-    return commute_generator.for_code(
-        code
+    return commute_generator.for_msoarea(
+        msoarea
     )
 
 
@@ -51,9 +51,9 @@ def test_load(
 
 def test_regional_generators(
         regional_generator,
-        code
+        msoarea
 ):
-    assert regional_generator.code == code
+    assert regional_generator.msoarea == msoarea
 
 
 def test_weighted_modes(regional_generator):
