@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import yaml
 
@@ -10,8 +10,15 @@ default_config_filename = Path(
 
 
 class RegionalGenerator:
-    def __init__(self, code: str):
+    def __init__(
+            self,
+            code: str,
+            weighted_modes: List[
+                Tuple[int, "ModeOfTransport"]
+            ]
+    ):
         self.code = code
+        self.weighted_modes = weighted_modes
 
 
 class ModeOfTransport:
@@ -32,6 +39,14 @@ class ModeOfTransport:
     ):
         self.description = description
 
+    def index(self, headers):
+        for i, header in enumerate(headers):
+            if self.description in header:
+                return i
+        raise AssertionError(
+            f"{self} not found in headers {headers}"
+        )
+
     def __eq__(self, other):
         if isinstance(other, str):
             return self.description == other
@@ -41,6 +56,12 @@ class ModeOfTransport:
 
     def __hash__(self):
         return hash(self.description)
+
+    def __str__(self):
+        return self.description
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {self.description}>"
 
     @classmethod
     def load_from_file(
@@ -79,10 +100,16 @@ class CommuteGenerator:
                 config_filename
             )
             for row in reader:
+                weighted_modes = list()
+                for mode in modes_of_transport:
+                    weighted_modes.append((
+                        row[mode.index(headers)], mode
+                    ))
                 code = row[code_column]
                 regional_generators.append(
                     RegionalGenerator(
-                        code=code
+                        code=code,
+                        weighted_modes=weighted_modes
                     )
                 )
         return CommuteGenerator(
