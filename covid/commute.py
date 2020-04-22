@@ -141,7 +141,7 @@ class ModeOfTransport:
         return self.description
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {self.description}>"
+        return f"<{self.__class__.__name__} {self}>"
 
     @classmethod
     def load_from_file(
