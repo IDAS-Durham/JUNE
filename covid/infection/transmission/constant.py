@@ -1,14 +1,14 @@
 from covid.infection.transmission import Transmission
 
+
 class TransmissionConstant(Transmission):
     def __init__(self, timer, user_parameters={}):
         required_parameters = ["transmission_probability"]
         super().__init__(timer, user_parameters, required_parameters)
-        print('***TRANSMISSION PROBABILITY = ',self.transmission_probability)
 
-    @property
-    def probability(self):
-        return self.transmission_probability
+    def update_probability(self):
+        time = self.timer.now
+        self.last_time_updated = time
 
 
 if __name__ == "__main__":
@@ -16,9 +16,8 @@ if __name__ == "__main__":
     print(trans.probability)
     user_config = {
         "transmission_probability": {
-            "distribution": "constant",
-            "parameters": {"value": 0.8}
+            "distribution": "constant", "parameters": {"value": 0.5}
         }
     }
     trans = TransmissionConstant(None, user_config)
-    print(trans.probability)
+    print(trans.transmission_probability)

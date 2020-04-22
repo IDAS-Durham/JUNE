@@ -141,7 +141,7 @@ class Person:
             self.infected = True
             self.susceptible = False
 
-    def update_health_status(self, time):
+    def update_health_status(self):
         if self.recovered == True:
             self.infected = False
             self.infection = None
@@ -149,6 +149,7 @@ class Person:
             self.susceptible = False
             if self.infection.still_infected:
                 self.infected = True
+                self.infection.update_infection_probability()
                 if self.infection.symptoms == None:
                     print("error!")
                 self.counter.update_symptoms()

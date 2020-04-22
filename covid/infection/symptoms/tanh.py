@@ -12,8 +12,10 @@ class SymptomsTanh(Symptoms):
         self.delta_onset = (self.Tmax-self.Tonset)
         self.delta_end   = (self.Tend-self.Tmax)
 
-    def _calculate_severity(self,time):
-        time_since_start = time - self.starttime
+    def update_severity(self):
+        time = self.timer.now
+        self.severity = 0.
+        time_since_start = time - self.infection_start_time
         if time_since_start<=self.Tmax:
             severity = (1.+np.tanh(3.14*(time_since_start-self.Tonset)/self.delta_onset))/2.
         elif time_since_start>self.Tmax:
@@ -21,7 +23,8 @@ class SymptomsTanh(Symptoms):
         elif (time>self.Tend):
             severity = 0.
         severity *= self.maxseverity
-        return severity
+        self.last_time_updated = time
+        self.severity = severity
 
 
 if __name__=='__main__':
