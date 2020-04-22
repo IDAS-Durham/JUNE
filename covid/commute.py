@@ -20,7 +20,7 @@ class RegionalGenerator:
     ):
         """
         Randomly generate modes of transport, weighted by usage, for
-        one particular reason.
+        one particular region.
 
         Parameters
         ----------
