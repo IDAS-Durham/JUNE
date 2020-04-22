@@ -1,8 +1,9 @@
-from covid.groups.people import Person
-import sys
 import random
-import matplotlib
+import sys
+
 import matplotlib.pyplot as plt
+
+from covid.groups.people import Person
 
 
 class Group:
@@ -42,7 +43,6 @@ class Group:
         "TestGroup",
     ]
 
-    
     def __init__(self, name, spec, number=-1):
         if not self.sane(name, spec):
             return
@@ -64,10 +64,10 @@ class Group:
 
     def get_name(self):
         return self.name
-    
+
     def get_spec(self):
         return self.spec
-        
+
     def set_intensity(self, intensity):
         self.intensity = intensity
 
@@ -92,11 +92,11 @@ class Group:
             print("--> Ignore and proceed.")
         else:
             self.people.append(person)
-            if person.is_susceptible():
+            if person.health_information.is_susceptible():
                 self.susceptible.append(person)
-            if person.is_infected():
+            if person.health_information.is_infected():
                 self.infected.append(person)
-            if person.is_recovered():
+            if person.health_information.is_recovered():
                 self.recovered.append(person)
                 self.infected.remove(person)
 
@@ -106,11 +106,11 @@ class Group:
         self.recovered.clear()
         for person in self.people:
             person.update_health_status()
-            if person.is_susceptible():
+            if person.health_information.is_susceptible():
                 self.susceptible.append(person)
-            if person.is_infected():
+            if person.health_information.is_infected():
                 self.infected.append(person)
-            elif person.is_recovered():
+            elif person.health_information.is_recovered():
                 self.recovered.append(person)
                 if person in self.infected:
                     self.infected.remove(person)
@@ -154,14 +154,14 @@ class Group:
             self.add(Person(str(i), 0, age, sex, 0, 0))
         # self.output(False,False)
 
-    def output(self, plot=False, full=False,time = 0):
+    def output(self, plot=False, full=False, time=0):
         print("==================================================")
-        print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
+        print("Group ", self.name, ", type = ", self.spec, " with ", len(self.people), " people.")
         print("* ",
-            self.size_susceptible(),"(",round(self.size_susceptible() / self.size() * 100),"%) are susceptible, ",
-            self.size_infected(),   "(",round(self.size_infected() / self.size() * 100),   "%) are infected,",
-            self.size_recovered(),  "(",round(self.size_recovered() / self.size() * 100),  "%) have recovered.",
-        )
+              self.size_susceptible(), "(", round(self.size_susceptible() / self.size() * 100), "%) are susceptible, ",
+              self.size_infected(), "(", round(self.size_infected() / self.size() * 100), "%) are infected,",
+              self.size_recovered(), "(", round(self.size_recovered() / self.size() * 100), "%) have recovered.",
+              )
 
         ages = []
         M = 0
@@ -173,9 +173,9 @@ class Group:
             else:
                 F += 1
         print("* ",
-              F,"(",round(F / self.size() * 100.0),"%) females, ",
-              M,"(",round(M / self.size() * 100.0),"%) males;",
-        )
+              F, "(", round(F / self.size() * 100.0), "%) females, ",
+              M, "(", round(M / self.size() * 100.0), "%) males;",
+              )
         if plot:
             fig, axes = plt.subplots()
             axes.hist(ages, 20, range=(0, 100), density=True, facecolor="blue", alpha=0.5)
@@ -202,9 +202,10 @@ def reciprocal_matrix(matrix, demography):
     demography_matrix = demography.reshape(-1, 1) / demography.reshape(1, -1)
     return (matrix + matrix.T * demography_matrix) / 2
 
+
 class TestGroups():
-    def __init__(self,N):
+    def __init__(self, N):
         self.members = []
         self.members.append([])
-        self.members[0].append(Group("Test","Random",1000))
-        print (self)
+        self.members[0].append(Group("Test", "Random", 1000))
+        print(self)

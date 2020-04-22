@@ -50,11 +50,11 @@ class Logger:
         susceptible = 0
         recovered = 0
         for person in area.people:
-            if person.is_susceptible():
+            if person.health_information.is_susceptible():
                 susceptible += 1
-            if person.is_infected():
+            if person.health_information.is_infected():
                 infected += 1
-            if person.is_recovered():
+            if person.health_information.is_recovered():
                 recovered += 1
         return susceptible, infected, recovered
 
