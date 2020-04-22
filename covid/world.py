@@ -1,19 +1,17 @@
-from covid.inputs import Inputs
-from covid.groups import *
-from covid.interaction import *
-from covid.infection import *
-from covid.logger import Logger
-from covid.time import Timer
+import os
 
+import numpy as np
 # from covid.interaction import Interaction
 # from covid.interaction_selector import InteractionSelector
 # from covid.time import DayIterator
 import pandas as pd
-import numpy as np
-from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
-import os
-from covid import time
+from tqdm.auto import tqdm  # for a fancy progress bar
+
+from covid.groups import *
+from covid.inputs import Inputs
+from covid.logger import Logger
+from covid.time import Timer
 
 
 class World:
@@ -72,13 +70,13 @@ class World:
             pbar.update(1)
         pbar.close()
         print("Initializing schools...")
-        #self.schools = Schools(self, self.areas, self.inputs.school_df)
-        #pbar = tqdm(total=len(self.areas.members))
-        #for area in self.areas.members:
+        # self.schools = Schools(self, self.areas, self.inputs.school_df)
+        # pbar = tqdm(total=len(self.areas.members))
+        # for area in self.areas.members:
         #    self.distributor = SchoolDistributor(self.schools, area)
         #    self.distributor.distribute_kids_to_school()
         #    pbar.update(1)
-        #pbar.close()
+        # pbar.close()
         self.interaction = self.initialize_interaction()
         # print("Initializing Companies...")
         # self.companies = Companies(self)
@@ -100,7 +98,7 @@ class World:
 
         with open(pickle_obj, "wb") as f:
             pickle.dump(self, f)
-    
+
     @classmethod
     def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
         """
@@ -111,7 +109,7 @@ class World:
         with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
-    
+
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
@@ -201,7 +199,6 @@ class World:
             infecter_reference.infect(group.people[choice])
         group.update_status_lists()
 
-
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
         if active_groups == None or len(active_groups) == 0:
@@ -228,8 +225,8 @@ class World:
         print("Infecting indivuals in their household.")
         for household in self.households.members:
             self.seed_infections_group(household, 1)
-        #i = 0
-        #for person in self.people.members:
+        # i = 0
+        # for person in self.people.members:
         #    i += 1
         #    if person.infection != None: 
         #        print(person.infection.threshold_transmission)
