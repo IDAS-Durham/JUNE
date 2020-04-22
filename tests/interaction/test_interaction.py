@@ -7,7 +7,6 @@ from covid.groups.test_groups.test_group import TestGroups
 from covid.interaction import Interaction
 from covid.collective_interaction import CollectiveInteraction
 from covid.infection import Infection
-from covid.infection_selector import InfectionSelector
 
 
 def ratio_SI_simulated(beta, N, I_0, times, mode):

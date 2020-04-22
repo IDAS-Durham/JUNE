@@ -9,8 +9,9 @@ class Interaction(ParameterInitializer):
 
     def __init__(self, user_parameters, required_parameters, world):
         super().__init__("interaction", user_parameters, required_parameters)
-        self.groups   = []
-        self.world = world
+        self.groups       = []
+        self.world       = world
+        self.intensities = {}
 
     def time_step(self):
         for grouptype in self.groups:
@@ -29,8 +30,17 @@ class Interaction(ParameterInitializer):
     def single_time_step_for_group(self, group):
         pass
 
+    def get_intensity(self,grouptype):
+        if grouptype in self.intensities:
+            return self.intensities[grouptype]
+        return 1
 
+    def set_intensities(self,intensities):
+        self.intensities = intensities
 
+    def set_intensity(self,grouptype,intensity):
+        self.intensities[grouptype] = intensity
+        
 
 
 
