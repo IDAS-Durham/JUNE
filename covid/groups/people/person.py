@@ -59,10 +59,11 @@ class Person:
     """
 
     def __init__(
-        self, person_id, area, work_msoa, age, nomis_bin, sex, health_index, econ_index
+        self, timer, person_id, area, work_msoa, age, nomis_bin, sex, health_index, econ_index
     ):
         # if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
         #    return
+        self.timer = timer
         self.id = person_id
         self.age = age
         self.nomis_bin = nomis_bin
@@ -90,7 +91,7 @@ class Person:
         return True
 
     def init_counter(self):
-        self.counter = Counter(self, self.area.world.timer)
+        self.counter = Counter(self, self.timer)
 
     def get_counter(self):
         return self.counter
