@@ -89,6 +89,7 @@ class World:
            pbar.update(1)
         pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"])
+        self.to_pickle()
         print("Done.")
 
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
