@@ -39,5 +39,5 @@ infection:
           value: 0.2
   symptoms:
     type: constant
-    parameter:
+    parameters:
       recovery_rate: 0.1
