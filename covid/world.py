@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import numpy as np
 # from covid.interaction import Interaction
@@ -8,6 +9,7 @@ import pandas as pd
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from covid.commute import CommuteGenerator
 from covid.groups import *
 from covid.inputs import Inputs
 from covid.logger import Logger
@@ -31,6 +33,11 @@ class World:
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         self.read_defaults()
+
+        self.commute_generator = CommuteGenerator.from_file(
+            Path(__file__).parent.parent / "data/commuting.csv"
+        )
+
         self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
