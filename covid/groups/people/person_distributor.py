@@ -115,8 +115,6 @@ class PersonDistributor:
 
     def _assign_industry(self, i, sex, age, sector_man, sector_woman, employed=True):
         """
-        :param gender: (string) male/female
-        :param employed: (bool) - for now we assume all people are employed
         Note: in this script self.area.name is used and assumed to be (string) OArea code
         THIS MIGHT NEED CHANGING
 
@@ -152,6 +150,25 @@ class PersonDistributor:
 
       
     def _assign_industry_specific(self, ratio, distribution):
+        """
+        Given a person who we know is in an industry we want to be more specific on the job for, we assign them a specific job
+        e.g. we want to assign teachers specifically, who belong to the 'Education' sector
+        The output of the function is a 4-digit number corresponding to the specific job - 
+        this number corresponds to the NOMIS annual occupation survey:
+
+        Healthcares sector
+        2211: Medical practitioners
+        2217: Medical radiographers
+        2231: Nurses
+        2232: Midwives
+
+        Education sector
+        2311: Higher education teaching professional
+        2312: Further education teaching professionals
+        2314: Secondary education teaching professionals
+        2315: Primary and nursery education teaching professionals
+        2316: Special needs education teaching professionals
+        """
         MC_random = np.random.uniform()
         industry_specific_id = None
 
