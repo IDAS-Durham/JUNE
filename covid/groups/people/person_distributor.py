@@ -14,7 +14,8 @@ class PersonDistributor:
     by the census statistics
     """
 
-    def __init__(self, people, area, msoareas, companysector_by_sex_dict, companysector_by_sex_df, workflow_df, companysector_specific_by_sex_df):
+    def __init__(self, timer, people, area, msoareas, companysector_by_sex_dict, companysector_by_sex_df, workflow_df, companysector_specific_by_sex_df):
+        self.timer = timer
         self.area = area
         self.msoareas = msoareas
         self.people = people
@@ -277,6 +278,7 @@ class PersonDistributor:
             )
             person = Person(
                 self.people.total_people,
+                self.timer,
                 self.area,
                 work_msoa_rnd,
                 age_random,

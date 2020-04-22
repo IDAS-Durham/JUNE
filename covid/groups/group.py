@@ -1,4 +1,4 @@
-from covid.groups.people import Person
+#from covid.groups.people import Person
 import sys
 import random
 import matplotlib
@@ -28,18 +28,19 @@ class Group:
     """
 
     allowed_groups = [
-        "Household",
-        "School",
-        "Work_Outdoor",
-        "Work_Indoor",
-        "Commute_Public",
-        "Commute_Private",
-        "Leisure_Outdoor",
-        "Leisure_Indoor",
-        "Shopping",
-        "ReferenceGroup",
-        "Random",
-        "TestGroup",
+        "household",
+        "school",
+        "work_Outdoor",
+        "work_Indoor",
+        "commute_Public",
+        "commute_Private",
+        "leisure_Outdoor",
+        "leisure_Indoor",
+        "shopping",
+        "referenceGroup",
+        "random",
+        "testGroup",
+        "box"
     ]
 
     
@@ -62,12 +63,13 @@ class Group:
             return False
         return True
 
-    def get_name(self):
-        return self.name
-    
-    def get_spec(self):
-        return self.spec
-        
+    def set_active_members(self):
+        for person in self.people:
+            if person.active_group != None:
+                raise ValueError("Trying to set an already active person")
+            else:
+                person.active_group = self.spec
+
     def set_intensity(self, intensity):
         self.intensity = intensity
 
@@ -76,30 +78,30 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
-    def add(self, person):
-        if not isinstance(person, Person):
-            print("Error in Group.Add(", p, ") is not a person.")
-            print("--> Exit the code.")
-            sys.exit()
-        if person in self.people:
-            print(
-                "Tried to add already present person",
-                person.Name(),
-                " to group ",
-                self.gname,
-                ".",
-            )
-            print("--> Ignore and proceed.")
-        else:
-            self.people.append(person)
-            if person.is_susceptible():
-                self.susceptible.append(person)
-            if person.is_infected():
-                self.infected.append(person)
-            if person.is_recovered():
-                self.recovered.append(person)
-                self.infected.remove(person)
-
+#    def add(self, person):
+#        if not isinstance(person, Person):
+#            print("Error in Group.Add(", p, ") is not a person.")
+#            print("--> Exit the code.")
+#            sys.exit()
+#        if person in self.people:
+#            print(
+#                "Tried to add already present person",
+#                person.Name(),
+#                " to group ",
+#                self.gname,
+#                ".",
+#            )
+#            print("--> Ignore and proceed.")
+#        else:
+#            self.people.append(person)
+#            if person.is_susceptible():
+#                self.susceptible.append(person)
+#            if person.is_infected():
+#                self.infected.append(person)
+#            if person.is_recovered():
+#                self.recovered.append(person)
+#                self.infected.remove(person)
+#
     def update_status_lists(self, time=0):
         self.susceptible.clear()
         self.infected.clear()
@@ -122,6 +124,7 @@ class Group:
         self.infected.clear()
         self.recovered.clear()
 
+    @property
     def size(self):
         return len(self.people)
 
@@ -134,33 +137,13 @@ class Group:
     def size_recovered(self):
         return len(self.recovered)
 
-    def people(self):
-        return self.people
-
-    def get_susceptible(self):
-        return self.susceptible
-
-    def get_infected(self):
-        return self.infected
-
-    def get_recovered(self):
-        return self.recovered
-
-    def fill_random_group(self, number):
-        print("Filling random group with ", number, "members.")
-        for i in range(number):
-            age = random.randrange(0, 100)
-            sex = random.choice(("M", "F"))
-            self.add(Person(str(i), 0, age, sex, 0, 0))
-        # self.output(False,False)
-
     def output(self, plot=False, full=False,time = 0):
         print("==================================================")
         print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
         print("* ",
-            self.size_susceptible(),"(",round(self.size_susceptible() / self.size() * 100),"%) are susceptible, ",
-            self.size_infected(),   "(",round(self.size_infected() / self.size() * 100),   "%) are infected,",
-            self.size_recovered(),  "(",round(self.size_recovered() / self.size() * 100),  "%) have recovered.",
+            self.size_susceptible(),"(",round(self.size_susceptible() / self.size * 100),"%) are susceptible, ",
+            self.size_infected(),   "(",round(self.size_infected() / self.size * 100),   "%) are infected,",
+            self.size_recovered(),  "(",round(self.size_recovered() / self.size * 100),  "%) have recovered.",
         )
 
         ages = []
@@ -173,8 +156,8 @@ class Group:
             else:
                 F += 1
         print("* ",
-              F,"(",round(F / self.size() * 100.0),"%) females, ",
-              M,"(",round(M / self.size() * 100.0),"%) males;",
+              F,"(",round(F / self.size * 100.0),"%) females, ",
+              M,"(",round(M / self.size * 100.0),"%) males;",
         )
         if plot:
             fig, axes = plt.subplots()
