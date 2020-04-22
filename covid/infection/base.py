@@ -13,7 +13,6 @@ class InfectionInitializer:
     def __init__(self, timer, health_index, user_config):
         infection_name = type(self).__name__
         self.timer = timer
-        user_config = user_config
         default_types = self.read_default_config(infection_name)
         self.transmission = self.initialize_transmission(default_types, user_config)
         self.symptoms = self.initialize_symptoms(
@@ -39,10 +38,11 @@ class InfectionInitializer:
         return default_params
 
     def initialize_transmission(self, default_types, user_config):
-        if "transmission" in user_config:
-            transmission_type = user_config["transmission"]["type"]
-            if "parameters" in user_config["transmission"]:
-                transmission_parameters = user_config["transmission"]["parameters"]
+        infection_config = user_config["infection"]
+        if "transmission" in infection_config:
+            transmission_type = infection_config["transmission"]["type"]
+            if "parameters" in infection_config["transmission"]:
+                transmission_parameters = infection_config["transmission"]["parameters"]
             else:
                 transmission_parameters = {}
         else:
@@ -84,25 +84,31 @@ class Infection(InfectionInitializer, ParameterInitializer):
     can be added/modified a posteriori.
     """
 
-    def __init__(self, person, timer, user_config, required_parameters):
+    def __init__(self, person, timer, user_config, infection_parameters, required_parameters):
         self.person = person
+        self.required_parameters = required_parameters
         if person == None:
-            InfectionInitializer.__init__(timer, None, user_config)
+            InfectionInitializer.__init__(self, timer, None, user_config)
         else:
-            InfectionInitializer.__init__(timer, self.person.health_index, user_config)
-        ParameterInitializer.__init__("infection", required_parameters)
+            InfectionInitializer.__init__(
+                self, timer, self.person.health_index, user_config
+            )
+        ParameterInitializer.__init__(
+            self, "infection", infection_parameters, required_parameters
+        )
         try:
             self.starttime = timer.now
         except:
             print("is this a test? otherwise check the time!")
             pass
         self.user_config = user_config
+        self.user_parameters = infection_parameters 
         self.last_time_updated = self.timer.now  # testing
         self.infection_probability = 0.0
 
     def infect(self, person_to_infect):
-        person_to_infect.infection = Infection(
-            person_to_infect, self.timer, self.user_config
+        person_to_infect.infection = self.__class__(
+            person_to_infect, self.timer, self.user_config, self.user_parameters
         )
 
     def set_transmission(self, transmission):
@@ -128,15 +134,7 @@ class Infection(InfectionInitializer, ParameterInitializer):
 
     @property
     def still_infected(self):
-        transmission_bool = (
-            self.transmission != None
-            and self.transmission.probability > self.threshold_transmission
-        )
-        symptoms_bool = (
-            self.symptoms != None and self.symptoms.severity > self.threshold_symptoms
-        )
-        is_infected = transmission_bool or symptoms_bool
-        return is_infected
+        pass
 
     def update_infection_probability(self):
         self.last_time_updated = self.timer.now
