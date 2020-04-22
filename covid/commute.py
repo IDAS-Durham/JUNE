@@ -2,6 +2,7 @@ import csv
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
 import yaml
 
 default_config_filename = Path(
@@ -19,6 +20,42 @@ class RegionalGenerator:
     ):
         self.code = code
         self.weighted_modes = weighted_modes
+
+    @property
+    def total(self):
+        return sum(
+            mode[0]
+            for mode
+            in self.weighted_modes
+        )
+
+    @property
+    def modes(self):
+        return [
+            mode[1]
+            for mode
+            in self.weighted_modes
+        ]
+
+    @property
+    def weights(self):
+        return [
+            mode[0] / self.total
+            for mode
+            in self.weighted_modes
+        ]
+
+    def weighted_random_choice(self):
+        return np.random.choice(
+            self.modes,
+            p=self.weights
+        )
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {self}>"
+
+    def __str__(self):
+        return self.code
 
 
 class ModeOfTransport:
