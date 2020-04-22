@@ -52,6 +52,7 @@ class World:
             # get msoa flow data for this oa area
             wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
             person_distributor = PersonDistributor(
+                self.timer,
                 self.people,
                 area,
                 self.msoareas,
