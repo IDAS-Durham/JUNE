@@ -103,7 +103,10 @@ class CommuteGenerator:
                 weighted_modes = list()
                 for mode in modes_of_transport:
                     weighted_modes.append((
-                        row[mode.index(headers)], mode
+                        int(row[
+                                mode.index(headers)
+                            ]),
+                        mode
                     ))
                 code = row[code_column]
                 regional_generators.append(
