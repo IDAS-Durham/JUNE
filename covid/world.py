@@ -35,7 +35,7 @@ class World:
         self.read_defaults()
 
         self.commute_generator = CommuteGenerator.from_file(
-            Path(__file__).parent.parent / "data/commuting.csv"
+            Path(__file__).parent.parent / "data/commute.csv"
         )
 
         self.timer = Timer(self.config["time"])
