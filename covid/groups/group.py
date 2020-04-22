@@ -48,7 +48,6 @@ class Group:
             return
         self.name = name
         self.spec = spec
-        self.intensity = 1.0  # None
         self.people = []
         self.susceptible = []
         self.infected = []
@@ -67,15 +66,7 @@ class Group:
 
     def get_spec(self):
         return self.spec
-
-    def set_intensity(self, intensity):
-        self.intensity = intensity
-
-    def get_intensity(self, time=0):
-        if self.intensity == None:
-            return 1.0
-        return self.intensity  # .intensity(time)
-
+    
     def add(self, person):
         if not isinstance(person, Person):
             print("Error in Group.Add(", p, ") is not a person.")
