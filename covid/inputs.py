@@ -59,7 +59,7 @@ class Inputs:
         self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_companysector_by_sex_census()
         self.companysector_specific_by_sex_df = self.read_companysector_specific_by_sex()
 
-        self.commute_generator_path = Path(__file__).parent.parent / "data/commute.csv"
+        self.commute_generator_path = Path(__file__).parent.parent / "data/census_data/commute.csv"
 
     def read(self, filename):
         df = pd.read_csv(
