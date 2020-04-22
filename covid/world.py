@@ -34,15 +34,15 @@ class World:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         self.read_defaults()
 
-        self.commute_generator = CommuteGenerator.from_file(
-            Path(__file__).parent.parent / "data/commute.csv"
-        )
-
         self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
+        print("Initializing commute generator...")
+        self.commute_generator = CommuteGenerator.from_file(
+            self.inputs.commute_generator_path
+        )
         print("Initializing areas...")
         self.msoareas = MSOAreas(self)
         msoareas_distributor = MSOAreaDistributor(self.msoareas)
