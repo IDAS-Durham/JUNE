@@ -12,14 +12,13 @@ class TransmissionConstant(Transmission):
 
 
 if __name__ == "__main__":
-    trans = TransmissionConstant()
+    trans = TransmissionConstant(None)
     print(trans.probability)
     user_config = {
         "transmission_probability": {
-            "distribution": "gaussian",
-            "parameters": {"mean": 0.3,
-                "width_minus" : 0.5},
+            "distribution": "constant",
+            "parameters": {"value": 0.8}
         }
     }
-    trans = TransmissionConstant(user_config)
+    trans = TransmissionConstant(None, user_config)
     print(trans.probability)
