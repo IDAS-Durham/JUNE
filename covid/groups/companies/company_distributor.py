@@ -28,9 +28,9 @@ class CompanyDistributor:
         return self.companies_msoarea[index]
 
     def distribute_adults_to_companies(self):
-        STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
+        STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
+        ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
+        OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
         
         # this assumes that self.msoarea.people.values() gives the people who WORK in that area
         for person in self.msoarea.work_people:

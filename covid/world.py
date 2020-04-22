@@ -80,14 +80,14 @@ class World:
             pbar.update(1)
         pbar.close()
         self.interaction = self.initialize_interaction()
-        # print("Initializing Companies...")
-        # self.companies = Companies(self)
-        # pbar = tqdm(total=len(self.msoareas.members))
-        # for area in self.msoareas.members:
-        #    self.distributor = CompanyDistributor(self.companies, area)
-        #    self.distributor.distribute_adults_to_companies()
-        #    pbar.update(1)
-        # pbar.close()
+        print("Initializing Companies...")
+        self.companies = Companies(self)
+        pbar = tqdm(total=len(self.msoareas.members))
+        for area in self.msoareas.members:
+           self.distributor = CompanyDistributor(self.companies, area)
+           self.distributor.distribute_adults_to_companies()
+           pbar.update(1)
+        pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")
 
