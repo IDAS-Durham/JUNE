@@ -19,12 +19,22 @@ def make_commute_generator():
 
 
 @pytest.fixture(
+    name="code"
+)
+def make_code():
+    return "E00062207"
+
+
+@pytest.fixture(
     name="regional_generator"
 )
 def make_regional_generator(
-        commute_generator
+        commute_generator,
+        code
 ):
-    return commute_generator.regional_generators[0]
+    return commute_generator.for_code(
+        code
+    )
 
 
 def test_load(
@@ -40,9 +50,10 @@ def test_load(
 
 
 def test_regional_generators(
-        regional_generator
+        regional_generator,
+        code
 ):
-    assert regional_generator.code == "E00062207"
+    assert regional_generator.code == code
 
 
 def test_weighted_modes(regional_generator):
