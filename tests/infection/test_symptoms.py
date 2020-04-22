@@ -92,10 +92,11 @@ def check_symptom_tags(N, world):
         severity = world.people.members[0].infection.symptom_severity
         severs1.append(severity)
         tag = world.people.members[0].infection.symptoms.tag
-        for j in range(0, len(allowed)):
-            if tag == allowed[j]:
-                tags[j] += 1
-                break
+        tags[tag.index(allowed)] += 1
+        #for j in range(0, len(allowed)):
+        #    if tag == allowed[j]:
+        #        tags[j] += 1
+        #        break
     for i in range(len(tags)):
         tags[i] = tags[i] / N
     print(tags)
