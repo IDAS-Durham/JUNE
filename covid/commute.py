@@ -13,7 +13,7 @@ default_config_filename = Path(
 class RegionalGenerator:
     def __init__(
             self,
-            code: str,
+            msoarea: str,
             weighted_modes: List[
                 Tuple[int, "ModeOfTransport"]
             ]
@@ -24,13 +24,13 @@ class RegionalGenerator:
 
         Parameters
         ----------
-        code
+        msoarea
             A unique identifier for a Output region
         weighted_modes
             A list of tuples comprising the number of people using a mode
             of a transport and a representation of that mode of transport
         """
-        self.code = code
+        self.msoarea = msoarea
         self.weighted_modes = weighted_modes
 
     @property
@@ -79,7 +79,7 @@ class RegionalGenerator:
         return f"<{self.__class__.__name__} {self}>"
 
     def __str__(self):
-        return self.code
+        return self.msoarea
 
 
 class ModeOfTransport:
@@ -187,27 +187,27 @@ class CommuteGenerator:
         Parameters
         ----------
         regional_generators
-            A dictionary mapping Geography Codes to objects that randomly
+            A dictionary mapping Geography msoareas to objects that randomly
             generate modes of transport
         """
         self.regional_generators = regional_generators
 
-    def for_code(self, code: str) -> RegionalGenerator:
+    def for_msoarea(self, msoarea: str) -> RegionalGenerator:
         """
         Get a regional generator for an Output Area identified
-        by its output code, e.g. E00062207
+        by its output msoarea, e.g. E00062207
 
         Parameters
         ----------
-        code
-            An output code
+        msoarea
+            A code for an msoarea
 
         Returns
         -------
         An object that weighted-randomly selects modes of transport for the region.
         """
         return self.regional_generators[
-            code
+            msoarea
         ]
 
     @classmethod
@@ -238,7 +238,7 @@ class CommuteGenerator:
         with open(filename) as f:
             reader = csv.reader(f)
             headers = next(reader)
-            code_column = headers.index("geography code")
+            msoarea_column = headers.index("geography code")
             modes_of_transport = ModeOfTransport.load_from_file(
                 config_filename
             )
@@ -251,9 +251,9 @@ class CommuteGenerator:
                             ]),
                         mode
                     ))
-                code = row[code_column]
-                regional_generators[code] = RegionalGenerator(
-                    code=code,
+                msoarea = row[msoarea_column]
+                regional_generators[msoarea] = RegionalGenerator(
+                    msoarea=msoarea,
                     weighted_modes=weighted_modes
                 )
 
