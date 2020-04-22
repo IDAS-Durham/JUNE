@@ -37,9 +37,9 @@ class Logger:
             self.data_dict[area.name][day]["infected"] = infected
             self.data_dict[area.name][day]["recovered"] = recovered
         self.data_dict["world"][day] = {}
-        self.data_dict["world"][day]["susceptible"] = susceptible
-        self.data_dict["world"][day]["infected"] = infected
-        self.data_dict["world"][day]["recovered"] = recovered
+        self.data_dict["world"][day]["susceptible"] = susceptible_world
+        self.data_dict["world"][day]["infected"] = infected_world
+        self.data_dict["world"][day]["recovered"] = recovered_world
         self.log_r0(day)
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:

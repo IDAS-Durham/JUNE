@@ -36,14 +36,17 @@ def distribute_values(world):
     plt.show()
 
 
-def distribute_values_Tanh(world):
+def distribute_values_symptoms_Tanh(world):
     import random
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(1, 1, figsize=(9, 4))
     ax.set_title("10 examples for plateau'ed evolution of symptom severity over time")
-    # TODO: how do we set symtomps parameters from here ??
-    infection = Infection(world.people.members[0], world.timer)
+    user_config = {'transmission': {'type': 'Constant'},
+                    'symptoms': {'type': 'tanh'},
+                   }
+    infection = Infection(world.people.members[0], world.timer,
+                        user_config)
 
     for i in range(10):
         infection.infect(world.people.members[i + 1])
@@ -84,8 +87,8 @@ def check_symptom_tags(N, world):
         # reset timer
         infection.timer = Timer(world.config["time"])
         infection.infect(person)
-        next(infection.timer)
-        next(infection.timer)
+        while infection.timer.now < 1.5:
+            next(infection.timer)
         severity = world.people.members[0].infection.symptom_severity
         severs1.append(severity)
         tag = world.people.members[0].infection.symptoms.tag
@@ -93,8 +96,6 @@ def check_symptom_tags(N, world):
             if tag == allowed[j]:
                 tags[j] += 1
                 break
-            # else:
-            #    tags[0] += 1
     for i in range(len(tags)):
         tags[i] = tags[i] / N
     print(tags)
@@ -123,8 +124,8 @@ def check_symptom_tags(N, world):
 
 if __name__ == "__main__":
     world = World()
-    # print ("distribute values Gaussian shape")
-    # distribute_values(world)
+    print ("distribute values Gaussian shape")
+    distribute_values(world)
     print("distribute values tanh shape")
-    distribute_values_Tanh(world)
-    check_symptom_tags(100000, world)
+    distribute_values_symptoms_Tanh(world)
+    check_symptom_tags(1000, world)
