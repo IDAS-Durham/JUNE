@@ -4,7 +4,7 @@ logger:
   save_path: results
 
 world:
-  zone: NorthEast # NorthEast # available are all UK regions, and EnglandWales together.
+  zone: test # NorthEast # available are all UK regions, and EnglandWales together.
 
 time:
   total_days: 20

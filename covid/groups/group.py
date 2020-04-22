@@ -1,4 +1,3 @@
-#from covid.groups.people import Person
 import sys
 import random
 import matplotlib
@@ -49,7 +48,6 @@ class Group:
             return
         self.name = name
         self.spec = spec
-        self.intensity = 1.0  # None
         self.people = []
         self.susceptible = []
         self.infected = []
@@ -128,12 +126,15 @@ class Group:
     def size(self):
         return len(self.people)
 
+    @property
     def size_susceptible(self):
         return len(self.susceptible)
 
+    @property
     def size_infected(self):
         return len(self.infected)
 
+    @property
     def size_recovered(self):
         return len(self.recovered)
 

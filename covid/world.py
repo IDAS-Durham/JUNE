@@ -220,11 +220,6 @@ class World:
             print("Infecting indivuals in their household.")
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
-        # i = 0
-        # for person in self.people.members:
-        #    i += 1
-        #    if person.infection != None:
-        #        print(person.infection.threshold_transmission)
         print(
             "starting the loop ..., at ",
             self.timer.day,
