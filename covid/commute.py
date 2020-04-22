@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import numpy as np
 import yaml
@@ -118,9 +118,14 @@ class ModeOfTransport:
 class CommuteGenerator:
     def __init__(
             self,
-            regional_generators: List[RegionalGenerator]
+            regional_generators: Dict[str, RegionalGenerator]
     ):
         self.regional_generators = regional_generators
+
+    def for_code(self, code):
+        return self.regional_generators[
+            code
+        ]
 
     @classmethod
     def from_file(
@@ -128,7 +133,7 @@ class CommuteGenerator:
             filename: str,
             config_filename: str = default_config_filename
     ) -> "CommuteGenerator":
-        regional_generators = list()
+        regional_generators = dict()
         with open(filename) as f:
             reader = csv.reader(f)
             headers = next(reader)
@@ -146,12 +151,11 @@ class CommuteGenerator:
                         mode
                     ))
                 code = row[code_column]
-                regional_generators.append(
-                    RegionalGenerator(
-                        code=code,
-                        weighted_modes=weighted_modes
-                    )
+                regional_generators[code] = RegionalGenerator(
+                    code=code,
+                    weighted_modes=weighted_modes
                 )
+
         return CommuteGenerator(
             regional_generators
         )
