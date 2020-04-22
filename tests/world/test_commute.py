@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from covid import commute as c
 
 test_file_directory = Path(
@@ -7,12 +9,29 @@ test_file_directory = Path(
 ).parent.parent / "test_data"
 
 
-def test_load():
-    commute_generator = c.CommuteGenerator.from_file(
+@pytest.fixture(
+    name="commute_generator"
+)
+def make_commute_generator():
+    return c.CommuteGenerator.from_file(
         test_file_directory / "commute.csv"
     )
+
+
+def test_load(
+        commute_generator
+):
     assert isinstance(
         commute_generator,
         c.CommuteGenerator
     )
-    assert len(commute_generator.regional_generators) == 105
+
+    regional_generators = commute_generator.regional_generators
+    assert len(regional_generators) == 8802
+
+
+def test_regional_generators(
+        commute_generator
+):
+    regional_generator = commute_generator.regional_generators[0]
+    assert regional_generator.code == "E00062207"
