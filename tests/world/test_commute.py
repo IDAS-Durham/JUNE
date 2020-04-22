@@ -4,9 +4,9 @@ import pytest
 
 from covid import commute as c
 
-test_file_directory = Path(
+data_filename = Path(
     __file__
-).parent.parent / "test_data"
+).parent.parent / "test_data/commute.csv"
 
 
 @pytest.fixture(
@@ -14,7 +14,7 @@ test_file_directory = Path(
 )
 def make_commute_generator():
     return c.CommuteGenerator.from_file(
-        test_file_directory / "commute.csv"
+        data_filename
     )
 
 
@@ -35,3 +35,10 @@ def test_regional_generators(
 ):
     regional_generator = commute_generator.regional_generators[0]
     assert regional_generator.code == "E00062207"
+
+
+def test_modes_of_transport():
+    modes_of_transport = c.ModeOfTransport.load_from_file()
+    assert len(modes_of_transport) == 12
+    assert "Work mainly at or from home" in modes_of_transport
+    assert c.ModeOfTransport.load_from_file()[0] is modes_of_transport[0]
