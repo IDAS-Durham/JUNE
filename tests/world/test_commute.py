@@ -18,6 +18,15 @@ def make_commute_generator():
     )
 
 
+@pytest.fixture(
+    name="regional_generator"
+)
+def make_regional_generator(
+        commute_generator
+):
+    return commute_generator.regional_generators[0]
+
+
 def test_load(
         commute_generator
 ):
@@ -31,17 +40,31 @@ def test_load(
 
 
 def test_regional_generators(
-        commute_generator
+        regional_generator
 ):
-    regional_generator = commute_generator.regional_generators[0]
     assert regional_generator.code == "E00062207"
 
+
+def test_weighted_modes(regional_generator):
     weighted_modes = regional_generator.weighted_modes
     assert len(regional_generator.weighted_modes) == 12
 
     weighted_mode = weighted_modes[0]
     assert weighted_mode[0] == 15
     assert weighted_mode[1] == "Work mainly at or from home"
+
+
+def test_weights(regional_generator):
+    assert regional_generator.total == 180
+
+    weights = regional_generator.weights
+    assert len(weights) == 12
+    assert sum(weights) == pytest.approx(1.0)
+
+
+def test_weighted_random_choice(regional_generator):
+    result = regional_generator.weighted_random_choice()
+    assert isinstance(result, c.ModeOfTransport)
 
 
 def test_modes_of_transport():
