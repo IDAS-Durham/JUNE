@@ -230,7 +230,15 @@ class Inputs:
         """
 
         industrysector_specic_by_sex_df = pd.read_csv(
-            "../data/census_data/output_area/NorthEast/health_education_by_sex_NorthEast.csv"
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                'data',
+                'census_data',
+                'output_area',
+                'NorthEast',
+                'health_education_by_sex_NorthEast.csv'
+                )
         )
 
         return industrysector_specic_by_sex_df

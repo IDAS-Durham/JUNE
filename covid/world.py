@@ -1,7 +1,7 @@
 from covid.inputs import Inputs
 from covid.groups import *
 from covid.interaction import *
-from covid.infection import Infection
+from covid.infection import *
 from covid.logger import Logger
 from covid.time import Timer
 
@@ -72,13 +72,13 @@ class World:
             pbar.update(1)
         pbar.close()
         print("Initializing schools...")
-        self.schools = Schools(self, self.areas, self.inputs.school_df)
-        pbar = tqdm(total=len(self.areas.members))
-        for area in self.areas.members:
-            self.distributor = SchoolDistributor(self.schools, area)
-            self.distributor.distribute_kids_to_school()
-            pbar.update(1)
-        pbar.close()
+        #self.schools = Schools(self, self.areas, self.inputs.school_df)
+        #pbar = tqdm(total=len(self.areas.members))
+        #for area in self.areas.members:
+        #    self.distributor = SchoolDistributor(self.schools, area)
+        #    self.distributor.distribute_kids_to_school()
+        #    pbar.update(1)
+        #pbar.close()
         self.interaction = self.initialize_interaction()
         # print("Initializing Companies...")
         # self.companies = Companies(self)
@@ -190,15 +190,16 @@ class World:
             infection_parameters = self.config["infection"]["parameters"]
         else:
             infection_parameters = {}
-        infection = globals()[infection_name](person, self.timer, infection_parameters)
+        infection = globals()[infection_name](person, self.timer, self.config, infection_parameters)
         return infection
 
     def seed_infections_group(self, group, n_infections):
         #    print (n_infections,group.people)
         choices = np.random.choice(group.size(), n_infections)
-        infecter_reference = Infection(None, self.timer, self.config)
+        infecter_reference = self.initialize_infection(None)
         for choice in choices:
             infecter_reference.infect(group.people[choice])
+        group.update_status_lists()
 
 
     def do_timestep(self, day_iter):
@@ -227,6 +228,11 @@ class World:
         print("Infecting indivuals in their household.")
         for household in self.households.members:
             self.seed_infections_group(household, 1)
+        #i = 0
+        #for person in self.people.members:
+        #    i += 1
+        #    if person.infection != None: 
+        #        print(person.infection.threshold_transmission)
         print(
             "starting the loop ..., at ",
             self.timer.day,
@@ -234,9 +240,10 @@ class World:
             self.timer.total_days,
             " days",
         )
+
         while self.timer.day <= self.timer.total_days:
-            self.do_timestep(self.timer)
             self.logger.log_timestep(self.timer.day)
+            self.do_timestep(self.timer)
             next(self.timer)
 
 

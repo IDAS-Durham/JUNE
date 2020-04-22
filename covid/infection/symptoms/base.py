@@ -14,8 +14,7 @@ ALLOWED_SYMPTOM_TAGS = [
 
 class Symptoms(ParameterInitializer):
     def __init__(self, timer, health_index, user_parameters, required_parameters):
-        super().__init__("symptoms", required_parameters)
-        self.initialize_parameters(user_parameters)
+        super().__init__("symptoms", user_parameters, required_parameters)
         self.timer = timer
         self.infection_start_time = self.timer.now
         self.last_time_updated = self.timer.now  # for testing
