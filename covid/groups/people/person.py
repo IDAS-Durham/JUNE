@@ -141,7 +141,8 @@ class Person:
             nomis_bin=None,
             sex=None,
             health_index=None,
-            econ_index=None
+            econ_index=None,
+            mode_of_transport=None
     ):
         if not 0 <= age <= 120 or sex not in ("M", "F"):
             raise AssertionError(
@@ -157,6 +158,7 @@ class Person:
         self.work_msoarea = work_msoa
         self.econ_index = econ_index
         self.area = area
+        self.mode_of_transport = mode_of_transport
         self.active_group = None
         self.household = None
         self.school = None
