@@ -38,7 +38,7 @@ class InfectionInitializer:
         return default_params
 
     def initialize_transmission(self, default_types, user_config):
-        if "infection" in user_config["infection"] and "transmission" in user_config["infection"]:
+        if "infection" in user_config and "transmission" in user_config["infection"]:
             transmission_config = user_config["infection"]["transmission"]
             transmission_type = transmission_config["type"]
             if "parameters" in transmission_config:
@@ -55,7 +55,7 @@ class InfectionInitializer:
         return transmission
 
     def initialize_symptoms(self, health_index, default_types, user_config):
-        if "infection" in user_config["infection"] and "symptoms" in user_config["infection"]:
+        if "infection" in user_config and "symptoms" in user_config["infection"]:
             symptoms_config = user_config["infection"]["symptoms"]
             symptoms_type = symptoms_config["type"]
             if "parameters" in symptoms_config:
