@@ -192,7 +192,20 @@ class CommuteGenerator:
         """
         self.regional_generators = regional_generators
 
-    def for_code(self, code):
+    def for_code(self, code: str) -> RegionalGenerator:
+        """
+        Get a regional generator for an Output Area identified
+        by its output code, e.g. E00062207
+
+        Parameters
+        ----------
+        code
+            An output code
+
+        Returns
+        -------
+        An object that weighted-randomly selects modes of transport for the region.
+        """
         return self.regional_generators[
             code
         ]
