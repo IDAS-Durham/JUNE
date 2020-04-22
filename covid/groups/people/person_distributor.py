@@ -146,7 +146,7 @@ class PersonDistributor:
                     industry_id = sector_woman[i]
                 else:
                     raise ValueError('sex must be with male or female. Intead got {}'.format(sex_random))
-                industry = industry_dict[industry_id]
+                industry = self.industry_dict[industry_id]
 
             return industry
 
@@ -213,8 +213,8 @@ class PersonDistributor:
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(size=self.area.n_residents)
-        companysector_male_rnd_array = self.sector_distribution_male.rvs(size=self.n_residents)
-        companysector_female_rnd_array = self.sector_distribution_female.rvs(size=self.n_residents)
+        companysector_male_rnd_array = self.sector_distribution_male.rvs(size=self.area.n_residents)
+        companysector_female_rnd_array = self.sector_distribution_female.rvs(size=self.area.n_residents)
 
         # this won't work with this as this df is actually a dict - but this can be fixed
         healthcare_specific_slice = self.companysector_specific_by_sex_df[:4]
