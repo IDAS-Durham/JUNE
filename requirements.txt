@@ -43,3 +43,4 @@ pytest
 pytest-cov
 scipy
 scikit-learn==0.22.2
+PyYAML==5.3.1
