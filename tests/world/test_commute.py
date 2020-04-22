@@ -35,7 +35,13 @@ def test_regional_generators(
 ):
     regional_generator = commute_generator.regional_generators[0]
     assert regional_generator.code == "E00062207"
+
+    weighted_modes = regional_generator.weighted_modes
     assert len(regional_generator.weighted_modes) == 12
+
+    weighted_mode = weighted_modes[0]
+    assert weighted_mode[0] == 15
+    assert weighted_mode[1] == "Work mainly at or from home"
 
 
 def test_modes_of_transport():
