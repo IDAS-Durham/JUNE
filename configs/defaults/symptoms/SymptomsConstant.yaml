@@ -1,9 +1,1 @@
-time_offset:
-  distribution: constant
-  parameters:
-    value: 0.5  
-
-end_time:
-  distribution: constant
-  parameters:
-    value: 10 
+recovery_rate: 0.2
