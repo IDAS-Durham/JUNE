@@ -2,8 +2,7 @@ from covid.parameters import ParameterInitializer
 import numpy as np
 import random
 
-allowed_symptom_tags = [
-    "none",  # this is only for people who are not ill
+ALLOWED_SYMPTOM_TAGS = [
     "asymptomatic",
     "influenza-like illness",
     "pneumonia",
@@ -15,21 +14,18 @@ allowed_symptom_tags = [
 
 class Symptoms(ParameterInitializer):
     def __init__(self, timer, health_index, user_parameters, required_parameters):
-        super().__init__("symptoms", required_parameters)
-        self.initialize_parameters(user_parameters)
+        super().__init__("symptoms", user_parameters, required_parameters)
         self.timer = timer
-        self.starttime = self.timer.now
+        self.infection_start_time = self.timer.now
+        self.last_time_updated = self.timer.now  # for testing
         self.health_index = health_index
         self.maxseverity = random.random()
-        self.tags = allowed_symptom_tags
+        self.tags = ALLOWED_SYMPTOM_TAGS
+        self.severity = 0.0
 
-    @property
-    def severity(self):
-        if self.timer.now >= self.starttime:
-            severity  = self._calculate_severity(self.timer.now)
-        else:
-            severity = 0.0
-        return max(0.0, severity)
+    def update_severity(self):
+        self.last_time_updated = self.timer.now
+        pass
 
     @property
     def n_tags(self):
@@ -37,13 +33,10 @@ class Symptoms(ParameterInitializer):
 
     @property
     def tag(self):
-        return self.fix_tag(self.severity)
+        return self.fix_tag()
 
-    def fix_tag(self, severity):
-        if severity <= 0.0:
+    def fix_tag(self):
+        if self.severity <= 0.0:
             return "healthy"
-        index = np.searchsorted(self.health_index, severity)
+        index = np.searchsorted(self.health_index, self.severity)
         return self.tags[index + 1]
-
-    def tags(self):
-        return self.tags

@@ -105,7 +105,7 @@ class Group:
         self.infected.clear()
         self.recovered.clear()
         for person in self.people:
-            person.update_health_status(time)
+            person.update_health_status()
             if person.is_susceptible():
                 self.susceptible.append(person)
             if person.is_infected():
