@@ -6,3 +6,5 @@ data
 *.pkl
 *.egg-info
 .env
+cookie
+data.zip
