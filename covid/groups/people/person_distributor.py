@@ -261,9 +261,8 @@ class PersonDistributor:
         male_education_distribution = np.array(education_specific_slice['males'])/male_education_specific
         female_healthcare_distribution = np.array(healthcare_specific_slice['females'])/female_healthcare_specific
         female_education_distribution = np.array(education_specific_slice['females'])/female_education_specific
-                
 
-        for i in range(0, self.area.n_residents):
+        for i in range(self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
