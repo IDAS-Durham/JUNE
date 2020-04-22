@@ -6,4 +6,4 @@ mean_time:
 sigma_time:
   distribution: constant
   parameters:
-    value: 11
+    value: 3 
