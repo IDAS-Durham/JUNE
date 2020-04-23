@@ -56,13 +56,4 @@ and
 
 # Quickstart
 
-To run a quick test, make sure you set `zone: test` in the cofig.yaml file and run
-
-```
-from covid import World
-
-PATH_TO_CONFIG = "configs/config_example.yaml"
-world = World(PATH_TO_CONFIG)
-
-```
-This will populate a world with 20 output areas, a few thousand people to play with.
+Refer to ``Notebooks/quickstart.ipynb``
