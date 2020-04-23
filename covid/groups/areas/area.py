@@ -26,7 +26,7 @@ class Area:
         """
         Object that generates modes of transport randomly weighted by census data
         """
-        return self.world.commute_generator.for_code(
+        return self.world.commute_generator.for_msoarea(
             self.msoarea
         )
 
