@@ -417,8 +417,8 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.workflow_df)
+    #print(ip.workflow_df)
     #print(ip.companysize_df)
-    #print(ip.companysector_df)
-    #print(ip.companysector_by_sex_df)
-    #print(ip.companysector_specific_by_sex_df)
+    print(ip.companysector_df)
+    print(ip.companysector_by_sex_df)
+    print(ip.companysector_specific_by_sex_df)
