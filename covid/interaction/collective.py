@@ -20,7 +20,7 @@ class InteractionCollective(Interaction):
         ):
             return None
         effective_load = self.calculate_effective_viral_load(group)
-        if effective_load <= 0.:
+        if effective_load <= 0.: #TODO ask Frank
             return
         for recipient in group.susceptible:
             self.single_time_step_for_recipient(
@@ -31,7 +31,7 @@ class InteractionCollective(Interaction):
         self, recipient, effective_load, group
     ):
         transmission_probability  = 0.
-        recipient_probability     = recipient.susceptibility
+        recipient_probability     = recipient.health_information.susceptibility
         if recipient_probability <= 0.0:
             return
         if self.mode == "superposition":
@@ -56,7 +56,7 @@ class InteractionCollective(Interaction):
             transmission_probability = 1.-np.exp(recipient_probability * effective_load)
         if random.random() <= transmission_probability:
             infecter = self.select_infecter()
-            infecter.infection.infect(recipient)
+            infecter.health_information.infection.infect(recipient)
             infecter.counter.increment_infected()
             recipient.counter.update_infection_data(
                 self.world.timer.now, group.spec
@@ -73,14 +73,13 @@ class InteractionCollective(Interaction):
         if interaction_intensity > 0.:
             self.weights = []
             for person in group.infected:
-                trans_prob = person.infection.transmission.transmission_probability 
-                summed_load += trans_prob 
-                self.weights.append([person, trans_prob])
+                viral_load   = person.health_information.infection.transmission.transmission_probability
+                summed_load += viral_load
+                self.weights.append([person, viral_load])
             for i in range(len(self.weights)):
                 self.weights[i][1] /= summed_load
             summed_load *= interaction_intensity
         return summed_load
-        #return #person.infection.transmission.transmission_probability
 
     def select_infecter(self):
         disc = random.random()

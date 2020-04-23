@@ -4,6 +4,15 @@ Repository for data and models built
 
 Given the size of this team we should work in branches and merge regularly and separate folders for projects.
 
+# Tests
+
+Run the tests with
+
+```
+cd tests
+pytest --ignore=need_fixing
+```
+
 # Data
 ## How to get the data
 
