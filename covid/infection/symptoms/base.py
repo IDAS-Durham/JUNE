@@ -27,6 +27,9 @@ class Symptoms(ParameterInitializer):
         self.last_time_updated = self.timer.now
         pass
 
+    def is_recovered(self):
+        pass
+
     @property
     def n_tags(self):
         return len(self.tags)

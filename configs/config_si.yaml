@@ -1,0 +1,39 @@
+title: SI model 
+
+logger:
+  save_path: results
+
+world:
+  zone: test # NorthEast # available are all UK regions, and EnglandWales together.
+
+time:
+  total_days: 20
+  step_duration: 
+      weekday:
+          1: 24
+      weekend:
+          1: 24
+  step_active_groups:
+      weekday:
+          1: ['boxes'] # active groups during first time step
+      weekend:
+          1: ['boxes'] 
+
+interaction:
+  type: collective
+  parameters:
+    mode: probabilistic 
+
+infection:
+  type: constant
+  transmission:
+    type: constant
+    parameters:
+      transmission_probability:
+        distribution: constant
+        parameters:
+          value: 0.2
+  symptoms:
+    type: constant
+    parameters:
+      recovery_rate: 0.1
