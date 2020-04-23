@@ -117,7 +117,7 @@ class Infection(InfectionInitializer, ParameterInitializer):
         infection = self.__class__(
             person_to_infect, self.timer, self.user_config, self.user_parameters
         )
-        person_to_infect.set_infection(infection)
+        person_to_infect.health_information.set_infection(infection)
 
     def set_transmission(self, transmission):
         if not isinstance(transmission, Transmission):

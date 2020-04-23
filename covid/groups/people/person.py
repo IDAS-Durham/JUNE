@@ -13,52 +13,25 @@ class HealthInformation:
         self.recovered = False
 
     def set_infection(self, infection):
-        if not isinstance(infection, Infection) and infection is not None:
-            print("Error in Infection.Add(", infection, ") is not an infection")
-            print("--> Exit the code.")
-            sys.exit()
         self.infection = infection
-        if self.infection is None:
-            if self.infected:
-                self.recovered = True
-                self.susceptible = False
-            self.infected = False
-        else:
-            self.infected = True
-            self.susceptible = False
+        self.infected = True
+        self.susceptible = False
 
     def update_health_status(self):
-        if self.recovered is True:
-            self.infected = False
-            self.infection = None
-        if self.infection is not None:
-            self.susceptible = False
-            if self.infection.still_infected:
-                self.infected = True
-                self.infection.update_infection_probability()
-                if self.infection.symptoms is None:
-                    print("error!")
-                self.counter.update_symptoms()
-            else:
-                self.infected = False
-                self.infection = None
-                self.counter.set_length_of_infection()
-
-    def is_recovered(self):
-        return self.recovered
-
-    def get_infection(self):
-        return self.infection
-
-    def is_susceptible(self):
-        return self.susceptible
-
-    def is_infected(self):
-        return self.infected
-
-    def set_recovered(self, is_recovered):
         if self.infected:
-            self.recovered = is_recovered
+            if self.infection.symptoms.is_recovered():
+                self.set_recovered()
+            else:
+                self.infection.update_infection_probability()
+                #self.counter.update_symptoms()
+
+    def set_recovered(self):
+        # self.infection = None
+        self.recovered = True
+        self.infected = False
+        self.susceptible = False
+        self.susceptibility = 0.0
+        self.counter.set_length_of_infection()
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.fix_tag(symptoms.severity)
@@ -133,22 +106,24 @@ class Person:
     """
 
     def __init__(
-            self,
-            person_id=None,
-            area=None,
-            work_msoa=None,
-            age=-1,
-            nomis_bin=None,
-            sex=None,
-            health_index=None,
-            econ_index=None,
-            mode_of_transport=None
+        self,
+        world=None,
+        person_id=None,
+        area=None,
+        work_msoa=None,
+        age=-1,
+        nomis_bin=None,
+        sex=None,
+        health_index=None,
+        econ_index=None,
+        mode_of_transport=None,
     ):
-        if not 0 <= age <= 120 or sex not in ("M", "F"):
-            raise AssertionError(
-                f"Attempting to initialise a person"
-            )
+        # if not 0 <= age <= 120 or sex not in ("M", "F"):
+        #    raise AssertionError(
+        #        f"Attempting to initialise a person"
+        #    )
         self.id = person_id
+        self.world = world
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
@@ -164,36 +139,7 @@ class Person:
         self.school = None
         self.industry = None
         self.industry_specific = None
-        self.health_information = HealthInformation(
-            Counter(self)
-        )
-
-    def get_name(self):
-        return self.id
-
-    def get_age(self):
-        return self.age
-
-    def get_sex(self):
-        return self.sex
-
-    def get_health_index(self):
-        return self.health_index
-
-    def get_econ_index(self):
-        return self.econ_index
-
-    def get_susceptibility(self):
-        return self.susceptibility
-
-    def set_household(self, household):
-        self.household = household
-
-    def susceptibility(self):
-        return self.susceptibility
-
-    def set_susceptibility(self, susceptibility):
-        self.susceptibility = susceptibility
+        self.health_information = HealthInformation(Counter(self))
 
     def output(self, time=0):
         print("--------------------------------------------------")
