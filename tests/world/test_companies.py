@@ -28,20 +28,24 @@ def test_company_number_per_msoa():
         ) < 0.15
     )
 
-def test_():
+def test_company_sex_ratio():
     """
-    Check that all kids in ages between 5 and 17 are assigned a school 
     """
     world = World.from_pickle()
-    KIDS_LOW = 5
-    KIDS_UP = 17
-    lost_kids = 0
-    for i in range(len(world.areas.members)):
-        for j in range(len(world.areas.members[i].people)):
-            if (world.areas.members[i].people[j].age >= KIDS_LOW) and (
-                world.areas.members[i].people[j].age <= KIDS_UP
-            ):
-                if world.areas.members[i].people[j].school is None:
-                    lost_kids += 1
+    inputs = Inputs()
 
-    assert lost_kids == 0
+    comp_size_bins = [0,9,19,20,50,100,250,500,1000,999999]  #TODO don't hardcode
+    
+    comp_sizes = np.zeros(len(world.companies.members))
+    for i, company in enumerate(world.companies.members):
+        comp_sizes[i] = company.n_employees_max
+
+    world_hist = np.histogram(comp_sizes, bins=comp_size_bins, normed=True)[0]
+    input_hist = worksize_df.sum(axis=0).values / worksize_df.sum(axis=0).sum()
+
+    #TODO judge the difference in distribution
+
+
+#def test_company_sex_ratio():
+#    """
+#    """
