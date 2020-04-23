@@ -45,9 +45,9 @@ class World:
             self.people.members = box.people
         else:
             print("Initializing commute generator...")
-            self.commute_generator = CommuteGenerator.from_file(
-                self.inputs.commute_generator_path
-            )
+            #self.commute_generator = CommuteGenerator.from_file(
+            #    self.inputs.commute_generator_path
+            #)
             print("Initializing areas...")
             self.areas = Areas(self)
             areas_distributor = AreaDistributor(self.areas, self.inputs)

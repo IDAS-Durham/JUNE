@@ -278,7 +278,6 @@ class PersonDistributor:
             person = Person(
                 self.area.world,
                 self.people.total_people,
-                self.timer,
                 self.area,
                 work_msoa_rnd,
                 age_random,
@@ -286,8 +285,7 @@ class PersonDistributor:
                 sex_random,
                 health_index,
                 0,
-                mode_of_transport=self.area.regional_commute_generator.weighted_random_choice()
-            )
+                mode_of_transport=None)#self.area.regional_commute_generator.weighted_random_choice())
             self.people.members.append(person)
             self.area.people.append(person)
             self.people.total_people += 1
