@@ -67,7 +67,7 @@ class InteractionCollective(Interaction):
         summed_load = 0.0
         interaction_intensity = (
             self.get_intensity(grouptype) /
-            (max(1, group.size - 1)**self.get_alpha(grouptype)) *
+            (max(1, group.size)**self.get_alpha(grouptype)) *
             (self.world.timer.now - self.world.timer.previous)
         )
         if interaction_intensity > 0.:
