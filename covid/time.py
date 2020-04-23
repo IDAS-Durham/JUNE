@@ -1,7 +1,7 @@
 import calendar
 
 class Timer():
-    def __init__(self, time_config, initial_day='Monday'):
+    def __init__(self, time_config=None, initial_day='Monday'):
         if time_config is None:
             import os
             import yaml
