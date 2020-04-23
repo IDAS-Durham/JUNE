@@ -25,7 +25,7 @@ class Company:
 class Companies:
     def __init__(self, world):
         self.world = world
-        self.members = {}
+        #TODO Chr self.members = {}
         self.init_companies(
             world.inputs.companysize_df,
             world.inputs.companysector_df,
