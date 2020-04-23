@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
@@ -19,13 +20,14 @@ class Company:
         # set the max number of employees to be the mean number in a range
         self.n_employees_max = n_employees_max
         self.n_employees = 0
+        self.n_woman = 0
         self.industry = industry
 
 
 class Companies:
-    def __init__(self, world):
+    def __init__(self, world, msoareas):
         self.world = world
-        #TODO Chr self.members = {}
+        self.msoareas = msoareas
         self.init_companies(
             world.inputs.companysize_df,
             world.inputs.companysector_df,
@@ -69,41 +71,58 @@ class Companies:
                 # for each company in industry
                     # assign company a size_mean according to the probability distribution
 
-        
         companies = []
         # need to make sure the dict is set up correctly to do this
-        sector_columns = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U']
-        size_columns = ["0-9","10-19","20-49","50-99","100-249","250-499","500-999","1000-xxx"]
+        comp_sec_col = [
+            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U',
+        ]
+        #size_columns = ["0-9","10-19","20-49","50-99","100-249","250-499","500-999","1000-xxx"]
+        comp_size_col = companysize_df.columns.values
+        comp_size_col_encoded = np.arange(1,len(comp_size_col)+1)
+        
         size_dict = {}
-        for idx, column in enumerate(size_columns):
+        for idx, column in enumerate(comp_size_col):
             size_dict[idx+1] = self._compute_size_mean(column)
         
-
-        pbar = tqdm(total=len(companysector_df['msoareas']))
-        for idx, msoarea in enumerate(companysector_df['msoareas']):
+        #pbar = tqdm(total=len(companysector_df['msoareas']))
+        for idx, msoarea_id in enumerate(companysector_df['msoareas']):
             try:
-                companysize_df.loc[msoarea]
-                
+
+                # create comany size distribution for MSOArea
+                companysize_df.loc[msoarea_id]
                 distribution = []
-                for column in size_columns:
+                for column in comp_size_col:
                     distribution.append(
-                        float(companysize_df.loc[msoarea][column])/(self._sum_str_elements(companysize_df.loc[msoarea],size_columns))
+                        float(companysize_df.loc[msoarea_id][column]) /\
+                        (self._sum_str_elements(companysize_df.loc[msoarea_id],comp_size_col))
                     )
-                numbers = np.arange(1,9)
-                random_variable = rv_discrete(values=(numbers,distribution))
-                for column in sector_columns:
+                comp_size_rv = rv_discrete(values=(comp_size_col_encoded,distribution))
+                
+                # create companies for each sector in MSOArea
+                for column in comp_sec_col:
+
+                    comp_size_rnd_array = comp_size_rv.rvs(size=int(companysector_df[column][idx]))
                     for i in range(int(companysector_df[column][idx])):
                         company = Company(
                             company_id=i,
-                            msoa=msoarea,
-                            n_employees_max=size_dict[random_variable.rvs(size=1)[0]],
+                            msoa=msoarea_id,
+                            n_employees_max=size_dict[comp_size_rnd_array[i]],
                             industry=column
                         )
                             
-                companies.append(company)
-            except:
-                pass
-            pbar.update(1)
-        pbar.close()
+                        companies.append(company)
 
+                        msoaidx = np.where(self.msoareas.ids_in_order == msoarea_id)[0]
+                        if len(msoaidx) != 0:
+                            self.msoareas.members[msoaidx[0]].companies.append(company)
+                        else:
+                            #TODO give some warning for verbose
+                            pass
+ 
+            except:
+                #TODO include verbose option
+                warnings.warn(f"The initialization of companies for the MSOArea {0} failed.".format(msoarea))
+                pass
+            #pbar.update(1)
+        #pbar.close()
         self.members = companies

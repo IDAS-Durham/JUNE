@@ -16,8 +16,11 @@ def test_company_number_per_msoa():
     world = World.from_pickle()
     inputs = Inputs()
     msoas = np.unique(inputs.oa2msoa_df["MSOA11CD"].values)
-    assert len(world.companies.members) == world.inputs.companysize_df.sum(axis=1).sum()
-
+    assert (
+        abs(1 - len(world.companies.members) / \
+            world.inputs.companysize_df.sum(axis=1).sum()
+        ) < 0.05
+    )
 
 #def test_all_kids_school():
 #    """
