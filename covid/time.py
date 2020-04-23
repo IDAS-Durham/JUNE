@@ -76,9 +76,9 @@ class Timer():
 
     def active_groups(self):
         # households are always active
-        always_active = ["households"]
+        #always_active = ["households"]
         active = self.time_config["step_active_groups"][self.type_day][self.shift+1]
-        return active + always_active 
+        return active #+ always_active 
 
 if __name__ == '__main__':
 

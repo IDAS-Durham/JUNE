@@ -16,15 +16,15 @@ class Interaction(ParameterInitializer):
     def time_step(self):
         for grouptype in self.groups:
             for group in grouptype.members:
-                if group.size() != 0:
+                if group.size != 0:
                     group.update_status_lists()
         for grouptype in self.groups:
             for group in grouptype.members:
-                if group.size() != 0:
+                if group.size != 0:
                     self.single_time_step_for_group(group)
         for grouptype in self.groups:
             for group in grouptype.members:
-                if group.size() != 0:
+                if group.size != 0:
                     group.update_status_lists()
 
     def single_time_step_for_group(self, group):
