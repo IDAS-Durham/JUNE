@@ -38,11 +38,11 @@ class InfectionInitializer:
         return default_params
 
     def initialize_transmission(self, default_types, user_config):
-        infection_config = user_config["infection"]
-        if "transmission" in infection_config:
-            transmission_type = infection_config["transmission"]["type"]
-            if "parameters" in infection_config["transmission"]:
-                transmission_parameters = infection_config["transmission"]["parameters"]
+        if "infection" in user_config and "transmission" in user_config["infection"]:
+            transmission_config = user_config["infection"]["transmission"]
+            transmission_type = transmission_config["type"]
+            if "parameters" in transmission_config:
+                transmission_parameters = transmission_config["parameters"]
             else:
                 transmission_parameters = {}
         else:
@@ -55,10 +55,11 @@ class InfectionInitializer:
         return transmission
 
     def initialize_symptoms(self, health_index, default_types, user_config):
-        if "symptoms" in user_config:
-            symptoms_type = user_config["symptoms"]["type"]
-            if "parameters" in user_config["symptoms"]:
-                symptoms_parameters = user_config["symptoms"]["parameters"]
+        if "infection" in user_config and "symptoms" in user_config["infection"]:
+            symptoms_config = user_config["infection"]["symptoms"]
+            symptoms_type = symptoms_config["type"]
+            if "parameters" in symptoms_config:
+                symptoms_parameters = symptoms_config["parameters"]
             else:
                 symptoms_parameters = {}
         else:
@@ -107,9 +108,16 @@ class Infection(InfectionInitializer, ParameterInitializer):
         self.infection_probability = 0.0
 
     def infect(self, person_to_infect):
-        person_to_infect.infection = self.__class__(
+        """Infects someone by initializing an infeciton object with the same type
+        and parameters as the carrier's infection class.
+
+        Arguments:
+            person_to_infect (Person) has to be an instance of the Person class.
+        """
+        infection = self.__class__(
             person_to_infect, self.timer, self.user_config, self.user_parameters
         )
+        person_to_infect.set_infection(infection)
 
     def set_transmission(self, transmission):
         if not isinstance(transmission, Transmission):
