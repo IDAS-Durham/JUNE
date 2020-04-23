@@ -1,19 +1,17 @@
-from covid.inputs import Inputs
-from covid.groups import *
-from covid.interaction import *
-from covid.infection import *
-from covid.logger import Logger
-from covid.time import Timer
+import os
 
+import numpy as np
 # from covid.interaction import Interaction
 # from covid.interaction_selector import InteractionSelector
 # from covid.time import DayIterator
-import pandas as pd
-import numpy as np
-from tqdm.auto import tqdm  # for a fancy progress bar
 import yaml
-import os
-from covid import time
+from tqdm.auto import tqdm  # for a fancy progress bar
+
+from covid.commute import CommuteGenerator
+from covid.groups import *
+from covid.inputs import Inputs
+from covid.logger import Logger
+from covid.time import Timer
 
 
 class World:
@@ -25,22 +23,29 @@ class World:
         print("Initializing world...")
         self.read_config(config_file)
         self.read_defaults()
+
         self.box_mode = box_mode
+
         self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
+        print("Initializing commute generator...")
+        self.commute_generator = CommuteGenerator.from_file(
+            self.inputs.commute_generator_path
+        )
         print("Initializing areas...")
+
         if box_mode:
             box = Box()
             N_people = self.inputs.n_residents.values.sum()
             for i in range(0, N_people):
-                person = Person(i, self.timer, None, None, None, None, None, None, 0,)
+                person = Person(i, self.timer, None, None, None, None, None, None, 0, )
                 box.people.append(person)
             self.boxes = Boxes()
             self.boxes.members = [box]
-            self.people = People(self) 
+            self.people = People(self)
             self.people.members = box.people
         else:
             self.areas = Areas(self)
