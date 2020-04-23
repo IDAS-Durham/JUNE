@@ -79,7 +79,7 @@ class World:
             self.distributor.distribute_kids_to_school()
             pbar.update(1)
         pbar.close()
-        self.interaction = self.initialize_interaction()
+        #self.interaction = self.initialize_interaction()
         print("Initializing Companies...")
         self.companies = Companies(self)
         pbar = tqdm(total=len(self.msoareas.members))
@@ -89,33 +89,38 @@ class World:
            pbar.update(1)
         pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"])
-        self.to_pickle()
         print("Done.")
 
+
+    #@classmethod
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
         """
         Write the world to file. Comes in handy when setting up the world
         takes a long time.
         """
         import pickle
+        print("___TEST___", self.companies)
 
         with open(pickle_obj, "wb") as f:
             pickle.dump(self, f)
-    
+   
+
     @classmethod
-    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
+    def from_pickle(cls, pickle_obj=os.path.join("data", "world.pkl")):
+        #def from_pickle(cls, pickle_obj=os.path.join("..", "..", "data", "world.pkl")):
         """
         Initializes a world instance from an already populated world.
         """
         import pickle
 
-        with open(pickle_obj, "rb") as f:
+        with open("/cosma7/data/dp004/dc-beck3/world.pkl", "rb") as f:
             world = pickle.load(f)
         return world
     
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
+
 
     def read_defaults(self):
         default_config_path = os.path.join(
@@ -232,5 +237,6 @@ class World:
 
 if __name__ == "__main__":
     world = World()
-    # world = World.from_pickle()
-    world.group_dynamics()
+    #world = World.to_pickle()
+    #world = World.from_pickle()
+    #world.group_dynamics()
