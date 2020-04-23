@@ -31,7 +31,7 @@ class Hospitals:
     def get_closest_hospital(self,area,k):
         hospital_tree = self.hospital_trees
         distances,neighbours = hospital_tree.query(
-            np.deg2rad(area.coordinates),k = k,sort_results=True
+            np.deg2rad(area.coordinates.reshape(1,-1)),k = k,sort_results=True
             )
         
         return neighbours
