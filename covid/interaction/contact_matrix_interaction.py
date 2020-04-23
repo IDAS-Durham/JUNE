@@ -127,7 +127,6 @@ class MatrixInteraction(Interaction):
         # if no age empty
         if len(not_in_group) == 0:
             return matrix
-
         else:
             return self.remove_distribute_matrix(matrix, not_in_group)
 

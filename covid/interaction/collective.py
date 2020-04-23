@@ -20,7 +20,7 @@ class InteractionCollective(Interaction):
         ):
             return None
         effective_load = self.calculate_effective_viral_load(group)
-        if effective_load <= 0.: #TODO ask Frank
+        if effective_load <= 0.:
             return
         for recipient in group.susceptible:
             self.single_time_step_for_recipient(
@@ -73,13 +73,14 @@ class InteractionCollective(Interaction):
         if interaction_intensity > 0.:
             self.weights = []
             for person in group.infected:
-                viral_load   = person.infection.transmission.transmission_probability
-                summed_load += viral_load
-                self.weights.append([person, viral_load])
+                trans_prob = person.infection.transmission.transmission_probability 
+                summed_load += trans_prob 
+                self.weights.append([person, trans_prob])
             for i in range(len(self.weights)):
                 self.weights[i][1] /= summed_load
             summed_load *= interaction_intensity
         return summed_load
+        #return #person.infection.transmission.transmission_probability
 
     def select_infecter(self):
         disc = random.random()
