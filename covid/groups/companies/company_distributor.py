@@ -16,7 +16,7 @@ class CompanyDistributor:
     def __init__(self, companies, msoarea):
         """Get all companies within MSOArea"""
         self.msoarea = msoarea
-        self.companies_all = companies
+        self.companies = companies
 
 
     def distribute_adults_to_companies(self):
@@ -24,7 +24,7 @@ class CompanyDistributor:
         ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
         OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
         count = 0
-        # this assumes that self.msoarea.people.values() gives the people who WORK in that area
+        
         for person in self.msoarea.work_people:
             
             count += 1
@@ -43,9 +43,15 @@ class CompanyDistributor:
                     else:
                         company.n_employees += 1
                         company.n_woman += person.sex  #remember: woman=1;man=0
+                        company.people.append(person)
                         person.company_id = company.id
-                        assigned = True
                         break
                 else:
                     pass
+        
+        # remove companies with no employees
+        for company in self.msoarea.companies:
+            if company.n_employees == 0:
+                self.msoarea.companies.remove(company)
+                self.companies.members.remove(company)
 
