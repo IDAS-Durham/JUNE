@@ -24,7 +24,6 @@ class World:
         relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         self.box_mode = box_mode
-
         self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
