@@ -135,6 +135,7 @@ class Inputs:
                 ),
             names=column_names,
             usecols=usecols,
+            header=0,
         )
         companysize_df = companysize_df.set_index("MSOA11CD")
 
@@ -220,6 +221,7 @@ class Inputs:
 
         return industry_by_sex_dict, industry_by_sex_df
 
+
     def read_companysector_specific_by_sex(self):
         """
         Specifies the number of people in a given REGION who work in specific hospital roles 
@@ -230,11 +232,20 @@ class Inputs:
         """
 
         industrysector_specic_by_sex_df = pd.read_csv(
-            "../data/census_data/output_area/NorthEast/health_education_by_sex_NorthEast.csv"
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                'data',
+                'census_data',
+                'output_area',
+                'NorthEast',
+                'health_education_by_sex_NorthEast.csv'
+            )
         )
 
         return industrysector_specic_by_sex_df
-    
+   
+
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
         The dataframe derives from:
@@ -339,11 +350,9 @@ class Inputs:
         """
         Workout where people go to work. It is for the whole of England & Wales
         and can easily be stripped to get single regions.
-        The MSOA area code is used for homes (rows) and work (columns).
         The dataframe from NOMIS:
             TableID: WU01EW
             https://wicid.ukdataservice.ac.uk/cider/wicid/downloads.php
-        , but is processed to be placed in a pandas.DataFrame.
 
         Args:
             DATA_DIR: path to dataset (csv file)
@@ -351,7 +360,10 @@ class Inputs:
         Returns:
             dictionary with frequencies of populations 
         """
-        dirs = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", 'data', 'census_data', 'middle_output_area', 'EnglandWales/')
+        dirs = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..", 'data', 'census_data', 'middle_output_area', 'EnglandWales/'
+        )
         wf_df = pd.read_csv(
             dirs + "flow_in_msoa_wu01ew_2011.csv",
             delimiter=',',
@@ -380,9 +392,5 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.contact_matrix.shape)
-    print(ip.age_freq)
-    print(ip.decoder_age)
-    print(ip.decoder_sex)
-    print(ip.decoder_household_composition)
-    print(ip.areas_coordinates_df)
+    print(ip.companysize_df)
+
