@@ -123,7 +123,7 @@ class Logger:
             recovered.append(n_rec)
         fig, ax = plt.subplots()
         ax.plot(day_array, infected, label="Infected")
-#        ax.plot(day_array, susceptible, label="Susceptible", linestyle="--")
+        ax.plot(day_array, susceptible, label="Susceptible", linestyle="--")
         ax.plot(day_array, recovered, label="Recovered", linestyle=":")
         ax.set_xlabel("Days")
         ax.set_ylabel("Number of people")
