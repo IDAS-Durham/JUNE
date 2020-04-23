@@ -31,7 +31,7 @@ class InteractionCollective(Interaction):
         self, recipient, effective_load, group
     ):
         transmission_probability  = 0.
-        recipient_probability     = recipient.susceptibility
+        recipient_probability     = recipient.health_information.susceptibility
         if recipient_probability <= 0.0:
             return
         if self.mode == "superposition":
@@ -56,7 +56,7 @@ class InteractionCollective(Interaction):
             transmission_probability = 1.-np.exp(recipient_probability * effective_load)
         if random.random() <= transmission_probability:
             infecter = self.select_infecter()
-            infecter.infection.infect(recipient)
+            infecter.health_information.infection.infect(recipient)
             infecter.counter.increment_infected()
             recipient.counter.update_infection_data(
                 self.world.timer.now, group.spec
@@ -73,7 +73,7 @@ class InteractionCollective(Interaction):
         if interaction_intensity > 0.:
             self.weights = []
             for person in group.infected:
-                viral_load   = person.infection.transmission.transmission_probability
+                viral_load   = person.health_information.infection.transmission.transmission_probability
                 summed_load += viral_load
                 self.weights.append([person, viral_load])
             for i in range(len(self.weights)):

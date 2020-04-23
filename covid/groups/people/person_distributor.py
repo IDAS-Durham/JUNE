@@ -276,6 +276,7 @@ class PersonDistributor:
                 work_msoa_woman_rnd_array,
             )
             person = Person(
+                self.area.world,
                 self.people.total_people,
                 self.timer,
                 self.area,
