@@ -30,77 +30,23 @@ class World:
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if box_mode:
-            box = Box()
-            N_people = self.inputs.n_residents.values.sum()
-            for i in range(0, N_people):
-                person = Person(self, i, None, None, None, None, None, None, 0)
-                box.people.append(person)
-            self.boxes = Boxes()
-            self.boxes.members = [box]
-            self.people = People(self)
-            self.people.members = box.people
+            self.initialize_box_mode()
         else:
             print("Initializing commute generator...")
-            #self.commute_generator = CommuteGenerator.from_file(
-            #    self.inputs.commute_generator_path
-            #)
-            print("Initializing areas...")
-            self.areas = Areas(self)
-            areas_distributor = AreaDistributor(self.areas, self.inputs)
-            areas_distributor.read_areas_census()
-            print("Initializing MSOAreas...")
-            self.msoareas = MSOAreas(self)
-            msoareas_distributor = MSOAreaDistributor(self.msoareas)
-            msoareas_distributor.read_msoareas_census()
-            print("Initializing people...")
-            self.people = People(self)
-            pbar = tqdm(total=len(self.areas.members))
-            for area in self.areas.members:
-                # get msoa flow data for this oa area
-                wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
-                person_distributor = PersonDistributor(
-                    self.timer,
-                    self.people,
-                    area,
-                    self.msoareas,
-                    self.inputs.companysector_by_sex_dict,
-                    self.inputs.companysector_by_sex_df,
-                    wf_area_df,
-                    self.inputs.companysector_specific_by_sex_df,
-                )
-                person_distributor.populate_area()
-                pbar.update(1)
-            pbar.close()
-            print("Initializing households...")
-            pbar = tqdm(total=len(self.areas.members))
-            self.households = Households(self)
-            for area in self.areas.members:
-                household_distributor = HouseholdDistributor(self, area)
-                household_distributor.distribute_people_to_household()
-                pbar.update(1)
-            pbar.close()
-            print(relevant_groups)
+            self.commute_generator = CommuteGenerator.from_file(
+                self.inputs.commute_generator_path
+            )
+            self.initialize_areas()
+            self.initialize_msoa_areas()
+            self.initialize_people()
+            self.initialize_households()
+            self.initialize_msoa_areas()
             if "schools" in relevant_groups:
-                print("Initializing schools...")
-                self.schools = Schools(self, self.areas, self.inputs.school_df)
-                pbar = tqdm(total=len(self.areas.members))
-                for area in self.areas.members:
-                   self.distributor = SchoolDistributor(self.schools, area)
-                   self.distributor.distribute_kids_to_school()
-                   pbar.update(1)
-                pbar.close()
+                self.initialize_schools()
             else:
                 print("schools not needed, skipping...")
-
             if "companies" in relevant_groups:
-                print("Initializing Companies...")
-                self.companies = Companies(self)
-                pbar = tqdm(total=len(self.msoareas.members))
-                for area in self.msoareas.members:
-                   self.distributor = CompanyDistributor(self.companies, area)
-                   self.distributor.distribute_adults_to_companies()
-                   pbar.update(1)
-                pbar.close()
+                self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
         self.interaction = self.initialize_interaction()
@@ -144,11 +90,13 @@ class World:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
     def get_simulation_groups(self):
-        # only initialize relevant groups
+        """
+        Reads all the different groups specified in the time section of the configuration file.
+        """
         timesteps_config = self.config["time"]["step_active_groups"]
         active_groups = []
         for daytype in timesteps_config.keys():
-            for i, timestep in timesteps_config[daytype].items():
+            for timestep in timesteps_config[daytype].values():
                 for group in timestep:
                     active_groups.append(group)
         active_groups = np.unique(active_groups)
@@ -167,6 +115,107 @@ class World:
         for key in default_config.keys():
             if key not in self.config:
                 self.config[key] = default_config[key]
+
+    def initialize_box_mode(self):
+        """
+        Sets the simulation to run in a single box, with everyone inside and no schools, households, etc.
+        Useful for testing interaction models and comparing to SIR.
+        """
+        print("Setting up box mode...")
+        box = Box()
+        N_people = self.inputs.n_residents.values.sum()
+        for i in range(0, N_people):
+            person = Person(self, i, None, None, None, None, None, None, 0)
+            box.people.append(person)
+        self.boxes = Boxes()
+        self.boxes.members = [box]
+        self.people = People(self)
+        self.people.members = box.people
+
+    def initialize_areas(self):
+        """
+        Each output area in the world is represented by an Area object. This Area object contains the
+        demographic information about people living in it.
+        """
+        print("Initializing areas...")
+        self.areas = Areas(self)
+        areas_distributor = AreaDistributor(self.areas, self.inputs)
+        areas_distributor.read_areas_census()
+
+    def initialize_msoa_areas(self):
+        """
+        An MSOA area is a group of output areas. We use them to store company data.
+        """
+        print("Initializing MSOAreas...")
+        self.msoareas = MSOAreas(self)
+        msoareas_distributor = MSOAreaDistributor(self.msoareas)
+        msoareas_distributor.read_msoareas_census()
+
+    def initialize_people(self):
+        """
+        Populates the world with person instances.
+        """
+        print("Initializing people...")
+        self.people = People(self)
+        pbar = tqdm(total=len(self.areas.members))
+        for area in self.areas.members:
+            # get msoa flow data for this oa area
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
+            person_distributor = PersonDistributor(
+                self.timer,
+                self.people,
+                area,
+                self.msoareas,
+                self.inputs.companysector_by_sex_dict,
+                self.inputs.companysector_by_sex_df,
+                wf_area_df,
+                self.inputs.companysector_specific_by_sex_df,
+            )
+            person_distributor.populate_area()
+            pbar.update(1)
+        pbar.close()
+
+    def initialize_households(self):
+        """
+        Calls the HouseholdDistributor to assign people to households following
+        the census household compositions.
+        """
+        print("Initializing households...")
+        pbar = tqdm(total=len(self.areas.members))
+        self.households = Households(self)
+        for area in self.areas.members:
+            household_distributor = HouseholdDistributor(self, area)
+            household_distributor.distribute_people_to_household()
+            pbar.update(1)
+        pbar.close()
+
+    def initialize_schools(self):
+        """
+        Schools are organized in NN k-d trees by age group, so we can quickly query
+        the closest age compatible school to a certain kid.
+        """
+        print("Initializing schools...")
+        self.schools = Schools(self, self.areas, self.inputs.school_df)
+        pbar = tqdm(total=len(self.areas.members))
+        for area in self.areas.members:
+           self.distributor = SchoolDistributor(self.schools, area)
+           self.distributor.distribute_kids_to_school()
+           pbar.update(1)
+        pbar.close()
+
+    def initialize_companies(self):
+        """
+        Companies live in MSOA areas.
+        """
+        self.initialize_companies()
+        print("Initializing Companies...")
+        self.companies = Companies(self)
+        pbar = tqdm(total=len(self.msoareas.members))
+        for area in self.msoareas.members:
+           self.distributor = CompanyDistributor(self.companies, area)
+           self.distributor.distribute_adults_to_companies()
+           pbar.update(1)
+        pbar.close()
 
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
