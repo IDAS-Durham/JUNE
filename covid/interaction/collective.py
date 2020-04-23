@@ -57,8 +57,8 @@ class InteractionCollective(Interaction):
         if random.random() <= transmission_probability:
             infecter = self.select_infecter()
             infecter.health_information.infection.infect(recipient)
-            infecter.counter.increment_infected()
-            recipient.counter.update_infection_data(
+            infecter.health_information.counter.increment_infected()
+            recipient.health_information.counter.update_infection_data(
                 self.world.timer.now, group.spec
             )
 
