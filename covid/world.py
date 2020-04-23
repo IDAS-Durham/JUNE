@@ -8,6 +8,7 @@ from covid.time import Timer
 # from covid.interaction import Interaction
 # from covid.interaction_selector import InteractionSelector
 # from covid.time import DayIterator
+import warnings
 import pandas as pd
 import numpy as np
 from tqdm.auto import tqdm  # for a fancy progress bar
@@ -81,12 +82,15 @@ class World:
         pbar.close()
         #self.interaction = self.initialize_interaction()
         print("Initializing Companies...")
-        self.companies = Companies(self)
+        self.companies = Companies(self, self.msoareas)
         pbar = tqdm(total=len(self.msoareas.members))
-        for area in self.msoareas.members:
-           self.distributor = CompanyDistributor(self.companies, area)
-           self.distributor.distribute_adults_to_companies()
-           pbar.update(1)
+        for msoarea in self.msoareas.members:
+            if not msoarea.work_people:
+                warnings.warn(f"The MSOArea {0} has no people that work in it!".format(msoarea))
+            else:
+                self.distributor = CompanyDistributor(self.companies, msoarea)
+                self.distributor.distribute_adults_to_companies()
+            pbar.update(1)
         pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"])
         print("Done.")

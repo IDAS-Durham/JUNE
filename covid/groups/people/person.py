@@ -72,12 +72,12 @@ class Person:
         self.area = area
         self.work_msoarea = work_msoa
         self.econ_index = econ_index
-        self.area = area
         self.active_group = None
         self.household = None
         self.school = None
         self.industry = None
         self.industry_specific = None
+        self.company_id = None
         self.init_counter()
         self.init_health_information()
 

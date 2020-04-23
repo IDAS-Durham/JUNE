@@ -151,23 +151,25 @@ class PersonDistributor:
       
     def _assign_industry_specific(self, ratio, distribution):
         """
-        Given a person who we know is in an industry we want to be more specific on the job for, we assign them a specific job
-        e.g. we want to assign teachers specifically, who belong to the 'Education' sector
-        The output of the function is a 4-digit number corresponding to the specific job - 
-        this number corresponds to the NOMIS annual occupation survey:
+        Given a person who we know is in an industry we want to be more specific
+        on the job for, we assign them a specific job e.g. we want to assign
+        teachers specifically, who belong to the 'Education' sector.
+        The output of the function is a 4-digit number corresponding to
+        the specific job - this number corresponds to the NOMIS
+        annual occupation survey:
 
-        Healthcares sector
-        2211: Medical practitioners
-        2217: Medical radiographers
-        2231: Nurses
-        2232: Midwives
+            Healthcares sector
+                2211: Medical practitioners
+                2217: Medical radiographers
+                2231: Nurses
+                2232: Midwives
 
-        Education sector
-        2311: Higher education teaching professional
-        2312: Further education teaching professionals
-        2314: Secondary education teaching professionals
-        2315: Primary and nursery education teaching professionals
-        2316: Special needs education teaching professionals
+            Education sector
+                2311: Higher education teaching professional
+                2312: Further education teaching professionals
+                2314: Secondary education teaching professionals
+                2315: Primary and nursery education teaching professionals
+                2316: Special needs education teaching professionals
         """
         MC_random = np.random.uniform()
         industry_specific_id = None
@@ -191,15 +193,16 @@ class PersonDistributor:
         """
         if age < self.ADULT_THRESHOLD:
             # too young to work
-            return None
+            workmsoa = None
         elif age > self.OLD_THRESHOLD:
             # too old to work
-            return None
+            workmsoa = None
         else:
             if sex == 1:
-                return self.workflow_df.index.values[msoa_woman[i]]
+                workmsoa = self.workflow_df.index.values[msoa_woman[i]]
             else:
-                return self.workflow_df.index.values[msoa_man[i]]
+                workmsoa = self.workflow_df.index.values[msoa_man[i]]
+        return workmsoa 
 
     def populate_area(self):
         """
@@ -266,7 +269,7 @@ class PersonDistributor:
             work_msoa_rnd = self.assign_work_msoarea(
                 i,
                 sex_random,
-                age_random,
+                nomis_bin,
                 work_msoa_man_rnd_array,
                 work_msoa_woman_rnd_array,
             )
@@ -305,45 +308,58 @@ class PersonDistributor:
                     self.area._oldmen[i] = person
                 else:
                     self.area._oldwomen[i] = person
+            
             # assign person to an industry
-            # add some conditions to allow for employed != True - wither age and/or from a database
-
+            # add some conditions to allow for employed != True
+            # wither age and/or from a database
             person.industry = self._assign_industry(
                 i,
                 sex_random,
-                age_random,
+                nomis_bin,
                 companysector_male_rnd_array,
-                companysector_female_rnd_array)
+                companysector_female_rnd_array
+            )
 
             # assign specific industry if relevant based on sex
-
             if person.industry == 'Q': #Healthcare
                 if sex_random == 0: # Male
-                    industry_specific_id = self._assign_industry_specific(male_healthcare_ratio, male_healthcare_distribution)
+                    industry_specific_id = self._assign_industry_specific(
+                        male_healthcare_ratio, male_healthcare_distribution
+                    )
                     if industry_specific_id is not None:
                         industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 elif sex_random == 1: # Female
-                    industry_specific_id = self._assign_industry_specific(female_healthcare_ratio, female_healthcare_distribution)
+                    industry_specific_id = self._assign_industry_specific(
+                        female_healthcare_ratio, female_healthcare_distribution
+                    )
                     if industry_specific_id is not None:
                         industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 else:
-                    raise ValueError('sex must be with male or female. Intead got {}'.format(sex_random))
+                    raise ValueError(
+                        'Sex must be with male or female. Intead got {}'.format(sex_random)
+                    )
                 
             elif person.industry == 'P': # Education
                 if sex_random == 0: # Male 
-                    industry_specific_id = self._assign_industry_specific(male_education_ratio, male_education_distribution)
+                    industry_specific_id = self._assign_industry_specific(
+                        male_education_ratio, male_education_distribution
+                    )
                     if industry_specific_id is not None:
                         industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 elif sex_random == 1: # Female
-                    industry_specific_id = self._assign_industry_specific(female_education_ratio, female_education_distribution)
+                    industry_specific_id = self._assign_industry_specific(
+                        female_education_ratio, female_education_distribution
+                    )
                     if industry_specific_id is not None:
                         industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 else:
-                    raise ValueError('sex must be with male or female. Instead got {}'.format(sex_random))
+                    raise ValueError(
+                        'Sex must be with male or female. Instead got {}'.format(sex_random)
+                    )
                 
         try:
             assert (
