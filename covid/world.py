@@ -7,8 +7,10 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from covid.interaction import *
 from covid.commute import CommuteGenerator
 from covid.groups import *
+from covid.infection import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
@@ -31,23 +33,22 @@ class World:
         self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
-        print("Initializing commute generator...")
-        self.commute_generator = CommuteGenerator.from_file(
-            self.inputs.commute_generator_path
-        )
-        print("Initializing areas...")
-
         if box_mode:
             box = Box()
             N_people = self.inputs.n_residents.values.sum()
             for i in range(0, N_people):
-                person = Person(i, self.timer, None, None, None, None, None, None, 0, )
+                person = Person(self,i, self.timer, None, None, None, None, None, None, 0, )
                 box.people.append(person)
             self.boxes = Boxes()
             self.boxes.members = [box]
             self.people = People(self)
             self.people.members = box.people
         else:
+            print("Initializing commute generator...")
+            #self.commute_generator = CommuteGenerator.from_file(
+            #    self.inputs.commute_generator_path
+            #)
+            print("Initializing areas...")
             self.areas = Areas(self)
             areas_distributor = AreaDistributor(self.areas, self.inputs)
             areas_distributor.read_areas_census()

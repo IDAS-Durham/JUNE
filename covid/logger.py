@@ -57,11 +57,11 @@ class Logger:
         susceptible = 0
         recovered = 0
         for person in area.people:
-            if person.health_information.is_susceptible():
+            if person.health_information.susceptible:
                 susceptible += 1
-            if person.health_information.is_infected():
+            if person.health_information.infected:
                 infected += 1
-            if person.health_information.is_recovered():
+            if person.health_information.recovered:
                 recovered += 1
         return susceptible, infected, recovered
 
@@ -76,9 +76,9 @@ class Logger:
             r0_area = 0
             area_counter = 0
             for person in area.people:
-                if person.infected == True:
-                    r0_area += person.counter.number_of_infected
-                    r0_global += person.counter.number_of_infected
+                if person.health_information.infected == True:
+                    r0_area += person.health_information.counter.number_of_infected
+                    r0_global += person.health_information.counter.number_of_infected
                     area_counter += 1
                     global_counter += 1
             if area_counter == 0:
@@ -139,9 +139,9 @@ class Logger:
         lengths = []
         predictions = []
         for person in self.world.people.members:
-            if person.recovered:
-                lengths.append(person.counter.length_of_infection)
-                predictions.append(person.infection.symptoms.predicted_recovery_time)
+            if person.health_information.recovered:
+                lengths.append(person.health_information.counter.length_of_infection)
+                predictions.append(person.health_information.infection.symptoms.predicted_recovery_time)
         return lengths
 
 

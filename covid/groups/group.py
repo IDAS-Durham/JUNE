@@ -105,12 +105,12 @@ class Group:
         self.infected.clear()
         self.recovered.clear()
         for person in self.people:
-            person.update_health_status()
-            if person.is_susceptible():
+            person.health_information.update_health_status()
+            if person.health_information.susceptible:
                 self.susceptible.append(person)
-            if person.is_infected():
+            if person.health_information.infected:
                 self.infected.append(person)
-            elif person.is_recovered():
+            elif person.health_information.recovered:
                 self.recovered.append(person)
                 if person in self.infected:
                     self.infected.remove(person)
