@@ -10,7 +10,7 @@ Run the tests with
 
 ```
 cd tests
-pytest --ignore=need_fixing
+pytest
 ```
 
 # Data
