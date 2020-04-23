@@ -164,7 +164,7 @@ class ModeOfTransport:
         A list of modes of transport
         """
         with open(config_filename) as f:
-            configs = yaml.load(f)
+            configs = yaml.load(f, Loader=yaml.FullLoader)
         return [
             ModeOfTransport(
                 config["description"]
