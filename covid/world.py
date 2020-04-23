@@ -1,9 +1,6 @@
 import os
 
 import numpy as np
-# from covid.interaction import Interaction
-# from covid.interaction_selector import InteractionSelector
-# from covid.time import DayIterator
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
@@ -24,8 +21,8 @@ class World:
     def __init__(self, config_file=None, box_mode=False):
         print("Initializing world...")
         self.read_config(config_file)
+        relevant_groups = self.get_simulation_groups()
         self.read_defaults()
-
         self.box_mode = box_mode
 
         self.timer = Timer(self.config["time"])
@@ -37,7 +34,7 @@ class World:
             box = Box()
             N_people = self.inputs.n_residents.values.sum()
             for i in range(0, N_people):
-                person = Person(self,i, self.timer, None, None, None, None, None, None, 0, )
+                person = Person(self, i, None, None, None, None, None, None, 0)
                 box.people.append(person)
             self.boxes = Boxes()
             self.boxes.members = [box]
@@ -52,6 +49,7 @@ class World:
             self.areas = Areas(self)
             areas_distributor = AreaDistributor(self.areas, self.inputs)
             areas_distributor.read_areas_census()
+            print("Initializing MSOAreas...")
             self.msoareas = MSOAreas(self)
             msoareas_distributor = MSOAreaDistributor(self.msoareas)
             msoareas_distributor.read_msoareas_census()
@@ -82,23 +80,31 @@ class World:
                 household_distributor.distribute_people_to_household()
                 pbar.update(1)
             pbar.close()
-        # print("Initializing schools...")
-        # self.schools = Schools(self, self.areas, self.inputs.school_df)
-        # pbar = tqdm(total=len(self.areas.members))
-        # for area in self.areas.members:
-        #    self.distributor = SchoolDistributor(self.schools, area)
-        #    self.distributor.distribute_kids_to_school()
-        #    pbar.update(1)
-        # pbar.close()
+            print(relevant_groups)
+            if "schools" in relevant_groups:
+                print("Initializing schools...")
+                self.schools = Schools(self, self.areas, self.inputs.school_df)
+                pbar = tqdm(total=len(self.areas.members))
+                for area in self.areas.members:
+                   self.distributor = SchoolDistributor(self.schools, area)
+                   self.distributor.distribute_kids_to_school()
+                   pbar.update(1)
+                pbar.close()
+            else:
+                print("schools not needed, skipping...")
+
+            if "companies" in relevant_groups:
+                print("Initializing Companies...")
+                self.companies = Companies(self)
+                pbar = tqdm(total=len(self.msoareas.members))
+                for area in self.msoareas.members:
+                   self.distributor = CompanyDistributor(self.companies, area)
+                   self.distributor.distribute_adults_to_companies()
+                   pbar.update(1)
+                pbar.close()
+            else:
+                print("companies not needed, skipping...")
         self.interaction = self.initialize_interaction()
-        # print("Initializing Companies...")
-        # self.companies = Companies(self)
-        # pbar = tqdm(total=len(self.msoareas.members))
-        # for area in self.msoareas.members:
-        #    self.distributor = CompanyDistributor(self.companies, area)
-        #    self.distributor.distribute_adults_to_companies()
-        #    pbar.update(1)
-        # pbar.close()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
@@ -137,6 +143,17 @@ class World:
             )
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
+
+    def get_simulation_groups(self):
+        # only initialize relevant groups
+        timesteps_config = self.config["time"]["step_active_groups"]
+        active_groups = []
+        for daytype in timesteps_config.keys():
+            for i, timestep in timesteps_config[daytype].items():
+                for group in timestep:
+                    active_groups.append(group)
+        active_groups = np.unique(active_groups)
+        return active_groups
 
     def read_defaults(self):
         default_config_path = os.path.join(
