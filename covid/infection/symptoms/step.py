@@ -7,10 +7,11 @@ class SymptomsStep(Symptoms):
         self.Toffset = max(0.0, self.time_offset)
         self.Tend = max(0.0, self.end_time)
 
-    def _calculate_severity(self, time):
+    def update_severity(self):
+        time = self.timer.now
         if time > self.starttime + self.Toffset and time < self.starttime + self.Tend:
             severity = self.maxseverity
         else:
             severity = 0.
-        return severity
 
+        self.severity = severity
