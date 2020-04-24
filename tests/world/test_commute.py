@@ -24,7 +24,7 @@ def make_regional_generator(commute_generator, msoarea):
 
 class TestModeOfTransport:
 
-    def test__setup_with_a_description__check_the_index_is_computed_via_the_index_method(self):
+    def test__setup_with_a_description__check_index(self):
 
         mode_of_transport = c.ModeOfTransport(description="hello")
 
@@ -37,7 +37,7 @@ class TestModeOfTransport:
         with pytest.raises(AssertionError):
             mode_of_transport.index(headers=["hi", "hel2lo"])
 
-    def test__equality_override__asserting_to_description_gives_true_else_false(self):
+    def test__equality_override(self):
 
         mode_of_transport = c.ModeOfTransport(description="hello")
 
@@ -53,7 +53,7 @@ class TestModeOfTransport:
 
 class TestRegionalGenerator:
 
-    def test__total_property__gives_number_of_people_using_all_transports__is_sum_of_people_for_each_transport(self):
+    def test__total__sum_of_people_using_all_transports(self):
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
@@ -67,7 +67,7 @@ class TestRegionalGenerator:
 
         assert regional_gen.total == 7
 
-    def test__modes_property__gives_list_of_all_input_transports(self):
+    def test__modes__list_of_all_transports(self):
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
@@ -81,7 +81,7 @@ class TestRegionalGenerator:
 
         assert regional_gen.modes == ["car", "bus", "magic_carpet"]
 
-    def test__weights_property__gives_list_of_total_people_in_each_transport_divided_by_total_people_overall(self):
+    def test__weights__lists_people_per_transport_divided_by_total(self):
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
@@ -95,7 +95,7 @@ class TestRegionalGenerator:
 
         assert regional_gen.weights == [2/7, 4/7, 1/7]
 
-    def test__weighted_random_choice_property__chooses_a_random_value_from_the_modes(self):
+    def test__weighted_choice__chooses_random_value_from_the_modes(self):
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
@@ -109,7 +109,7 @@ class TestRegionalGenerator:
 
         assert regional_gen.weighted_random_choice() == "car" or "bus" or "magic_carpet"
 
-    def test__weighted_random_choice_property__if_transports_have_zero_people_they_are_not_selected(self):
+    def test__weighted_choice__cant_choose_transports_with_0_people(self):
 
         weighted_modes = [(0, c.ModeOfTransport("car")), (4, c.ModeOfTransport("bus")), (0, c.ModeOfTransport("magic_carpet"))]
 
