@@ -1,7 +1,7 @@
 from covid.world import World
 import pandas as pd
 from covid.inputs import Inputs
-from covid.groups.Hospitals import hospital
+from covid.groups.hospitals import hospital
 
 def test_all_areas_to_hospital(world_ne):
     '''
