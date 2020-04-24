@@ -25,9 +25,9 @@ class Company:
 
 
 class Companies:
-    def __init__(self, world, msoareas):
+    def __init__(self, world):
         self.world = world
-        self.msoareas = msoareas
+        self.msoareas = world.msoareas
         self.init_companies(
             world.inputs.companysize_df,
             world.inputs.companysector_df,

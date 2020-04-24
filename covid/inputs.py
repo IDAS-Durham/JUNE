@@ -144,7 +144,6 @@ class Inputs:
                 "middle_output_area",
                 "EnglandWales",
                 "companysize_msoa11cd_2019.csv"
-                ),
             ),
             names=column_names,
             usecols=usecols,
