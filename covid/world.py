@@ -215,8 +215,8 @@ class World:
             if not msoarea.work_people:
                 warnings.warn(f"The MSOArea {0} has no people that work in it!".format(msoarea))
             else:
-            self.distributor = CompanyDistributor(self.companies, area)
-            self.distributor.distribute_adults_to_companies()
+                self.distributor = CompanyDistributor(self.companies, area)
+                self.distributor.distribute_adults_to_companies()
             pbar.update(1)
         pbar.close()
 
