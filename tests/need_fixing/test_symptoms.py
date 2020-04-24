@@ -4,7 +4,6 @@ import os
 import yaml
 import pytest
 from covid.time import Timer
-from covid.infection import InfectionConstant
 from covid.infection.symptoms import *
 from covid.groups.people import Person
 from covid.infection.symptoms.base import ALLOWED_SYMPTOM_TAGS
@@ -21,13 +20,17 @@ def make_user_parameters():
         },
         "Gaussian": {
             "mean_time": {"distribution": "constant", "parameters": {"value": 2}},
-            "sigma_time": {"distribution": "constant", "parameters": {"value": 3}},
+            "sigma_time": {"distribution": "constant", "parameters": {"value": 5}},
         },
         "Tanh": {
-            "max_time": {"distribution": "constant", "parameters": {"value": 2},},
-            "onset_time": {"distribution": "constant", "parameters": {"value": 3}},
+            "max_time": {"distribution": "constant", "parameters": {"value": 3},},
+            "onset_time": {"distribution": "constant", "parameters": {"value": 1}},
             "end_time": {"distribution": "constant", "parameters": {"value": 8}},
         },
+        "Step": {
+            "time_offset": {"distribution": "constant", "parameters": {"value": 1},},
+            "end_time": {"distribution": "constant", "parameters": {"value": 10},},
+        }
     }
 
     return user_parameters
@@ -55,43 +58,41 @@ def test_read_parameters_user(symptom_type, user_parameters, test_timer):
 
 
 @pytest.mark.parametrize("symptom_type", ["Step", "Gaussian", "Tanh"])
-def test_update_severity(symptom_type, test_timer):
+def test_update_severity(symptom_type, test_timer, user_parameters):
     """
-    Check that severity starts from 0, and changes with time
+    Check that severity starts from 0, and updates
     """
     health_index = [0.4, 0.55, 0.65, 0.8, 0.95]
 
     symptoms = globals()["Symptoms" + symptom_type](
-            test_timer, health_index
+            test_timer, health_index, user_parameters = user_parameters.get(symptom_type)
     )
-
     assert symptoms.severity == 0.0
-
-    while symptoms.timer.now < 3.0:
-        next(symptoms.timer)
-        symptoms.update_severity()
-    assert symptoms.severity != 0.0
+    symptoms.update_severity()
+    assert symptoms.last_time_updated == test_timer.now
 
 
-def test_symptom_tags(world_ne, test_timer, N=1000):
+@pytest.mark.parametrize("symptom_type", ["Step"])
+def test_symptom_tags(symptom_type, user_parameters, world_ne, test_timer, N=1000):
     """
     Check that ratio of symptoms matches input ratios after sampling
     """
     health_index = [0.4, 0.55, 0.65, 0.8, 0.95]
-    infection = InfectionConstant(None, test_timer)
     severs1 = []
     tags = [0] * len(ALLOWED_SYMPTOM_TAGS)  # [0, 0, 0, 0, 0, 0]
     expected = [0.4, 0.15, 0.10, 0.15, 0.15, 0.05]
 
-    person = Person(world_ne, 1, None, None, 1, 0, 1, health_index, None)
+
     for i in range(N):
-        # reset timer
-        infection.timer.day = 1
-        infection.timer.day_int = 1
-        infection.infect(person)
-        while infection.timer.now < 3.0:
-            next(infection.timer)
-            person.infection.symptoms.update_severity()
+        symptoms = globals()["Symptoms" + symptom_type](
+            test_timer, health_index, 
+            user_parameters = user_parameters.get(symptom_type)
+            )
+        while symptoms.timer.now < 3.0:
+            next(symptoms.timer)
+            symptoms.update_severity()
+            print('Now : ', symptoms.timer.now)
+            print('Severity : ', symptoms.severity)
         severity = person.infection.symptoms.severity
         severs1.append(severity)
         tag = person.infection.symptoms.tag
