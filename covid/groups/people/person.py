@@ -7,10 +7,13 @@ class HealthInformation:
     def __init__(self, counter):
         self.counter = counter
         self.susceptibility = 1.0
-        self.susceptible = True
-        self.infected = False
-        self.infection = None
-        self.recovered = False
+        self.susceptible    = True
+        self.infected       = False
+        self.must_stay_home = False
+        self.in_hospital    = False
+        self.infection      = None
+        self.recovered      = False
+        self.dead           = False   
 
     def set_infection(self, infection):
         self.infection = infection
@@ -24,12 +27,23 @@ class HealthInformation:
             else:
                 self.infection.update_infection_probability()
                 #self.counter.update_symptoms()
+            tag = self.infection.symptoms.tag()
+            if tag=="influenza-like illness" or tag=="pneumonia":
+                self.must_stay_at_home = True
+            else:
+                self.must_stay_at_home = False
+            if tag=="hospitalised" or tag=="intensive care":
+                self.in_hospital = True
+            else:
+                self.in_hospital = False
+            if tag=="dead":
+                self.dead = True
 
     def set_recovered(self):
         # self.infection = None
-        self.recovered = True
-        self.infected = False
-        self.susceptible = False
+        self.recovered      = True
+        self.infected       = False
+        self.susceptible    = False
         self.susceptibility = 0.0
         self.counter.set_length_of_infection()
 
