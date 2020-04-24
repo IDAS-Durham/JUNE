@@ -27,7 +27,7 @@ class MatrixInteraction(Interaction):
 
     def single_time_step_for_group(self, group):
         if (
-            group.size() <= 1
+            group.size <= 1
             or group.size_infected() == 0
             or group.size_susceptible() == 0
         ):
@@ -58,10 +58,10 @@ class MatrixInteraction(Interaction):
                         -transmission_probability * recipient.susceptibility()
                     ):
                         infecter.infection.infect(recipient)
-                        recipient.get_counter().update_infection_data(
+                        recipient.counter.update_infection_data(
                             self.world.timer.now, group.get_spec()
                         )
-                        infecter.get_counter().increment_infected()
+                        infecter.counter.increment_infected()
 
     def calculate_single_transmission_probability(self, infecter, group):
         intensity = group.get_intensity(self.time)
@@ -127,7 +127,6 @@ class MatrixInteraction(Interaction):
         # if no age empty
         if len(not_in_group) == 0:
             return matrix
-
         else:
             return self.remove_distribute_matrix(matrix, not_in_group)
 
