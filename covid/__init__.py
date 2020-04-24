@@ -1,2 +1,2 @@
 __name__ = "covid"
-#from .world import World
+from .world import World
