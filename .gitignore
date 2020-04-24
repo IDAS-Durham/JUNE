@@ -3,6 +3,7 @@
 data
 *__pycache__*
 *.ipynb_checkpoints*
+*.pyc
 *.ipynb
 *.csv
 *.pkl

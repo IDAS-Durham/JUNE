@@ -29,6 +29,7 @@ class Group:
     allowed_groups = [
         "household",
         "school",
+        "company",
         "work_Outdoor",
         "work_Indoor",
         "commute_Public",
@@ -109,7 +110,18 @@ class Group:
             if person.health_information.susceptible:
                 self.susceptible.append(person)
             if person.health_information.infected:
-                self.infected.append(person)
+                if person.health_information.must_stay_home:
+                    # don't add this person to the group
+                    # the household group instance deals with this in its own
+                    # update_status_lists method
+                elif person.health_information.in_hospital:
+                    # don't add this person to the group
+                    # the hospital group instance deals with this in its own
+                    # update_status_lists method
+                elif person.health_information.dead:
+                    # never add dead people
+                else:
+                    self.infected.append(person)
             elif person.health_information.recovered:
                 self.recovered.append(person)
                 if person in self.infected:

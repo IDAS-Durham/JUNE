@@ -13,40 +13,41 @@ class CompanyDistributor:
     """
     Distributes people to different companies
     """
-
     def __init__(self, companies, msoarea):
+        """Get all companies within MSOArea"""
         self.msoarea = msoarea
-        self.companies_all = companies
-        # gather call companies in a given msoarea
-        self.companies_msoarea = []
-        for company in self.companies_all.members:
-            if company.msoa == msoarea:
-                self.companies_msoarea.append(company)
+        self.companies = companies
 
-    def _randomly_sample_company(self):
-        index = np.random.randint(len(self.companies_msoarea))
-        return self.companies_msoarea[index]
 
     def distribute_adults_to_companies(self):
-        STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
+        STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
+        ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
+        OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
+        count = 0
         
-        # this assumes that self.msoarea.people.values() gives the people who WORK in that area
         for person in self.msoarea.work_people:
-            if (
-                    person.age <= OLD_THRESHOLD # if we already assume the first comment, this seems redundant
-                and person.age >= STUDENT_THRESHOLD 
-            ):  # person age from 20 up to 74 yo
-                person_industry = person.industry
-                assigned = False
-                while assigned == False:
-                    # randomly sample from companies in msoarea rather than filling from the start
-                    # as not all companies will be filled and there may be a mismatch in the number of people
-                    # and the number of companies
-                    company = self._randomly_sample_company()
-                    if company.n_employees == company.n_employees_max:
-                            pass
-                    else:
-                        company.n_employees +=1
-                        assigned = True
+            
+            count += 1
+            comp_choice = np.random.choice(
+                len(self.msoarea.companies), len(self.msoarea.companies), replace=False
+            )
+            
+            for idx in comp_choice:
+                company = self.msoarea.companies[idx]
+
+                if ( person.industry == company.industry and
+                    company.n_employees < company.n_employees_max):
+                    company.n_employees += 1
+                    company.n_woman += person.sex  #remember: woman=1;man=0
+                    company.people.append(person)
+                    person.company_id = company.id
+                    break
+                #TODO: Take care if cases where people did not find any
+                # company at all
+        
+        # remove companies with no employees
+        for company in self.msoarea.companies:
+            if company.n_employees == 0:
+                self.msoarea.companies.remove(company)
+                self.companies.members.remove(company)
+
