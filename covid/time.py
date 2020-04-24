@@ -1,7 +1,7 @@
 import calendar
 
 class Timer():
-    def __init__(self, time_config, initial_day='Monday'):
+    def __init__(self, time_config=None, initial_day='Monday'):
         if time_config is None:
             import os
             import yaml
@@ -76,9 +76,9 @@ class Timer():
 
     def active_groups(self):
         # households are always active
-        always_active = ["households"]
+        #always_active = ["households"]
         active = self.time_config["step_active_groups"][self.type_day][self.shift+1]
-        return active + always_active 
+        return active #+ always_active 
 
 if __name__ == '__main__':
 
