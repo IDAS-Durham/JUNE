@@ -9,9 +9,10 @@ class SymptomsStep(Symptoms):
 
     def update_severity(self):
         time = self.timer.now
-        if time > self.starttime + self.Toffset and time < self.starttime + self.Tend:
+        if time > self.infection_start_time + self.Toffset and time < self.infection_start_time + self.Tend:
             severity = self.maxseverity
         else:
             severity = 0.
 
+        self.last_time_updated = time
         self.severity = severity
