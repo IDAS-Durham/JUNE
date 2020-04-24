@@ -1,0 +1,6 @@
+threshold_transmission: 0.001
+threshold_symptoms: 0.001
+transmission:
+  type: constant
+symptoms:
+  type: constant 

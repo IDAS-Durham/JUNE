@@ -1,0 +1,29 @@
+title: Covid configuration example
+
+logger:
+  save_path: results
+
+world:
+  zone: test # NorthEast # available are all UK regions, and EnglandWales together.
+
+time:
+  total_days: 20
+  step_duration: 
+      weekday:
+          1: 8 # first time step duration in hours
+          2: 16
+      weekend:
+          1: 24
+  step_active_groups:
+      weekday:
+          1: ['schools'] # active groups during first time step
+          2: [] 
+      weekend:
+          1: [] 
+
+infection:
+  asymptomatic_ratio: 0.4
+
+interaction:
+  type: stochastic
+

@@ -1,25 +1,21 @@
 import numpy as np
 import os
-from covid.inputs import Inputs
-from covid.world import World
 
 
-def test_no_lonely_children():
+def test_no_lonely_children(world_ne):
     """
     Check there ar eno children living without adults
     """
 
-    world = World.from_pickle()
-
     attribute = "nomis_bin"
-    decoder = world.inputs.decoder_age
+    decoder = world_ne.inputs.decoder_age
     only_children = 0
-    for i in range(len(world.areas.members)):
-        for j in range(len(world.areas.members[i].households)):
+    for i in range(len(world_ne.areas.members)):
+        for j in range(len(world_ne.areas.members[i].households)):
             freq = np.zeros(len(decoder))
-            for k in range(len(world.areas.members[i].households[j].people)):
+            for k in range(len(world_ne.areas.members[i].households[j].people)):
                 freq[
-                    getattr(world.areas.members[i].households[j].people[k], attribute)
+                    getattr(world_ne.areas.members[i].households[j].people[k], attribute)
                 ] += 1
                 # if no adults, but at least one child
                 if (np.sum(freq[5:]) == 0.0) & (np.sum(freq[:5]) > 0.0):
@@ -28,26 +24,25 @@ def test_no_lonely_children():
     assert only_children == 0
 
 
-def test_no_homeless():
+def test_no_homeless(world_ne):
     """
     Check that no one belonging to an are is left without a house
     """
-    world = World.from_pickle()
     total_in_households = 0
-    for i in range(len(world.areas.members)):
-        for j in range(len(world.areas.members[i].households)):
-            total_in_households += len(world.areas.members[i].households[j].people)
+    for i in range(len(world_ne.areas.members)):
+        for j in range(len(world_ne.areas.members[i].households)):
+            total_in_households += len(world_ne.areas.members[i].households[j].people)
 
-    assert total_in_households == len(world.people.members)
+    assert total_in_households == len(world_ne.people.members)
 
 
-def test_enough_houses():
+def test_enough_houses(world_ne):
     """
     Check that we don't have areas with no children in allowed household compositions, but children living
     in that output area. Same for old people.
     """
 
-    inputs = Inputs()
+    inputs = world_ne.inputs
 
     OLD_THRESHOLD = 12
 
