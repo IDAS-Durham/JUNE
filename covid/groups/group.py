@@ -29,6 +29,7 @@ class Group:
     allowed_groups = [
         "household",
         "school",
+        "company",
         "work_Outdoor",
         "work_Indoor",
         "commute_Public",
