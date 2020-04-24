@@ -13,7 +13,12 @@ class Household(Group):
         self.people = []
         #self.residents = group(self.id,"household")
         self.area = area
-        self.household_composition = composition 
+        self.household_composition = composition
+    
+    def set_active_members(self):
+        for person in self.people:
+            if person.active_group is None:
+                person.active_group = "household"
 
 class Households:
     """
