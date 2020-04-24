@@ -33,7 +33,7 @@ def make_user_parameters():
     return user_parameters
 
 
-@pytest.mark.parametrize("symptom_type", ["Constant", "Gaussian", "Tanh"])
+@pytest.mark.parametrize("symptom_type", ["Constant", "Step", "Gaussian", "Tanh"])
 def test_read_parameters_default(symptom_type, test_timer):
 
     symptoms = globals()["Symptoms" + symptom_type](test_timer, None)
@@ -41,7 +41,7 @@ def test_read_parameters_default(symptom_type, test_timer):
         assert hasattr(symptoms, parameter)
 
 
-@pytest.mark.parametrize("symptom_type", ["Constant", "Gaussian", "Tanh"])
+@pytest.mark.parametrize("symptom_type", ["Constant", "Step", "Gaussian", "Tanh"])
 def test_read_parameters_user(symptom_type, user_parameters, test_timer):
 
     symptoms = globals()["Symptoms" + symptom_type](
@@ -54,8 +54,7 @@ def test_read_parameters_user(symptom_type, user_parameters, test_timer):
         )
 
 
-'''
-@pytest.mark.parametrize("symptom_type", ["Constant", "Gaussian", "Tanh"])
+@pytest.mark.parametrize("symptom_type", ["Step", "Gaussian", "Tanh"])
 def test_update_severity(symptom_type, test_timer):
     """
     Check that severity starts from 0, and changes with time
@@ -68,10 +67,9 @@ def test_update_severity(symptom_type, test_timer):
 
     assert symptoms.severity == 0.0
 
-    while symptoms.timer.now < 5.0:
+    while symptoms.timer.now < 3.0:
         next(symptoms.timer)
         symptoms.update_severity()
-        print(symptoms.timer.now)
     assert symptoms.severity != 0.0
 
 
@@ -102,4 +100,3 @@ def test_symptom_tags(world_ne, test_timer, N=1000):
     for i in range(len(tags)):
         tags[i] = tags[i] / N
     np.testing.assert_allclose(tags, expected, atol=0.05)
-'''
