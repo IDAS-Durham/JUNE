@@ -79,7 +79,7 @@ class Companies:
         comp_sec_col.remove('msoareas')
 
         comp_size_col = companysize_df.columns.values
-        comp_size_col_encoded = np.arange(1,len(comp_size_col)+1)
+        comp_size_col_encoded = np.arange(1, len(comp_size_col) + 1)
         
         size_dict = {}
         for idx, column in enumerate(comp_size_col):
