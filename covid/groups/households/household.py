@@ -20,6 +20,31 @@ class Household(Group):
             if person.active_group is None:
                 person.active_group = "household"
 
+    def set_active_members(self):
+        for person in self.people:
+            if person.active_group is None:
+                person.active_group = "household"
+
+    def update_status_lists(self, time=0):
+        self.susceptible.clear()
+        self.infected.clear()
+        self.recovered.clear()
+        for person in self.people:
+            person.health_information.update_health_status()
+            if person.health_information.susceptible:
+                self.susceptible.append(person)
+            if person.health_information.infected:
+                if person.health_information.in_hospital:
+                    continue
+                elif person.health_information.dead:
+                    continue
+                else:
+                    self.infected.append(person)
+            elif person.health_information.recovered:
+                self.recovered.append(person)
+                if person in self.infected:
+                    self.infected.remove(person)
+
 class Households:
     """
     Contains all households for the given area, and information about them.
