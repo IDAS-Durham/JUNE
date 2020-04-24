@@ -128,11 +128,7 @@ class PersonDistributor:
         according to the generated probability distribution
         """
 
-        if age < self.ADULT_THRESHOLD:
-            # too young to work
-            return None
-        elif age > self.OLD_THRESHOLD:
-            # too old to work
+        if not self.ADULT_THRESHOLD <= age <= self.OLD_THRESHOLD:
             return None
 
         else:
