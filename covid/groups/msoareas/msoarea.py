@@ -23,7 +23,7 @@ class MSOArea:
         
         self.world = world
         self.id = name
-        self.n_companies = n_companies
+        self.companies = []
         self.oarea = []
         self.work_people = []
         #self.n_companies_a = n_companies_a

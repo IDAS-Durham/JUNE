@@ -53,9 +53,15 @@ class Inputs:
 
         # Read census data on low resolution map (MSOA)
         self.oa2msoa_df = self.oa2msoa(self.n_residents.index.values)
-        self.workflow_df = self.create_workflow_df(self.oa2msoa_df["MSOA11CD"].values)
-        self.companysize_df = self.read_companysize_census()
-        self.companysector_df = self.read_companysector_census()
+        self.workflow_df = self.create_workflow_df(
+            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+        )
+        self.companysize_df = self.read_companysize_census(
+            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+        )
+        self.companysector_df = self.read_companysector_census(
+            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+        )
         self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_companysector_by_sex_census()
         self.companysector_specific_by_sex_df = self.read_companysector_specific_by_sex()
 
@@ -107,10 +113,15 @@ class Inputs:
 
         return oa2msoa_df
 
-    def read_companysize_census(self):
+    def read_companysize_census(self, msoa):
         """
-        Gives nr. of companies with nr. of employees per MSOA
-        (NOMIS: UK Business Counts - local units by industry and employment size band)
+        Gives nr. of companies with nr. of employees per MSOA.
+        Filter the MOSArea according to the OAreas used.
+        (
+            NOMIS: UK Business Counts - local units by industry and employment size band
+            Note: Currently the data of 2019 is used, since the 2011 data
+                  seems to be unavailable.
+        )
         """
         usecols = [1, 3, 4, 5, 6, 7, 8, 9, 10]
         column_names = [
@@ -131,25 +142,29 @@ class Inputs:
                 "data",
                 "census_data",
                 "middle_output_area",
-                "NorthEast",
-                "business_counts_northeast_2019.csv"
+                "EnglandWales",
+                "companysize_msoa11cd_2019.csv"
             ),
             names=column_names,
             usecols=usecols,
+            header=0,
         )
         companysize_df = companysize_df.set_index("MSOA11CD")
+        
+        # filter out MSOA areas that are simulated
+        companysize_df = companysize_df.loc[msoa]
 
         assert companysize_df.isnull().values.any() == False
 
         return companysize_df
 
-    def read_companysector_census(self):
+
+    def read_companysector_census(self, msoa):
         """
         Gives number of companies by type according to NOMIS sector data at the MSOA level
         TableID: WD601EW
         https://www.nomisweb.co.uk/census/2011/wd601ew
         """
-
         companysector_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -162,8 +177,16 @@ class Inputs:
             ),
             index_col=0,
         )
+        companysector_df = companysector_df.set_index("msoareas")
+        
+        # filter out MSOA areas that are simulated
+        companysector_df = companysector_df.loc[msoa]
 
-        return companysector_df
+        companysector_df = companysector_df.reset_index()
+        companysector_df = companysector_df.rename(columns={"index": "msoareas"})
+        
+        return companysector_df 
+
 
     def read_companysector_by_sex_census(self):
         """
@@ -188,8 +211,10 @@ class Inputs:
 
         # define all columns in csv file relateing to males
         # here each letter corresponds to the industry sector (see metadata)
-        m_columns = ['m A', 'm B', 'm C', 'm D', 'm E', 'm F', 'm G', 'm H', 'm I', 'm J',
-                     'm K', 'm L', 'm M', 'm N', 'm O', 'm P', 'm Q', 'm R', 'm S', 'm T', 'm U']
+        m_columns = [
+            'm A', 'm B', 'm C', 'm D', 'm E', 'm F', 'm G', 'm H', 'm I', 'm J',
+            'm K', 'm L', 'm M', 'm N', 'm O', 'm P', 'm Q', 'm R', 'm S', 'm T', 'm U',
+        ]
 
         m_distributions = []
         for oa in range(len(industry_by_sex_df['oareas'])):
@@ -202,6 +227,11 @@ class Inputs:
             m_distributions.append(distribution)
 
         # define all columns in csv file relateing to males
+        f_columns = [
+            'f A', 'f B', 'f C', 'f D', 'f E', 'f F', 'f G', 'f H', 'f I', 'f J',
+            'f K', 'f L', 'f M', 'f N', 'f O', 'f P', 'f Q', 'f R', 'f S', 'f T', 'f U'
+        ]
+                
         f_columns = ['f A', 'f B', 'f C', 'f D', 'f E', 'f F', 'f G', 'f H', 'f I', 'f J',
                      'f K', 'f L', 'f M', 'f N', 'f O', 'f P', 'f Q', 'f R', 'f S', 'f T', 'f U']
 
@@ -220,6 +250,7 @@ class Inputs:
             industry_by_sex_dict[oa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
 
         return industry_by_sex_dict, industry_by_sex_df
+
 
     def read_companysector_specific_by_sex(self):
         """
@@ -243,6 +274,7 @@ class Inputs:
         )
 
         return industrysector_specic_by_sex_df
+   
 
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
@@ -350,11 +382,9 @@ class Inputs:
         """
         Workout where people go to work. It is for the whole of England & Wales
         and can easily be stripped to get single regions.
-        The MSOA area code is used for homes (rows) and work (columns).
         The dataframe from NOMIS:
             TableID: WU01EW
             https://wicid.ukdataservice.ac.uk/cider/wicid/downloads.php
-        , but is processed to be placed in a pandas.DataFrame.
 
         Args:
             DATA_DIR: path to dataset (csv file)
@@ -362,8 +392,10 @@ class Inputs:
         Returns:
             dictionary with frequencies of populations 
         """
-        dirs = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", 'data', 'census_data',
-                            'middle_output_area', 'EnglandWales/')
+        dirs = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..", 'data', 'census_data', 'middle_output_area', 'EnglandWales/'
+        )
         wf_df = pd.read_csv(
             dirs + "flow_in_msoa_wu01ew_2011.csv",
             delimiter=',',
@@ -392,9 +424,8 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.contact_matrix.shape)
-    print(ip.age_freq)
-    print(ip.decoder_age)
-    print(ip.decoder_sex)
-    print(ip.decoder_household_composition)
-    print(ip.areas_coordinates_df)
+    #print(ip.workflow_df)
+    #print(ip.companysize_df)
+    print(ip.companysector_df)
+    print(ip.companysector_by_sex_df)
+    print(ip.companysector_specific_by_sex_df)
