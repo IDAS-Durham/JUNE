@@ -73,7 +73,7 @@ def test_update_severity(symptom_type, test_timer, user_parameters):
 
 
 @pytest.mark.parametrize("symptom_type", ["Step", "Gaussian", "Tanh"])
-def test_symptom_tags(symptom_type, user_parameters, world_ne, test_timer, N=500):
+def test_symptom_tags_have_right_frequency(symptom_type, user_parameters, world_ne, test_timer, N=500):
     """
     Check that ratio of symptoms matches input ratios after sampling
     """
