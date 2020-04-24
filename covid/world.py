@@ -2,6 +2,7 @@ import os
 
 import warnings
 import numpy as np
+import pickle
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
@@ -58,8 +59,6 @@ class World:
         Write the world to file. Comes in handy when setting up the world
         takes a long time.
         """
-        import pickle
-
         with open(pickle_obj, "wb") as f:
             pickle.dump(self, f)
 
@@ -68,8 +67,6 @@ class World:
         """
         Initializes a world instance from an already populated world.
         """
-        import pickle
-
         with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
@@ -388,6 +385,6 @@ class World:
 
 
 if __name__ == "__main__":
-    world = World(config_file='../configs/config_companies.yaml')
+    world = World(config_file=os.path.join("..", "configs", "config_companies.yaml"))
     # world = World.from_pickle()
     world.group_dynamics()

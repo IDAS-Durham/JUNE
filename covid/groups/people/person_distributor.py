@@ -116,7 +116,7 @@ class PersonDistributor:
         distribution_female = self.companysector_by_sex_dict[self.area.name]["f"]
         self.sector_distribution_female = stats.rv_discrete(values=(numbers, distribution_female))
 
-    def _assign_industry(self, i, sex, age, sector_man, sector_woman, employed=True):
+    def _assign_industry(self, i, sex, sector_man, sector_woman, employed=True):
         """
         Note: in this script self.area.name is used and assumed to be (string) OArea code
         THIS MIGHT NEED CHANGING
@@ -128,24 +128,19 @@ class PersonDistributor:
         according to the generated probability distribution
         """
 
-        if not self.ADULT_THRESHOLD <= age <= self.OLD_THRESHOLD:
-            return None
-
+        if not employed:
+            industry = "NA"
         else:
-        
-            if employed == False:
-                industry = "NA"
+            ## accss relevant indudtry label
+            if sex == 0: # Male
+                industry_id = sector_man[i]
+            elif sex == 1: # Female
+                industry_id = sector_woman[i]
             else:
-                ## accss relevant indudtry label
-                if sex == 0: # Male
-                    industry_id = sector_man[i]
-                elif sex == 1: # Female
-                    industry_id = sector_woman[i]
-                else:
-                    raise ValueError('sex must be with male or female. Intead got {}'.format(sex_random))
-                industry = self.industry_dict[industry_id]
+                raise ValueError('sex must be with male or female. Intead got {}'.format(sex_random))
+            industry = self.industry_dict[industry_id]
 
-            return industry
+        return industry
 
     def _assign_industry_specific(self, ratio, distribution):
         """
@@ -183,16 +178,12 @@ class PersonDistributor:
 
         return industry_specific_id
 
-    def assign_work_msoarea(self, i, sex, age, msoa_man, msoa_woman):
+    def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
         """
         Return: str,
             MOSA11CD area code
         """
-        if age < self.ADULT_THRESHOLD:
-            # too young to work
-            workmsoa = None
-        elif age > self.OLD_THRESHOLD:
-            # too old to work
+        if is_working_age:
             workmsoa = None
         else:
             if sex == 1:
@@ -265,14 +256,18 @@ class PersonDistributor:
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
-            health_index = self.health_index.get_index_for_age(age_random)
+            if not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD:
+                is_working_age = True
+            else:
+                is_working_age = False
             work_msoa_rnd = self.assign_work_msoarea(
                 i,
                 sex_random,
-                nomis_bin,
+                is_working_age,
                 work_msoa_man_rnd_array,
                 work_msoa_woman_rnd_array,
             )
+            health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
                 self.area.world,
                 self.people.total_people,
@@ -315,13 +310,13 @@ class PersonDistributor:
             # assign person to an industry
             # add some conditions to allow for employed != True
             # wither age and/or from a database
-            person.industry = self._assign_industry(
-                i,
-                sex_random,
-                nomis_bin,
-                companysector_male_rnd_array,
-                companysector_female_rnd_array
-            )
+            if is_working_age:
+                person.industry = self._assign_industry(
+                    i,
+                    sex_random,
+                    companysector_male_rnd_array,
+                    companysector_female_rnd_array
+                )
 
             # assign specific industry if relevant based on sex
             if person.industry == 'Q': #Healthcare
