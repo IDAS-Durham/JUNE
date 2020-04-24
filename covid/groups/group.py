@@ -64,7 +64,7 @@ class Group:
 
     def set_active_members(self):
         for person in self.people:
-            if person.active_group != None:
+            if person.active_group is not None:
                 raise ValueError("Trying to set an already active person")
             else:
                 person.active_group = self.spec
@@ -77,31 +77,7 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
-#    def add(self, person):
-#        if not isinstance(person, Person):
-#            print("Error in Group.Add(", p, ") is not a person.")
-#            print("--> Exit the code.")
-#            sys.exit()
-#        if person in self.people:
-#            print(
-#                "Tried to add already present person",
-#                person.Name(),
-#                " to group ",
-#                self.gname,
-#                ".",
-#            )
-#            print("--> Ignore and proceed.")
-#        else:
-#            self.people.append(person)
-#            if person.is_susceptible():
-#                self.susceptible.append(person)
-#            if person.is_infected():
-#                self.infected.append(person)
-#            if person.is_recovered():
-#                self.recovered.append(person)
-#                self.infected.remove(person)
-#
-    def update_status_lists(self, time=0):
+    def update_status_lists(self, time=1):
         self.susceptible.clear()
         self.infected.clear()
         self.recovered.clear()
@@ -110,7 +86,21 @@ class Group:
             if person.health_information.susceptible:
                 self.susceptible.append(person)
             if person.health_information.infected:
-                self.infected.append(person)
+                if person.health_information.must_stay_home:
+                    continue
+                    # don't add this person to the group
+                    # the household group instance deals with this in its own
+                    # update_status_lists method
+                elif person.health_information.in_hospital:
+                    continue
+                    # don't add this person to the group
+                    # the hospital group instance deals with this in its own
+                    # update_status_lists method
+                elif person.health_information.dead:
+                    continue
+                    # never add dead people
+                else:
+                    self.infected.append(person)
             elif person.health_information.recovered:
                 self.recovered.append(person)
                 if person in self.infected:

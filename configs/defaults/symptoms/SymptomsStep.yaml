@@ -1,9 +1,9 @@
-mean_time:
+time_offset: 
   distribution: constant
   parameters:
-    value: 1  
+    value: 2
+end_time: 
+  distribution: constant
+  parameters:
+    value: 5
 
-sigma_time:
-  distribution: constant
-  parameters:
-    value: 3 
