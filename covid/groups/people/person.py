@@ -146,13 +146,13 @@ class Person:
         self.area = area
         self.work_msoarea = work_msoa
         self.econ_index = econ_index
-        self.area = area
         self.mode_of_transport = mode_of_transport
         self.active_group = None
         self.household = None
         self.school = None
         self.industry = None
         self.industry_specific = None
+        self.company_id = None
         self.health_information = HealthInformation(Counter(self))
 
     def output(self, time=0):
