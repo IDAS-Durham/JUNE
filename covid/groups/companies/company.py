@@ -2,18 +2,20 @@ import warnings
 import numpy as np
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
+from covid.groups import Group
 
 class CompanyError(BaseException):
     """Class for throwing company related errors."""
     pass
 
-class Company:
+class Company(Group):
     """
     The Company class represents a company that contains information about 
     its workers (19 - 74 years old).
     """
 
     def __init__(self, company_id, msoa, n_employees_max, industry):
+        super().__init__("Company_%05d" % company_id, "company")
         self.id = company_id
         self.people = []
         self.msoa = msoa
