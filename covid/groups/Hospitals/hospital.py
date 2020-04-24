@@ -12,7 +12,25 @@ class Hospital(Group):
         self.id = hospital_id
         self.coordinates = coordinates
         self.beds = n_beds
-        
+
+    def update_status_lists(self, time=0):
+        self.susceptible.clear()
+        self.infected.clear()
+        self.recovered.clear()
+        for person in self.people:
+            person.health_information.update_health_status()
+            if person.health_information.susceptible:
+                self.susceptible.append(person)
+            if person.health_information.infected:
+                if person.health_information.must_stay_home:
+                elif person.health_information.dead:
+                else:
+                    self.infected.append(person)
+            elif person.health_information.recovered:
+                self.recovered.append(person)
+                if person in self.infected:
+                    self.infected.remove(person)
+
 class Hospitals:
     def __init__(self,hospital_df):
         #self.world = world
