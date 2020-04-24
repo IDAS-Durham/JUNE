@@ -22,6 +22,3 @@ def create_timer():
     timer = Timer(config['time'])
     return timer 
 
-if __name__ == '__main__':
-
-    create_timer()
