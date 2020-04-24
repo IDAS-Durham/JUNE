@@ -8,39 +8,46 @@ import matplotlib.pyplot as plt
 
 
 class Logger:
-    def __init__(self, world, save_path="results"):
+    def __init__(self, world, save_path="results", box_mode=False):
         self.world = world
         self.data_dict = {}
         self.save_path = save_path
+        self.box_mode = box_mode
         if not os.path.exists(self.save_path):
             os.mkdir(self.save_path)
         self.init_logger()
 
     def init_logger(self):
-        for area in self.world.areas.members:
-            self.data_dict[area.name] = {}
-            self.data_dict["world"] = {}
+        if not self.box_mode:
+            for area in self.world.areas.members:
+                self.data_dict[area.name] = {}
+        self.data_dict["world"] = {}
 
     def log_timestep(self, day):
         susceptible_world = 0
         infected_world = 0
         recovered_world = 0
-        for area in self.world.areas.members:
-            if day not in self.data_dict[area.name]:
+        if not self.box_mode:
+            for area in self.world.areas.members:
                 self.data_dict[area.name][day] = {}
-            self.data_dict[area.name][day] = {}
-            susceptible, infected, recovered = self.get_infected_people_area(area)
-            susceptible_world += susceptible
-            infected_world += infected
-            recovered_world += recovered
-            self.data_dict[area.name][day]["susceptible"] = susceptible
-            self.data_dict[area.name][day]["infected"] = infected
-            self.data_dict[area.name][day]["recovered"] = recovered
-        self.data_dict["world"][day] = {}
-        self.data_dict["world"][day]["susceptible"] = susceptible
-        self.data_dict["world"][day]["infected"] = infected
-        self.data_dict["world"][day]["recovered"] = recovered
-        self.log_r0(day)
+                susceptible, infected, recovered = self.get_infected_people_area(area)
+                susceptible_world += susceptible
+                infected_world += infected
+                recovered_world += recovered
+                self.data_dict[area.name][day]["susceptible"] = susceptible
+                self.data_dict[area.name][day]["infected"] = infected
+                self.data_dict[area.name][day]["recovered"] = recovered
+            self.data_dict["world"][day] = {}
+            self.data_dict["world"][day]["susceptible"] = susceptible_world
+            self.data_dict["world"][day]["infected"] = infected_world
+            self.data_dict["world"][day]["recovered"] = recovered_world
+            self.log_r0(day)
+        else:
+            box = self.world.boxes.members[0]
+            self.data_dict["world"][day] = {}
+            self.data_dict["world"][day]["susceptible"] = len(box.susceptible)
+            self.data_dict["world"][day]["infected"] = len(box.infected)
+            self.data_dict["world"][day]["recovered"] = len(box.recovered)
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
             json.dump(self.data_dict, f)
@@ -50,11 +57,11 @@ class Logger:
         susceptible = 0
         recovered = 0
         for person in area.people:
-            if person.is_susceptible():
+            if person.health_information.susceptible:
                 susceptible += 1
-            if person.is_infected():
+            if person.health_information.infected:
                 infected += 1
-            if person.is_recovered():
+            if person.health_information.recovered:
                 recovered += 1
         return susceptible, infected, recovered
 
@@ -69,9 +76,9 @@ class Logger:
             r0_area = 0
             area_counter = 0
             for person in area.people:
-                if person.infected == True:
-                    r0_area += person.counter.number_of_infected
-                    r0_global += person.counter.number_of_infected
+                if person.health_information.infected == True:
+                    r0_area += person.health_information.counter.number_of_infected
+                    r0_global += person.health_information.counter.number_of_infected
                     area_counter += 1
                     global_counter += 1
             if area_counter == 0:
@@ -105,37 +112,18 @@ class Logger:
         recovered = []
         day_array = []
         first_area = list(self.data_dict.keys())[0]
-        days = self.data_dict[first_area].keys()
+        days = self.data_dict["world"].keys()
         for day in days:
             day_array.append(day)
-            n_inf = 0
-            n_susc = 0
-            n_rec = 0
-            for area in self.world.areas.members:
-                n_inf += sum(
-                    [
-                        self.data_dict[area.name][day]["infected"]
-                        for shift in self.data_dict[area.name][day].keys()
-                    ]
-                )
-                n_susc += sum(
-                    [
-                        self.data_dict[area.name][day]["susceptible"]
-                        for shift in self.data_dict[area.name][day].keys()
-                    ]
-                )
-                n_rec += sum(
-                    [
-                        self.data_dict[area.name][day]["recovered"]
-                        for shift in self.data_dict[area.name][day].keys()
-                    ]
-                )
+            n_inf = self.data_dict["world"][day]["infected"]
+            n_susc = self.data_dict["world"][day]["susceptible"]
+            n_rec = self.data_dict["world"][day]["recovered"]
             infected.append(n_inf)
             susceptible.append(n_susc)
             recovered.append(n_rec)
         fig, ax = plt.subplots()
         ax.plot(day_array, infected, label="Infected")
-#        ax.plot(day_array, susceptible, label="Susceptible", linestyle="--")
+        ax.plot(day_array, susceptible, label="Susceptible", linestyle="--")
         ax.plot(day_array, recovered, label="Recovered", linestyle=":")
         ax.set_xlabel("Days")
         ax.set_ylabel("Number of people")
@@ -144,9 +132,17 @@ class Logger:
         fig.savefig(os.path.join(self.save_path, "infection_curves.png"), dpi=300)
         return fig, ax
 
-
     def plot_r0_map(self):
         pass
+
+    def get_infection_duration(self):
+        lengths = []
+        predictions = []
+        for person in self.world.people.members:
+            if person.health_information.recovered:
+                lengths.append(person.health_information.counter.length_of_infection)
+                predictions.append(person.health_information.infection.symptoms.predicted_recovery_time)
+        return lengths
 
 
 

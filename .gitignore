@@ -1,4 +1,14 @@
+.DS_Store
+.idea/
 data
 *__pycache__*
 *.ipynb_checkpoints*
-*.pyc*
+*.pyc
+*.ipynb
+*.csv
+*.pkl
+*.egg-info
+.env
+cookie
+data.zip
+__MACOSX
