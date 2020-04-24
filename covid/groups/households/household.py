@@ -35,7 +35,9 @@ class Household(Group):
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if person.health_information.in_hospital:
+                    continue
                 elif person.health_information.dead:
+                    continue
                 else:
                     self.infected.append(person)
             elif person.health_information.recovered:

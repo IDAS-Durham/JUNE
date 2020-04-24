@@ -27,7 +27,7 @@ class HealthInformation:
             else:
                 self.infection.update_infection_probability()
                 #self.counter.update_symptoms()
-            tag = self.infection.symptoms.tag()
+            tag = self.infection.symptoms.tag
             if tag=="influenza-like illness" or tag=="pneumonia":
                 self.must_stay_at_home = True
             else:

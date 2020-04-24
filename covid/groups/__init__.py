@@ -7,3 +7,4 @@ from .people import Person, People, PersonDistributor
 from .households import Household, Households, HouseholdDistributor
 from .test_groups import TestGroup, TestGroups
 from .box import Box, Boxes
+from .hospitals import Hospital, Hospitals
