@@ -140,6 +140,10 @@ class GaussianParameter(ParameterDistribution):
         except KeyError:
             # raise ParametersError(self, "width_plus")
             self.upper = None
+        try:
+            self.ensure_positive = parameters_dict["ensure_positive"]
+        except KeyError:
+            self.ensure_positive = False
 
     @property
     def value(self) -> float:
@@ -164,7 +168,7 @@ class GaussianParameter(ParameterDistribution):
                 self.upper == None or value < self.upper
             ):
                 break
-        return value
+        return max(value, 0.0)
 
 
 class UniformParameter:
