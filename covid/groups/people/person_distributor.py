@@ -304,7 +304,6 @@ class PersonDistributor:
                     # we currently simulate
                     idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
                     self.msoareas.members[idx].work_people.append(person)
-                    pass
                 if sex_random == 0:
                     self.area._men[i] = person
                 else:
