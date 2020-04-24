@@ -35,19 +35,15 @@ class CompanyDistributor:
             for idx in comp_choice:
                 company = self.msoarea.companies[idx]
 
-                if person.industry == company.industry:
-                    if company.n_employees == company.n_employees_max:
-                        #TODO: Take care if cases where people did not find any
-                        # company at all
-                        pass
-                    else:
-                        company.n_employees += 1
-                        company.n_woman += person.sex  #remember: woman=1;man=0
-                        company.people.append(person)
-                        person.company_id = company.id
-                        break
-                else:
-                    pass
+                if ( person.industry == company.industry and
+                    company.n_employees < company.n_employees_max):
+                    company.n_employees += 1
+                    company.n_woman += person.sex  #remember: woman=1;man=0
+                    company.people.append(person)
+                    person.company_id = company.id
+                    break
+                #TODO: Take care if cases where people did not find any
+                # company at all
         
         # remove companies with no employees
         for company in self.msoarea.companies:
