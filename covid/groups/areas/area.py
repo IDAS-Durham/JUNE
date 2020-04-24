@@ -1,5 +1,8 @@
 import numpy as np
 
+from covid.commute import RegionalGenerator
+
+
 class Area:
     """
     Stores information about the area, like the total population
@@ -17,6 +20,15 @@ class Area:
         self.people = []
         self.households = []
         self.coordinates = coordinates
+
+    @property
+    def regional_commute_generator(self) -> RegionalGenerator:
+        """
+        Object that generates modes of transport randomly weighted by census data
+        """
+        return self.world.commute_generator.for_msoarea(
+            self.msoarea
+        )
 
     def check_census_freq_ratios(self):
         for key in self.census_freq.keys():

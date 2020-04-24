@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import stats
+
 from covid.groups.people import Person
 from covid.groups.people.health_index import HealthIndex
 
@@ -14,7 +15,9 @@ class PersonDistributor:
     by the census statistics
     """
 
-    def __init__(self, people, area, msoareas, companysector_by_sex_dict, companysector_by_sex_df, workflow_df, companysector_specific_by_sex_df):
+    def __init__(self, timer, people, area, msoareas, companysector_by_sex_dict, companysector_by_sex_df, workflow_df,
+                 companysector_specific_by_sex_df):
+        self.timer = timer
         self.area = area
         self.msoareas = msoareas
         self.people = people
@@ -174,7 +177,6 @@ class PersonDistributor:
 
         return industry
 
-      
     def _assign_industry_specific(self, ratio, distribution):
         MC_random = np.random.uniform()
         industry_specific_id = None
@@ -185,11 +187,10 @@ class PersonDistributor:
         else:
             # Assign specific industry according to distribution
             numbers = np.arange(len(distribution))
-            random_variable = stats.rv_discrete(values=(numbers,distribution))
+            random_variable = stats.rv_discrete(values=(numbers, distribution))
             industry_specific_id = random_variable.rvs(size=1)
-            
+
         return industry_specific_id
-            
 
     def assign_work_msoarea(self, i, sex, age, msoa_man, msoa_woman):
         """
@@ -252,18 +253,17 @@ class PersonDistributor:
         female_education = np.sum(self.companysector_by_sex_df['f P'])
         female_healthcare = np.sum(self.companysector_by_sex_df['f Q'])
 
-        male_healthcare_ratio = male_healthcare_specific/male_healthcare
-        male_education_ratio = male_education_specific/male_education
-        female_healthcare_ratio = female_healthcare_specific/female_healthcare
-        female_education_ratio = female_education_specific/female_education
+        male_healthcare_ratio = male_healthcare_specific / male_healthcare
+        male_education_ratio = male_education_specific / male_education
+        female_healthcare_ratio = female_healthcare_specific / female_healthcare
+        female_education_ratio = female_education_specific / female_education
 
-        male_healthcare_distribution = np.array(healthcare_specific_slice['males'])/male_healthcare_specific
-        male_education_distribution = np.array(education_specific_slice['males'])/male_education_specific
-        female_healthcare_distribution = np.array(healthcare_specific_slice['females'])/female_healthcare_specific
-        female_education_distribution = np.array(education_specific_slice['females'])/female_education_specific
-                
+        male_healthcare_distribution = np.array(healthcare_specific_slice['males']) / male_healthcare_specific
+        male_education_distribution = np.array(education_specific_slice['males']) / male_education_specific
+        female_healthcare_distribution = np.array(healthcare_specific_slice['females']) / female_healthcare_specific
+        female_education_distribution = np.array(education_specific_slice['females']) / female_education_specific
 
-        for i in range(0, self.area.n_residents):
+        for i in range(self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
@@ -276,6 +276,7 @@ class PersonDistributor:
                 work_msoa_woman_rnd_array,
             )
             person = Person(
+                self.area.world,
                 self.people.total_people,
                 self.area,
                 work_msoa_rnd,
@@ -284,7 +285,7 @@ class PersonDistributor:
                 sex_random,
                 health_index,
                 0,
-            )
+                mode_of_transport=None)#self.area.regional_commute_generator.weighted_random_choice())
             self.people.members.append(person)
             self.area.people.append(person)
             self.people.total_people += 1
@@ -317,49 +318,53 @@ class PersonDistributor:
 
             # assign specific industry if relevant based on sex
 
-            if person.industry == 'Q': #Healthcare
-                if sex_random == 0: # Male
-                    industry_specific_id = self._assign_industry_specific(male_healthcare_ratio, male_healthcare_distribution)
+            if person.industry == 'Q':  # Healthcare
+                if sex_random == 0:  # Male
+                    industry_specific_id = self._assign_industry_specific(male_healthcare_ratio,
+                                                                          male_healthcare_distribution)
                     if industry_specific_id is not None:
                         industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
-                elif sex_random == 1: # Female
-                    industry_specific_id = self._assign_industry_specific(female_healthcare_ratio, female_healthcare_distribution)
+                elif sex_random == 1:  # Female
+                    industry_specific_id = self._assign_industry_specific(female_healthcare_ratio,
+                                                                          female_healthcare_distribution)
                     if industry_specific_id is not None:
                         industry_specific_code = healthcare_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 else:
                     raise ValueError('sex must be with male or female. Intead got {}'.format(sex_random))
-                
-            elif person.industry == 'P': # Education
-                if sex_random == 0: # Male 
-                    industry_specific_id = self._assign_industry_specific(male_education_ratio, male_education_distribution)
+
+            elif person.industry == 'P':  # Education
+                if sex_random == 0:  # Male
+                    industry_specific_id = self._assign_industry_specific(male_education_ratio,
+                                                                          male_education_distribution)
                     if industry_specific_id is not None:
                         industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
-                elif sex_random == 1: # Female
-                    industry_specific_id = self._assign_industry_specific(female_education_ratio, female_education_distribution)
+                elif sex_random == 1:  # Female
+                    industry_specific_id = self._assign_industry_specific(female_education_ratio,
+                                                                          female_education_distribution)
                     if industry_specific_id is not None:
                         industry_specific_code = education_specific_slice['occupation_codes'][industry_specific_id[0]]
                         person.industry_specific = industry_specific_code
                 else:
                     raise ValueError('sex must be with male or female. Instead got {}'.format(sex_random))
-                
+
         try:
             assert (
-                sum(
-                    map(
-                        len,
-                        [
-                            self.area._kids.keys(),
-                            self.area._men.keys(),
-                            self.area._women.keys(),
-                            self.area._oldmen.keys(),
-                            self.area._oldwomen.keys(),
-                        ],
+                    sum(
+                        map(
+                            len,
+                            [
+                                self.area._kids.keys(),
+                                self.area._men.keys(),
+                                self.area._women.keys(),
+                                self.area._oldmen.keys(),
+                                self.area._oldwomen.keys(),
+                            ],
+                        )
                     )
-                )
-                == self.area.n_residents
+                    == self.area.n_residents
             )
         except:
             raise (
