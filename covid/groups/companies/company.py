@@ -65,8 +65,9 @@ class Companies:
         """
 
         ## PSEUDO CODE TO DEFINE WHAT IS BEING DONE HERE
-        # companysize_df contains msoarea, and the number of companies of different sizes in that area
-        # company_sector_dict contains the number of companies by sector in each msoarea
+        # companysize_df contains msoarea, and the number of companies of
+        # different sizes in that area company_sector_dict contains the
+        # number of companies by sector in each msoarea
         # for each msoarea
             # compute a probability distribution over company sizes
             # for each industry
@@ -74,11 +75,9 @@ class Companies:
                     # assign company a size_mean according to the probability distribution
 
         companies = []
-        # need to make sure the dict is set up correctly to do this
-        comp_sec_col = [
-            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U',
-        ]
-        #size_columns = ["0-9","10-19","20-49","50-99","100-249","250-499","500-999","1000-xxx"]
+        comp_sec_col = self.world.inputs.companysector_df.columns.values.tolist()
+        comp_sec_col.remove('msoareas')
+
         comp_size_col = companysize_df.columns.values
         comp_size_col_encoded = np.arange(1,len(comp_size_col)+1)
         
