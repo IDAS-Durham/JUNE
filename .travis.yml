@@ -8,10 +8,9 @@ install:
   - pip install -U pip
   - pip install -r requirements.txt
   - pip install -e .
+  - bash get_data.sh
 
 script:
   - cd test_covid
-  - pytest --cov-report term --cov
+  - pytest
 
-after_success:
-  - codecov
