@@ -4,9 +4,11 @@ from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
 from covid.groups import Group
 
+
 class CompanyError(BaseException):
     """Class for throwing company related errors."""
     pass
+
 
 class Company(Group):
     """
