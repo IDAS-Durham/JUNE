@@ -2,7 +2,8 @@ import sys
 import random
 import matplotlib
 import matplotlib.pyplot as plt
-
+import attr
+from covid import exc
 
 class Group:
     """
@@ -16,8 +17,8 @@ class Group:
     randomly assorted on a step-by-step base.
 
     The logic is that the group will enjoy one Interaction per time step,
-    where the infection spreads, with a probablity driven by transmission
-    probabilities and inteaction intensity, plus, possilby, individual
+    where the infection spreads, with a probability driven by transmission
+    probabilities and inteaction intensity, plus, possilbly, individual
     susceptibility to become infected.
 
     TODO: we will have to decide in how far specific groups define behavioral
@@ -45,10 +46,13 @@ class Group:
 
     
     def __init__(self, name, spec, number=-1):
-        if not self.sane(name, spec):
-            return
+
+        if spec not in self.allowed_groups:
+            raise exc.GroupException("Tried to initialise group with an invalid specification:", spec)
+
         self.name = name
         self.spec = spec
+        self._intensity = 1.0
         self.people = []
         self.susceptible = []
         self.infected = []
@@ -58,7 +62,7 @@ class Group:
 
     def sane(self, name, spec):
         if not spec in self.allowed_groups:
-            print("Error: tried to initialise group with wrong specification:", spec)
+            raise
             return False
         return True
 
@@ -69,13 +73,13 @@ class Group:
             else:
                 person.active_group = self.spec
 
-    def set_intensity(self, intensity):
-        self.intensity = intensity
+    @property
+    def intensity(self):
+        return self._intensity
 
-    def get_intensity(self, time=0):
-        if self.intensity == None:
-            return 1.0
-        return self.intensity  # .intensity(time)
+    # @intensity.setter
+    # def intensity(self, intensity):
+    #     self._intensity = intensity
 
     def update_status_lists(self, time=1):
         self.susceptible.clear()
