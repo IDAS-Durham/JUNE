@@ -10,7 +10,7 @@ install:
   - pip install -e .
 
 script:
-  - cd tests
+  - cd test_covid
   - pytest --cov-report term --cov
 
 after_success:
