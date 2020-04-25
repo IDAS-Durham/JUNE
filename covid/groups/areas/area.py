@@ -9,7 +9,9 @@ class Area:
     number, universities, etc.
     """
 
-    def __init__(self, world, oarea, msoarea, n_residents, n_households, census_freq, coordinates):
+    def __init__(
+        self, world, oarea, msoarea, n_residents, n_households, census_freq, coordinates
+    ):
         self.world = world
         self.name = oarea
         self.msoarea = msoarea
@@ -26,9 +28,7 @@ class Area:
         """
         Object that generates modes of transport randomly weighted by census data
         """
-        return self.world.commute_generator.for_msoarea(
-            self.msoarea
-        )
+        return self.world.commute_generator.for_msoarea(self.msoarea)
 
     def check_census_freq_ratios(self):
         for key in self.census_freq.keys():
@@ -41,8 +41,6 @@ class Area:
 
 
 class Areas:
-
     def __init__(self, world):
         self.world = world
         self.members = []
-
