@@ -23,7 +23,7 @@ class HealthInformation:
                 self.set_recovered()
             else:
                 self.infection.update_infection_probability()
-                #self.counter.update_symptoms()
+                # self.counter.update_symptoms()
 
     def set_recovered(self):
         # self.infection = None
