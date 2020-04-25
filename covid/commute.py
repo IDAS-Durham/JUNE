@@ -193,7 +193,7 @@ class CommuteGenerator:
         """
         self.regional_generators = regional_generators
 
-    def for_msoarea(self, msoarea: str) -> RegionalGenerator:
+    def regional_gen_from_msoarea(self, msoarea: str) -> RegionalGenerator:
         """
         Get a regional generator for an Output Area identified
         by its output msoarea, e.g. E00062207

@@ -19,11 +19,10 @@ def make_msoarea():
 
 @pytest.fixture(name="regional_generator")
 def make_regional_generator(commute_generator, msoarea):
-    return commute_generator.for_msoarea(msoarea)
+    return commute_generator.regional_gen_from_msoarea(msoarea)
 
 
 class TestModeOfTransport:
-
     def test__setup_with_a_description__check_index(self):
 
         mode_of_transport = c.ModeOfTransport(description="hello")
@@ -43,7 +42,7 @@ class TestModeOfTransport:
 
         assert mode_of_transport == "hello"
 
-    def test__load_from_file__uses_correct_values_from_default_configs_file(self):
+    def test__load_from_file__uses_correct_values_from_configs(self):
 
         modes_of_transport = c.ModeOfTransport.load_from_file()
         assert len(modes_of_transport) == 12
@@ -52,18 +51,25 @@ class TestModeOfTransport:
 
 
 class TestRegionalGenerator:
-
     def test__total__sum_of_people_using_all_transports(self):
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.total == 2
 
-        weighted_modes = [(2, c.ModeOfTransport("car")), (4, c.ModeOfTransport("bus")), (1, c.ModeOfTransport("magic_carpet"))]
+        weighted_modes = [
+            (2, c.ModeOfTransport("car")),
+            (4, c.ModeOfTransport("bus")),
+            (1, c.ModeOfTransport("magic_carpet")),
+        ]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.total == 7
 
@@ -71,13 +77,21 @@ class TestRegionalGenerator:
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.modes == ["car"]
 
-        weighted_modes = [(2, c.ModeOfTransport("car")), (4, c.ModeOfTransport("bus")), (1, c.ModeOfTransport("magic_carpet"))]
+        weighted_modes = [
+            (2, c.ModeOfTransport("car")),
+            (4, c.ModeOfTransport("bus")),
+            (1, c.ModeOfTransport("magic_carpet")),
+        ]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.modes == ["car", "bus", "magic_carpet"]
 
@@ -85,74 +99,103 @@ class TestRegionalGenerator:
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.weights == [1]
 
-        weighted_modes = [(2, c.ModeOfTransport("car")), (4, c.ModeOfTransport("bus")), (1, c.ModeOfTransport("magic_carpet"))]
+        weighted_modes = [
+            (2, c.ModeOfTransport("car")),
+            (4, c.ModeOfTransport("bus")),
+            (1, c.ModeOfTransport("magic_carpet")),
+        ]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
-        assert regional_gen.weights == [2/7, 4/7, 1/7]
+        assert regional_gen.weights == [2 / 7, 4 / 7, 1 / 7]
 
     def test__weighted_choice__chooses_random_value_from_the_modes(self):
 
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.weighted_random_choice() == "car"
 
-        weighted_modes = [(2, c.ModeOfTransport("car")), (4, c.ModeOfTransport("bus")), (1, c.ModeOfTransport("magic_carpet"))]
+        weighted_modes = [
+            (2, c.ModeOfTransport("car")),
+            (4, c.ModeOfTransport("bus")),
+            (1, c.ModeOfTransport("magic_carpet")),
+        ]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.weighted_random_choice() == "car" or "bus" or "magic_carpet"
 
     def test__weighted_choice__cant_choose_transports_with_0_people(self):
 
-        weighted_modes = [(0, c.ModeOfTransport("car")), (4, c.ModeOfTransport("bus")), (0, c.ModeOfTransport("magic_carpet"))]
+        weighted_modes = [
+            (0, c.ModeOfTransport("car")),
+            (4, c.ModeOfTransport("bus")),
+            (0, c.ModeOfTransport("magic_carpet")),
+        ]
 
-        regional_gen = c.RegionalGenerator(msoarea="test_area", weighted_modes=weighted_modes)
+        regional_gen = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=weighted_modes
+        )
 
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
 
 
-def test_load(commute_generator):
-    assert isinstance(commute_generator, c.CommuteGenerator)
+class TestCommuteGenerator:
+    def test__region_gen_from_commute_gen__via_msoarea(self):
 
-    regional_generators = commute_generator.regional_generators
-    assert len(regional_generators) == 8802
+        regional_gen_0 = c.RegionalGenerator(
+            msoarea="test_area", weighted_modes=[(2, c.ModeOfTransport("car"))]
+        )
+
+        commute_gen = c.CommuteGenerator(regional_generators={"north" : regional_gen_0})
+
+        regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="north")
+
+        assert regional_gen == regional_gen_0
+
+        regional_gen_1 = c.RegionalGenerator(
+            msoarea="test_area",
+            weighted_modes=[
+                (2, c.ModeOfTransport("car")),
+                (4, c.ModeOfTransport("bus")),
+                (1, c.ModeOfTransport("magic_carpet")),
+            ],
+        )
+
+        commute_gen = c.CommuteGenerator(regional_generators={"north" : regional_gen_0, "south" : regional_gen_1})
+
+        regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="north")
+
+        assert regional_gen == regional_gen_0
+
+        regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="south")
+
+        assert regional_gen == regional_gen_1
+
+    def test__load_from_file__uses_correct_values_from_configs(self):
+
+        commute_gen = c.CommuteGenerator.from_file(data_filename)
+
+        assert isinstance(commute_gen, c.CommuteGenerator)
+
+        regional_generators = commute_gen.regional_generators
+        assert len(regional_generators) == 8802
 
 
-def test_regional_generators(regional_generator, msoarea):
-
-    print(regional_generator.weighted_modes)
-    print(regional_generator.total)
-
-    assert regional_generator.msoarea == msoarea
-
-
-def test_weighted_modes(regional_generator):
-    weighted_modes = regional_generator.weighted_modes
-    assert len(regional_generator.weighted_modes) == 12
-
-    weighted_mode = weighted_modes[0]
-    assert weighted_mode[0] == 15
-    assert weighted_mode[1] == "Work mainly at or from home"
-
-
-def test_weights(regional_generator):
-    assert regional_generator.total == 180
-
-    weights = regional_generator.weights
-    assert len(weights) == 12
-    assert sum(weights) == pytest.approx(1.0)
-
-
-def test_weighted_random_choice(regional_generator):
-    result = regional_generator.weighted_random_choice()
-    assert isinstance(result, c.ModeOfTransport)
 
