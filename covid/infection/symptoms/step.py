@@ -2,7 +2,8 @@ from covid.infection.symptoms import Symptoms
 
 
 class SymptomsStep(Symptoms):
-    def __init__(self, timer, health_index, user_parameters={}):
+    def __init__(self, timer, health_index, user_parameters=None):
+        user_parameters = user_parameters or dict()
         required_parameters = ["time_offset", "end_time"]
         super().__init__(timer, health_index, user_parameters, required_parameters)
         self.time_offset = max(0.0, self.time_offset)

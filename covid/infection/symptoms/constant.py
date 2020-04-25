@@ -4,7 +4,8 @@ from covid.infection.symptoms import Symptoms
 
 
 class SymptomsConstant(Symptoms):
-    def __init__(self, timer, health_index, user_parameters={}):
+    def __init__(self, timer, health_index, user_parameters=None):
+        user_parameters = user_parameters or dict()
         required_parameters = ["recovery_rate"]
         super().__init__(timer, health_index, user_parameters, required_parameters)
         self.predicted_recovery_time = self.predict_recovery_time()
