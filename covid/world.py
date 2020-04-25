@@ -242,7 +242,8 @@ class World:
                 self.inputs.companysector_by_sex_dict,
                 self.inputs.companysector_by_sex_df,
                 wf_area_df,
-                self.inputs.companysector_specific_by_sex_df,
+                self.inputs.compsec_specic_ratio_by_sex_df,
+                self.inputs.compsec_specic_distr_by_sex_df,
             )
             person_distributor.populate_area()
             pbar.update(1)
