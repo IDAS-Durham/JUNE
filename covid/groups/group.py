@@ -60,12 +60,6 @@ class Group:
         if self.spec == "Random":
             self.fill_random_group(number)
 
-    def sane(self, name, spec):
-        if not spec in self.allowed_groups:
-            raise
-            return False
-        return True
-
     def set_active_members(self):
         for person in self.people:
             if person.active_group is not None:
@@ -77,9 +71,9 @@ class Group:
     def intensity(self):
         return self._intensity
 
-    # @intensity.setter
-    # def intensity(self, intensity):
-    #     self._intensity = intensity
+    @intensity.setter
+    def intensity(self, intensity):
+        self._intensity = intensity
 
     def update_status_lists(self, time=1):
         self.susceptible.clear()
