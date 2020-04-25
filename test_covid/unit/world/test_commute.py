@@ -1,11 +1,9 @@
-from pathlib import Path
-
 import pytest
+import os
 
 from covid import commute as c
 
-data_filename = Path(__file__).parent.parent / "test_data/commute.csv"
-
+test_data_filename = "{}/files/commute.csv".format(os.path.dirname(os.path.realpath(__file__)))
 
 class TestModeOfTransport:
     def test__setup_with_a_description__check_index(self):
@@ -175,7 +173,7 @@ class TestCommuteGenerator:
 
     def test__load_from_file__uses_correct_values_from_configs(self):
 
-        commute_gen = c.CommuteGenerator.from_file(data_filename)
+        commute_gen = c.CommuteGenerator.from_file(test_data_filename)
 
         assert isinstance(commute_gen, c.CommuteGenerator)
 
