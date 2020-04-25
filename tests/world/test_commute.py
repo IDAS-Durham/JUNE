@@ -7,21 +7,6 @@ from covid import commute as c
 data_filename = Path(__file__).parent.parent / "test_data/commute.csv"
 
 
-@pytest.fixture(name="commute_generator")
-def make_commute_generator():
-    return c.CommuteGenerator.from_file(data_filename)
-
-
-@pytest.fixture(name="msoarea")
-def make_msoarea():
-    return "E00062207"
-
-
-@pytest.fixture(name="regional_generator")
-def make_regional_generator(commute_generator, msoarea):
-    return commute_generator.regional_gen_from_msoarea(msoarea)
-
-
 class TestModeOfTransport:
     def test__setup_with_a_description__check_index(self):
 
