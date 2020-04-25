@@ -3,7 +3,8 @@ import numpy as np
 
 
 class SymptomsTanh(Symptoms):
-    def __init__(self, timer, health_index, user_parameters={}):
+    def __init__(self, timer, health_index, user_parameters=None):
+        user_parameters = user_parameters or dict()
         required_parameters = ["max_time", "onset_time", "end_time"]
         super().__init__(timer, health_index, user_parameters, required_parameters)
 
