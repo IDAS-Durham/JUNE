@@ -17,7 +17,7 @@ class Company(Group):
     """
 
     def __init__(self, company_id, msoa, n_employees_max, industry):
-        super().__init__("Company_%05d" % company_id, "company")
+        super().__init__(name="Company_%05d" % company_id, spec="company")
         self.id = company_id
         self.people = []
         self.msoa = msoa
