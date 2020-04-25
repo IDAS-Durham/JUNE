@@ -62,8 +62,10 @@ class Inputs:
         self.companysector_df = self.read_companysector_census(
             np.unique(self.oa2msoa_df["MSOA11CD"].values)
         )
-        self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_companysector_by_sex_census()
-        self.companysector_specific_by_sex_df = self.read_companysector_specific_by_sex()
+        self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_compsec_by_sex_census()
+        self.compsec_specic_ratio_by_sex_df, self.compsec_specic_distr_by_sex_df = self.read_key_compsec_by_sex(
+            self.companysector_by_sex_df
+        )
 
         self.commute_generator_path = Path(__file__).parent.parent / "data/census_data/commute.csv"
 
@@ -188,7 +190,7 @@ class Inputs:
         return companysector_df 
 
 
-    def read_companysector_by_sex_census(self):
+    def read_compsec_by_sex_census(self):
         """
         Gives number dict of discrete probability distributions by sex of the different industry sectors at the OA level
         The dict is of the format: {[oa]: {[gender('m'/'f')]: [distribution]}}
@@ -252,16 +254,16 @@ class Inputs:
         return industry_by_sex_dict, industry_by_sex_df
 
 
-    def read_companysector_specific_by_sex(self):
+    def read_key_compsec_by_sex(self, companysector_by_sex_df):
         """
-        Specifies the number of people in a given REGION who work in specific hospital roles 
-        and educational roles
+        Specifies the number of people in a given REGION who work in
+        a key sector such as health-care and education.
 
         Derives from the NOMIS annual occupational survey
         https://www.nomisweb.co.uk/query/construct/summary.asp?mode=construct&version=0&dataset=168
         """
 
-        industrysector_specic_by_sex_df = pd.read_csv(
+        education_healthcare_by_sex_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
@@ -270,10 +272,74 @@ class Inputs:
                 'output_area',
                 'NorthEast',
                 'health_education_by_sex_NorthEast.csv'
-            )
+            ),
+            index_col=0,
         )
+        education_healthcare_by_sex_df = education_healthcare_by_sex_df.rename(
+            columns={"males": "male", "females": "female"}
+        )
+        education_df = education_healthcare_by_sex_df[
+            education_healthcare_by_sex_df['occupations'].str.contains('education')
+        ]
+        healthcare_df = education_healthcare_by_sex_df[
+            ~education_healthcare_by_sex_df.occupations.isin(education_df.occupations)
+        ]
+        
+        # Get ratio of people work in any compared to the specific key sector 
+        male_healthcare_ratio = np.sum(healthcare_df["male"]) / \
+            np.sum(companysector_by_sex_df["m Q"])
+        male_education_ratio = np.sum(education_df["male"]) / \
+            np.sum(companysector_by_sex_df["m P"])
+        female_healthcare_ratio = np.sum(healthcare_df["female"]) / \
+            np.sum(companysector_by_sex_df["f Q"])
+        female_education_ratio = np.sum(education_df["female"]) / \
+            np.sum(companysector_by_sex_df["f P"])
+        
+        compsec_specic_ratio_by_sex_df = pd.DataFrame(
+            np.array([
+                [male_education_ratio, female_education_ratio],
+                [male_healthcare_ratio, female_healthcare_ratio]
+            ]),
+            index=['education', 'healthcare'],
+            columns=['male', 'female'],
+            dtype=np.float,
+        )
+        del (
+            male_healthcare_ratio, male_education_ratio,
+            female_healthcare_ratio, female_education_ratio,
+        )
+        
+        # Get distribution of duties within key sector
+        healthcare_distr_df = healthcare_df.loc[
+            :,["male", "female"]
+        ].div(
+            healthcare_df[["male", "female"]].sum(axis=0), axis=1
+        )
+        #healthcare_distr_df["healthcare_sector"] = healthcare_df.occupations.values
+        healthcare_distr_df["healthcare_sector_id"] = healthcare_df.occupation_codes.values
+        healthcare_distr_df["sector"] = ["healthcare"] * len(healthcare_distr_df.index.values)
+        healthcare_distr_df = healthcare_distr_df.groupby(
+            ['sector', 'healthcare_sector_id']
+        ).mean()
+        
+        education_distr_df = education_df.loc[
+            :,["male", "female"]
+        ].div(
+            education_df[["male", "female"]].sum(axis=0), axis=1
+        )
+        #education_distr_df["education_sector"] = education_df.occupations.values
+        education_distr_df["education_sector_id"] = education_df.occupation_codes.values
+        education_distr_df["sector"] = ["education"] * len(education_distr_df.index.values)
+        education_distr_df = education_distr_df.groupby(
+            ['sector', 'education_sector_id']
+        ).mean()
+        
+        compsec_specic_distr_by_sex_df = pd.concat([
+            healthcare_distr_df, education_distr_df
+        ])
+        del healthcare_distr_df, education_distr_df
 
-        return industrysector_specic_by_sex_df
+        return compsec_specic_ratio_by_sex_df, compsec_specic_distr_by_sex_df
    
 
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
@@ -426,6 +492,6 @@ if __name__ == "__main__":
     ip = Inputs()
     #print(ip.workflow_df)
     #print(ip.companysize_df)
-    print(ip.companysector_df)
-    print(ip.companysector_by_sex_df)
-    print(ip.companysector_specific_by_sex_df)
+    #print(ip.companysector_df)
+    #print(ip.companysector_by_sex_df)
+    #print(ip.companysector_specific_by_sex_df)
