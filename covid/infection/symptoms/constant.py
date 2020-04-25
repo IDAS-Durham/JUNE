@@ -11,9 +11,9 @@ class SymptomsConstant(Symptoms):
 
     def predict_recovery_time(self):
         """If the probabiliy of recovery per day is p, then the recovery day can be estimaed by sampling from a geometric distribution with parameter p."""
-        days_to_recover = stats.expon.rvs(scale=1./self.recovery_rate)
-        #day_of_recovery = self.timer.now + days_to_recover
-        return days_to_recover 
+        days_to_recover = stats.expon.rvs(scale=1.0 / self.recovery_rate)
+        # day_of_recovery = self.timer.now + days_to_recover
+        return days_to_recover
 
     def is_recovered(self):
         deltat = self.timer.now - self.timer.previous
