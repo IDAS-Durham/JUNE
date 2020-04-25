@@ -44,10 +44,10 @@ class InfectionInitializer:
             if "parameters" in transmission_config:
                 transmission_parameters = transmission_config["parameters"]
             else:
-                transmission_parameters = {}
+                transmission_parameters = None 
         else:
             transmission_type = default_types["transmission"]["type"]
-            transmission_parameters = {}
+            transmission_parameters = None 
         transmission_class_name = "Transmission" + transmission_type.capitalize()
         transmission = globals()[transmission_class_name](
             self.timer, transmission_parameters
@@ -61,10 +61,10 @@ class InfectionInitializer:
             if "parameters" in symptoms_config:
                 symptoms_parameters = symptoms_config["parameters"]
             else:
-                symptoms_parameters = {}
+                symptoms_parameters = None 
         else:
             symptoms_type = default_types["symptoms"]["type"]
-            symptoms_parameters = {}
+            symptoms_parameters = None 
         symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
         symptoms = globals()[symptoms_class_name](
             self.timer, health_index, symptoms_parameters
