@@ -50,7 +50,7 @@ class World:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
-        #self.interaction = self.initialize_interaction()
+        self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
