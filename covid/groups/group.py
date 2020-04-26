@@ -1,8 +1,4 @@
-import sys
-import random
-import matplotlib
 import matplotlib.pyplot as plt
-import attr
 from covid import exc
 
 class Group:
@@ -111,29 +107,13 @@ class Group:
         self.infected.clear()
         self.recovered.clear()
 
-    @property
-    def size(self):
-        return len(self.people)
-
-    @property
-    def size_susceptible(self):
-        return len(self.susceptible)
-
-    @property
-    def size_infected(self):
-        return len(self.infected)
-
-    @property
-    def size_recovered(self):
-        return len(self.recovered)
-
     def output(self, plot=False, full=False,time = 0):
         print("==================================================")
         print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
         print("* ",
-            self.size_susceptible(),"(",round(self.size_susceptible() / self.size * 100),"%) are susceptible, ",
-            self.size_infected(),   "(",round(self.size_infected() / self.size * 100),   "%) are infected,",
-            self.size_recovered(),  "(",round(self.size_recovered() / self.size * 100),  "%) have recovered.",
+            self.size_susceptible(),"(",round(len(self.susceptible) / len(self.people) * 100),"%) are susceptible, ",
+            self.size_infected(),   "(",round(len(self.infected) / len(self.people) * 100),   "%) are infected,",
+            self.size_recovered(),  "(",round(len(self.recovered) / len(self.people) * 100),  "%) have recovered.",
         )
 
         ages = []
@@ -146,8 +126,8 @@ class Group:
             else:
                 F += 1
         print("* ",
-              F,"(",round(F / self.size * 100.0),"%) females, ",
-              M,"(",round(M / self.size * 100.0),"%) males;",
+              F,"(",round(F / len(self.people) * 100.0),"%) females, ",
+              M,"(",round(M / len(self.people) * 100.0),"%) males;",
         )
         if plot:
             fig, axes = plt.subplots()
