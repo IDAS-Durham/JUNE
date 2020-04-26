@@ -13,6 +13,7 @@ from covid.infection import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
+#from covid.box_generator import BoxGenerator
 
 
 class World:
@@ -74,6 +75,11 @@ class World:
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
+
+    @classmethod
+    def box_mode(cls, region=None, n_people=None):
+        pass
+
 
     def read_config(self, config_file):
         if config_file is None:
@@ -385,6 +391,6 @@ class World:
 
 
 if __name__ == "__main__":
-    world = World(config_file=os.path.join("..", "configs", "config_companies.yaml"))
+    world = World(config_file=os.path.join("..", "configs", "config_example.yaml"))
     # world = World.from_pickle()
     world.group_dynamics()
