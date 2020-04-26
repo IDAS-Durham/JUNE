@@ -5,6 +5,7 @@ import numpy as np
 
 
 def get_age_brackets(nomis_age_bin):
+    """Auxiliary function to get the age delimiters of a nomis bin"""
     try:
         age_1, age_2 = nomis_age_bin.split("-")
         if age_2 == "XXX":
@@ -17,6 +18,21 @@ def get_age_brackets(nomis_age_bin):
 
 class BoxGenerator(Box):
     def __init__(self, world=None, region=None, n_people=None):
+        """Generates a simulation box where all people interact with each other.
+        If you just want a box with random people with random sex (50/50) and a random
+        age (uniform across 0 to 99) then just leave region as None or set it to "random".
+        On the other hand, the population can be initialized from census data by setting the name of the region in the region parameter.
+
+        Parameters
+        ----------
+        world : 
+            An instance of the World class (optional, will be passed to the created people)
+        region :
+            A string with the name of the region or "random".
+
+        n_people:
+            Number of people to initialize in the random mode.
+        """
         super().__init__()
         self.world = world
         self.health_index_gen = HealthIndex()
@@ -32,6 +48,9 @@ class BoxGenerator(Box):
             self.create_random_box(n_people)
 
     def create_box_from_region(self, region):
+        """
+        We read from the census data the number of people, and their age and sex distributions. We sample uniformly inside each age bin, and we assign a health index based on the age.
+        """
         inputs = Inputs(zone=region)
         # sex numbers
         number_of_men = (
@@ -92,6 +111,9 @@ class BoxGenerator(Box):
         np.random.shuffle(self.people)
 
     def create_random_box(self, n_people):
+        """
+        Random box of n_people. Sex is kept 50/50, and age is uniformly sampled from 0 to 99.
+        """
         self.n_people = n_people
         # Assign equal men and women. If odd, add one more woman.
         if n_people % 2 == 0:
