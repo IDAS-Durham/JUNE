@@ -13,7 +13,7 @@ from covid.infection import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
-#from covid.box_generator import BoxGenerator
+from covid.box_generator import BoxGenerator
 
 
 class World:
@@ -21,7 +21,7 @@ class World:
     Stores global information about the simulation
     """
 
-    def __init__(self, config_file=None, box_mode=False):
+    def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
         print("Initializing world...")
         self.read_config(config_file)
         relevant_groups = self.get_simulation_groups()
@@ -33,7 +33,7 @@ class World:
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if box_mode:
-            self.initialize_box_mode()
+            self.initialize_box_mode(box_region, box_n_people)
         else:
             print("Initializing commute generator...")
             self.commute_generator = CommuteGenerator.from_file(
@@ -76,11 +76,6 @@ class World:
     def from_config(cls, config_file):
         return cls(config_file)
 
-    @classmethod
-    def box_mode(cls, region=None, n_people=None):
-        pass
-
-
     def read_config(self, config_file):
         if config_file is None:
             config_file = os.path.join(
@@ -195,18 +190,14 @@ class World:
             if key not in self.config:
                 self.config[key] = default_config[key]
 
-    def initialize_box_mode(self):
+    def initialize_box_mode(self, region=None, n_people=None):
         """
         Sets the simulation to run in a single box, with everyone inside and no schools, households, etc.
         Useful for testing interaction models and comparing to SIR.
         """
         print("Setting up box mode...")
-        box = Box()
-        N_people = self.inputs.n_residents.values.sum()
-        for i in range(0, N_people):
-            person = Person(self, i, None, None, None, None, None, None, 0)
-            box.people.append(person)
         self.boxes = Boxes()
+        box = BoxGenerator(self, region, n_people)
         self.boxes.members = [box]
         self.people = People(self)
         self.people.members = box.people

@@ -7,7 +7,6 @@ from covid.box_generator import get_age_brackets
 
 # random box tests
 
-
 @pytest.fixture(name="box_random")
 def create_box_with_random_people():
     box = BoxGenerator(n_people=2000)
@@ -38,7 +37,6 @@ def test__random_box_has_correct_health_index_distribution(box_random):
     assert hasattr(person, "health_index")
 
 # tests of box based on census data
-
 
 @pytest.fixture(name="box_region")
 def create_box_for_region():
