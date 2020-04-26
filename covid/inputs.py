@@ -11,10 +11,15 @@ class Inputs:
     """
 
     def __init__(
-            self,
-            zone="NorthEast",
-            DATA_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "processed",
-                                         "census_data"),
+        self,
+        zone="NorthEast",
+        DATA_DIR: str = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "data",
+            "processed",
+            "census_data",
+        ),
     ):
         self.zone = zone
         self.DATA_DIR = DATA_DIR
@@ -37,18 +42,28 @@ class Inputs:
             self.encoder_household_composition[column] = i
 
         self.school_df = pd.read_csv(
-            os.path.join(self.DATA_DIR, 'school_data', 'uk_schools_data.csv')
+            os.path.join(self.DATA_DIR, "school_data", "uk_schools_data.csv")
         )
         self.hospital_df = pd.read_csv(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'data', 'census_data', 'hospital_data',
-                         'england_hospitals.csv')
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "census_data",
+                "hospital_data",
+                "england_hospitals.csv",
+            )
         )
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
             os.path.join(
-                self.DATA_DIR, "..", "social_mixing", "POLYMOD", "extended_polymod_UK.csv"
+                self.DATA_DIR,
+                "..",
+                "social_mixing",
+                "POLYMOD",
+                "extended_polymod_UK.csv",
             ),
-            delimiter=',',
+            delimiter=",",
         )
 
         # Read census data on low resolution map (MSOA)
@@ -62,12 +77,17 @@ class Inputs:
         self.companysector_df = self.read_companysector_census(
             np.unique(self.oa2msoa_df["MSOA11CD"].values)
         )
-        self.companysector_by_sex_dict, self.companysector_by_sex_df = self.read_compsec_by_sex_census()
-        self.compsec_specic_ratio_by_sex_df, self.compsec_specic_distr_by_sex_df = self.read_key_compsec_by_sex(
-            self.companysector_by_sex_df
+        (
+            self.companysector_by_sex_dict,
+            self.companysector_by_sex_df,
+        ) = self.read_companysector_by_sex_census()
+        (
+            self.compsec_specic_ratio_by_sex_df,
+            self.compsec_specic_distr_by_sex_df
+        ) = self.read_key_compsec_by_sex(self.companysector_by_sex_df)
+        self.commute_generator_path = (
+            Path(__file__).parent.parent / "data/census_data/commute.csv"
         )
-
-        self.commute_generator_path = Path(__file__).parent.parent / "data/census_data/commute.csv"
 
     def read(self, filename):
         df = pd.read_csv(
@@ -104,8 +124,7 @@ class Inputs:
                 "census_data",
                 "area_code_translations",
                 "oa_msoa_englandwales_2011.csv",
-            )
-            ,
+            ),
             names=column_names,
             usecols=usecols,
         )
@@ -145,21 +164,20 @@ class Inputs:
                 "census_data",
                 "middle_output_area",
                 "EnglandWales",
-                "companysize_msoa11cd_2019.csv"
+                "companysize_msoa11cd_2019.csv",
             ),
             names=column_names,
             usecols=usecols,
             header=0,
         )
         companysize_df = companysize_df.set_index("MSOA11CD")
-        
+
         # filter out MSOA areas that are simulated
         companysize_df = companysize_df.loc[msoa]
 
         assert companysize_df.isnull().values.any() == False
 
         return companysize_df
-
 
     def read_companysector_census(self, msoa):
         """
@@ -170,25 +188,24 @@ class Inputs:
         companysector_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
-                '..',
-                'data',
-                'census_data',
-                'middle_output_area',
-                'NorthEast',
-                'company_sector_cleaned_msoa.csv',
+                "..",
+                "data",
+                "census_data",
+                "middle_output_area",
+                "NorthEast",
+                "company_sector_cleaned_msoa.csv",
             ),
             index_col=0,
         )
         companysector_df = companysector_df.set_index("msoareas")
-        
+
         # filter out MSOA areas that are simulated
         companysector_df = companysector_df.loc[msoa]
 
         companysector_df = companysector_df.reset_index()
         companysector_df = companysector_df.rename(columns={"index": "msoareas"})
-        
-        return companysector_df 
 
+        return companysector_df
 
     def read_compsec_by_sex_census(self):
         """
@@ -202,25 +219,44 @@ class Inputs:
         industry_by_sex_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
-                '..',
-                'data',
-                'census_data',
-                'output_area',
-                'NorthEast',
-                'industry_by_sex_cleaned.csv'
+                "..",
+                "data",
+                "census_data",
+                "output_area",
+                "NorthEast",
+                "industry_by_sex_cleaned.csv",
             )
         )
 
         # define all columns in csv file relateing to males
         # here each letter corresponds to the industry sector (see metadata)
         m_columns = [
-            'm A', 'm B', 'm C', 'm D', 'm E', 'm F', 'm G', 'm H', 'm I', 'm J',
-            'm K', 'm L', 'm M', 'm N', 'm O', 'm P', 'm Q', 'm R', 'm S', 'm T', 'm U',
+            "m A",
+            "m B",
+            "m C",
+            "m D",
+            "m E",
+            "m F",
+            "m G",
+            "m H",
+            "m I",
+            "m J",
+            "m K",
+            "m L",
+            "m M",
+            "m N",
+            "m O",
+            "m P",
+            "m Q",
+            "m R",
+            "m S",
+            "m T",
+            "m U",
         ]
 
         m_distributions = []
-        for oa in range(len(industry_by_sex_df['oareas'])):
-            total = float(industry_by_sex_df['m all'][oa])
+        for oa in range(len(industry_by_sex_df["oareas"])):
+            total = float(industry_by_sex_df["m all"][oa])
 
             distribution = []
             for column in m_columns:
@@ -230,16 +266,56 @@ class Inputs:
 
         # define all columns in csv file relateing to males
         f_columns = [
-            'f A', 'f B', 'f C', 'f D', 'f E', 'f F', 'f G', 'f H', 'f I', 'f J',
-            'f K', 'f L', 'f M', 'f N', 'f O', 'f P', 'f Q', 'f R', 'f S', 'f T', 'f U'
+            "f A",
+            "f B",
+            "f C",
+            "f D",
+            "f E",
+            "f F",
+            "f G",
+            "f H",
+            "f I",
+            "f J",
+            "f K",
+            "f L",
+            "f M",
+            "f N",
+            "f O",
+            "f P",
+            "f Q",
+            "f R",
+            "f S",
+            "f T",
+            "f U",
         ]
-                
-        f_columns = ['f A', 'f B', 'f C', 'f D', 'f E', 'f F', 'f G', 'f H', 'f I', 'f J',
-                     'f K', 'f L', 'f M', 'f N', 'f O', 'f P', 'f Q', 'f R', 'f S', 'f T', 'f U']
+
+        f_columns = [
+            "f A",
+            "f B",
+            "f C",
+            "f D",
+            "f E",
+            "f F",
+            "f G",
+            "f H",
+            "f I",
+            "f J",
+            "f K",
+            "f L",
+            "f M",
+            "f N",
+            "f O",
+            "f P",
+            "f Q",
+            "f R",
+            "f S",
+            "f T",
+            "f U",
+        ]
 
         f_distributions = []
-        for oa in range(len(industry_by_sex_df['oareas'])):
-            total = int(industry_by_sex_df['f all'][oa])
+        for oa in range(len(industry_by_sex_df["oareas"])):
+            total = int(industry_by_sex_df["f all"][oa])
 
             distribution = []
             for column in f_columns:
@@ -248,8 +324,11 @@ class Inputs:
             f_distributions.append(distribution)
 
         industry_by_sex_dict = {}
-        for idx, oa in enumerate(industry_by_sex_df['oareas']):
-            industry_by_sex_dict[oa] = {'m': m_distributions[idx], 'f': f_distributions[idx]}
+        for idx, oa in enumerate(industry_by_sex_df["oareas"]):
+            industry_by_sex_dict[oa] = {
+                "m": m_distributions[idx],
+                "f": f_distributions[idx],
+            }
 
         return industry_by_sex_dict, industry_by_sex_df
 
@@ -341,7 +420,7 @@ class Inputs:
         del healthcare_distr_df, education_distr_df
 
         return compsec_specic_ratio_by_sex_df, compsec_specic_distr_by_sex_df
-   
+
 
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
@@ -359,12 +438,12 @@ class Inputs:
         travel_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
-                '..',
-                'data',
-                'census_data',
-                'middle_output_area',
-                'NorthEast',
-                'flow_method_oa_qs701northeast_2011.csv',
+                "..",
+                "data",
+                "census_data",
+                "middle_output_area",
+                "NorthEast",
+                "flow_method_oa_qs701northeast_2011.csv",
             ),
             delimiter=",",
             delim_whitespace=False,
@@ -398,10 +477,10 @@ class Inputs:
                 c
                 for c in travel_df.columns
                 if "Taxi" in c
-                   or "scooter" in c
-                   or "car" in c
-                   or "Bicycle" in c
-                   or "foot" in c
+                or "scooter" in c
+                or "car" in c
+                or "Bicycle" in c
+                or "foot" in c
             ]
         ].sum(axis=1)
         travel_df = travel_df.drop(
@@ -409,17 +488,22 @@ class Inputs:
                 c
                 for c in travel_df.columns
                 if "Taxi" in c
-                   or "scooter" in c
-                   or "car" in c
-                   or "Bicycle" in c
-                   or "foot" in c
+                or "scooter" in c
+                or "car" in c
+                or "Bicycle" in c
+                or "foot" in c
             ]
         )
         travel_df = travel_df[["home", "public", "private"]]
 
         # create dictionary to merge OA into MSOA
-        dirs = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "census_data",
-                            "area_code_translations")
+        dirs = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "data",
+            "census_data",
+            "area_code_translations",
+        )
         dic = pd.read_csv(
             dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv",
             delimiter=",",
@@ -427,11 +511,7 @@ class Inputs:
         )
 
         # merge OA into MSOA
-        travel_df = travel_df.merge(
-            msoa2oa_df,
-            left_index=True,
-            right_index=True,
-        )
+        travel_df = travel_df.merge(msoa2oa_df, left_index=True, right_index=True,)
         travel_df = travel_df.groupby(["MSOA11CD"]).sum()
 
         if freq:
@@ -442,9 +522,15 @@ class Inputs:
         return travel_df
 
     def create_workflow_df(
-            self, msoa,
-            DATA_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data", "census_data",
-                                         "flow/")
+        self,
+        msoa,
+        DATA_DIR: str = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "data",
+            "census_data",
+            "flow/",
+        ),
     ) -> dict:
         """
         Workout where people go to work. It is for the whole of England & Wales
@@ -461,11 +547,15 @@ class Inputs:
         """
         dirs = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            "..", 'data', 'census_data', 'middle_output_area', 'EnglandWales/'
+            "..",
+            "data",
+            "census_data",
+            "middle_output_area",
+            "EnglandWales/",
         )
         wf_df = pd.read_csv(
             dirs + "flow_in_msoa_wu01ew_2011.csv",
-            delimiter=',',
+            delimiter=",",
             delim_whitespace=False,
             skiprows=1,
             usecols=[0, 1, 3, 4],
@@ -474,16 +564,20 @@ class Inputs:
         # filter out MSOA areas that are simulated
         wf_df = wf_df[wf_df["home_msoa11cd"].isin(list(msoa))]
         # convert into ratios
-        wf_df = wf_df.groupby(
-            ['home_msoa11cd', 'work_msoa11cd']
-        ).agg({'n_man': 'sum', 'n_woman': 'sum'})
+        wf_df = wf_df.groupby(["home_msoa11cd", "work_msoa11cd"]).agg(
+            {"n_man": "sum", "n_woman": "sum"}
+        )
 
-        wf_df['n_man'] = wf_df.groupby(level=0)['n_man'].apply(
-            lambda x: x / float(x.sum(axis=0))
-        ).values
-        wf_df['n_woman'] = wf_df.groupby(level=0)['n_woman'].apply(
-            lambda x: x / float(x.sum(axis=0))
-        ).values
+        wf_df["n_man"] = (
+            wf_df.groupby(level=0)["n_man"]
+            .apply(lambda x: x / float(x.sum(axis=0)))
+            .values
+        )
+        wf_df["n_woman"] = (
+            wf_df.groupby(level=0)["n_woman"]
+            .apply(lambda x: x / float(x.sum(axis=0)))
+            .values
+        )
 
         return wf_df
 

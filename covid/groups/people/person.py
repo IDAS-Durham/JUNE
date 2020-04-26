@@ -1,24 +1,34 @@
-import sys
-
-from covid.infection import Infection
-
-
 class HealthInformation:
     def __init__(self, counter):
         self.counter = counter
         self.susceptibility = 1.0
-        self.susceptible    = True
-        self.infected       = False
-        self.must_stay_home = False
-        self.in_hospital    = False
-        self.infection      = None
-        self.recovered      = False
-        self.dead           = False   
+        self.susceptible = True
+        self.infected = False
+        self.infection = None
+        self.recovered = False
 
     def set_infection(self, infection):
         self.infection = infection
         self.infected = True
         self.susceptible = False
+
+    @property
+    def tag(self):
+        if self.infection is not None:
+            return self.infection.symptoms.tag
+        return None
+
+    @property
+    def must_stay_at_home(self) -> bool:
+        return self.tag in ("influenza-like illness", "pneumonia")
+
+    @property
+    def in_hospital(self) -> bool:
+        return self.tag in ("hospitalised", "intensive care")
+
+    @property
+    def dead(self) -> bool:
+        return self.tag == "dead"
 
     def update_health_status(self):
         if self.infected:
@@ -26,24 +36,12 @@ class HealthInformation:
                 self.set_recovered()
             else:
                 self.infection.update_infection_probability()
-                #self.counter.update_symptoms()
-            tag = self.infection.symptoms.tag
-            if tag=="influenza-like illness" or tag=="pneumonia":
-                self.must_stay_at_home = True
-            else:
-                self.must_stay_at_home = False
-            if tag=="hospitalised" or tag=="intensive care":
-                self.in_hospital = True
-            else:
-                self.in_hospital = False
-            if tag=="dead":
-                self.dead = True
 
     def set_recovered(self):
         # self.infection = None
-        self.recovered      = True
-        self.infected       = False
-        self.susceptible    = False
+        self.recovered = True
+        self.infected = False
+        self.susceptible = False
         self.susceptibility = 0.0
         self.counter.set_length_of_infection()
 
@@ -86,7 +84,7 @@ class Counter:
 
     def update_infection_data(self, time, grouptype=None):
         self.time_of_infection = time
-        if grouptype != None:
+        if grouptype is not None:
             self.grouptype_of_infection = grouptype
 
     def set_length_of_infection(self):
@@ -120,17 +118,17 @@ class Person:
     """
 
     def __init__(
-        self,
-        world=None,
-        person_id=None,
-        area=None,
-        work_msoa=None,
-        age=-1,
-        nomis_bin=None,
-        sex=None,
-        health_index=None,
-        econ_index=None,
-        mode_of_transport=None,
+            self,
+            world=None,
+            person_id=None,
+            area=None,
+            work_msoa=None,
+            age=-1,
+            nomis_bin=None,
+            sex=None,
+            health_index=None,
+            econ_index=None,
+            mode_of_transport=None,
     ):
         # if not 0 <= age <= 120 or sex not in ("M", "F"):
         #    raise AssertionError(
@@ -173,9 +171,9 @@ class Person:
             )
         else:
             print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
-        if self.health_information.is_susceptible():
+        if self.health_information.susceptible:
             print("-- person is susceptible.")
-        if self.health_information.is_infected():
+        if self.health_information.infected:
             print(
                 "-- person is infected: ",
                 self.health_information.get_symptoms_tag(time + 5),
@@ -183,7 +181,7 @@ class Person:
                 self.health_information.infection.symptom_severity(time + 5),
                 "]",
             )
-        if self.health_information.is_recovered():
+        if self.health_information.recovered:
             print("-- person has recovered.")
 
 

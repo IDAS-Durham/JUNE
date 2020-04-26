@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/JosephPB/covidmodelling.svg?token=RZpZVED1uFcNhmBpzes5&branch=master)](https://travis-ci.com/JosephPB/covidmodelling)
+
 # COVID Modelling
 
 Repository for data and models built
