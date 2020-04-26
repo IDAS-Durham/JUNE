@@ -3,7 +3,7 @@ import os
 
 from covid import commute as c
 
-test_data_filename = "{}/files/commute.csv".format(os.path.dirname(os.path.realpath(__file__)))
+test_data_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "data", "census_data", "commute.csv")
 
 class TestModeOfTransport:
     def test__setup_with_a_description__check_index(self):
