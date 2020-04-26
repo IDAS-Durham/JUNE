@@ -1,2 +1,2 @@
-#from .base import Interaction
-#from .collective import InteractionCollective
+from .base import Interaction
+from .collective import InteractionCollective
