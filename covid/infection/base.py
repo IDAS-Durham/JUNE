@@ -78,7 +78,7 @@ class Infection(InfectionInitializer, ParameterInitializer):
     which may vary by individual:
     - transmission probability, Ptransmission.
     - symptom severity, Severity
-    Either of them will be a numer between 0 (low) and 1 (high, strong sypmotoms), 
+    Either of them will be a number between 0 (low) and 1 (high, strong sypmotoms), 
     and for both we will have some thresholds.
     Another important part for the infection is their begin, starttime, which must
     be given in the constructor.  Transmission probability and symptom severity
