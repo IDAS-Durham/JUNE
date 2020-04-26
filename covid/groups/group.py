@@ -86,7 +86,7 @@ class Group:
             if person.health_information.susceptible:
                 self.susceptible.append(person)
             if person.health_information.infected:
-                if person.health_information.must_stay_home:
+                if person.health_information.must_stay_at_home:
                     continue
                     # don't add this person to the group
                     # the household group instance deals with this in its own
