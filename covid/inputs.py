@@ -337,6 +337,7 @@ class Inputs:
         compsec_specic_distr_by_sex_df = pd.concat([
             healthcare_distr_df, education_distr_df
         ])
+        compsec_specic_distr_by_sex_df = compsec_specic_distr_by_sex_df.sort_index()
         del healthcare_distr_df, education_distr_df
 
         return compsec_specic_ratio_by_sex_df, compsec_specic_distr_by_sex_df
