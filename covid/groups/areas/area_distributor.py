@@ -5,7 +5,7 @@ from covid.groups.areas import Area
 
 class AreaDistributor:
     def __init__(self, areas, input_data):
-        self.input = input_data 
+        self.input = input_data
         self.areas = areas
 
     def read_areas_census(self):
@@ -16,13 +16,15 @@ class AreaDistributor:
         This is all on the OA layer.
         """
         n_residents_df = self.input.n_residents
-        age_df = self.input.age_freq 
+        age_df = self.input.age_freq
         sex_df = self.input.sex_freq
         household_composition_df = self.input.household_composition_freq
         areas_list = []
         for i, area_name in enumerate(n_residents_df.index):
-            area_coord = self.input.areas_coordinates_df.loc[area_name][["Y", "X"]].values
-            
+            area_coord = self.input.areas_coordinates_df.loc[area_name][
+                ["Y", "X"]
+            ].values
+
             area = Area(
                 self.areas.world,
                 area_name,
@@ -37,4 +39,4 @@ class AreaDistributor:
                 area_coord,
             )
             areas_list.append(area)
-        self.areas.members = areas_list 
+        self.areas.members = areas_list
