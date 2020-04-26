@@ -132,7 +132,7 @@ class PersonDistributor:
             values=(numbers, distribution_female)
         )
 
-    def _assign_industry(self, i, sex, sector_man, sector_woman, employed=True):
+    def _assign_industry(self, i, person, sector_man, sector_woman, employed=True):
         """
         Note: in this script self.area.name is used and assumed to be (string) OArea code
         THIS MIGHT NEED CHANGING
@@ -144,23 +144,24 @@ class PersonDistributor:
         according to the generated probability distribution
         """
 
-        if not employed:
-            industry = "NA"
-        else:
-            ## accss relevant indudtry label
-            if sex == 0:  # Male
+        if employed:
+            # get industry label
+            if person.sex == 0:  # Male
                 industry_id = sector_man[i]
-            elif sex == 1:  # Female
+            elif person.sex == 1:  # Female
                 industry_id = sector_woman[i]
             else:
                 raise ValueError(
                     "sex must be with male or female. Intead got {}".format(sex_random)
                 )
-            industry = self.industry_dict[industry_id]
+            person.industry = self.industry_dict[industry_id]
+            
+            if (person.industry == "Q" or person.industry == "P"):
+                self._assign_key_industry(person)
+        else:
+            pass
 
-        return industry
-
-    def _assign_industry_specific(self, ratio, distribution):
+    def _assign_key_industry(self, person):
         """
         Given a person who we know is in an industry we want to be more specific
         on the job for, we assign them a specific job e.g. we want to assign
@@ -182,19 +183,32 @@ class PersonDistributor:
                 2315: Primary and nursery education teaching professionals
                 2316: Special needs education teaching professionals
         """
-        MC_random = np.random.uniform()
-        industry_specific_id = None
+        compsec_decoder = {"Q": "healthcare", "P": "education"}
+        sex_decoder = {0: "male", 1: "female"}
 
-        # Check if person should be assigned any specific industry given their sector
+        MC_random = np.random.uniform()
+
+        ratio = self.compsec_specic_ratio_by_sex_df.loc[
+            compsec_decoder[person.industry], sex_decoder[person.sex]
+        ]
+        distribution = self.compsec_specic_distr_by_sex_df.loc[
+            (compsec_decoder[person.industry], ), sex_decoder[person.sex]
+        ].values
+        
+        # Select people working in key industries
         if MC_random < ratio:
-            pass
+            key_industry_id = None
         else:
-            # Assign specific industry according to distribution
+            # Assign job category within key industry
             numbers = np.arange(len(distribution))
             random_variable = stats.rv_discrete(values=(numbers, distribution))
-            industry_specific_id = random_variable.rvs(size=1)
-
-        return industry_specific_id
+            key_industry_id = random_variable.rvs(size=1)
+        
+        if key_industry_id is not None:
+            key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
+                (compsec_decoder[person.industry])
+            ].index.values[key_industry_id[0]]
+            person.industry_specific = key_industry_code
 
     def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
         """
@@ -304,67 +318,15 @@ class PersonDistributor:
                 else:
                     self.area._oldwomen[i] = person
 
-            # assign person to an industry
-            # add some conditions to allow for employed != True
-            # wither age and/or from a database
+            # assign person to an industry TODO: implement unemployment
             if is_working_age:
-                person.industry = self._assign_industry(
+                self._assign_industry(
                     i,
-                    sex_random,
+                    person,
                     companysector_male_rnd_array,
                     companysector_female_rnd_array,
                 )
 
-            # assign specific industry if relevant based on sex
-            if person.industry == "Q":  # Healthcare
-                if sex_random == 0:  # Male
-                    industry_specific_id = self._assign_industry_specific(
-                        self.compsec_specic_ratio_by_sex_df.loc[
-                            'healthcare', 'male'
-                        ],
-                        self.compsec_specic_distr_by_sex_df.loc[
-                            ('healthcare', ), 'male'
-                        ].values,
-                    )
-                elif sex_random == 1:  # Female
-                    industry_specific_id = self._assign_industry_specific(
-                        self.compsec_specic_ratio_by_sex_df.loc[
-                            'healthcare', 'female'
-                        ],
-                        self.compsec_specic_distr_by_sex_df.loc[
-                            ('healthcare', ), 'female'
-                        ].values,
-                    )
-                if industry_specific_id is not None:
-                    industry_specific_code = self.compsec_specic_distr_by_sex_df.loc[
-                        ('healthcare')    
-                    ].index.values[industry_specific_id[0]]
-                    person.industry_specific = industry_specific_code
-
-            elif person.industry == "P":  # Education
-                if sex_random == 0:  # Male
-                    industry_specific_id = self._assign_industry_specific(
-                        self.compsec_specic_ratio_by_sex_df.loc[
-                            'education', 'male'
-                        ],
-                        self.compsec_specic_distr_by_sex_df.loc[
-                            ('education', ), 'male'
-                        ].values,
-                    )
-                elif sex_random == 1:  # Female
-                    industry_specific_id = self._assign_industry_specific(
-                        self.compsec_specic_ratio_by_sex_df.loc[
-                            'education', 'female'
-                        ],
-                        self.compsec_specic_distr_by_sex_df.loc[
-                            ('education', ), 'female'
-                        ].values,
-                    )
-                if industry_specific_id is not None:
-                    industry_specific_code = self.compsec_specic_distr_by_sex_df.loc[
-                        ('education')    
-                    ].index.values[industry_specific_id[0]]
-                    person.industry_specific = industry_specific_code
         try:
             assert (
                 sum(
