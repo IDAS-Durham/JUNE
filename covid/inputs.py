@@ -80,7 +80,7 @@ class Inputs:
         (
             self.companysector_by_sex_dict,
             self.companysector_by_sex_df,
-        ) = self.read_companysector_by_sex_census()
+        ) = self.read_compsec_by_sex_census()
         (
             self.compsec_specic_ratio_by_sex_df,
             self.compsec_specic_distr_by_sex_df
