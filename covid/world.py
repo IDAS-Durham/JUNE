@@ -40,6 +40,7 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
+            self.initialize_hospitals()
             self.initialize_msoa_areas()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -118,7 +119,8 @@ class World:
 
     def initialize_box_mode(self):
         """
-        Sets the simulation to run in a single box, with everyone inside and no schools, households, etc.
+        Sets the simulation to run in a single box, with everyone inside and no 
+        schools, households, etc.
         Useful for testing interaction models and comparing to SIR.
         """
         print("Setting up box mode...")
@@ -188,6 +190,19 @@ class World:
             household_distributor.distribute_people_to_household()
             pbar.update(1)
         pbar.close()
+
+    def initialize_hospitals(self):
+        """
+        for testing purposes: create only one hospital
+        """
+        print("Initializing hospitals...")
+        #pbar = tqdm(total=len(self.areas.members))
+        self.hospitals = Hospitals(self)
+        #for area in self.areas.members:
+        #    household_distributor = HouseholdDistributor(self, area)
+        #    household_distributor.distribute_people_to_household()
+        #    pbar.update(1)
+        #pbar.close()
 
     def initialize_schools(self):
         """
@@ -290,7 +305,8 @@ class World:
         if self.box_mode:
             self.seed_infections_box(n_seed)
         else:
-            print("Infecting indivuals in their household.")
+            print("Infecting individuals in their household,",
+                  "for in total ",len(self.households.members)," households.")
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
         print(
