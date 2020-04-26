@@ -28,7 +28,9 @@ class Area:
         """
         Object that generates modes of transport randomly weighted by census data
         """
-        return self.world.commute_generator.for_msoarea(self.msoarea)
+        return self.world.commute_generator.regional_gen_from_msoarea(
+            self.msoarea
+        )
 
     def check_census_freq_ratios(self):
         for key in self.census_freq.keys():

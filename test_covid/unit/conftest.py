@@ -16,9 +16,8 @@ def create_timer():
                     os.path.realpath(__file__)
                     ),
                 )
-    with open("config_ne.yaml", "r") as f:
+    with open("config_ne.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    timer = Timer(config['time'])
-    return timer 
+    return Timer(config['time'])
 
