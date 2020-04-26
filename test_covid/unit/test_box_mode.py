@@ -1,0 +1,104 @@
+import numpy as np
+import pytest
+from covid.box_generator import BoxGenerator
+from covid.inputs import Inputs
+
+
+# random box tests
+
+
+@pytest.fixture(name="box_random")
+def create_box_with_random_people():
+    box = BoxGenerator(n_people=2000)
+    return box
+
+
+def test__random_box_has_correct_number_of_people(box_random):
+    assert box_random.n_people == 2000
+    assert len(box_random.people) == 2000
+
+
+def test__random_box_has_correct_sex_distribution(box_random):
+    men = [person for person in box_random.people if person.sex == 0]
+    women = [person for person in box_random.people if person.sex == 1]
+    assert np.isclose(len(men), len(women), atol=0, rtol=0.001)
+
+
+def test__random_box_has_correct_age_distribution(box_random):
+    all_ages = [person.age for person in box_random.people]
+    _, counts = np.unique(all_ages, return_counts=True)
+    mean_age_number = np.mean(counts)
+    assert np.allclose(counts, mean_age_number, atol=0, rtol=0.001)
+
+
+def test__random_box_has_correct_health_index_distribution(box_random):
+    """
+    I don't fully understand how health index works so I will not test this for now.
+    """
+    pass
+
+
+# tests of box based on census data
+
+
+@pytest.fixture(name="box_region")
+def create_box_for_region():
+    box = BoxGenerator(region="NorthEast", n_people=10)
+    return box
+
+
+@pytest.fixture(name="ne_inputs")
+def get_north_east_ne_inputsut_data():
+    ne_inputs = Inputs(zone="NorthEast")
+    return ne_inputs
+
+
+def test__region_box_has_correct_number_of_people(box_region, ne_inputs):
+    true_people = ne_inputs.n_residents.values.sum()
+    box_people = len(box_region.people)
+    assert box_people == true_people
+    assert box_region.n_people == true_people
+
+#
+#def test__region_box_has_correct_sex_distribution(box_region, ne_inputs):
+#    men = [person for person in box_region.people if person.sex == 0]
+#    women = [person for person in box_region.people if person.sex == 1]
+#    men_ratio = len(men) / box_region.n_people
+#    women_ratio = len(women) / box_region.n_people
+#    # census data
+#    number_of_men = int(
+#        ne_inputs.n_residents * np.array(ne_inputs.sex_freq["males"]).flatten()
+#    )
+#    number_of_men = number_of_men.sum()
+#    number_of_women = int(
+#        ne_inputs.n_residents * np.array(ne_inputs.sex_freq["females"]).flatten()
+#    )
+#    number_of_women = number_of_women.sum()
+#    total = number_of_men + number_of_women
+#    assert total == ne_inputs.n_residents.values.sum()
+#    true_men_ratio = number_of_men / total
+#    true_women_ratio = number_of_women / total
+#    assert np.isclose(men_ratio, true_men_ratio, atol=0, rtol=1e-2)
+#    assert np.isclose(women_ratio, true_women_ratio, atol=0, rtol=1e-2)
+#
+#def test__region_box_has_correct_age_distribution(box_region, ne_inputs):
+#    average_age_ratios = np.array(ne_inputs.age_freq.values) * ne_inputs.n_residents
+#    # census data
+#    number_of_men = (
+#        ne_inputs.n_residents * np.array(ne_inputs.sex_freq["males"]).flatten()
+#    )
+#    number_of_men = number_of_men.sum()
+#    number_of_women = (
+#        ne_inputs.n_residents * np.array(ne_inputs.sex_freq["females"]).flatten()
+#    )
+#    number_of_women = number_of_women.sum()
+#    total = number_of_men + number_of_women
+#    assert total == ne_inputs.n_residents.values.sum()
+#    true_men_ratio = number_of_men / total
+#    true_women_ratio = number_of_women / total
+#    assert np.isclose(men_ratio, true_men_ratio, atol=0, rtol=1e-2)
+#    assert np.isclose(women_ratio, true_women_ratio, atol=0, rtol=1e-2)
+#
+#def test__region_box_has_correct_health_index(box_region, ne_inputs):
+#    # TODO
+#    pass
