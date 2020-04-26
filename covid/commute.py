@@ -9,10 +9,15 @@ default_config_filename = Path(
     __file__
 ).parent.parent / "configs/commute.yaml"
 
+
 class ModeOfTransport:
     __all = dict()
 
-    def __new__(cls, description):
+    def __new__(
+            cls,
+            description,
+            is_public=False
+    ):
         if description not in ModeOfTransport.__all:
             ModeOfTransport.__all[
                 description
@@ -23,9 +28,52 @@ class ModeOfTransport:
 
     def __init__(
             self,
-            description
+            description: str,
+            is_public: bool = False
     ):
+        """
+        Create a ModeOfTransport from its description.
+
+        Only one instance of each mode of transport exists with instances being
+        retrieved from the __all dictionary.
+
+        Parameters
+        ----------
+        description
+            e.g. "Bus, minibus or coach"
+        is_public
+            True if this is public transport, for example a bus.
+        """
         self.description = description
+        self.is_public = is_public
+
+    @property
+    def is_private(self) -> bool:
+        """
+        True if this is private transport, for example a car.
+        """
+        return not self.is_public
+
+    @classmethod
+    def with_description(
+            cls,
+            description: str
+    ) -> "ModeOfTransport":
+        """
+        Retrieve a mode of transport by its description.
+
+        Parameters
+        ----------
+        description
+            A description, e.g. 'Bus, minibus or coach'
+
+        Returns
+        -------
+        The corresponding ModeOfTransport instance
+        """
+        return ModeOfTransport.__all[
+            description
+        ]
 
     def index(self, headers: List[str]) -> int:
         """
@@ -94,7 +142,7 @@ class ModeOfTransport:
             configs = yaml.load(f, Loader=yaml.FullLoader)
         return [
             ModeOfTransport(
-                config["description"]
+                **config
             )
             for config in configs
         ]
