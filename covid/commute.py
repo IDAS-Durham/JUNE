@@ -7,7 +7,7 @@ import yaml
 
 default_config_filename = Path(
     __file__
-).parent.parent / "configs/commute.yaml"
+).parent.parent / "configs/defaults/commute.yaml"
 
 
 class ModeOfTransport:
