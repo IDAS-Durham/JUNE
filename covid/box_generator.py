@@ -130,12 +130,11 @@ class BoxGenerator(Box):
         np.random.shuffle(sex_shuffle_array)
 
         # If there are fewer than 100 people, then select random ages to initialize.
-        possible_ages = np.arange(0, 100)
+        possible_ages = np.arange(1, 100)
         if n_people < len(possible_ages):
             selected_ages = np.random.choice(possible_ages, n_people, replace=False)
         else:
             selected_ages = possible_ages
-
         people_per_age = n_people // len(selected_ages)
         people_per_age_array = people_per_age * np.ones(
             len(selected_ages), dtype=np.int
@@ -144,15 +143,13 @@ class BoxGenerator(Box):
         remaining_people = n_people % len(selected_ages)
         if remaining_people != 0:
             random_ages = np.random.choice(
-                possible_ages, remaining_people, replace=False
+                np.arange(0, len(possible_ages)), remaining_people, replace=False
             )
-            print(len(random_ages))
             people_per_age_array[random_ages] += 1
 
         age_shuffle_array = np.concatenate(
-            [np.ones(age_count) for age_count in people_per_age_array]
+            [selected_ages[i] * np.ones(age_count) for i, age_count in enumerate(people_per_age_array)]
         )
-
         # initialize people
         assert len(age_shuffle_array) == len(sex_shuffle_array)
         for i in range(0, n_people):

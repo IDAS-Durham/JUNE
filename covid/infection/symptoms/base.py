@@ -42,4 +42,5 @@ class Symptoms(ParameterInitializer):
         if self.severity <= 0.0:
             return "healthy"
         index = np.searchsorted(self.health_index, self.severity)
-        return self.tags[index]
+        tag = self.tags[index]
+        return tag

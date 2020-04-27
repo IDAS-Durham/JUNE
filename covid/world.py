@@ -201,7 +201,7 @@ class World:
         self.boxes.members  = [box]
         self.people         = People(self)
         self.people.members = box.people
-        self.hospitals      = Hospitals(self,box_mode=True)
+        self.hospitals      = Hospitals(self, box_mode=True)
 
     def initialize_areas(self):
         """
