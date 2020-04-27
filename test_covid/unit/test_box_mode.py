@@ -28,7 +28,7 @@ def test__random_box_has_correct_age_distribution(box_random):
     all_ages = [person.age for person in box_random.people]
     _, counts = np.unique(all_ages, return_counts=True)
     mean_age_number = np.mean(counts)
-    assert np.allclose(counts, mean_age_number, atol=0, rtol=0.001)
+    assert np.allclose(counts, mean_age_number, atol=0, rtol=0.1)
 
 
 def test__random_box_has_correct_health_index_distribution(box_random):

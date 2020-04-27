@@ -89,10 +89,10 @@ class Group:
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if person.health_information.must_stay_at_home:
+                    continue
                     #print ("person must stay at home",person.id,":",
                     #       person.health_information.tag," for",
                     #       person.health_information.infection.symptoms.severity)
-                    continue
                     # don't add this person to the group
                     # the household group instance deals with this in its own
                     # update_status_lists method
@@ -102,6 +102,7 @@ class Group:
                            person.health_information.infection.symptoms.severity)
                     person.get_into_hospital()
                     self.people.remove(person)
+                    continue
                     # don't add this person to the group
                     # the hospital group instance deals with this in its own
                     # update_status_lists method
