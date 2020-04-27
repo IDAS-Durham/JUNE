@@ -265,30 +265,7 @@ class Inputs:
             m_distributions.append(distribution)
 
         # define all columns in csv file relateing to males
-        f_columns = [
-            "f A",
-            "f B",
-            "f C",
-            "f D",
-            "f E",
-            "f F",
-            "f G",
-            "f H",
-            "f I",
-            "f J",
-            "f K",
-            "f L",
-            "f M",
-            "f N",
-            "f O",
-            "f P",
-            "f Q",
-            "f R",
-            "f S",
-            "f T",
-            "f U",
-        ]
-
+        
         f_columns = [
             "f A",
             "f B",
