@@ -386,6 +386,6 @@ class World:
 
 
 if __name__ == "__main__":
-    world = World(config_file=os.path.join("..", "configs", "config_companies.yaml"))
+    world = World(config_file=os.path.join("..", "configs", "config_example.yaml"))
     # world = World.from_pickle()
     world.group_dynamics()
