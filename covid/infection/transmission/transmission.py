@@ -1,5 +1,27 @@
-import numpy as np
-import random
+from covid.parameters import ParameterInitializer
+
+class Transmission(ParameterInitializer):
+    def __init__(self, timer, user_parameters, required_parameters):
+        super().__init__("transmission", user_parameters, required_parameters)
+        self.timer = timer
+        if timer != None:
+            self.infection_start_time = self.timer.now
+            self.last_time_updated = self.timer.now  # for testing
+        self.probability = 0.0
+
+    def update_probability(self):
+        pass
+
+
+class TransmissionConstant(Transmission):
+    def __init__(self, timer, user_parameters=None):
+        user_parameters = user_parameters or dict()
+        required_parameters = ["transmission_probability"]
+        super().__init__(timer, user_parameters, required_parameters)
+
+    def update_probability(self):
+        time = self.timer.now
+        self.last_time_updated = time
 
 
 class Transmission:
@@ -8,7 +30,7 @@ class Transmission:
     This is time-dependent, and the actual value is calculated in the method
     Probability.  We allow to vary parameters around their mean value with
     a left- and right-sided Gaussian described by sigma and the result
-    limited by 2 sigma in either direction or physical limits.  
+    limited by 2 sigma in either direction or physical limits.
 
     Currently two forms are implemented:
     - TransmissionSI
@@ -20,7 +42,7 @@ class Transmission:
     Parameters are probability and end_time
     - TransmissionXNExp
     a probablity of the form $P(t) = P_0 x^n exp(-x/a)$ with parameters given
-    by P_0 = probability, n = exponent, and a = norm 
+    by P_0 = probability, n = exponent, and a = norm
 
     TODO: we should try and map this onto the Flute/Imperial models, as far
     as possible, to have a baseline and to facilitate validation.
