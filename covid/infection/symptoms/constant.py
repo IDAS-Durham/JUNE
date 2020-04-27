@@ -11,7 +11,10 @@ class SymptomsConstant(Symptoms):
         self.predicted_recovery_time = self.predict_recovery_time()
 
     def predict_recovery_time(self):
-        """If the probabiliy of recovery per day is p, then the recovery day can be estimaed by sampling from a geometric distribution with parameter p."""
+        """
+        If the probabiliy of recovery per day is p, then the recovery day can be estimated 
+        by sampling from a geometric distribution with parameter p.
+        """
         days_to_recover = stats.expon.rvs(scale=1.0 / self.recovery_rate)
         # day_of_recovery = self.timer.now + days_to_recover
         return days_to_recover
@@ -25,7 +28,8 @@ class SymptomsConstant(Symptoms):
             return False
 
     def update_severity(self):
-        pass
+        self.last_time_updated = self.timer.now
+        self.severity = self.maxseverity
 
 
 if __name__ == "__main__":
