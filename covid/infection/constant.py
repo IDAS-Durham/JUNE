@@ -5,11 +5,6 @@ class InfectionConstant(Infection):
         required_parameters = ["threshold_transmission", "threshold_symptoms"]
         super().__init__(person, timer, user_config, user_parameters, required_parameters)
 
-    def update_infection_probability(self):
-        self.transmission.update_probability()
-        trans_prob = self.transmission.transmission_probability
-        self.infection_probability = trans_prob
-
     @property
     def still_infected(self):
         #transmission_bool = (

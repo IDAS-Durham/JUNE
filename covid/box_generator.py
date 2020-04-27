@@ -21,7 +21,8 @@ class BoxGenerator(Box):
         """Generates a simulation box where all people interact with each other.
         If you just want a box with random people with random sex (50/50) and a random
         age (uniform across 0 to 99) then just leave region as None or set it to "random".
-        On the other hand, the population can be initialized from census data by setting the name of the region in the region parameter.
+        On the other hand, the population can be initialized from census data by 
+        setting the name of the region in the region parameter.
 
         Parameters
         ----------
@@ -39,7 +40,8 @@ class BoxGenerator(Box):
         if region is not None:
             if n_people is not None:
                 print(
-                    "warning, specifying number of people has no effect when specifying a region as well. Number of people will be read from census data directly."
+                    "warning, specifying number of people has no effect when specifying",
+                    "a region as well. Number of people will be read from census data directly."
                 )
                 self.create_box_from_region(region)
         if region is None or region == "random":
@@ -49,7 +51,8 @@ class BoxGenerator(Box):
 
     def create_box_from_region(self, region):
         """
-        We read from the census data the number of people, and their age and sex distributions. We sample uniformly inside each age bin, and we assign a health index based on the age.
+        We read from the census data the number of people, and their age and sex distributions. 
+        We sample uniformly inside each age bin, and we assign a health index based on the age.
         """
         inputs = Inputs(zone=region)
         # sex numbers

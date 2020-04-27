@@ -198,9 +198,10 @@ class World:
         print("Setting up box mode...")
         self.boxes = Boxes()
         box = BoxGenerator(self, region, n_people)
-        self.boxes.members = [box]
-        self.people = People(self)
+        self.boxes.members  = [box]
+        self.people         = People(self)
         self.people.members = box.people
+        self.hospitals      = Hospitals(self,box_mode=True)
 
     def initialize_areas(self):
         """
@@ -325,7 +326,6 @@ class World:
         return infection
 
     def seed_infections_group(self, group, n_infections):
-        #    print (n_infections,group.people)
         choices = np.random.choice(group.size, n_infections)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
@@ -333,6 +333,7 @@ class World:
         group.update_status_lists()
 
     def seed_infections_box(self, n_infections):
+        print ("seed ",n_infections,"infections in box")
         choices = np.random.choice(self.people.members, n_infections, replace=False)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
@@ -341,6 +342,8 @@ class World:
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
+        print ("=====================================================")
+        print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -383,6 +386,8 @@ class World:
 
 
 if __name__ == "__main__":
-    world = World(config_file=os.path.join("..", "configs", "config_example.yaml"))
+    #world = World(config_file=os.path.join("../configs", "config_example.yaml"))
+    world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+                  box_mode=True,box_n_people=100)
     # world = World.from_pickle()
     world.group_dynamics()
