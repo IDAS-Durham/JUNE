@@ -35,7 +35,7 @@ class HealthInformation:
             if self.infection.symptoms.is_recovered():
                 self.set_recovered()
             else:
-                self.infection.update_infection_probability()
+                self.infection.update()
 
     def set_recovered(self):
         # self.infection = None
@@ -156,6 +156,10 @@ class Person:
         self.company_id = None
         self.health_information = HealthInformation(Counter(self))
 
+    def get_into_hospital(self):
+        hospital = self.world.hospitals.get_nearest(self)
+        hospital.add_as_patient(self)
+        
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
