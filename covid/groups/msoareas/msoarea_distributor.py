@@ -24,5 +24,5 @@ class MSOAreaDistributor:
                 self.msoareas.world.inputs.companysize_df.loc[msoa].values.sum(),
             )
             msoareas_list.append(msoarea)
-        self.msoareas.members = msoareas_list 
+        self.msoareas.members = msoareas_list
         self.msoareas.ids_in_order = msoa11cd

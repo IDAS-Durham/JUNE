@@ -9,7 +9,9 @@ class Area:
     number, universities, etc.
     """
 
-    def __init__(self, world, oarea, msoarea, n_residents, n_households, census_freq, coordinates):
+    def __init__(
+        self, world, oarea, msoarea, n_residents, n_households, census_freq, coordinates
+    ):
         self.world = world
         self.name = oarea
         self.msoarea = msoarea
@@ -41,8 +43,6 @@ class Area:
 
 
 class Areas:
-
     def __init__(self, world):
         self.world = world
         self.members = []
-
