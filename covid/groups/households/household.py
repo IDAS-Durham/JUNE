@@ -12,7 +12,6 @@ class Household(Group):
         self.area = area
         self.people = []
         #self.residents = group(self.id,"household")
-        self.area = area
         self.household_composition = composition
     
     def set_active_members(self):
