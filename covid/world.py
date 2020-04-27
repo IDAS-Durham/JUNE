@@ -242,7 +242,8 @@ class World:
                 self.inputs.companysector_by_sex_dict,
                 self.inputs.companysector_by_sex_df,
                 wf_area_df,
-                self.inputs.companysector_specific_by_sex_df,
+                self.inputs.compsec_specic_ratio_by_sex_df,
+                self.inputs.compsec_specic_distr_by_sex_df,
             )
             person_distributor.populate_area()
             pbar.update(1)
@@ -385,6 +386,6 @@ class World:
 
 
 if __name__ == "__main__":
-    world = World(config_file=os.path.join("..", "configs", "config_companies.yaml"))
+    world = World(config_file=os.path.join("..", "configs", "config_example.yaml"))
     # world = World.from_pickle()
     world.group_dynamics()

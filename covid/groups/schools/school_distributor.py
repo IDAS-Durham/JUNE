@@ -2,7 +2,8 @@ import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
-#from covid.school import SchoolError
+
+# from covid.school import SchoolError
 
 EARTH_RADIUS = 6371  # km
 
