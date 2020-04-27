@@ -46,7 +46,7 @@ class HealthInformation:
         self.counter.set_length_of_infection()
 
     def get_symptoms_tag(self, symptoms):
-        return self.infection.symptoms.fix_tag(symptoms.severity)
+        return self.infection.symptoms.tag(symptoms.severity)
 
     def transmission_probability(self, time):
         if self.infection is not None:

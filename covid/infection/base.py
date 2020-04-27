@@ -6,7 +6,6 @@ import yaml
 import importlib
 from covid.infection.transmission import *
 from covid.infection.symptoms import *
-from covid.parameters import ParameterInitializer
 
 
 class InfectionInitializer:
@@ -72,7 +71,7 @@ class InfectionInitializer:
         return symptoms
 
 
-class Infection(InfectionInitializer, ParameterInitializer):
+class Infection(InfectionInitializer):
     """
     The description of the infection, with two time dependent characteristics,
     which may vary by individual:
