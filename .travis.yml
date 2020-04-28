@@ -2,6 +2,12 @@ language: python
 python: 
   - '3.6'
 
+branches:
+  only:
+    - master
+    - gh-pages
+
+
 install: 
   - pip install -U pip
   - pip install -r requirements.txt
