@@ -2,7 +2,8 @@ from covid.infection.transmission import Transmission
 
 
 class TransmissionConstant(Transmission):
-    def __init__(self, timer, user_parameters={}):
+    def __init__(self, timer, user_parameters=None):
+        user_parameters = user_parameters or dict()
         required_parameters = ["transmission_probability"]
         super().__init__(timer, user_parameters, required_parameters)
 

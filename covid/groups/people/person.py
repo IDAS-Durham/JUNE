@@ -1,8 +1,3 @@
-import sys
-
-from covid.infection import Infection
-
-
 class HealthInformation:
     def __init__(self, counter):
         self.counter = counter
@@ -17,13 +12,30 @@ class HealthInformation:
         self.infected = True
         self.susceptible = False
 
+    @property
+    def tag(self):
+        if self.infection is not None:
+            return self.infection.symptoms.tag
+        return None
+
+    @property
+    def must_stay_at_home(self) -> bool:
+        return self.tag in ("influenza-like illness", "pneumonia")
+
+    @property
+    def in_hospital(self) -> bool:
+        return self.tag in ("hospitalised", "intensive care")
+
+    @property
+    def dead(self) -> bool:
+        return self.tag == "dead"
+
     def update_health_status(self):
         if self.infected:
             if self.infection.symptoms.is_recovered():
                 self.set_recovered()
             else:
-                self.infection.update_infection_probability()
-                #self.counter.update_symptoms()
+                self.infection.update()
 
     def set_recovered(self):
         # self.infection = None
@@ -72,7 +84,7 @@ class Counter:
 
     def update_infection_data(self, time, grouptype=None):
         self.time_of_infection = time
-        if grouptype != None:
+        if grouptype is not None:
             self.grouptype_of_infection = grouptype
 
     def set_length_of_infection(self):
@@ -106,17 +118,17 @@ class Person:
     """
 
     def __init__(
-        self,
-        world=None,
-        person_id=None,
-        area=None,
-        work_msoa=None,
-        age=-1,
-        nomis_bin=None,
-        sex=None,
-        health_index=None,
-        econ_index=None,
-        mode_of_transport=None,
+            self,
+            world=None,
+            person_id=None,
+            area=None,
+            work_msoa=None,
+            age=-1,
+            nomis_bin=None,
+            sex=None,
+            health_index=None,
+            econ_index=None,
+            mode_of_transport=None,
     ):
         # if not 0 <= age <= 120 or sex not in ("M", "F"):
         #    raise AssertionError(
@@ -132,15 +144,22 @@ class Person:
         self.area = area
         self.work_msoarea = work_msoa
         self.econ_index = econ_index
-        self.area = area
         self.mode_of_transport = mode_of_transport
         self.active_group = None
         self.household = None
         self.school = None
         self.industry = None
+        #TODO finda a different way to specify education
+        # and healthcare job subclasses since a lot of people
+        # will not use this flas
         self.industry_specific = None
+        self.company_id = None
         self.health_information = HealthInformation(Counter(self))
 
+    def get_into_hospital(self):
+        hospital = self.world.hospitals.get_nearest(self)
+        hospital.add_as_patient(self)
+        
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
@@ -156,9 +175,9 @@ class Person:
             )
         else:
             print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
-        if self.health_information.is_susceptible():
+        if self.health_information.susceptible:
             print("-- person is susceptible.")
-        if self.health_information.is_infected():
+        if self.health_information.infected:
             print(
                 "-- person is infected: ",
                 self.health_information.get_symptoms_tag(time + 5),
@@ -166,7 +185,7 @@ class Person:
                 self.health_information.infection.symptom_severity(time + 5),
                 "]",
             )
-        if self.health_information.is_recovered():
+        if self.health_information.recovered:
             print("-- person has recovered.")
 
 

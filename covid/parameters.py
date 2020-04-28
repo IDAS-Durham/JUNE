@@ -1,5 +1,6 @@
 import os
 import random
+
 import yaml
 
 
@@ -11,13 +12,16 @@ class ParametersError(BaseException):
 
 
 class ParameterInitializer:
+    __yaml_cache = dict()
+
     """
     Given a list of required parameters, initializes the (child) class
     with the parameter values by reading the user config file or the defaults.
     The classtype argument is the kind of class (transmission, symptoms, etc.)
     you are initializing, so it can look the defaults at the right place.
     """
-    def __init__(self, classtype:str, user_parameters:dict, required_parameters:dict) -> None:
+
+    def __init__(self, classtype: str, user_parameters: dict, required_parameters: dict) -> None:
         self.classtype = classtype
         self.required_parameters = required_parameters
         self.user_parameters = user_parameters
@@ -25,7 +29,7 @@ class ParameterInitializer:
         self.default_parameters = self.read_default_parameters()
         self.initialize_parameters()
 
-    def read_default_parameters(self)->dict:
+    def read_default_parameters(self) -> dict:
         default_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
@@ -34,18 +38,20 @@ class ParameterInitializer:
             self.classtype,
             self.class_name + ".yaml",
         )
-        try:
-            with open(default_path, "r") as f:
-                default_params = yaml.load(f, Loader=yaml.FullLoader)
-        except FileNotFoundError:
-            print(default_path)
-            raise FileNotFoundError("Default parameter config file not found")
-        return default_params
+        if default_path not in ParameterInitializer.__yaml_cache:
+            try:
+                with open(default_path, "r") as f:
+                    default_params = yaml.load(f, Loader=yaml.FullLoader)
+            except FileNotFoundError:
+                print(default_path)
+                raise FileNotFoundError("Default parameter config file not found")
+            ParameterInitializer.__yaml_cache[default_path] = default_params
+        return ParameterInitializer.__yaml_cache[default_path]
 
-    def initialize_parameters(self) ->None:
+    def initialize_parameters(self) -> None:
         parameter_values_dict = {}
         for parameter in self.required_parameters:
-            if parameter not in self.user_parameters: # if parameter is not specified by user, take it from defaults
+            if parameter not in self.user_parameters:  # if parameter is not specified by user, take it from defaults
                 parameter_config = self.default_parameters[parameter]
                 if type(parameter_config) != dict:
                     parameter_values_dict[parameter] = parameter_config
@@ -70,7 +76,7 @@ class ParameterInitializer:
         for parameter, value in parameter_values_dict.items():
             setattr(self, parameter, value)
 
-    def calculate_parameter(self, parameter_config: dict)->float:
+    def calculate_parameter(self, parameter_config: dict) -> float:
         try:
             distribution = parameter_config["distribution"]
         except KeyError:
@@ -155,7 +161,7 @@ class GaussianParameter(ParameterDistribution):
             self.width_plus = self.width_minus
         while True:
             if random.random() < self.width_minus / (
-                self.width_plus + self.width_minus
+                    self.width_plus + self.width_minus
             ):
                 value = self.mean - 1.0
                 while value < self.mean:
@@ -165,7 +171,7 @@ class GaussianParameter(ParameterDistribution):
                 while value > self.mean:
                     value = random.gauss(self.mean, self.width_minus)
             if (self.lower == None or value > self.lower) and (
-                self.upper == None or value < self.upper
+                    self.upper == None or value < self.upper
             ):
                 break
         return max(value, 0.0)
