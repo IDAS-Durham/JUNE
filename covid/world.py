@@ -51,6 +51,10 @@ class World:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
+            if "boundary" in relevant_groups:
+                self.initialize_boundary()
+            else:
+                print("nothing exists outside the simulated region")
         self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
@@ -68,82 +72,6 @@ class World:
         """
         Initializes a world instance from an already populated world.
         """
-        with open(pickle_obj, "rb") as f:
-            world = pickle.load(f)
-        return world
-
-    @classmethod
-    def from_config(cls, config_file):
-        return cls(config_file)
-
-    def read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "configs",
-                "config_example.yaml",
-            )
-        with open(config_file, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
-
-    def get_simulation_groups(self):
-        """
-        Reads all the different groups specified in the time section of the configuration file.
-        """
-        timesteps_config = self.config["time"]["step_active_groups"]
-        active_groups = []
-        for daytype in timesteps_config.keys():
-            for timestep in timesteps_config[daytype].values():
-                for group in timestep:
-                    active_groups.append(group)
-        active_groups = np.unique(active_groups)
-        return active_groups
-
-    def read_defaults(self):
-        default_config_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..",
-            "configs",
-            "defaults",
-            "world.yaml",
-        )
-        with open(default_config_path, "r") as f:
-            default_config = yaml.load(f, Loader=yaml.FullLoader)
-        for key in default_config.keys():
-            if key not in self.config:
-                self.config[key] = default_config[key]
-            self.initialize_households()
-            self.initialize_msoa_areas()
-            if "schools" in relevant_groups:
-                self.initialize_schools()
-            else:
-                print("schools not needed, skipping...")
-            if "companies" in relevant_groups:
-                self.initialize_companies()
-            else:
-                print("companies not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
-        print("Done.")
-
-    def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
-        """
-        Write the world to file. Comes in handy when setting up the world
-        takes a long time.
-        """
-        import pickle
-
-        with open(pickle_obj, "wb") as f:
-            pickle.dump(self, f)
-
-    @classmethod
-    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
-        """
-        Initializes a world instance from an already populated world.
-        """
-        import pickle
-
         with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
@@ -237,11 +165,10 @@ class World:
                 self.people,
                 area,
                 self.msoareas,
-                self.inputs.companysector_by_sex_dict,
-                self.inputs.companysector_by_sex_df,
+                self.inputs.compsec_by_sex_df,
                 wf_area_df,
-                self.inputs.compsec_specic_ratio_by_sex_df,
-                self.inputs.compsec_specic_distr_by_sex_df,
+                self.inputs.key_compsec_ratio_by_sex_df,
+                self.inputs.key_compsec_distr_by_sex_df,
             )
             person_distributor.populate_area()
             pbar.update(1)
@@ -293,6 +220,26 @@ class World:
             pbar.update(1)
         pbar.close()
 
+    def initialize_boundary(self):
+        """
+        Create a population that lives in the boundary.
+        It interacts with the population in the simulated region only
+        in companies. No interaction takes place during leasure activities.
+        """
+        print("Initializing Companies...")
+        self.boundary = Boundary(self)
+        pbar = tqdm(total=len(self.msoareas.members))
+        for msoarea in self.msoareas.members:
+            if not msoarea.work_people:
+                warnings.warn(
+                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
+                )
+            else:
+                self.distributor = CompanyDistributor(self.companies, msoarea)
+                self.distributor.distribute_adults_to_companies()
+            pbar.update(1)
+        pbar.close()
+    
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
         if "parameters" in self.config["interaction"]:
@@ -386,8 +333,6 @@ class World:
 
 
 if __name__ == "__main__":
-    #world = World(config_file=os.path.join("../configs", "config_example.yaml"))
-    world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
-                  box_mode=True,box_n_people=100)
+    world = World(config_file=os.path.join("../configs", "config_example.yaml"))
     # world = World.from_pickle()
     world.group_dynamics()
