@@ -122,7 +122,6 @@ class SymptomsTanh(Symptoms):
                 1.0
                 + np.tanh(3.14 * (time_since_start - self.onset_time) / self.delta_onset)
             ) / 2.0
-            print(severity)
         elif time_since_start > self.max_time:
             severity = (
                 1.0 + np.tanh(3.14 * (self.end_time - time_since_start) / self.delta_end)
