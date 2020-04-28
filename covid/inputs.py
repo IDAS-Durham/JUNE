@@ -59,7 +59,7 @@ class Inputs:
                     self.OUTPUT_AREA_DIR,
                     'carehomes.csv'
                 ),
-                header=0,
+                header=None,
                 names=['output_area', 'N_carehome_residents'],
                 index_col=0
                 )
@@ -571,7 +571,7 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    print(ip.carehomes_df)
+    print(len(ip.carehomes_df))
     #print(ip.companysize_df)
     #print(ip.companysector_df)
     #print(ip.companysector_by_sex_df)
