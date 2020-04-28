@@ -51,10 +51,10 @@ class World:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
-            if "boundary" in relevant_groups:
-                self.initialize_boundary()
-            else:
-                print("nothing exists outside the simulated region")
+            #if "boundary" in relevant_groups:
+            self.initialize_boundary()
+            #else:
+            #    print("nothing exists outside the simulated region")
         self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
@@ -226,7 +226,7 @@ class World:
         It interacts with the population in the simulated region only
         in companies. No interaction takes place during leasure activities.
         """
-        print("Initializing Companies...")
+        print("Creating Boundary...")
         self.boundary = Boundary(self)
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
