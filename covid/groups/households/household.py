@@ -19,11 +19,6 @@ class Household(Group):
             if person.active_group is None:
                 person.active_group = "household"
 
-    def set_active_members(self):
-        for person in self.people:
-            if person.active_group is None:
-                person.active_group = "household"
-
     def update_status_lists(self, time=0):
         self.susceptible.clear()
         self.infected.clear()
