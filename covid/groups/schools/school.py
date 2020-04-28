@@ -26,7 +26,7 @@ class School(Group):
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
-
+    
 
 class Schools:
     def __init__(self, world, areas, school_df):
