@@ -28,7 +28,7 @@ class Group:
 
     allowed_groups = [
         "box",
-        "boundary"
+        "boundary",
         "commute_Public",
         "commute_Private",
         "company",
@@ -44,7 +44,6 @@ class Group:
         "work_Outdoor",
         "work_Indoor",
     ]
-
     
     def __init__(self, name, spec, number=-1):
         if not self.sane(name, spec):

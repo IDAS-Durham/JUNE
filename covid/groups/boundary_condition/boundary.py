@@ -6,6 +6,7 @@ from tqdm.auto import tqdm
 
 from covid.groups import Group
 from covid.groups.people import Person
+from covid.groups.people.health_index import HealthIndex
 
 class BoundaryError(BaseException):
     """Class for throwing boundary related errors."""
@@ -13,11 +14,8 @@ class BoundaryError(BaseException):
 
 
 class Boundary(Group):
-    """
-    """
-
     def __init__(self, world):
-        super().__init__("Boundary", "boundary")
+        super().__init__(None, "boundary")
         self.world = world
         self.n_residents = 0
         self.people = []
@@ -30,33 +28,31 @@ class Boundary(Group):
         from the boundary.
         """
 
-        self._init_random_variables()
+        health_index = HealthIndex()
+        self._init_frequencies()
 
-        for company in world.companies.members:
+        for company in self.world.companies.members:
             # nr. of missing workforce
             #TODO companies shouldn always be completely full
-            n_residents += (company.n_employees_max - company.n_employees)
+            n_residents = (company.n_employees_max - company.n_employees)
 
-            nomis_bin_random_array = self.nomis_bin_rv.rvs(size=n_residents)
-            self.area.sex_rv = stats.rv_discrete(
-                values=(
-                    np.arange(0, len(sex_freq_per_compsec.columns.values)),
-                    sex_freq.values
-                )
+            (
+                sex_rnd_arr, nomis_bin_rnd_arr, age_rnd_arr
+            ) = self._init_random_variables(
+                n_residents, company.industry
             )
 
-            for i in n_residents:
-                
+            for i in range(n_residents):
                 # create new person
                 person = Person(
                     self.world,
                     (i + self.n_residents),
                     'boundary',
                     company.msoa,
-                    age_random, #TODO
-                    nomis_bin,  #TODO
-                    sex_random, #TODO
-                    health_index,
+                    age_rnd_arr[i],
+                    nomis_bin_rnd_arr[i],
+                    sex_rnd_arr[i],
+                    health_index.get_index_for_age(age_rnd_arr[i]),
                     econ_index=0,
                     mode_of_transport=None,
                 )
@@ -64,19 +60,21 @@ class Boundary(Group):
                 
                 # Inform groups about new person
                 self.people.append(person)
-                self.people.members.append(person)
-                self.company.people.append(person)
-                self.msoareas.members[idx].work_people.append(person)
+                self.world.people.members.append(person)
+                company.people.append(person)
+                idx = [
+                    idx for idx, msoa in enumerate(self.world.msoareas.members)
+                    if msoa.id == company.msoa
+                ][0]
+                self.world.msoareas.members[idx].work_people.append(person)
 
             self.n_residents += n_residents
 
-    def _init_random_variables(self):
+    def _init_frequencies(self):
         """
-        Read the frequencies for different attributes of the whole
-        simulated region, and initialize random variables following
-        the discrete distribution.
+        Create the frequencies for different attributes of the whole
+        simulated region.
         """
-
         # sex-frequencies per company sector
         f_col = [
             col for col in self.world.inputs.compsec_by_sex_df.columns.values if "f " in col
@@ -88,13 +86,16 @@ class Boundary(Group):
         ]
         m_nrs_per_compsec = self.world.inputs.compsec_by_sex_df[m_col].sum(axis='rows')
 
-        self.sex_freq_per_compsec = pd.DataFrame(
+        sex_freq_per_compsec = pd.DataFrame(
             data=np.vstack((f_nrs_per_compsec.values, m_nrs_per_compsec.values)).T,
             index=[idx.split(' ')[-1] for idx in m_nrs_per_compsec.index.values],
             columns=["f", "m"],
         )
+        self.sex_freq_per_compsec = sex_freq_per_compsec.div(
+            sex_freq_per_compsec.sum(axis=1), axis=0,
+        )
 
-        # age-frequencies based on the whole simulated region
+        # age-frequencies of people at work, based on the whole simulated region
         nomis_and_age_list = [
             [person.nomis_bin, person.age] for person in self.world.people.members
         ]
@@ -102,13 +103,41 @@ class Boundary(Group):
         (nomis_bin_unique, nomis_bin_counts) = np.unique(nomis_bin_arr, return_counts=True)
         (age_unique, age_counts) = np.unique(age_arr, return_counts=True)
 
-        self.nomis_bin_freq = pd.DataFrame(
+        nomis_bin_df = pd.DataFrame(
             data=nomis_bin_counts,
             index=list(nomis_bin_unique),
             columns=["freq"],
         )
-        self.age_freq = pd.DataFrame(
+        self.nomis_bins = nomis_bin_df.div(nomis_bin_df.sum(axis=0), axis=1)
+        
+        age_df = pd.DataFrame(
             data=age_counts,
             index=list(age_unique),
             columns=["freq"],
         )
+        self.ages = age_df.div(age_df.sum(axis=0), axis=1)
+    
+    def _init_random_variables(self, n_residents, compsec):
+        """
+        Create the random variables following the discrete distributions.
+        for different attributes of the whole simulated region.
+        """
+        sex_rv = rv_discrete(
+            values=(
+                np.arange(0, 2),
+                self.sex_freq_per_compsec.loc[compsec].values,
+            )
+        )
+        sex_rnd_arr = sex_rv.rvs(size=n_residents)
+        
+        nomis_bin_rv = rv_discrete(
+            values=(np.arange(0, len(self.nomis_bins.freq.values)), self.nomis_bins.freq.values)
+        )
+        nomis_bin_rnd_arr = nomis_bin_rv.rvs(size=n_residents)
+        
+        age_rv = rv_discrete(
+            values=(np.arange(0, len(self.ages.freq.values)), self.ages.freq.values)
+        )
+        age_rnd_arr = age_rv.rvs(size=n_residents)
+        
+        return sex_rnd_arr, nomis_bin_rnd_arr, age_rnd_arr
