@@ -21,11 +21,10 @@ class PersonDistributor:
         people,
         area,
         msoareas,
-        companysector_by_sex_dict,
-        companysector_by_sex_df,
+        compsec_by_sex_df,
         workflow_df,
-        compsec_specic_ratio_by_sex_df,
-        compsec_specic_distr_by_sex_df,
+        key_compsec_ratio_by_sex_df,
+        key_compsec_distr_by_sex_df,
     ):
         """
         """
@@ -38,12 +37,11 @@ class PersonDistributor:
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self.no_kids_area = False
         self.no_students_area = False
-        self.companysector_by_sex_dict = companysector_by_sex_dict
-        self.companysector_by_sex_df = companysector_by_sex_df
+        self.companysector_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.area.world.config)
-        self.compsec_specic_ratio_by_sex_df = compsec_specic_ratio_by_sex_df
-        self.compsec_specic_distr_by_sex_df = compsec_specic_distr_by_sex_df
+        self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
+        self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
 
     def _get_age_brackets(self, nomis_age_bin):
@@ -123,11 +121,14 @@ class PersonDistributor:
             21: "U",
         }
         numbers = np.arange(1, 22)
-        distribution_male = self.companysector_by_sex_dict[self.area.name]["m"]
+        m_comp = [col for col in self.companysector_by_sex_df.columns.values if "m " in col]
+        distribution_male = self.companysector_by_sex_df.loc[self.area.name][m_comp].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
         )
-        distribution_female = self.companysector_by_sex_dict[self.area.name]["f"]
+        
+        f_comp = [col for col in self.companysector_by_sex_df.columns.values if "f " in col]
+        distribution_female = self.companysector_by_sex_df.loc[self.area.name][f_comp].values
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )
