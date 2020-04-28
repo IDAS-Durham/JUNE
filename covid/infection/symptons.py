@@ -101,32 +101,35 @@ class SymptomsStep(Symptoms):
 
 
 class SymptomsTanh(Symptoms):
-    def __init__(self, timer, health_index, user_parameters=None):
-        user_parameters = user_parameters or dict()
-        required_parameters = ["max_time", "onset_time", "end_time"]
-        super().__init__(timer, health_index, user_parameters, required_parameters)
+    def __init__(self, health_index, start_time, max_time=2.0, onset_time=0.5, end_time=15.0):
 
-        self.Tmax = max(0.0, self.max_time)
-        self.Tonset = max(0.0, self.onset_time)
-        self.Tend = max(0.0, self.end_time)
-        self.delta_onset = self.Tmax - self.Tonset
-        self.delta_end = self.Tend - self.Tmax
+        super().__init__(health_index)
 
-    def update_severity_at_time(self):
-        time = self.timer.now
-        self.severity = 0.0
+        self.start_time = start_time
+
+        self.max_time = max(0.0, max_time)
+        self.onset_time = max(0.0, onset_time)
+        self.end_time = max(0.0, end_time)
+        self.delta_onset = self.max_time - self.onset_time
+        self.delta_end = self.end_time - self.max_time
+
+    def update_severity_at_time(self, time):
+
         time_since_start = time - self.start_time
-        if time_since_start <= self.Tmax:
+
+        if time_since_start <= self.max_time:
             severity = (
                 1.0
-                + np.tanh(3.14 * (time_since_start - self.Tonset) / self.delta_onset)
+                + np.tanh(3.14 * (time_since_start - self.onset_time) / self.delta_onset)
             ) / 2.0
-        elif time_since_start > self.Tmax:
+            print(severity)
+        elif time_since_start > self.max_time:
             severity = (
-                1.0 + np.tanh(3.14 * (self.Tend - time_since_start) / self.delta_end)
+                1.0 + np.tanh(3.14 * (self.end_time - time_since_start) / self.delta_end)
             ) / 2.0
-        elif time > self.Tend:
+        elif time > self.end_time:
             severity = 0.0
+
         severity *= self.maxseverity
         self.last_time_updated = time
         self.severity = severity
