@@ -3,6 +3,7 @@ from scipy import stats
 
 from covid.groups.people import Person
 from covid.groups.people.health_index import HealthIndex
+from collections import OrderedDict
 
 
 class PersonError(BaseException):
@@ -38,6 +39,8 @@ class PersonDistributor:
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self.no_kids_area = False
         self.no_students_area = False
+        self.men_by_age = OrderedDict()
+        self.women_by_age = OrderedDict()
         self.companysector_by_sex_dict = companysector_by_sex_dict
         self.companysector_by_sex_df = companysector_by_sex_df
         self.workflow_df = workflow_df
@@ -232,12 +235,12 @@ class PersonDistributor:
         by the household distributor as the pool of people available to c
         create households.
         """
-        self.area._kids = {}
-        self.area._men = {}
-        self.area._women = {}
-        self.area._oldmen = {}
-        self.area._oldwomen = {}
-        self.area._student_keys = {}
+        #self.area._kids = {}
+        #self.area._men = {}
+        #self.area._women = {}
+        #self.area._oldmen = {}
+        #self.area._oldwomen = {}
+        #self.area._student_keys = {}
         # create age keys for men and women TODO # this would be use to match age of couples
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
@@ -294,29 +297,38 @@ class PersonDistributor:
             self.area.people.append(person)
             self.people.total_people += 1
             # assign person to the right group:
-            if nomis_bin < self.ADULT_THRESHOLD:
-                self.area._kids[i] = person
-            elif nomis_bin < self.OLD_THRESHOLD:
-                # find msoarea of work
-                idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
-                if len(idx) != 0:
-                    self.msoareas.members[idx[0]].work_people.append(person)
-                else:
-                    # TODO count people who work outside of the region
-                    # we currently simulate
-                    idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
-                    self.msoareas.members[idx].work_people.append(person)
-                if sex_random == 0:
-                    self.area._men[i] = person
-                else:
-                    self.area._women[i] = person
-                if person.nomis_bin in [6, 7]:  # that person can be a student
-                    self.area._student_keys[i] = person
+            ## used in the old household distributor
+            #if nomis_bin < self.ADULT_THRESHOLD:
+            #    self.area._kids[i] = person
+            #elif nomis_bin < self.OLD_THRESHOLD:
+            #    # find msoarea of work
+            #    idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
+            #    if len(idx) != 0:
+            #        self.msoareas.members[idx[0]].work_people.append(person)
+            #    else:
+            #        # TODO count people who work outside of the region
+            #        # we currently simulate
+            #        idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
+            #        self.msoareas.members[idx].work_people.append(person)
+            #    if sex_random == 0:
+            #        self.area._men[i] = person
+            #    else:
+            #        self.area._women[i] = person
+            #    if person.nomis_bin in [6, 7]:  # that person can be a student
+            #        self.area._student_keys[i] = person
+            #else:
+            #    if sex_random == 0:
+            #        self.area._oldmen[i] = person
+            #    else:
+            #        self.area._oldwomen[i] = person
+            if sex_random == 0:
+                if age_random not in self.men_by_age:
+                    self.men_by_age[age_random] = []
+                self.men_by_age[age_random].append(person)
             else:
-                if sex_random == 0:
-                    self.area._oldmen[i] = person
-                else:
-                    self.area._oldwomen[i] = person
+                if age_random not in self.women_by_age:
+                    self.women_by_age[age_random] = []
+                self.women_by_age[age_random].append(person)
 
             # assign person to an industry TODO: implement unemployment
             if is_working_age:
