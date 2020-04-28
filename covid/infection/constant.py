@@ -1,14 +1,9 @@
 from covid.infection import Infection
 
 class InfectionConstant(Infection):
-    def __init__(self, person, timer, user_config, user_parameters):
+    def __init__(self, person, timer, user_config={}, user_parameters={}):
         required_parameters = ["threshold_transmission", "threshold_symptoms"]
         super().__init__(person, timer, user_config, user_parameters, required_parameters)
-
-    def update_infection_probability(self):
-        self.transmission.update_probability()
-        trans_prob = self.transmission.transmission_probability
-        self.infection_probability = trans_prob
 
     @property
     def still_infected(self):
