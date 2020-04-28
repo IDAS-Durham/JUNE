@@ -1,4 +1,5 @@
 .DS_Store
+test_covid/results/
 .idea/
 data
 *__pycache__*
