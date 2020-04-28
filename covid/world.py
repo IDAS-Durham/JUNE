@@ -228,17 +228,6 @@ class World:
         """
         print("Creating Boundary...")
         self.boundary = Boundary(self)
-        pbar = tqdm(total=len(self.msoareas.members))
-        for msoarea in self.msoareas.members:
-            if not msoarea.work_people:
-                warnings.warn(
-                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
-                )
-            else:
-                self.distributor = CompanyDistributor(self.companies, msoarea)
-                self.distributor.distribute_adults_to_companies()
-            pbar.update(1)
-        pbar.close()
     
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
