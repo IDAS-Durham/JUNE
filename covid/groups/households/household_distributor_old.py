@@ -22,9 +22,10 @@ class HouseholdDistributor:
     Note: in this class student refers to an adult age 18-25, independently of they being a student or not.
     """
 
-    def __init__(self, number_households_per_composition:dict = None, men_by_age: dict =None, women_by_age:dict = None):
-        self.number_households_per_composition = number_households_per_composition
-        self.people_by_age = people_by_age
+    def __init__(self, world, area):
+        self.world = world
+        self.SAME_SEX_COUPLE_RATIO = area.world.config["households"]["same_sex_couple_ratio"]
+        self.area = area
         self._init_random_variables()
 
     def _init_random_variables(self):
@@ -33,9 +34,20 @@ class HouseholdDistributor:
         and initializes random variables following the discrete distributions.
         """
         household_freq = self.area.census_freq["household_freq"]
+        n_households = self.area.n_households
         # random variable for household freq.
         self.household_rv = stats.rv_discrete(
             values=(np.arange(0, len(household_freq)), household_freq.values)
+        )
+        # random variable for the probability of a couple having different age groups,
+        # -1 lower group, 0 same, +1 upper, currently this is not used.
+        # self.age_groups_rv = stats.rv_discrete(values=([-1, 0, 1], [0.2, 0.6, 0.2]))
+        # when we match sex in a couple, we assume 10% of first 2 adults have same sex.
+        self.same_sex_rv = stats.rv_discrete(
+            values=(
+                [0, 1],
+                [1 - self.SAME_SEX_COUPLE_RATIO, self.SAME_SEX_COUPLE_RATIO],
+            )
         )
 
     def _fill_random_man(self, household):

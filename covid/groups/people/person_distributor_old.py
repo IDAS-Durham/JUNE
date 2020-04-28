@@ -237,6 +237,12 @@ class PersonDistributor:
         by the household distributor as the pool of people available to c
         create households.
         """
+        self.area._kids = {}
+        self.area._men = {}
+        self.area._women = {}
+        self.area._oldmen = {}
+        self.area._oldwomen = {}
+        self.area._student_keys = {}
         # create age keys for men and women TODO # this would be use to match age of couples
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
@@ -290,15 +296,18 @@ class PersonDistributor:
                 nomis_bin,
                 sex_random,
                 health_index,
-                0, # economic index, not implemented yet.
+                0,
                 mode_of_transport=None,
             )  # self.area.regional_commute_generator.weighted_random_choice())
             self.people.members.append(person)
             self.area.people.append(person)
             self.people.total_people += 1
-
-            if not self.skip_companies:
-                if nomis_bin < self.OLD_THRESHOLD:
+            # assign person to the right group:
+            ## used in the old household distributor
+            if nomis_bin < self.ADULT_THRESHOLD:
+                self.area._kids[i] = person
+            elif nomis_bin < self.OLD_THRESHOLD:
+                if not self.skip_companies:
                     # find msoarea of work
                     idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
                     if len(idx) != 0:
@@ -308,14 +317,25 @@ class PersonDistributor:
                         # we currently simulate
                         idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
                         self.msoareas.members[idx].work_people.append(person)
-            if sex_random == 0:
-                if age_random not in self.men_by_age:
-                    self.men_by_age[age_random] = []
-                self.men_by_age[age_random].append(person)
+                if sex_random == 0:
+                    self.area._men[i] = person
+                else:
+                    self.area._women[i] = person
+                if person.nomis_bin in [6, 7]:  # that person can be a student
+                    self.area._student_keys[i] = person
             else:
-                if age_random not in self.women_by_age:
-                    self.women_by_age[age_random] = []
-                self.women_by_age[age_random].append(person)
+                if sex_random == 0:
+                    self.area._oldmen[i] = person
+                else:
+                    self.area._oldwomen[i] = person
+            #if sex_random == 0:
+            #    if age_random not in self.men_by_age:
+            #        self.men_by_age[age_random] = []
+            #    self.men_by_age[age_random].append(person)
+            #else:
+            #    if age_random not in self.women_by_age:
+            #        self.women_by_age[age_random] = []
+            #    self.women_by_age[age_random].append(person)
 
             if not self.skip_companies:
                 # assign person to an industry TODO: implement unemployment
