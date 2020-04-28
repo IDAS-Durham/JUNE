@@ -68,7 +68,7 @@ def test_update_severity(symptom_type, test_timer, user_parameters):
             test_timer, health_index, user_parameters = user_parameters.get(symptom_type)
     )
     assert symptoms.severity == 0.0
-    symptoms.update_severity()
+    symptoms.update_severity_at_time()
     assert symptoms.last_time_updated == test_timer.now
 
 
@@ -91,7 +91,7 @@ def test_symptom_tags_have_right_frequency(symptom_type, user_parameters, world_
             )
         while symptoms.timer.now < 4.0:
             next(symptoms.timer)
-            symptoms.update_severity()
+            symptoms.update_severity_at_time()
         if symptoms.severity > 0:
             tag = symptoms.tag
             tags[ALLOWED_SYMPTOM_TAGS.index(tag)] += 1
