@@ -17,7 +17,7 @@ class School(Group):
     """
 
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
-        super().__init__("School_%05d" % school_id, "School")
+        super().__init__("School_%05d" % school_id, "school")
         self.id = school_id
         self.people = []
         self.coordinates = coordinates
@@ -26,7 +26,7 @@ class School(Group):
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
-
+    
 
 class Schools:
     def __init__(self, world, areas, school_df):
@@ -116,13 +116,6 @@ class Schools:
         )
         return school_tree
 
-    def set_active_members(self):
-        for school in self.members:
-            for person in school.people:
-                if person.active_group != None:
-                    raise SchoolError("Trying to set an already active person")
-                else:
-                    person.active_group = "school"
 
     def create_interaction_poisson_distributions(self, school_interaction_matrix):
         """

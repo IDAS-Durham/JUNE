@@ -45,7 +45,7 @@ RKIdata = [
 ]
 
 class HealthIndex:
-    def __init__(self, config):
+    def __init__(self, config=None):
         #print ("Init health index calculator")
         if config==None or "health_datafiles" not in config:
             self.ICdata  = ICdata
