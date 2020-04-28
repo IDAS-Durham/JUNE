@@ -6,7 +6,7 @@ class Household(Group):
     its residents.
     """
 
-    def __init__(self, house_id, composition, area):
+    def __init__(self, house_id=None, composition=None, area=None):
         super().__init__("Household_%03d"%house_id, "household") 
         self.id = house_id
         self.area = area

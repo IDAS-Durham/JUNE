@@ -45,7 +45,7 @@ class World:
                 self.initialize_people(skip_companies=True)
             else:
                 self.initialize_people(skip_companies=False)
-            self.initialize_carehomes() #Important that goes before households.
+            #self.initialize_carehomes() #Important that goes before households.
             self.initialize_households()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -267,6 +267,7 @@ class World:
         pbar.close()
 
     def initialize_carehomes(self):
+        print("Initializing carehomes...")
         self.carehomes = CareHomes(self)
         carehome_distributor = CareHomeDistributor()
         carehomes_df = self.inputs.carehomes_df
