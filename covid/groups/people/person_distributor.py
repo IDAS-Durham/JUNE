@@ -27,6 +27,7 @@ class PersonDistributor:
         workflow_df,
         compsec_specic_ratio_by_sex_df,
         compsec_specic_distr_by_sex_df,
+        skip_companies=False,
     ):
         """
         """
@@ -34,6 +35,7 @@ class PersonDistributor:
         self.area = area
         self.msoareas = msoareas
         self.people = people
+        self.skip_companies = skip_companies
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
@@ -235,12 +237,12 @@ class PersonDistributor:
         by the household distributor as the pool of people available to c
         create households.
         """
-        #self.area._kids = {}
-        #self.area._men = {}
-        #self.area._women = {}
-        #self.area._oldmen = {}
-        #self.area._oldwomen = {}
-        #self.area._student_keys = {}
+        self.area._kids = {}
+        self.area._men = {}
+        self.area._women = {}
+        self.area._oldmen = {}
+        self.area._oldwomen = {}
+        self.area._student_keys = {}
         # create age keys for men and women TODO # this would be use to match age of couples
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
@@ -254,16 +256,17 @@ class PersonDistributor:
             age = np.random.randint(age_1, age_2 + 1, 1)[0]
             age_random_array.append(age)
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
-        work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
-        work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(
-            size=self.area.n_residents
-        )
-        companysector_male_rnd_array = self.sector_distribution_male.rvs(
-            size=self.area.n_residents
-        )
-        companysector_female_rnd_array = self.sector_distribution_female.rvs(
-            size=self.area.n_residents
-        )
+        if not self.skip_companies:
+            work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
+            work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(
+                size=self.area.n_residents
+            )
+            companysector_male_rnd_array = self.sector_distribution_male.rvs(
+                size=self.area.n_residents
+            )
+            companysector_female_rnd_array = self.sector_distribution_female.rvs(
+                size=self.area.n_residents
+            )
 
         for i in range(self.area.n_residents):
             sex_random = sex_random_array[i]
@@ -273,13 +276,16 @@ class PersonDistributor:
                 is_working_age = True
             else:
                 is_working_age = False
-            work_msoa_rnd = self.assign_work_msoarea(
-                i,
-                sex_random,
-                is_working_age,
-                work_msoa_man_rnd_array,
-                work_msoa_woman_rnd_array,
-            )
+            if not self.skip_companies:
+                work_msoa_rnd = self.assign_work_msoarea(
+                    i,
+                    sex_random,
+                    is_working_age,
+                    work_msoa_man_rnd_array,
+                    work_msoa_woman_rnd_array,
+                )
+            else:
+                work_msoa_rnd=None
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
                 self.area.world,
@@ -298,46 +304,48 @@ class PersonDistributor:
             self.people.total_people += 1
             # assign person to the right group:
             ## used in the old household distributor
-            #if nomis_bin < self.ADULT_THRESHOLD:
-            #    self.area._kids[i] = person
-            #elif nomis_bin < self.OLD_THRESHOLD:
-            #    # find msoarea of work
-            #    idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
-            #    if len(idx) != 0:
-            #        self.msoareas.members[idx[0]].work_people.append(person)
-            #    else:
-            #        # TODO count people who work outside of the region
-            #        # we currently simulate
-            #        idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
-            #        self.msoareas.members[idx].work_people.append(person)
-            #    if sex_random == 0:
-            #        self.area._men[i] = person
-            #    else:
-            #        self.area._women[i] = person
-            #    if person.nomis_bin in [6, 7]:  # that person can be a student
-            #        self.area._student_keys[i] = person
-            #else:
-            #    if sex_random == 0:
-            #        self.area._oldmen[i] = person
-            #    else:
-            #        self.area._oldwomen[i] = person
-            if sex_random == 0:
-                if age_random not in self.men_by_age:
-                    self.men_by_age[age_random] = []
-                self.men_by_age[age_random].append(person)
+            if nomis_bin < self.ADULT_THRESHOLD:
+                self.area._kids[i] = person
+            elif nomis_bin < self.OLD_THRESHOLD:
+                if not self.skip_companies:
+                    # find msoarea of work
+                    idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
+                    if len(idx) != 0:
+                        self.msoareas.members[idx[0]].work_people.append(person)
+                    else:
+                        # TODO count people who work outside of the region
+                        # we currently simulate
+                        idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
+                        self.msoareas.members[idx].work_people.append(person)
+                if sex_random == 0:
+                    self.area._men[i] = person
+                else:
+                    self.area._women[i] = person
+                if person.nomis_bin in [6, 7]:  # that person can be a student
+                    self.area._student_keys[i] = person
             else:
-                if age_random not in self.women_by_age:
-                    self.women_by_age[age_random] = []
-                self.women_by_age[age_random].append(person)
+                if sex_random == 0:
+                    self.area._oldmen[i] = person
+                else:
+                    self.area._oldwomen[i] = person
+            #if sex_random == 0:
+            #    if age_random not in self.men_by_age:
+            #        self.men_by_age[age_random] = []
+            #    self.men_by_age[age_random].append(person)
+            #else:
+            #    if age_random not in self.women_by_age:
+            #        self.women_by_age[age_random] = []
+            #    self.women_by_age[age_random].append(person)
 
-            # assign person to an industry TODO: implement unemployment
-            if is_working_age:
-                self._assign_industry(
-                    i,
-                    person,
-                    companysector_male_rnd_array,
-                    companysector_female_rnd_array,
-                )
+            if not self.skip_companies:
+                # assign person to an industry TODO: implement unemployment
+                if is_working_age:
+                    self._assign_industry(
+                        i,
+                        person,
+                        companysector_male_rnd_array,
+                        companysector_female_rnd_array,
+                    )
 
         try:
             assert (
