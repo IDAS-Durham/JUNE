@@ -27,7 +27,9 @@ class Boundary(Group):
         This will establish the number of workers recruited
         from the boundary.
         """
-
+        
+        self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
+        self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
         health_index = HealthIndex()
         self._init_frequencies()
 
@@ -104,17 +106,23 @@ class Boundary(Group):
         (age_unique, age_counts) = np.unique(age_arr, return_counts=True)
 
         nomis_bin_df = pd.DataFrame(
-            data=nomis_bin_counts,
-            index=list(nomis_bin_unique),
-            columns=["freq"],
+            data=np.vstack((nomis_bin_unique, nomis_bin_counts)).T,
+            columns=["age", "freq"],
         )
+        nomis_bin_df = nomis_bin_df[
+            (nomis_bin_df["age"] >= self.ADULT_THRESHOLD) & \
+            (nomis_bin_df["age"] <= self.OLD_THRESHOLD)
+        ]
         self.nomis_bins = nomis_bin_df.div(nomis_bin_df.sum(axis=0), axis=1)
         
         age_df = pd.DataFrame(
-            data=age_counts,
-            index=list(age_unique),
-            columns=["freq"],
+            data=np.vstack((age_unique, age_counts)).T,
+            columns=["age", "freq"],
         )
+        age_df = age_df[
+            (age_df["age"] >= 20) & \
+            (age_df["age"] <= 65)
+        ]
         self.ages = age_df.div(age_df.sum(axis=0), axis=1)
     
     def _init_random_variables(self, n_residents, compsec):
