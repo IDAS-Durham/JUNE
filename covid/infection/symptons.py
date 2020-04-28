@@ -46,6 +46,7 @@ class SymptomsConstant(Symptoms):
         self.predicted_recovery_time = stats.expon.rvs(scale=1.0 / self.recovery_rate)
 
     def update_severity_at_time(self, time):
+
         self.last_time_updated = time
 
     def is_recovered(self, deltat):
@@ -58,17 +59,21 @@ class SymptomsConstant(Symptoms):
 
 
 class SymptomsGaussian(Symptoms):
-    def __init__(self, timer, health_index, user_parameters={}):
-        required_parameters = ["mean_time", "sigma_time"]
-        super().__init__(timer, health_index, user_parameters, required_parameters)
-        self.Tmean = max(0.0, self.mean_time)
-        self.sigmaT = max(0.001, self.sigma_time)
+    def __init__(self, health_index, start_time, mean_time=1.0, sigma_time=3.0):
 
-    def update_severity_at_time(self):
-        time = self.timer.now
+        super().__init__(health_index=health_index)
+
+        self.start_time = start_time
+        self.Tmean = max(0.0, mean_time)
+        self.sigmaT = max(0.001, sigma_time)
+        self.maxseverity = random.random()
+
+    def update_severity_at_time(self, time):
+
         dt = time - (self.start_time + self.Tmean)
-        self.last_time_updated = time
+
         self.severity = self.maxseverity * np.exp(-(dt ** 2) / self.sigmaT ** 2)
+        self.last_time_updated = time
 
 
 class SymptomsStep(Symptoms):
