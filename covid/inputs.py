@@ -611,6 +611,7 @@ if __name__ == "__main__":
 
     ip = Inputs()
     print(ip.carehomes_df)
+    print(ip.carehomes_df.loc['E00062207'])
     #print(len(ip.household_composition_df))
     #print(ip.household_composition_df)
     #print(ip.parent_child_df)

@@ -271,7 +271,7 @@ class World:
         carehome_distributor = CareHomeDistributor()
         carehomes_df = self.inputs.carehomes_df
         for area in self.areas.members:
-            people_in_carehome = carehomes_df[area.name]
+            people_in_carehome = carehomes_df.loc[area.name]['N_carehome_residents']
             carehome = carehome_distributor.create_carehome_in_area(area, people_in_carehome)
             self.carehomes.members.append(carehome)
 
