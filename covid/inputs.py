@@ -41,6 +41,14 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
 
+        self.household_composition_df = pd.read_csv(
+                os.path.join(
+                    self.OUTPUT_AREA_DIR,
+                    'minimum_household_composition.csv',
+                ),
+                index_col="output_area"
+                )
+ 
         self.school_df = pd.read_csv(
             os.path.join(self.DATA_DIR, "school_data", "uk_schools_data.csv")
         )
@@ -572,6 +580,8 @@ if __name__ == "__main__":
 
     ip = Inputs()
     print(len(ip.carehomes_df))
+    print(len(ip.household_composition_df))
+    print(ip.household_composition_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
     #print(ip.companysector_by_sex_df)
