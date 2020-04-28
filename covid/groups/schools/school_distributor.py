@@ -87,3 +87,11 @@ class SchoolDistributor:
                 school.people.append(person)
                 person.school = school
                 school.n_pupils += 1
+
+    def distribute_teachers_to_school(self):
+        for person in self.msoarea.work_people:
+            if (
+                person.industry_specific == school.age_mean
+                and school.n_teachers < school.n_teachers_max
+            ):
+
