@@ -272,7 +272,7 @@ class World:
         carehome_distributor = CareHomeDistributor()
         carehomes_df = self.inputs.carehomes_df
         for area in self.areas.members:
-            people_in_carehome = carehomes_df[area.name]
+            people_in_carehome = carehomes_df.loc[area.name]['N_carehome_residents']
             carehome = carehome_distributor.create_carehome_in_area(area, people_in_carehome)
             self.carehomes.members.append(carehome)
 
@@ -402,8 +402,9 @@ class World:
 
 
 if __name__ == "__main__":
-    #world = World(config_file=os.path.join("../configs", "config_example.yaml"))
-    world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
-                  box_mode=True,box_n_people=100)
+    world = World(config_file=os.path.join("../configs", "my_config.yaml"))
+    world.to_pickle()
+    #world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+    #              box_mode=True,box_n_people=100)
     # world = World.from_pickle()
-    world.group_dynamics()
+    #world.group_dynamics()
