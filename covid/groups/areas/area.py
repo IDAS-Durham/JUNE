@@ -15,6 +15,7 @@ class Area:
         self.world = world
         self.name = oarea
         self.msoarea = msoarea
+        self.carehome = None
         self.n_residents = int(n_residents)
         self.n_households = n_households
         self.census_freq = census_freq

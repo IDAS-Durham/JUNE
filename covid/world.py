@@ -41,7 +41,11 @@ class World:
             )
             self.initialize_areas()
             self.initialize_msoa_areas()
-            self.initialize_people()
+            if "companies" not in relevant_groups:
+                self.initialize_people(skip_companies=True)
+            else:
+                self.initialize_people(skip_companies=False)
+            self.initialize_carehomes() #Important that goes before households.
             self.initialize_households()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -222,7 +226,7 @@ class World:
         msoareas_distributor = MSOAreaDistributor(self.msoareas)
         msoareas_distributor.read_msoareas_census()
 
-    def initialize_people(self):
+    def initialize_people(self, skip_companies=False):
         """
         Populates the world with person instances.
         """
@@ -242,6 +246,7 @@ class World:
                 wf_area_df,
                 self.inputs.compsec_specic_ratio_by_sex_df,
                 self.inputs.compsec_specic_distr_by_sex_df,
+                skip_companies=skip_companies,
             )
             person_distributor.populate_area()
             pbar.update(1)
@@ -260,6 +265,16 @@ class World:
             household_distributor.distribute_people_to_household()
             pbar.update(1)
         pbar.close()
+
+    def initialize_carehomes(self):
+        self.carehomes = CareHomes(self)
+        carehome_distributor = CareHomeDistributor()
+        carehomes_df = self.inputs.carehomes_df
+        for area in self.areas.members:
+            people_in_carehome = carehomes_df[area.name]
+            carehome = carehome_distributor.create_carehome_in_area(area, people_in_carehome)
+            self.carehomes.members.append(carehome)
+
 
     def initialize_schools(self):
         """
