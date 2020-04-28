@@ -27,6 +27,7 @@ class Group:
         "household",
         "school",
         "company",
+        "hospital",
         "work_Outdoor",
         "work_Indoor",
         "commute_Public",
@@ -72,6 +73,7 @@ class Group:
         self._intensity = intensity
 
     def update_status_lists(self, time=1):
+        print ("=== update status list for group with ",len(self.people)," people ===")
         self.susceptible.clear()
         self.infected.clear()
         self.recovered.clear()
@@ -82,10 +84,18 @@ class Group:
             if person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
+                    #print ("person must stay at home",person.id,":",
+                    #       person.health_information.tag," for",
+                    #       person.health_information.infection.symptoms.severity)
                     # don't add this person to the group
                     # the household group instance deals with this in its own
                     # update_status_lists method
                 elif person.health_information.in_hospital:
+                    print ("person should be in hospital",person.id,":",
+                           person.health_information.tag," for",
+                           person.health_information.infection.symptoms.severity)
+                    person.get_into_hospital()
+                    self.people.remove(person)
                     continue
                     # don't add this person to the group
                     # the hospital group instance deals with this in its own

@@ -144,9 +144,12 @@ class Infection(InfectionInitializer, ParameterInitializer):
     def still_infected(self):
         pass
 
-    def update_infection_probability(self):
-        self.last_time_updated = self.timer.now
-        # do something here to realte transmission probability and symptoms
+    def update(self):
+        if self.last_time_updated <= self.timer.now:
+            self.last_time_updated = self.timer.now
+            self.transmission.update_probability()
+            self.infection_probability = self.transmission.transmission_probability
+            self.symptoms.update_severity()
 
 
 if __name__ == "__main__":
