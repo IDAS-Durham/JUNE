@@ -20,7 +20,7 @@ class InteractionCollective(Interaction):
         ):
             return None
         effective_load = self.calculate_effective_viral_load(group)
-        if effective_load <= 0.: #TODO ask Frank
+        if effective_load <= 0.:
             return
         for recipient in group.susceptible:
             self.single_time_step_for_recipient(
