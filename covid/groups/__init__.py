@@ -8,3 +8,4 @@ from .households import Household, Households, HouseholdDistributor
 from .hospitals import Hospital, Hospitals
 from .test_groups import TestGroup, TestGroups
 from .box import Box, Boxes
+from .boundary_condition import Boundary
