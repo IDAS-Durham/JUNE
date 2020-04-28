@@ -110,6 +110,9 @@ def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
     return ages_df
 
 
+def read_minimal_household_composition(OUTPUT_AREA_DIR):
+    pass
+
 def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
     """
     TableID: QS112EW
