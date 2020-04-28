@@ -7,85 +7,17 @@ import yaml
 
 default_config_filename = Path(
     __file__
-).parent.parent / "configs/commute.yaml"
-
-
-class RegionalGenerator:
-    def __init__(
-            self,
-            msoarea: str,
-            weighted_modes: List[
-                Tuple[int, "ModeOfTransport"]
-            ]
-    ):
-        """
-        Randomly generate modes of transport, weighted by usage, for
-        one particular region.
-
-        Parameters
-        ----------
-        msoarea
-            A unique identifier for a Output region
-        weighted_modes
-            A list of tuples comprising the number of people using a mode
-            of a transport and a representation of that mode of transport
-        """
-        self.msoarea = msoarea
-        self.weighted_modes = weighted_modes
-
-    @property
-    def total(self) -> int:
-        """
-        The sum of the numbers of people using each mode of transport
-        """
-        return sum(
-            mode[0]
-            for mode
-            in self.weighted_modes
-        )
-
-    @property
-    def modes(self) -> List["ModeOfTransport"]:
-        """
-        A list of modes of transport
-        """
-        return [
-            mode[1]
-            for mode
-            in self.weighted_modes
-        ]
-
-    @property
-    def weights(self) -> List[float]:
-        """
-        The normalised weights for each mode of transport.
-        """
-        return [
-            mode[0] / self.total
-            for mode
-            in self.weighted_modes
-        ]
-
-    def weighted_random_choice(self) -> "ModeOfTransport":
-        """
-        Randomly choose a mode of transport, weighted by usage in this region.
-        """
-        return np.random.choice(
-            self.modes,
-            p=self.weights
-        )
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__} {self}>"
-
-    def __str__(self):
-        return self.msoarea
+).parent.parent / "configs/defaults/commute.yaml"
 
 
 class ModeOfTransport:
     __all = dict()
 
-    def __new__(cls, description):
+    def __new__(
+            cls,
+            description,
+            is_public=False
+    ):
         if description not in ModeOfTransport.__all:
             ModeOfTransport.__all[
                 description
@@ -96,9 +28,52 @@ class ModeOfTransport:
 
     def __init__(
             self,
-            description
+            description: str,
+            is_public: bool = False
     ):
+        """
+        Create a ModeOfTransport from its description.
+
+        Only one instance of each mode of transport exists with instances being
+        retrieved from the __all dictionary.
+
+        Parameters
+        ----------
+        description
+            e.g. "Bus, minibus or coach"
+        is_public
+            True if this is public transport, for example a bus.
+        """
         self.description = description
+        self.is_public = is_public
+
+    @property
+    def is_private(self) -> bool:
+        """
+        True if this is private transport, for example a car.
+        """
+        return not self.is_public
+
+    @classmethod
+    def with_description(
+            cls,
+            description: str
+    ) -> "ModeOfTransport":
+        """
+        Retrieve a mode of transport by its description.
+
+        Parameters
+        ----------
+        description
+            A description, e.g. 'Bus, minibus or coach'
+
+        Returns
+        -------
+        The corresponding ModeOfTransport instance
+        """
+        return ModeOfTransport.__all[
+            description
+        ]
 
     def index(self, headers: List[str]) -> int:
         """
@@ -167,10 +142,84 @@ class ModeOfTransport:
             configs = yaml.load(f, Loader=yaml.FullLoader)
         return [
             ModeOfTransport(
-                config["description"]
+                **config
             )
             for config in configs
         ]
+
+
+class RegionalGenerator:
+    def __init__(
+            self,
+            msoarea: str,
+            weighted_modes: List[
+                Tuple[int, "ModeOfTransport"]
+            ]
+    ):
+        """
+        Randomly generate modes of transport, weighted by usage, for
+        one particular region.
+
+        Parameters
+        ----------
+        msoarea
+            A unique identifier for a Output region
+        weighted_modes
+            A list of tuples comprising the number of people using a mode
+            of a transport and a representation of that mode of transport
+        """
+        self.msoarea = msoarea
+        self.weighted_modes = weighted_modes
+
+    @property
+    def total(self) -> int:
+        """
+        The sum of the numbers of people using each mode of transport
+        """
+        return sum(
+            mode[0]
+            for mode
+            in self.weighted_modes
+        )
+
+    @property
+    def modes(self) -> List["ModeOfTransport"]:
+        """
+        A list of modes of transport
+        """
+        return [
+            mode[1]
+            for mode
+            in self.weighted_modes
+        ]
+
+    @property
+    def weights(self) -> List[float]:
+        """
+        The normalised weights for each mode of transport.
+        """
+        return [
+            mode[0] / self.total
+            for mode
+            in self.weighted_modes
+        ]
+
+    # TODO : Make property (too scared to do this myself atm)
+
+    def weighted_random_choice(self) -> "ModeOfTransport":
+        """
+        Randomly choose a mode of transport, weighted by usage in this region.
+        """
+        return np.random.choice(
+            self.modes,
+            p=self.weights
+        )
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {self}>"
+
+    def __str__(self):
+        return self.msoarea
 
 
 class CommuteGenerator:
@@ -192,7 +241,7 @@ class CommuteGenerator:
         """
         self.regional_generators = regional_generators
 
-    def for_msoarea(self, msoarea: str) -> RegionalGenerator:
+    def regional_gen_from_msoarea(self, msoarea: str) -> RegionalGenerator:
         """
         Get a regional generator for an Output Area identified
         by its output msoarea, e.g. E00062207
