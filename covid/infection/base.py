@@ -5,8 +5,8 @@ import os
 import yaml
 import importlib
 from covid.infection.transmission import *
-from covid.infection.symptoms import *
-
+from covid.infection import symptons as sym
+from covid.interaction.parameters import ParameterInitializer
 
 class InfectionInitializer:
     def __init__(self, timer, health_index, user_config):
@@ -130,7 +130,7 @@ class Infection(InfectionInitializer):
         self.transmission = transmission
 
     def set_symptoms(self, symptoms):
-        if symptoms != None and not isinstance(symptoms, Symptoms):
+        if symptoms != None and not isinstance(symptoms, sym.Symptoms):
             print("Error in Infection.set_symptoms(", symptoms, ") is not a symptoms.")
             print("--> Exit the code.")
             sys.exit()
