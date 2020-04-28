@@ -60,7 +60,7 @@ class Inputs:
                     'carehomes.csv'
                 ),
                 header=0,
-                names=['output_area', 'n_residents'],
+                names=['output_area', 'N_carehome_residents'],
                 index_col=0
                 )
         self.areas_coordinates_df = self.read_coordinates()
