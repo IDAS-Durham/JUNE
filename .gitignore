@@ -1,7 +1,10 @@
+.DS_Store
+test_covid/results/
 .idea/
 data
 *__pycache__*
 *.ipynb_checkpoints*
+*.pyc
 *.ipynb
 *.csv
 *.pkl
@@ -9,3 +12,4 @@ data
 .env
 cookie
 data.zip
+__MACOSX

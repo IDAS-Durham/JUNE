@@ -38,16 +38,16 @@ class InfectionInitializer:
         return default_params
 
     def initialize_transmission(self, default_types, user_config):
-        infection_config = user_config["infection"]
-        if "transmission" in infection_config:
-            transmission_type = infection_config["transmission"]["type"]
-            if "parameters" in infection_config["transmission"]:
-                transmission_parameters = infection_config["transmission"]["parameters"]
+        if "infection" in user_config and "transmission" in user_config["infection"]:
+            transmission_config = user_config["infection"]["transmission"]
+            transmission_type = transmission_config["type"]
+            if "parameters" in transmission_config:
+                transmission_parameters = transmission_config["parameters"]
             else:
-                transmission_parameters = {}
+                transmission_parameters = None 
         else:
             transmission_type = default_types["transmission"]["type"]
-            transmission_parameters = {}
+            transmission_parameters = None 
         transmission_class_name = "Transmission" + transmission_type.capitalize()
         transmission = globals()[transmission_class_name](
             self.timer, transmission_parameters
@@ -55,15 +55,16 @@ class InfectionInitializer:
         return transmission
 
     def initialize_symptoms(self, health_index, default_types, user_config):
-        if "symptoms" in user_config:
-            symptoms_type = user_config["symptoms"]["type"]
-            if "parameters" in user_config["symptoms"]:
-                symptoms_parameters = user_config["symptoms"]["parameters"]
+        if "infection" in user_config and "symptoms" in user_config["infection"]:
+            symptoms_config = user_config["infection"]["symptoms"]
+            symptoms_type = symptoms_config["type"]
+            if "parameters" in symptoms_config:
+                symptoms_parameters = symptoms_config["parameters"]
             else:
-                symptoms_parameters = {}
+                symptoms_parameters = None 
         else:
             symptoms_type = default_types["symptoms"]["type"]
-            symptoms_parameters = {}
+            symptoms_parameters = None 
         symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
         symptoms = globals()[symptoms_class_name](
             self.timer, health_index, symptoms_parameters
@@ -107,9 +108,16 @@ class Infection(InfectionInitializer, ParameterInitializer):
         self.infection_probability = 0.0
 
     def infect(self, person_to_infect):
-        person_to_infect.infection = self.__class__(
+        """Infects someone by initializing an infeciton object with the same type
+        and parameters as the carrier's infection class.
+
+        Arguments:
+            person_to_infect (Person) has to be an instance of the Person class.
+        """
+        infection = self.__class__(
             person_to_infect, self.timer, self.user_config, self.user_parameters
         )
+        person_to_infect.health_information.set_infection(infection)
 
     def set_transmission(self, transmission):
         if not isinstance(transmission, Transmission):
@@ -136,9 +144,12 @@ class Infection(InfectionInitializer, ParameterInitializer):
     def still_infected(self):
         pass
 
-    def update_infection_probability(self):
-        self.last_time_updated = self.timer.now
-        # do something here to realte transmission probability and symptoms
+    def update(self):
+        if self.last_time_updated <= self.timer.now:
+            self.last_time_updated = self.timer.now
+            self.transmission.update_probability()
+            self.infection_probability = self.transmission.transmission_probability
+            self.symptoms.update_severity()
 
 
 if __name__ == "__main__":
