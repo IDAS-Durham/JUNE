@@ -54,6 +54,15 @@ class Inputs:
                 "england_hospitals.csv",
             )
         )
+        self.carehomes_df = pd.read_csv(
+                os.path.join(
+                    self.OUTPUT_AREA_DIR,
+                    'carehomes.csv'
+                ),
+                header=0,
+                names=['output_area', 'n_residents'],
+                index_col=0
+                )
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
             os.path.join(
@@ -562,7 +571,7 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    #print(ip.workflow_df)
+    print(ip.carehomes_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
     #print(ip.companysector_by_sex_df)
