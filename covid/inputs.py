@@ -62,6 +62,14 @@ class Inputs:
                 "england_hospitals.csv",
             )
         )
+        self.n_students = pd.read_csv(
+                os.path.join(
+                    self.OUTPUT_AREA_DIR,
+                    'n_students.csv'
+                ),
+                index_col=0
+                )
+ 
         self.carehomes_df = pd.read_csv(
                 os.path.join(
                     self.OUTPUT_AREA_DIR,
@@ -607,6 +615,7 @@ if __name__ == "__main__":
     print(ip.household_composition_df)
     print(ip.parent_child_df)
     print(ip.husband_wife_df)
+    print(ip.n_students)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
     #print(ip.companysector_by_sex_df)
