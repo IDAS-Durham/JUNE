@@ -1,22 +1,21 @@
-import numpy as np
-import random
-
-
 class Transmission:
 
-    def __init__(self, timer, constant=0.3):
+    def __init__(self, start_time):
 
-        self.constant = constant
-
-        self.timer = timer
-
-        if timer != None:
-            self.infection_start_time = self.timer.now
-            self.last_time_updated = self.timer.now  # for testing
-
+        self.start_time = start_time
         self.probability = 0.0
 
-    def update_probability(self):
+    def update_probability_at_time(self, time):
+        raise NotImplementedError()
 
-        time = self.timer.now
+class TransmissionConstant(Transmission):
+
+    def __init__(self, start_time, proabability=0.3):
+
+        super().__init__(start_time=start_time)
+
+        self.probability = proabability
+
+    def update_probability_at_time(self, time):
+
         self.last_time_updated = time
