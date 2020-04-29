@@ -24,21 +24,22 @@ class Group:
     """
 
     allowed_groups = [
-        "household",
-        "school",
-        "company",
-        "hospital",
-        "work_Outdoor",
-        "work_Indoor",
+        "box",
+        "boundary"
         "commute_Public",
         "commute_Private",
+        "company",
+        "household",
+        "hospital",
         "leisure_Outdoor",
         "leisure_Indoor",
-        "shopping",
-        "referenceGroup",
         "random",
+        "referenceGroup",
+        "shopping",
+        "school",
         "testGroup",
-        "box"
+        "work_Outdoor",
+        "work_Indoor",
     ]
 
     
