@@ -39,6 +39,7 @@ class HouseholdDistributor:
         self.OLD_MIN_AGE = 65
         self.OLD_MAX_AGE = 99
         self.ADULT_MIN_AGE = 18
+        self.YOUNG_ADULT_MAX_AGE = 35
         kids_parents_age_dict_sorted = OrderedDict(distribution_kids_parents_age)
         self._kids_parents_age_rv = stats.rv_discrete(
             list(kids_parents_age_dict_sorted.keys()),
@@ -51,6 +52,35 @@ class HouseholdDistributor:
         self._random_sex_rv = stats.rv_discrete(values=((0, 1), (0.5, 0.5)))
         self._refresh_random_numbers_list(number_of_random_numbers)
 
+    def _refresh_random_numbers_list(self, n=1000000):
+        """
+        Samples one million age differences for couples and parents-kids. Sampling in batches makes the code much faster. They are converted to lists so they can be popped.
+        """
+        # create one million random age difference array to save time
+        self._couples_age_differences_list = list(self._couples_age_rv.rvs(size=n))
+        # create one million random age difference array to save time
+        self._kids_parents_age_differences_list = list(
+            self._kids_parents_age_rv.rvs(size=n)
+        )
+        self._random_sex_list = list(self._random_sex_rv.rvs(size=10 * n))
+        self._random_student_age = list(
+            np.random.randint(self.STUDENT_MIN_AGE, self.STUDENT_MAX_AGE + 1, size=n)
+        )
+        self._random_oldpeople_age = list(
+            np.random.randint(self.OLD_MIN_AGE, self.OLD_MAX_AGE + 1, size=n)
+        )
+        self._random_kid_age = list(np.random.randint(0, self.ADULT_MIN_AGE, size=n))
+        siblings_age_gap1 = list(np.random.randint(-5, -2, size=n // 2))
+        siblings_age_gap2 = list(np.random.randint(2, 5, size=n // 2))
+        self._random_siblings_age_gap = siblings_age_gap1 + siblings_age_gap2
+        random.shuffle(self._random_siblings_age_gap)
+        self._random_adult_age = list(
+            np.random.randint(self.ADULT_MIN_AGE, self.OLD_MIN_AGE, size=n)
+        )
+        self._random_youngpeople_age = list(
+            np.random.randint(self.ADULT_MIN_AGE, self.YOUNG_ADULT_MAX_AGE + 1, size=n)
+        )
+
     def distribute_people_to_households(
         self, area, number_households_per_composition: dict, n_students: int
     ):
@@ -58,8 +88,10 @@ class HouseholdDistributor:
         Given a populated output area, it distributes the people to households. The instance of the Area class, area, should have two dictionary attributes, ``men_by_age`` and ``women_by_age``. The keys of the dictionaries are the ages and the values are the Person instances. The process of creating these dictionaries is done in people_distributor.py
         The ``number_households_per_composition`` argument is a dictionary containing the number of households per each composition. We obtain this from the nomis dataset and should be read by the inputs class in the world init.
         """
-        families_with_possible_young_adults = []
-        families_with_extra_kids = []
+        households_with_extra_adults = []
+        households_with_extra_oldpeople = []
+        households_with_extra_kids = []
+        households_with_extra_youngadults = []
         # student households
         key = "0 >=1 0 0 0"
         if key in number_households_per_composition:
@@ -88,10 +120,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_nokids_households(
-                adults_per_household=1,
-                n_households=house_number,
-                can_have_young_adults=False,
-                area=area,
+                adults_per_household=1, n_households=house_number, area=area,
             )
 
         # couple adult
@@ -99,10 +128,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_nokids_households(
-                adults_per_household=2,
-                n_households=house_number,
-                area=area,
-                can_have_young_adults=False,
+                adults_per_household=2, n_households=house_number, area=area,
             )
 
         # single adult with possible young adults
@@ -110,11 +136,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_nokids_households(
-                adults_per_household=1,
-                n_households=house_number,
-                area=area,
-                can_have_young_adults=True,
-                families_with_possible_young_adults=families_with_possible_young_adults,
+                adults_per_household=1, n_households=house_number, area=area,
             )
 
         # couple  with possible young adults
@@ -125,8 +147,27 @@ class HouseholdDistributor:
                 adults_per_household=2,
                 n_households=house_number,
                 area=area,
-                can_have_young_adults=True,
-                families_with_possible_young_adults=families_with_possible_young_adults,
+                extra_people_lists=(households_with_extra_youngadults),
+            )
+
+        key = "0 0 >=1 1 0"
+        if key in number_households_per_composition:
+            house_number = number_households_per_composition[key]
+            self.fill_youngadult_with_parents_households(
+                adults_per_household=1,
+                n_households=house_number,
+                area=area,
+                extra_people_lists=(households_with_extra_youngadults),
+            )
+
+        key = "0 0 >=1 2 0"
+        if key in number_households_per_composition:
+            house_number = number_households_per_composition[key]
+            self.fill_youngadult_with_parents_households(
+                adults_per_household=2,
+                n_households=house_number,
+                area=area,
+                extra_people_lists=(households_with_extra_youngadults),
             )
 
         # families with dependent kids
@@ -134,45 +175,48 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_families_households(
-                families_with_possible_young_adults=families_with_possible_young_adults,
                 n_households=house_number,
                 kids_per_house=1,
                 parents_per_house=1,
                 area=area,
+                extra_people_lists=(households_with_extra_youngadults),
             )
         key = ">=2 0 >=0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_families_households(
-                families_with_possible_young_adults=families_with_possible_young_adults,
-                families_with_extra_kids=families_with_extra_kids,
                 n_households=house_number,
                 kids_per_house=2,
                 parents_per_house=1,
                 area=area,
+                extra_people_lists=(
+                    households_with_extra_kids,
+                    households_with_extra_youngadults,
+                ),
             )
         key = "1 0 >=0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_families_households(
-                families_with_possible_young_adults=families_with_possible_young_adults,
-                families_with_extra_kids=families_with_extra_kids,
                 n_households=house_number,
                 kids_per_house=1,
                 parents_per_house=2,
                 area=area,
+                extra_people_lists=(households_with_extra_youngadults),
             )
 
-        key = "2 0 >=0 2 0"
+        key = ">=2 0 >=0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             self.fill_families_households(
-                families_with_possible_young_adults=families_with_possible_young_adults,
-                families_with_extra_kids=families_with_extra_kids,
                 n_households=house_number,
                 kids_per_house=2,
                 parents_per_house=2,
                 area=area,
+                extra_people_lists=(
+                    households_with_extra_youngadults,
+                    households_with_extra_kids,
+                ),
             )
 
         # other household types
@@ -180,47 +224,62 @@ class HouseholdDistributor:
         key = "1 0 >=0 >=1 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            #TODO
+            self.fill_families_households(
+                n_households=house_number,
+                kids_per_house=1,
+                parents_per_house=1,
+                area=area,
+                extra_people_lists=(
+                    households_with_extra_youngadults,
+                    households_with_extra_adults,
+                    households_with_extra_oldpeople,
+                ),
+            )
 
         # possible multigenerational, two kids
         key = ">=2 0 >=0 >=1 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            #TODO
-            
+            self.fill_families_households(
+                n_households=house_number,
+                kids_per_house=2,
+                parents_per_house=1,
+                area=area,
+                extra_people_lists=(
+                    households_with_extra_kids,
+                    households_with_extra_youngadults,
+                    households_with_extra_adults,
+                    households_with_extra_oldpeople,
+                ),
+            )
+
         # all old people -> to be filled with remaining
         key = "0 0 0 0 >=1"
+        if key in number_households_per_composition:
+            house_number = number_households_per_composition[key]
+            self.fill_oldpeople_households(
+                people_per_household=1,
+                n_households=house_number,
+                area=area,
+                extra_people_lists=(households_with_extra_oldpeople),
+            )
 
         # other trash -> to be filled with remaining
         key = "0 0 >=1 >=0 >=0"
+        if key in number_households_per_composition:
+            house_number = number_households_per_composition[key]
+            self.fill_youngadult_households(
+                youngadults_per_household=1,
+                n_households=house_number,
+                area=area,
+                extra_people_lists=(
+                    households_with_extra_youngadults,
+                    households_with_extra_adults,
+                    households_with_extra_oldpeople,
+                ),
+            )
 
-
-
-    def _refresh_random_numbers_list(self, n=1000000):
-        """
-        Samples one million age differences for couples and parents-kids. Sampling in batches makes the code much faster. They are converted to lists so they can be popped.
-        """
-        # create one million random age difference array to save time
-        self._couples_age_differences_list = list(self._couples_age_rv.rvs(size=n))
-        # create one million random age difference array to save time
-        self._kids_parents_age_differences_list = list(
-            self._kids_parents_age_rv.rvs(size=n)
-        )
-        self._random_sex_list = list(self._random_sex_rv.rvs(size=10 * n))
-        self._random_student_age = list(
-            np.random.randint(self.STUDENT_MIN_AGE, self.STUDENT_MAX_AGE + 1, size=n)
-        )
-        self._random_oldpeople_age = list(
-            np.random.randint(self.OLD_MIN_AGE, self.OLD_MAX_AGE + 1, size=n)
-        )
-        self._random_kid_age = list(np.random.randint(0, self.ADULT_MIN_AGE, size=n))
-        siblings_age_gap1 = list(np.random.randint(-5, -2, size=n // 2))
-        siblings_age_gap2 = list(np.random.randint(2, 5, size=n // 2))
-        self._random_siblings_age_gap = siblings_age_gap1 + siblings_age_gap2
-        random.shuffle(self._random_siblings_age_gap)
-        self._random_adult_age = list(
-            np.random.randint(self.ADULT_MIN_AGE, self.OLD_MIN_AGE, size=n)
-        )
+        # we now fill the remaining ones
 
     def _create_household(self, area):
         """Creates household in area and world."""
@@ -343,10 +402,14 @@ class HouseholdDistributor:
                     students_left = False
                     break
 
-    def fill_oldpeople_households(self, people_per_household, n_households, area):
+    def fill_oldpeople_households(
+        self, people_per_household, n_households, area, extra_people_lists=()
+    ):
 
         for _ in range(0, n_households):
             household = self._create_household(area)
+            for array in extra_people_lists:
+                array.append(household)
             age = self._random_oldpeople_age.pop()
             sex = self._random_sex_list.pop()
             if sex == 0:
@@ -380,8 +443,7 @@ class HouseholdDistributor:
         kids_per_house: int,
         parents_per_house: int,
         area,
-        families_with_possible_young_adults=None,
-        families_with_extra_kids=None,
+        extra_people_lists=(),
     ):
         for _ in range(0, n_households):
             household = self._create_household(area)
@@ -409,7 +471,6 @@ class HouseholdDistributor:
             household.people.append(first_kid)
             first_parent = self._get_matching_parent(first_kid, area)
             household.people.append(first_parent)
-            families_with_possible_young_adults.append(household)
             if parents_per_house == 2:
                 second_parent = self._get_matching_partner(first_parent, area)
                 if second_parent is not None:
@@ -435,15 +496,11 @@ class HouseholdDistributor:
                         max_age=self.ADULT_MIN_AGE - 1,
                     )
                 household.people.append(second_kid)
-                families_with_extra_kids.append(household)
+            for array in extra_people_lists:
+                array.append(household)
 
     def fill_nokids_households(
-        self,
-        adults_per_household,
-        n_households,
-        area,
-        families_with_possible_young_adults=None,
-        can_have_young_adults=None,
+        self, adults_per_household, n_households, area, extra_people_lists=(),
     ):
         for _ in range(0, n_households):
             household = self._create_household(area)
@@ -457,10 +514,81 @@ class HouseholdDistributor:
                     min_age=18,
                     max_age=65,
                 )
+            else:
+                first_adult = self._get_closest_person_of_age(
+                    area.women_by_age,
+                    area.men_by_age,
+                    first_adult_age,
+                    min_age=18,
+                    max_age=65,
+                )
                 household.people.append(first_adult)
-            if can_have_young_adults:
-                families_with_possible_young_adults.append(household)
+            for array in extra_people_lists:
+                array.append(household)
             if adults_per_household == 1:
                 continue
             second_adult = self._get_matching_partner(first_adult, area)
             household.people.append(second_adult)
+
+    def fill_youngadult_households(
+        self, youngadults_per_household, n_households, area, extra_people_lists=()
+    ):
+        for _ in range(0, n_households):
+            household = self._create_household(area)
+            for array in extra_people_lists:
+                array.append(household)
+            for _ in youngadults_per_household:
+                age = self._random_youngpeople_age.pop()
+                sex = self._random_sex_list.pop()
+                if sex == 0:
+                    person = self._get_closest_person_of_age(
+                        area.men_by_age,
+                        area.women_by_age,
+                        age,
+                        min_age=self.ADULT_MIN_AGE,
+                        max_age=self.YOUNG_ADULT_MAX_AGE,
+                    )
+                else:
+                    person = self._get_closest_person_of_age(
+                        area.women_by_age,
+                        area.men_by_age,
+                        age,
+                        min_age=self.ADULT_MIN_AGE,
+                        max_age=self.YOUNG_ADULT_MAX_AGE,
+                    )
+                household.people.append(person)
+
+    def fill_youngadult_with_parents_households(
+        self, adults_per_household, n_households, area, extra_people_lists=()
+    ):
+        for _ in range(0, n_households):
+            household = self._create_household(area)
+            for array in extra_people_lists:
+                array.append(household)
+            youngadult_sex = self._random_sex_list.pop()
+            youngadult_age = self._random_youngpeople_age.pop()
+            if youngadult_sex == 0:
+                youngadult = self._get_closest_person_of_age(
+                    area.men_by_age,
+                    area.women_by_age,
+                    youngadult_age,
+                    self.OLD_MIN_AGE,
+                    self.YOUNG_ADULT_MAX_AGE,
+                )
+            else:
+                youngadult = self._get_closest_person_of_age(
+                    area.women_by_age,
+                    area.men_by_age,
+                    youngadult_age,
+                    self.OLD_MIN_AGE,
+                    self.YOUNG_ADULT_MAX_AGE,
+                )
+
+            household.people.append(youngadult)
+            adult = self._get_matching_parent(youngadult, area)
+            household.people.append(adult)
+            if adults_per_household == 1:
+                continue
+            else:
+                adult2 = self._get_matching_partner(adult, area)
+                household.people.append(adult2)
