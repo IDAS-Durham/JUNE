@@ -28,21 +28,25 @@ class Household(Group):
         self.susceptible.clear()
         self.infected.clear()
         self.recovered.clear()
+        dead = []
         for person in self.people:
             person.health_information.update_health_status()
             if person.health_information.susceptible:
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if person.health_information.in_hospital:
-                    continue
+                    person.get_into_hospital()
                 elif person.health_information.dead:
-                    continue
+                    person.bury()
+                    dead.append(person)
                 else:
                     self.infected.append(person)
             elif person.health_information.recovered:
                 self.recovered.append(person)
                 if person in self.infected:
                     self.infected.remove(person)
+        for person in dead:
+            self.people.remove(person)
 
 class Households:
     """

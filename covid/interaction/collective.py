@@ -13,19 +13,17 @@ class InteractionCollective(Interaction):
         self.alphas = {}
 
     def single_time_step_for_group(self, group):
-        if (
-            group.size <= 1
-            or group.size_infected == 0
-            or group.size_susceptible == 0
-        ):
-            return None
-        effective_load = self.calculate_effective_viral_load(group)
-        if effective_load <= 0.:
-            return
-        for recipient in group.susceptible:
-            self.single_time_step_for_recipient(
-                recipient, effective_load, group
-            )
+        if group.must_timestep():
+            effective_load = self.calculate_effective_viral_load(group)
+            if effective_load <= 0.:
+                return
+            for recipient in group.susceptible:
+                self.single_time_step_for_recipient(
+                    recipient, effective_load, group
+                )
+        if group.spec=="hospital":
+            print ("must allow for infection of workers by patients")
+            
 
     def single_time_step_for_recipient(
         self, recipient, effective_load, group
