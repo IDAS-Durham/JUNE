@@ -328,3 +328,10 @@ class PersonDistributor:
                     )
         self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
         self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
+        total_people = 0
+        for people_dict in [self.area.men_by_age, self.area.women_by_age]:
+            for age in people_dict.keys():
+                total_people += len(people_dict[age])
+
+        assert total_people == self.area.n_residents
+
