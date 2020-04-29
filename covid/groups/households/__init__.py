@@ -1,2 +1,2 @@
 from .household import Household, Households 
-from .new_household_distributor import HouseholdDistributor
+from .household_distributor_old import HouseholdDistributor

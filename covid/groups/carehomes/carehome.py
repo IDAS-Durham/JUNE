@@ -1,7 +1,7 @@
 from covid.groups import Group
 
 class CareHome(Group):
-    def __init(self, carehome_id, area, n_residents):
+    def __init__(self, carehome_id, area, n_residents):
         super().__init__("CareHome_%04d"%carehome_id, "carehome")
         self.id = carehome_id
         self.area = area

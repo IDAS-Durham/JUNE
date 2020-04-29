@@ -253,6 +253,7 @@ class HouseholdDistributor:
                 ),
             )
 
+
         # all old people -> to be filled with remaining
         key = "0 0 0 0 >=1"
         if key in number_households_per_composition:
@@ -280,6 +281,25 @@ class HouseholdDistributor:
             )
 
         # we now fill the remaining ones
+        for people_dict in [area.men_by_age, area.women_by_age]:
+            for age in people_dict.keys():
+                for person in people_dict[age]:
+                    if person.age < self.ADULT_MIN_AGE:
+                        kid = people_dict[person.age].pop()
+                        household = np.random.choice(households_with_extra_kids)
+                        household.people.append(kid)
+                    if self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
+                        youngadult = people_dict[person.age].pop()
+                        household = np.random.choice(households_with_extra_youngadults)
+                        household.people.append(youngadult)
+                    if self.YOUNG_ADULT_MAX_AGE < person.age <= self.OLD_MIN_AGE:
+                        adult = people_dict[person.age].pop()
+                        household = np.random.choice(households_with_extra_adults)
+                        household.people.append(adult)
+                    if self.OLD_MIN_AGE <= person.age:
+                        old = people_dict[person.age].pop()
+                        household = np.random.choice(households_with_extra_oldpeople)
+                        household.people.append(old)
 
     def _create_household(self, area):
         """Creates household in area and world."""
