@@ -1,7 +1,7 @@
-import numpy as np
 import random
-from scipy import stats
 
+import numpy as np
+from scipy import stats
 
 ALLOWED_SYMPTOM_TAGS = [
     "asymptomatic",
@@ -39,28 +39,21 @@ class Symptoms:
 
 class SymptomsConstant(Symptoms):
     def __init__(self, health_index, recovery_rate=0.2):
-
         super().__init__(health_index=health_index)
 
         self.recovery_rate = recovery_rate
         self.predicted_recovery_time = stats.expon.rvs(scale=1.0 / self.recovery_rate)
 
     def update_severity_at_time(self, time):
-
         self.last_time_updated = time
 
     def is_recovered(self, deltat):
-
         prob_recovery = 1.0 - np.exp(-self.recovery_rate * deltat)
-        if np.random.rand() <= prob_recovery:
-            return True
-        else:
-            return False
+        return np.random.rand() <= prob_recovery
 
 
 class SymptomsGaussian(Symptoms):
     def __init__(self, health_index, start_time, mean_time=1.0, sigma_time=3.0):
-
         super().__init__(health_index=health_index)
 
         self.start_time = start_time
@@ -69,7 +62,6 @@ class SymptomsGaussian(Symptoms):
         self.maxseverity = random.random()
 
     def update_severity_at_time(self, time):
-
         dt = time - (self.start_time + self.Tmean)
 
         self.severity = self.maxseverity * np.exp(-(dt ** 2) / self.sigmaT ** 2)
@@ -88,10 +80,7 @@ class SymptomsStep(Symptoms):
 
     def update_severity_at_time(self, time):
 
-        if (
-            time > self.start_time + self.time_offset
-            and time < self.start_time + self.end_time
-        ):
+        if self.start_time + self.time_offset < time < self.start_time + self.end_time:
             severity = self.maxseverity
         else:
             severity = 0.0
@@ -118,16 +107,13 @@ class SymptomsTanh(Symptoms):
         time_since_start = time - self.start_time
 
         if time_since_start <= self.max_time:
-            severity = (
-                1.0
-                + np.tanh(3.14 * (time_since_start - self.onset_time) / self.delta_onset)
+            severity = 1.0 + np.tanh(
+                np.pi * (time_since_start - self.onset_time) / self.delta_onset
             ) / 2.0
-        elif time_since_start > self.max_time:
-            severity = (
-                1.0 + np.tanh(3.14 * (self.end_time - time_since_start) / self.delta_end)
+        else:
+            severity = 1.0 + np.tanh(
+                np.pi * (self.end_time - time_since_start) / self.delta_end
             ) / 2.0
-        elif time > self.end_time:
-            severity = 0.0
 
         severity *= self.maxseverity
         self.last_time_updated = time
