@@ -196,9 +196,12 @@ class World:
         couples_age_diff = self.inputs.husband_wife_df
         self.households = Households(self)
         self.household_distributor = HouseholdDistributor(
-            distribution_first_kid_parent_age_diff=kids_parents_age_diff_1,
-            distribution_second_kid_parent_age_diff=kids_parents_age_diff_2,
-            distribution_couples_age=couples_age_diff,
+            first_kid_parent_age_differences = np.array(kids_parents_age_diff_1.index).flatten(),
+            first_kid_parent_age_differences_probabilities = np.array(kids_parents_age_diff_1.values).flatten(),
+            second_kid_parent_age_differences = np.array(kids_parents_age_diff_2.index).flatten(),
+            second_kid_parent_age_differences_probabilities=np.array(kids_parents_age_diff_2.values).flatten(),
+            couples_age_differences=np.array(couples_age_diff.index).flatten(),
+            couples_age_differences_probabilities=np.array(couples_age_diff.values).flatten(),
             number_of_random_numbers=int(len(self.people.members)),
         )
         n_students_per_area = self.inputs.n_students
@@ -206,15 +209,11 @@ class World:
         for area in self.areas.members:
             n_students = n_students_per_area.loc[area.name].values[0]
             house_composition_numbers = household_composition_per_area.loc[area.name]
-            try:
-                self.household_distributor.distribute_people_to_households(
-                    area,
-                    number_households_per_composition=house_composition_numbers,
-                    n_students=n_students,
-                )
-            except ValueError:
-                print("area failed:", area.name)
-                pass
+            self.household_distributor.distribute_people_to_households(
+                area,
+                number_households_per_composition=house_composition_numbers,
+                n_students=n_students,
+            )
             pbar.update(1)
         pbar.close()
 
