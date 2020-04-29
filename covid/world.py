@@ -51,10 +51,10 @@ class World:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
-            #if "boundary" in relevant_groups:
-            self.initialize_boundary()
-            #else:
-            #    print("nothing exists outside the simulated region")
+            if "boundary" in relevant_groups:
+                self.initialize_boundary()
+            else:
+                print("nothing exists outside the simulated region")
         self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
