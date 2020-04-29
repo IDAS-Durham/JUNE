@@ -36,35 +36,20 @@ class SchoolDistributor:
                         self.schools.school_agegroup_to_global_indices[agegroup][idx]
                     ]
                 )
-            agemean = self.compute_age_group_mean(agegroup)
             self.closest_schools_by_age[agegroup] = closest_schools
-            self.is_agemean_full[agegroup] = False
-
-    def compute_age_group_mean(self, agegroup):
-        try:
-            age_1, age_2 = agegroup.split("-")
-            if age_2 == "XXX":
-                agemean = 90
-            else:
-                age_1 = float(age_1)
-                age_2 = float(age_2)
-                agemean = (age_2 + age_1) / 2.0
-        except:
-            agemean = int(agegroup)
-        return agemean
+            self.is_school_full[agegroup] = False
 
     def distribute_kids_to_school(self):
         for person in self.area.people:
             if (
-                person.nomis_bin <= self.SCHOOL_AGE_RANGE[1]
-                and person.nomis_bin >= self.SCHOOL_AGE_RANGE[0]
-            ):  # person.nomis_bin from 5 up to 19 yo
-                agegroup = self.area.world.inputs.decoder_age[person.nomis_bin]
-                agemean = self.compute_age_group_mean(agegroup)
-                if self.is_agemean_full[
+                person.age <= self.SCHOOL_AGE_RANGE[1]
+                and person.age >= self.SCHOOL_AGE_RANGE[0]
+            ):  
+                if self.is_school_full[
                     agegroup
                 ]:  # if all schools at that age are full, assign one randomly
-                    if person.nomis_bin == 6:  # if it is 18-19 yo, then do not fill
+                    if person.age <= 4 or person.age >= 18:
+                    #if person.nomis_bin == 6:  # if it is 18-19 yo, then do not fill
                         continue
                     random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
                     school = self.closest_schools_by_age[agegroup][random_number]
@@ -77,7 +62,7 @@ class SchoolDistributor:
                         else:
                             break
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
-                        self.is_agemean_full[agegroup] = True
+                        self.is_school_full[agegroup] = True
                         random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[
                             0
                         ]

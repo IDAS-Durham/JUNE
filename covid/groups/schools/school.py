@@ -74,10 +74,9 @@ class Schools:
         Returns the k schools closest to the output area centroid.
         """
         school_tree = self.school_trees[age]
-        reformat_coordinates = np.deg2rad(coordinates).reshape(1,-1)
-        print(reformat_coordinates.shape)
+        coordinates_rad = np.deg2rad(coordinates).reshape(1,-1)
         distances, neighbours = school_tree.query(
-            reformat_coordinates, k=k, sort_results=True,
+            coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
 
