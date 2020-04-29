@@ -267,10 +267,7 @@ class PersonDistributor:
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
-            if not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD:
-                is_working_age = True
-            else:
-                is_working_age = False
+            is_working_age = not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
             work_msoa_rnd = self.assign_work_msoarea(
                 i,
                 sex_random,
