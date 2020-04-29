@@ -30,7 +30,7 @@ class Group:
 
     allowed_groups = [
         "box",
-        "boundary"
+        "boundary",
         "commute_Public",
         "commute_Private",
         "company",
