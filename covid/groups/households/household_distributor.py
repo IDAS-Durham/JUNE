@@ -21,6 +21,9 @@ def get_closest_element_in_array(array, value):
     min_idx = np.argmin(np.abs(value - array))
     return array[min_idx]
 
+def normalize_probabilities_array(array):
+    total_prob = sum(array)
+    return np.array(array) / total_prob
 
 class HouseholdDistributor:
     """
@@ -40,29 +43,35 @@ class HouseholdDistributor:
         self.OLD_MAX_AGE = 99
         self.ADULT_MIN_AGE = 18
         self.YOUNG_ADULT_MAX_AGE = 35
-        kids_parents_age_dict_sorted = OrderedDict(distribution_kids_parents_age)
         self._kids_parents_age_rv = stats.rv_discrete(
-            list(kids_parents_age_dict_sorted.keys()),
-            list(kids_parents_age_dict_sorted.values()),
+            values=(
+                list(distribution_kids_parents_age.keys()),
+                list(distribution_kids_parents_age.values()),
+            ),
         )
-        couples_age_dict_sorted = OrderedDict(distribution_couples_age)
         self._couples_age_rv = stats.rv_discrete(
-            list(couples_age_dict_sorted.keys()), list(couples_age_dict_sorted.values())
+            values=(
+                list(distribution_couples_age.keys()),
+                list(distribution_couples_age.values()),
+            )
         )
         self._random_sex_rv = stats.rv_discrete(values=((0, 1), (0.5, 0.5)))
-        self._refresh_random_numbers_list(number_of_random_numbers)
+        # self._refresh_random_numbers_list(number_of_random_numbers)
 
     def _refresh_random_numbers_list(self, n=1000000):
         """
         Samples one million age differences for couples and parents-kids. Sampling in batches makes the code much faster. They are converted to lists so they can be popped.
         """
         # create one million random age difference array to save time
+        print(n)
+        test = self._couples_age_rv.rvs(size=n)
+        print(test)
         self._couples_age_differences_list = list(self._couples_age_rv.rvs(size=n))
         # create one million random age difference array to save time
         self._kids_parents_age_differences_list = list(
             self._kids_parents_age_rv.rvs(size=n)
         )
-        self._random_sex_list = list(self._random_sex_rv.rvs(size=10 * n))
+        self._random_sex_list = list(self._random_sex_rv.rvs(size=n))
         self._random_student_age = list(
             np.random.randint(self.STUDENT_MIN_AGE, self.STUDENT_MAX_AGE + 1, size=n)
         )
@@ -252,7 +261,6 @@ class HouseholdDistributor:
                     households_with_extra_oldpeople,
                 ),
             )
-
 
         # all old people -> to be filled with remaining
         key = "0 0 0 0 >=1"
