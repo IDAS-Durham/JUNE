@@ -26,11 +26,13 @@ def normalize_probabilities_array(array):
     total_prob = sum(array)
     return np.array(array) / total_prob
 
+
 def count_items_in_dict(dictionary):
     counter = 0
     for age in dictionary.keys():
         counter += len(dictionary[age])
     return counter
+
 
 def count_remaining_people(dict1, dict2):
     return count_items_in_dict(dict1) + count_items_in_dict(dict2)
@@ -74,10 +76,7 @@ class HouseholdDistributor:
             ),
         )
         self._couples_age_rv = stats.rv_discrete(
-            values=(
-                couples_age_differences,
-                couples_age_differences_probabilities,
-            )
+            values=(couples_age_differences, couples_age_differences_probabilities,)
         )
         self._random_sex_rv = stats.rv_discrete(values=((0, 1), (0.5, 0.5)))
         self._refresh_random_numbers_list(number_of_random_numbers)
@@ -124,7 +123,7 @@ class HouseholdDistributor:
         households_with_extra_oldpeople = []
         households_with_extra_kids = []
         households_with_extra_youngadults = []
-        houses_with_kids = []
+        households_with_kids = []
 
         # families with dependent kids
         key = "1 0 >=0 1 0"
@@ -135,9 +134,12 @@ class HouseholdDistributor:
                 kids_per_house=1,
                 parents_per_house=1,
                 area=area,
-                extra_people_lists=(households_with_extra_youngadults, houses_with_kids),
+                extra_people_lists=(
+                    households_with_extra_youngadults,
+                    households_with_kids,
+                ),
             )
-    
+
         key = ">=2 0 >=0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -149,7 +151,7 @@ class HouseholdDistributor:
                 extra_people_lists=(
                     households_with_extra_kids,
                     households_with_extra_youngadults,
-                    houses_with_kids,
+                    households_with_kids,
                 ),
             )
 
@@ -161,7 +163,10 @@ class HouseholdDistributor:
                 kids_per_house=1,
                 parents_per_house=2,
                 area=area,
-                extra_people_lists=(households_with_extra_youngadults, houses_with_kids),
+                extra_people_lists=(
+                    households_with_extra_youngadults,
+                    households_with_kids,
+                ),
             )
 
         key = ">=2 0 >=0 2 0"
@@ -175,7 +180,7 @@ class HouseholdDistributor:
                 extra_people_lists=(
                     households_with_extra_youngadults,
                     households_with_extra_kids,
-                    houses_with_kids,
+                    households_with_kids,
                 ),
             )
 
@@ -193,7 +198,7 @@ class HouseholdDistributor:
                     households_with_extra_youngadults,
                     households_with_extra_adults,
                     households_with_extra_oldpeople,
-                    houses_with_kids,
+                    households_with_kids,
                 ),
             )
 
@@ -211,7 +216,7 @@ class HouseholdDistributor:
                     households_with_extra_youngadults,
                     households_with_extra_adults,
                     households_with_extra_oldpeople,
-                    houses_with_kids,
+                    households_with_kids,
                 ),
             )
 
@@ -286,7 +291,6 @@ class HouseholdDistributor:
                 extra_people_lists=(households_with_extra_youngadults,),
             )
 
-
         # other trash -> to be filled with remaining
         key = "0 0 >=0 >=0 >=0"
         if key in number_households_per_composition:
@@ -304,20 +308,32 @@ class HouseholdDistributor:
                 while people_dict[age]:
                     person = people_dict[age].pop()
                     if person.age < self.ADULT_MIN_AGE:
-                        household = np.random.choice(households_with_extra_kids)
+                        if households_with_extra_kids:
+                            household = np.random.choice(households_with_extra_kids)
+                        elif households_with_kids:
+                            household = np.random.choice(households_with_kids)
+                        else:
+                            household = np.random.choice(area.households)
                         household.people.append(person)
                         continue
                     elif self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
-                        household = np.random.choice(households_with_extra_youngadults)
+                        if households_with_extra_youngadults:
+                            household = np.random.choice(
+                                households_with_extra_youngadults
+                            )
+                        else:
+                            household = np.random.choice(area.households)
                         household.people.append(person)
                         continue
                     elif self.ADULT_MIN_AGE <= person.age < self.OLD_MIN_AGE:
                         if households_with_extra_adults:
                             household = np.random.choice(households_with_extra_adults)
-                        else:
+                        elif households_with_extra_youngadults:
                             household = np.random.choice(
                                 households_with_extra_youngadults
                             )
+                        else:
+                            household = np.random.choice(area.households)
                         household.people.append(person)
                         continue
                     elif self.OLD_MIN_AGE <= person.age:
@@ -325,13 +341,17 @@ class HouseholdDistributor:
                             household = self._create_household(area)
                             households_with_extra_oldpeople.append(household)
                             household.people.append(person)
+                        elif households_with_extra_oldpeople:
+                            household = np.random.choice(
+                                households_with_extra_oldpeople
+                            )
+                            household.people.append(person)
                         else:
-                            household = np.random.choice(households_with_extra_oldpeople)
+                            household = np.random.choice(area.households)
                             household.people.append(person)
                         continue
                     print("woops")
                     print(person.age)
-
 
         assert count_remaining_people(area.men_by_age, area.women_by_age) == 0
 
@@ -427,7 +447,7 @@ class HouseholdDistributor:
                 area.women_by_age,
                 target_age,
                 min_age=0,
-                max_age=self.ADULT_MIN_AGE-1,
+                max_age=self.ADULT_MIN_AGE - 1,
             )
         else:
             kid = self._get_closest_person_of_age(
@@ -435,9 +455,9 @@ class HouseholdDistributor:
                 area.men_by_age,
                 target_age,
                 min_age=0,
-                max_age=self.ADULT_MIN_AGE-1,
+                max_age=self.ADULT_MIN_AGE - 1,
             )
-        return kid  
+        return kid
 
     def fill_all_student_households(
         self, area, n_students: int, student_houses_number: int
@@ -445,14 +465,14 @@ class HouseholdDistributor:
         if n_students == 0:
             return None
         # students per household
-        ratio = np.floor(n_students / student_houses_number)
+        ratio = max(int(np.floor(n_students / student_houses_number)), 1)
         # get all people in the students age
         # fill students to households
         students_left = True
         while students_left:
             household = self._create_household(area)
             student_houses_number -= 1
-            for _ in range(0, np.floor(ratio)):
+            for _ in range(0, ratio):
                 sex = self._random_sex_list.pop()
                 if sex == 0:
                     age = self._random_student_age.pop()
