@@ -405,7 +405,7 @@ class World:
 
 if __name__ == "__main__":
     world = World(config_file=os.path.join("../configs", "my_config.yaml"))
-    world.to_pickle()
+    world.to_pickle('../world.pkl')
     #world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)
     # world = World.from_pickle()
