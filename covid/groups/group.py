@@ -1,6 +1,9 @@
+import logging
 from typing import List
 
 import matplotlib.pyplot as plt
+
+logger = logging.getLogger(__name__)
 
 
 class Group:
@@ -99,7 +102,7 @@ class Group:
                 person.active_group = self.spec
 
     def update_status_lists(self):
-        print("=== update status list for group with ", len(self.people), " people ===")
+        logger.debug("=== update status list for group with ", len(self.people), " people ===")
         for person in self.people:
             person.health_information.update_health_status()
             if person.health_information.infected:
@@ -112,9 +115,9 @@ class Group:
                     # the household group instance deals with this in its own
                     # update_status_lists method
                 elif person.health_information.in_hospital:
-                    print("person should be in hospital", person.id, ":",
-                          person.health_information.tag, " for",
-                          person.health_information.infection.symptoms.severity)
+                    logger.debug("person should be in hospital", person.id, ":",
+                                 person.health_information.tag, " for",
+                                 person.health_information.infection.symptoms.severity)
                     person.get_into_hospital()
                     self.people.remove(person)
                     continue
