@@ -611,10 +611,10 @@ if __name__ == "__main__":
 
     ip = Inputs()
     #print(ip.carehomes_df[:80].sum())
-    #print(len(ip.household_composition_df))
+    print([len(col.split(' ')) for col in ip.household_composition_df.columns])
     #print(ip.household_composition_df)
-    print(ip.parent_child_df)
-    print(ip.parent_child_df.sum())
+    #print(ip.parent_child_df)
+    #print(ip.parent_child_df.sum())
     #print(ip.husband_wife_df)
     #print(ip.n_students)
     #print(ip.companysize_df)
