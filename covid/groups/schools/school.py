@@ -12,8 +12,6 @@ class SchoolError(BaseException):
 
 class School(Group):
     """
-    The School class represents a household and contains information about 
-    its pupils (6 - 14 years old).
     """
 
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
@@ -123,8 +121,8 @@ class Schools:
 
     def create_interaction_poisson_distributions(self, school_interaction_matrix):
         """
-        Creates 6*5/2 = different 15 Poisson distributions, that model the probability of interaction
-        between two different age groups in a school.
+        Creates 6*5/2 = different 15 Poisson distributions, that model the
+        probability of interaction between two different age groups in a school.
         """
         self.age_interaction_prob = np.empty(
             (6, 6), dtype=stats._discrete_distns.poisson_gen

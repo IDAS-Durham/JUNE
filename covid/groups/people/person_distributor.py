@@ -197,19 +197,19 @@ class PersonDistributor:
         ].values
         
         # Select people working in key industries
-        if MC_random < ratio:
-            key_industry_id = None
-        else:
-            # Assign job category within key industry
-            numbers = np.arange(len(distribution))
-            random_variable = stats.rv_discrete(values=(numbers, distribution))
-            key_industry_id = random_variable.rvs(size=1)
-        
-        if key_industry_id is not None:
-            key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
-                (compsec_decoder[person.industry])
-            ].index.values[key_industry_id[0]]
-            person.industry_specific = key_industry_code
+
+        #if MC_random < ratio:
+        #    key_industry_id = None
+        #else:
+        # Assign job category within key industry
+        numbers = np.arange(len(distribution))
+        random_variable = stats.rv_discrete(values=(numbers, distribution))
+        key_industry_id = random_variable.rvs(size=1)
+        #if key_industry_id is not None:
+        key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
+            (compsec_decoder[person.industry])
+        ].index.values[key_industry_id[0]]
+        person.industry_specific = key_industry_code
 
     def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
         """
@@ -267,7 +267,7 @@ class PersonDistributor:
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
-            if not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD:
+            if self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD:
                 is_working_age = True
             else:
                 is_working_age = False
@@ -291,6 +291,14 @@ class PersonDistributor:
                 0,
                 mode_of_transport=None,
             )  # self.area.regional_commute_generator.weighted_random_choice())
+            # assign person to an industry TODO: implement unemployment
+            if is_working_age:
+                self._assign_industry(
+                    i,
+                    person,
+                    companysector_male_rnd_array,
+                    companysector_female_rnd_array,
+                )
             self.people.members.append(person)
             self.area.people.append(person)
             self.people.total_people += 1
@@ -318,15 +326,6 @@ class PersonDistributor:
                     self.area._oldmen[i] = person
                 else:
                     self.area._oldwomen[i] = person
-
-            # assign person to an industry TODO: implement unemployment
-            if is_working_age:
-                self._assign_industry(
-                    i,
-                    person,
-                    companysector_male_rnd_array,
-                    companysector_female_rnd_array,
-                )
 
         try:
             assert (
