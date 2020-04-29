@@ -42,12 +42,14 @@ class CareHomeDistributor:
                     del men_by_age[current_age_to_fill]
                 man_to_fill.carehome = carehome
                 carehome.people.append(man_to_fill)
+                people_counter += 1
             elif current_age_to_fill in women_by_age:
                 woman_to_fill = women_by_age[current_age_to_fill].pop()
                 if len(women_by_age[current_age_to_fill]) == 0:
                     del women_by_age[current_age_to_fill]
                 carehome.people.append(woman_to_fill)
                 woman_to_fill.carehome = carehome
+                people_counter += 1
             else:
                 current_age_to_fill -= 1
 
