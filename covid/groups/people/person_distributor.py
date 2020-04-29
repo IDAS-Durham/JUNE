@@ -293,7 +293,6 @@ class PersonDistributor:
             )  # self.area.regional_commute_generator.weighted_random_choice())
             self.people.members.append(person)
             self.area.people.append(person)
-            self.people.total_people += 1
             # assign person to the right group:
             if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
