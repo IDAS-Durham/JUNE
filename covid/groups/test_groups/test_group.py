@@ -16,7 +16,7 @@ class TestGroups:
         self.members = []
         self.total_people = total_people
         self.people_per_group = people_per_group
-        if config != None:
+        if config is not None:
             self.health_index_constructor = HealthIndex(config)
         else:
             self.health_index_constructor = None
