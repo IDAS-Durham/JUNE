@@ -20,10 +20,11 @@ class SchoolDistributor:
 
     def __init__(self, schools, area):
         self.area = area
+        self.world = area.world
         self.msoarea = area.msoarea
         self.schools = schools
-        self.MAX_SCHOOLS = area.world.config["schools"]["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = area.world.config["schools"]["school_age_range"]
+        self.MAX_SCHOOLS = self.world.config["schools"]["neighbour_schools"]
+        self.SCHOOL_AGE_RANGE = self.world.config["schools"]["school_age_range"]
         self.closest_schools_by_age = {}
         self.is_agemean_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
@@ -32,11 +33,12 @@ class SchoolDistributor:
                 agegroup, self.area, self.MAX_SCHOOLS,
             )
             for idx in closest_schools_idx:
-                closest_schools.append(
-                    self.schools.members[
-                        self.schools.school_agegroup_to_global_indices[agegroup][idx]
-                    ]
-                )
+                close_school = self.schools.members[
+                    self.schools.school_agegroup_to_global_indices[agegroup][idx]
+                ]
+                closest_schools.append(close_school)
+                self.area.schools.append(close_school)
+
             agemean = self.compute_age_group_mean(agegroup)
             self.closest_schools_by_age[agegroup] = closest_schools
             self.is_agemean_full[agegroup] = False
@@ -90,11 +92,42 @@ class SchoolDistributor:
                 school.n_pupils += 1
 
     def distribute_teachers_to_school(self):
-        for person in self.msoarea.work_people:
-            print("**pesron**", person)
-            if (
-                person.industry_specific == school.age_mean
-                and school.n_teachers < school.n_teachers_max
-            ):
-                pass
+        """
+        Education sector
+            2311: Higher education teaching professional
+            2312: Further education teaching professionals
+            2314: Secondary education teaching professionals
+            2315: Primary and nursery education teaching professionals
+            2316: Special needs education teaching professionals
+        """
+        # find people working in education
+        #TODO add key-company-sector id to config.yaml
+        teachers = [
+            person for idx,person in enumerate(self.msoarea.work_people)
+            if person.industry == "P"
+        ]
+        
+        # equal chance to work in any school nearest to any area within msoa
+        # Note: doing it this way rather then putting them into the area which
+        # is currently chose in the for-loop in the world.py file ensure that
+        # teachers are equally distr., no over-crowding
+        areas_in_msoa = self.msoarea.oareas
+        areas_rv = stats.rv_discrete(
+            values=(
+                np.arange(len(areas_in_msoa)),
+                np.array([1/len(areas_in_msoa)]*len(areas_in_msoa))
+            )
+        )
+        areas_rnd_arr = areas_rv.rvs(size=len(teachers))
+
+        for i,teacher in enumerate(teachers):
+            if teacher.industry_specific != None:
+                area = areas_in_msoa[areas_rnd_arr[i]]
+                    
+                #TODO currently we make no distinction between school levels
+                # because age ranges of schools are not correct
+                for school in area.schools:
+                    if school.n_teachers < school.n_teachers_max:
+                        teacher.school = school.id
+                        school.n_teachers += 1
 
