@@ -2,8 +2,6 @@ from typing import List
 
 import matplotlib.pyplot as plt
 
-from covid.groups import Person
-
 
 class Group:
     """
@@ -52,11 +50,10 @@ class Group:
         self.name = name
         self.spec = spec
         self.people = []
-        if self.spec == "Random":
-            self.fill_random_group(number)
+        self.intensity = 1.0
 
     @property
-    def susceptible(self) -> List[Person]:
+    def susceptible(self) -> List:
         """
         People in this group who are susceptible to the disease
         """
@@ -66,7 +63,7 @@ class Group:
         ]
 
     @property
-    def infected(self) -> List[Person]:
+    def infected(self) -> List:
         """
         People in this group who are currently infected with the disease
         """
@@ -79,7 +76,7 @@ class Group:
         ]
 
     @property
-    def recovered(self) -> List[Person]:
+    def recovered(self) -> List:
         """
         People in this group who have recovered from the disease
         """
@@ -100,14 +97,6 @@ class Group:
                 raise ValueError("Trying to set an already active person")
             else:
                 person.active_group = self.spec
-
-    def set_intensity(self, intensity):
-        self.intensity = intensity
-
-    def get_intensity(self, time=0):
-        if self.intensity == None:
-            return 1.0
-        return self.intensity  # .intensity(time)
 
     def update_status_lists(self):
         print("=== update status list for group with ", len(self.people), " people ===")
@@ -130,13 +119,6 @@ class Group:
                     self.people.remove(person)
                     continue
 
-    def clear(self, all=True):
-        if all:
-            self.people.clear()
-        self.susceptible.clear()
-        self.infected.clear()
-        self.recovered.clear()
-
     @property
     def size(self):
         return len(self.people)
@@ -157,9 +139,9 @@ class Group:
         print("==================================================")
         print("Group ", self.name, ", type = ", self.spec, " with ", len(self.people), " people.")
         print("* ",
-              self.size_susceptible(), "(", round(self.size_susceptible() / self.size * 100), "%) are susceptible, ",
-              self.size_infected(), "(", round(self.size_infected() / self.size * 100), "%) are infected,",
-              self.size_recovered(), "(", round(self.size_recovered() / self.size * 100), "%) have recovered.",
+              self.size_susceptible, "(", round(self.size_susceptible / self.size * 100), "%) are susceptible, ",
+              self.size_infected, "(", round(self.size_infected / self.size * 100), "%) are infected,",
+              self.size_recovered, "(", round(self.size_recovered / self.size * 100), "%) have recovered.",
               )
 
         ages = []
