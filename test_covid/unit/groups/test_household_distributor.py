@@ -2,7 +2,49 @@ import numpy as np
 import os
 from covid.groups import Household, HouseholdDistributor, Households, Person
 import pytest
+from collections import OrderedDict
+from covid.groups import Person
+from pathlib import Path
 
+class MockHouseholds:
+    def __init__(self):
+        self.members = []
+
+class MockWorld:
+    def __init__(self):
+        self.households = MockHouseholds()
+
+class MockArea:
+    def __init__(self):
+        self.create_dicts()
+
+    def create_dicts(self):
+        self.men_by_age = create_men_by_age_dict()
+        self.women_by_age = create_women_by_age_dict()
+
+def create_men_by_age_dict():
+    ages = np.arange(0,99)
+    men_by_age = OrderedDict({})
+    for age in ages:
+        men_by_age[age] = []
+        for _ in range(0,50):
+            man = Person(sex=0, age=age)
+            men_by_age[age].append(man)
+    return men_by_age
+
+def create_women_by_age_dict():
+    ages = np.arange(0,99)
+    women_by_age = OrderedDict({})
+    for age in ages:
+        women_by_age[age] = []
+        for _ in range(0,50):
+            woman = Person(sex=1, age=age)
+            women_by_age[age].append(woman)
+    return women_by_age
+
+def create_area():
+    area = MockArea()
+    return area
 
 @pytest.fixture(name="number_households_per_composition")
 def create_household_composition_example():
@@ -31,41 +73,20 @@ def create_household_distributor():
     )
     return hd
 
-
-def create_people_by_age_dict(sex, number_per_age=100):
-    ages = np.arange(0, 100)
-    women_by_age = OrderedDict({})
-    for age in ages:
-        women_by_age[age] = []
-        for _ in range(number_per_age):
-            person = Person(sex=sex, age=age)
-            women_by_age[age].append(person)
-    return women_by_age
-
-
-def test__get_matching_partner_is_correct():
-
-    women_by_age = create_people_by_age_dict(1, 100)
-    hdistributor = HouseholdDistributor(women_by_age=women_by_age)
-    person = Person(sex=0, age=40)
-    matching_women_ages = []
-    for _ in range(200):
-        matching_woman = hdistributor.get_matching_partner(age=40, sex=0)
-        assert matching_woman.sex == 1
-        matching_women_ages.append(matching_woman.age)
-
-    # here check is gaussian
-    # repeat for man
+def test__get_matching_partner_is_correct(household_distributor):
+    area = create_area()
+    man = Person(sex=0, age=40)
+    woman = household_distributor._get_matching_partner(man, area)
+    assert woman.sex == 1
+    assert (woman.age == 40) or (woman.age == 41)
+    woman = Person(sex=1, age=40)
+    man = household_distributor._get_matching_partner(woman, area)
+    assert man.sex == 0
+    assert (man.age == 40) or (man.age == 41)
+    # check we get same sex if not available
+    area.men_by_age = {}
+    woman = household_distributor._get_matching_partner(woman, area)
+    assert woman.sex == 1
+    assert (woman.age == 40) or (woman.age == 41)
 
 
-def test__get_matching_parent_is_correct():
-    kid = Person(age=20)
-    hdistributor = HouseholdDistributor(
-        men_by_age=men_by_age, women_by_age=women_by_age
-    )
-    matching_kids = []
-    for _ in range(50):
-        matching_kid_to_parent = hdistributor.get_matching_kid_to_parent(parent)
-        matching_kids.append(matching_kid_to_parent)
-
-    # assert is gaussian
