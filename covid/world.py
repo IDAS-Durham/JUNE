@@ -326,10 +326,11 @@ class World:
             " days",
         )
 
-        while self.timer.day <= self.timer.total_days:
-            self.logger.log_timestep(self.timer.day)
+        for day in self.timer:
+            if day > self.timer.total_days:
+                break
+            self.logger.log_timestep(day)
             self.do_timestep(self.timer)
-            next(self.timer)
 
 
 if __name__ == "__main__":
