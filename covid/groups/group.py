@@ -28,6 +28,7 @@ class Group:
 
     allowed_groups = [
         "household",
+        "carehome",
         "school",
         "company",
         "hospital",

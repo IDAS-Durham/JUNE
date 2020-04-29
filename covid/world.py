@@ -45,7 +45,7 @@ class World:
                 self.initialize_people(skip_companies=True)
             else:
                 self.initialize_people(skip_companies=False)
-            #self.initialize_carehomes() #Important that goes before households.
+            self.initialize_carehomes() #Important that goes before households.
             self.initialize_households()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -273,6 +273,8 @@ class World:
         carehomes_df = self.inputs.carehomes_df
         for area in self.areas.members:
             people_in_carehome = carehomes_df.loc[area.name]['N_carehome_residents']
+            if people_in_carehome == 0:
+                continue
             carehome = carehome_distributor.create_carehome_in_area(area, people_in_carehome)
             self.carehomes.members.append(carehome)
 
