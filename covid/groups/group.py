@@ -54,6 +54,7 @@ class Group:
         self.susceptible = []
         self.infected = []
         self.recovered = []
+        #print ("Made group:",name," ",spec," ",number)
         if self.spec == "Random":
             self.fill_random_group(number)
 
@@ -78,43 +79,59 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
+    def must_timestep(self):
+        return (self.size > 1 and
+                self.size_infected > 0 and
+                self.size_susceptible > 0)
+
+    
     def update_status_lists(self, time=1):
-        print ("=== update status list for group with ",len(self.people)," people ===")
         self.susceptible.clear()
         self.infected.clear()
         self.recovered.clear()
+        # collect people dying in this time step, move them to the cemetery, and
+        # remove them from the list afterwards.
+        dead      = []
+        # these two lists are for testing purposes only
+        #stay_home = []
+        #hospital  = []
         for person in self.people:
             person.health_information.update_health_status()
             if person.health_information.susceptible:
                 self.susceptible.append(person)
-            if person.health_information.infected:
+            elif person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
-                    #print ("person must stay at home",person.id,":",
-                    #       person.health_information.tag," for",
-                    #       person.health_information.infection.symptoms.severity)
+                    # stay_home.append(person)
                     # don't add this person to the group
                     # the household group instance deals with this in its own
                     # update_status_lists method
                 elif person.health_information.in_hospital:
-                    print ("person should be in hospital",person.id,":",
-                           person.health_information.tag," for",
-                           person.health_information.infection.symptoms.severity)
                     person.get_into_hospital()
-                    self.people.remove(person)
-                    continue
+                    # hospital.append(person)
                     # don't add this person to the group
                     # the hospital group instance deals with this in its own
                     # update_status_lists method
                 elif person.health_information.dead:
-                    continue
-                    # never add dead people
+                    person.bury()
+                    dead.append(person)
                 else:
                     self.infected.append(person)
             elif person.health_information.recovered:
                 self.recovered.append(person)
                 if person in self.infected:
                     self.infected.remove(person)
+        # remove the dead people from the hospital
+        # TODO: will still have to get them off the households -> need to check what I did
+        for person in dead:
+            self.people.remove(person)
+        #print ("=== update status list for group with ",len(self.people)," people ===")
+        #print ("=== ",len(self.infected)," people infected,",
+        #       len(self.susceptible)," suscepctible,",
+        #       len(self.recovered)," recovered,")
+        #print ("===",len(stay_home)," must stay home,",
+        #       len(hospital)," in hospital,",
+        #       len(dead)," dead.")
 
     def clear(self, all=True):
         if all:

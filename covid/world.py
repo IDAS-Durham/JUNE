@@ -32,7 +32,9 @@ class World:
         self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
-        if box_mode:
+        if self.box_mode:
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
             print("Initializing commute generator...")
@@ -43,6 +45,8 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
             else:
@@ -202,7 +206,12 @@ class World:
         self.boxes.members  = [box]
         self.people         = People(self)
         self.people.members = box.people
-        self.hospitals      = Hospitals(self, box_mode=True)
+
+    def initialize_cemeteries(self):
+        self.cemeteries = Cemeteries(self)
+        
+    def initialize_hospitals(self):
+        self.hospitals = Hospitals(self, box_mode=True)
 
     def initialize_areas(self):
         """
@@ -261,19 +270,6 @@ class World:
             household_distributor.distribute_people_to_household()
             pbar.update(1)
         pbar.close()
-
-    def initialize_hospitals(self):
-        """
-        for testing purposes: create only one hospital
-        """
-        print("Initializing hospitals...")
-        #pbar = tqdm(total=len(self.areas.members))
-        self.hospitals = Hospitals(self)
-        #for area in self.areas.members:
-        #    household_distributor = HouseholdDistributor(self, area)
-        #    household_distributor.distribute_people_to_household()
-        #    pbar.update(1)
-        #pbar.close()
 
     def initialize_schools(self):
         """
