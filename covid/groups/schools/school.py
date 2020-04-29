@@ -17,7 +17,6 @@ class School(Group):
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
         super().__init__("School_%05d" % school_id, "school")
         self.id = school_id
-        self.people = []
         self.coordinates = coordinates  #[lon, lat]
         self.msoa = None
         # self.residents = group(self.id,"household")

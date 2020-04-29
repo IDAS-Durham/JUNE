@@ -18,7 +18,6 @@ class Boundary(Group):
         super().__init__(None, "boundary")
         self.world = world
         self.n_residents = 0
-        self.people = []
         self.missing_workforce_nr()
 
     def missing_workforce_nr(self):
@@ -40,9 +39,7 @@ class Boundary(Group):
 
             (
                 sex_rnd_arr, nomis_bin_rnd_arr, age_rnd_arr
-            ) = self._init_random_variables(
-                n_residents, company.industry
-            )
+            ) = self.init_random_variables(n_residents, company.industry)
 
             for i in range(n_residents):
                 # create new person
@@ -125,7 +122,7 @@ class Boundary(Group):
         ]
         self.ages = age_df.div(age_df.sum(axis=0), axis=1)
     
-    def _init_random_variables(self, n_residents, compsec):
+    def init_random_variables(self, n_residents, compsec):
         """
         Create the random variables following the discrete distributions.
         for different attributes of the whole simulated region.
