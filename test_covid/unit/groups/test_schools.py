@@ -7,7 +7,6 @@ import pandas as pd
 from pathlib import Path
 
 
-'''
 def test__number_schools():
     data_directory = Path(__file__).parent.parent.parent.parent
     school_path = data_directory / "data/census_data/school_data/uk_schools_data.csv"
@@ -15,7 +14,6 @@ def test__number_schools():
     schools = Schools.from_file(school_path)
 
     assert len(schools.members) == len(school_df)
-'''
 
 def test__given_school_coordinate_finds_itself():
     data_directory = Path(__file__).parent.parent.parent.parent
@@ -23,14 +21,14 @@ def test__given_school_coordinate_finds_itself():
     schools = Schools.from_file(school_path)
 
     school_df = pd.read_csv(school_path)
+    index = 100
     closest_school = schools.get_closest_schools(
         3,
-        np.array([school_df.iloc[0].latitude, 
-            school_df.iloc[0].longitude]),
-        0,
+        school_df[['latitude', 'longitude']].iloc[index].values, 
+        1,
     )
 
-    assert schools.members[closest_school[0]] == schools.members[0]
+    assert schools.members[closest_school[index]] == schools.members[index]
 
 '''
 def test_year_ranges_fullfilled():
