@@ -21,7 +21,9 @@ class World:
     Stores global information about the simulation
     """
 
-    def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
+    def __init__(
+        self, config_file=None, box_mode=False, box_n_people=None, box_region=None
+    ):
         print("Initializing world...")
         self.read_config(config_file)
         relevant_groups = self.get_simulation_groups()
@@ -45,7 +47,7 @@ class World:
                 self.initialize_people(skip_companies=True)
             else:
                 self.initialize_people(skip_companies=False)
-            self.initialize_carehomes() #Important that goes before households.
+            self.initialize_carehomes()  # Important that goes before households.
             self.initialize_households()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -56,7 +58,9 @@ class World:
             else:
                 print("companies not needed, skipping...")
         self.interaction = self.initialize_interaction()
-        self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
+        self.logger = Logger(
+            self, self.config["logger"]["save_path"], box_mode=box_mode
+        )
         print("Done.")
 
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
@@ -128,7 +132,9 @@ class World:
             else:
                 print("companies not needed, skipping...")
         self.interaction = self.initialize_interaction()
-        self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
+        self.logger = Logger(
+            self, self.config["logger"]["save_path"], box_mode=box_mode
+        )
         print("Done.")
 
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
@@ -202,10 +208,10 @@ class World:
         print("Setting up box mode...")
         self.boxes = Boxes()
         box = BoxGenerator(self, region, n_people)
-        self.boxes.members  = [box]
-        self.people         = People(self)
+        self.boxes.members = [box]
+        self.people = People(self)
         self.people.members = box.people
-        self.hospitals      = Hospitals(self, box_mode=True)
+        self.hospitals = Hospitals(self, box_mode=True)
 
     def initialize_areas(self):
         """
@@ -259,12 +265,26 @@ class World:
         """
         print("Initializing households...")
         pbar = tqdm(total=len(self.areas.members))
+        kids_parents_age_diff = self.inputs.parent_child_df["0"].to_dict()
+        couples_age_diff = self.inputs.husband_wife_df.to_dict()
         self.households = Households(self)
-        for area in self.areas.members:
-            household_distributor = HouseholdDistributor(self, area)
-            household_distributor.distribute_people_to_household()
-            pbar.update(1)
-        pbar.close()
+        self.household_distributor = HouseholdDistributor(
+            distribution_kids_parents_age=kids_parents_age_diff,
+            distribution_couples_age=couples_age_diff,
+            number_of_random_numbers=int(len(self.people.members)),
+        )
+        #n_students_per_area = self.inputs.n_students
+        #household_composition_per_area = self.inputs.household_composition_df
+        #for area in self.areas.members:
+        #    n_students = n_students_per_area.loc[area.name]
+        #    house_composition_numbers = household_composition_per_area.loc[area.name]
+        #    self.household_distributor.distribute_people_to_households(
+        #        area,
+        #        number_households_per_composition=house_composition_numbers,
+        #        n_students=n_students,
+        #    )
+        #    pbar.update(1)
+        #pbar.close()
 
     def initialize_carehomes(self):
         print("Initializing carehomes...")
@@ -272,12 +292,13 @@ class World:
         carehome_distributor = CareHomeDistributor()
         carehomes_df = self.inputs.carehomes_df
         for area in self.areas.members:
-            people_in_carehome = carehomes_df.loc[area.name]['N_carehome_residents']
+            people_in_carehome = carehomes_df.loc[area.name]["N_carehome_residents"]
             if people_in_carehome == 0:
                 continue
-            carehome = carehome_distributor.create_carehome_in_area(area, people_in_carehome)
+            carehome = carehome_distributor.create_carehome_in_area(
+                area, people_in_carehome
+            )
             self.carehomes.members.append(carehome)
-
 
     def initialize_schools(self):
         """
@@ -288,9 +309,9 @@ class World:
         self.schools = Schools(self, self.areas, self.inputs.school_df)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-           self.distributor = SchoolDistributor(self.schools, area)
-           self.distributor.distribute_kids_to_school()
-           pbar.update(1)
+            self.distributor = SchoolDistributor(self.schools, area)
+            self.distributor.distribute_kids_to_school()
+            pbar.update(1)
         pbar.close()
 
     def initialize_companies(self):
@@ -303,7 +324,9 @@ class World:
         for msoarea in self.msoareas.members:
             if not msoarea.work_people:
                 warnings.warn(
-                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
+                    f"\n The MSOArea {0} has no people that work in it!".format(
+                        msoarea.id
+                    )
                 )
             else:
                 self.distributor = CompanyDistributor(self.companies, msoarea)
@@ -351,7 +374,7 @@ class World:
         group.update_status_lists()
 
     def seed_infections_box(self, n_infections):
-        print ("seed ",n_infections,"infections in box")
+        print("seed ", n_infections, "infections in box")
         choices = np.random.choice(self.people.members, n_infections, replace=False)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
@@ -360,8 +383,8 @@ class World:
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
-        print ("=====================================================")
-        print ("=== active groups: ",active_groups,".")
+        print("=====================================================")
+        print("=== active groups: ", active_groups, ".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -406,7 +429,7 @@ class World:
 if __name__ == "__main__":
     world = World(config_file=os.path.join("../configs", "my_config.yaml"))
     world.to_pickle()
-    #world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+    # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)
     # world = World.from_pickle()
-    #world.group_dynamics()
+    # world.group_dynamics()
