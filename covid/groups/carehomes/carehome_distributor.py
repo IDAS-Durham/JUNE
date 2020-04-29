@@ -32,7 +32,7 @@ class CareHomeDistributor:
             np.max(list(men_by_age.keys())), np.max(list(women_by_age.keys()))
         )
         people_counter = 0
-        while people_counter < carehome.carehome_residents_number:
+        while people_counter < carehome.n_residents:
             # fill until no old people or care home full
             if current_age_to_fill in men_by_age:
                 man_to_fill = men_by_age[current_age_to_fill].pop()
@@ -40,12 +40,14 @@ class CareHomeDistributor:
                     len(men_by_age[current_age_to_fill]) == 0
                 ):  # delete age key if empty list
                     del men_by_age[current_age_to_fill]
+                man_to_fill.carehome = carehome
                 carehome.people.append(man_to_fill)
             elif current_age_to_fill in women_by_age:
                 woman_to_fill = women_by_age[current_age_to_fill].pop()
                 if len(women_by_age[current_age_to_fill]) == 0:
                     del women_by_age[current_age_to_fill]
                 carehome.people.append(woman_to_fill)
+                woman_to_fill.carehome = carehome
             else:
                 current_age_to_fill -= 1
 

@@ -41,8 +41,8 @@ class PersonDistributor:
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self.no_kids_area = False
         self.no_students_area = False
-        self.men_by_age = OrderedDict()
-        self.women_by_age = OrderedDict()
+        self.area.men_by_age = {}
+        self.area.women_by_age = {}
         self.companysector_by_sex_dict = companysector_by_sex_dict
         self.companysector_by_sex_df = companysector_by_sex_df
         self.workflow_df = workflow_df
@@ -328,14 +328,14 @@ class PersonDistributor:
                     self.area._oldmen[i] = person
                 else:
                     self.area._oldwomen[i] = person
-            #if sex_random == 0:
-            #    if age_random not in self.men_by_age:
-            #        self.men_by_age[age_random] = []
-            #    self.men_by_age[age_random].append(person)
-            #else:
-            #    if age_random not in self.women_by_age:
-            #        self.women_by_age[age_random] = []
-            #    self.women_by_age[age_random].append(person)
+            if sex_random == 0:
+                if age_random not in self.area.men_by_age:
+                    self.area.men_by_age[age_random] = []
+                self.area.men_by_age[age_random].append(person)
+            else:
+                if age_random not in self.area.women_by_age:
+                    self.area.women_by_age[age_random] = []
+                self.area.women_by_age[age_random].append(person)
 
             if not self.skip_companies:
                 # assign person to an industry TODO: implement unemployment
@@ -346,6 +346,8 @@ class PersonDistributor:
                         companysector_male_rnd_array,
                         companysector_female_rnd_array,
                     )
+        self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
+        self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
 
         try:
             assert (

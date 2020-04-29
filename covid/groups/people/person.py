@@ -149,6 +149,7 @@ class Person:
         self.household = None
         self.school = None
         self.industry = None
+        self.carehome = None
         #TODO finda a different way to specify education
         # and healthcare job subclasses since a lot of people
         # will not use this flas
