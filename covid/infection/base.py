@@ -146,7 +146,7 @@ class Infection(InfectionInitializer):
     def update(self):
         if self.last_time_updated <= self.timer.now:
             self.last_time_updated = self.timer.now
-            self.transmission.update_probability()
+            self.transmission.update_probability_at_time()
             self.infection_probability = self.transmission.transmission_probability
             self.symptoms.update_severity()
 
@@ -159,4 +159,4 @@ if __name__ == "__main__":
     inf = Infection(None, None, user_params)
     print(inf.transmission)
     print(inf.symptoms.infection)
-    print(inf.transmission.probability)
+    print(inf.transmission.probability_at_time)
