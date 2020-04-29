@@ -102,8 +102,8 @@ class Boundary(Group):
             [person.nomis_bin, person.age] for person in self.world.people.members
         ]
         nomis_bin_arr, age_arr = np.array(nomis_and_age_list).T
-        (nomis_bin_unique, nomis_bin_counts) = np.unique(nomis_bin_arr, return_counts=True)
-        (age_unique, age_counts) = np.unique(age_arr, return_counts=True)
+        nomis_bin_unique, nomis_bin_counts = np.unique(nomis_bin_arr, return_counts=True)
+        age_unique, age_counts = np.unique(age_arr, return_counts=True)
 
         nomis_bin_df = pd.DataFrame(
             data=np.vstack((nomis_bin_unique, nomis_bin_counts)).T,
@@ -139,12 +139,12 @@ class Boundary(Group):
         sex_rnd_arr = sex_rv.rvs(size=n_residents)
         
         nomis_bin_rv = rv_discrete(
-            values=(np.arange(0, len(self.nomis_bins.freq.values)), self.nomis_bins.freq.values)
+            values=(np.arange(len(self.nomis_bins.freq.values)), self.nomis_bins.freq.values)
         )
         nomis_bin_rnd_arr = nomis_bin_rv.rvs(size=n_residents)
         
         age_rv = rv_discrete(
-            values=(np.arange(0, len(self.ages.freq.values)), self.ages.freq.values)
+            values=(np.arange(len(self.ages.freq.values)), self.ages.freq.values)
         )
         age_rnd_arr = age_rv.rvs(size=n_residents)
         
