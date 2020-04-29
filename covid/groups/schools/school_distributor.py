@@ -28,7 +28,7 @@ class SchoolDistributor:
         for agegroup, school_tree in self.schools.school_trees.items():
             closest_schools = []
             closest_schools_idx = self.schools.get_closest_schools(
-                agegroup, self.area, self.MAX_SCHOOLS,
+                agegroup, self.area.coordinates, self.MAX_SCHOOLS,
             )
             for idx in closest_schools_idx:
                 closest_schools.append(
