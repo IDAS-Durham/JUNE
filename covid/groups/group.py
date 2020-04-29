@@ -1,4 +1,8 @@
+from typing import List
+
 import matplotlib.pyplot as plt
+
+from covid.groups import Person
 
 
 class Group:
@@ -52,14 +56,20 @@ class Group:
             self.fill_random_group(number)
 
     @property
-    def susceptible(self):
+    def susceptible(self) -> List[Person]:
+        """
+        People in this group who are susceptible to the disease
+        """
         return [
             person for person in self.people
             if person.health_information.susceptible
         ]
 
     @property
-    def infected(self):
+    def infected(self) -> List[Person]:
+        """
+        People in this group who are currently infected with the disease
+        """
         return [
             person for person in self.people
             if person.health_information.infected and not (
@@ -69,7 +79,10 @@ class Group:
         ]
 
     @property
-    def recovered(self):
+    def recovered(self) -> List[Person]:
+        """
+        People in this group who have recovered from the disease
+        """
         return [
             person for person in self.people
             if person.health_information.recovered
