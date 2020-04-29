@@ -1,6 +1,4 @@
 from covid.interaction.parameters import ParameterInitializer
-from covid.infection import Infection
-from covid.groups import Group
 import numpy as np
 import sys
 import random

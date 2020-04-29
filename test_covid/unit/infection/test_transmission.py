@@ -1,5 +1,4 @@
 from covid.infection import transmission as trans
-from covid import time as t
 
 import pytest
 

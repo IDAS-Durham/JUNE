@@ -35,7 +35,7 @@ class HealthInformation:
             if self.infection.symptoms.is_recovered():
                 self.set_recovered()
             else:
-                self.infection.update()
+                self.infection.update_to_time()
 
     def set_recovered(self):
         # self.infection = None

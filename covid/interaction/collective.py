@@ -1,5 +1,4 @@
 from covid.interaction import Interaction
-from covid.infection import Infection
 from covid.groups import Group
 import numpy as np
 import sys
