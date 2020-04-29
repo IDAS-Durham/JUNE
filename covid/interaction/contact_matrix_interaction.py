@@ -26,42 +26,46 @@ class MatrixInteraction(Interaction):
         super().__init__(user_parameters, required_parameters)
 
     def single_time_step_for_group(self, group):
-        if (
-            group.size <= 1
-            or group.size_infected() == 0
-            or group.size_susceptible() == 0
-        ):
-            return
+        if group.must_timestep():
+            self.matrix = group.get_contact_matrix()
+            self.matrix = self.reduce_matrix(group)
+            self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
+            
+            for infecter in group.get_infected():
+                contact_ages = self.prepare_interaction_ages(infecter,group)
+                for age in contact_ages:
+                    self.make_interactions(infecter,group,age)
+        if group.spec=="hospital":
+            print ("must allow for infection of workers by patients")
 
-        self.matrix = group.get_contact_matrix()
-        self.matrix = self.reduce_matrix(group)
-        self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
 
-        for infecter in group.get_infected():
-            transmission_probability = self.calculate_single_transmission_probability(
-                infecter, group
-            )
+    def make_interactions(self,infecter,group,age):
+        # randomly select someone with that age
+        recipient = self.make_single_contact(infecter, group, age)
+        if (recipient and 
+            not (recipient.is_infected()) and
+            recipient.susceptibility > 0.0):
+            if random.random() <= 1.0 - np.exp(
+                    -transmission_probability * recipient.susceptibility()
+            ):
+                infecter.infection.infect(recipient)
+                recipient.counter.update_infection_data(
+                    self.world.timer.now, group.get_spec()
+                )
+                infecter.counter.increment_infected()
+
+        
+    def prepare_interaction_ages(self,infecter,group):
+        self.transmission_probability = self.calculate_single_transmission_probability(
+            infecter, group
+        )
+        if self.transmission_probability>1.e-12:
             Naverage = self.contacts[infecter.age]
             # find column infecter, and sum
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
             draw_contacts = np.random.rand(Ncontacts)
-            contact_ages = np.searchsorted(
-                self.probability[:, infecter.age], draw_contacts
-            )
-            for i in range(Ncontacts):
-                # randomly select someone with that age
-                recipient = self.make_single_contact(infecter, group, contact_ages[i])
-                if recipient and (
-                    not (recipient.is_infected()) and recipient.susceptibility > 0.0
-                ):
-                    if random.random() <= 1.0 - np.exp(
-                        -transmission_probability * recipient.susceptibility()
-                    ):
-                        infecter.infection.infect(recipient)
-                        recipient.counter.update_infection_data(
-                            self.world.timer.now, group.get_spec()
-                        )
-                        infecter.counter.increment_infected()
+            return np.searchsorted(self.probability[:, infecter.age], draw_contacts) 
+        return []
 
     def calculate_single_transmission_probability(self, infecter, group):
         intensity = group.get_intensity(self.time)
