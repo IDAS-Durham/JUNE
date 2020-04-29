@@ -77,14 +77,11 @@ class Inputs:
         self.companysector_df = self.read_companysector_census(
             np.unique(self.oa2msoa_df["MSOA11CD"].values)
         )
+        self.compsec_by_sex_df = self.read_compsec_by_sex()
         (
-            self.companysector_by_sex_dict,
-            self.companysector_by_sex_df,
-        ) = self.read_compsec_by_sex_census()
-        (
-            self.compsec_specic_ratio_by_sex_df,
-            self.compsec_specic_distr_by_sex_df
-        ) = self.read_key_compsec_by_sex(self.companysector_by_sex_df)
+            self.key_compsec_ratio_by_sex_df,
+            self.key_compsec_distr_by_sex_df
+        ) = self.read_key_compsec_by_sex(self.compsec_by_sex_df)
         self.commute_generator_path = (
             Path(__file__).parent.parent / "data/census_data/commute.csv"
         )
@@ -207,16 +204,17 @@ class Inputs:
 
         return companysector_df
 
-    def read_compsec_by_sex_census(self):
+    def read_compsec_by_sex(self):
         """
-        Gives number dict of discrete probability distributions by sex of the different industry sectors at the OA level
+        Gives number dict of discrete probability distributions by sex of the
+        different industry sectors at the OA level.
         The dict is of the format: {[oa]: {[gender('m'/'f')]: [distribution]}}
         
         TableID: KS605EW to KS607EW
         https://www.nomisweb.co.uk/census/2011/ks605ew
         """
 
-        industry_by_sex_df = pd.read_csv(
+        compsec_by_sex_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
@@ -225,89 +223,35 @@ class Inputs:
                 "output_area",
                 "NorthEast",
                 "industry_by_sex_cleaned.csv",
-            )
+            ),
+            index_col=0,
+        )
+        compsec_by_sex_df = compsec_by_sex_df.drop(
+            ['date', 'geography', 'rural urban'], axis=1,
         )
 
         # define all columns in csv file relateing to males
-        # here each letter corresponds to the industry sector (see metadata)
-        m_columns = [
-            "m A",
-            "m B",
-            "m C",
-            "m D",
-            "m E",
-            "m F",
-            "m G",
-            "m H",
-            "m I",
-            "m J",
-            "m K",
-            "m L",
-            "m M",
-            "m N",
-            "m O",
-            "m P",
-            "m Q",
-            "m R",
-            "m S",
-            "m T",
-            "m U",
-        ]
+        m_columns = [col for col in compsec_by_sex_df.columns.values if "m " in col]
+        m_columns.remove('m all')
+        m_columns.remove('m R S T U')
 
-        m_distributions = []
-        for oa in range(len(industry_by_sex_df["oareas"])):
-            total = float(industry_by_sex_df["m all"][oa])
+        f_columns = [col for col in compsec_by_sex_df.columns.values if "f " in col]
+        f_columns.remove('f all')
+        f_columns.remove('f R S T U')
 
-            distribution = []
-            for column in m_columns:
-                distribution.append(float(industry_by_sex_df[column][oa]) / total)
-
-            m_distributions.append(distribution)
-
-        # define all columns in csv file relateing to males
+        uni_columns = [col for col in compsec_by_sex_df.columns.values if "all " in col]
+        compsec_by_sex_df = compsec_by_sex_df.drop(
+            uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
+        )
+        compsec_by_sex_df = compsec_by_sex_df.set_index('oareas')
+        compsec_by_sex_df.loc[:, m_columns] = compsec_by_sex_df.loc[:, m_columns].div(
+            compsec_by_sex_df[m_columns].sum(axis=1), axis=0
+        )
+        compsec_by_sex_df.loc[:, f_columns] = compsec_by_sex_df.loc[:, f_columns].div(
+            compsec_by_sex_df[f_columns].sum(axis=1), axis=0
+        )
         
-        f_columns = [
-            "f A",
-            "f B",
-            "f C",
-            "f D",
-            "f E",
-            "f F",
-            "f G",
-            "f H",
-            "f I",
-            "f J",
-            "f K",
-            "f L",
-            "f M",
-            "f N",
-            "f O",
-            "f P",
-            "f Q",
-            "f R",
-            "f S",
-            "f T",
-            "f U",
-        ]
-
-        f_distributions = []
-        for oa in range(len(industry_by_sex_df["oareas"])):
-            total = int(industry_by_sex_df["f all"][oa])
-
-            distribution = []
-            for column in f_columns:
-                distribution.append(int(industry_by_sex_df[column][oa]) / total)
-
-            f_distributions.append(distribution)
-
-        industry_by_sex_dict = {}
-        for idx, oa in enumerate(industry_by_sex_df["oareas"]):
-            industry_by_sex_dict[oa] = {
-                "m": m_distributions[idx],
-                "f": f_distributions[idx],
-            }
-
-        return industry_by_sex_dict, industry_by_sex_df
+        return compsec_by_sex_df
 
 
     def read_key_compsec_by_sex(self, companysector_by_sex_df):
@@ -565,5 +509,6 @@ if __name__ == "__main__":
     #print(ip.workflow_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
-    #print(ip.companysector_by_sex_df)
+    print(ip.compsec_by_sex_df)
+    #print(ip.compsec_by_sex_dict)
     #print(ip.companysector_specific_by_sex_df)
