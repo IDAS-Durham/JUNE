@@ -30,8 +30,7 @@ def test_no_kids_carehome(world_ne):
 
 def test_n_carehome_residents(world_ne):
 
-    for i in range(len(world_ne.areas.members)):
-        for j in range(len(world_ne.areas.members[i].carehomes)):
-            assert world_ne.inputs.carehomes_df.loc[world_ne.areas.members[i].name] == world_ne.areas.members[i].carehomes.members[j].n_carehome_residents
-            assert world_ne.inputs.carehomes_df.loc[world_ne.areas.members[i].name] == len(world_ne.areas.members[i].carehomes.members[j].people)
+    for carehome in world_ne.carehomes.members:
+        assert world_ne.inputs.carehomes_df.loc[carehome.area.name, 'N_carehome_residents'] == carehome.n_residents
+        assert world_ne.inputs.carehomes_df.loc[carehome.area.name, 'N_carehome_residents']  == len(carehome.people) 
 
