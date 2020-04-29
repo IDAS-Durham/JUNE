@@ -20,8 +20,12 @@ class School(Group):
         super().__init__("School_%05d" % school_id, "school")
         self.id = school_id
         self.people = []
-        self.coordinates = coordinates
+        self.coordinates = coordinates  #[lon, lat]
+        self.msoa = None
         # self.residents = group(self.id,"household")
+        #TODO assumption on nr. of students per teachers
+        self.n_teachers_max = int(n_pupils / 30)
+        self.n_teachers = 0
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
         self.age_min = age_min

@@ -20,6 +20,7 @@ class SchoolDistributor:
 
     def __init__(self, schools, area):
         self.area = area
+        self.msoarea = area.msoarea
         self.schools = schools
         self.MAX_SCHOOLS = area.world.config["schools"]["neighbour_schools"]
         self.SCHOOL_AGE_RANGE = area.world.config["schools"]["school_age_range"]
@@ -90,8 +91,10 @@ class SchoolDistributor:
 
     def distribute_teachers_to_school(self):
         for person in self.msoarea.work_people:
+            print("**pesron**", person)
             if (
                 person.industry_specific == school.age_mean
                 and school.n_teachers < school.n_teachers_max
             ):
+                pass
 

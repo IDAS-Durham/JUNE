@@ -159,7 +159,7 @@ class World:
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.id,)]
             person_distributor = PersonDistributor(
                 self.timer,
                 self.people,
@@ -197,9 +197,10 @@ class World:
         self.schools = Schools(self, self.areas, self.inputs.school_df)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-           self.distributor = SchoolDistributor(self.schools, area)
-           self.distributor.distribute_kids_to_school()
-           pbar.update(1)
+            self.distributor = SchoolDistributor(self.schools, area)
+            self.distributor.distribute_kids_to_school()
+            self.distributor.distribute_teachers_to_school()
+            pbar.update(1)
         pbar.close()
 
     def initialize_companies(self):
