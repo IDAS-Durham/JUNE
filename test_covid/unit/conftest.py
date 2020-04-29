@@ -1,3 +1,7 @@
+from covid.infection import infection as infect
+from covid.infection import symptons as sym
+from covid.infection import transmission as trans
+
 from covid import World
 from covid.time import Timer 
 import os
@@ -21,3 +25,11 @@ def create_timer():
 
     return Timer(config['time'])
 
+
+@pytest.fixture(name="symptoms", scope="session")
+def create_symptoms():
+    return sym.SymptomsConstant(health_index=None, recovery_rate=0.3)
+
+@pytest.fixture(name="transmission", scope="session")
+def create_transmission():
+    return trans.TransmissionConstant(start_time=0.0, proabability=0.3)
