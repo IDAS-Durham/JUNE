@@ -19,7 +19,6 @@ class Boundary(Group):
         super().__init__("Boundary", "boundary")
         self.world = world
         self.n_residents = 0
-        self.people = []
         self.missing_workforce_nr()
 
     def missing_workforce_nr(self):
