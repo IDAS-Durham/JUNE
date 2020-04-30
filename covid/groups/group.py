@@ -1,7 +1,9 @@
-import sys
-import random
-import matplotlib
+import logging
+from typing import List
+
 import matplotlib.pyplot as plt
+
+logger = logging.getLogger(__name__)
 
 
 class Group:
@@ -27,36 +29,62 @@ class Group:
     """
 
     allowed_groups = [
-        "household",
-        "school",
-        "company",
-        "hospital",
-        "work_Outdoor",
-        "work_Indoor",
+        "box",
+        "boundary",
         "commute_Public",
         "commute_Private",
+        "company",
+        "household",
+        "hospital",
         "leisure_Outdoor",
         "leisure_Indoor",
-        "shopping",
-        "referenceGroup",
         "random",
+        "referenceGroup",
+        "shopping",
+        "school",
         "testGroup",
-        "box"
+        "work_Outdoor",
+        "work_Indoor",
     ]
 
-    
     def __init__(self, name, spec, number=-1):
-        if not self.sane(name, spec):
-            return
         self.name = name
         self.spec = spec
         self.people = []
-        self.susceptible = []
-        self.infected = []
-        self.recovered = []
-        #print ("Made group:",name," ",spec," ",number)
-        if self.spec == "Random":
-            self.fill_random_group(number)
+        self.intensity = 1.0
+
+    @property
+    def susceptible(self) -> List:
+        """
+        People in this group who are susceptible to the disease
+        """
+        return [
+            person for person in self.people
+            if person.health_information.susceptible
+        ]
+
+    @property
+    def infected(self) -> List:
+        """
+        People in this group who are currently infected with the disease
+        """
+        return [
+            person for person in self.people
+            if person.health_information.infected and not (
+                    person.health_information.in_hospital
+                    or person.health_information.dead
+            )
+        ]
+
+    @property
+    def recovered(self) -> List:
+        """
+        People in this group who have recovered from the disease
+        """
+        return [
+            person for person in self.people
+            if person.health_information.recovered
+        ]
 
     def sane(self, name, spec):
         if not spec in self.allowed_groups:
@@ -84,17 +112,7 @@ class Group:
                 self.size_infected > 0 and
                 self.size_susceptible > 0)
 
-    
-    def update_status_lists(self, time=1):
-        self.susceptible.clear()
-        self.infected.clear()
-        self.recovered.clear()
-        # collect people dying in this time step, move them to the cemetery, and
-        # remove them from the list afterwards.
-        dead      = []
-        # these two lists are for testing purposes only
-        #stay_home = []
-        #hospital  = []
+    def update_status_lists(self):
         for person in self.people:
             person.health_information.update_health_status()
             if person.health_information.susceptible:
@@ -102,43 +120,9 @@ class Group:
             elif person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
-                    # stay_home.append(person)
-                    # don't add this person to the group
-                    # the household group instance deals with this in its own
-                    # update_status_lists method
-                elif person.health_information.in_hospital:
-                    person.get_into_hospital()
-                    # hospital.append(person)
-                    # don't add this person to the group
-                    # the hospital group instance deals with this in its own
-                    # update_status_lists method
-                elif person.health_information.dead:
-                    person.bury()
-                    dead.append(person)
-                else:
-                    self.infected.append(person)
-            elif person.health_information.recovered:
-                self.recovered.append(person)
-                if person in self.infected:
-                    self.infected.remove(person)
-        # remove the dead people from the hospital
-        # TODO: will still have to get them off the households -> need to check what I did
-        for person in dead:
-            self.people.remove(person)
-        #print ("=== update status list for group with ",len(self.people)," people ===")
-        #print ("=== ",len(self.infected)," people infected,",
-        #       len(self.susceptible)," suscepctible,",
-        #       len(self.recovered)," recovered,")
-        #print ("===",len(stay_home)," must stay home,",
-        #       len(hospital)," in hospital,",
-        #       len(dead)," dead.")
-
-    def clear(self, all=True):
-        if all:
-            self.people.clear()
-        self.susceptible.clear()
-        self.infected.clear()
-        self.recovered.clear()
+            elif person.health_information.dead:
+                person.bury()
+                self.people.remove(person)
 
     @property
     def size(self):
@@ -156,14 +140,14 @@ class Group:
     def size_recovered(self):
         return len(self.recovered)
 
-    def output(self, plot=False, full=False,time = 0):
+    def output(self, plot=False, full=False, time=0):
         print("==================================================")
-        print("Group ",self.name,", type = ",self.spec," with ",len(self.people)," people.")
+        print("Group ", self.name, ", type = ", self.spec, " with ", len(self.people), " people.")
         print("* ",
-            self.size_susceptible(),"(",round(self.size_susceptible() / self.size * 100),"%) are susceptible, ",
-            self.size_infected(),   "(",round(self.size_infected() / self.size * 100),   "%) are infected,",
-            self.size_recovered(),  "(",round(self.size_recovered() / self.size * 100),  "%) have recovered.",
-        )
+              self.size_susceptible, "(", round(self.size_susceptible / self.size * 100), "%) are susceptible, ",
+              self.size_infected, "(", round(self.size_infected / self.size * 100), "%) are infected,",
+              self.size_recovered, "(", round(self.size_recovered / self.size * 100), "%) have recovered.",
+              )
 
         ages = []
         M = 0
@@ -175,9 +159,9 @@ class Group:
             else:
                 F += 1
         print("* ",
-              F,"(",round(F / self.size * 100.0),"%) females, ",
-              M,"(",round(M / self.size * 100.0),"%) males;",
-        )
+              F, "(", round(F / self.size * 100.0), "%) females, ",
+              M, "(", round(M / self.size * 100.0), "%) males;",
+              )
         if plot:
             fig, axes = plt.subplots()
             axes.hist(ages, 20, range=(0, 100), density=True, facecolor="blue", alpha=0.5)
@@ -204,9 +188,10 @@ def reciprocal_matrix(matrix, demography):
     demography_matrix = demography.reshape(-1, 1) / demography.reshape(1, -1)
     return (matrix + matrix.T * demography_matrix) / 2
 
+
 class TestGroups():
-    def __init__(self,N):
+    def __init__(self, N):
         self.members = []
         self.members.append([])
-        self.members[0].append(Group("Test","Random",1000))
-        print (self)
+        self.members[0].append(Group("Test", "Random", 1000))
+        print(self)
