@@ -74,7 +74,6 @@ def test__age_range_schools(world_ne):
                 n_outside_range += 1
     assert n_outside_range == 0
 
-
 def test__non_mandatory_dont_go_if_school_full(world_ne):
 
     non_mandatory_added = 0

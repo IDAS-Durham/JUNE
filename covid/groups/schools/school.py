@@ -13,12 +13,28 @@ class SchoolError(BaseException):
 
 
 class School(Group):
-    """
-    The School class represents a household and contains information about 
-    its pupils (6 - 14 years old).
-    """
-
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max, sector):
+        """
+        Create a School given its description.
+
+        Parameters
+        ----------
+        school_id:
+            unique identifier of the school
+        coordinates:
+            latitude and longitude 
+        n_pupils: 
+            number of pupils that attend the school
+        age_min:
+            minimum age of the pupils
+        age_max:
+            maximum age of the pupils
+        sector:
+            whether it is a "primary", "secondary" or both "primary_secondary"
+
+        """
+
+
         super().__init__("School_%05d" % school_id, "school")
         self.coordinates = coordinates
         self.n_pupils_max = n_pupils
@@ -30,7 +46,17 @@ class School(Group):
 
 
 class Schools:
-    def __init__(self, school_df, config):
+
+    def __init__(self, school_df: pd.DataFrame, config: dict):
+        """
+        Create a group of Schools, and provide functionality to access closest school
+
+        Parameters
+        ----------
+        school_df:
+            data frame with school data
+        """
+ 
         self.members = []
         self.config = config
         school_df.reset_index(drop=True, inplace=True)
