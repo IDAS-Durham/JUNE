@@ -128,7 +128,7 @@ class Person:
             sex=None,
             health_index=None,
             econ_index=None,
-            mode_of_transport=None,
+            mode_of_transport=None
     ):
         # if not 0 <= age <= 120 or sex not in ("M", "F"):
         #    raise AssertionError(
@@ -149,6 +149,7 @@ class Person:
         self.household = None
         self.school = None
         self.industry = None
+        self.in_hospital = None
         #TODO finda a different way to specify education
         # and healthcare job subclasses since a lot of people
         # will not use this flas
@@ -157,8 +158,13 @@ class Person:
         self.health_information = HealthInformation(Counter(self))
 
     def get_into_hospital(self):
-        hospital = self.world.hospitals.get_nearest(self)
-        hospital.add_as_patient(self)
+        if self.in_hospital==None:
+            hospital = self.world.hospitals.get_nearest(self)
+            hospital.add_as_patient(self)
+
+    def bury(self):
+        cemetery = self.world.cemeteries.get_nearest(self)
+        cemetery.add(self)
         
     def output(self, time=0):
         print("--------------------------------------------------")
