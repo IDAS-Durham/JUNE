@@ -128,7 +128,6 @@ class SchoolDistributor:
                 # because age ranges of schools are not correct
                 for school in area.schools:
                     if school.n_teachers < school.n_teachers_max:
-
                         teacher.school = school.id
                         school.n_teachers += 1
 

@@ -200,18 +200,19 @@ class PersonDistributor:
         
         # Select people working in key industries
 
-        #if MC_random < ratio:
-        #    key_industry_id = None
-        #else:
-        # Assign job category within key industry
-        numbers = np.arange(len(distribution))
-        random_variable = stats.rv_discrete(values=(numbers, distribution))
-        key_industry_id = random_variable.rvs(size=1)
-        #if key_industry_id is not None:
-        key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
-            (compsec_decoder[person.industry])
-        ].index.values[key_industry_id[0]]
-        person.industry_specific = key_industry_code
+        if MC_random < ratio:
+            #print(MC_random, ratio)
+            key_industry_id = None
+        else:
+            # Assign job category within key industry
+            numbers = np.arange(len(distribution))
+            random_variable = stats.rv_discrete(values=(numbers, distribution))
+            key_industry_id = random_variable.rvs(size=1)
+        if key_industry_id is not None:
+            key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
+                (compsec_decoder[person.industry])
+            ].index.values[key_industry_id[0]]
+            person.industry_specific = key_industry_code
 
     def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
         """
