@@ -1,9 +1,10 @@
 from sklearn.neighbors import BallTree
 from scipy import stats
-from covid.groups import Group
 import numpy as np
 import pandas as pd
+import yaml
 
+from covid.groups import Group
 
 class SchoolError(BaseException):
     """Class for throwing school related errors."""
@@ -17,7 +18,7 @@ class School(Group):
     its pupils (6 - 14 years old).
     """
 
-    def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
+    def __init__(self, school_id, coordinates, n_pupils, age_min, age_max, sector):
         super().__init__("School_%05d" % school_id, "school")
         self.id = school_id
         self.coordinates = coordinates
@@ -25,18 +26,21 @@ class School(Group):
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
+        self.sector = sector
 
 
 class Schools:
     def __init__(self, school_df, config):
         self.members = []
+        self.config = config
+        school_df.reset_index(drop=True, inplace=True)
         self.init_schools(school_df)
         self.init_trees(school_df)
-        self.config = config
 
     @classmethod
     def from_file(cls, filename: str, config_filename: str):
         school_df = pd.read_csv(filename, index_col=0)
+        # make sure indices are the ones expected
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return Schools(school_df, config)
@@ -53,6 +57,7 @@ class Schools:
                 row["NOR"],
                 row["age_min"],
                 row["age_max"],
+                row["sector"],
             )
             schools.append(school)
         self.members = schools
@@ -60,11 +65,10 @@ class Schools:
     def init_trees(self, school_df):
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: [] for k in range(self.SCHOOL_AGE_RANGE[0], self.SCHOOL_AGE_RANGE[1] + 1)
+            k: [] for k in range(self.config['school_age_range'][0], self.config['school_age_range'][1] + 1)
         }
         # have a tree per age
-        school_df.reset_index(drop=True)
-        for age in range(self.SCHOOL_AGE_RANGE[0], self.SCHOOL_AGE_RANGE[1] + 1):
+        for age in range(self.config['school_age_range'][0], self.config['school_age_range'][1] + 1):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
             ]
