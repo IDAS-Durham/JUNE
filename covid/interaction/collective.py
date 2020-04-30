@@ -50,7 +50,7 @@ class InteractionCollective(Interaction):
             logic of the SI/SIR models --- and normalised to the time interval, given in
             units of full days.
             """
-            transmission_probability = 1.-np.exp(recipient_probability * effective_load)
+            transmission_probability = 1.-np.exp(-recipient_probability * effective_load)
         if random.random() <= transmission_probability:
             infecter = self.select_infecter()
             infecter.health_information.infection.infect_person_at_time(recipient)
@@ -79,11 +79,9 @@ class InteractionCollective(Interaction):
         return summed_load
 
     def select_infecter(self):
-        disc = random.random()
-        i    = 0
-        while disc > 0.0 and i < len(self.weights)-1:
-            i += 1
-        return self.weights[i][0]
+        choice_weights = [w[1] for w in self.weights]
+        idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
+        return self.weights[idx][0]
 
     def get_alpha(self,grouptype):
         if grouptype in self.alphas:
