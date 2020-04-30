@@ -35,7 +35,9 @@ class PersonDistributor:
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
-        self.key_compsec_id = area.world.config["companies"]["key_sector"]
+        self.key_compsec_id = [
+            value for key, value in area.world.config["companies"]["key_sector"].items()
+        ]
         self.no_kids_area = False
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
@@ -96,33 +98,10 @@ class PersonDistributor:
             )
         )
 
-        # company data
-        ## TODO add company data intilialisation from dict of distibutions in industry_distibutions.py
-        self.industry_dict = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
-            7: "G",
-            8: "H",
-            9: "I",
-            10: "J",
-            11: "K",
-            12: "L",
-            13: "M",
-            14: "N",
-            15: "O",
-            16: "P",
-            17: "Q",
-            18: "R",
-            19: "S",
-            20: "T",
-            21: "U",
-        }
+        # companies data
         numbers = np.arange(1, 22)
         m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
+        
         distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
@@ -133,6 +112,9 @@ class PersonDistributor:
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )
+        self.industry_dict = {
+            (idx+1): col.split(' ')[-1] for idx,col in enumerate(m_col)
+        }
 
     def _assign_industry(self, i, person, sector_man, sector_woman, employed=True):
         """
