@@ -1,5 +1,4 @@
 from covid.interaction import Interaction
-from covid.infection import Infection
 from covid.groups import Group
 import numpy as np
 import sys
@@ -56,7 +55,7 @@ class InteractionCollective(Interaction):
             transmission_probability = 1.-np.exp(recipient_probability * effective_load)
         if random.random() <= transmission_probability:
             infecter = self.select_infecter()
-            infecter.health_information.infection.infect(recipient)
+            infecter.health_information.infection.infect_person_at_time(recipient)
             infecter.health_information.counter.increment_infected()
             recipient.health_information.counter.update_infection_data(
                 self.world.timer.now, group.spec
