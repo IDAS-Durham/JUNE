@@ -9,3 +9,4 @@ from .hospitals import Hospital, Hospitals
 from .test_groups import TestGroup, TestGroups
 from .box import Box, Boxes
 from .cemetery import Cemetery, Cemeteries
+from .boundary_condition import Boundary
