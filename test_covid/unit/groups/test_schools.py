@@ -31,7 +31,7 @@ def test__given_school_coordinate_finds_itself_as_closest(index):
         1,
     )
     closest_school_idx = schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
-    assert schools.members[closest_school_idx].id == schools.members[index].id
+    assert schools.members[closest_school_idx].name == schools.members[index].name
 
 
 
@@ -52,7 +52,7 @@ def test__all_kids_mandatory_school(world_ne):
                     lost_kids += 1
     assert lost_kids == 0
 
-def test_only_kids_school(world_ne):
+def test__only_kids_school(world_ne):
     """
     Check that all kids in ages between 5 and 17 are assigned a school 
     """
@@ -65,4 +65,18 @@ def test_only_kids_school(world_ne):
                     schooled_adults += 1
 
     assert schooled_adults == 0
+
+def test__non_mandatory_dont_go_if_school_full(world_ne):
+
+    non_mandatory_added = 0
+    for school in world_ne.schools.members:
+        if school.n_pupils > school.n_pupils_max:
+            if (np.sum(np.array(school.people[school.n_pupils_max:]) > world_ne.schools.MANDATORY_SCHOOL_AGE_RANGE[1]) or
+                np.sum(np.array(school.people[school.n_pupils_max:]) < world_ne.schools.MANDATORY_SCHOOL_AGE_RANGE[0])):
+                    non_mandatory_added += 1
+
+    assert non_mandatory_added == 0
+
+
+
 
