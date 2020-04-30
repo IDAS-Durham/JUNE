@@ -23,11 +23,9 @@ class CompanyDistributor:
         STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
         ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
         OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
-        count = 0
 
         for person in self.msoarea.work_people:
 
-            count += 1
             comp_choice = np.random.choice(
                 len(self.msoarea.companies), len(self.msoarea.companies), replace=False
             )
