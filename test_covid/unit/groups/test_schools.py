@@ -51,9 +51,6 @@ def test__all_kids_mandatory_school(world_ne):
     assert lost_kids == 0
 
 def test__only_kids_school(world_ne):
-    """
-    Check that all kids in ages between 5 and 17 are assigned a school 
-    """
     ADULTS_LOW = 20 
     schooled_adults = 0
     for i in range(len(world_ne.areas.members)):
@@ -69,6 +66,15 @@ def test__n_pupils_counter(world_ne):
         n_pupils = len(school.people)
         assert n_pupils == school.n_pupils
 
+def test__age_range_schools(world_ne):
+    n_outside_range = 0
+    for school in world_ne.schools.members:
+        for person in school.people:
+            if person.age < school.age_min or person.age > school.age_max:
+                n_outside_range += 1
+    assert n_outside_range == 0
+
+
 def test__non_mandatory_dont_go_if_school_full(world_ne):
 
     non_mandatory_added = 0
@@ -81,7 +87,5 @@ def test__non_mandatory_dont_go_if_school_full(world_ne):
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
-
-
 
 
