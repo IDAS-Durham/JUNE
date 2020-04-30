@@ -103,15 +103,6 @@ class SymptomsTanh(Symptoms):
         # TODO : These have both cropped up in the recent project history, which is correct?
 
         if delta_time <= self.max_time:
-            severity = np.tanh( 1.0 +
-                np.pi * (delta_time - self.onset_time) / self.delta_onset
-            ) / 2.0
-        else:
-            severity = np.tanh( 1.0 +
-                np.pi * (self.end_time - delta_time) / self.delta_end
-            ) / 2.0
-
-        if delta_time <= self.max_time:
             severity = (
                 1.0
                 + np.tanh(np.pi * (delta_time - self.onset_time) / self.delta_onset)
@@ -120,6 +111,8 @@ class SymptomsTanh(Symptoms):
             severity = (
                 1.0 + np.tanh(np.pi * (self.end_time - delta_time) / self.delta_end)
             ) / 2.0
+
+        print(severity)
 
         severity *= self.maxseverity
         self.severity = severity
