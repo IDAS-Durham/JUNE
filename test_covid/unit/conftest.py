@@ -38,8 +38,8 @@ def create_timer():
 
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
-    return sym.SymptomsConstant(health_index=None, recovery_rate=0.3)
+    return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
 
 @pytest.fixture(name="transmission", scope="session")
 def create_transmission():
-    return trans.TransmissionConstant(start_time=0.0, proabability=0.3)
+    return trans.TransmissionConstant(proabability=0.3)

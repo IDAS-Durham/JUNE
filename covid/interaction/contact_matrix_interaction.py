@@ -57,7 +57,7 @@ class MatrixInteraction(Interaction):
                     if random.random() <= 1.0 - np.exp(
                         -transmission_probability * recipient.susceptibility()
                     ):
-                        infecter.infection.infect(recipient)
+                        infecter.infection.infect_person_at_time(recipient)
                         recipient.counter.update_infection_data(
                             self.world.timer.now, group.get_spec()
                         )

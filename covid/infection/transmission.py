@@ -4,7 +4,7 @@ class Transmission:
 
         self.probability = 0.0
 
-    def update_probability_at_time(self, time):
+    def update_probability_from_delta_time(self, time):
         raise NotImplementedError()
 
 class TransmissionConstant(Transmission):
@@ -15,6 +15,6 @@ class TransmissionConstant(Transmission):
 
         self.probability = proabability
 
-    def update_probability_at_time(self, time):
+    def update_probability_from_delta_time(self, delta_time):
 
         pass
