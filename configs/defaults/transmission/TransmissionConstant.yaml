@@ -1,4 +1,4 @@
-transmission_probability:
+probability:
   distribution: constant
   parameters:
     value: 0.3
