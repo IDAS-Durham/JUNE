@@ -14,22 +14,22 @@ class Interaction(ParameterInitializer):
         self.intensities = {}
 
     def time_step(self):
-        print ("-----------------------------------------------------")
+        #print ("-----------------------------------------------------")
         for grouptype in self.groups:
             for group in grouptype.members:
                 if group.size != 0:
                     group.update_status_lists()
-        print ("-----------------------------------------------------")
+        #print ("-----------------------------------------------------")
         for grouptype in self.groups:
             for group in grouptype.members:
                 if group.size != 0:
                     self.single_time_step_for_group(group)
-        print ("-----------------------------------------------------")
+        #print ("-----------------------------------------------------")
         for grouptype in self.groups:
             for group in grouptype.members:
                 if group.size != 0:
                     group.update_status_lists()
-        print ("-----------------------------------------------------")
+        #print ("-----------------------------------------------------")
 
     def single_time_step_for_group(self, group):
         pass
