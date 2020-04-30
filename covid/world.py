@@ -29,7 +29,7 @@ class World:
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
         self.people = []
-        self.total_people = 0
+        self.total_people = 0  #TODO is nowehere updated
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if box_mode:

@@ -526,5 +526,5 @@ if __name__ == "__main__":
     #print(ip.workflow_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
-    #print(ip.compsec_by_sex_df)
-    print(ip.key_compsec_ratio_by_sex_df)
+    print(ip.compsec_by_sex_df)
+    #print(ip.key_compsec_ratio_by_sex_df)
