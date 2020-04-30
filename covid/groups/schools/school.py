@@ -3,6 +3,7 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 import yaml
+from typing import List, Tuple, Dict
 
 from covid.groups import Group
 
@@ -13,7 +14,13 @@ class SchoolError(BaseException):
 
 
 class School(Group):
-    def __init__(self, school_id, coordinates, n_pupils, age_min, age_max, sector):
+    def __init__(self, 
+            school_id: int,
+            coordinates: Tuple[float, float], 
+            n_pupils: int, 
+            age_min: int, 
+            age_max: int, 
+            sector: str):
         """
         Create a School given its description.
 
@@ -33,8 +40,6 @@ class School(Group):
             whether it is a "primary", "secondary" or both "primary_secondary"
 
         """
-
-
         super().__init__("School_%05d" % school_id, "school")
         self.coordinates = coordinates
         self.n_pupils_max = n_pupils
@@ -55,6 +60,8 @@ class Schools:
         ----------
         school_df:
             data frame with school data
+        config:
+            config dictionary
         """
  
         self.members = []
@@ -64,16 +71,37 @@ class Schools:
         self.init_trees(school_df)
 
     @classmethod
-    def from_file(cls, filename: str, config_filename: str):
+    def from_file(cls, filename: str, config_filename: str)->"Schools":
+        """
+        Initialize Schools from path to data frame, and path to config file 
+
+        Parameters
+        ----------
+        filename:
+            path to school dataframe
+        config_filename:
+            path to school config dictionary
+
+        Returns
+        -------
+        Schools instance
+        """
+ 
         school_df = pd.read_csv(filename, index_col=0)
-        # make sure indices are the ones expected
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return Schools(school_df, config)
 
-    def init_schools(self, school_df):
+    def init_schools(self, school_df: pd.DataFrame):
         """
-        Initializes schools.
+        Create School objects with the right characteristics, 
+        as given by dataframe
+
+        Parameters
+        ----------
+        school_df:
+            dataframe with school characteristics data
+
         """
         schools = []
         for i, (index, row) in enumerate(school_df.iterrows()):
@@ -88,7 +116,18 @@ class Schools:
             schools.append(school)
         self.members = schools
 
-    def init_trees(self, school_df):
+    def init_trees(self, school_df: pd.DataFrame):
+        """
+        Create trees to easily find the closest school that
+        accepts a pupil given their age
+
+        Parameters
+        ----------
+        school_df:
+            dataframe with school characteristics data
+
+        """
+
         school_trees = {}
         school_agegroup_to_global_indices = {
             k: [] for k in range(self.config['school_age_range'][0], self.config['school_age_range'][1] + 1)
@@ -104,10 +143,27 @@ class Schools:
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
 
-    def get_closest_schools(self, age, coordinates, k):
+    def get_closest_schools(self, age: int, coordinates: Tuple[float, float], k: int)->int:
         """
-        Returns the k schools closest to the output area centroid.
+        Get the k-th closest school to a given coordinate, that accepts pupils
+        aged age
+
+        Parameters
+        ----------
+        age:
+            age of the pupil
+        coordinates: 
+            latitude and longitude
+        k:
+            k-th neighbour
+
+        Returns
+        -------
+        ID of the k-th closest school, within school trees for 
+        a given age group
+
         """
+
         school_tree = self.school_trees[age]
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
         distances, neighbours = school_tree.query(
@@ -115,10 +171,21 @@ class Schools:
         )
         return neighbours[0]
 
-    def _create_school_tree(self, school_df):
+    def _create_school_tree(self, school_df: pd.DataFrame)->BallTree:
         """
         Reads school location and sizes, it initializes a KD tree on a sphere,
         to query the closest schools to a given location.
+
+        Parameters
+        ----------
+        school_df: 
+            dataframe with school characteristics data
+
+        Returns
+        -------
+        Tree to query nearby schools
+
+ 
         """
         school_tree = BallTree(
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
