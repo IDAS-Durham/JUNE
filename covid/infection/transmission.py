@@ -1,8 +1,7 @@
 class Transmission:
 
-    def __init__(self, start_time):
+    def __init__(self):
 
-        self.start_time = start_time
         self.probability = 0.0
 
     def update_probability_at_time(self, time):
@@ -10,12 +9,12 @@ class Transmission:
 
 class TransmissionConstant(Transmission):
 
-    def __init__(self, start_time, proabability=0.3):
+    def __init__(self, proabability=0.3):
 
-        super().__init__(start_time=start_time)
+        super().__init__()
 
         self.probability = proabability
 
     def update_probability_at_time(self, time):
 
-        self.last_time_updated = time
+        pass
