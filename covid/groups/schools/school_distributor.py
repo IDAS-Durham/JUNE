@@ -3,15 +3,11 @@ from random import uniform
 from scipy import stats
 import yaml
 import warnings
+from typing import List, Tuple, Dict
 
 # from covid.school import SchoolError
 
 EARTH_RADIUS = 6371  # km
-
-"""
-This file contains routines to attribute people with different characteristics
-according to census data.
-"""
 
 
 class SchoolDistributor:
@@ -19,7 +15,20 @@ class SchoolDistributor:
     Distributes students in an area to different schools 
     """
 
-    def __init__(self, schools, area, config):
+    def __init__(self, schools: "Schools", area: "Area", config: dict):
+        """
+        Get closest schools to this output area, per age group
+        (different schools admit pupils with different age ranges)
+
+        Parameters
+        ----------
+        schools: 
+            instance of Schools, with information on all schools in world.
+        area:
+            instance of Area.
+        config:
+            config dictionary.
+        """
         self.area = area
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
@@ -44,17 +53,43 @@ class SchoolDistributor:
             self.is_school_full[agegroup] = False
 
     @classmethod
-    def from_file(cls, schools, area, config_filename):
+    def from_file(cls, schools: "Schools", area: "Area", config_filename: str)->"SchoolDistributor":
+        """
+        Initialize SchoolDistributor from path to its config file 
+
+        Parameters
+        ----------
+        schools: 
+            instance of Schools, with information on all schools in world.
+        area:
+            instance of Area.
+        config:
+            path to config dictionary
+
+        Returns
+        -------
+        SchoolDistributor instance
+        """
+
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
         return SchoolDistributor(schools, area, config)
 
     def distribute_kids_to_school(self):
+        """
+        Function to distribute kids to schools according to distance 
+        """
         self.distribute_mandatory_kids_to_school()
         self.distribute_non_mandatory_kids_to_school()
 
     def distribute_mandatory_kids_to_school(self):
+        """
+        Send kids to the nearest school among the self.MAX_SCHOOLS schools,
+        that has vacancies. If none of them has vacancies, pick one of them
+        at random (making it larger than it should be)
+        """
+
         for person in self.area.people:
             if (
                 person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[1]
@@ -84,6 +119,11 @@ class SchoolDistributor:
                 school.n_pupils += 1
 
     def distribute_non_mandatory_kids_to_school(self):
+        '''
+        For kids in age ranges that might go to school, but it is not mandatory
+        send them to the closest school that has vacancies among the self.MAX_SCHOOLS closests.
+        If none of them has vacancies do not send them to school
+        '''
         for person in self.area.people:
             if (
                 self.SCHOOL_AGE_RANGE[0] < person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
