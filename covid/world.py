@@ -12,6 +12,8 @@ from covid.groups import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
+from covid.interaction import *
+from covid.infection import *
 
 
 class World:
