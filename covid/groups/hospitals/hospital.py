@@ -1,7 +1,9 @@
-from sklearn.neighbors import BallTree
+from sklearn.neighbors._ball_tree import BallTree
+
 from covid.groups import Group
+
 import numpy as np
-import sys
+
 
 class Hospital(Group):
     """
@@ -46,7 +48,7 @@ class Hospital(Group):
     @property
     def full_ICU(self):
         return len(self.ICUpatients)>=self.n_ICUbeds
-    
+
     def set_active_members(self):
         for person in self.people:
             if person.active_group is None:
@@ -70,30 +72,7 @@ class Hospital(Group):
     def size(self):
         return len(self.people)+len(self.patients)+len(self.ICUpatients)
 
-
-    def update_status_lists_for_workers(self, time=1):
-        dead = []
-        self.susceptible.clear()
-        self.infected.clear()
-        self.recovered.clear()
-        for person in self.people:
-            person.health_information.update_health_status()
-            if person.health_information.susceptible:
-                self.susceptible.append(person)
-            if person.health_information.infected:
-                self.infected.append(person)
-            elif person.health_information.recovered:
-                self.recovered.append(person)
-                if person in self.infected:
-                    self.infected.remove(person)
-            elif person.health_information.dead:
-                person.bury()
-                dead.append(person)
-        for person in dead:
-            self.people.remove(person)
-
-
-    def update_status_lists_for_patients(self, time=1):
+    def update_status_lists_for_patients(self):
         dead = []
         for person in self.patients:
             person.health_information.update_health_status()
@@ -115,7 +94,7 @@ class Hospital(Group):
         for person in dead:
             self.patients.remove(person)
 
-    def update_status_lists_for_ICUpatients(self, time=1):
+    def update_status_lists_for_ICUpatients(self):
         dead = []
         for person in self.ICUpatients:
             person.health_information.update_health_status()
@@ -137,16 +116,17 @@ class Hospital(Group):
         for person in dead:
             self.ICUpatients.remove(person)
                         
-    def update_status_lists(self, time=1):
+    def update_status_lists(self):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        self.update_status_lists_for_workers(time)
-        self.update_status_lists_for_patients(time)
-        self.update_status_lists_for_ICUpatients(time)        
+        super().update_status_lists()
+        self.update_status_lists_for_patients()
+        self.update_status_lists_for_ICUpatients()
         print ("=== update status list for hospital with ",self.size," people ===")
         print ("=== hospital currently has ",len(self.patients)," patients",
                "and ",len(self.ICUpatients)," ICU patients")
-                    
+
+
 class Hospitals:
     """
     Contains all hospitals for the given area, and information about them.
@@ -222,3 +202,4 @@ class Hospitals:
         return hospital_tree.query(
             np.deg2rad(area.coordinates.reshape(1,-1)),k = k,sort_results=True
             )
+

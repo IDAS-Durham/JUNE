@@ -1,19 +1,17 @@
 import os
-
-import warnings
-import numpy as np
 import pickle
+import warnings
+
+import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-from covid.interaction import *
+from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
-from covid.infection import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
-from covid.box_generator import BoxGenerator
 
 
 class World:
@@ -55,6 +53,10 @@ class World:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
+            if "boundary" in relevant_groups:
+                self.initialize_boundary()
+            else:
+                print("nothing exists outside the simulated region")
         self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
@@ -72,82 +74,6 @@ class World:
         """
         Initializes a world instance from an already populated world.
         """
-        with open(pickle_obj, "rb") as f:
-            world = pickle.load(f)
-        return world
-
-    @classmethod
-    def from_config(cls, config_file):
-        return cls(config_file)
-
-    def read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "configs",
-                "config_example.yaml",
-            )
-        with open(config_file, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
-
-    def get_simulation_groups(self):
-        """
-        Reads all the different groups specified in the time section of the configuration file.
-        """
-        timesteps_config = self.config["time"]["step_active_groups"]
-        active_groups = []
-        for daytype in timesteps_config.keys():
-            for timestep in timesteps_config[daytype].values():
-                for group in timestep:
-                    active_groups.append(group)
-        active_groups = np.unique(active_groups)
-        return active_groups
-
-    def read_defaults(self):
-        default_config_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..",
-            "configs",
-            "defaults",
-            "world.yaml",
-        )
-        with open(default_config_path, "r") as f:
-            default_config = yaml.load(f, Loader=yaml.FullLoader)
-        for key in default_config.keys():
-            if key not in self.config:
-                self.config[key] = default_config[key]
-            self.initialize_households()
-            self.initialize_msoa_areas()
-            if "schools" in relevant_groups:
-                self.initialize_schools()
-            else:
-                print("schools not needed, skipping...")
-            if "companies" in relevant_groups:
-                self.initialize_companies()
-            else:
-                print("companies not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
-        print("Done.")
-
-    def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
-        """
-        Write the world to file. Comes in handy when setting up the world
-        takes a long time.
-        """
-        import pickle
-
-        with open(pickle_obj, "wb") as f:
-            pickle.dump(self, f)
-
-    @classmethod
-    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
-        """
-        Initializes a world instance from an already populated world.
-        """
-        import pickle
-
         with open(pickle_obj, "rb") as f:
             world = pickle.load(f)
         return world
@@ -203,15 +129,15 @@ class World:
         print("Setting up box mode...")
         self.boxes = Boxes()
         box = BoxGenerator(self, region, n_people)
-        self.boxes.members  = [box]
-        self.people         = People(self)
+        self.boxes.members = [box]
+        self.people = People(self)
         self.people.members = box.people
 
     def initialize_cemeteries(self):
         self.cemeteries = Cemeteries(self)
-        
+
     def initialize_hospitals(self):
-        self.hospitals = Hospitals(self,self.inputs.hospital_df,self.box_mode)
+        self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
 
     def initialize_areas(self):
         """
@@ -247,11 +173,10 @@ class World:
                 self.people,
                 area,
                 self.msoareas,
-                self.inputs.companysector_by_sex_dict,
-                self.inputs.companysector_by_sex_df,
+                self.inputs.compsec_by_sex_df,
                 wf_area_df,
-                self.inputs.compsec_specic_ratio_by_sex_df,
-                self.inputs.compsec_specic_distr_by_sex_df,
+                self.inputs.key_compsec_ratio_by_sex_df,
+                self.inputs.key_compsec_distr_by_sex_df,
             )
             person_distributor.populate_area()
             pbar.update(1)
@@ -280,9 +205,9 @@ class World:
         self.schools = Schools(self, self.areas, self.inputs.school_df)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-           self.distributor = SchoolDistributor(self.schools, area)
-           self.distributor.distribute_kids_to_school()
-           pbar.update(1)
+            self.distributor = SchoolDistributor(self.schools, area)
+            self.distributor.distribute_kids_to_school()
+            pbar.update(1)
         pbar.close()
 
     def initialize_companies(self):
@@ -302,6 +227,15 @@ class World:
                 self.distributor.distribute_adults_to_companies()
             pbar.update(1)
         pbar.close()
+
+    def initialize_boundary(self):
+        """
+        Create a population that lives in the boundary.
+        It interacts with the population in the simulated region only
+        in companies. No interaction takes place during leasure activities.
+        """
+        print("Creating Boundary...")
+        self.boundary = Boundary(self)
 
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
@@ -343,7 +277,7 @@ class World:
         group.update_status_lists()
 
     def seed_infections_box(self, n_infections):
-        print ("seed ",n_infections,"infections in box")
+        print("seed ", n_infections, "infections in box")
         choices = np.random.choice(self.people.members, n_infections, replace=False)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
@@ -352,8 +286,8 @@ class World:
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
-        #print ("=====================================================")
-        #print ("=== active groups: ",active_groups,".")
+        # print ("=====================================================")
+        # print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -379,7 +313,7 @@ class World:
             self.seed_infections_box(n_seed)
         else:
             print("Infecting individuals in their household,",
-                  "for in total ",len(self.households.members)," households.")
+                  "for in total ", len(self.households.members), " households.")
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
         print(
@@ -390,15 +324,18 @@ class World:
             " days",
         )
 
-        while self.timer.day <= self.timer.total_days:
-            self.logger.log_timestep(self.timer.day)
+        for day in self.timer:
+            if day > self.timer.total_days:
+                break
+            self.logger.log_timestep(day)
             self.do_timestep(self.timer)
-            next(self.timer)
 
 
 if __name__ == "__main__":
     world = World(config_file=os.path.join("../configs", "config_example.yaml"))
-    #world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+
+    # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)
+
     # world = World.from_pickle()
     world.group_dynamics()
