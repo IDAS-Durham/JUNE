@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
-    all people in the group, the healthy ones and the infected ones (we may 
+    all people in the group, the healthy ones and the infected ones (we may
     have to add the immune ones as well).
 
     This is very basic and we will have to specify derived classes with
