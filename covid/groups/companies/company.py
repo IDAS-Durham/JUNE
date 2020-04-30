@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
@@ -111,8 +110,9 @@ class Companies:
                             pass
  
             except:
-                #TODO include verbose option
-                warnings.warn(f"The initialization of companies for the MSOArea {0} failed.".format(msoarea))
+                raise CompanyError(
+                    f"The initialization of companies for the MSOArea {0} failed.".format(msoarea)
+                )
                 pass
             #pbar.update(1)
         #pbar.close()
