@@ -25,6 +25,9 @@ class SchoolDistributor:
         self.schools = schools
         self.MAX_SCHOOLS = self.world.config["schools"]["neighbour_schools"]
         self.SCHOOL_AGE_RANGE = self.world.config["schools"]["school_age_range"]
+        self.education_sector_label = (
+            self.world.config["companies"]["key_sector"]["schools"]
+        )
         self.closest_schools_by_age = {}
         self.is_agemean_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
@@ -104,7 +107,7 @@ class SchoolDistributor:
         #TODO add key-company-sector id to config.yaml
         teachers = [
             person for idx,person in enumerate(self.msoarea.work_people)
-            if person.industry == "P"
+            if person.industry == self.education_sector_label
         ]
         
         # equal chance to work in any school nearest to any area within msoa
