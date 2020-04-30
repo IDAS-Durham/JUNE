@@ -44,7 +44,7 @@ class SymptomsConstant(Symptoms):
         self.recovery_rate = recovery_rate
         self.predicted_recovery_time = stats.expon.rvs(scale=1.0 / self.recovery_rate)
 
-    def update_severity_from_delta_time(self, time):
+    def update_severity_from_delta_time(self, delta_time):
 
         pass
 
@@ -63,7 +63,7 @@ class SymptomsGaussian(Symptoms):
 
     def update_severity_from_delta_time(self, delta_time):
 
-        dt = delta_time - + self.mean_time
+        dt = delta_time - self.mean_time
 
         self.severity = self.maxseverity * np.exp(-(dt ** 2) / self.sigma_time ** 2)
 
