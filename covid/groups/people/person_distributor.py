@@ -168,6 +168,12 @@ class PersonDistributor:
                 2316: Special needs education teaching professionals
         """
         #TODO if input date is provided nicely we don't need this anymore
+        #TODO this dictionary are the only key_compsec currently implemented
+        key_compsec_dict = {
+            2314: "secondary",
+            2315: "primary",
+            2316: "special_needs",
+        }
         compsec_decoder = {"Q": "healthcare", "P": "education"}
         sex_decoder = {0: "male", 1: "female"}
 
@@ -194,7 +200,11 @@ class PersonDistributor:
             key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
                 (compsec_decoder[person.industry])
             ].index.values[key_industry_id[0]]
-            person.industry_specific = key_industry_code
+            
+            if key_industry_code in key_compsec_dict.keys():
+                person.industry_specific = key_compsec_dict[key_industry_code]
+            else:
+                person.industry_specific = key_industry_code
 
     def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
         """
