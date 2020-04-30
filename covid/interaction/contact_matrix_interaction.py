@@ -64,7 +64,7 @@ class MatrixInteraction(Interaction):
                         infecter.counter.increment_infected()
 
     def calculate_single_transmission_probability(self, infecter, group):
-        intensity = group.get_intensity(self.time)
+        intensity = group.intensity
         probability = infecter.transmission.transmission_probability
         # probability *= self.severity_multiplier(group.get_spec())
         return (
