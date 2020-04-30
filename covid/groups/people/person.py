@@ -193,4 +193,7 @@ class People:
     def __init__(self, world):
         self.world = world
         self.members = []
-        self.total_people = 0
+
+    @property
+    def total_people(self):
+        return len(self.members)
