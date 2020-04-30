@@ -26,6 +26,7 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
+        self.is_full=False
 
 
 class Schools:

@@ -60,7 +60,7 @@ class SchoolDistributor:
                     # if it is younger than 4 or older than 18, do not fill
                     # (not necessarily everyone that age goes to school
                     if (
-                        person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                        person.age < self.MANDATORY_SCHOOL_AGE_RANGE[0]
                         or person.age > self.MANDATORY_SCHOOL_AGE_RANGE[1]
                     ):
                         continue
@@ -76,6 +76,12 @@ class SchoolDistributor:
                         else:
                             break
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
+                        if (
+                            person.age < self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                            or person.age > self.MANDATORY_SCHOOL_AGE_RANGE[1]
+                        ):
+                            continue
+
                         self.is_school_full[person.age] = True
                         random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[
                             0
@@ -86,3 +92,4 @@ class SchoolDistributor:
                 school.people.append(person)
                 person.school = school
                 school.n_pupils += 1
+
