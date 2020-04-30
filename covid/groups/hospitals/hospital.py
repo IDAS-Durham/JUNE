@@ -1,6 +1,7 @@
 from sklearn.neighbors import BallTree
 from covid.groups import Group
 import numpy as np
+import sys
 
 class Hospital(Group):
     """
@@ -13,10 +14,10 @@ class Hospital(Group):
     become a real problem as it is manifestly not correct.
     """
 
-    def __init__(self, hospital_id=1, structure=None, area=None):
+    def __init__(self, hospital_id=1, structure=None, postcode=None):
         Group.__init__(self, name = "Hospital_%03d"%hospital_id, spec = "hospital") 
         self.id          = hospital_id
-        self.area        = area
+        self.postcode    = postcode
         self.people      = []
         self.patients    = []
         self.ICUpatients = []
@@ -25,8 +26,6 @@ class Hospital(Group):
         into the composition
         """
         self.structure = structure
-        print ("I am Boris - this is my virtual hospital",self.id)
-
 
     @property
     def n_beds(self):
@@ -152,15 +151,41 @@ class Hospitals:
     """
     Contains all hospitals for the given area, and information about them.
     """
-    def __init__(self, world, box_mode=False):
+    def __init__(self, world, hospital_df=None, box_mode=False):
         self.world    = world
         self.box_mode = box_mode
         self.members  = []
-        #self.hospital_trees = self._create_hospital_tree(hospital_df)
-        if self.box_mode:
+        # translate identifier from csv to position in members
+        self.finder   = {}
+        # maximal distance of patient to receiving hospital - parameter needs to be fixed/adjusted
+        self.max_distance = 100.
+        # number of ICU beds per hospital from simple fraction, numbers
+        # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
+        self.ICUfraction  = 5900./141000. 
+        if not(self.box_mode):
+            print ("Init hospitals from data file")
+            self.hospital_trees = self.create_hospital_trees(hospital_df)
+        else:
             self.members.append(Hospital(1,{ "n_beds": 10,   "n_ICUbeds": 2}))
             self.members.append(Hospital(2,{ "n_beds": 5000, "n_ICUbeds": 5000}))
 
+    def create_hospital_trees(self,hospital_df):
+        hospital_tree = BallTree(
+            np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
+            )
+        for row in range(hospital_df.shape[0]):
+            n_beds    = hospital_df.iloc[row]["beds"]
+            n_ICUbeds = round(self.ICUfraction*n_beds)
+            n_beds   -= n_ICUbeds
+            self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
+                                         { "n_beds": int(n_beds),   "n_ICUbeds": int(n_ICUbeds) },
+                                         hospital_df.iloc[row]["Postcode"]))
+            self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members)-1
+            #print ("--- Hospital[",hospital_df.iloc[row]["Unnamed: 0"],
+            #       "<-->",len(self.members)-1,"]: ",
+            #       n_beds," beds and ",n_ICUbeds," n_ICUbeds.")
+        return hospital_tree
+    
     def get_nearest(self,person):
         tagICU = person.health_information.tag=="intensive care"
         tag    = person.health_information.tag=="hospitalised"
@@ -170,21 +195,30 @@ class Hospitals:
                     return hospital
                 if tagICU and not(hospital.full_ICU):
                     return hospital
-        print ("no hospital found for patient with",person.health_information.tag)
+        else:
+            winner  = None
+            windist = 1.e12
+            angles, hospitals = self.get_closest_hospital(person.area,100)
+            for angle, hospitaltag in zip(angles[0], hospitals[0]):
+                hospital = self.members[self.finder[hospitaltag]]
+                distance = angle*6371.
+                if distance > self.max_distance:
+                    break
+                if ((tag and not(hospital.full)) or
+                    (tagICU and not(hospital.full_ICU))):
+                    winner  = hospital
+                    windist = distance
+                    break
+            if winner!=None:
+                print ("Receiving hospital for patient with ",person.health_information.tag,": ",
+                       winner.structure," distance = ",windist," km at ",winner.postcode)
+                return winner
+        print ("no hospital found for patient with",person.health_information.tag,
+               "in distance < ",self.maxdistance," km.")
         return None
 
-    
-        
-
-    #def _create_hospital_tree(self,hospital_df):
-    #    hospital_tree = BallTree(
-    #        np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
-    #        )
-    #    return hospital_tree
-
-    #def get_closest_hospital(self,area,k):
-    #    hospital_tree = self.hospital_trees
-    #    distances,neighbours = hospital_tree.query(
-    #        np.deg2rad(area.coordinates.reshape(1,-1)),k = k,sort_results=True
-    #        )
-    #    return neighbours
+    def get_closest_hospital(self,area,k):
+        hospital_tree = self.hospital_trees
+        return hospital_tree.query(
+            np.deg2rad(area.coordinates.reshape(1,-1)),k = k,sort_results=True
+            )
