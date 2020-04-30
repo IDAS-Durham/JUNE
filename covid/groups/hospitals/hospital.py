@@ -155,7 +155,7 @@ class Hospitals:
             )
         for row in range(hospital_df.shape[0]):
             n_beds     = hospital_df.iloc[row]["beds"]
-            n_icu_beds = round(self.icu_raction*n_beds)
+            n_icu_beds = round(self.icu_fraction*n_beds)
             n_beds    -= n_icu_beds
             self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
                                          { "n_beds": int(n_beds),   "n_ICUbeds": int(n_icu_beds) },
