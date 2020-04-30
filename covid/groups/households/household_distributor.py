@@ -10,6 +10,24 @@ This file contains routines to attribute people with different characteristics
 according to census data.
 """
 
+ALLOWED_HOUSEHOLD_COMPOSITIONS = [
+    "1 0 >=0 1 0",
+    ">=2 0 >=0 1 0",
+    "1 0 >=0 2 0",
+    ">=2 0 >=0 2 0",
+    "1 0 >=0 >=1 >=0",
+    ">=2 0 >=0 >=1 >=0",
+    "0 0 0 0 >=2",
+    "0 >=1 0 0 0",
+    "0 0 0 0 1",
+    "0 0 0 0 2",
+    "0 0 0 1 0",
+    "0 0 0 2 0",
+    "0 0 >=1 1 0",
+    "0 0 >=1 2 0",
+    "0 0 >=0 >=0 >=0",
+]
+
 
 class HouseholdError(BaseException):
     """ class for throwing household related errors """
@@ -57,13 +75,17 @@ class HouseholdDistributor:
         """
         Distribution_
         """
+        self.KID_MAX_AGE = 17
         self.STUDENT_MIN_AGE = 18
         self.STUDENT_MAX_AGE = 25
         self.OLD_MIN_AGE = 65
         self.OLD_MAX_AGE = 99
         self.ADULT_MIN_AGE = 18
+        self.ADULT_MAX_AGE = 64
+        self.YOUNG_ADULT_MIN_AGE = 18
         self.YOUNG_ADULT_MAX_AGE = 35
-        self.MAX_AGE_TO_BE_PARENT = 68
+        self.MAX_AGE_TO_BE_PARENT = 64
+
         self._first_kid_parent_age_diff_rv = stats.rv_discrete(
             values=(
                 first_kid_parent_age_differences,
@@ -125,6 +147,17 @@ class HouseholdDistributor:
         households_with_extra_kids = []
         households_with_extra_youngadults = []
         households_with_kids = []
+        for key in number_households_per_composition:
+            if key not in ALLOWED_HOUSEHOLD_COMPOSITIONS:
+                raise HouseholdError(f"Household composition {key} not supported")
+
+        # student households
+        key = "0 >=1 0 0 0"
+        if key in number_households_per_composition:
+            house_number = number_households_per_composition[key]
+            self.fill_all_student_households(
+                area=area, n_students=n_students, student_houses_number=house_number,
+            )
 
         # families with dependent kids
         key = "1 0 >=0 1 0"
@@ -232,14 +265,6 @@ class HouseholdDistributor:
                 extra_people_lists=(households_with_extra_oldpeople,),
             )
 
-        # student households
-        key = "0 >=1 0 0 0"
-        if key in number_households_per_composition:
-            house_number = number_households_per_composition[key]
-            self.fill_all_student_households(
-                area=area, n_students=n_students, student_houses_number=house_number,
-            )
-
         # single person old
         key = "0 0 0 0 1"
         if key in number_households_per_composition:
@@ -302,13 +327,14 @@ class HouseholdDistributor:
                 households_with_extra_adults.append(household)
                 households_with_extra_oldpeople.append(household)
 
-        # print(number_households_per_composition)
         # we now fill the remaining ones
         for people_dict in [area.men_by_age, area.women_by_age]:
             for age in people_dict.keys():
-                while people_dict[age]:
-                    person = people_dict[age].pop()
+                for person in people_dict[age]:
                     if person.age < self.ADULT_MIN_AGE:
+                        # put hte kid into a household that accepts extra kids.
+                        # if that is not possible, then choose a house that already has kids.
+                        # if that is not possible, choose randomly
                         if households_with_extra_kids:
                             household = np.random.choice(households_with_extra_kids)
                         elif households_with_kids:
@@ -318,6 +344,8 @@ class HouseholdDistributor:
                         household.people.append(person)
                         continue
                     elif self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
+                        # put a young adult to a house that accepts young adults,
+                        # other wise, randomly
                         if households_with_extra_youngadults:
                             household = np.random.choice(
                                 households_with_extra_youngadults
@@ -326,7 +354,10 @@ class HouseholdDistributor:
                             household = np.random.choice(area.households)
                         household.people.append(person)
                         continue
-                    elif self.ADULT_MIN_AGE <= person.age < self.OLD_MIN_AGE:
+                    elif self.ADULT_MIN_AGE <= person.age <= self.ADULT_MAX_AGE:
+                        # adult with adults,
+                        # otherwise with young adults,
+                        # otherwise random
                         if households_with_extra_adults:
                             household = np.random.choice(households_with_extra_adults)
                         elif households_with_extra_youngadults:
@@ -338,23 +369,17 @@ class HouseholdDistributor:
                         household.people.append(person)
                         continue
                     elif self.OLD_MIN_AGE <= person.age:
-                        if not households_with_extra_oldpeople:
-                            household = self._create_household(area)
-                            households_with_extra_oldpeople.append(household)
-                            household.people.append(person)
-                        elif households_with_extra_oldpeople:
+                        # old with old,
+                        # otherwise random
+                        if households_with_extra_oldpeople:
                             household = np.random.choice(
                                 households_with_extra_oldpeople
                             )
-                            household.people.append(person)
                         else:
                             household = np.random.choice(area.households)
-                            household.people.append(person)
+                        household.people.append(person)
                         continue
-                    print("woops")
-                    print(person.age)
-
-        assert count_remaining_people(area.men_by_age, area.women_by_age) == 0
+                    raise HouseholdError("Couldn't allocate extra person.")
 
     def _create_household(self, area):
         """Creates household in area and world."""
@@ -367,8 +392,11 @@ class HouseholdDistributor:
         """
         If the number of people in people_dict of the given age is 0, it deletes the key.
         """
+        ret = False
         if len(people_dict[age]) == 0:
+            ret = True
             del people_dict[age]
+        return ret
 
     def _get_closest_person_of_age(
         self, first_dict, second_dict, age, min_age=0, max_age=100
@@ -445,14 +473,13 @@ class HouseholdDistributor:
         sampled_age_difference = self._second_kid_parent_age_diff_list.pop()
         target_age = max(parent.age - sampled_age_difference, 0)
         kid_sex = self._random_sex_list.pop()
-        print(target_age)
         if kid_sex == 0:
             kid = self._get_closest_person_of_age(
                 area.men_by_age,
                 area.women_by_age,
                 target_age,
                 min_age=0,
-                max_age=self.ADULT_MIN_AGE - 1,
+                max_age=self.KID_MAX_AGE,
             )
         else:
             kid = self._get_closest_person_of_age(
@@ -460,7 +487,7 @@ class HouseholdDistributor:
                 area.men_by_age,
                 target_age,
                 min_age=0,
-                max_age=self.ADULT_MIN_AGE - 1,
+                max_age=self.KID_MAX_AGE,
             )
         return kid
 
@@ -473,10 +500,9 @@ class HouseholdDistributor:
         ratio = max(int(np.floor(n_students / student_houses_number)), 1)
         # get all people in the students age
         # fill students to households
-        students_left = True
-        while students_left:
+        students_left = n_students
+        while True:
             household = self._create_household(area)
-            student_houses_number -= 1
             for _ in range(0, ratio):
                 sex = self._random_sex_list.pop()
                 if sex == 0:
@@ -500,8 +526,8 @@ class HouseholdDistributor:
                 if student is None:
                     return None
                 household.people.append(student)
-                n_students -= 1
-                if n_students == 0 or student_houses_number == 0:
+                students_left -= 1
+                if students_left == 0:
                     return None
 
     def fill_oldpeople_households(
@@ -551,7 +577,7 @@ class HouseholdDistributor:
                     area.women_by_age,
                     first_kid_age,
                     min_age=0,
-                    max_age=self.ADULT_MIN_AGE - 1,
+                    max_age=self.KID_MAX_AGE,
                 )
             else:
                 first_kid = self._get_closest_person_of_age(
@@ -559,14 +585,16 @@ class HouseholdDistributor:
                     area.men_by_age,
                     first_kid_age,
                     min_age=0,
-                    max_age=self.ADULT_MIN_AGE - 1,
+                    max_age=self.KID_MAX_AGE,
                 )
             if first_kid is None:
                 return None
             household.people.append(first_kid)
             first_parent = self._get_matching_parent(first_kid, area)
             if first_parent is None:
-                raise ValueError("Orphan kid")
+                raise HouseholdError(
+                    "Orphan kid. Check household configuration and population."
+                )
             for array in extra_people_lists:
                 array.append(household)
             household.people.append(first_parent)
@@ -594,16 +622,16 @@ class HouseholdDistributor:
                     area.men_by_age,
                     area.women_by_age,
                     first_adult_age,
-                    min_age=18,
-                    max_age=65,
+                    min_age=self.ADULT_MIN_AGE,
+                    max_age=self.ADULT_MAX_AGE,
                 )
             else:
                 first_adult = self._get_closest_person_of_age(
                     area.women_by_age,
                     area.men_by_age,
                     first_adult_age,
-                    min_age=18,
-                    max_age=65,
+                    min_age=self.ADULT_MIN_AGE,
+                    max_age=self.ADULT_MAX_AGE,
                 )
             if first_adult is None:
                 return None
@@ -622,7 +650,7 @@ class HouseholdDistributor:
     ):
         for _ in range(0, n_households):
             household = self._create_household(area)
-            for _ in youngadults_per_household:
+            for _ in range(youngadults_per_household):
                 age = self._random_youngpeople_age.pop()
                 sex = self._random_sex_list.pop()
                 if sex == 0:
@@ -630,7 +658,7 @@ class HouseholdDistributor:
                         area.men_by_age,
                         area.women_by_age,
                         age,
-                        min_age=self.ADULT_MIN_AGE,
+                        min_age=self.YOUNG_ADULT_MIN_AGE,
                         max_age=self.YOUNG_ADULT_MAX_AGE,
                     )
                 else:
@@ -638,7 +666,7 @@ class HouseholdDistributor:
                         area.women_by_age,
                         area.men_by_age,
                         age,
-                        min_age=self.ADULT_MIN_AGE,
+                        min_age=self.YOUNG_ADULT_MIN_AGE,
                         max_age=self.YOUNG_ADULT_MAX_AGE,
                     )
                 if person is None:
@@ -661,7 +689,7 @@ class HouseholdDistributor:
                     area.men_by_age,
                     area.women_by_age,
                     youngadult_age,
-                    self.OLD_MIN_AGE,
+                    self.YOUNG_ADULT_MIN_AGE,
                     self.YOUNG_ADULT_MAX_AGE,
                 )
             else:
@@ -669,7 +697,7 @@ class HouseholdDistributor:
                     area.women_by_age,
                     area.men_by_age,
                     youngadult_age,
-                    self.OLD_MIN_AGE,
+                    self.YOUNG_ADULT_MIN_AGE,
                     self.YOUNG_ADULT_MAX_AGE,
                 )
             if youngadult is None:
