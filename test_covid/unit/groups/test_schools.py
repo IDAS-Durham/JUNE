@@ -9,9 +9,10 @@ from pathlib import Path
 
 def test__total_number_schools_is_correct():
     data_directory = Path(__file__).parent.parent.parent.parent
-    school_path = data_directory / "data/census_data/school_data/uk_schools_data.csv"
+    school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
+    config_path = data_directory / "configs/defaults/schools.yaml"
     school_df = pd.read_csv(school_path)
-    schools = Schools.from_file(school_path)
+    schools = Schools.from_file(school_path, config_path)
 
     assert len(schools.members) == len(school_df)
 
@@ -19,8 +20,9 @@ def test__total_number_schools_is_correct():
 @pytest.mark.parametrize("index", [5, 50, 500, 5000])
 def test__given_school_coordinate_finds_itself_as_closest(index):
     data_directory = Path(__file__).parent.parent.parent.parent
-    school_path = data_directory / "data/census_data/school_data/uk_schools_data.csv"
-    schools = Schools.from_file(school_path)
+    school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
+    config_path = data_directory / "configs/defaults/schools.yaml"
+    schools = Schools.from_file(school_path, config_path)
 
     school_df = pd.read_csv(school_path)
     age = int(0.5*(school_df.iloc[index].age_min + school_df.iloc[index].age_max))
@@ -29,12 +31,16 @@ def test__given_school_coordinate_finds_itself_as_closest(index):
         school_df[['latitude', 'longitude']].iloc[index].values, 
         1,
     )
+    assert len(schools.members) == len(school_df)
+    print(len(schools.members))
+    print(schools.school_agegroup_to_global_indices.get(age))
     closest_school_idx = schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
+    print(closest_school_idx)
     assert schools.members[closest_school_idx].id == schools.members[index].id
 
+
+
 '''
-
-
 def test_year_ranges_fullfilled():
     
 
