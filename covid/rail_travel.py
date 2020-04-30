@@ -119,5 +119,11 @@ if __name__ == "__main__":
     for row_label, row in zip(list(city_travel['station']), travel_matrix):
         print ('%s [%s]' % (row_label, ' '.join('%02s' % i for i in row)))
 
+    # Normalise travel matrix
+    travel = travel_matrix.copy()
+    for idx, i in enumerate(travel):
+        travel[idx] = i/np.sum(i)
+    np.save('../custom_data/travel_matrix_normalised.npy', travel)
+    
     # The city_travel dataframe and travel_matrix have now been updated
     # Note: the travel_matrix is not symmetric as it only accounts for the travel from origin to destination and not back again
