@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import rv_discrete
 from tqdm import tqdm
 
-def distribute_passengers(city_travel, peak_commute, subtract_commute = True):
+def distribute_passengers(city_travel, peak_commute = None, subtract_commute = False):
     """
     :param city_travel: pd.DataFrame with columns=['station','arrivals','departures','average']
     :param peak_commut: peak commuting data for each station in the morning
@@ -40,7 +40,7 @@ def distribute_passengers(city_travel, peak_commute, subtract_commute = True):
 
     # Travel matrix is added to for each starting and stopping city
     # Rows are stating city and columns are stopping
-    travel_matrix = np.zeros(len(stations)**2).reshape(len(stations,len(stations)))
+    travel_matrix = np.zeros(len(stations)**2).reshape(len(stations),len(stations))
 
     finished = False
                                                        
