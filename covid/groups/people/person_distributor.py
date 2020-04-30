@@ -37,7 +37,7 @@ class PersonDistributor:
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self.no_kids_area = False
         self.no_students_area = False
-        self.companysector_by_sex_df = compsec_by_sex_df
+        self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.area.world.config)
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
@@ -121,14 +121,14 @@ class PersonDistributor:
             21: "U",
         }
         numbers = np.arange(1, 22)
-        m_comp = [col for col in self.companysector_by_sex_df.columns.values if "m " in col]
-        distribution_male = self.companysector_by_sex_df.loc[self.area.name][m_comp].values
+        m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
+        distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
         )
         
-        f_comp = [col for col in self.companysector_by_sex_df.columns.values if "f " in col]
-        distribution_female = self.companysector_by_sex_df.loc[self.area.name][f_comp].values
+        f_col = [col for col in self.compsec_by_sex_df.columns.values if "f " in col]
+        distribution_female = self.compsec_by_sex_df.loc[self.area.name][f_col].values
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )
@@ -267,10 +267,7 @@ class PersonDistributor:
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
-            if not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD:
-                is_working_age = True
-            else:
-                is_working_age = False
+            is_working_age = not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
             work_msoa_rnd = self.assign_work_msoarea(
                 i,
                 sex_random,
@@ -293,7 +290,6 @@ class PersonDistributor:
             )  # self.area.regional_commute_generator.weighted_random_choice())
             self.people.members.append(person)
             self.area.people.append(person)
-            self.people.total_people += 1
             # assign person to the right group:
             if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
