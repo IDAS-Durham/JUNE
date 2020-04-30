@@ -12,10 +12,6 @@ class Cemetery(Group):
 
     def set_active_members(self):
         pass
-    
-    @property
-    def size(self):
-        return len(self.people)
 
 class Cemeteries:
     def __init__(self, world):
