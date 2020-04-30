@@ -33,9 +33,9 @@ def distribute_passengers(city_travel, peak_commute = None, subtract_commute = F
         city_travel['to_depart'] = city_travel['average']
         pbar = tqdm(total=np.sum(city_travel['average']))
     else:
-        city_travel['to_depart'] = city_travel['average_no_commute']
         city_travel['average_no_commute'] = average - np.array(peak_commute)
         city_travel['average_no_commute'] = np.array(city_travel['average_no_commute'])/100.
+        city_travel['to_depart'] = city_travel['average_no_commute']
         pbar = tqdm(total=np.sum(city_travel['average_no_commute']))
 
     # Travel matrix is added to for each starting and stopping city
@@ -53,7 +53,7 @@ def distribute_passengers(city_travel, peak_commute = None, subtract_commute = F
         random_variable = rv_discrete(values=(numbers,distribution))
         departing = np.zeros(len(distribution))
         # This can simple be optimised by making size=100 and assigning numbers
-        for i in range(100):
+        for i in range(10):
             station_id = random_variable.rvs(size=1)
             departing[station_id] +=1
 
@@ -102,7 +102,7 @@ def distribute_passengers(city_travel, peak_commute = None, subtract_commute = F
             finished = True
     pbar.close()
 
-    return travel_matrix
+    return travel_matrix, city_travel
 
 
 if __name__ == "__main__":
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # Read in national travel data
     city_travel = pd.read_csv('../custom_data/major_city_rail_2011.csv')
 
-    travel_matrix = distribute_passengers(city_travel=city_travel)
+    travel_matrix, _ = distribute_passengers(city_travel=city_travel)
 
     # Save travel matrix
     np.save('../custom_data/travel_matrix.npy', travel_matrix)
