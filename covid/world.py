@@ -211,7 +211,7 @@ class World:
         self.cemeteries = Cemeteries(self)
         
     def initialize_hospitals(self):
-        self.hospitals = Hospitals(self, box_mode=True)
+        self.hospitals = Hospitals(self,self.inputs.hospital_df,self.box_mode)
 
     def initialize_areas(self):
         """
@@ -352,8 +352,8 @@ class World:
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
-        print ("=====================================================")
-        print ("=== active groups: ",active_groups,".")
+        #print ("=====================================================")
+        #print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -397,8 +397,8 @@ class World:
 
 
 if __name__ == "__main__":
-    #world = World(config_file=os.path.join("../configs", "config_example.yaml"))
-    world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
-                  box_mode=True,box_n_people=100)
+    world = World(config_file=os.path.join("../configs", "config_example.yaml"))
+    #world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+    #              box_mode=True,box_n_people=100)
     # world = World.from_pickle()
     world.group_dynamics()
