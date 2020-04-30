@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import rv_discrete
 from tqdm import tqdm
 
-def distribute_passengers(city_travel):
+def distribute_passengers(city_travel, peak_commute):
     """
     :param city_travel: pd.DataFrame with columns=['station','arrivals','departures','average']
     city_travel['station']: strings - all stations in dataset
@@ -15,20 +15,20 @@ def distribute_passengers(city_travel):
 
     # We assume that all stations are connected to each other directly for initial 4testing
 
-    stations_2011 = np.array(city_travel['station'])
+    stations = np.array(city_travel['station'])
 
-    arrivals_2011 = np.array(city_travel['arrivals'])
-    departures_2011 = np.array(city_travel['departures'])
+    arrivals = np.array(city_travel['arrivals'])
+    departures = np.array(city_travel['departures'])
 
     # Take average and scale by 100 for code testing
     city_travel['average'] = np.array(city_travel['average'])/100.
 
     # Initialise
-    city_travel['arrived'] = np.zeros(len(stations_2011))
+    city_travel['arrived'] = np.zeros(len(stations))
     city_travel['to_depart'] = city_travel['average']
     # Travel matrix is added to for each starting and stopping city
     # Rows are stating city and columns are stopping
-    travel_matrix = np.zeros(len(stations_2011)**2).reshape(len(stations_2011),len(stations_2011))
+    travel_matrix = np.zeros(len(stations)**2).reshape(len(stations,len(stations))
 
     finished = False
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     # Save travel matrix
     np.save('../custom_data/travel_matrix.npy', travel_matrix)
-    for row_label, row in zip(stations_2011, travel_matrix):
+    for row_label, row in zip(city_travel['stations'], travel_matrix):
         print ('%s [%s]' % (row_label, ' '.join('%02s' % i for i in row)))
 
     # The city_travel dataframe and travel_matrix have now been updated
