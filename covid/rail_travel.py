@@ -33,6 +33,7 @@ def distribute_passengers(city_travel, peak_commute = None, subtract_commute = F
         city_travel['to_depart'] = city_travel['average']
         pbar = tqdm(total=np.sum(city_travel['average']))
     else:
+        peak_commute = list(peak_commute['commuters'])
         city_travel['average_no_commute'] = average - np.array(peak_commute)
         city_travel['average_no_commute'] = np.array(city_travel['average_no_commute'])/100.
         city_travel['to_depart'] = city_travel['average_no_commute']
