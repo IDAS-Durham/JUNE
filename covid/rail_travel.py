@@ -112,11 +112,11 @@ if __name__ == "__main__":
     city_travel = pd.read_csv('../custom_data/major_city_rail_2011.csv')
     peak_commuters = pd.read_csv('../custom_data/major_city_rail_commuters_2016.csv')
 
-    travel_matrix, _ = distribute_passengers(city_travel=city_travel,peak_commuters=peak_commuters,subtract_commute=True)
+    travel_matrix, _ = distribute_passengers(city_travel=city_travel,peak_commute=peak_commuters,subtract_commute=True)
 
     # Save travel matrix
     np.save('../custom_data/travel_matrix.npy', travel_matrix)
-    for row_label, row in zip(city_travel['stations'], travel_matrix):
+    for row_label, row in zip(list(city_travel['station']), travel_matrix):
         print ('%s [%s]' % (row_label, ' '.join('%02s' % i for i in row)))
 
     # The city_travel dataframe and travel_matrix have now been updated
