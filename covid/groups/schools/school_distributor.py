@@ -130,7 +130,14 @@ class SchoolDistributor:
                 #TODO currently we make no distinction between school levels
                 # because age ranges of schools are not correct
                 for school in area.schools:
-                    if school.n_teachers < school.n_teachers_max:
+                    if (school.n_teachers < school.n_teachers_max) and \
+                        (teacher.industry_specific in school.sector):
                         teacher.school = school.id
                         school.n_teachers += 1
+                    elif teacher.industry_specific is "special_needs":
+                        # everyone has special needs :-)
+                        #TODO fine better why for filtering
+                        teacher.school = school.id
+                        school.n_teachers += 1
+
 
