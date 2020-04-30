@@ -9,9 +9,11 @@ households:
 schools:
   school_age_range: [1,6] # numbers correspond to age groups defined by NOMIS dataset.
   neighbour_schools: 6
+  student_nr_per_teacher: 30
 
 companies:
   work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
+  key_sector: ['P','Q']
 
 people:
   adult_threshold: 6 # 18 yo
