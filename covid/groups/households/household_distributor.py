@@ -63,6 +63,7 @@ class HouseholdDistributor:
         self.OLD_MAX_AGE = 99
         self.ADULT_MIN_AGE = 18
         self.YOUNG_ADULT_MAX_AGE = 35
+        self.MAX_AGE_TO_BE_PARENT = 68
         self._first_kid_parent_age_diff_rv = stats.rv_discrete(
             values=(
                 first_kid_parent_age_differences,
@@ -376,14 +377,17 @@ class HouseholdDistributor:
         Tries to find the person with the closest age in first dict inside the min_age and max_age.
         If it fails, it looks into the second_dict. If it fails it returns None.
         """
+        if age < min_age or age > max_age:
+            return None
+
         compatible_ages = np.array(list(first_dict.keys()))
         compatible_ages = compatible_ages[
-            (min_age < compatible_ages) & (compatible_ages < max_age)
+            (min_age <= compatible_ages) & (compatible_ages <= max_age)
         ]
         if len(compatible_ages) == 0:
             compatible_ages = np.array(list(second_dict.keys()))
             compatible_ages = compatible_ages[
-                (min_age < compatible_ages) & (compatible_ages < max_age)
+                (min_age <= compatible_ages) & (compatible_ages <= max_age)
             ]
             if len(compatible_ages) == 0:
                 return None
@@ -429,7 +433,7 @@ class HouseholdDistributor:
             area.men_by_age,
             target_age,
             min_age=kid.age + self.ADULT_MIN_AGE,
-            max_age=self.OLD_MIN_AGE,
+            max_age=self.MAX_AGE_TO_BE_PARENT,
         )
         return parent
 
@@ -439,8 +443,9 @@ class HouseholdDistributor:
         """
         # first we try to find a mother, as it is more common to live with a single mother than a single father
         sampled_age_difference = self._second_kid_parent_age_diff_list.pop()
-        target_age = parent.age - sampled_age_difference
+        target_age = max(parent.age - sampled_age_difference, 0)
         kid_sex = self._random_sex_list.pop()
+        print(target_age)
         if kid_sex == 0:
             kid = self._get_closest_person_of_age(
                 area.men_by_age,
