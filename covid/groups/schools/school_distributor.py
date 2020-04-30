@@ -15,16 +15,19 @@ according to census data.
 
 class SchoolDistributor:
     """
-    Distributes students to different schools
+    Distributes students in an area to different schools 
     """
 
-    def __init__(self, schools, area):
+    def __init__(self, schools, area, config):
         self.area = area
         self.schools = schools
-        self.MAX_SCHOOLS = area.world.config["schools"]["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = area.world.config["schools"]["school_age_range"]
+        self.MAX_SCHOOLS = config["schools"]["neighbour_schools"]
+        self.SCHOOL_AGE_RANGE = config["schools"]["school_age_range"]
+        self.MANDATORY_SCHOOL_AGE_RANGE = config["schools"][
+            "school_mandatory_age_range"
+        ]
         self.closest_schools_by_age = {}
-        self.is_agemean_full = {}
+        self.is_shool_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
             closest_schools = []
             closest_schools_idx = self.schools.get_closest_schools(
@@ -39,18 +42,28 @@ class SchoolDistributor:
             self.closest_schools_by_age[agegroup] = closest_schools
             self.is_school_full[agegroup] = False
 
+    @classmethod
+    def load_from_file(cls, schools, area, config_filename):
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        return SchoolDistributor(schools, area, config)
+
     def distribute_kids_to_school(self):
         for person in self.area.people:
             if (
                 person.age <= self.SCHOOL_AGE_RANGE[1]
                 and person.age >= self.SCHOOL_AGE_RANGE[0]
-            ):  
-                if self.is_school_full[
-                    agegroup
-                ]:  # if all schools at that age are full, assign one randomly
-                    if person.age <= 4 or person.age >= 18:
-                    #if person.nomis_bin == 6:  # if it is 18-19 yo, then do not fill
+            ):
+                if self.is_school_full[agegroup]:
+                    # if it is younger than 4 or older than 18, do not fill
+                    # (not necessarily everyone that age goes to school
+                    if (
+                        person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                        or person.age > self.MANDATORY_SCHOOL_AGE_RANGE[1]
+                    ):
                         continue
+                    # if in mandatory age range, assign a full school randomly
                     random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
                     school = self.closest_schools_by_age[agegroup][random_number]
                 else:

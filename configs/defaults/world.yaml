@@ -7,7 +7,8 @@ households:
   same_sex_couple_ratio: 0.1
 
 schools:
-  school_age_range: [1,6] # numbers correspond to age groups defined by NOMIS dataset.
+  school_age_range: [0,19] # numbers correspond to age groups defined by NOMIS dataset.
+  mandatory_school_age_range: [5,18]
   neighbour_schools: 6
 
 companies:
