@@ -51,20 +51,16 @@ class SchoolDistributor:
         return SchoolDistributor(schools, area, config)
 
     def distribute_kids_to_school(self):
+        self.distribute_mandatory_kids_to_school()
+        self.distribute_non_mandatory_kids_to_school()
+
+    def distribute_mandatory_kids_to_school(self):
         for person in self.area.people:
             if (
-                person.age <= self.SCHOOL_AGE_RANGE[1]
-                and person.age >= self.SCHOOL_AGE_RANGE[0]
+                person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[1]
+                and person.age >= self.MANDATORY_SCHOOL_AGE_RANGE[0]
             ):
                 if self.is_school_full[person.age]:
-                    # if it is younger than 4 or older than 18, do not fill
-                    # (not necessarily everyone that age goes to school
-                    if (
-                        person.age < self.MANDATORY_SCHOOL_AGE_RANGE[0]
-                        or person.age > self.MANDATORY_SCHOOL_AGE_RANGE[1]
-                    ):
-                        continue
-                    # if in mandatory age range, assign a full school randomly
                     random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
                     school = self.closest_schools_by_age[person.age][random_number]
                 else:
@@ -75,18 +71,37 @@ class SchoolDistributor:
                             schools_full += 1
                         else:
                             break
-                    if schools_full == self.MAX_SCHOOLS:  # all schools are full
-                        if (
-                            person.age < self.MANDATORY_SCHOOL_AGE_RANGE[0]
-                            or person.age > self.MANDATORY_SCHOOL_AGE_RANGE[1]
-                        ):
-                            continue
 
                         self.is_school_full[person.age] = True
                         random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[
                             0
                         ]
                         school = self.closest_schools_by_age[person.age][random_number]
+                    else:  # just keep the school saved in the previous for loop
+                        pass
+                school.people.append(person)
+                person.school = school
+                school.n_pupils += 1
+
+    def distribute_non_mandatory_kids_to_school(self):
+        for person in self.area.people:
+            if (
+                person.age <= self.SCHOOL_AGE_RANGE[1]
+                and person.age >= self.SCHOOL_AGE_RANGE[0]
+            ):
+                if self.is_school_full[person.age]:
+                        continue
+                else:
+                    schools_full = 0
+                    for i in range(0, self.MAX_SCHOOLS):  # look for non full school
+                        school = self.closest_schools_by_age[person.age][i]
+                        if school.n_pupils >= school.n_pupils_max:
+                            schools_full += 1
+                        else:
+                            break
+                    if schools_full == self.MAX_SCHOOLS:  # all schools are full
+                            continue
+
                     else:  # just keep the school saved in the previous for loop
                         pass
                 school.people.append(person)
