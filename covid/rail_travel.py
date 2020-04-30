@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 from scipy.stats import rv_discrete
 from tqdm import tqdm
 
-def distribute_passengers(city_travel, peak_commute):
+def distribute_passengers(city_travel, peak_commute, subtract_commute = True):
     """
     :param city_travel: pd.DataFrame with columns=['station','arrivals','departures','average']
+    :param peak_commut: peak commuting data for each station in the morning
+
     city_travel['station']: strings - all stations in dataset
     city_travel['arrivals]: float - daily arrivals for each station
     city_travel['departures]: float = daily departures for each station
@@ -20,19 +22,28 @@ def distribute_passengers(city_travel, peak_commute):
     arrivals = np.array(city_travel['arrivals'])
     departures = np.array(city_travel['departures'])
 
+    # subtract commuters
+    average = np.array(city_travel['average'])
     # Take average and scale by 100 for code testing
     city_travel['average'] = np.array(city_travel['average'])/100.
-
     # Initialise
     city_travel['arrived'] = np.zeros(len(stations))
-    city_travel['to_depart'] = city_travel['average']
+
+    if subtract_commute == False:
+        city_travel['to_depart'] = city_travel['average']
+        pbar = tqdm(total=np.sum(city_travel['average']))
+    else:
+        city_travel['to_depart'] = city_travel['average_no_commute']
+        city_travel['average_no_commute'] = average - np.array(peak_commute)
+        city_travel['average_no_commute'] = np.array(city_travel['average_no_commute'])/100.
+        pbar = tqdm(total=np.sum(city_travel['average_no_commute']))
+
     # Travel matrix is added to for each starting and stopping city
     # Rows are stating city and columns are stopping
-    travel_matrix = np.zeros(len(stations)**2).reshape(len(stations,len(stations))
+    travel_matrix = np.zeros(len(stations)**2).reshape(len(stations,len(stations)))
 
     finished = False
-
-    pbar = tqdm(total=np.sum(city_travel['average']))
+                                                       
     while finished == False:
 
         # Get distirbution over people departing
@@ -50,7 +61,10 @@ def distribute_passengers(city_travel, peak_commute):
         for station_idx, num_to_travel in enumerate(departing):
             # Stations they can travel to
             travel_stations = np.delete(np.array(city_travel['station']),station_idx)
-            travel_average = np.delete(np.array(city_travel['average']),station_idx)
+            if subtract_commute == False:
+                travel_average = np.delete(np.array(city_travel['average']),station_idx)
+            else:
+                travel_average = np.delete(np.array(city_travel['average_no_commute']),station_idx)
             travel_arrived = np.delete(np.array(city_travel['arrived']),station_idx)
             travel_to_depart = np.delete(np.array(city_travel['to_depart']),station_idx)
             # How many people are left to arrive at each station
