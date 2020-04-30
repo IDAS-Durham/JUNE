@@ -1,10 +1,9 @@
-from covid.interaction import Interaction
-from covid.infection import Infection
-from covid.groups import Group
-from covid.world import World
-import numpy as np
-import sys
 import random
+
+import numpy as np
+
+from covid.interaction import Interaction
+from covid.world import World
 
 """
 We assume that the matrices are symmetric, with age indexing rows and
@@ -30,21 +29,20 @@ class MatrixInteraction(Interaction):
             self.matrix = group.get_contact_matrix()
             self.matrix = self.reduce_matrix(group)
             self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
-            
+
             for infecter in group.get_infected():
-                contact_ages = self.prepare_interaction_ages(infecter,group)
+                contact_ages = self.prepare_interaction_ages(infecter, group)
                 for age in contact_ages:
-                    self.make_interactions(infecter,group,age)
-        if group.spec=="hospital":
-            print ("must allow for infection of workers by patients")
+                    self.make_interactions(infecter, group, age)
+        if group.spec == "hospital":
+            print("must allow for infection of workers by patients")
 
-
-    def make_interactions(self,infecter,group,age):
+    def make_interactions(self, infecter, group, age):
         # randomly select someone with that age
         recipient = self.make_single_contact(infecter, group, age)
-        if (recipient and 
-            not (recipient.is_infected()) and
-            recipient.susceptibility > 0.0):
+        if (recipient and
+                not (recipient.is_infected()) and
+                recipient.susceptibility > 0.0):
             if random.random() <= 1.0 - np.exp(
                     -transmission_probability * recipient.susceptibility()
             ):
@@ -54,25 +52,39 @@ class MatrixInteraction(Interaction):
                 )
                 infecter.counter.increment_infected()
 
-        
-    def prepare_interaction_ages(self,infecter,group):
+    def prepare_interaction_ages(self, infecter, group):
         self.transmission_probability = self.calculate_single_transmission_probability(
             infecter, group
         )
-        if self.transmission_probability>1.e-12:
+        if self.transmission_probability > 1.e-12:
             Naverage = self.contacts[infecter.age]
             # find column infecter, and sum
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
             draw_contacts = np.random.rand(Ncontacts)
-            return np.searchsorted(self.probability[:, infecter.age], draw_contacts) 
-        return []
+            contact_ages = np.searchsorted(
+                self.probability[:, infecter.age], draw_contacts
+            )
+            for i in range(Ncontacts):
+                # randomly select someone with that age
+                recipient = self.make_single_contact(infecter, group, contact_ages[i])
+                if recipient and (
+                        not (recipient.is_infected()) and recipient.susceptibility > 0.0
+                ):
+                    if random.random() <= 1.0 - np.exp(
+                            -self.transmission_probability * recipient.susceptibility()
+                    ):
+                        infecter.infection.infect_person_at_time(recipient)
+                        recipient.counter.update_infection_data(
+                            self.world.timer.now, group.get_spec()
+                        )
+                        infecter.counter.increment_infected()
 
     def calculate_single_transmission_probability(self, infecter, group):
         intensity = group.intensity
         probability = infecter.transmission.transmission_probability
         # probability *= self.severity_multiplier(group.get_spec())
         return (
-            probability * intensity * (self.world.timer.now - self.world.timer.before)
+                probability * intensity * (self.world.timer.now - self.world.timer.before)
         )
 
     def test_single_time_step_for_group(self, group):

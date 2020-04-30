@@ -275,7 +275,7 @@ class World:
         choices = np.random.choice(group.size, n_infections)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
-            infecter_reference.infect(group.people[choice])
+            infecter_reference.infect_person_at_time(group.people[choice])
         group.update_status_lists()
 
     def seed_infections_box(self, n_infections):
@@ -283,7 +283,7 @@ class World:
         choices = np.random.choice(self.people.members, n_infections, replace=False)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
-            infecter_reference.infect(choice)
+            infecter_reference.infect_person_at_time(choice)
         self.boxes.members[0].update_status_lists()
 
     def do_timestep(self, day_iter):

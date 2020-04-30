@@ -1,3 +1,10 @@
+from covid.infection import infection as infect
+from covid.infection import symptons as sym
+from covid.infection import transmission as trans
+
+from covid import World
+from covid.time import Timer 
+
 import os
 from pathlib import Path
 
@@ -27,3 +34,12 @@ def create_timer():
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     return Timer(config['time'])
+
+
+@pytest.fixture(name="symptoms", scope="session")
+def create_symptoms():
+    return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
+
+@pytest.fixture(name="transmission", scope="session")
+def create_transmission():
+    return trans.TransmissionConstant(proabability=0.3)
