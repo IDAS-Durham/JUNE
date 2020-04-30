@@ -122,31 +122,31 @@ class TestSymptomsTanh:
 
     # TODO : Cant test ithotu knowing correct code.
 
-    # def test__update_severity__correct_dependence_on_parameters(self):
-    #
-    #     symptom = sym.SymptomsTanh(
-    #         health_index=None, max_time=2.0, onset_time=0.5, end_time=15.0
-    #     )
-    #
-    #     # Time since start < max time
-    #     # severity = 1.0 + np.tanh(3.14 * (time_since_start - self.onset_time) / self.delta_onset)) / 2.0
-    #     # severity = (1.0 + np.tanh(3.14 * (1.0 - 0.5) / (2.0 - 0.5)) / 2.0
-    #
-    #     symptom.update_severity_from_delta_time(delta_time=1.0)
-    #
-    #     assert symptom.severity == pytest.approx(symptom.maxseverity * 0.890253, 1.0e-4)
-    #
-    #     # Time since start > max time
-    #     # severity = 1.0 + np.tanh(3.14 * (end_time - time_since_start) / self.delta_end)) / 2.0
-    #     # severity = (1.0 + np.tanh(3.14 * (15.0 - 2.5) / (15.0 - 2.0)) / 2.0
-    #
-    #     symptom.update_severity_from_delta_time(delta_time=2.5)
-    #
-    #     assert symptom.severity == pytest.approx(symptom.maxseverity * 0.997620, 1.0e-4)
-    #
-    #     # Time > end_time
-    #     # severity = 0.0
-    #
-    #     symptom.update_severity_from_delta_time(delta_time=10000.0)
-    #
-    #     assert symptom.severity == 0.0
+    def test__update_severity__correct_dependence_on_parameters(self):
+
+        symptom = sym.SymptomsTanh(
+            health_index=None, max_time=2.0, onset_time=0.5, end_time=15.0
+        )
+
+        # Time since start < max time
+        # severity = 1.0 + np.tanh(3.14 * (time_since_start - self.onset_time) / self.delta_onset)) / 2.0
+        # severity = (1.0 + np.tanh(3.14 * (1.0 - 0.5) / (2.0 - 0.5)) / 2.0
+
+        symptom.update_severity_from_delta_time(delta_time=1.0)
+
+        assert symptom.severity == pytest.approx(symptom.maxseverity * 0.89035, 1.0e-4)
+
+        # Time since start > max time
+        # severity = 1.0 + np.tanh(3.14 * (end_time - time_since_start) / self.delta_end)) / 2.0
+        # severity = (1.0 + np.tanh(3.14 * (15.0 - 2.5) / (15.0 - 2.0)) / 2.0
+
+        symptom.update_severity_from_delta_time(delta_time=2.5)
+
+        assert symptom.severity == pytest.approx(symptom.maxseverity * 0.99762, 1.0e-4)
+
+        # Time > end_time
+        # severity = 0.0
+
+        symptom.update_severity_from_delta_time(delta_time=10000.0)
+
+        assert symptom.severity == 0.0
