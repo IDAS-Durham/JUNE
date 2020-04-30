@@ -20,7 +20,6 @@ class School(Group):
 
     def __init__(self, school_id, coordinates, n_pupils, age_min, age_max, sector):
         super().__init__("School_%05d" % school_id, "school")
-        self.id = school_id
         self.coordinates = coordinates
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
