@@ -16,48 +16,50 @@ class Infection:
     def __init__(self, start_time, transmission, symptoms):
 
         self.start_time = start_time
+        self.last_time_updated = start_time
         self.transmission = transmission
         self.symptoms = symptoms
 
-        self.last_time_updated = self.start_time  # testing
         self.infection_probability = 0.0
 
-    def infect(self, person):
+    def new_infection_at_time(self, time):
+
+        # TODO : Currently assume transmission / symptoms parameters do not change between infections, will sort this
+        # TODO : out in next refactor.
+
+        return Infection(start_time=time, transmission=self.transmission, symptoms=self.symptoms)
+
+    def infect_person_at_time(self, person, time):
         """Infects someone by initializing an infeciton object with the same type
         and parameters as the carrier's infection class.
 
         Arguments:
             person (Person) has to be an instance of the Person class.
         """
-        person.health_information.set_infection(infection=copy.deepcopy(self))
+
+        infection = self.new_infection_at_time(time=time)
+
+        person.health_information.set_infection(infection=infection)
 
     def symptom_tag(self, tagno):
         return self.symptoms.tag
 
-    @property
-    def still_infected(self):
-        raise NotImplementedError()
-
-    def update_to_time(self, time):
+    def update_at_time(self, time):
 
         if self.last_time_updated <= time:
 
+            delta_time = time - self.start_time
+
             self.last_time_updated = time
-            self.transmission.update_probability_at_time(time=time)
-            self.symptoms.update_severity_from_delta_time(delta_time=time)
+            self.transmission.update_probability_from_delta_time(delta_time=delta_time)
+            self.symptoms.update_severity_from_delta_time(delta_time=delta_time)
             self.infection_probability = self.transmission.probability
-
-class InfectionConstant(Infection):
-
-    def __init__(self, start_time, transmission, symptoms, threshold_transmission=0.001, threshold_symptoms=0.001):
-
-        super().__init__(start_time=start_time, transmission=transmission, symptoms=symptoms)
-
-        self.threshold_tranmission = threshold_transmission
-        self.threshold_symptoms = threshold_symptoms
 
     @property
     def still_infected(self):
+
+        # TODO : These can be determined using the instances of tranmsision, symptoms.
+
         #transmission_bool = (
         #    self.transmission != None
         #    and self.transmission.probability > self.threshold_transmission

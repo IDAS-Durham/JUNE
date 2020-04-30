@@ -9,8 +9,9 @@ class TestInfection:
 
         person = per.Person()
 
-        infection.infect(person=person)
+        infection.infect_person_at_time(person=person, time=0.2)
 
+        assert person.health_information.infection.start_time == 0.2
         assert person.health_information.infection.transmission.probability == transmission.probability
         assert person.health_information.infection.symptoms.recovery_rate == symptoms.recovery_rate
 
@@ -18,9 +19,10 @@ class TestInfection:
 
         infection = infect.Infection(start_time=0.1, transmission=transmission, symptoms=symptoms)
 
-        infection.update_to_time(time=1.0)
+        severity_before_update = infection.symptoms.severity
 
-        assert infection.last_time_updated == 1.0
-        assert infection.transmission.last_time_updated == 1.0
-        assert infection.symptoms.last_time_updated == 1.0
+        infection.update_at_time(time=0.2)
+
+        assert infection.last_time_updated == 0.2
+        assert infection.symptoms.severity != severity_before_update
         assert infection.infection_probability == transmission.probability
