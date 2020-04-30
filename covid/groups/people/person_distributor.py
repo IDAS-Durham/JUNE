@@ -35,6 +35,7 @@ class PersonDistributor:
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
+        self.key_compsec_id = area.world.config["companies"]["key_sector"]
         self.no_kids_area = False
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
@@ -157,7 +158,7 @@ class PersonDistributor:
                 )
             person.industry = self.industry_dict[industry_id]
             
-            if (person.industry == "Q" or person.industry == "P"):
+            if person.industry in self.key_compsec_id:
                 self._assign_key_industry(person)
         else:
             pass
@@ -184,6 +185,7 @@ class PersonDistributor:
                 2315: Primary and nursery education teaching professionals
                 2316: Special needs education teaching professionals
         """
+        #TODO if input date is provided nicely we don't need this anymore
         compsec_decoder = {"Q": "healthcare", "P": "education"}
         sex_decoder = {0: "male", 1: "female"}
 

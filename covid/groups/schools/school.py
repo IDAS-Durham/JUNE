@@ -14,14 +14,22 @@ class School(Group):
     """
     """
 
-    def __init__(self, school_id, coordinates, n_pupils, age_min, age_max):
+    def __init__(
+            self,
+            school_id,
+            coordinates,
+            n_pupils,
+            n_teachers_max,
+            age_min,
+            age_max
+        ):
         super().__init__("School_%05d" % school_id, "school")
         self.id = school_id
         self.coordinates = coordinates  #[lon, lat]
         self.msoa = None
         # self.residents = group(self.id,"household")
         #TODO assumption on nr. of students per teachers
-        self.n_teachers_max = int(n_pupils / 30)
+        self.n_teachers_max = n_teachers_max
         self.n_teachers = 0
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
@@ -33,6 +41,7 @@ class Schools:
     def __init__(self, world, areas, school_df):
         self.world = world
         self.members = []
+        self.stud_nr_per_teacher = self.world.config['schools']['student_nr_per_teacher']
         self.init_schools(school_df)
 
     def _compute_age_group_mean(self, agegroup):
@@ -76,10 +85,12 @@ class Schools:
             school_trees[agegroup] = self._create_school_tree(_school_df_agegroup)
         # create schools and put them in the right age group
         for i, (index, row) in enumerate(school_df.iterrows()):
+            n_teachers_max = int(row["NOR"] / self.stud_nr_per_teacher)
             school = School(
                 i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 row["NOR"],
+                n_teachers_max,
                 row["age_min"],
                 row["age_max"],
             )
