@@ -34,8 +34,6 @@ def test__given_school_coordinate_finds_itself_as_closest(index):
     assert schools.members[closest_school_idx].name == schools.members[index].name
 
 
-
-
 def test__all_kids_mandatory_school(world_ne):
     """
     Check that all kids in mandatory school ages are assigned a school 
@@ -66,14 +64,21 @@ def test__only_kids_school(world_ne):
 
     assert schooled_adults == 0
 
+def test__n_pupils_counter(world_ne):
+    for school in world_ne.schools.members:
+        n_pupils = len(school.people)
+        assert n_pupils == school.n_pupils
+
 def test__non_mandatory_dont_go_if_school_full(world_ne):
 
     non_mandatory_added = 0
     for school in world_ne.schools.members:
         if school.n_pupils > school.n_pupils_max:
-            if (np.sum(np.array(school.people[school.n_pupils_max:]) > world_ne.schools.MANDATORY_SCHOOL_AGE_RANGE[1]) or
-                np.sum(np.array(school.people[school.n_pupils_max:]) < world_ne.schools.MANDATORY_SCHOOL_AGE_RANGE[0])):
-                    non_mandatory_added += 1
+            ages = np.array([person.age for person in school.people[int(school.n_pupils_max):]])
+            older_kids_when_full = np.sum(ages > world_ne.schools.config['school_mandatory_age_range'][1])
+            younger_kids_when_full = np.sum(ages < world_ne.schools.config['school_mandatory_age_range'][0])
+            if older_kids_when_full >0 or younger_kids_when_full>0:
+                non_mandatory_added += 1
 
     assert non_mandatory_added == 0
 
