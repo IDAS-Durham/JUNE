@@ -44,7 +44,7 @@ class Infection:
 
             self.last_time_updated = time
             self.transmission.update_probability_at_time(time=time)
-            self.symptoms.update_severity_at_time(time=time)
+            self.symptoms.update_severity_from_delta_time(delta_time=time)
             self.infection_probability = self.transmission.probability
 
 class InfectionConstant(Infection):
