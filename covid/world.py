@@ -1,19 +1,19 @@
 import os
-
-import warnings
-import numpy as np
 import pickle
+import warnings
+
+import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-from covid.interaction import *
+from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
-from covid.infection import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
-from covid.box_generator import BoxGenerator
+from covid.interaction import *
+from covid.infection import *
 
 
 class World:
@@ -32,7 +32,9 @@ class World:
         self.total_people = 0  #TODO is nowehere updated
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
-        if box_mode:
+        if self.box_mode:
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
             print("Initializing commute generator...")
@@ -43,6 +45,8 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
             else:
@@ -120,16 +124,22 @@ class World:
 
     def initialize_box_mode(self, region=None, n_people=None):
         """
-        Sets the simulation to run in a single box, with everyone inside and no schools, households, etc.
+        Sets the simulation to run in a single box, with everyone inside and no 
+        schools, households, etc.
         Useful for testing interaction models and comparing to SIR.
         """
         print("Setting up box mode...")
         self.boxes = Boxes()
         box = BoxGenerator(self, region, n_people)
-        self.boxes.members  = [box]
-        self.people         = People(self)
+        self.boxes.members = [box]
+        self.people = People(self)
         self.people.members = box.people
-        self.hospitals      = Hospitals(self, box_mode=True)
+
+    def initialize_cemeteries(self):
+        self.cemeteries = Cemeteries(self)
+
+    def initialize_hospitals(self):
+        self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
 
     def initialize_areas(self):
         """
@@ -229,7 +239,7 @@ class World:
         """
         print("Creating Boundary...")
         self.boundary = Boundary(self)
-    
+
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
         if "parameters" in self.config["interaction"]:
@@ -266,21 +276,21 @@ class World:
         choices = np.random.choice(group.size, n_infections)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
-            infecter_reference.infect(group.people[choice])
+            infecter_reference.infect_person_at_time(group.people[choice])
         group.update_status_lists()
 
     def seed_infections_box(self, n_infections):
-        print ("seed ",n_infections,"infections in box")
+        print("seed ", n_infections, "infections in box")
         choices = np.random.choice(self.people.members, n_infections, replace=False)
         infecter_reference = self.initialize_infection(None)
         for choice in choices:
-            infecter_reference.infect(choice)
+            infecter_reference.infect_person_at_time(choice)
         self.boxes.members[0].update_status_lists()
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
-        print ("=====================================================")
-        print ("=== active groups: ",active_groups,".")
+        # print ("=====================================================")
+        # print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -305,7 +315,8 @@ class World:
         if self.box_mode:
             self.seed_infections_box(n_seed)
         else:
-            print("Infecting indivuals in their household.")
+            print("Infecting individuals in their household,",
+                  "for in total ", len(self.households.members), " households.")
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
         print(
@@ -325,5 +336,9 @@ class World:
 
 if __name__ == "__main__":
     world = World(config_file=os.path.join("../configs", "config_example.yaml"))
+
+    # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+    #              box_mode=True,box_n_people=100)
+
     # world = World.from_pickle()
     #world.group_dynamics()
