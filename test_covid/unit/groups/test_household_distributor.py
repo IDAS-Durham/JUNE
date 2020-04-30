@@ -183,3 +183,10 @@ def test__fill_all_student_households(household_distributor):
     area = create_area(people_per_age=5)  # enough students
     household_distributor.fill_all_student_households(area, 20, 5)
     assert len(area.households) == 5
+    for household in area.households:
+        for person in household.people:
+            assert (
+                household_distributor.STUDENT_MIN_AGE
+                <= person.age
+                <= household_distributor.STUDENT_MAX_AGE
+            )
