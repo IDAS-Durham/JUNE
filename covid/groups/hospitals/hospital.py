@@ -15,7 +15,7 @@ class Hospital(Group):
     """
 
     def __init__(self, hospital_id=1, structure=None, postcode=None):
-        Group.__init__(self, name = "Hospital_%03d"%hospital_id, spec = "hospital") 
+        super().__init__(self, name = "Hospital_%03d"%hospital_id, spec = "hospital") 
         self.id          = hospital_id
         self.postcode    = postcode
         self.people      = []
@@ -161,8 +161,8 @@ class Hospitals:
         self.max_distance = 100.
         # number of ICU beds per hospital from simple fraction, numbers
         # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
-        self.ICUfraction  = 5900./141000. 
-        if not(self.box_mode):
+        self.icu_fraction  = 5900./141000. 
+        if not self.box_mode:
             print ("Init hospitals from data file")
             self.hospital_trees = self.create_hospital_trees(hospital_df)
         else:
@@ -174,11 +174,11 @@ class Hospitals:
             np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
             )
         for row in range(hospital_df.shape[0]):
-            n_beds    = hospital_df.iloc[row]["beds"]
-            n_ICUbeds = round(self.ICUfraction*n_beds)
-            n_beds   -= n_ICUbeds
+            n_beds     = hospital_df.iloc[row]["beds"]
+            n_icu_beds = round(self.icu_raction*n_beds)
+            n_beds    -= n_icu_beds
             self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
-                                         { "n_beds": int(n_beds),   "n_ICUbeds": int(n_ICUbeds) },
+                                         { "n_beds": int(n_beds),   "n_ICUbeds": int(n_icu_beds) },
                                          hospital_df.iloc[row]["Postcode"]))
             self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members)-1
             #print ("--- Hospital[",hospital_df.iloc[row]["Unnamed: 0"],
