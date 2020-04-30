@@ -1,6 +1,7 @@
 import numpy as np
 from random import uniform
 from scipy import stats
+import yaml
 import warnings
 
 # from covid.school import SchoolError
@@ -21,13 +22,13 @@ class SchoolDistributor:
     def __init__(self, schools, area, config):
         self.area = area
         self.schools = schools
-        self.MAX_SCHOOLS = config["schools"]["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = config["schools"]["school_age_range"]
-        self.MANDATORY_SCHOOL_AGE_RANGE = config["schools"][
+        self.MAX_SCHOOLS = config["neighbour_schools"]
+        self.SCHOOL_AGE_RANGE = config["school_age_range"]
+        self.MANDATORY_SCHOOL_AGE_RANGE = config[
             "school_mandatory_age_range"
         ]
         self.closest_schools_by_age = {}
-        self.is_shool_full = {}
+        self.is_school_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
             closest_schools = []
             closest_schools_idx = self.schools.get_closest_schools(
@@ -43,7 +44,7 @@ class SchoolDistributor:
             self.is_school_full[agegroup] = False
 
     @classmethod
-    def load_from_file(cls, schools, area, config_filename):
+    def from_file(cls, schools, area, config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -55,7 +56,7 @@ class SchoolDistributor:
                 person.age <= self.SCHOOL_AGE_RANGE[1]
                 and person.age >= self.SCHOOL_AGE_RANGE[0]
             ):
-                if self.is_school_full[agegroup]:
+                if self.is_school_full[person.age]:
                     # if it is younger than 4 or older than 18, do not fill
                     # (not necessarily everyone that age goes to school
                     if (
@@ -65,21 +66,21 @@ class SchoolDistributor:
                         continue
                     # if in mandatory age range, assign a full school randomly
                     random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
-                    school = self.closest_schools_by_age[agegroup][random_number]
+                    school = self.closest_schools_by_age[person.age][random_number]
                 else:
                     schools_full = 0
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
-                        school = self.closest_schools_by_age[agegroup][i]
+                        school = self.closest_schools_by_age[person.age][i]
                         if school.n_pupils >= school.n_pupils_max:
                             schools_full += 1
                         else:
                             break
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
-                        self.is_school_full[agegroup] = True
+                        self.is_school_full[person.age] = True
                         random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[
                             0
                         ]
-                        school = self.closest_schools_by_age[agegroup][random_number]
+                        school = self.closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
                 school.people.append(person)
