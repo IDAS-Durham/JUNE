@@ -194,10 +194,12 @@ class World:
         the closest age compatible school to a certain kid.
         """
         print("Initializing schools...")
-        self.schools = Schools(self, self.areas, self.inputs.school_df)
+        self.schools = Schools.from_file(self.inputs.school_data_path,
+            self.inputs.school_config_path)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-           self.distributor = SchoolDistributor(self.schools, area)
+           self.distributor = SchoolDistributor.from_file(self.schools, area,
+                   self.inputs.school_config_path)
            self.distributor.distribute_kids_to_school()
            pbar.update(1)
         pbar.close()
