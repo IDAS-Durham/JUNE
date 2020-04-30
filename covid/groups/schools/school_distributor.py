@@ -86,8 +86,8 @@ class SchoolDistributor:
     def distribute_non_mandatory_kids_to_school(self):
         for person in self.area.people:
             if (
-                person.age <= self.SCHOOL_AGE_RANGE[1]
-                and person.age >= self.SCHOOL_AGE_RANGE[0]
+                self.MANDATORY_SCHOOL_AGE_RANGE[1] < person.age <= self.SCHOOL_AGE_RANGE[1]
+                and self.SCHOOL_AGE_RANGE[0] < person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
             ):
                 if self.is_school_full[person.age]:
                         continue
@@ -95,7 +95,9 @@ class SchoolDistributor:
                     schools_full = 0
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
                         school = self.closest_schools_by_age[person.age][i]
-                        if school.n_pupils >= school.n_pupils_max:
+                        # check number of students in that age group
+                        n_pupils_age = len([pupil.age for pupil in school.people if pupil.age == person.age])
+                        if n_pupils_age >= (school.n_pupils_max/(school.age_max - school.age_min)):
                             schools_full += 1
                         else:
                             break
