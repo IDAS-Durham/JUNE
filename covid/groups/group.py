@@ -48,8 +48,6 @@ class Group:
     ]
 
     def __init__(self, name, spec, number=-1):
-        if not self.sane(name, spec):
-            return
         self.name = name
         self.spec = spec
         self.people = []
@@ -101,26 +99,30 @@ class Group:
             else:
                 person.active_group = self.spec
 
+    def set_intensity(self, intensity):
+        self.intensity = intensity
+
+    def get_intensity(self, time=0):
+        if self.intensity == None:
+            return 1.0
+        return self.intensity  # .intensity(time)
+
+    def must_timestep(self):
+        return (self.size > 1 and
+                self.size_infected > 0 and
+                self.size_susceptible > 0)
+
     def update_status_lists(self):
-        logger.debug("=== update status list for group with ", len(self.people), " people ===")
         for person in self.people:
             person.health_information.update_health_status()
-            if person.health_information.infected:
+            if person.health_information.susceptible:
+                self.susceptible.append(person)
+            elif person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
-                    # print ("person must stay at home",person.id,":",
-                    #       person.health_information.tag," for",
-                    #       person.health_information.infection.symptoms.severity)
-                    # don't add this person to the group
-                    # the household group instance deals with this in its own
-                    # update_status_lists method
-                elif person.health_information.in_hospital:
-                    logger.debug("person should be in hospital", person.id, ":",
-                                 person.health_information.tag, " for",
-                                 person.health_information.infection.symptoms.severity)
-                    person.get_into_hospital()
-                    self.people.remove(person)
-                    continue
+            elif person.health_information.dead:
+                person.bury()
+                self.people.remove(person)
 
     @property
     def size(self):
