@@ -110,8 +110,9 @@ if __name__ == "__main__":
 
     # Read in national travel data
     city_travel = pd.read_csv('../custom_data/major_city_rail_2011.csv')
+    peak_commuters = pd.read_csv('../custom_data/major_city_rail_commuters_2016.csv')
 
-    travel_matrix, _ = distribute_passengers(city_travel=city_travel)
+    travel_matrix, _ = distribute_passengers(city_travel=city_travel,peak_commuters=peak_commuters,subtract_commute=True)
 
     # Save travel matrix
     np.save('../custom_data/travel_matrix.npy', travel_matrix)
