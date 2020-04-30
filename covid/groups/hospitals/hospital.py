@@ -20,6 +20,8 @@ class Hospital(Group):
         self.id = hospital_id
         self.postcode = postcode
         self.people = []
+        self.nurses = []
+        self.doctors = []
         self.patients = []
         self.ICUpatients = []
         """

@@ -140,6 +140,19 @@ class World:
 
     def initialize_hospitals(self):
         self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
+        hospitals_distributor = HospitalDistributor(self.hospitals)
+        hospitals_distributor.distribute_medics_to_hospitals()
+        pbar = tqdm(total=len(self.msoareas.members))
+        for msoarea in self.msoareas.members:
+            if not msoarea.work_people:
+                warnings.warn(
+                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
+                )
+            else:
+                distributor = HospitalDistributor(self.hospitals, msoarea)
+                distributor.distribute_medics_to_hospitals()
+            pbar.update(1)
+        pbar.close()
 
     def initialize_areas(self):
         """
