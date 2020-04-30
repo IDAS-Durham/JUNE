@@ -123,7 +123,7 @@ def check_infection_progress(interaction, groups, endtime):
     for i in range(len(group.people)):
         age = group.people[i].get_age()
         index = min(7, int(age / 10))
-        tag = group.people[i].get_infection().get_symptoms().fix_tag(severities[i])
+        tag = group.people[i].get_infection().get_symptoms().tag(severities[i])
         N[index] += 1
         if tag == "asymptomatic":
             Nasymp[index] += 1
