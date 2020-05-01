@@ -80,4 +80,5 @@ class HospitalDistributor:
                         
                     if (hospital.n_medics < hospital.n_medics_max):# and \
                         medic.hospital = hospital.id
+                        medic.company_id = hospital.id
                         hospital.n_medics += 1
