@@ -5,10 +5,21 @@ import responses
 import requests
 
 class APICall():
+    """
+    Handling API calls to the Google Maps API
+    Interacts through url API calls directly, as well as using the Python client
+    
+    Note: This requires the Google Maps Place API for running and making calls
+    """
 
     def __init__(key):
         self.key = key
         self.client = googlemaps.Client(self.key)
+        self.raise_warning()
+
+    def raise_warning(self):
+        print ('WARNING: By running this class you will be making Google Maps API calls \n
+                This will use API credits and may charge you money - please proceed with caution')
 
     def process_results(self, results):
         locations = []
