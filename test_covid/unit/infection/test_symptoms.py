@@ -1,4 +1,4 @@
-from covid.infection import symptons as sym
+from covid.infection import symptoms as sym
 
 import numpy as np
 import pytest
