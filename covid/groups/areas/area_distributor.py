@@ -21,7 +21,8 @@ class AreaDistributor:
         sex_df = self.input.sex_freq
         household_composition_df = self.input.household_composition_freq
         areas_list = []
-        for i, area_name in enumerate(n_residents_df.index):
+        oa_in_sim = n_residents_df.index
+        for i, area_name in enumerate(oa_in_sim):
             area_coord = self.input.areas_coordinates_df.loc[area_name][
                 ["Y", "X"]
             ].values
@@ -42,3 +43,4 @@ class AreaDistributor:
             )
             areas_list.append(area)
         self.areas.members = areas_list
+        self.areas.names_in_order = oa_in_sim
