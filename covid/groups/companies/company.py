@@ -37,9 +37,9 @@ class Companies:
 
 
     def _compute_size_mean(self, sizegroup):
-        '''
+        """
         Given company size group calculates mean
-        '''
+        """
         
         # ensure that read_companysize_census() also returns number of companies
         # in each size category
@@ -102,7 +102,7 @@ class Companies:
                             
                         companies.append(company)
 
-                        msoaidx = np.where(self.msoareas.ids_in_order == msoarea_id)[0]
+                        msoaidx = np.where(self.msoareas.names_in_order == msoarea_id)[0]
                         if len(msoaidx) != 0:
                             self.msoareas.members[msoaidx[0]].companies.append(company)
                         else:

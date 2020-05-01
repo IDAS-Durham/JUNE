@@ -15,10 +15,11 @@ class Hospital(Group):
     become a real problem as it is manifestly not correct.
     """
 
-    def __init__(self, hospital_id=1, structure=None, postcode=None):
+    def __init__(self, hospital_id=1, structure=None, postcode=None, msoa_name=None):
         super().__init__("Hospital_%03d" % hospital_id, "hospital")
         self.id = hospital_id
         self.postcode = postcode
+        self.msoa_name = msoa_name
         self.people = []
         self.nurses = []
         self.doctors = []
@@ -136,6 +137,7 @@ class Hospitals:
     def __init__(self, world, hospital_df=None, box_mode=False):
         self.world = world
         self.box_mode = box_mode
+        self.area_mapping_df = world.inputs.area_mapping_df
         self.members = []
         # translate identifier from csv to position in members
         self.finder = {}
@@ -145,9 +147,8 @@ class Hospitals:
         # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
         self.icu_fraction = 5900. / 141000.
         if not self.box_mode:
-            print("Init hospitals from data file")
+            print("There are %d hospitals in the world." % len(hospital_df.index.values))
             self.hospital_trees = self.create_hospital_trees(hospital_df)
-            self.create_area_trees(hospital_df)
         else:
             self.members.append(Hospital(1, {"n_beds": 10, "n_ICUbeds": 2}))
             self.members.append(Hospital(2, {"n_beds": 5000, "n_ICUbeds": 5000}))
@@ -157,16 +158,24 @@ class Hospitals:
             np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
         for row in range(hospital_df.shape[0]):
+            # create hospital attributes
             n_beds = hospital_df.iloc[row]["beds"]
             n_icu_beds = round(self.icu_fraction * n_beds)
             n_beds -= n_icu_beds
-            self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
-                                         {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
-                                         hospital_df.iloc[row]["Postcode"]))
+            postcode = hospital_df.iloc[row]["Postcode"]
+            msoa_name = self.area_mapping_df[
+                self.area_mapping_df["PCD"] == postcode
+            ]["MSOA"].values[0]
+            # create hospital
+            hospital = Hospital(
+                hospital_df.iloc[row]["Unnamed: 0"],
+                {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
+                postcode,
+                msoa_name,
+            )
+            # add hospital to it's group
+            self.members.append(hospital)
             self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members) - 1
-            # print ("--- Hospital[",hospital_df.iloc[row]["Unnamed: 0"],
-            #       "<-->",len(self.members)-1,"]: ",
-            #       n_beds," beds and ",n_ICUbeds," n_ICUbeds.")
         return hospital_tree
 
     def get_nearest(self, person):
@@ -207,34 +216,3 @@ class Hospitals:
             np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True
         )
     
-    def create_area_trees(self, hospital_df):
-        coords = np.array([
-            list(area.coordinates.reshape(1, -1)[0]) for area in self.world.areas.members
-        ])
-        area_tree = BallTree(
-            np.deg2rad(coords) , metric="haversine"
-        )
-        
-        dists, _ = area_tree.query(coords, k=3)
-        area_dist_mean = np.mean(np.array([np.mean(dist) for dist in dists]))
-        print("***3***", area_dist_mean) 
-        
-        dists, _ = area_tree.query(
-            hospital_df[["Latitude", "Longitude"]].values, k=3
-        )
-        print("***mm***", dists) 
-        hosp_dist_mean = np.mean(np.array([np.mean(dist) for dist in dists]))
-        print("***4***", hosp_dist_mean) 
-        
-        for row in range(hospital_df.shape[0]):
-            n_beds = hospital_df.iloc[row]["beds"]
-            n_icu_beds = round(self.icu_fraction * n_beds)
-            n_beds -= n_icu_beds
-            self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
-                                         {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
-                                         hospital_df.iloc[row]["Postcode"]))
-            self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members) - 1
-            # print ("--- Hospital[",hospital_df.iloc[row]["Unnamed: 0"],
-            #       "<-->",len(self.members)-1,"]: ",
-            #       n_beds," beds and ",n_ICUbeds," n_ICUbeds.")
-        return hospital_tree

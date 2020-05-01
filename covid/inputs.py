@@ -25,12 +25,14 @@ class Inputs:
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
 
+        # This is the top-level of the hierarchy
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
             header=0,
             index_col="output_area",
         )
+        self.area_mapping_df = self.read_area_mapping(self.n_residents.index.values)
 
         self.age_freq, self.decoder_age = self.read("age_structure.csv")
         self.sex_freq, self.decoder_sex = self.read("sex.csv")
@@ -44,16 +46,9 @@ class Inputs:
         self.school_df = pd.read_csv(
             os.path.join(self.DATA_DIR, "school_data", "uk_schools_data.csv")
         )
-        self.hospital_df = pd.read_csv(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "data",
-                "census_data",
-                "hospital_data",
-                "england_hospitals.csv",
-            )
-        )
+        
+        self.read_hospitals(self.area_mapping_df["PCD"].values)
+        
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
             os.path.join(
@@ -67,8 +62,6 @@ class Inputs:
         )
 
         # Read census data on low resolution map (MSOA)
-        self.area_mapping_df = self.read_area_mapping(self.n_residents.index.values)
-        print(self.area_mapping_df)
         self.workflow_df = self.create_workflow_df(
             np.unique(self.area_mapping_df["MSOA"].values)
         )
@@ -108,7 +101,26 @@ class Inputs:
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         return areas_coordinates_df
 
-    def read_area_mapping(self, oa_id):
+    def read_hospitals(self, pcd_names):
+        """
+        Read in hospital data and filter those within
+        the population region.
+        """
+        hospital_df = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "census_data",
+                "hospital_data",
+                "england_hospitals.csv",
+            )
+        )
+        self.hospital_df = hospital_df.loc[
+            hospital_df["Postcode"].isin(list(pcd_names))
+        ]
+
+    def read_area_mapping(self, oa_names):
         """
         Creat link between Postcode and OA layers.
         Needed to know in which OAs which hospitals are.
@@ -131,7 +143,7 @@ class Inputs:
             usecols=usecols,
         )
         area_mapping_df = area_mapping_df.loc[
-            area_mapping_df["OA"].isin(list(oa_id))
+            area_mapping_df["OA"].isin(list(oa_names))
         ]
         return area_mapping_df
 
@@ -513,6 +525,6 @@ if __name__ == "__main__":
     #print(ip.workflow_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
-    print(ip.compsec_by_sex_df)
+    #print(ip.compsec_by_sex_df)
     #print(ip.compsec_by_sex_dict)
     #print(ip.companysector_specific_by_sex_df)
