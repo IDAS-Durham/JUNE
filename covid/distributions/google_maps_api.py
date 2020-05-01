@@ -20,6 +20,15 @@ class APICall():
     def raise_warning(self):
         print ('WARNING: By running this class you will be making Google Maps API calls \n This will use API credits and may charge you money - please proceed with caution')
 
+
+    def get_request(self, url):
+        try:
+            response = requests.get(url)
+            return response
+        except:
+            raise Exception('Error: GET request failed')
+
+        
     def process_results(self, results):
         locations = []
         names = []
@@ -33,6 +42,15 @@ class APICall():
 
         return locations, names, reviews, ratings
 
+    def process_pagetoken(self, resp_json_payload, out):
+        locations, names, reviews, ratings = out
+        try:
+            next_page_token = resp_json_payload['next_page_token']
+            return [locations, names, reviews, ratings, next_page_token]
+
+        except:
+            print ('No more next page tokens')
+            return [locations, names, reviews, ratings]
         
     def nearby_search(self, location, radius, location_type, return_pagetoken = False):
         """
@@ -51,29 +69,19 @@ class APICall():
         lon = str(lon)
         url = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&type={}&&key={}'.format(lat,lon,radius,location_type,self.key))
 
-        try:
-            response = requests.get(url)
-            pass
-        except:
-            raise Exception('Error: GET request failed')
-        
+        response = self.get_request(url)
         # convert to json
         resp_json_payload = response.json()
         
         results = resp_json_payload['results']
 
-        locations, names, reviews, ratings = self.process_results(results)
+        out = self.process_results(results)
 
         if return_pagetoken:
-            try:
-                next_page_token = resp_json_payload['next_page_token']
-                return [locations, names, reviews, ratings, next_page_token]
-            except:
-                print ('No more next page tokens')
-                return [locations, names, reviews, ratings]
-
+            out = self.process_pagetoken(resp_json_payload, out)
+            return out
         else:
-            return [locations, names, reviews, ratings]
+            return out
 
         
     def nearby_search_next_page(self, next_page_token, return_pagetoken = False):
@@ -84,33 +92,28 @@ class APICall():
         """
         
         url = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={}&key={}'.format(next_page_token,self.key))
-        
-        try:
-            response = requests.get(url)
-            pass
-        except:
-            raise Exception('Error: GET request failed')
 
+        response = self.get_request(url)
+        
         # convert to json 
         resp_json_payload = response.json()
-
         
         results = resp_json_payload['results']
 
         locations, names, reviews, ratings = self.process_results(results)
 
+
+        out = self.process_results(results)
+
         if return_pagetoken:
-            try:
-                next_page_token = resp_json_payload['next_page_token']
-                return [locations, names, reviews, ratings, next_page_token]
-
-            except:
-                print ('No more next page tokens')
-                return [locations, names, reviews, ratings]
-
+            out = self.process_pagetoken(resp_json_payload, out)
+            return out
         else:
-            return [locations, names, reviews, ratings]
-        
+            return out
+
+    
+    def nearby_search_loop(self, location, radius, location_type):
+        pass
         
         
 
