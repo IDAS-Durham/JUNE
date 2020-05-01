@@ -96,3 +96,4 @@ def test__non_mandatory_dont_go_if_school_full(world_ne):
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
+
