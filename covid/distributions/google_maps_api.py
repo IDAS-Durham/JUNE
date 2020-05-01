@@ -1,5 +1,6 @@
 import googlemaps
 from datetime import datetime
+import time
 
 import responses
 import requests
@@ -118,18 +119,20 @@ class APICall():
 
     
     def nearby_search_loop(self, location, radius, location_type):
+        print ('Calling API')
         out = self.nearby_search(location, radius, location_type, return_pagetoken = True)
-        token = self.out_len_check(out_0)
-        
+        token = self.out_len_check(out)
         outs = []
         outs.append(out)
         while token is not None:
-            out_token = self.nearby_seach_next_page(token, return_pagetoken = True)
+            print ('Calling API')
+            time.sleep(2)
+            out_token = self.nearby_search_next_page(token, return_pagetoken = True)
             outs.append(out_token)
             token_check = self.out_len_check(out_token)
             token = token_check
 
-            return outs
+        return outs
         
 
     def places(self, query, location, radius, location_type = None):
