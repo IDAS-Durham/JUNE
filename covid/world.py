@@ -253,8 +253,8 @@ class World:
 
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
-            grouptype = getattr(self, group_name)
-            for group in grouptype.members:
+            group_type = getattr(self, group_name)
+            for group in group_type.members:
                 group.set_active_members()
 
     def set_allpeople_free(self):
