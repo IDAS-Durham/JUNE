@@ -14,4 +14,4 @@ data
 cookie
 data.zip
 __MACOSX
-covid/*.log
+*.log
