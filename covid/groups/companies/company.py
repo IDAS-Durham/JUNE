@@ -4,11 +4,6 @@ from tqdm.auto import tqdm
 from covid.groups import Group
 
 
-class CompanyError(BaseException):
-    """Class for throwing company related errors."""
-    pass
-
-
 class Company(Group):
     """
     The Company class represents a company that contains information about 
@@ -110,8 +105,8 @@ class Companies:
                             pass
  
             except:
-                raise CompanyError(
-                    f"The initialization of companies for the MSOArea {0} failed.".format(msoarea)
+                warnings warnings.warn(
+                    f"The initialization of companies for the MSOArea {msoarea} failed."
                 )
                 pass
             #pbar.update(1)
