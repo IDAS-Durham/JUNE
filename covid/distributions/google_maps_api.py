@@ -67,14 +67,14 @@ class APICall():
         if return_pagetoken:
             try:
                 next_page_token = resp_json_payload['next_page_token']
-                return locations, names, reviews, ratings, next_pagetoken
+                return [locations, names, reviews, ratings, next_pagetoken]
 
             except:
                 print ('No more next page tokens')
-                return locations, names, reviews, ratings
+                return [locations, names, reviews, ratings]
 
         else:
-            return locations, names, reviews, ratings
+            return [locations, names, reviews, ratings]
 
         
     def nearby_search_next_page(self, next_page_token, return_pagetoken = False):
@@ -98,14 +98,14 @@ class APICall():
         if return_pagetoken:
             try:
                 next_page_token = resp_json_payload['next_page_token']
-                return locations, names, reviews, ratings, next_pagetoken
+                return [locations, names, reviews, ratings, next_pagetoken]
 
             except:
                 print ('No more next page tokens')
-                return locations, names, reviews, ratings
+                return [locations, names, reviews, ratings]
 
         else:
-            return locations, names, reviews, ratings
+            return [locations, names, reviews, ratings]
         
         
         
@@ -148,7 +148,7 @@ class APICall():
 
         locations, names, reviews, ratings = process_results(results)
 
-        return locations, names, reviews, ratings
+        return [locations, names, reviews, ratings]
             
 
     def distance(self, origin_location, destination_location, mode):
