@@ -31,7 +31,7 @@ class World:
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
         self.people = []
-        self.total_people = 0
+        self.total_people = 0  #TODO is nowehere updated
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
@@ -47,7 +47,7 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
-            self.initialize_hospitals()
+            #self.initialize_hospitals()
             self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -171,7 +171,7 @@ class World:
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.id,)]
             person_distributor = PersonDistributor(
                 self.timer,
                 self.people,
@@ -213,6 +213,7 @@ class World:
            self.distributor = SchoolDistributor.from_file(self.schools, area,
                    self.inputs.school_config_path)
            self.distributor.distribute_kids_to_school()
+           self.distributor.distribute_teachers_to_school()
            pbar.update(1)
         pbar.close()
 
@@ -254,17 +255,13 @@ class World:
         return interaction
 
     def set_active_group_to_people(self, active_groups):
-        print('active groups : ', active_groups)
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
-            print('group type : ', grouptype)
             for group in grouptype.members:
                 group.set_active_members()
 
     def set_allpeople_free(self):
         for person in self.people.members:
-            if person.active_group == 'school':
-                print('is school ', person.active_group)
             person.active_group = None
 
     def initialize_infection(self):
@@ -364,4 +361,4 @@ if __name__ == "__main__":
     #              box_mode=True,box_n_people=100)
 
     # world = World.from_pickle()
-    world.group_dynamics()
+    #world.group_dynamics()
