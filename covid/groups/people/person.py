@@ -67,7 +67,7 @@ class Counter:
         self.maximal_symptoms_time = -1
         self.maximal_symptoms_tag = "none"
         self.time_of_infection = -1
-        self.grouptype_of_infection = "none"
+        self.group_type_of_infection = "none"
         self.length_of_infection = -1
 
     @property
@@ -82,10 +82,10 @@ class Counter:
             )
             self.maximal_symptoms_time = self.timer.now - self.time_of_infection
 
-    def update_infection_data(self, time, grouptype=None):
+    def update_infection_data(self, time, group_type=None):
         self.time_of_infection = time
-        if grouptype is not None:
-            self.grouptype_of_infection = grouptype
+        if group_type is not None:
+            self.group_type_of_infection = group_type
 
     def set_length_of_infection(self):
         self.length_of_infection = self.timer.now - self.time_of_infection
