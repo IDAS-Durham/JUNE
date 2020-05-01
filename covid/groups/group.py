@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from covid.exc import GroupException
 
 import matplotlib.pyplot as plt
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
-    all people in the group, the healthy ones and the infected ones (we may 
+    all people in the group, the healthy ones and the infected ones (we may
     have to add the immune ones as well).
 
     This is very basic and we will have to specify derived classes with
@@ -30,9 +31,10 @@ class Group:
 
     allowed_groups = [
         "box",
-        "boundary"
+        "boundary",
         "commute_Public",
         "commute_Private",
+        "cemetery",
         "company",
         "household",
         "hospital",
@@ -47,9 +49,8 @@ class Group:
         "work_Indoor",
     ]
 
-    def __init__(self, name, spec, number=-1):
-        if not self.sane(name, spec):
-            return
+    def __init__(self, name, spec):
+        self.sane(name, spec)
         self.name = name
         self.spec = spec
         self.people = []
@@ -89,10 +90,8 @@ class Group:
         ]
 
     def sane(self, name, spec):
-        if not spec in self.allowed_groups:
-            print("Error: tried to initialise group with wrong specification:", spec)
-            return False
-        return True
+        if spec not in self.allowed_groups:
+            raise GroupException(f"{spec} is not an allowed group type")
 
     def set_active_members(self):
         for person in self.people:
@@ -101,26 +100,30 @@ class Group:
             else:
                 person.active_group = self.spec
 
-    def update_status_lists(self):
-        logger.debug("=== update status list for group with ", len(self.people), " people ===")
+    def set_intensity(self, intensity):
+        self.intensity = intensity
+
+    def get_intensity(self, time=0):
+        if self.intensity == None:
+            return 1.0
+        return self.intensity  # .intensity(time)
+
+    def must_timestep(self):
+        return (self.size > 1 and
+                self.size_infected > 0 and
+                self.size_susceptible > 0)
+
+    def update_status_lists(self, time, delta_time):
         for person in self.people:
-            person.health_information.update_health_status()
-            if person.health_information.infected:
+            person.health_information.update_health_status(time, delta_time)
+            if person.health_information.susceptible:
+                self.susceptible.append(person)
+            elif person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
-                    # print ("person must stay at home",person.id,":",
-                    #       person.health_information.tag," for",
-                    #       person.health_information.infection.symptoms.severity)
-                    # don't add this person to the group
-                    # the household group instance deals with this in its own
-                    # update_status_lists method
-                elif person.health_information.in_hospital:
-                    logger.debug("person should be in hospital", person.id, ":",
-                                 person.health_information.tag, " for",
-                                 person.health_information.infection.symptoms.severity)
-                    person.get_into_hospital()
-                    self.people.remove(person)
-                    continue
+            elif person.health_information.dead:
+                person.bury()
+                self.people.remove(person)
 
     @property
     def size(self):

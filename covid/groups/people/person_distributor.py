@@ -37,7 +37,7 @@ class PersonDistributor:
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
         self.no_kids_area = False
         self.no_students_area = False
-        self.companysector_by_sex_df = compsec_by_sex_df
+        self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.area.world.config)
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
@@ -121,14 +121,14 @@ class PersonDistributor:
             21: "U",
         }
         numbers = np.arange(1, 22)
-        m_comp = [col for col in self.companysector_by_sex_df.columns.values if "m " in col]
-        distribution_male = self.companysector_by_sex_df.loc[self.area.name][m_comp].values
+        m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
+        distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
         )
         
-        f_comp = [col for col in self.companysector_by_sex_df.columns.values if "f " in col]
-        distribution_female = self.companysector_by_sex_df.loc[self.area.name][f_comp].values
+        f_col = [col for col in self.compsec_by_sex_df.columns.values if "f " in col]
+        distribution_female = self.compsec_by_sex_df.loc[self.area.name][f_col].values
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )

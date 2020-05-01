@@ -118,6 +118,9 @@ class ModeOfTransport:
     def __repr__(self):
         return f"<{self.__class__.__name__} {self}>"
 
+    def __getnewargs__(self):
+        return self.description, self.is_public
+
     @classmethod
     def load_from_file(
             cls,
