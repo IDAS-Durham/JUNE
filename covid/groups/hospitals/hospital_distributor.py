@@ -72,7 +72,7 @@ class HospitalDistributor:
             hospitals_rnd_arr = areas_rv.rvs(size=len(medics))
 
             for i,medic in enumerate(medics):
-                if medic.industry_specific != None:
+                if medic.industry_specific not None:
                     hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
                         
                     if (hospital.n_medics < hospital.n_medics_max):# and \
