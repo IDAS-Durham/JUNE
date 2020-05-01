@@ -1,2 +1,1 @@
-from .base import Infection
-from .constant import InfectionConstant
+from .infection import Infection
