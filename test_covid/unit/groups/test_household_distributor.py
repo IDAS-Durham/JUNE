@@ -165,7 +165,7 @@ def test__get_matching_second_kid(household_distributor):
     assert kid.age == 5 or kid.age == 4
     parent = Person(age=80)
     kid = household_distributor._get_matching_second_kid(parent, area)
-    assert kid is None
+    assert kid.age == 17
 
 
 def test__fill_all_student_households(household_distributor):
@@ -245,10 +245,13 @@ def test__fill_families_households(household_distributor):
 
 
 def test__fill_nokids_households(household_distributor):
-    area = create_area(age_min=18, people_per_age=2)
+    area = create_area(age_min=18, people_per_age=10, age_max=70)
     households_with_extrapeople_list = []
     household_distributor.fill_nokids_households(
-        2, 10, area, extra_people_lists=(households_with_extrapeople_list,)
+        adults_per_household=2,
+        n_households=10,
+        area=area,
+        extra_people_lists=(households_with_extrapeople_list,),
     )
     assert len(households_with_extrapeople_list) == 10
     assert len(area.households) == 10
@@ -308,14 +311,13 @@ def test__fill_youngadult_with_parents_households(household_distributor):
 
 def test__fill_communal_establishments(household_distributor):
     area = create_area(people_per_age=5)
-    household_distributor.fill_communal_establishment(
-        n_establishments=5, people_per_establishment=10, area=area
+    household_distributor.fill_all_communal_establishments(
+        n_establishments=5, n_people_in_communal=20, area=area
     )
     assert len(area.households) == 5
-    assert len(area.world.households.members) == 50
+    assert len(area.world.households.members) == 5
     for household in area.households:
-        assert len(household.pople) == 10
-
+        assert len(household.people) == 4
 
 
 def test__area_is_filled_properly_1(household_distributor):
@@ -337,7 +339,9 @@ def test__area_is_filled_properly_1(household_distributor):
         "0 0 0 0 1": 1,
         "0 0 0 0 2": 1,
     }
-    household_distributor.distribute_people_to_households(area, composition_numbers, 0)
+    household_distributor.distribute_people_to_households(
+        area, composition_numbers, 0, 0
+    )
     assert len(area.households) == 6
     total_people = 0
     for household in area.households:
@@ -393,11 +397,13 @@ def test__area_is_filled_properly_2(household_distributor):
         "0 0 0 0 2": 1,
         "0 0 0 0 1": 1,
     }
-    household_distributor.distribute_people_to_households(area, composition_numbers, 5)
+    household_distributor.distribute_people_to_households(
+        area, composition_numbers, 5, 0
+    )
     assert len(area.households) == 5
     total_people = 0
     for household in area.households:
-        assert len(household.people) <= 6
+        assert len(household.people) <= 10
         kids = 0
         adults = 0
         youngadults = 0
@@ -428,3 +434,46 @@ def test__area_is_filled_properly_2(household_distributor):
         total_people += old + kids + adults + youngadults
 
     assert total_people == 16
+
+
+def test__area_is_filled_properly_3(household_distributor):
+    area = create_area(people_per_age=0)
+    men_by_age_counts = {
+        5: 3,  # kids
+        50: 14,  # adults
+    }
+    area.men_by_age = OrderedDict({})
+    area.women_by_age = OrderedDict({})
+    for age in men_by_age_counts.keys():
+        area.men_by_age[age] = []
+        for _ in range(men_by_age_counts[age]):
+            person = Person(age=age)
+            area.men_by_age[age].append(person)
+    composition_numbers = {
+        "1 0 >=0 2 0": 1,
+        ">=2 0 >=0 2 0": 1,
+        ">=0 >=0 >=0 >=0 >=0": 2,
+    }
+    household_distributor.distribute_people_to_households(
+        area, composition_numbers, 0, 10
+    )
+    assert len(area.households) == 4
+    total_people = 0
+    for household in area.households:
+        assert len(household.people) in [3, 4, 5]
+        kids = 0
+        adults = 0
+        for person in household.people:
+            if 0 <= person.age < household_distributor.ADULT_MIN_AGE:
+                kids += 1
+            elif (
+                household_distributor.ADULT_MIN_AGE
+                <= person.age
+                < household_distributor.OLD_MIN_AGE
+            ):
+                adults += 1
+        assert kids in [0, 1, 2]
+        assert adults in [2, 5]
+        total_people += kids + adults
+
+    assert total_people == 17
