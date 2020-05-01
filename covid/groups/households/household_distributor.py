@@ -503,6 +503,7 @@ class HouseholdDistributor:
         students_left = n_students
         while True:
             household = self._create_household(area)
+            household.student_ratio = ratio
             for _ in range(0, ratio):
                 sex = self._random_sex_list.pop()
                 if sex == 0:
@@ -524,7 +525,7 @@ class HouseholdDistributor:
                         max_age=self.STUDENT_MAX_AGE,
                     )
                 if student is None:
-                    return None
+                    raise HouseholdError("Students do not match!")
                 household.people.append(student)
                 students_left -= 1
                 if students_left == 0:

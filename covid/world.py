@@ -47,8 +47,8 @@ class World:
                 self.initialize_people(skip_companies=True)
             else:
                 self.initialize_people(skip_companies=False)
-            #self.initialize_carehomes()  # Important that goes before households.
-            #self.initialize_households()
+            self.initialize_carehomes()  # Important that goes before households.
+            self.initialize_households()
             if "schools" in relevant_groups:
                 self.initialize_schools()
             else:
@@ -208,7 +208,7 @@ class World:
         household_composition_per_area = self.inputs.household_composition_df
         for area in self.areas.members:
             n_students = n_students_per_area.loc[area.name].values[0]
-            house_composition_numbers = household_composition_per_area.loc[area.name]
+            house_composition_numbers = household_composition_per_area.loc[area.name].to_dict()
             self.household_distributor.distribute_people_to_households(
                 area,
                 number_households_per_composition=house_composition_numbers,
