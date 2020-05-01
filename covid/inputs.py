@@ -34,24 +34,15 @@ class Inputs:
 
         self.age_freq, self.decoder_age = self.read("age_structure.csv")
         self.sex_freq, self.decoder_sex = self.read("sex.csv")
-        self.household_composition_freq, self.decoder_household_composition = self.read(
-            "household_composition.csv"
-        )
-        self.encoder_household_composition = {}
-        for i, column in enumerate(self.household_composition_freq.columns):
-            self.encoder_household_composition[column] = i
-
+            
         self.household_composition_df = pd.read_csv(
                 os.path.join(
                     self.OUTPUT_AREA_DIR,
                     'minimum_household_composition.csv',
                 ),
                 index_col="output_area"
-                )
- 
-        self.school_df = pd.read_csv(
-            os.path.join(self.DATA_DIR, "school_data", "uk_schools_data.csv")
         )
+
         self.hospital_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -62,23 +53,59 @@ class Inputs:
                 "england_hospitals.csv",
             )
         )
+        self.areas_coordinates_df = self.read_coordinates()
+        self.contact_matrix = np.genfromtxt(
+            os.path.join(
+                self.DATA_DIR,
+                "..",
+                "social_mixing",
+                "POLYMOD",
+                "extended_polymod_UK.csv",
+            ),
+            delimiter=",",
+        )
+
+        # Read census data on low resolution map (MSOA)
+        self.oa2msoa_df = self.oa2msoa(self.n_residents.index.values)
+        self.workflow_df = self.create_workflow_df(
+            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+        )
+        self.companysize_df = self.read_companysize_census(
+            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+        )
+        self.companysector_df = self.read_companysector_census(
+            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+        )
+        self.compsec_by_sex_df = self.read_compsec_by_sex()
+        self.commute_generator_path = (
+            Path(__file__).parent.parent / "data/census_data/commute.csv"
+        )
+        self.school_data_path = (
+            Path(__file__).parent.parent / "data/processed/school_data/england_schools_data.csv"
+        )
+
+        self.school_config_path = (
+            Path(__file__).parent.parent / "configs/defaults/schools.yaml"
+        )
+
         self.n_students = pd.read_csv(
-                os.path.join(
-                    self.OUTPUT_AREA_DIR,
-                    'n_students.csv'
-                ),
-                index_col=0
-                )
- 
+            os.path.join(
+                self.OUTPUT_AREA_DIR,
+                'n_students.csv'
+            ),
+            index_col=0
+        )
+
         self.carehomes_df = pd.read_csv(
-                os.path.join(
-                    self.OUTPUT_AREA_DIR,
-                    'carehomes.csv'
-                ),
-                skiprows=1,
-                names=['output_area', 'N_carehome_residents'],
-                index_col=0
-                )
+               os.path.join(
+                   self.OUTPUT_AREA_DIR,
+                   'carehomes.csv'
+               ),
+               skiprows=1,
+               names=['output_area', 'N_carehome_residents'],
+               index_col=0
+               )
+
         self.n_in_communal = pd.read_csv(
                 os.path.join(
                     self.OUTPUT_AREA_DIR,
@@ -86,7 +113,6 @@ class Inputs:
                 ),
                 index_col=0
                 )
- 
  
         AGE_DIFF_DIR =  os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
@@ -111,40 +137,6 @@ class Inputs:
                 index_col=0
                 )
 
-        self.areas_coordinates_df = self.read_coordinates()
-        self.contact_matrix = np.genfromtxt(
-            os.path.join(
-                self.DATA_DIR,
-                "..",
-                "social_mixing",
-                "POLYMOD",
-                "extended_polymod_UK.csv",
-            ),
-            delimiter=",",
-        )
-
-        # Read census data on low resolution map (MSOA)
-        self.oa2msoa_df = self.oa2msoa(self.n_residents.index.values)
-        self.workflow_df = self.create_workflow_df(
-            np.unique(self.oa2msoa_df["MSOA11CD"].values)
-        )
-        self.companysize_df = self.read_companysize_census(
-            np.unique(self.oa2msoa_df["MSOA11CD"].values)
-        )
-        self.companysector_df = self.read_companysector_census(
-            np.unique(self.oa2msoa_df["MSOA11CD"].values)
-        )
-        (
-            self.companysector_by_sex_dict,
-            self.companysector_by_sex_df,
-        ) = self.read_compsec_by_sex_census()
-        (
-            self.compsec_specic_ratio_by_sex_df,
-            self.compsec_specic_distr_by_sex_df
-        ) = self.read_key_compsec_by_sex(self.companysector_by_sex_df)
-        self.commute_generator_path = (
-            Path(__file__).parent.parent / "data/census_data/commute.csv"
-        )
 
     def read(self, filename):
         df = pd.read_csv(
@@ -264,16 +256,17 @@ class Inputs:
 
         return companysector_df
 
-    def read_compsec_by_sex_census(self):
+    def read_compsec_by_sex(self):
         """
-        Gives number dict of discrete probability distributions by sex of the different industry sectors at the OA level
+        Gives number dict of discrete probability distributions by sex of the
+        different industry sectors at the OA level.
         The dict is of the format: {[oa]: {[gender('m'/'f')]: [distribution]}}
         
         TableID: KS605EW to KS607EW
         https://www.nomisweb.co.uk/census/2011/ks605ew
         """
 
-        industry_by_sex_df = pd.read_csv(
+        compsec_by_sex_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
@@ -282,89 +275,40 @@ class Inputs:
                 "output_area",
                 "NorthEast",
                 "industry_by_sex_cleaned.csv",
-            )
+            ),
+            index_col=0,
+        )
+        compsec_by_sex_df = compsec_by_sex_df.drop(
+            ['date', 'geography', 'rural urban'], axis=1,
         )
 
         # define all columns in csv file relateing to males
-        # here each letter corresponds to the industry sector (see metadata)
-        m_columns = [
-            "m A",
-            "m B",
-            "m C",
-            "m D",
-            "m E",
-            "m F",
-            "m G",
-            "m H",
-            "m I",
-            "m J",
-            "m K",
-            "m L",
-            "m M",
-            "m N",
-            "m O",
-            "m P",
-            "m Q",
-            "m R",
-            "m S",
-            "m T",
-            "m U",
-        ]
+        m_columns = [col for col in compsec_by_sex_df.columns.values if "m " in col]
+        m_columns.remove('m all')
+        m_columns.remove('m R S T U')
 
-        m_distributions = []
-        for oa in range(len(industry_by_sex_df["oareas"])):
-            total = float(industry_by_sex_df["m all"][oa])
+        f_columns = [col for col in compsec_by_sex_df.columns.values if "f " in col]
+        f_columns.remove('f all')
+        f_columns.remove('f R S T U')
 
-            distribution = []
-            for column in m_columns:
-                distribution.append(float(industry_by_sex_df[column][oa]) / total)
-
-            m_distributions.append(distribution)
-
-        # define all columns in csv file relateing to males
+        uni_columns = [col for col in compsec_by_sex_df.columns.values if "all " in col]
+        compsec_by_sex_df = compsec_by_sex_df.drop(
+            uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
+        )
+        compsec_by_sex_df = compsec_by_sex_df.set_index('oareas')
         
-        f_columns = [
-            "f A",
-            "f B",
-            "f C",
-            "f D",
-            "f E",
-            "f F",
-            "f G",
-            "f H",
-            "f I",
-            "f J",
-            "f K",
-            "f L",
-            "f M",
-            "f N",
-            "f O",
-            "f P",
-            "f Q",
-            "f R",
-            "f S",
-            "f T",
-            "f U",
-        ]
-
-        f_distributions = []
-        for oa in range(len(industry_by_sex_df["oareas"])):
-            total = int(industry_by_sex_df["f all"][oa])
-
-            distribution = []
-            for column in f_columns:
-                distribution.append(int(industry_by_sex_df[column][oa]) / total)
-
-            f_distributions.append(distribution)
-
-        industry_by_sex_dict = {}
-        for idx, oa in enumerate(industry_by_sex_df["oareas"]):
-            industry_by_sex_dict[oa] = {
-                "m": m_distributions[idx],
-                "f": f_distributions[idx],
-            }
-
-        return industry_by_sex_dict, industry_by_sex_df
+        # use the counts to get key company sector ratios
+        self.read_key_compsec_by_sex(compsec_by_sex_df)
+        
+        # convert counts to ratios
+        compsec_by_sex_df.loc[:, m_columns] = compsec_by_sex_df.loc[:, m_columns].div(
+            compsec_by_sex_df[m_columns].sum(axis=1), axis=0
+        )
+        compsec_by_sex_df.loc[:, f_columns] = compsec_by_sex_df.loc[:, f_columns].div(
+            compsec_by_sex_df[f_columns].sum(axis=1), axis=0
+        )
+        
+        return compsec_by_sex_df
 
 
     def read_key_compsec_by_sex(self, companysector_by_sex_df):
@@ -398,30 +342,14 @@ class Inputs:
             ~education_healthcare_by_sex_df.occupations.isin(education_df.occupations)
         ]
         
-        # Get ratio of people work in any compared to the specific key sector 
-        male_healthcare_ratio = np.sum(healthcare_df["male"]) / \
-            np.sum(companysector_by_sex_df["m Q"])
-        male_education_ratio = np.sum(education_df["male"]) / \
-            np.sum(companysector_by_sex_df["m P"])
-        female_healthcare_ratio = np.sum(healthcare_df["female"]) / \
-            np.sum(companysector_by_sex_df["f Q"])
-        female_education_ratio = np.sum(education_df["female"]) / \
-            np.sum(companysector_by_sex_df["f P"])
-        
-        compsec_specic_ratio_by_sex_df = pd.DataFrame(
-            np.array([
-                [male_education_ratio, female_education_ratio],
-                [male_healthcare_ratio, female_healthcare_ratio]
-            ]),
-            index=['education', 'healthcare'],
-            columns=['male', 'female'],
-            dtype=np.float,
+        self.get_key_compsec_ratio_by_sex(
+            education_df, healthcare_df, companysector_by_sex_df
         )
-        del (
-            male_healthcare_ratio, male_education_ratio,
-            female_healthcare_ratio, female_education_ratio,
-        )
-        
+        self.get_key_compsec_distr_by_sex(education_df, healthcare_df)
+    
+    def get_key_compsec_distr_by_sex(self, education_df, healthcare_df):
+        """
+        """
         # Get distribution of duties within key sector
         healthcare_distr_df = healthcare_df.loc[
             :,["male", "female"]
@@ -453,8 +381,40 @@ class Inputs:
         compsec_specic_distr_by_sex_df = compsec_specic_distr_by_sex_df.sort_index()
         del healthcare_distr_df, education_distr_df
 
-        return compsec_specic_ratio_by_sex_df, compsec_specic_distr_by_sex_df
+        self.key_compsec_distr_by_sex_df = compsec_specic_distr_by_sex_df
 
+    def get_key_compsec_ratio_by_sex(
+            self,
+            education_df,
+            healthcare_df,
+            companysector_by_sex_df
+        ):
+        """
+        """
+        # Get ratio of people work in any compared to the specific key sector 
+        male_healthcare_ratio = np.sum(healthcare_df["male"]) / \
+            np.sum(companysector_by_sex_df["m Q"])
+        male_education_ratio = np.sum(education_df["male"]) / \
+            np.sum(companysector_by_sex_df["m P"])
+        female_healthcare_ratio = np.sum(healthcare_df["female"]) / \
+            np.sum(companysector_by_sex_df["f Q"])
+        female_education_ratio = np.sum(education_df["female"]) / \
+            np.sum(companysector_by_sex_df["f P"])
+ 
+        compsec_specic_ratio_by_sex_df = pd.DataFrame(
+            np.array([
+                [male_education_ratio, female_education_ratio],
+                [male_healthcare_ratio, female_healthcare_ratio]
+            ]),
+            index=['education', 'healthcare'],
+            columns=['male', 'female'],
+            dtype=np.float,
+        )
+        del (
+            male_healthcare_ratio, male_education_ratio,
+            female_healthcare_ratio, female_education_ratio,
+        )
+        self.key_compsec_ratio_by_sex_df = compsec_specic_ratio_by_sex_df
 
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
@@ -618,17 +578,9 @@ class Inputs:
 
 if __name__ == "__main__":
 
-    ip = Inputs(zone="test")
-    #print(ip.carehomes_df[:80].sum())
-    print(ip.n_in_communal)
-    print(ip.n_in_communal.sum())
-    print([len(col.split(' ')) for col in ip.household_composition_df.columns])
-    #print(ip.household_composition_df)
-    #print(ip.parent_child_df)
-    #print(ip.parent_child_df.sum())
-    #print(ip.husband_wife_df)
-    #print(ip.n_students)
+    ip = Inputs()
+    #print(ip.workflow_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
-    #print(ip.companysector_by_sex_df)
-    #print(ip.companysector_specific_by_sex_df)
+    print(ip.compsec_by_sex_df)
+    #print(ip.key_compsec_ratio_by_sex_df)

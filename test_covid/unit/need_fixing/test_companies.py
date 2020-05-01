@@ -10,6 +10,45 @@ import pytest
 sns.set_context("paper")
 
 
+def test_company_size():
+    """
+    """
+    in_compsize_distr = world.inputs.companysize_df.sum(axis='rows')
+    in_compsize_distr = in_compsize_distr.to_frame(name="in_counts")
+    in_compsize_distr = in_compsize_distr.reset_index()
+    in_compsize_distr = in_compsize_distr.rename(columns={"index": "bins"})
+
+    out_compsize_distr = np.zeros(len(world.companies.members))
+    for i, company in enumerate(world.companies.members):
+        out_compsize_distr[i] = company.n_employees
+        
+    bins = np.array([0,9,19,20,50,100,250,500,1000,999999])
+    inds = np.digitize(out_compsize_distr, bins)
+    bins, counts = np.unique(inds, return_counts=True)
+
+    out_compsize_distr = pd.DataFrame(
+        data=np.array([bins, counts]).T,
+        columns=['size','out_counts'],
+    )
+    out_compsize_distr= pd.merge(
+        in_compsize_distr,
+        out_compsize_distr,
+        left_index=True,
+        right_index=True,
+        how='left',
+    )
+    out_compsize_distr = out_compsize_distr.fillna(0)
+    out_compsize_distr = out_compsize_distr.drop(["size", "in_counts"], axis=1)
+
+
+    in_compsize_distr = in_compsize_distr.rename(columns={"in_counts": "counts"})
+    out_compsize_distr = out_compsize_distr.rename(columns={"out_counts": "counts"})
+    in_compsize_distr["src"] = ["input"] * len(in_compsize_distr.index.values)
+    out_compsize_distr["src"] = ["output"] * len(out_compsize_distr.values)
+
+    compsize_distr = pd.concat([in_compsize_distr, out_compsize_distr], axis=0)
+
+
 def test_company_number_per_msoa():
     """ 
     Check the number of companies in the world is correct
