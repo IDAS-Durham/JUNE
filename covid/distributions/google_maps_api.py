@@ -119,6 +119,12 @@ class APICall():
 
     
     def nearby_search_loop(self, location, radius, location_type):
+        """
+        In cases where there may be multple next pages (up to Google's max 3), run loop over all pages
+        :param location: (tuple of ints) location is a tuple of (latitude, longitude)
+        :param radius: (int) meter radius search area around location coordinate
+        :param location_type: (string) type of location being searched for
+        """
         print ('Calling API')
         out = self.nearby_search(location, radius, location_type, return_pagetoken = True)
         token = self.out_len_check(out)
@@ -144,7 +150,6 @@ class APICall():
         :param radius: (int) meter radius search area around location coordinate
         :param location_type: (string, optional) type of location being searched for
         """
-
         
         try:
             if location_type is not None:
