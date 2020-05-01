@@ -19,9 +19,7 @@ class HospitalDistributor:
         self.msoarea = msoarea
         # check if this msoarea has hospitals
         self.hospitals_in_msoa(hospitals)
-        if len(self.msoarea.hospitals) == 0:
-            pass
-        else:
+        if len(self.msoarea.hospitals) != 0:
             self.healthcare_sector_label = (
                 self.world.config["companies"]["key_sector"]["hospitals"]
             )
@@ -55,9 +53,8 @@ class HospitalDistributor:
         ]
 
         if len(medics) == 0:
-            warnings.warn(
-                f"\n The MSOArea {0} has no people that work in it!".format(self.msoarea.name),
-                RuntimeWarning
+            Logger.info(
+                f"\n The MSOArea {self.msoarea.name} has no people that work in it!"
             )
         
         else:
