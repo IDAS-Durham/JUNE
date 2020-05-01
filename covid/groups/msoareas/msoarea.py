@@ -22,14 +22,15 @@ class MSOArea:
         """
 
         self.world = world
-        self.id = name
+        self.name = name
         self.oareas = oareas
-        self.companies = []
         self.work_people = []
+        self.companies = []
+        self.hospitals = []
 
 
 class MSOAreas:
     def __init__(self, world):
         self.world = world
         self.members = []
-        self.ids_in_order = None
+        self.names_in_order = None

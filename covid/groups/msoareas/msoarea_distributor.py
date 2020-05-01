@@ -6,8 +6,9 @@ from covid.groups.msoareas import MSOArea
 
 class MSOAreaDistributor:
     def __init__(self, msoareas):
-        self.msoareas = msoareas
         self.world = msoareas.world
+        self.msoareas = msoareas
+        self.area_mapping_df = self.msoareas.world.inputs.area_mapping_df
 
     def read_msoareas_census(self):
         """
@@ -17,11 +18,11 @@ class MSOAreaDistributor:
         This is all on the MSOA layer.
         """
         msoareas_list = []
-        msoa11cd = np.unique(self.msoareas.world.inputs.oa2msoa_df["MSOA11CD"].values)
+        msoa_in_sim = self.area_mapping_df["MSOA"].unique()
         msoaofoa = np.array([
             [area.name, area.msoarea] for area in self.world.areas.members
         ]).T
-        for i, msoa in enumerate(msoa11cd):
+        for msoa in msoa_in_sim:
             # find oareas inside this msoa
             idxs = np.where(msoaofoa[1] == msoa)[0]
             areas = [self.world.areas.members[idx] for idx in idxs]
@@ -36,4 +37,4 @@ class MSOAreaDistributor:
             for area in areas:
                 area.msoarea = msoarea
         self.msoareas.members = msoareas_list
-        self.msoareas.ids_in_order = msoa11cd
+        self.msoareas.names_in_order = msoa_in_sim
