@@ -100,9 +100,6 @@ class APICall():
         
         results = resp_json_payload['results']
 
-        locations, names, reviews, ratings = self.process_results(results)
-
-
         out = self.process_results(results)
 
         if return_pagetoken:
@@ -111,10 +108,28 @@ class APICall():
         else:
             return out
 
+    def out_len_check(self, out):
+        if len(out) == 5:
+            locations, names, reviews, ratings, next_page_token = out
+            return next_page_token
+        else:
+            locations, names, reviews, ratings = out
+            return None
+
     
     def nearby_search_loop(self, location, radius, location_type):
-        pass
+        out = self.nearby_search(location, radius, location_type, return_pagetoken = True)
+        token = self.out_len_check(out_0)
         
+        outs = []
+        outs.append(out)
+        while token is not None:
+            out_token = self.nearby_seach_next_page(token, return_pagetoken = True)
+            outs.append(out_token)
+            token_check = self.out_len_check(out_token)
+            token = token_check
+
+            return outs
         
 
     def places(self, query, location, radius, location_type = None):
