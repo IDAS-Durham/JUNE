@@ -47,8 +47,11 @@ def distribute_passengers(city_travel, peak_commute = None, subtract_commute = F
                                                        
     while finished == False:
 
+        city_to_depart = np.array(city_travel['to_depart'])
+        city_to_depart[city_to_depart <= 0.] = 1.
         # Get distirbution over people departing
-        distribution = np.array(city_travel['to_depart'])/np.sum(np.array(city_travel['to_depart']))
+        # distribution = np.array(city_travel['to_depart'])/np.sum(np.array(city_travel['to_depart']))
+        distribution = city_to_depart/np.sum(city_to_depart)
         numbers = np.arange(len(distribution))
         # Initialise discrete probability distributionn
         random_variable = rv_discrete(values=(numbers,distribution))
@@ -87,10 +90,16 @@ def distribute_passengers(city_travel, peak_commute = None, subtract_commute = F
             for i in range(int(num_to_travel)):
                 station_id = random_variable.rvs(size=1)
                 travel_station = travel_stations[station_id][0]
+                travel_idx = np.where(city_travel['station'] == travel_station)[0][0]
                 # Update arrived array
-                city_travel['arrived'][city_travel['station'] == travel_station] += 1
-                travel_matrix[station_idx][city_travel['station'] == travel_station] += 1
-
+                city_travel['arrived'][travel_idx] += 1
+                city_travel['to_depart'][travel_idx] -= 1
+                travel_matrix[station_idx][travel_idx] += 1
+                #print ('adding 1 to {}'.format(travel_matrix[station_idx][city_travel['station'] == travel_station][0]))
+                #print (travel_matrix[station_idx])
+                #print (travel_matrix[city_travel['station'] == travel_station])
+                travel_matrix[travel_idx][station_idx] += 1
+                #print ('adding 1 to {}'.format(travel_matrix[city_travel['station'] == travel_station][0][station_idx]))
             # Update to deoart array to record that people have departed from the station
             city_travel['to_depart'][station_idx] -= num_to_travel
 
