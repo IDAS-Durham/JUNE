@@ -26,11 +26,13 @@ ALLOWED_HOUSEHOLD_COMPOSITIONS = [
     "0 0 >=1 1 0",
     "0 0 >=1 2 0",
     "0 0 >=0 >=0 >=0",
+    ">=0 >=0 >=0 >=0 >=0",
 ]
 
 
 class HouseholdError(BaseException):
     """ class for throwing household related errors """
+
     pass
 
 
@@ -117,6 +119,7 @@ class HouseholdDistributor:
         self._random_oldpeople_age = list(
             np.random.randint(self.OLD_MIN_AGE, self.OLD_MAX_AGE + 1, size=n)
         )
+        self._random_age = list(np.random.randint(0, 99, size=n))
         self._random_kid_age = list(np.random.randint(0, self.ADULT_MIN_AGE, size=n))
         siblings_age_gap1 = list(np.random.randint(-5, -2, size=n // 2))
         siblings_age_gap2 = list(np.random.randint(2, 5, size=n // 2))
@@ -130,7 +133,11 @@ class HouseholdDistributor:
         )
 
     def distribute_people_to_households(
-            self, area, number_households_per_composition: dict, n_students: int, n_comunal: int
+        self,
+        area,
+        number_households_per_composition: dict,
+        n_students: int,
+        n_people_in_communal: int,
     ):
         """
         Given a populated output area, it distributes the people to households. The instance of the Area class, area, should have two dictionary attributes, ``men_by_age`` and ``women_by_age``. The keys of the dictionaries are the ages and the values are the Person instances. The process of creating these dictionaries is done in people_distributor.py
@@ -141,6 +148,7 @@ class HouseholdDistributor:
         households_with_extra_kids = []
         households_with_extra_youngadults = []
         households_with_kids = []
+
         for key in number_households_per_composition:
             if key not in ALLOWED_HOUSEHOLD_COMPOSITIONS:
                 raise HouseholdError(f"Household composition {key} not supported")
@@ -149,188 +157,249 @@ class HouseholdDistributor:
         key = "0 >=1 0 0 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_all_student_households(
-                area=area, n_students=n_students, student_houses_number=house_number,
-            )
+            if house_number > 0:
+                self.fill_all_student_households(
+                    area=area,
+                    n_students=n_students,
+                    student_houses_number=house_number,
+                )
 
         # families with dependent kids
         key = "1 0 >=0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_families_households(
-                n_households=house_number,
-                kids_per_house=1,
-                parents_per_house=1,
-                area=area,
-                extra_people_lists=(
-                    households_with_extra_youngadults,
-                    households_with_kids,
-                ),
-            )
+            if house_number > 0:
+                self.fill_families_households(
+                    n_households=house_number,
+                    kids_per_house=1,
+                    parents_per_house=1,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_youngadults,
+                        households_with_kids,
+                    ),
+                )
 
         key = ">=2 0 >=0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_families_households(
-                n_households=house_number,
-                kids_per_house=2,
-                parents_per_house=1,
-                area=area,
-                extra_people_lists=(
-                    households_with_extra_kids,
-                    households_with_extra_youngadults,
-                    households_with_kids,
-                ),
-            )
+            if house_number > 0:
+                self.fill_families_households(
+                    n_households=house_number,
+                    kids_per_house=2,
+                    parents_per_house=1,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_kids,
+                        households_with_extra_youngadults,
+                        households_with_kids,
+                    ),
+                )
 
         key = "1 0 >=0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_families_households(
-                n_households=house_number,
-                kids_per_house=1,
-                parents_per_house=2,
-                area=area,
-                extra_people_lists=(
-                    households_with_extra_youngadults,
-                    households_with_kids,
-                ),
-            )
+            if house_number > 0:
+                self.fill_families_households(
+                    n_households=house_number,
+                    kids_per_house=1,
+                    parents_per_house=2,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_youngadults,
+                        households_with_kids,
+                    ),
+                )
 
         key = ">=2 0 >=0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_families_households(
-                n_households=house_number,
-                kids_per_house=2,
-                parents_per_house=2,
-                area=area,
-                extra_people_lists=(
-                    households_with_extra_youngadults,
-                    households_with_extra_kids,
-                    households_with_kids,
-                ),
-            )
+            if house_number > 0:
+                self.fill_families_households(
+                    n_households=house_number,
+                    kids_per_house=2,
+                    parents_per_house=2,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_youngadults,
+                        households_with_extra_kids,
+                        households_with_kids,
+                    ),
+                )
 
         # other household types
         # possible multigenerational, one kid
         key = "1 0 >=0 >=1 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_families_households(
-                n_households=house_number,
-                kids_per_house=1,
-                parents_per_house=1,
-                area=area,
-                extra_people_lists=(
-                    households_with_extra_youngadults,
-                    households_with_extra_adults,
-                    households_with_extra_oldpeople,
-                    households_with_kids,
-                ),
-            )
+            if house_number > 0:
+                self.fill_families_households(
+                    n_households=house_number,
+                    kids_per_house=1,
+                    parents_per_house=1,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_youngadults,
+                        households_with_extra_adults,
+                        households_with_extra_oldpeople,
+                        households_with_kids,
+                    ),
+                )
 
         # possible multigenerational, two kids
         key = ">=2 0 >=0 >=1 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_families_households(
-                n_households=house_number,
-                kids_per_house=2,
-                parents_per_house=1,
-                area=area,
-                extra_people_lists=(
-                    households_with_extra_kids,
-                    households_with_extra_youngadults,
-                    households_with_extra_adults,
-                    households_with_extra_oldpeople,
-                    households_with_kids,
-                ),
-            )
+            if house_number > 0:
+                self.fill_families_households(
+                    n_households=house_number,
+                    kids_per_house=2,
+                    parents_per_house=1,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_kids,
+                        households_with_extra_youngadults,
+                        households_with_extra_adults,
+                        households_with_extra_oldpeople,
+                        households_with_kids,
+                    ),
+                )
 
         # all old people -> to be filled with remaining
         key = "0 0 0 0 >=2"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_oldpeople_households(
-                people_per_household=2,
-                n_households=house_number,
-                area=area,
-                extra_people_lists=(households_with_extra_oldpeople,),
-            )
+            if house_number > 0:
+                self.fill_oldpeople_households(
+                    people_per_household=2,
+                    n_households=house_number,
+                    area=area,
+                    extra_people_lists=(households_with_extra_oldpeople,),
+                )
 
         # single person old
         key = "0 0 0 0 1"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_oldpeople_households(
-                people_per_household=1, n_households=house_number, area=area,
-            )
+            if house_number > 0:
+                self.fill_oldpeople_households(
+                    people_per_household=1, n_households=house_number, area=area,
+                )
 
         # couples old
         key = "0 0 0 0 2"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_oldpeople_households(
-                people_per_household=2, n_households=house_number, area=area,
-            )
+            if house_number > 0:
+                self.fill_oldpeople_households(
+                    people_per_household=2, n_households=house_number, area=area,
+                )
 
         # single person adult
         key = "0 0 0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_nokids_households(
-                adults_per_household=1, n_households=house_number, area=area,
-            )
+            if house_number > 0:
+                self.fill_nokids_households(
+                    adults_per_household=1, n_households=house_number, area=area,
+                )
 
         # couple adult
         key = "0 0 0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_nokids_households(
-                adults_per_household=2, n_households=house_number, area=area,
-            )
+            if house_number > 0:
+                self.fill_nokids_households(
+                    adults_per_household=2, n_households=house_number, area=area,
+                )
 
         key = "0 0 >=1 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_youngadult_with_parents_households(
-                adults_per_household=1,
-                n_households=house_number,
-                area=area,
-                extra_people_lists=(households_with_extra_youngadults,),
-            )
+            if house_number > 0:
+                self.fill_youngadult_with_parents_households(
+                    adults_per_household=1,
+                    n_households=house_number,
+                    area=area,
+                    extra_people_lists=(households_with_extra_youngadults,),
+                )
 
         key = "0 0 >=1 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            self.fill_youngadult_with_parents_households(
-                adults_per_household=2,
-                n_households=house_number,
-                area=area,
-                extra_people_lists=(households_with_extra_youngadults,),
-            )
+            if house_number > 0:
+                self.fill_youngadult_with_parents_households(
+                    adults_per_household=2,
+                    n_households=house_number,
+                    area=area,
+                    extra_people_lists=(households_with_extra_youngadults,),
+                )
 
         # other trash -> to be filled with remaining
         key = "0 0 >=0 >=0 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
-            for _ in range(house_number):
-                household = self._create_household(area)
-                households_with_extra_youngadults.append(household)
-                households_with_extra_adults.append(household)
-                households_with_extra_oldpeople.append(household)
+            if house_number > 0:
+                for _ in range(house_number):
+                    household = self._create_household(area)
+                    households_with_extra_youngadults.append(household)
+                    households_with_extra_adults.append(household)
+                    households_with_extra_oldpeople.append(household)
+
+        # we have so far filled the minimum household configurations.
+        # The rest are then distributed randomly between the houses that
+        # accept their characteristics, or we put them in a communal building.
 
         remaining_people = count_remaining_people(area.men_by_age, area.women_by_age)
-        # check if they fit in comunal spaces
+        # check if they fit in communal spaces
         key = ">=0 >=0 >=0 >=0 >=0"
         if key in number_households_per_composition:
-            if remaining_people <= n_comunal:
-                fill_random_people_to_existing_households()
-                # if the people left are just the ones in the comunal, put them there.
+            house_number = number_households_per_composition[key]
+            if house_number > 0:
+                if remaining_people > n_people_in_communal:
+                    n_to_fill = remaining_people - n_people_in_communal
+                    self.fill_random_people_to_existing_households(
+                        n_to_fill,
+                        households_with_extra_kids,
+                        households_with_kids,
+                        households_with_extra_youngadults,
+                        households_with_extra_adults,
+                        households_with_extra_oldpeople,
+                        area=area,
+                    )
+                self.fill_all_communal_establishments(
+                    n_establishments=house_number,
+                    n_people_in_communal=n_people_in_communal,
+                    area=area,
+                )
+                remaining_people = count_remaining_people(
+                    area.men_by_age, area.women_by_age
+                )
+                try:
+                    assert remaining_people == 0
+                except:
+                    raise HouseholdError(
+                        f"{remaining_people} were not allocated in a household."
+                    )
+        # remaining
+        self.fill_random_people_to_existing_households(
+            remaining_people,
+            households_with_extra_kids,
+            households_with_kids,
+            households_with_extra_youngadults,
+            households_with_extra_adults,
+            households_with_extra_oldpeople,
+            area=area,
+        )
+        # if the people left are just the ones in the communal, put them there.
 
-
-
+        remaining_people = count_remaining_people(area.men_by_age, area.women_by_age)
+        try:
+            assert remaining_people == 0
+        except:
+            raise HouseholdError(
+                f"{remaining_people} were not allocated in a household."
+            )
         # we now fill the remaining ones
 
     def _create_household(self, area):
@@ -423,7 +492,7 @@ class HouseholdDistributor:
         """
         # first we try to find a mother, as it is more common to live with a single mother than a single father
         sampled_age_difference = self._second_kid_parent_age_diff_list.pop()
-        target_age = max(parent.age - sampled_age_difference, 0)
+        target_age = min(max(parent.age - sampled_age_difference, 0), 17)
         kid_sex = self._random_sex_list.pop()
         if kid_sex == 0:
             kid = self._get_closest_person_of_age(
@@ -668,56 +737,94 @@ class HouseholdDistributor:
                     return None
                 household.people.append(adult2)
 
-    def fill_random_people_to_existing_households(households_with_extra_kids, households_with_kids, households_with_extra_youngadults, households_with_extra_adults, households_with_extra_oldpeople, area):
-        for people_dict in [area.men_by_age, area.women_by_age]:
-            for age in people_dict.keys():
-                for person in people_dict[age]:
-                    if person.age < self.ADULT_MIN_AGE:
-                        # put hte kid into a household that accepts extra kids.
-                        # if that is not possible, then choose a house that already has kids.
-                        # if that is not possible, choose randomly
-                        if households_with_extra_kids:
-                            household = np.random.choice(households_with_extra_kids)
-                        elif households_with_kids:
-                            household = np.random.choice(households_with_kids)
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    elif self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
-                        # put a young adult to a house that accepts young adults,
-                        # other wise, randomly
-                        if households_with_extra_youngadults:
-                            household = np.random.choice(
-                                households_with_extra_youngadults
-                            )
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    elif self.ADULT_MIN_AGE <= person.age <= self.ADULT_MAX_AGE:
-                        # adult with adults,
-                        # otherwise with young adults,
-                        # otherwise random
-                        if households_with_extra_adults:
-                            household = np.random.choice(households_with_extra_adults)
-                        elif households_with_extra_youngadults:
-                            household = np.random.choice(
-                                households_with_extra_youngadults
-                            )
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    elif self.OLD_MIN_AGE <= person.age:
-                        # old with old,
-                        # otherwise random
-                        if households_with_extra_oldpeople:
-                            household = np.random.choice(
-                                households_with_extra_oldpeople
-                            )
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    raise HouseholdError("Couldn't allocate extra person.")
+    def fill_all_communal_establishments(
+        self, n_establishments, n_people_in_communal, area
+    ):
+        ratio = min(int(n_people_in_communal / n_establishments),1)
+        print(ratio)
+        people_counter = 0
+        while people_counter < n_people_in_communal:
+            household = self._create_household(area)
+            for _ in range(ratio):
+                sex = self._random_sex_list.pop()
+                age = self._random_age.pop()
+                if sex == 0:
+                    person = self._get_closest_person_of_age(
+                        area.men_by_age, area.women_by_age, age
+                    )
+                else:
+                    person = self._get_closest_person_of_age(
+                        area.women_by_age, area.men_by_age, age
+                    )
+                if person is None:
+                    raise HouseholdError("Failed to match communal people.")
+                household.people.append(person)
+                people_counter += 1
+                if people_counter == n_people_in_communal:
+                    return None
+
+    def fill_random_people_to_existing_households(
+        self,
+        number_to_fill,
+        households_with_extra_kids,
+        households_with_kids,
+        households_with_extra_youngadults,
+        households_with_extra_adults,
+        households_with_extra_oldpeople,
+        area,
+    ):
+        for _ in range(number_to_fill):
+            random_sex = self._random_sex_list.pop()
+            random_age = self._random_age.pop()
+            if random_sex == 0:
+                person = self._get_closest_person_of_age(
+                    area.men_by_age, area.women_by_age, random_age
+                )
+            else:
+                person = self._get_closest_person_of_age(
+                    area.women_by_age, area.men_by_age, random_age
+                )
+            if person is None:
+                return None
+            if person.age < self.ADULT_MIN_AGE:
+                # put hte kid into a household that accepts extra kids.
+                # if that is not possible, then choose a house that already has kids.
+                # if that is not possible, choose randomly
+                if households_with_extra_kids:
+                    household = np.random.choice(households_with_extra_kids)
+                elif households_with_kids:
+                    household = np.random.choice(households_with_kids)
+                else:
+                    household = np.random.choice(area.households)
+                household.people.append(person)
+                continue
+            elif self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
+                # put a young adult to a house that accepts young adults,
+                # other wise, randomly
+                if households_with_extra_youngadults:
+                    household = np.random.choice(households_with_extra_youngadults)
+                else:
+                    household = np.random.choice(area.households)
+                household.people.append(person)
+                continue
+            elif self.ADULT_MIN_AGE <= person.age <= self.ADULT_MAX_AGE:
+                # adult with adults,
+                # otherwise with young adults,
+                # otherwise random
+                if households_with_extra_adults:
+                    household = np.random.choice(households_with_extra_adults)
+                elif households_with_extra_youngadults:
+                    household = np.random.choice(households_with_extra_youngadults)
+                else:
+                    household = np.random.choice(area.households)
+                household.people.append(person)
+                continue
+            elif self.OLD_MIN_AGE <= person.age:
+                # old with old,
+                # otherwise random
+                if households_with_extra_oldpeople:
+                    household = np.random.choice(households_with_extra_oldpeople)
+                else:
+                    household = np.random.choice(area.households)
+                household.people.append(person)
+                continue

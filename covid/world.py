@@ -196,23 +196,40 @@ class World:
         couples_age_diff = self.inputs.husband_wife_df
         self.households = Households(self)
         self.household_distributor = HouseholdDistributor(
-            first_kid_parent_age_differences = np.array(kids_parents_age_diff_1.index).flatten(),
-            first_kid_parent_age_differences_probabilities = np.array(kids_parents_age_diff_1.values).flatten(),
-            second_kid_parent_age_differences = np.array(kids_parents_age_diff_2.index).flatten(),
-            second_kid_parent_age_differences_probabilities=np.array(kids_parents_age_diff_2.values).flatten(),
+            first_kid_parent_age_differences=np.array(
+                kids_parents_age_diff_1.index
+            ).flatten(),
+            first_kid_parent_age_differences_probabilities=np.array(
+                kids_parents_age_diff_1.values
+            ).flatten(),
+            second_kid_parent_age_differences=np.array(
+                kids_parents_age_diff_2.index
+            ).flatten(),
+            second_kid_parent_age_differences_probabilities=np.array(
+                kids_parents_age_diff_2.values
+            ).flatten(),
             couples_age_differences=np.array(couples_age_diff.index).flatten(),
-            couples_age_differences_probabilities=np.array(couples_age_diff.values).flatten(),
+            couples_age_differences_probabilities=np.array(
+                couples_age_diff.values
+            ).flatten(),
             number_of_random_numbers=int(len(self.people.members)),
         )
         n_students_per_area = self.inputs.n_students
+        n_people_in_communal_per_area = self.inputs.n_in_communal
         household_composition_per_area = self.inputs.household_composition_df
         for area in self.areas.members:
             n_students = n_students_per_area.loc[area.name].values[0]
-            house_composition_numbers = household_composition_per_area.loc[area.name].to_dict()
+            n_people_in_communal = n_people_in_communal_per_area.loc[area.name].values[
+                0
+            ]
+            house_composition_numbers = household_composition_per_area.loc[
+                area.name
+            ].to_dict()
             self.household_distributor.distribute_people_to_households(
                 area,
                 number_households_per_composition=house_composition_numbers,
                 n_students=n_students,
+                n_people_in_communal=n_people_in_communal,
             )
             pbar.update(1)
         pbar.close()
@@ -359,8 +376,8 @@ class World:
 
 if __name__ == "__main__":
     world = World(config_file=os.path.join("../configs", "my_config.yaml"))
-    world.to_pickle('../world.pkl')
-    #world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+    world.to_pickle("../world.pkl")
+    # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)
     # world = World.from_pickle()
     # world.group_dynamics()
