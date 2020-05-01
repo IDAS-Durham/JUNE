@@ -47,8 +47,8 @@ class APICall():
 
         lat, lon = location
         lat = str(lat)
-        lon = std(lon)
-        url = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&type={}&&key={}'.format(apikey,lat,lon,radius,location_type,self.key))
+        lon = str(lon)
+        url = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&type={}&&key={}'.format(lat,lon,radius,location_type,self.key))
 
         try:
             response = requests.get(url)
