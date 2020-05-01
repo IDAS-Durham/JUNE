@@ -1,6 +1,7 @@
 import os
 import pickle
-import warnings
+import logging
+import logging.config
 
 import numpy as np
 import yaml
@@ -26,6 +27,7 @@ class World:
     def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
         print("Initializing world...")
         self.read_config(config_file)
+        self.world_creation_logger(self.config["logger"]["save_path"])
         relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         self.box_mode = box_mode
@@ -64,6 +66,34 @@ class World:
         self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
+
+    def world_creation_logger(
+            self,
+            save_path,
+            config_file=None,
+            default_level=logging.INFO,
+        ):
+        """
+        """
+        # where to read and write files
+        if config_file is None:
+            config_file = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "configs",
+                "config_world_creation_logger.yaml",
+            )
+        # creating logger
+        log_file = os.path.join(save_path, "world_creation.log")
+        if os.path.isfile(config_file):
+            with open(config_file, 'rt') as f:
+                log_config = yaml.safe_load(f.read())
+            logging.config.dictConfig(log_config)
+        else:
+            logging.basicConfig(
+                filename=log_file, level=logging.INFO
+            )
+        logging.info('Doing something')
 
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
         """

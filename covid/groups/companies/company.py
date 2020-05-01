@@ -1,9 +1,10 @@
-from covid.logger import Logger
+import logging
 import numpy as np
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
 from covid.groups import Group
 
+ic_logger = logging.getLogger(__name__)
 
 class Company(Group):
     """
@@ -106,7 +107,7 @@ class Companies:
                             pass
  
             except:
-                Logger.info(
+                ic_logger.info(
                     f"The initialization of companies for the MSOArea {msoarea} failed."
                 )
                 pass
