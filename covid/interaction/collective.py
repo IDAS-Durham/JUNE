@@ -1,5 +1,4 @@
 from covid.interaction import Interaction
-from covid.infection import Infection
 from covid.groups import Group
 import numpy as np
 import sys
@@ -12,23 +11,21 @@ class InteractionCollective(Interaction):
         super().__init__(user_parameters, required_parameters, world)
         self.alphas = {}
 
-    def single_time_step_for_group(self, group):
-        if (
-            group.size <= 1
-            or group.size_infected == 0
-            or group.size_susceptible == 0
-        ):
-            return None
-        effective_load = self.calculate_effective_viral_load(group)
-        if effective_load <= 0.:
-            return
-        for recipient in group.susceptible:
-            self.single_time_step_for_recipient(
-                recipient, effective_load, group
-            )
+    def single_time_step_for_group(self, group, time):
+        if group.must_timestep():
+            effective_load = self.calculate_effective_viral_load(group)
+            if effective_load <= 0.:
+                return
+            for recipient in group.susceptible:
+                self.single_time_step_for_recipient(
+                    recipient, effective_load, group, time
+                )
+        if group.spec=="hospital":
+            print ("must allow for infection of workers by patients")
+            
 
     def single_time_step_for_recipient(
-        self, recipient, effective_load, group
+        self, recipient, effective_load, group, time
     ):
         transmission_probability  = 0.
         recipient_probability     = recipient.health_information.susceptibility
@@ -53,10 +50,10 @@ class InteractionCollective(Interaction):
             logic of the SI/SIR models --- and normalised to the time interval, given in
             units of full days.
             """
-            transmission_probability = 1.-np.exp(recipient_probability * effective_load)
+            transmission_probability = 1.-np.exp(-recipient_probability * effective_load)
         if random.random() <= transmission_probability:
             infecter = self.select_infecter()
-            infecter.health_information.infection.infect(recipient)
+            infecter.health_information.infection.infect_person_at_time(recipient, time=time)
             infecter.health_information.counter.increment_infected()
             recipient.health_information.counter.update_infection_data(
                 self.world.timer.now, group.spec
@@ -73,7 +70,7 @@ class InteractionCollective(Interaction):
         if interaction_intensity > 0.:
             self.weights = []
             for person in group.infected:
-                viral_load   = person.health_information.infection.transmission.transmission_probability
+                viral_load   = person.health_information.infection.transmission.probability
                 summed_load += viral_load
                 self.weights.append([person, viral_load])
             for i in range(len(self.weights)):
@@ -82,11 +79,9 @@ class InteractionCollective(Interaction):
         return summed_load
 
     def select_infecter(self):
-        disc = random.random()
-        i    = 0
-        while disc > 0.0 and i < len(self.weights)-1:
-            i += 1
-        return self.weights[i][0]
+        choice_weights = [w[1] for w in self.weights]
+        idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
+        return self.weights[idx][0]
 
     def get_alpha(self,grouptype):
         if grouptype in self.alphas:
