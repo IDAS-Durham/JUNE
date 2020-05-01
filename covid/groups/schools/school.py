@@ -7,6 +7,7 @@ from typing import List, Tuple, Dict
 
 from covid.groups import Group
 
+
 class SchoolError(BaseException):
     """Class for throwing school related errors."""
 
@@ -14,13 +15,15 @@ class SchoolError(BaseException):
 
 
 class School(Group):
-    def __init__(self, 
-            school_id: int,
-            coordinates: Tuple[float, float], 
-            n_pupils: int, 
-            age_min: int, 
-            age_max: int, 
-            sector: str):
+    def __init__(
+        self,
+        school_id: int,
+        coordinates: Tuple[float, float],
+        n_pupils: int,
+        age_min: int,
+        age_max: int,
+        sector: str,
+    ):
         """
         Create a School given its description.
 
@@ -47,11 +50,10 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.is_full=False
+        self.is_full = False
 
 
 class Schools:
-
     def __init__(self, school_df: pd.DataFrame, config: dict):
         """
         Create a group of Schools, and provide functionality to access closest school
@@ -63,7 +65,7 @@ class Schools:
         config:
             config dictionary
         """
- 
+
         self.members = []
         self.config = config
         school_df.reset_index(drop=True, inplace=True)
@@ -71,7 +73,7 @@ class Schools:
         self.init_trees(school_df)
 
     @classmethod
-    def from_file(cls, filename: str, config_filename: str)->"Schools":
+    def from_file(cls, filename: str, config_filename: str) -> "Schools":
         """
         Initialize Schools from path to data frame, and path to config file 
 
@@ -86,7 +88,7 @@ class Schools:
         -------
         Schools instance
         """
- 
+
         school_df = pd.read_csv(filename, index_col=0)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -130,10 +132,16 @@ class Schools:
 
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: [] for k in range(self.config['school_age_range'][0], self.config['school_age_range'][1] + 1)
+            k: []
+            for k in range(
+                self.config["school_age_range"][0],
+                self.config["school_age_range"][1] + 1,
+            )
         }
         # have a tree per age
-        for age in range(self.config['school_age_range'][0], self.config['school_age_range'][1] + 1):
+        for age in range(
+            self.config["school_age_range"][0], self.config["school_age_range"][1] + 1
+        ):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
             ]
@@ -143,7 +151,9 @@ class Schools:
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
 
-    def get_closest_schools(self, age: int, coordinates: Tuple[float, float], k: int)->int:
+    def get_closest_schools(
+        self, age: int, coordinates: Tuple[float, float], k: int
+    ) -> int:
         """
         Get the k-th closest school to a given coordinate, that accepts pupils
         aged age
@@ -171,7 +181,7 @@ class Schools:
         )
         return neighbours[0]
 
-    def _create_school_tree(self, school_df: pd.DataFrame)->BallTree:
+    def _create_school_tree(self, school_df: pd.DataFrame) -> BallTree:
         """
         Reads school location and sizes, it initializes a KD tree on a sphere,
         to query the closest schools to a given location.
