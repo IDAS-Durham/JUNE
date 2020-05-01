@@ -45,8 +45,8 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
-            #self.initialize_hospitals()
-            #self.initialize_cemeteries()
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
             else:
@@ -143,7 +143,6 @@ class World:
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
             distributor = HospitalDistributor(self.hospitals, msoarea)
-            distributor.distribute_medics_to_hospitals()
             pbar.update(1)
         pbar.close()
 

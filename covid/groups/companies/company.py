@@ -102,7 +102,7 @@ class Companies:
                             
                         companies.append(company)
 
-                        msoaidx = np.where(self.msoareas.ids_in_order == msoarea_id)[0]
+                        msoaidx = np.where(self.msoareas.names_in_order == msoarea_id)[0]
                         if len(msoaidx) != 0:
                             self.msoareas.members[msoaidx[0]].companies.append(company)
                         else:
