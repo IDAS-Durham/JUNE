@@ -31,18 +31,12 @@ ALLOWED_HOUSEHOLD_COMPOSITIONS = [
 
 class HouseholdError(BaseException):
     """ class for throwing household related errors """
-
     pass
 
 
 def get_closest_element_in_array(array, value):
     min_idx = np.argmin(np.abs(value - array))
     return array[min_idx]
-
-
-def normalize_probabilities_array(array):
-    total_prob = sum(array)
-    return np.array(array) / total_prob
 
 
 def count_items_in_dict(dictionary):
@@ -136,7 +130,7 @@ class HouseholdDistributor:
         )
 
     def distribute_people_to_households(
-        self, area, number_households_per_composition: dict, n_students: int
+            self, area, number_households_per_composition: dict, n_students: int, n_comunal: int
     ):
         """
         Given a populated output area, it distributes the people to households. The instance of the Area class, area, should have two dictionary attributes, ``men_by_age`` and ``women_by_age``. The keys of the dictionaries are the ages and the values are the Person instances. The process of creating these dictionaries is done in people_distributor.py
@@ -327,59 +321,17 @@ class HouseholdDistributor:
                 households_with_extra_adults.append(household)
                 households_with_extra_oldpeople.append(household)
 
+        remaining_people = count_remaining_people(area.men_by_age, area.women_by_age)
+        # check if they fit in comunal spaces
+        key = ">=0 >=0 >=0 >=0 >=0"
+        if key in number_households_per_composition:
+            if remaining_people <= n_comunal:
+                fill_random_people_to_existing_households()
+                # if the people left are just the ones in the comunal, put them there.
+
+
+
         # we now fill the remaining ones
-        for people_dict in [area.men_by_age, area.women_by_age]:
-            for age in people_dict.keys():
-                for person in people_dict[age]:
-                    if person.age < self.ADULT_MIN_AGE:
-                        # put hte kid into a household that accepts extra kids.
-                        # if that is not possible, then choose a house that already has kids.
-                        # if that is not possible, choose randomly
-                        if households_with_extra_kids:
-                            household = np.random.choice(households_with_extra_kids)
-                        elif households_with_kids:
-                            household = np.random.choice(households_with_kids)
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    elif self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
-                        # put a young adult to a house that accepts young adults,
-                        # other wise, randomly
-                        if households_with_extra_youngadults:
-                            household = np.random.choice(
-                                households_with_extra_youngadults
-                            )
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    elif self.ADULT_MIN_AGE <= person.age <= self.ADULT_MAX_AGE:
-                        # adult with adults,
-                        # otherwise with young adults,
-                        # otherwise random
-                        if households_with_extra_adults:
-                            household = np.random.choice(households_with_extra_adults)
-                        elif households_with_extra_youngadults:
-                            household = np.random.choice(
-                                households_with_extra_youngadults
-                            )
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    elif self.OLD_MIN_AGE <= person.age:
-                        # old with old,
-                        # otherwise random
-                        if households_with_extra_oldpeople:
-                            household = np.random.choice(
-                                households_with_extra_oldpeople
-                            )
-                        else:
-                            household = np.random.choice(area.households)
-                        household.people.append(person)
-                        continue
-                    raise HouseholdError("Couldn't allocate extra person.")
 
     def _create_household(self, area):
         """Creates household in area and world."""
@@ -715,3 +667,57 @@ class HouseholdDistributor:
                 if adult2 is None:
                     return None
                 household.people.append(adult2)
+
+    def fill_random_people_to_existing_households(households_with_extra_kids, households_with_kids, households_with_extra_youngadults, households_with_extra_adults, households_with_extra_oldpeople, area):
+        for people_dict in [area.men_by_age, area.women_by_age]:
+            for age in people_dict.keys():
+                for person in people_dict[age]:
+                    if person.age < self.ADULT_MIN_AGE:
+                        # put hte kid into a household that accepts extra kids.
+                        # if that is not possible, then choose a house that already has kids.
+                        # if that is not possible, choose randomly
+                        if households_with_extra_kids:
+                            household = np.random.choice(households_with_extra_kids)
+                        elif households_with_kids:
+                            household = np.random.choice(households_with_kids)
+                        else:
+                            household = np.random.choice(area.households)
+                        household.people.append(person)
+                        continue
+                    elif self.ADULT_MIN_AGE <= person.age <= self.YOUNG_ADULT_MAX_AGE:
+                        # put a young adult to a house that accepts young adults,
+                        # other wise, randomly
+                        if households_with_extra_youngadults:
+                            household = np.random.choice(
+                                households_with_extra_youngadults
+                            )
+                        else:
+                            household = np.random.choice(area.households)
+                        household.people.append(person)
+                        continue
+                    elif self.ADULT_MIN_AGE <= person.age <= self.ADULT_MAX_AGE:
+                        # adult with adults,
+                        # otherwise with young adults,
+                        # otherwise random
+                        if households_with_extra_adults:
+                            household = np.random.choice(households_with_extra_adults)
+                        elif households_with_extra_youngadults:
+                            household = np.random.choice(
+                                households_with_extra_youngadults
+                            )
+                        else:
+                            household = np.random.choice(area.households)
+                        household.people.append(person)
+                        continue
+                    elif self.OLD_MIN_AGE <= person.age:
+                        # old with old,
+                        # otherwise random
+                        if households_with_extra_oldpeople:
+                            household = np.random.choice(
+                                households_with_extra_oldpeople
+                            )
+                        else:
+                            household = np.random.choice(area.households)
+                        household.people.append(person)
+                        continue
+                    raise HouseholdError("Couldn't allocate extra person.")
