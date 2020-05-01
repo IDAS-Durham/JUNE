@@ -79,6 +79,15 @@ class Inputs:
                 names=['output_area', 'N_carehome_residents'],
                 index_col=0
                 )
+        self.n_in_communal = pd.read_csv(
+                os.path.join(
+                    self.OUTPUT_AREA_DIR,
+                    'n_people_in_communal.csv'
+                ),
+                index_col=0
+                )
+ 
+ 
         AGE_DIFF_DIR =  os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
@@ -609,12 +618,14 @@ class Inputs:
 
 if __name__ == "__main__":
 
-    ip = Inputs()
+    ip = Inputs(zone="test")
     #print(ip.carehomes_df[:80].sum())
-    #print(len(ip.household_composition_df))
+    print(ip.n_in_communal)
+    print(ip.n_in_communal.sum())
+    print([len(col.split(' ')) for col in ip.household_composition_df.columns])
     #print(ip.household_composition_df)
-    print(ip.parent_child_df)
-    print(ip.parent_child_df.sum())
+    #print(ip.parent_child_df)
+    #print(ip.parent_child_df.sum())
     #print(ip.husband_wife_df)
     #print(ip.n_students)
     #print(ip.companysize_df)
