@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from covid.exc import GroupException
 
 import matplotlib.pyplot as plt
 
@@ -33,6 +34,7 @@ class Group:
         "boundary",
         "commute_Public",
         "commute_Private",
+        "cemetery",
         "company",
         "household",
         "hospital",
@@ -47,7 +49,8 @@ class Group:
         "work_Indoor",
     ]
 
-    def __init__(self, name, spec, number=-1):
+    def __init__(self, name, spec):
+        self.sane(name, spec)
         self.name = name
         self.spec = spec
         self.people = []
@@ -87,10 +90,8 @@ class Group:
         ]
 
     def sane(self, name, spec):
-        if not spec in self.allowed_groups:
-            print("Error: tried to initialise group with wrong specification:", spec)
-            return False
-        return True
+        if spec not in self.allowed_groups:
+            raise GroupException(f"{spec} is not an allowed group type")
 
     def set_active_members(self):
         for person in self.people:
@@ -112,9 +113,9 @@ class Group:
                 self.size_infected > 0 and
                 self.size_susceptible > 0)
 
-    def update_status_lists(self):
+    def update_status_lists(self, time, delta_time):
         for person in self.people:
-            person.health_information.update_health_status()
+            person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
                 self.susceptible.append(person)
             elif person.health_information.infected:
