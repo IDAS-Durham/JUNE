@@ -1,3 +1,4 @@
 school_age_range: [0,19] # numbers correspond to age groups defined by NOMIS dataset.
 school_mandatory_age_range: [5,18]
 neighbour_schools: 35 
+student_nr_per_teacher: 30

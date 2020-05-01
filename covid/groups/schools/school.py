@@ -20,6 +20,7 @@ class School(Group):
         school_id: int,
         coordinates: Tuple[float, float],
         n_pupils: int,
+        n_teachers_max: int,
         age_min: int,
         age_max: int,
         sector: str,
@@ -44,13 +45,17 @@ class School(Group):
 
         """
         super().__init__(name="School_%05d" % school_id, spec="school")
+        self.id = school_id
         self.coordinates = coordinates
+        self.msoa = None
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
         self.is_full = False
+        self.n_teachers_max = n_teachers_max
+        self.n_teachers = 0
 
 
 class Schools:
@@ -69,6 +74,7 @@ class Schools:
         self.members = []
         self.config = config
         school_df.reset_index(drop=True, inplace=True)
+        self.stud_nr_per_teacher = config['student_nr_per_teacher']
         self.init_schools(school_df)
         self.init_trees(school_df)
 
@@ -107,10 +113,12 @@ class Schools:
         """
         schools = []
         for i, (index, row) in enumerate(school_df.iterrows()):
+            n_teachers_max = int(row["NOR"] / self.stud_nr_per_teacher)
             school = School(
                 i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 row["NOR"],
+                n_teachers_max,
                 row["age_min"],
                 row["age_max"],
                 row["sector"],
@@ -201,3 +209,4 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
+
