@@ -68,80 +68,6 @@ class World:
         Write the world to file. Comes in handy when setting up the world
         takes a long time.
         """
-        with open(pickle_obj, "wb") as f:
-            pickle.dump(self, f)
-
-    @classmethod
-    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
-        """
-        Initializes a world instance from an already populated world.
-        """
-        with open(pickle_obj, "rb") as f:
-            world = pickle.load(f)
-        return world
-
-    @classmethod
-    def from_config(cls, config_file):
-        return cls(config_file)
-
-    def read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "configs",
-                "config_example.yaml",
-            )
-        with open(config_file, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
-
-    def get_simulation_groups(self):
-        """
-        Reads all the different groups specified in the time section of the configuration file.
-        """
-        timesteps_config = self.config["time"]["step_active_groups"]
-        active_groups = []
-        for daytype in timesteps_config.keys():
-            for timestep in timesteps_config[daytype].values():
-                for group in timestep:
-                    active_groups.append(group)
-        active_groups = np.unique(active_groups)
-        return active_groups
-
-    def read_defaults(self):
-        default_config_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..",
-            "configs",
-            "defaults",
-            "world.yaml",
-        )
-        with open(default_config_path, "r") as f:
-            default_config = yaml.load(f, Loader=yaml.FullLoader)
-        for key in default_config.keys():
-            if key not in self.config:
-                self.config[key] = default_config[key]
-            self.initialize_households()
-            self.initialize_msoa_areas()
-            if "schools" in relevant_groups:
-                self.initialize_schools()
-            else:
-                print("schools not needed, skipping...")
-            if "companies" in relevant_groups:
-                self.initialize_companies()
-            else:
-                print("companies not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.logger = Logger(
-            self, self.config["logger"]["save_path"], box_mode=box_mode
-        )
-        print("Done.")
-
-    def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
-        """
-        Write the world to file. Comes in handy when setting up the world
-        takes a long time.
-        """
         import pickle
 
         with open(pickle_obj, "wb") as f:
@@ -265,26 +191,31 @@ class World:
         """
         print("Initializing households...")
         pbar = tqdm(total=len(self.areas.members))
-        kids_parents_age_diff = self.inputs.parent_child_df["0"].to_dict()
-        couples_age_diff = self.inputs.husband_wife_df.to_dict()
+        kids_parents_age_diff_1 = self.inputs.parent_child_df["0"]
+        kids_parents_age_diff_2 = self.inputs.parent_child_df["1"]
+        couples_age_diff = self.inputs.husband_wife_df
         self.households = Households(self)
         self.household_distributor = HouseholdDistributor(
-            distribution_kids_parents_age=kids_parents_age_diff,
-            distribution_couples_age=couples_age_diff,
+            first_kid_parent_age_differences = np.array(kids_parents_age_diff_1.index).flatten(),
+            first_kid_parent_age_differences_probabilities = np.array(kids_parents_age_diff_1.values).flatten(),
+            second_kid_parent_age_differences = np.array(kids_parents_age_diff_2.index).flatten(),
+            second_kid_parent_age_differences_probabilities=np.array(kids_parents_age_diff_2.values).flatten(),
+            couples_age_differences=np.array(couples_age_diff.index).flatten(),
+            couples_age_differences_probabilities=np.array(couples_age_diff.values).flatten(),
             number_of_random_numbers=int(len(self.people.members)),
         )
-        #n_students_per_area = self.inputs.n_students
-        #household_composition_per_area = self.inputs.household_composition_df
-        #for area in self.areas.members:
-        #    n_students = n_students_per_area.loc[area.name]
-        #    house_composition_numbers = household_composition_per_area.loc[area.name]
-        #    self.household_distributor.distribute_people_to_households(
-        #        area,
-        #        number_households_per_composition=house_composition_numbers,
-        #        n_students=n_students,
-        #    )
-        #    pbar.update(1)
-        #pbar.close()
+        n_students_per_area = self.inputs.n_students
+        household_composition_per_area = self.inputs.household_composition_df
+        for area in self.areas.members:
+            n_students = n_students_per_area.loc[area.name].values[0]
+            house_composition_numbers = household_composition_per_area.loc[area.name].to_dict()
+            self.household_distributor.distribute_people_to_households(
+                area,
+                number_households_per_composition=house_composition_numbers,
+                n_students=n_students,
+            )
+            pbar.update(1)
+        pbar.close()
 
     def initialize_carehomes(self):
         print("Initializing carehomes...")
