@@ -29,7 +29,8 @@ if __name__ == "__main__":
             os.path.dirname(
                 os.path.realpath(__file__)
             ),
-            "../..",
+            "..",
+            "..",
             "configs",
             "config_example.yaml"
     )
