@@ -147,6 +147,7 @@ class Hospitals:
         if not self.box_mode:
             print("Init hospitals from data file")
             self.hospital_trees = self.create_hospital_trees(hospital_df)
+            self.create_area_trees(hospital_df)
         else:
             self.members.append(Hospital(1, {"n_beds": 10, "n_ICUbeds": 2}))
             self.members.append(Hospital(2, {"n_beds": 5000, "n_ICUbeds": 5000}))
@@ -180,6 +181,7 @@ class Hospitals:
         else:
             winner = None
             windist = 1.e12
+            # find 100 nearest hospitals
             angles, hospitals = self.get_closest_hospital(person.area, 100)
             for angle, hospitaltag in zip(angles[0], hospitals[0]):
                 hospital = self.members[self.finder[hospitaltag]]
@@ -204,3 +206,35 @@ class Hospitals:
         return hospital_tree.query(
             np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True
         )
+    
+    def create_area_trees(self, hospital_df):
+        coords = np.array([
+            list(area.coordinates.reshape(1, -1)[0]) for area in self.world.areas.members
+        ])
+        area_tree = BallTree(
+            np.deg2rad(coords) , metric="haversine"
+        )
+        
+        dists, _ = area_tree.query(coords, k=3)
+        area_dist_mean = np.mean(np.array([np.mean(dist) for dist in dists]))
+        print("***3***", area_dist_mean) 
+        
+        dists, _ = area_tree.query(
+            hospital_df[["Latitude", "Longitude"]].values, k=3
+        )
+        print("***mm***", dists) 
+        hosp_dist_mean = np.mean(np.array([np.mean(dist) for dist in dists]))
+        print("***4***", hosp_dist_mean) 
+        
+        for row in range(hospital_df.shape[0]):
+            n_beds = hospital_df.iloc[row]["beds"]
+            n_icu_beds = round(self.icu_fraction * n_beds)
+            n_beds -= n_icu_beds
+            self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
+                                         {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
+                                         hospital_df.iloc[row]["Postcode"]))
+            self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members) - 1
+            # print ("--- Hospital[",hospital_df.iloc[row]["Unnamed: 0"],
+            #       "<-->",len(self.members)-1,"]: ",
+            #       n_beds," beds and ",n_ICUbeds," n_ICUbeds.")
+        return hospital_tree
