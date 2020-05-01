@@ -23,9 +23,10 @@ class MSOArea:
 
         self.world = world
         self.id = name
-        self.companies = []
         self.oarea = []
         self.work_people = []
+        self.companies = []
+        self.hospitals = []
 
 
 class MSOAreas:
