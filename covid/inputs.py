@@ -25,12 +25,14 @@ class Inputs:
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
 
+        # This is the top-level of the hierarchy
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
             header=0,
             index_col="output_area",
         )
+        self.area_mapping_df = self.read_area_mapping(self.n_residents.index.values)
 
         self.age_freq, self.decoder_age = self.read("age_structure.csv")
         self.sex_freq, self.decoder_sex = self.read("sex.csv")
@@ -41,16 +43,8 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
 
-        self.hospital_df = pd.read_csv(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "data",
-                "census_data",
-                "hospital_data",
-                "england_hospitals.csv",
-            )
-        )
+        self.read_hospitals(self.area_mapping_df["PCD"].values)
+        
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
             os.path.join(
@@ -64,15 +58,14 @@ class Inputs:
         )
 
         # Read census data on low resolution map (MSOA)
-        self.oa2msoa_df = self.oa2msoa(self.n_residents.index.values)
         self.workflow_df = self.create_workflow_df(
-            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+            np.unique(self.area_mapping_df["MSOA"].values)
         )
         self.companysize_df = self.read_companysize_census(
-            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+            np.unique(self.area_mapping_df["MSOA"].values)
         )
         self.companysector_df = self.read_companysector_census(
-            np.unique(self.oa2msoa_df["MSOA11CD"].values)
+            np.unique(self.area_mapping_df["MSOA"].values)
         )
         self.compsec_by_sex_df = self.read_compsec_by_sex()
         self.commute_generator_path = (
@@ -108,29 +101,51 @@ class Inputs:
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         return areas_coordinates_df
 
-    def oa2msoa(self, oa_id):
+    def read_hospitals(self, pcd_names):
         """
+        Read in hospital data and filter those within
+        the population region.
+        """
+        hospital_df = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "census_data",
+                "hospital_data",
+                "england_hospitals.csv",
+            )
+        )
+        self.hospital_df = hospital_df.loc[
+            hospital_df["Postcode"].isin(list(pcd_names))
+        ]
+
+    def read_area_mapping(self, oa_names):
+        """
+        Creat link between Postcode and OA layers.
+        Needed to know in which OAs which hospitals are.
+        and
         Creat link between OA and MSOA layers.
+        Needed due work-flow data, to know where people work.
         """
-        usecols = [0, 1]
-        column_names = ["OA11CD", "MSOA11CD"]
-        oa2msoa_df = pd.read_csv(
+        usecols = [0, 1, 3]
+        column_names = ["PCD", "OA", "MSOA"]
+        area_mapping_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
                 "data",
                 "census_data",
                 "area_code_translations",
-                "oa_msoa_englandwales_2011.csv",
+                "areas_mapping.csv",
             ),
             names=column_names,
             usecols=usecols,
         )
-        oa2msoa_df = oa2msoa_df.set_index("OA11CD")
-        # filter out OA areas that are simulated
-        oa2msoa_df = oa2msoa_df[oa2msoa_df.index.isin(list(oa_id))]
-
-        return oa2msoa_df
+        area_mapping_df = area_mapping_df.loc[
+            area_mapping_df["OA"].isin(list(oa_names))
+        ]
+        return area_mapping_df
 
     def read_companysize_census(self, msoa):
         """
@@ -144,7 +159,7 @@ class Inputs:
         """
         usecols = [1, 3, 4, 5, 6, 7, 8, 9, 10]
         column_names = [
-            "MSOA11CD",
+            "MSOA",
             "0-9",
             "10-19",
             "20-49",
@@ -168,7 +183,7 @@ class Inputs:
             usecols=usecols,
             header=0,
         )
-        companysize_df = companysize_df.set_index("MSOA11CD")
+        companysize_df = companysize_df.set_index("MSOA")
 
         # filter out MSOA areas that are simulated
         companysize_df = companysize_df.loc[msoa]
@@ -531,5 +546,3 @@ if __name__ == "__main__":
     #print(ip.workflow_df)
     #print(ip.companysize_df)
     #print(ip.companysector_df)
-    print(ip.compsec_by_sex_df)
-    #print(ip.key_compsec_ratio_by_sex_df)

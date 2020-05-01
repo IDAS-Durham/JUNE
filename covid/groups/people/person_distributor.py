@@ -298,13 +298,13 @@ class PersonDistributor:
                 self.area._kids[i] = person
             elif nomis_bin < self.OLD_THRESHOLD:
                 # find msoarea of work
-                idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
+                idx = np.where(self.msoareas.names_in_order == work_msoa_rnd)[0]
                 if len(idx) != 0:
                     self.msoareas.members[idx[0]].work_people.append(person)
                 else:
                     # TODO count people who work outside of the region
                     # we currently simulate
-                    idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
+                    idx = np.random.choice(np.arange(len(self.msoareas.names_in_order)))
                     self.msoareas.members[idx].work_people.append(person)
                 if sex_random == 0:
                     self.area._men[i] = person

@@ -1,14 +1,10 @@
-import warnings
+import logging
 import numpy as np
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
 from covid.groups import Group
 
-
-class CompanyError(BaseException):
-    """Class for throwing company related errors."""
-    pass
-
+ic_logger = logging.getLogger(__name__)
 
 class Company(Group):
     """
@@ -38,9 +34,9 @@ class Companies:
 
 
     def _compute_size_mean(self, sizegroup):
-        '''
+        """
         Given company size group calculates mean
-        '''
+        """
         
         # ensure that read_companysize_census() also returns number of companies
         # in each size category
@@ -76,16 +72,16 @@ class Companies:
             size_dict[idx+1] = self._compute_size_mean(column)
         
         #pbar = tqdm(total=len(companysector_df['msoareas']))
-        for idx, msoarea_id in enumerate(companysector_df['msoareas']):
+        for idx, msoarea_name in enumerate(companysector_df['msoareas']):
             try:
 
                 # create comany size distribution for MSOArea
-                companysize_df.loc[msoarea_id]
+                companysize_df.loc[msoarea_name]
                 distribution = []
                 for column in comp_size_col:
                     distribution.append(
-                        float(companysize_df.loc[msoarea_id][column]) /\
-                        (self._sum_str_elements(companysize_df.loc[msoarea_id],comp_size_col))
+                        float(companysize_df.loc[msoarea_name][column]) /\
+                        (self._sum_str_elements(companysize_df.loc[msoarea_name],comp_size_col))
                     )
                 comp_size_rv = rv_discrete(values=(comp_size_col_encoded,distribution))
                 
@@ -96,14 +92,14 @@ class Companies:
                     for i in range(int(companysector_df[column][idx])):
                         company = Company(
                             company_id=i,
-                            msoa=msoarea_id,
+                            msoa=msoarea_name,
                             n_employees_max=size_dict[comp_size_rnd_array[i]],
                             industry=column
                         )
                             
                         companies.append(company)
 
-                        msoaidx = np.where(self.msoareas.ids_in_order == msoarea_id)[0]
+                        msoaidx = np.where(self.msoareas.names_in_order == msoarea_id)[0]
                         if len(msoaidx) != 0:
                             self.msoareas.members[msoaidx[0]].companies.append(company)
                         else:
@@ -111,8 +107,9 @@ class Companies:
                             pass
  
             except:
-                #TODO include verbose option
-                warnings.warn(f"The initialization of companies for the MSOArea {0} failed.".format(msoarea))
+                ic_logger.info(
+                    f"The initialization of companies for the MSOArea {msoarea_name} failed."
+                )
                 pass
             #pbar.update(1)
         #pbar.close()
