@@ -43,10 +43,6 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
 
-        self.school_df = pd.read_csv(
-            os.path.join(self.DATA_DIR, "school_data", "uk_schools_data.csv")
-        )
-        
         self.read_hospitals(self.area_mapping_df["PCD"].values)
         
         self.areas_coordinates_df = self.read_coordinates()
