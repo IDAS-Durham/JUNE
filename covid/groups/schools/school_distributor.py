@@ -128,10 +128,10 @@ class SchoolDistributor:
             if (
                 self.SCHOOL_AGE_RANGE[0]
                 < person.age
-                <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                < self.MANDATORY_SCHOOL_AGE_RANGE[0]
                 or self.MANDATORY_SCHOOL_AGE_RANGE[1]
                 < person.age
-                <= self.SCHOOL_AGE_RANGE[1]
+                < self.SCHOOL_AGE_RANGE[1]
             ):
                 if self.is_school_full[person.age]:
                     continue
