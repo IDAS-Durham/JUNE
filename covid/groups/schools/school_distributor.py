@@ -33,9 +33,7 @@ class SchoolDistributor:
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
         self.SCHOOL_AGE_RANGE = config["school_age_range"]
-        self.MANDATORY_SCHOOL_AGE_RANGE = config[
-            "school_mandatory_age_range"
-        ]
+        self.MANDATORY_SCHOOL_AGE_RANGE = config["school_mandatory_age_range"]
         self.closest_schools_by_age = {}
         self.is_school_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
@@ -53,7 +51,9 @@ class SchoolDistributor:
             self.is_school_full[agegroup] = False
 
     @classmethod
-    def from_file(cls, schools: "Schools", area: "Area", config_filename: str)->"SchoolDistributor":
+    def from_file(
+        cls, schools: "Schools", area: "Area", config_filename: str
+    ) -> "SchoolDistributor":
         """
         Initialize SchoolDistributor from path to its config file 
 
@@ -119,37 +119,45 @@ class SchoolDistributor:
                 school.n_pupils += 1
 
     def distribute_non_mandatory_kids_to_school(self):
-        '''
+        """
         For kids in age ranges that might go to school, but it is not mandatory
         send them to the closest school that has vacancies among the self.MAX_SCHOOLS closests.
         If none of them has vacancies do not send them to school
-        '''
+        """
         for person in self.area.people:
             if (
-                self.SCHOOL_AGE_RANGE[0] < person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
-                or self.MANDATORY_SCHOOL_AGE_RANGE[1] < person.age <= self.SCHOOL_AGE_RANGE[1]
+                self.SCHOOL_AGE_RANGE[0]
+                < person.age
+                <= self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                or self.MANDATORY_SCHOOL_AGE_RANGE[1]
+                < person.age
+                <= self.SCHOOL_AGE_RANGE[1]
             ):
                 if self.is_school_full[person.age]:
-                        continue
+                    continue
                 else:
                     schools_full = 0
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
                         school = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
-                        n_pupils_age = len([pupil.age for pupil in school.people if pupil.age == person.age])
-                        if (
-                            school.n_pupils >= school.n_pupils_max 
-                            or n_pupils_age >= (school.n_pupils_max/(school.age_max - school.age_min))
+                        n_pupils_age = len(
+                            [
+                                pupil.age
+                                for pupil in school.people
+                                if pupil.age == person.age
+                            ]
+                        )
+                        if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
+                            school.n_pupils_max / (school.age_max - school.age_min)
                         ):
                             schools_full += 1
                         else:
                             break
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
-                            continue
+                        continue
 
                     else:  # just keep the school saved in the previous for loop
-                        pass 
+                        pass
                 school.people.append(person)
                 person.school = school
                 school.n_pupils += 1
-
