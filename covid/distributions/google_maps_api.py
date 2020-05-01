@@ -41,6 +41,7 @@ class APICall():
         :param location: (tuple of ints) location is a tuple of (latitude, longitude)
         :param radius: (int) meter radius search area around location coordinate
         :param location_type: (string) type of location being searched for
+        :param return_pagetoken: (bool) if True and there is anoter page to be generated, then returns token for next page
 
         Note: location types can be found here: https://developers.google.com/places/supported_types#table1
         """
@@ -76,7 +77,12 @@ class APICall():
 
         
     def nearby_search_next_page(self, next_page_token, return_pagetoken = False):
-
+        """
+        After running nearby search with next_page token, call next page
+        :param next_page_token: (string) output from self.nearby_search([...], return_pagetoken = True)
+        :param return_pagetoken: (bool) if True and there is anoter page to be generated, then returns token for next page
+        """
+        
         url = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={}&key={}'.format(next_page_token,self.key))
         
         try:
@@ -96,7 +102,7 @@ class APICall():
         if return_pagetoken:
             try:
                 next_page_token = resp_json_payload['next_page_token']
-                return [locations, names, reviews, ratings, next_pagetoken]
+                return [locations, names, reviews, ratings, next_page_token]
 
             except:
                 print ('No more next page tokens')
