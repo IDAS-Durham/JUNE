@@ -26,4 +26,4 @@ class MSOAreaDistributor:
             )
             msoareas_list.append(msoarea)
         self.msoareas.members = msoareas_list
-        self.msoareas.ids_in_order = msoa_in_sim
+        self.msoareas.names_in_order = msoa_in_sim
