@@ -1,5 +1,5 @@
 from covid.infection import infection as infect
-from covid.infection import symptons as sym
+from covid.infection import symptoms as sym
 from covid.infection import transmission as trans
 
 from covid import World
@@ -42,4 +42,4 @@ def create_symptoms():
 
 @pytest.fixture(name="transmission", scope="session")
 def create_transmission():
-    return trans.TransmissionConstant(proabability=0.3)
+    return trans.TransmissionConstant(probability=0.3)

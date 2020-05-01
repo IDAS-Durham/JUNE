@@ -9,11 +9,11 @@ class Transmission:
 
 class TransmissionConstant(Transmission):
 
-    def __init__(self, proabability=0.3):
+    def __init__(self, probability=0.3):
 
         super().__init__()
 
-        self.probability = proabability
+        self.probability = probability
 
     def update_probability_from_delta_time(self, delta_time):
 
