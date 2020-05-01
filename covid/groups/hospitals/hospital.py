@@ -1,3 +1,4 @@
+from covid.logger import Logger
 import numpy as np
 from sklearn.neighbors._ball_tree import BallTree
 
@@ -147,7 +148,9 @@ class Hospitals:
         # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
         self.icu_fraction = 5900. / 141000.
         if not self.box_mode:
-            print("There are %d hospitals in the world." % len(hospital_df.index.values))
+            Logger.info(
+                "There are %d hospitals in the world." % len(hospital_df.index.values)
+            )
             self.hospital_trees = self.create_hospital_trees(hospital_df)
         else:
             self.members.append(Hospital(1, {"n_beds": 10, "n_ICUbeds": 2}))
