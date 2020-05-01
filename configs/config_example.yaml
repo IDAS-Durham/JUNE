@@ -16,8 +16,8 @@ time:
           1: 24
   step_active_groups:
       weekday:
-          1: ['households','hospitals','companies'] # active groups during first time step
-          2: ['households','hospitals'] 
+          1: ['hospitals','companies', 'households'] # active groups during first time step
+          2: ['hospitals','households'] 
       weekend:
           1: ['households','hospitals'] 
 
@@ -32,7 +32,4 @@ infection:
   transmission:
     type: constant
     parameters:
-      transmission_probability:
-        distribution: constant
-        parameters:
-          value: 0.2
+      probability: 0.2

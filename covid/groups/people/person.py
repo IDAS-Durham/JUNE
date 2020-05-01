@@ -30,12 +30,12 @@ class HealthInformation:
     def dead(self) -> bool:
         return self.tag == "dead"
 
-    def update_health_status(self):
+    def update_health_status(self, time, delta_time):
         if self.infected:
-            if self.infection.symptoms.is_recovered():
+            if self.infection.symptoms.is_recovered(delta_time):
                 self.set_recovered()
             else:
-                self.infection.update_at_time()
+                self.infection.update_at_time(time)
 
     def set_recovered(self):
         # self.infection = None
