@@ -18,7 +18,7 @@ class MSOAreaDistributor:
         """
         msoareas_list = []
         msoa_in_sim = self.area_mapping_df["MSOA"].unique()
-        for i, msoa in enumerate(msoa_in_sim):
+        for msoa in msoa_in_sim:
             msoarea = MSOArea(
                 self.msoareas.world,
                 msoa,

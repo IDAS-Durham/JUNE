@@ -1,3 +1,4 @@
+from covid.logger import Logger
 import numpy as np
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
@@ -105,7 +106,7 @@ class Companies:
                             pass
  
             except:
-                warnings warnings.warn(
+                Logger.info(
                     f"The initialization of companies for the MSOArea {msoarea} failed."
                 )
                 pass
