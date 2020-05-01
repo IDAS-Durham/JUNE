@@ -41,9 +41,6 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
 
-        self.school_df = pd.read_csv(
-            os.path.join(self.DATA_DIR, "school_data", "uk_schools_data.csv")
-        )
         self.hospital_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -78,13 +75,17 @@ class Inputs:
             np.unique(self.oa2msoa_df["MSOA11CD"].values)
         )
         self.compsec_by_sex_df = self.read_compsec_by_sex()
-        (
-            self.key_compsec_ratio_by_sex_df,
-            self.key_compsec_distr_by_sex_df
-        ) = self.read_key_compsec_by_sex(self.compsec_by_sex_df)
         self.commute_generator_path = (
             Path(__file__).parent.parent / "data/census_data/commute.csv"
         )
+        self.school_data_path = (
+            Path(__file__).parent.parent / "data/processed/school_data/england_schools_data.csv"
+        )
+
+        self.school_config_path = (
+            Path(__file__).parent.parent / "configs/defaults/schools.yaml"
+        )
+
 
     def read(self, filename):
         df = pd.read_csv(
@@ -244,6 +245,11 @@ class Inputs:
             uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
         )
         compsec_by_sex_df = compsec_by_sex_df.set_index('oareas')
+        
+        # use the counts to get key company sector ratios
+        self.read_key_compsec_by_sex(compsec_by_sex_df)
+        
+        # convert counts to ratios
         compsec_by_sex_df.loc[:, m_columns] = compsec_by_sex_df.loc[:, m_columns].div(
             compsec_by_sex_df[m_columns].sum(axis=1), axis=0
         )
@@ -285,30 +291,14 @@ class Inputs:
             ~education_healthcare_by_sex_df.occupations.isin(education_df.occupations)
         ]
         
-        # Get ratio of people work in any compared to the specific key sector 
-        male_healthcare_ratio = np.sum(healthcare_df["male"]) / \
-            np.sum(companysector_by_sex_df["m Q"])
-        male_education_ratio = np.sum(education_df["male"]) / \
-            np.sum(companysector_by_sex_df["m P"])
-        female_healthcare_ratio = np.sum(healthcare_df["female"]) / \
-            np.sum(companysector_by_sex_df["f Q"])
-        female_education_ratio = np.sum(education_df["female"]) / \
-            np.sum(companysector_by_sex_df["f P"])
-        
-        compsec_specic_ratio_by_sex_df = pd.DataFrame(
-            np.array([
-                [male_education_ratio, female_education_ratio],
-                [male_healthcare_ratio, female_healthcare_ratio]
-            ]),
-            index=['education', 'healthcare'],
-            columns=['male', 'female'],
-            dtype=np.float,
+        self.get_key_compsec_ratio_by_sex(
+            education_df, healthcare_df, companysector_by_sex_df
         )
-        del (
-            male_healthcare_ratio, male_education_ratio,
-            female_healthcare_ratio, female_education_ratio,
-        )
-        
+        self.get_key_compsec_distr_by_sex(education_df, healthcare_df)
+    
+    def get_key_compsec_distr_by_sex(self, education_df, healthcare_df):
+        """
+        """
         # Get distribution of duties within key sector
         healthcare_distr_df = healthcare_df.loc[
             :,["male", "female"]
@@ -340,8 +330,40 @@ class Inputs:
         compsec_specic_distr_by_sex_df = compsec_specic_distr_by_sex_df.sort_index()
         del healthcare_distr_df, education_distr_df
 
-        return compsec_specic_ratio_by_sex_df, compsec_specic_distr_by_sex_df
+        self.key_compsec_distr_by_sex_df = compsec_specic_distr_by_sex_df
 
+    def get_key_compsec_ratio_by_sex(
+            self,
+            education_df,
+            healthcare_df,
+            companysector_by_sex_df
+        ):
+        """
+        """
+        # Get ratio of people work in any compared to the specific key sector 
+        male_healthcare_ratio = np.sum(healthcare_df["male"]) / \
+            np.sum(companysector_by_sex_df["m Q"])
+        male_education_ratio = np.sum(education_df["male"]) / \
+            np.sum(companysector_by_sex_df["m P"])
+        female_healthcare_ratio = np.sum(healthcare_df["female"]) / \
+            np.sum(companysector_by_sex_df["f Q"])
+        female_education_ratio = np.sum(education_df["female"]) / \
+            np.sum(companysector_by_sex_df["f P"])
+ 
+        compsec_specic_ratio_by_sex_df = pd.DataFrame(
+            np.array([
+                [male_education_ratio, female_education_ratio],
+                [male_healthcare_ratio, female_healthcare_ratio]
+            ]),
+            index=['education', 'healthcare'],
+            columns=['male', 'female'],
+            dtype=np.float,
+        )
+        del (
+            male_healthcare_ratio, male_education_ratio,
+            female_healthcare_ratio, female_education_ratio,
+        )
+        self.key_compsec_ratio_by_sex_df = compsec_specic_ratio_by_sex_df
 
     def read_commute_method(DATA_DIR: str, freq: bool = True) -> pd.DataFrame:
         """
@@ -510,5 +532,4 @@ if __name__ == "__main__":
     #print(ip.companysize_df)
     #print(ip.companysector_df)
     print(ip.compsec_by_sex_df)
-    #print(ip.compsec_by_sex_dict)
-    #print(ip.companysector_specific_by_sex_df)
+    #print(ip.key_compsec_ratio_by_sex_df)
