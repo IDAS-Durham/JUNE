@@ -17,9 +17,8 @@ class Company(Group):
     """
 
     def __init__(self, company_id, msoa, n_employees_max, industry):
-        super().__init__("Company_%05d" % company_id, "company")
+        super().__init__(name="Company_%05d" % company_id, spec="company")
         self.id = company_id
-        self.people = []
         self.msoa = msoa
         # set the max number of employees to be the mean number in a range
         self.n_employees_max = n_employees_max
@@ -65,17 +64,6 @@ class Companies:
         """
         Initializes all companies across all msoareas
         """
-
-        ## PSEUDO CODE TO DEFINE WHAT IS BEING DONE HERE
-        # companysize_df contains msoarea, and the number of companies of
-        # different sizes in that area company_sector_dict contains the
-        # number of companies by sector in each msoarea
-        # for each msoarea
-            # compute a probability distribution over company sizes
-            # for each industry
-                # for each company in industry
-                    # assign company a size_mean according to the probability distribution
-
         companies = []
         comp_sec_col = self.world.inputs.companysector_df.columns.values.tolist()
         comp_sec_col.remove('msoareas')

@@ -22,6 +22,7 @@ class Area:
         self.check_census_freq_ratios()
         self.people = []
         self.households = []
+        self.schools = []
         self.coordinates = coordinates
 
     @property
