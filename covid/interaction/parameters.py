@@ -29,6 +29,7 @@ class ParameterInitializer:
         default_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
+            "..",
             "configs",
             "defaults",
             self.classtype,
