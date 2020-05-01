@@ -13,8 +13,10 @@ from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
 from covid.interaction import *
-from covid.infection import *
-
+from covid.infection import transmission
+from covid.infection import symptoms
+from covid.infection import Infection
+from covid.groups.people import HealthIndex
 
 class World:
     """
@@ -265,32 +267,47 @@ class World:
         for person in self.people.members:
             person.active_group = None
 
-    def initialize_infection(self, person):
-        infection_name = self.config["infection"]["type"]
-        infection_name = "Infection" + infection_name.capitalize()
+    def initialize_infection(self):
         if "parameters" in self.config["infection"]:
             infection_parameters = self.config["infection"]["parameters"]
         else:
             infection_parameters = {}
-        infection = globals()[infection_name](
-            person, self.timer, self.config, infection_parameters
-        )
+        if "transmission" in self.config["infection"]:
+            transmission_type = self.config["infection"]["transmission"]["type"]
+            transmission_parameters = self.config["infection"]["transmission"]["parameters"]
+            transmission_class_name = "Transmission" + transmission_type.capitalize()
+        else:
+            trans_class = "TransmissionConstant"
+            transmission_parameters = {}
+        trans_class = getattr(transmission, transmission_class_name)
+        transmission_class = trans_class(**transmission_parameters)
+        if "symptoms" in self.config["infection"]:
+            symptoms_type = self.config["infection"]["symptoms"]["type"]
+            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
+            symptoms_class_name= "Symptoms" + symptoms_type.capitalize()
+        else:
+            symptoms_class_name = "SymptomsGaussian"
+            symptoms_parameters = {}
+        symp_class = getattr(symptoms, symptoms_class_name)
+        reference_health_index = HealthIndex().get_index_for_age(40)
+        symptoms_class = symp_class(health_index=reference_health_index, **symptoms_parameters)
+        infection = Infection(self.timer.now, transmission_class, symptoms_class, **infection_parameters)
         return infection
 
     def seed_infections_group(self, group, n_infections):
         choices = np.random.choice(group.size, n_infections)
-        infecter_reference = self.initialize_infection(None)
+        infecter_reference = self.initialize_infection()
         for choice in choices:
-            infecter_reference.infect_person_at_time(group.people[choice])
-        group.update_status_lists()
+            infecter_reference.infect_person_at_time(group.people[choice], self.timer.now)
+        group.update_status_lists(self.timer.now, delta_time=0)
 
     def seed_infections_box(self, n_infections):
         print("seed ", n_infections, "infections in box")
         choices = np.random.choice(self.people.members, n_infections, replace=False)
-        infecter_reference = self.initialize_infection(None)
+        infecter_reference = self.initialize_infection()
         for choice in choices:
-            infecter_reference.infect_person_at_time(choice)
-        self.boxes.members[0].update_status_lists()
+            infecter_reference.infect_person_at_time(choice, self.timer.now)
+        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()

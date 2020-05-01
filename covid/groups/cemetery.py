@@ -3,7 +3,7 @@ from covid.groups import Group
 
 class Cemetery(Group):
     def __init__(self):
-        super().__init__(self, "Cemetery", "cemetery")
+        super().__init__("Cemetery", "cemetery")
 
     def must_timestep(self):
         return False

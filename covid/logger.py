@@ -41,7 +41,7 @@ class Logger:
             self.data_dict["world"][day]["susceptible"] = susceptible_world
             self.data_dict["world"][day]["infected"] = infected_world
             self.data_dict["world"][day]["recovered"] = recovered_world
-            self.log_r0(day)
+            #self.log_r0() TODO implement
         else:
             box = self.world.boxes.members[0]
             self.data_dict["world"][day] = {}
@@ -93,8 +93,7 @@ class Logger:
 
     def log_r0(self):
         if not self.box_mode:
-            print("Not implemented yet")
-            sys.exit()
+            raise NotImplementedError()
         else:
             box = self.world.boxes.members[0]
             if self.world.timer.day_int+1 == self.world.timer.total_days: # dirty fix, need to rethink later
