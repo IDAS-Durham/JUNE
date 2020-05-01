@@ -254,13 +254,17 @@ class World:
         return interaction
 
     def set_active_group_to_people(self, active_groups):
+        print('active groups : ', active_groups)
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
+            print('group type : ', grouptype)
             for group in grouptype.members:
                 group.set_active_members()
 
     def set_allpeople_free(self):
         for person in self.people.members:
+            if person.active_group == 'school':
+                print('is school ', person.active_group)
             person.active_group = None
 
     def initialize_infection(self):
