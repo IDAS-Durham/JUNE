@@ -6,7 +6,7 @@ class MSOArea:
     Stores information about the MSOA, like the total number of companies, etc.
     """
 
-    def __init__(self, world, name, n_companies):
+    def __init__(self, world, name, oareas):
         """
         The n_companies_* represent the number of companies in a given msoa
         by sector - here we take the nomis definition of sector which gives
@@ -23,7 +23,7 @@ class MSOArea:
 
         self.world = world
         self.name = name
-        self.oarea = []
+        self.oareas = oareas
         self.work_people = []
         self.companies = []
         self.hospitals = []

@@ -24,6 +24,8 @@ class CompanyDistributor:
         self.companies = companies
 
     def distribute_adults_to_companies(self):
+        """
+        """
         STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
         ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
         OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
