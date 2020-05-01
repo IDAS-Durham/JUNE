@@ -31,7 +31,7 @@ class World:
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
         self.people = []
-        self.total_people = 0
+        self.total_people = 0  #TODO is nowehere updated
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
@@ -47,7 +47,7 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
-            self.initialize_hospitals()
+            #self.initialize_hospitals()
             self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
@@ -171,7 +171,7 @@ class World:
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.id,)]
             person_distributor = PersonDistributor(
                 self.timer,
                 self.people,
@@ -206,12 +206,15 @@ class World:
         the closest age compatible school to a certain kid.
         """
         print("Initializing schools...")
-        self.schools = Schools(self, self.areas, self.inputs.school_df)
+        self.schools = Schools.from_file(self.inputs.school_data_path,
+            self.inputs.school_config_path)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-            self.distributor = SchoolDistributor(self.schools, area)
-            self.distributor.distribute_kids_to_school()
-            pbar.update(1)
+           self.distributor = SchoolDistributor.from_file(self.schools, area,
+                   self.inputs.school_config_path)
+           self.distributor.distribute_kids_to_school()
+           self.distributor.distribute_teachers_to_school()
+           pbar.update(1)
         pbar.close()
 
     def initialize_companies(self):
@@ -316,6 +319,7 @@ class World:
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
         self.interaction.time_step()
+        print('Freeing people')
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
@@ -357,4 +361,4 @@ if __name__ == "__main__":
     #              box_mode=True,box_n_people=100)
 
     # world = World.from_pickle()
-    world.group_dynamics()
+    #world.group_dynamics()
