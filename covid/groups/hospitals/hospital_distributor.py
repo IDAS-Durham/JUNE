@@ -14,10 +14,10 @@ class HospitalDistributor:
     Distributes people working in health-care to hospitals
     """
 
-    def __init__(self, companies, msoarea):
-        self.world = world
+    def __init__(self, hospitals, msoarea):
+        self.world = self
         self.msoarea = msoarea
-        self.companies = companies
+        self.hospitals = hospitals
         self.healthcare_sector_label = (
             self.world.config["companies"]["key_sector"]["hospitals"]
         )

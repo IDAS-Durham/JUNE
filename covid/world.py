@@ -45,8 +45,8 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
-            self.initialize_hospitals()
-            self.initialize_cemeteries()
+            #self.initialize_hospitals()
+            #self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
             else:
@@ -140,17 +140,10 @@ class World:
 
     def initialize_hospitals(self):
         self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
-        hospitals_distributor = HospitalDistributor(self.hospitals)
-        hospitals_distributor.distribute_medics_to_hospitals()
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
-            if not msoarea.work_people:
-                warnings.warn(
-                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
-                )
-            else:
-                distributor = HospitalDistributor(self.hospitals, msoarea)
-                distributor.distribute_medics_to_hospitals()
+            distributor = HospitalDistributor(self.hospitals, msoarea)
+            distributor.distribute_medics_to_hospitals()
             pbar.update(1)
         pbar.close()
 
