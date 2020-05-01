@@ -43,7 +43,7 @@ class School(Group):
             whether it is a "primary", "secondary" or both "primary_secondary"
 
         """
-        super().__init__("School_%05d" % school_id, "school")
+        super().__init__(name="School_%05d" % school_id, spec="school")
         self.coordinates = coordinates
         self.n_pupils_max = n_pupils
         self.n_pupils = 0
