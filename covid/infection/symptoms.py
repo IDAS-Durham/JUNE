@@ -54,18 +54,23 @@ class SymptomsConstant(Symptoms):
 
 
 class SymptomsGaussian(Symptoms):
-    def __init__(self, health_index, mean_time=1.0, sigma_time=3.0):
+    def __init__(self, health_index, mean_time=1.0, sigma_time=3.0, recovery_rate=0.2):
         super().__init__(health_index=health_index)
 
         self.mean_time = max(0.0, mean_time)
         self.sigma_time = max(0.001, sigma_time)
         self.maxseverity = random.random()
+        self.recovery_rate = recovery_rate
 
     def update_severity_from_delta_time(self, delta_time):
 
         dt = delta_time - self.mean_time
 
         self.severity = self.maxseverity * np.exp(-(dt ** 2) / self.sigma_time ** 2)
+    
+    def is_recovered(self, delta_time):
+        prob_recovery = 1.0 - np.exp(-self.recovery_rate * delta_time)
+        return np.random.rand() <= prob_recovery
 
 
 class SymptomsStep(Symptoms):

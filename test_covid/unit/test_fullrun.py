@@ -29,9 +29,8 @@ if __name__ == "__main__":
             os.path.dirname(
                 os.path.realpath(__file__)
             ),
-            "../..",
-            "configs",
-            "config_example.yaml"
+            "..",
+            "config_ne.yaml"
     )
     world = World(config_path, box_mode=False)
     world.group_dynamics()
