@@ -37,9 +37,9 @@ class Companies:
 
 
     def _compute_size_mean(self, sizegroup):
-        '''
+        """
         Given company size group calculates mean
-        '''
+        """
         
         # ensure that read_companysize_census() also returns number of companies
         # in each size category
