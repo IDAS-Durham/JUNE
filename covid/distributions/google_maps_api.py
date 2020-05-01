@@ -95,7 +95,23 @@ class APICall():
 
         return locations, names, reviews, ratings
             
-            
+
+    def distance(self, origin_location, destination_location, mode):
+        """
+        Determine distance between two locations according t the mode of transport
+
+        :param origin_location: (tuple of ints) origin location is a tuple of (latitude, longitude)
+        :param destination_location: (tuple of ints) destination location is a tuple of (latitude, longitude)
+        :param mode: (string) mode of transport valid values are “driving”, “walking”, “transit” or “bicycling”
+        """
+
+        dist = self.client.distance_matrix(origin_location, destination_location, mode)
+
+
+        ## TODO finish this if needed
+
+        return dist
+        
         
         
 
