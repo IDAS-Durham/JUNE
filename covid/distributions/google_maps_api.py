@@ -34,7 +34,7 @@ class APICall():
         return locations, names, reviews, ratings
 
         
-    def nearby_search(self, location, radius, location_type):
+    def nearby_search(self, location, radius, location_type, return_pagetoken = False):
         """
         Searches nearby locations given a location and a radius for particular loction types
 
@@ -58,13 +58,58 @@ class APICall():
         
         # convert to json
         resp_json_payload = response.json()
+
+        
         results = resp_json_payload['results']
 
         locations, names, reviews, ratings = self.process_results(results)
 
-        return locations, names, reviews, ratings
+        if return_pagetoken:
+            try:
+                next_page_token = resp_json_payload['next_page_token']
+                return locations, names, reviews, ratings, next_pagetoken
+
+            except:
+                print ('No more next page tokens')
+                return locations, names, reviews, ratings
+
+        else:
+            return locations, names, reviews, ratings
 
         
+    def nearby_search_next_page(self, next_page_token, return_pagetoken = False):
+
+        url = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={}&key={}'.format(next_page_token,self.key))
+        
+        try:
+            response = requests.get(url)
+            pass
+        except:
+            raise Exception('Error: GET request failed')
+
+        # convert to json 
+        resp_json_payload = response.json()
+
+        
+        results = resp_json_payload['results']
+
+        locations, names, reviews, ratings = self.process_results(results)
+
+        if return_pagetoken:
+            try:
+                next_page_token = resp_json_payload['next_page_token']
+                return locations, names, reviews, ratings, next_pagetoken
+
+            except:
+                print ('No more next page tokens')
+                return locations, names, reviews, ratings
+
+        else:
+            return locations, names, reviews, ratings
+        
+        
+        
+
     def places(self, query, location, radius, location_type = None):
         """
         Search places according to a certain query
@@ -120,8 +165,7 @@ class APICall():
 
         ## TODO finish this if needed
 
-        return dist
-        
+        return dist        
         
         
 
