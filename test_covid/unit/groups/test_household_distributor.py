@@ -56,9 +56,6 @@ def create_area(age_min=0, age_max=99, people_per_age=5):
     return area
 
 
-
-
-
 @pytest.fixture(name="household_distributor")
 def create_household_distributor():
     first_kid_parent_age_differences = [20, 21]
@@ -240,7 +237,11 @@ def test__fill_families_households(household_distributor):
             kid_1, kid_2 = kid_2, kid_1
         assert (mother.age - kid_1.age <= 20) or (mother.age - kid_1.age <= 21)
         assert (mother.age - kid_2.age <= 30) or (mother.age - kid_2.age <= 31)
-        assert (father.age - mother.age) in [-1,0,1] or (father.age - mother.age) in [-1,0,1]
+        assert (father.age - mother.age) in [-1, 0, 1] or (father.age - mother.age) in [
+            -1,
+            0,
+            1,
+        ]
 
 
 def test__fill_nokids_households(household_distributor):
@@ -286,6 +287,7 @@ def test__fill_youngadult_households(household_distributor):
                 <= household_distributor.YOUNG_ADULT_MAX_AGE
             )
 
+
 def test__fill_youngadult_with_parents_households(household_distributor):
     area = create_area(age_min=15, age_max=40, people_per_age=5)
     households_with_extrapeople_list = []
@@ -303,13 +305,26 @@ def test__fill_youngadult_with_parents_households(household_distributor):
                 <= household_distributor.YOUNG_ADULT_MAX_AGE
             )
 
+
+def test__fill_communal_establishments(household_distributor):
+    area = create_area(people_per_age=5)
+    household_distributor.fill_communal_establishment(
+        n_establishments=5, people_per_establishment=10, area=area
+    )
+    assert len(area.households) == 5
+    assert len(area.world.households.members) == 50
+    for household in area.households:
+        assert len(household.pople) == 10
+
+
+
 def test__area_is_filled_properly_1(household_distributor):
     area = create_area(people_per_age=0)
     men_by_age_counts = {
-            5 : 4, # kids
-            50 : 4, # adults
-            75 : 3, # old people
-            }
+        5: 4,  # kids
+        50: 4,  # adults
+        75: 3,  # old people
+    }
     area.men_by_age = OrderedDict({})
     area.women_by_age = OrderedDict({})
     for age in men_by_age_counts.keys():
@@ -334,28 +349,37 @@ def test__area_is_filled_properly_1(household_distributor):
         for person in household.people:
             if 0 <= person.age < household_distributor.ADULT_MIN_AGE:
                 kids += 1
-            elif household_distributor.ADULT_MIN_AGE <= person.age <= household_distributor.YOUNG_ADULT_MAX_AGE:
+            elif (
+                household_distributor.ADULT_MIN_AGE
+                <= person.age
+                <= household_distributor.YOUNG_ADULT_MAX_AGE
+            ):
                 youngadults += 1
-            elif household_distributor.ADULT_MIN_AGE <= person.age < household_distributor.OLD_MIN_AGE:
+            elif (
+                household_distributor.ADULT_MIN_AGE
+                <= person.age
+                < household_distributor.OLD_MIN_AGE
+            ):
                 adults += 1
             else:
                 old += 1
-        assert kids in [0,1]
-        assert adults in [0,1]
-        assert youngadults in range(0,7)
-        assert old in range(0,3)
+        assert kids in [0, 1]
+        assert adults in [0, 1]
+        assert youngadults in range(0, 7)
+        assert old in range(0, 3)
         total_people += old + kids + adults + youngadults
 
     assert total_people == 11
 
+
 def test__area_is_filled_properly_2(household_distributor):
     area = create_area(people_per_age=0)
     men_by_age_counts = {
-            5 : 4, # kids
-            23: 5, # young adults or students
-            50 : 4, # adults
-            75 : 3, # old people
-            }
+        5: 4,  # kids
+        23: 5,  # young adults or students
+        50: 4,  # adults
+        75: 3,  # old people
+    }
     area.men_by_age = OrderedDict({})
     area.women_by_age = OrderedDict({})
     for age in men_by_age_counts.keys():
@@ -383,25 +407,24 @@ def test__area_is_filled_properly_2(household_distributor):
             print(person.age)
             if 0 <= person.age < household_distributor.ADULT_MIN_AGE:
                 kids += 1
-            elif household_distributor.ADULT_MIN_AGE <= person.age <= household_distributor.YOUNG_ADULT_MAX_AGE:
+            elif (
+                household_distributor.ADULT_MIN_AGE
+                <= person.age
+                <= household_distributor.YOUNG_ADULT_MAX_AGE
+            ):
                 youngadults += 1
-            elif household_distributor.ADULT_MIN_AGE <= person.age < household_distributor.OLD_MIN_AGE:
+            elif (
+                household_distributor.ADULT_MIN_AGE
+                <= person.age
+                < household_distributor.OLD_MIN_AGE
+            ):
                 adults += 1
             else:
                 old += 1
-        assert kids in range(0,5)
-        assert adults in [0,2]
+        assert kids in range(0, 5)
+        assert adults in [0, 2]
         assert youngadults in [0, 5]
-        assert old in range(0,3)
+        assert old in range(0, 3)
         total_people += old + kids + adults + youngadults
 
     assert total_people == 16
-
-
-
-
-
-
-
-
-
