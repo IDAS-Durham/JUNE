@@ -16,7 +16,7 @@ class Hospital(Group):
     """
 
     def __init__(self, hospital_id=1, structure=None, postcode=None, msoa_name=None):
-        super().__init__(self, "Hospital_%03d" % hospital_id, "hospital")
+        super().__init__("Hospital_%03d" % hospital_id, "hospital")
         self.id = hospital_id
         self.postcode = postcode
         self.msoa_name = msoa_name

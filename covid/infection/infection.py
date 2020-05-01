@@ -38,7 +38,6 @@ class Infection:
         """
 
         infection = self.new_infection_at_time(time=time)
-
         person.health_information.set_infection(infection=infection)
 
     def symptom_tag(self, tagno):
