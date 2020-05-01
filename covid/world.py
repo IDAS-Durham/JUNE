@@ -59,7 +59,7 @@ class World:
                 self.initialize_boundary()
             else:
                 print("nothing exists outside the simulated region")
-        #self.interaction = self.initialize_interaction()
+        self.interaction = self.initialize_interaction()
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
