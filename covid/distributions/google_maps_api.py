@@ -58,7 +58,6 @@ class APICall():
         
         # convert to json
         resp_json_payload = response.json()
-
         
         results = resp_json_payload['results']
 
@@ -67,8 +66,7 @@ class APICall():
         if return_pagetoken:
             try:
                 next_page_token = resp_json_payload['next_page_token']
-                return [locations, names, reviews, ratings, next_pagetoken]
-
+                return [locations, names, reviews, ratings, next_page_token]
             except:
                 print ('No more next page tokens')
                 return [locations, names, reviews, ratings]
