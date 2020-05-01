@@ -72,16 +72,16 @@ class Companies:
             size_dict[idx+1] = self._compute_size_mean(column)
         
         #pbar = tqdm(total=len(companysector_df['msoareas']))
-        for idx, msoarea_id in enumerate(companysector_df['msoareas']):
+        for idx, msoarea_name in enumerate(companysector_df['msoareas']):
             try:
 
                 # create comany size distribution for MSOArea
-                companysize_df.loc[msoarea_id]
+                companysize_df.loc[msoarea_name]
                 distribution = []
                 for column in comp_size_col:
                     distribution.append(
-                        float(companysize_df.loc[msoarea_id][column]) /\
-                        (self._sum_str_elements(companysize_df.loc[msoarea_id],comp_size_col))
+                        float(companysize_df.loc[msoarea_name][column]) /\
+                        (self._sum_str_elements(companysize_df.loc[msoarea_name],comp_size_col))
                     )
                 comp_size_rv = rv_discrete(values=(comp_size_col_encoded,distribution))
                 
@@ -92,7 +92,7 @@ class Companies:
                     for i in range(int(companysector_df[column][idx])):
                         company = Company(
                             company_id=i,
-                            msoa=msoarea_id,
+                            msoa=msoarea_name,
                             n_employees_max=size_dict[comp_size_rnd_array[i]],
                             industry=column
                         )
@@ -108,7 +108,7 @@ class Companies:
  
             except:
                 ic_logger.info(
-                    f"The initialization of companies for the MSOArea {msoarea} failed."
+                    f"The initialization of companies for the MSOArea {msoarea_name} failed."
                 )
                 pass
             #pbar.update(1)
