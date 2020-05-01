@@ -1,8 +1,11 @@
+import logging
 import numpy as np
 from sklearn.neighbors._ball_tree import BallTree
 
 from covid.groups import Group
 
+
+ic_logger = logging.getLogger(__name__)
 
 class Hospital(Group):
     """
@@ -15,11 +18,14 @@ class Hospital(Group):
     become a real problem as it is manifestly not correct.
     """
 
-    def __init__(self, hospital_id=1, structure=None, postcode=None):
+    def __init__(self, hospital_id=1, structure=None, postcode=None, msoa_name=None):
         super().__init__("Hospital_%03d" % hospital_id, "hospital")
         self.id = hospital_id
         self.postcode = postcode
+        self.msoa_name = msoa_name
         self.people = []
+        self.nurses = []
+        self.doctors = []
         self.patients = []
         self.ICUpatients = []
         """
@@ -134,6 +140,7 @@ class Hospitals:
     def __init__(self, world, hospital_df=None, box_mode=False):
         self.world = world
         self.box_mode = box_mode
+        self.area_mapping_df = world.inputs.area_mapping_df
         self.members = []
         # translate identifier from csv to position in members
         self.finder = {}
@@ -143,7 +150,9 @@ class Hospitals:
         # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
         self.icu_fraction = 5900. / 141000.
         if not self.box_mode:
-            print("Init hospitals from data file")
+            ic_logger.info(
+                "There are %d hospitals in the world." % len(hospital_df.index.values)
+            )
             self.hospital_trees = self.create_hospital_trees(hospital_df)
         else:
             self.members.append(Hospital(1, {"n_beds": 10, "n_ICUbeds": 2}))
@@ -154,16 +163,24 @@ class Hospitals:
             np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
         for row in range(hospital_df.shape[0]):
+            # create hospital attributes
             n_beds = hospital_df.iloc[row]["beds"]
             n_icu_beds = round(self.icu_fraction * n_beds)
             n_beds -= n_icu_beds
-            self.members.append(Hospital(hospital_df.iloc[row]["Unnamed: 0"],
-                                         {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
-                                         hospital_df.iloc[row]["Postcode"]))
+            postcode = hospital_df.iloc[row]["Postcode"]
+            msoa_name = self.area_mapping_df[
+                self.area_mapping_df["PCD"] == postcode
+            ]["MSOA"].values[0]
+            # create hospital
+            hospital = Hospital(
+                hospital_df.iloc[row]["Unnamed: 0"],
+                {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
+                postcode,
+                msoa_name,
+            )
+            # add hospital to it's group
+            self.members.append(hospital)
             self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members) - 1
-            # print ("--- Hospital[",hospital_df.iloc[row]["Unnamed: 0"],
-            #       "<-->",len(self.members)-1,"]: ",
-            #       n_beds," beds and ",n_ICUbeds," n_ICUbeds.")
         return hospital_tree
 
     def get_nearest(self, person):
@@ -178,6 +195,7 @@ class Hospitals:
         else:
             winner = None
             windist = 1.e12
+            # find 100 nearest hospitals
             angles, hospitals = self.get_closest_hospital(person.area, 100)
             for angle, hospitaltag in zip(angles[0], hospitals[0]):
                 hospital = self.members[self.finder[hospitaltag]]
@@ -202,3 +220,4 @@ class Hospitals:
         return hospital_tree.query(
             np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True
         )
+    
