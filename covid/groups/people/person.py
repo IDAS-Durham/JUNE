@@ -141,6 +141,7 @@ class Person:
         self.sex = sex
         self.health_index = health_index
         self.econ_index = econ_index
+        self.area = area
         self.work_msoarea = work_msoa
         self.mode_of_transport = mode_of_transport
         self.active_group = None
