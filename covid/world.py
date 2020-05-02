@@ -28,7 +28,7 @@ class World:
         print("Initializing world...")
         self.read_config(config_file)
         self.world_creation_logger(self.config["logger"]["save_path"])
-        relevant_groups = self.get_simulation_groups()
+        self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
@@ -51,15 +51,15 @@ class World:
             self.initialize_households()
             self.initialize_hospitals()
             self.initialize_cemeteries()
-            if "schools" in relevant_groups:
+            if "schools" in self.relevant_groups:
                 self.initialize_schools()
             else:
                 print("schools not needed, skipping...")
-            if "companies" in relevant_groups:
+            if "companies" in self.relevant_groups:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
-            if "boundary" in relevant_groups:
+            if "boundary" in self.relevant_groups:
                 self.initialize_boundary()
             else:
                 print("nothing exists outside the simulated region")
@@ -140,18 +140,31 @@ class World:
         return active_groups
 
     def read_defaults(self):
-        default_config_path = os.path.join(
+        """
+        Read config files for the world and it's active groups.
+        """
+        basepath = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
             "configs",
             "defaults",
-            "world.yaml",
         )
+        # global world settings
+        default_config_path = os.path.join(basepath, "world.yaml")
         with open(default_config_path, "r") as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
         for key in default_config.keys():
             if key not in self.config:
                 self.config[key] = default_config[key]
+        # active group settings
+        for relevant_group in self.relevant_groups:
+            group_config_path = os.path.join(basepath, f"{relevant_group}.yaml")
+            if os.path.isfile(group_config_path):
+                with open(group_config_path, "r") as f:
+                    default_config = yaml.load(f, Loader=yaml.FullLoader)
+                for key in default_config.keys():
+                    if key not in self.config:
+                        self.config[key] = default_config[key]
 
     def initialize_box_mode(self, region=None, n_people=None):
         """

@@ -3,19 +3,6 @@ interaction:
   parameters:
     mode: probabilistic
 
-households:
-  same_sex_couple_ratio: 0.1
-
-companies:
-  work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
-  key_sector:  # associated to groups existing in the world (e.g. schools & hospitals)
-    schools: 'P'
-    hospitals: 'Q'
-
-hospitals:
-  patience_nr_per_nurse: 10
-  patience_nr_per_doctor: 10
-
 people:
   adult_threshold: 6 # 18 yo
   student_age_group: 7
