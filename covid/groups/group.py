@@ -98,9 +98,6 @@ class Group:
             if person.active_group is not None:
                 raise ValueError("Trying to set an already active person")
             else:
-                if self.spec != 'school':
-                    print(self.spec)
-                    print(person)
                 person.active_group = self.spec
 
     def set_intensity(self, intensity):
