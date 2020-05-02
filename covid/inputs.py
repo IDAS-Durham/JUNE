@@ -32,7 +32,7 @@ class Inputs:
             header=0,
             index_col="output_area",
         )
-        self.area_mapping_df = self.read_area_mapping(self.n_residents.index.values)
+        self.area_mapping_df = self.read_area_mapping()
 
         self.age_freq, self.decoder_age = self.read("age_structure.csv")
         self.sex_freq, self.decoder_sex = self.read("sex.csv")
@@ -42,8 +42,7 @@ class Inputs:
         self.encoder_household_composition = {}
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
-
-        self.read_hospitals(self.area_mapping_df["PCD"].values)
+        self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
         
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
@@ -59,22 +58,24 @@ class Inputs:
 
         # Read census data on low resolution map (MSOA)
         self.workflow_df = self.create_workflow_df(
-            np.unique(self.area_mapping_df["MSOA"].values)
+            self.area_mapping_df,
+            self.n_residents.index.values,
         )
         self.companysize_df = self.read_companysize_census(
-            np.unique(self.area_mapping_df["MSOA"].values)
+            self.area_mapping_df,
+            self.n_residents.index.values,
         )
         self.companysector_df = self.read_companysector_census(
-            np.unique(self.area_mapping_df["MSOA"].values)
+            self.area_mapping_df,
+            self.n_residents.index.values,
         )
-        self.compsec_by_sex_df = self.read_compsec_by_sex()
+        self.compsec_by_sex_df = self.read_compsec_by_sex(self.n_residents.index.values)
         self.commute_generator_path = (
             Path(__file__).parent.parent / "data/census_data/commute.csv"
         )
         self.school_data_path = (
             Path(__file__).parent.parent / "data/processed/school_data/england_schools_data.csv"
         )
-
         self.school_config_path = (
             Path(__file__).parent.parent / "configs/defaults/schools.yaml"
         )
@@ -101,7 +102,7 @@ class Inputs:
         areas_coordinates_df.set_index("OA11CD", inplace=True)
         return areas_coordinates_df
 
-    def read_hospitals(self, pcd_names):
+    def read_hospitals(self, area_mapping, oa_in_world):
         """
         Read in hospital data and filter those within
         the population region.
@@ -116,11 +117,16 @@ class Inputs:
                 "england_hospitals.csv",
             )
         )
+        hospital_df = hospital_df.rename(columns={'Postcode': "PCD"})
+        hospital_df = pd.merge(hospital_df, area_mapping, how='inner', on=['PCD'])
+        pcd_in_world = np.unique(area_mapping[
+            area_mapping["OA"].isin(list(oa_in_world))
+        ]["PCD"].values)
         self.hospital_df = hospital_df.loc[
-            hospital_df["Postcode"].isin(list(pcd_names))
+            hospital_df["PCD"].isin(list(pcd_in_world))
         ]
 
-    def read_area_mapping(self, oa_names):
+    def read_area_mapping(self):
         """
         Creat link between Postcode and OA layers.
         Needed to know in which OAs which hospitals are.
@@ -142,12 +148,9 @@ class Inputs:
             names=column_names,
             usecols=usecols,
         )
-        area_mapping_df = area_mapping_df.loc[
-            area_mapping_df["OA"].isin(list(oa_names))
-        ]
         return area_mapping_df
 
-    def read_companysize_census(self, msoa):
+    def read_companysize_census(self, area_mapping, oa_in_world):
         """
         Gives nr. of companies with nr. of employees per MSOA.
         Filter the MOSArea according to the OAreas used.
@@ -186,13 +189,16 @@ class Inputs:
         companysize_df = companysize_df.set_index("MSOA")
 
         # filter out MSOA areas that are simulated
+        msoa = np.unique(area_mapping[
+            area_mapping["OA"].isin(list(oa_in_world))
+        ]["MSOA"].values)
         companysize_df = companysize_df.loc[msoa]
 
         assert companysize_df.isnull().values.any() == False
 
         return companysize_df
 
-    def read_companysector_census(self, msoa):
+    def read_companysector_census(self, area_mapping, oa_in_world):
         """
         Gives number of companies by type according to NOMIS sector data at the MSOA level
         TableID: WD601EW
@@ -213,6 +219,9 @@ class Inputs:
         companysector_df = companysector_df.set_index("msoareas")
 
         # filter out MSOA areas that are simulated
+        msoa = np.unique(area_mapping[
+            area_mapping["OA"].isin(list(oa_in_world))
+        ]["MSOA"].values)
         companysector_df = companysector_df.loc[msoa]
 
         companysector_df = companysector_df.reset_index()
@@ -220,7 +229,7 @@ class Inputs:
 
         return companysector_df
 
-    def read_compsec_by_sex(self):
+    def read_compsec_by_sex(self, oa_in_world):
         """
         Gives number dict of discrete probability distributions by sex of the
         different industry sectors at the OA level.
@@ -259,8 +268,11 @@ class Inputs:
         compsec_by_sex_df = compsec_by_sex_df.drop(
             uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
         )
+        compsec_by_sex_df = compsec_by_sex_df[
+            compsec_by_sex_df["oareas"].isin(list(oa_in_world))
+        ]
         compsec_by_sex_df = compsec_by_sex_df.set_index('oareas')
-        
+
         # use the counts to get key company sector ratios
         self.read_key_compsec_by_sex(compsec_by_sex_df)
         
@@ -481,7 +493,8 @@ class Inputs:
 
     def create_workflow_df(
         self,
-        msoa,
+        area_mapping,
+        oa_in_world,
         DATA_DIR: str = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
@@ -520,6 +533,9 @@ class Inputs:
             names=["home_msoa11cd", "work_msoa11cd", "n_man", "n_woman"],
         )
         # filter out MSOA areas that are simulated
+        msoa = np.unique(area_mapping[
+            area_mapping["OA"].isin(list(oa_in_world))
+        ]["MSOA"].values)
         wf_df = wf_df[wf_df["home_msoa11cd"].isin(list(msoa))]
         # convert into ratios
         wf_df = wf_df.groupby(["home_msoa11cd", "work_msoa11cd"]).agg(
@@ -536,7 +552,6 @@ class Inputs:
             .apply(lambda x: x / float(x.sum(axis=0)))
             .values
         )
-
         return wf_df
 
 
