@@ -12,6 +12,10 @@ companies:
     schools: 'P'
     hospitals: 'Q'
 
+hospitals:
+  patience_nr_per_nurse: 10
+  patience_nr_per_doctor: 10
+
 people:
   adult_threshold: 6 # 18 yo
   student_age_group: 7
