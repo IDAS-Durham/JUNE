@@ -36,8 +36,8 @@ class APICall():
         for i in results:
             locations.append(i['geometry']['location'])
             names.append(i['name'])
-            ratings.append(i['rating'])
-            reviews.append(i['user_ratings_total'])
+            #ratings.append(i['rating'])
+            #reviews.append(i['user_ratings_total'])
 
         return locations, names, reviews, ratings
 
