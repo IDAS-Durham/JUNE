@@ -21,14 +21,12 @@ class APICall():
     def raise_warning(self):
         print ('WARNING: By running this class you will be making Google Maps API calls \n This will use API credits and may charge you money - please proceed with caution')
 
-
     def get_request(self, url):
         try:
             response = requests.get(url)
             return response
         except:
             raise Exception('Error: GET request failed')
-
         
     def process_results(self, results):
         locations = []
