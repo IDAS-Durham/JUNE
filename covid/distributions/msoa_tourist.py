@@ -30,5 +30,4 @@ if __name__ == "__main__":
     for region in regions:
         msoas = pd.read_csv('./../../custom_data/msoa_coordinates_{}.csv'.format(region))
         outs = get_msoas_tourist(apikey,msoas)
-        print (outs)
-        np.save('./../../custom_data/outs_{}'.format(region))
+        np.save('./../../custom_data/outs_{}'.format(region), outs)
