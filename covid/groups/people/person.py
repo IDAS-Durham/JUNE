@@ -122,6 +122,7 @@ class Person:
             world=None,
             person_id=None,
             area=None,
+            residence_msoa=None,
             work_msoa=None,
             age=-1,
             nomis_bin=None,
@@ -136,26 +137,23 @@ class Person:
         #    )
         self.id = person_id
         self.world = world
+        # biological attributes
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
+        # geo-graphical attributes
+        self.area = area
+        self.residence_msoa = residence_msoa
+        self.work_msoarea = work_msoa
+        self.household = None
+        # primary activity attributes
+        self.mode_of_transport = mode_of_transport
+        self.work_msoarea = work_msoa
+        self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
+        self.active_group = None
+        self.in_hospital = None
         self.health_index = health_index
         self.econ_index = econ_index
-        self.area = area
-        self.work_msoarea = work_msoa
-        self.econ_index = econ_index
-        self.mode_of_transport = mode_of_transport
-        self.active_group = None
-        self.household = None
-        self.school = None
-        self.industry = None
-        self.hospital = None
-        self.in_hospital = None
-        #TODO finda a different way to specify education
-        # and healthcare job subclasses since a lot of people
-        # will not use this flas
-        self.industry_specific = None
-        self.company_id = None
         self.health_information = HealthInformation(Counter(self))
 
     def get_into_hospital(self):

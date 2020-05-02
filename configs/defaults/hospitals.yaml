@@ -1,0 +1,9 @@
+age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
+sector: 'Q'       # NOMIS name convention
+sub_sector:
+  nurse:
+    sector_id: 2231
+    nr_of_clients: 10
+  doctor:
+    sector_id: 2211
+    nr_of_clients: 10

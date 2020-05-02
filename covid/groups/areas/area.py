@@ -15,14 +15,14 @@ class Area:
         self.world = world
         self.name = oarea
         self.msoarea = msoarea
+        self.coordinates = coordinates
         self.n_residents = int(n_residents)
         self.n_households = n_households
         self.census_freq = census_freq
         self.check_census_freq_ratios()
         self.people = []
-        self.households = []
-        self.schools = []
-        self.coordinates = coordinates
+        for relevant_groups in worlf.relevant_groups:
+            setattr(self, relevant_groups, [])
 
     @property
     def regional_commute_generator(self) -> RegionalGenerator:
