@@ -75,7 +75,7 @@ class HospitalDistributor:
                 if medic.industry_specific is not None:
                     hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
                         
-                    if (hospital.n_medics < hospital.n_medics_max):# and \
-                        medic.hospital = hospital.id
-                        medic.company_id = hospital.id
-                        hospital.n_medics += 1
+                    #if (hospital.n_medics < hospital.n_medics_max):# and \
+                    medic.hospital = hospital.id
+                    medic.company_id = hospital.id
+                    hospital.n_medics += 1
