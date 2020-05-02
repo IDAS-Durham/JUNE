@@ -1,9 +1,11 @@
+import logging
 import warnings
 import numpy as np
 from random import uniform
 from scipy import stats
 import warnings
 
+ic_logger = logging.getLogger(__name__)
 
 class HospitalError(BaseException):
     """ class for throwing hospital related errors """
@@ -53,7 +55,7 @@ class HospitalDistributor:
         ]
 
         if len(medics) == 0:
-            Logger.info(
+            ic_logger.info(
                 f"\n The MSOArea {self.msoarea.name} has no people that work in it!"
             )
         
