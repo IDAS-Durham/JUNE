@@ -49,7 +49,7 @@ class World:
             self.initialize_msoa_areas()
             self.initialize_people()
             self.initialize_households()
-            #self.initialize_hospitals()
+            self.initialize_hospitals()
             self.initialize_cemeteries()
             if "schools" in relevant_groups:
                 self.initialize_schools()
