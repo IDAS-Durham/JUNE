@@ -23,6 +23,7 @@ class Hospital(Group):
         self.id = hospital_id
         self.postcode = postcode
         self.msoa_name = msoa_name
+        self.n_medics = 0
         self.people = []
         self.nurses = []
         self.doctors = []
@@ -159,6 +160,7 @@ class Hospitals:
             self.members.append(Hospital(2, {"n_beds": 5000, "n_ICUbeds": 5000}))
 
     def create_hospital_trees(self, hospital_df):
+        print("88888888", hospital_df)
         hospital_tree = BallTree(
             np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
@@ -167,7 +169,7 @@ class Hospitals:
             n_beds = hospital_df.iloc[row]["beds"]
             n_icu_beds = round(self.icu_fraction * n_beds)
             n_beds -= n_icu_beds
-            postcode = hospital_df.iloc[row]["Postcode"]
+            postcode = hospital_df.iloc[row]["PCD"]
             msoa_name = self.area_mapping_df[
                 self.area_mapping_df["PCD"] == postcode
             ]["MSOA"].values[0]
