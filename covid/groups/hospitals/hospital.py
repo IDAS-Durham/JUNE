@@ -23,6 +23,7 @@ class Hospital(Group):
         self.id = hospital_id
         self.postcode = postcode
         self.msoa_name = msoa_name
+        self.n_medics = 0
         self.people = []
         self.nurses = []
         self.doctors = []
