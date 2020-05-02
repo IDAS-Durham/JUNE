@@ -24,10 +24,11 @@ if __name__ == "__main__":
         api = f.read()
     apikey = api.split('\n')[0]
 
-    regions = ['East', 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest',\
-          'Yorkshire', 'London', 'Wales']
+    regions = ['East']#, 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest',\
+          #'Yorkshire', 'London', 'Wales']
 
     for region in regions:
-        msoas = pd.read_csv('./../custom_data/msoa_coordinates_{}.csv'.format(region))
+        msoas = pd.read_csv('./../../custom_data/msoa_coordinates_{}.csv'.format(region))
         outs = get_msoas_tourist(apikey,msoas)
-        np.save('./../custom_data/outs_{}'.format(region))
+        print (outs)
+        np.save('./../../custom_data/outs_{}'.format(region))
