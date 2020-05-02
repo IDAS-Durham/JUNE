@@ -18,8 +18,8 @@ class Company(Group):
         self.msoa = msoa
         # set the max number of employees to be the mean number in a range
         self.n_employees_max = n_employees_max
-        self.n_employees = 0
         self.n_woman = 0
+        self.employees = []
         self.industry = industry
 
 
