@@ -28,6 +28,7 @@ if __name__ == "__main__":
         #'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
 
     for region in regions:
+        print ('Working on region: {}'.format(region))
         msoas = pd.read_csv('./../../custom_data/msoa_coordinates_{}.csv'.format(region))
         outs = get_msoas_tourist(apikey,msoas)
         np.save('./../../custom_data/outs_{}'.format(region), outs)
