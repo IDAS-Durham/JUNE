@@ -24,8 +24,8 @@ if __name__ == "__main__":
         api = f.read()
     apikey = api.split('\n')[0]
 
-    regions = ['EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest']#,\
-          #'Yorkshire', 'London', 'Wales', 'East']
+    regions = ['Yorkshire', 'London', 'Wales']
+        #'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
 
     for region in regions:
         msoas = pd.read_csv('./../../custom_data/msoa_coordinates_{}.csv'.format(region))
