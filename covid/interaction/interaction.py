@@ -5,29 +5,33 @@ import numpy as np
 class Interaction:
 
     def __init__(self):
-
-        self.groups = []
         self.intensities = {}
 
-    def time_step(self, time, delta_time):
+    def time_step(self, time, delta_time, groups):
+
+        # TODO : Is there any reason for this to be passed all groups, as opposed to one group at a time?
+        # TODO : If not, make the class assume it always acts on one group (which could have sub groups internally).
+
         # TODO think how we treat the double update_status_lists and make it consistent
         # with delta_time
         # print ("-----------------------------------------------------")
-        for group_type in self.groups:
+        for group_type in groups:
             for group in group_type.members:
                 if group.size != 0:
                     group.update_status_lists(time=time, delta_time=0)
         # print ("-----------------------------------------------------")
-        for group_type in self.groups:
+        for group_type in groups:
             for group in group_type.members:
                 if group.size != 0:
                     self.single_time_step_for_group(group=group, time=time)
         # print ("-----------------------------------------------------")
-        for group_type in self.groups:
+        for group_type in groups:
             for group in group_type.members:
                 if group.size != 0:
                     group.update_status_lists(time=time, delta_time=delta_time)
         # print ("-----------------------------------------------------")
+
+    # TODO : The fact these functioonss use a group suggests the function above sould.
 
     def single_time_step_for_group(self, group, time):
         raise NotImplementedError()
