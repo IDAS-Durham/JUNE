@@ -61,7 +61,12 @@ class World:
                 self.initialize_boundary()
             else:
                 print("nothing exists outside the simulated region")
+            if "pubs" in relevant_groups:
+                self.initialize_pubs()
+            else:
+                print("pubs not needed, skipping...")
         self.interaction = self.initialize_interaction()
+        self.group_maker = GroupMaker(self)
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
@@ -142,6 +147,9 @@ class World:
 
     def initialize_hospitals(self):
         self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
+
+    def initialize_pubs(self):
+        self.pubs = Pubs(self, self.inputs.pubs_df, self.box_mode)
 
     def initialize_areas(self):
         """
@@ -254,6 +262,7 @@ class World:
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
+            self.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
 
@@ -305,8 +314,8 @@ class World:
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
-        # print ("=====================================================")
-        # print ("=== active groups: ",active_groups,".")
+        #print ("=====================================================")
+        #print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
