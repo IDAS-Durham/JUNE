@@ -121,30 +121,31 @@ class Person:
             self,
             world=None,
             person_id=None,
-            area=None,
-            residence_msoa=None,
-            work_msoa=None,
             age=-1,
             nomis_bin=None,
             sex=None,
+            mode_of_transport=None
+            oarea=None,
             health_index=None,
             econ_index=None,
-            mode_of_transport=None
     ):
+        """
+        Inputs:
+        """
         # if not 0 <= age <= 120 or sex not in ("M", "F"):
         #    raise AssertionError(
         #        f"Attempting to initialise a person"
         #    )
-        self.id = person_id
         self.world = world
+        self.id = person_id
         # biological attributes
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
-        self.area = area
-        self.residence_msoa = residence_msoa
-        self.work_msoarea = work_msoa
+        self.area = oarea
+        self.residence_msoa = oarea.msoarea
+        self.work_msoarea = None
         self.household = None
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
@@ -196,7 +197,6 @@ class Person:
 
 class People:
     def __init__(self, world):
-        self.world = world
         self.members = []
 
     @property

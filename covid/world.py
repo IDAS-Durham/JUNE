@@ -31,6 +31,7 @@ class World:
         self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         # set up logging
+        print(self.config)
         self.world_creation_logger(self.config["logger"]["save_path"])
         # start initialization
         self.box_mode = box_mode
