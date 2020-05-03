@@ -26,14 +26,17 @@ class World:
 
     def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
         print("Initializing world...")
+        # read configs
         self.read_config(config_file)
-        self.world_creation_logger(self.config["logger"]["save_path"])
         self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
+        # set up logging
+        self.world_creation_logger(self.config["logger"]["save_path"])
+        # start initialization
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
         self.people = []
-        self.total_people = 0  #TODO is nowehere updated
+        self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
@@ -196,8 +199,8 @@ class World:
         demographic information about people living in it.
         """
         print("Initializing areas...")
-        self.areas = Areas(self)
-        areas_distributor = AreaDistributor(self.areas, self.inputs)
+        self.areas = OAreas(self)
+        areas_distributor = OAreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
 
     def initialize_msoa_areas(self):
@@ -207,7 +210,6 @@ class World:
         print("Initializing MSOAreas...")
         self.msoareas = MSOAreas(self)
         msoareas_distributor = MSOAreaDistributor(self.msoareas)
-        msoareas_distributor.read_msoareas_census()
 
     def initialize_people(self):
         """
