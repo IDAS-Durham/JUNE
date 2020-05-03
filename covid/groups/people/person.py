@@ -200,6 +200,13 @@ class People:
         self.world = world
         self.members = []
 
+    #@classmethod
+    #def from_file(cls, filename: str,: str) -> "People":
+    #    """
+    #    """
+    #    = pd.read_csv(filename, index_col=0)
+    #    return People(,)
+
     @property
     def total_people(self):
         return len(self.members)

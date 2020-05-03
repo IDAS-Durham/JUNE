@@ -201,6 +201,10 @@ class World:
         Populates the world with person instances.
         """
         print("Initializing people...")
+        #self.people = People.from_file(
+        #    self.inputs.,
+        #    self.inputs.,
+        #)
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
@@ -246,8 +250,11 @@ class World:
         )
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-           self.distributor = SchoolDistributor.from_file(self.schools, area,
-                   self.inputs.school_config_path)
+           self.distributor = SchoolDistributor.from_file(
+                self.schools,
+                area,
+                self.inputs.school_config_path
+            )
            self.distributor.distribute_kids_to_school()
            self.distributor.distribute_teachers_to_school()
            pbar.update(1)
@@ -265,7 +272,10 @@ class World:
         self.companies = Companies(self)
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
-            self.distributor = CompanyDistributor(self.companies, msoarea)
+            self.distributor = CompanyDistributor(
+                self.companies,
+                msoarea
+            )
             self.distributor.distribute_adults_to_companies()
             pbar.update(1)
         pbar.close()
