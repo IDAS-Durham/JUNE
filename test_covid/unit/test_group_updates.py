@@ -100,15 +100,31 @@ def test__set_active_group_pupils(world_ne):
             break
     world_ne.set_allpeople_free()
 
+class MockHealthInformation:
+    def __init__(self, tag):
+        self.tag = tag
 
-if __name__ == "__main__":
-    config_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "..", "config_ne.yaml"
-    )
-    world = World(config_path, box_mode=False)
+    @property
+    def in_hospital(self) -> bool:
+        return self.tag in ("hospitalised", "intensive care")
 
-    test__set_active_group_pupils(world)
-    test__set_active_group_workers(world)
+def test__sick_gets_to_hospital_recovers_and_leaves(world_ne):
+
+    # sick goes to hospital
+    dummy_person = world_ne.people.members[0]
+    dummy_person.health_information = MockHealthInformation('hospitalised')
+    dummy_person.get_into_hospital()
+    world_ne.set_active_group_to_people(["schools", "hospitals", "households"])
+    assert dummy_person.active_group == 'hospital'
+    world_ne.set_allpeople_free()
+
+    # recovered, leaves hospital
+    dummy_person.health_information = MockHealthInformation('asymptomatic')
+    dummy_person.in_hospital.update_status_lists()
+    world_ne.set_active_group_to_people(["schools", "hospitals", "households"])
+    assert dummy_person.active_group != 'hospital'
+    world_ne.set_allpeople_free()
+
 
 
 
