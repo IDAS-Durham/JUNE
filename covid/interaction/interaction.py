@@ -3,6 +3,7 @@ import numpy as np
 
 
 class Interaction:
+
     def __init__(self):
 
         self.groups = []
@@ -52,22 +53,30 @@ class InteractionCollective(Interaction):
         self.alphas = {}
 
     def single_time_step_for_group(self, group, time):
+
         if group.must_timestep():
+
             effective_load = self.calculate_effective_viral_load(group)
+
             if effective_load <= 0.0:
                 return
+
             for recipient in group.susceptible:
                 self.single_time_step_for_recipient(
-                    recipient, effective_load, group, time
+                    recipient=recipient, effective_load=effective_load, group=group, time=time
                 )
+
         if group.spec == "hospital":
             print("must allow for infection of workers by patients")
 
     def single_time_step_for_recipient(self, recipient, effective_load, group, time):
+
         transmission_probability = 0.0
         recipient_probability = recipient.health_information.susceptibility
+
         if recipient_probability <= 0.0:
             return
+
         if self.mode == "superposition":
             """
             added probability from product of non-infection probabilities.
@@ -90,51 +99,73 @@ class InteractionCollective(Interaction):
             transmission_probability = 1.0 - np.exp(
                 -recipient_probability * effective_load
             )
+
         if random.random() <= transmission_probability:
+
             infecter = self.select_infecter()
+
             infecter.health_information.infection.infect_person_at_time(
-                recipient, time=time
+                person=recipient, time=time
             )
+
             infecter.health_information.counter.increment_infected()
+
             recipient.health_information.counter.update_infection_data(
                 time=time, group_type=group.spec
             )
 
     def calculate_effective_viral_load(self, delta_time, group):
+
         group_type = group.spec
         summed_load = 0.0
+
         interaction_intensity = (
             self.get_intensity_from_group_type(group_type)
-            / (max(1, group.size) ** self.get_alpha(group_type))
+            / (max(1, group.size) ** self.get_alpha(group_type=group_type))
             * (delta_time)
         )
+
         if interaction_intensity > 0.0:
+
             self.weights = []
+
             for person in group.infected:
+
                 viral_load = (
                     person.health_information.infection.transmission.probability
                 )
                 summed_load += viral_load
                 self.weights.append([person, viral_load])
+
             for i in range(len(self.weights)):
+
                 self.weights[i][1] /= summed_load
+
             summed_load *= interaction_intensity
+
         return summed_load
 
     def select_infecter(self):
+
         choice_weights = [w[1] for w in self.weights]
+
         idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
+
         return self.weights[idx][0]
 
     def get_alpha(self, group_type):
+
         if group_type in self.alphas:
             return self.alphas[group_type]
+
         return 1.0
 
     def set_alphas(self, alphas):
+
         self.alphas = alphas
 
-    def set_alpha(self, group_type, alpha):
+    def set_alpha_of_group_type(self, group_type, alpha):
+
         self.alphas[group_type] = alpha
 
 
@@ -155,7 +186,7 @@ class MatrixInteraction(Interaction):
 
         super().__init__()
 
-    def single_time_step_for_group(self, group):
+    def single_time_step_for_group(self, time, group):
 
         if group.must_timestep():
 
@@ -166,7 +197,7 @@ class MatrixInteraction(Interaction):
             for infecter in group.get_infected():
                 contact_ages = self.prepare_interaction_ages(infecter, group)
                 for age in contact_ages:
-                    self.make_interactions(infecter, group, age)
+                    self.make_interactions(time=time, infecter=infecter, group=group, age=age)
 
         if group.spec == "hospital":
             print("must allow for infection of workers by patients")
@@ -180,17 +211,17 @@ class MatrixInteraction(Interaction):
             and recipient.susceptibility > 0.0
         ):
             if random.random() <= 1.0 - np.exp(
-                -transmission_probability * recipient.susceptibility()
+                -self.transmission_probability * recipient.susceptibility()
             ):
-                infecter.infection.infect(recipient)
+                infecter.infection.infect_person_at_time(person=recipient, time=time)
                 recipient.counter.update_infection_data(
                     time=time, group_type=group.get_spec()
                 )
                 infecter.counter.increment_infected()
 
-    def prepare_interaction_ages(self, time, infecter, group):
+    def prepare_interaction_ages(self, delta_time, time, infecter, group):
         self.transmission_probability = self.calculate_single_transmission_probability(
-            infecter, group
+            delta_time=delta_time, infecter=infecter, group=group
         )
         if self.transmission_probability > 1.0e-12:
             Naverage = self.contacts[infecter.age]
@@ -217,7 +248,7 @@ class MatrixInteraction(Interaction):
 
     def calculate_single_transmission_probability(self, delta_time, infecter, group):
         intensity = group.intensity
-        probability = infecter.transmission.transmission_probability
+        probability = infecter.infection.transmission.probability
         # probability *= self.severity_multiplier(group.get_spec())
         return probability * intensity * delta_time
 
