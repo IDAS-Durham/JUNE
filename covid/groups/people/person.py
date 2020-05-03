@@ -124,7 +124,7 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
-            mode_of_transport=None
+            mode_of_transport=None,
             oarea=None,
             health_index=None,
             econ_index=None,
