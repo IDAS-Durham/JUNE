@@ -281,7 +281,7 @@ class Hospitals:
             metric="haversine",
         )
 
-    def allocate_patient(self, person: "Person") -> "Hospital":
+    def allocate_patient(self, person: "Person"):
         """
         Function to allocate patients into close by hospitals with available beds.
         If there are no available beds within a maximum distance, the patient is
@@ -325,6 +325,7 @@ class Hospitals:
                 ic_logger.info(
                     f"Receiving hospital for patient with {person.health_information.tag} at distance = {distance} km"
                 )
+                hospital.add_as_patient(person)
             else:
                 ic_logger.info(
                     "no hospital found for patient with",
@@ -333,7 +334,6 @@ class Hospitals:
                     self.max_distance,
                     " km.",
                 )
-            return hospital
 
     def get_closest_hospitals(
         self, coordinates: Tuple[float, float], r_max: float
