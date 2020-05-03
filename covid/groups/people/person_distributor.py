@@ -37,11 +37,11 @@ class PersonDistributor:
         self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
         self.relevant_groups = self.world.relevant_groups
-        self.key_compsec = [
-            {key: value}
+        self.key_compsec = {
+            key: value
             for key, value in self.world.config.items()
             if "sub_sector" in value
-        ]
+        }
         self.no_kids_area = False
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
@@ -143,7 +143,14 @@ class PersonDistributor:
                     "sex must be with male or female. Intead got {}".format(sex_random)
                 )
             person.industry = self.industry_dict[industry_id]
-            
+      
+            self.key_compsec_id = []
+            for key1, value1 in self.key_compsec.items():
+                for key2, value2 in value1.items():
+                    print(key2, value2)
+                    if key2 == "sector":
+                        self.key_compsec_id.append(value2)
+                
             if person.industry in self.key_compsec_id:
                 self._assign_key_industry(person)
         else:
@@ -209,18 +216,19 @@ class PersonDistributor:
             else:
                 person.industry_specific = key_industry_code
 
-    def _assign_work_msoarea(self, i, sex, msoa_man, msoa_woman):
+    def _assign_work_msoarea(self, i, person, msoa_man, msoa_woman):
         """
         Return: str,
             MOSA11CD area code
         """
-        if sex == 1:
+        if person.sex == 1:
             work_msoarea_name = self.workflow_df.index.values[msoa_woman[i]]
         else:
             work_msoarea_name = self.workflow_df.index.values[msoa_man[i]]
+        
+        person.work_msoarea = work_msoarea_name
 
-        # find msoarea of work
-        idx = np.where(self.msoareas.names_in_order == work_msoa_rnd)[0]
+        idx = np.where(self.msoareas.names_in_order == work_msoarea_name)[0]
         if len(idx) != 0:
             self.msoareas.members[idx[0]].work_people.append(person)
         else:
@@ -228,8 +236,6 @@ class PersonDistributor:
             # we currently simulate
             idx = np.random.choice(np.arange(len(self.msoareas.names_in_order)))
             self.msoareas.members[idx].work_people.append(person)
-        
-        return work_msoarea
 
     def populate_area(self):
         """
@@ -272,16 +278,8 @@ class PersonDistributor:
         for i in range(self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
-            print("^^test sex and age^^", sex_random, age_random)
             nomis_bin = nomis_bin_random_array[i]
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
-            if is_working_age:
-                work_msoa_rnd = self._assign_work_msoarea(
-                    i,
-                    sex_random,
-                    work_msoa_man_rnd_array,
-                    work_msoa_woman_rnd_array,
-                )
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
                 self.world,
@@ -296,6 +294,12 @@ class PersonDistributor:
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment
             if is_working_age:
+                self._assign_work_msoarea(
+                    i,
+                    person,
+                    work_msoa_man_rnd_array,
+                    work_msoa_woman_rnd_array,
+                )
                 self._assign_industry(
                     i,
                     person,
@@ -308,15 +312,6 @@ class PersonDistributor:
             if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
             elif nomis_bin < self.OLD_THRESHOLD:
-                # find msoarea of work
-                idx = np.where(self.msoareas.names_in_order == work_msoa_rnd)[0]
-                if len(idx) != 0:
-                    self.msoareas.members[idx[0]].work_people.append(person)
-                else:
-                    # TODO count people who work outside of the region
-                    # we currently simulate
-                    idx = np.random.choice(np.arange(len(self.msoareas.names_in_order)))
-                    self.msoareas.members[idx].work_people.append(person)
                 if sex_random == 0:
                     self.area._men[i] = person
                 else:

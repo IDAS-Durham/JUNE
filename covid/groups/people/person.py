@@ -124,10 +124,10 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
-            mode_of_transport=None,
             oarea=None,
             health_index=None,
             econ_index=None,
+            mode_of_transport=None,
     ):
         """
         Inputs:
@@ -149,7 +149,7 @@ class Person:
         self.household = None
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.work_msoarea = work_msoa
+        self.work_msoarea = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
         self.in_hospital = None
