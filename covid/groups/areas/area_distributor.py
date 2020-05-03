@@ -7,6 +7,7 @@ class AreaDistributor:
     def __init__(self, areas, input_data):
         self.input = input_data
         self.areas = areas
+        self.area_mapping_df = self.areas.world.inputs.area_mapping_df
 
     def read_areas_census(self):
         """
@@ -20,15 +21,17 @@ class AreaDistributor:
         sex_df = self.input.sex_freq
         household_composition_df = self.input.household_composition_freq
         areas_list = []
-        for i, area_name in enumerate(n_residents_df.index):
+        oa_in_sim = n_residents_df.index
+        for i, area_name in enumerate(oa_in_sim):
             area_coord = self.input.areas_coordinates_df.loc[area_name][
                 ["Y", "X"]
             ].values
-
             area = Area(
                 self.areas.world,
                 area_name,
-                self.areas.world.inputs.oa2msoa_df.loc[area_name]["MSOA11CD"],
+                self.area_mapping_df[
+                    self.area_mapping_df["OA"] == area_name
+                ]["MSOA"].unique()[0],
                 n_residents_df.loc[area_name],
                 0,  # n_households_df.loc[area_name],
                 {
@@ -40,3 +43,4 @@ class AreaDistributor:
             )
             areas_list.append(area)
         self.areas.members = areas_list
+        self.areas.names_in_order = oa_in_sim
