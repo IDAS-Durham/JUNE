@@ -29,20 +29,24 @@ class PersonDistributor:
         """
         """
         self.timer = timer
+        self.world = area.world
         self.area = area
         self.msoareas = msoareas
         self.people = people
-        self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
-        self.key_compsec_id = [
-            value for key, value in area.world.config["companies"]["key_sector"].items()
+        self.STUDENT_THRESHOLD = self.world.config["people"]["student_age_group"]
+        self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
+        self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
+        self.relevant_groups = self.world.relevant_groups
+        self.key_compsec = [
+            {key: value}
+            for key, value in self.world.config.items()
+            if "sub_sector" in value
         ]
         self.no_kids_area = False
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
-        self.health_index = HealthIndex(self.area.world.config)
+        self.health_index = HealthIndex(self.world.config)
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
         self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
@@ -189,7 +193,6 @@ class PersonDistributor:
         # Select people working in key industries
 
         if MC_random < ratio:
-            #print(MC_random, ratio)
             key_industry_id = None
         else:
             # Assign job category within key industry
@@ -206,19 +209,27 @@ class PersonDistributor:
             else:
                 person.industry_specific = key_industry_code
 
-    def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
+    def _assign_work_msoarea(self, i, sex, msoa_man, msoa_woman):
         """
         Return: str,
             MOSA11CD area code
         """
-        if is_working_age:
-            workmsoa = None
+        if sex == 1:
+            work_msoarea_name = self.workflow_df.index.values[msoa_woman[i]]
         else:
-            if sex == 1:
-                workmsoa = self.workflow_df.index.values[msoa_woman[i]]
-            else:
-                workmsoa = self.workflow_df.index.values[msoa_man[i]]
-        return workmsoa
+            work_msoarea_name = self.workflow_df.index.values[msoa_man[i]]
+
+        # find msoarea of work
+        idx = np.where(self.msoareas.names_in_order == work_msoa_rnd)[0]
+        if len(idx) != 0:
+            self.msoareas.members[idx[0]].work_people.append(person)
+        else:
+            # TODO count people who work outside of the region
+            # we currently simulate
+            idx = np.random.choice(np.arange(len(self.msoareas.names_in_order)))
+            self.msoareas.members[idx].work_people.append(person)
+        
+        return work_msoarea
 
     def populate_area(self):
         """
@@ -261,24 +272,24 @@ class PersonDistributor:
         for i in range(self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
+            print("^^test sex and age^^", sex_random, age_random)
             nomis_bin = nomis_bin_random_array[i]
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
-            work_msoa_rnd = self.assign_work_msoarea(
-                i,
-                sex_random,
-                is_working_age,
-                work_msoa_man_rnd_array,
-                work_msoa_woman_rnd_array,
-            )
+            if is_working_age:
+                work_msoa_rnd = self._assign_work_msoarea(
+                    i,
+                    sex_random,
+                    work_msoa_man_rnd_array,
+                    work_msoa_woman_rnd_array,
+                )
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
-                self.area.world,
+                self.world,
                 self.people.total_people,
-                self.area,
-                work_msoa_rnd,
                 age_random,
                 nomis_bin,
                 sex_random,
+                self.area,
                 health_index,
                 0,
                 mode_of_transport=None,
