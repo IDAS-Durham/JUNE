@@ -1,8 +1,7 @@
 import os
-
 import pytest
-
-from covid import commute as c
+import numpy as np
+from covid.groups import Person
 
 test_data_filename = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -10,8 +9,11 @@ test_data_filename = os.path.join(
     "..",
     "..",
     "data",
+    "processed",
     "census_data",
-    "commute.csv"
+    "output_area",
+    zone,
+    "residents.csv",
 )
 
 

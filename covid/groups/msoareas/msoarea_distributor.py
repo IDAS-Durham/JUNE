@@ -9,32 +9,45 @@ class MSOAreaDistributor:
         self.world = msoareas.world
         self.msoareas = msoareas
         self.area_mapping_df = self.msoareas.world.inputs.area_mapping_df
+        self.create_msoareas()
 
-    def read_msoareas_census(self):
+    def create_msoareas(self):
         """
         Reads census data from the input dictionary, and initializes
         the encoders/decoders for company variables.
         It also initializes all the areas of the world.
         This is all on the MSOA layer.
         """
+        msoa_in_sim = np.unique(
+            np.array([
+                area.msoarea for area in self.world.areas.members
+            ])
+        )
         msoareas_list = []
-        msoa_in_sim = self.area_mapping_df["MSOA"].unique()
-        msoaofoa = np.array([
-            [area.name, area.msoarea] for area in self.world.areas.members
-        ]).T
-        for msoa in msoa_in_sim:
-            # find oareas inside this msoa
-            idxs = np.where(msoaofoa[1] == msoa)[0]
-            areas = [self.world.areas.members[idx] for idx in idxs]
+        for msoa_name in msoa_in_sim:
+            # centroid of msoa
+            coordinates = ['xxx', 'xxx']
+            # find postcode inside this msoarea
+            pcd_in_msoa = self.area_mapping_df[
+                self.area_mapping_df["MSOA"] == msoa_name
+            ]["PCD"].values
+            # find oareas inside this msoarea
+            oa_in_msoa = [
+                area
+                for area in self.world.areas.members
+                if area.msoarea == msoa_name
+            ]
             # create msoarea
             msoarea = MSOArea(
-                self.msoareas.world,
-                msoa,
-                areas,
+                self.world,
+                coordinates,
+                pcd_in_msoa,
+                oa_in_msoa,
+                msoa_name,
             )
             msoareas_list.append(msoarea)
             # link  area to msoarea
-            for area in areas:
+            for area in oa_in_msoa:
                 area.msoarea = msoarea
         self.msoareas.members = msoareas_list
         self.msoareas.names_in_order = msoa_in_sim
