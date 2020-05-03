@@ -24,13 +24,26 @@ class Company(Group):
 
 
 class Companies:
-    def __init__(self, world):
-        self.world = world
+    def __init__(
+            self,
+            companysize_df: pd.DataFrame,
+            companysector_df: pd.DataFrame,
+            compsec_by_sex_df: pd.DataFrame,
+        ):
         self.msoareas = world.msoareas
         self.init_companies(
             world.inputs.companysize_df,
             world.inputs.companysector_df,
         )
+
+    @classmethod
+    def from_file(
+        cls,
+        companysize_filename: str,
+        companysector_filename: str,
+        companysector_by_sex_filename: str,
+        ) -> "Companies":
+        school_df = pd.read_csv(filename, index_col=0)
 
 
     def _compute_size_mean(self, sizegroup):
