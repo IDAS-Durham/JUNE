@@ -72,6 +72,8 @@ def test__allocate_patient_release_patient(hospitals, health_info):
     dummy_person = Person()
     dummy_person.health_information = MockHealthInformation(health_info) 
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
+    print('Coordinates : ', dummy_person.area.coordinates)
+    print('type : ', type(dummy_person.area.coordinates))
     assert dummy_person.in_hospital is None
     hospitals.allocate_patient(dummy_person)
     if health_info == 'hospitalised':
