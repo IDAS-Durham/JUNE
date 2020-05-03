@@ -68,19 +68,17 @@ class PersonDistributor:
         """
         # age data
         age_freq = self.area.census_freq["age_freq"]
-        age_kids_freq = age_freq.values[: self.ADULT_THRESHOLD]
         # check if there are no kids in the area, and if so,
         # declare it a no kids area.
-        if np.sum(age_kids_freq) == 0.0:
-            self.no_kids_area = True
-        else:
-            age_kid_freqs_norm = age_kids_freq / np.sum(age_kids_freq)
-            self.area.kid_age_rv = stats.rv_discrete(
-                values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm)
-            )
-        self.area.nomis_bin_rv = stats.rv_discrete(
-            values=(np.arange(0, len(age_freq)), age_freq.values)
-        )
+        #self.area.nomis_bin_rv = stats.rv_discrete(
+        #    values=(np.arange(0, len(age_freq)), age_freq.values)
+        #)
+        self.area.nomis_bin_random_values = []
+        for agebin in np.arange(0, len(age_freq)):
+            n_age = int(round(age_freq.iloc[agebin] * self.area.n_residents))
+            for _ in range(n_age):
+                self.area.nomis_bin_random_values.append(agebin)
+        np.random.shuffle(self.area.nomis_bin_random_values)
         # sex data
         sex_freq = self.area.census_freq["sex_freq"]
         self.area.sex_rv = stats.rv_discrete(
@@ -235,7 +233,9 @@ class PersonDistributor:
         # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
         #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
         #        d[i] = {}
-        nomis_bin_random_array = self.area.nomis_bin_rv.rvs(size=self.area.n_residents)
+        #nomis_bin_random_array = self.area.nomis_bin_rv.rvs(size=self.area.n_residents)
+        nomis_bin_random_array = self.area.nomis_bin_random_values
+        age_random_array = []
         age_random_array = []
         for nomis in nomis_bin_random_array:
             age_1, age_2 = self._get_age_brackets(
