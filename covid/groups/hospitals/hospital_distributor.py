@@ -17,7 +17,6 @@ class HospitalDistributor:
     """
 
     def __init__(self, hospitals, msoarea):
-        self.world = hospitals.world
         self.msoarea = msoarea
         # check if this msoarea has hospitals
         self.hospitals_in_msoa(hospitals)

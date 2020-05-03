@@ -72,8 +72,6 @@ def test__allocate_patient_release_patient(hospitals, health_info):
     dummy_person = Person()
     dummy_person.health_information = MockHealthInformation(health_info) 
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
-    print('Coordinates : ', dummy_person.area.coordinates)
-    print('type : ', type(dummy_person.area.coordinates))
     assert dummy_person.in_hospital is None
     hospitals.allocate_patient(dummy_person)
     if health_info == 'hospitalised':
@@ -88,3 +86,20 @@ def test__allocate_patient_release_patient(hospitals, health_info):
     assert len(selected_hospital.patients) == 0 
 
 
+# TODO: Check what happens when all hospitals are full
+
+'''
+@pytest.mark.parametrize("health_info", ["hospitalised", "intensive care"])
+def test_try_allocate_patient_to_full_hospital(health_info):
+    dummy_person = Person()
+    dummy_person.health_information = MockHealthInformation(health_info) 
+    dummy_person.area = MockArea(hospitals.members[0].coordinates)
+
+    for hospital in hospitals.members:
+        for i in range(hospital.n_beds):
+            hospital.
+        hospital.n_beds = 
+ 
+    # Remember to release people
+    # check hospitals are emtpy
+'''

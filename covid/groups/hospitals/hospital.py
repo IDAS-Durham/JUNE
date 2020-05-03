@@ -21,7 +21,14 @@ class Hospital(Group):
     become a real problem as it is manifestly not correct.
     """
 
-    def __init__(self, hospital_id: int, n_beds: int, n_icu_beds: int, coordinates: Tuple[float, float], msoa_name: str=None):
+    def __init__(
+        self,
+        hospital_id: int,
+        n_beds: int,
+        n_icu_beds: int,
+        coordinates: Tuple[float, float],
+        msoa_name: str = None,
+    ):
         """
         Create a Hospital given its description.
 
@@ -71,10 +78,16 @@ class Hospital(Group):
         """
         Set people in hospital active in hospital only
         """
-        for person in self.people:
+        #TODO: We need to check what we want to do with this,
+        # it will probably be taken care by the supergroup
+        for person in self.patients:
+            if person.active_group is None:
+                person.active_group = "hospital"
+        for person in self.icu_patients:
             if person.active_group is None:
                 person.active_group = "hospital"
 
+ 
     def add_as_patient(self, person: "Person"):
         """
         Add patient to hospital, depending on their healty information tag
@@ -173,11 +186,11 @@ class Hospital(Group):
     def update_status_lists(self):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        super().update_status_lists()
+        #super().update_status_lists()
         self.update_status_lists_for_patients()
         self.update_status_lists_for_ICUpatients()
         ic_logger.info(
-            "=== update status list for hospital with ", self.size, " people ==="
+            f"=== update status list for hospital with {self.size}  people ==="
         )
         ic_logger.info(
             "=== hospital currently has ",
@@ -185,7 +198,7 @@ class Hospital(Group):
             " patients",
             "and ",
             len(self.icu_patients),
-            " ICU patients",
+            " ICU patients"
         )
 
 
