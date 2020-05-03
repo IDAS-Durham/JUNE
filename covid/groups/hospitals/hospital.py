@@ -21,7 +21,7 @@ class Hospital(Group):
     become a real problem as it is manifestly not correct.
     """
 
-    def __init__(self, hospital_id, n_beds, n_icu_beds, coordinates, msoa_name=None):
+    def __init__(self, hospital_id: int, n_beds: int, n_icu_beds: int, coordinates: Tuple[float, float], msoa_name: str=None):
         """
         Create a Hospital given its description.
 
@@ -44,6 +44,7 @@ class Hospital(Group):
         self.id = hospital_id
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
+        self.coordinates = coordinates
         self.msoa_name = msoa_name
         self.n_medics = 0
         self.people = []
