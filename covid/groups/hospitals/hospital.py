@@ -138,10 +138,10 @@ class Hospitals:
     Contains all hospitals for the given area, and information about them.
     """
 
-    def __init__(self, world, hospital_df=None, box_mode=False):
-        self.world = world
+    def __init__(self, hospital_df=None, area_mapping_df=None, box_mode=False):
         self.box_mode = box_mode
-        self.area_mapping_df = world.inputs.area_mapping_df
+        #self.area_mapping_df = world.inputs.area_mapping_df
+        self.area_mapping_df = area_mapping_df
         self.members = []
         # translate identifier from csv to position in members
         self.finder = {}
@@ -158,6 +158,15 @@ class Hospitals:
         else:
             self.members.append(Hospital(1, {"n_beds": 10, "n_ICUbeds": 2}))
             self.members.append(Hospital(2, {"n_beds": 5000, "n_ICUbeds": 5000}))
+
+    @classmethod
+    def from_file(cls, hospital_filename, area_mapping_filename, box_mode=False):
+
+        hospital_df = pd.read_csv(hospital_filename, index_col=0)
+        area_mapping_df = pd.read_csv(area_mapping_filename, index_col=0)
+        return Hospitals(hospital_df, area_mapping_df)
+
+
 
     def create_hospital_trees(self, hospital_df):
         print("88888888", hospital_df)
