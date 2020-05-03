@@ -1,4 +1,3 @@
-u
 import logging
 import numpy as np
 import pandas as pd
@@ -36,14 +35,13 @@ class Companies:
 
         Parameters
         ----------
-        compsize_per_msoa_df:
+        compsize_per_msoa_df: pd.DataFram
             Nr. of companies within a size-range per MSOA.
 
-        compsec_per_msoa_df:
+        compsec_per_msoa_df: pd.DataFrame
             Nr. of companies per industry sector per MSOA.
         """
         self.members = []
-        self.msoareas = world.msoareas
         self.init_companies(
             compsize_per_msoa_df,
             compsec_per_msoa_df,
@@ -58,8 +56,13 @@ class Companies:
         """
         Parameters
         ----------
+        companysize_file: str
+        company_per_sector_per_msoa_file: str
         """
         compsize_per_msoa_df = pd.read_csv(companysize_file, index_col=0)
+        compsize_per_msoa_df = compsize_per_msoa_df.div(
+            compsize_per_msoa_df.sum(axis=1), axis=0
+        )
         compsec_per_msoa_df = pd.read_csv(
             company_per_sector_per_msoa_file, index_col=0
         )
@@ -69,7 +72,6 @@ class Companies:
         """
         Given company size group calculates mean
         """
-        
         # ensure that read_companysize_census() also returns number of companies
         # in each size category
         size_min, size_max = sizegroup.split('-')
@@ -81,68 +83,44 @@ class Companies:
             size_mean = (size_max - size_min)/2.0
 
         return int(size_mean)
-
-    def _sum_str_elements(self, df_loc, columns):
-        total = 0
-        for column in columns:
-            total += float(df_loc[column])
-        return total
     
     def init_companies(self, compsize_per_msoa_df, compsec_per_msoa_df):
         """
         Initializes all companies across all msoareas
         """
         companies = []
-        comp_sec_col = self.world.inputs.companysector_df.columns.values.tolist()
-        comp_sec_col.remove('msoareas')
-
-        comp_size_col = companysize_df.columns.values
-        comp_size_col_encoded = np.arange(1, len(comp_size_col) + 1)
         
-        size_dict = {}
-        for idx, column in enumerate(comp_size_col):
-            size_dict[idx+1] = self._compute_size_mean(column)
+        compsize_labels = compsize_per_msoa_df.columns.values
+        compsize_labels_encoded = np.arange(1, len(compsize_labels) + 1)
         
-        #pbar = tqdm(total=len(companysector_df['msoareas']))
-        for idx, msoarea_name in enumerate(companysector_df['msoareas']):
-            try:
-
-                # create comany size distribution for MSOArea
-                companysize_df.loc[msoarea_name]
-                distribution = []
-                for column in comp_size_col:
-                    distribution.append(
-                        float(companysize_df.loc[msoarea_name][column]) /\
-                        (self._sum_str_elements(companysize_df.loc[msoarea_name],comp_size_col))
-                    )
-                comp_size_rv = rv_discrete(values=(comp_size_col_encoded,distribution))
+        size_dict = {
+            (idx+1): self._compute_size_mean(size_label)
+            for idx, size_label in enumerate(compsize_labels)
+        }
+        
+        # Run through each MSOArea
+        for idx, msoarea_name in enumerate(compsec_per_msoa_df['msoareas']):
+            compsec_in_msoa_df = compsec_per_msoa_df.loc[msoarea_name]
+            compsize_freq_df = compsize_per_msoa_df.loc[msoarea_name]
+            comp_size_rv = rv_discrete(
+                values=(comp_size_col_encoded, compsize_freq_df.values)
+            )
+            comp_size_rnd_array = comp_size_rv.rvs(
+                size=int(compsec_in_msoa_df.sum())
+            )
+            
+            # Run through each industry sector
+            for compsec_label, nr_of_comp in compsec_in_msoa_df.iterrows():
                 
-                # create companies for each sector in MSOArea
-                for column in comp_sec_col:
+                # Run through all companies within sector within MSOA
+                for i in range(int(nr_of_comp)):
+                    company = Company(
+                        company_id=i,
+                        msoa=msoarea_name,
+                        n_employees_max=size_dict[comp_size_rnd_array[i]],
+                        industry=compsec_label
+                    )
+                        
+                    companies.append(company)
 
-                    comp_size_rnd_array = comp_size_rv.rvs(size=int(companysector_df[column][idx]))
-                    for i in range(int(companysector_df[column][idx])):
-                        company = Company(
-                            company_id=i,
-                            msoa=msoarea_name,
-                            n_employees_max=size_dict[comp_size_rnd_array[i]],
-                            industry=column
-                        )
-                            
-                        companies.append(company)
-
-                        msoaidx = np.where(self.msoareas.names_in_order == msoarea_name)[0]
-                        if len(msoaidx) != 0:
-                            self.msoareas.members[msoaidx[0]].companies.append(company)
-                        else:
-                            #TODO give some warning for verbose
-                            pass
- 
-            except:
-                ic_logger.info(
-                    f"The initialization of companies for the MSOArea {msoarea_name} failed."
-                )
-                pass
-            #pbar.update(1)
-        #pbar.close()
         self.members = companies
