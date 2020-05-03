@@ -42,7 +42,7 @@ class Inputs:
         self.encoder_household_composition = {}
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
-        self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
+        #self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
         
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
