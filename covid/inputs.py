@@ -80,6 +80,13 @@ class Inputs:
             Path(__file__).parent.parent / "configs/defaults/schools.yaml"
         )
 
+        self.hospital_data_path = (
+            Path(__file__).parent.parent / "data/processed/hospital_data/england_hospitals.csv"
+        )
+        self.hospital_config_path = (
+            Path(__file__).parent.parent / "configs/defaults/hospitals.yaml"
+        )
+
 
     def read(self, filename):
         df = pd.read_csv(
