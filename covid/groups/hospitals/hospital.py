@@ -44,7 +44,7 @@ class Hospital(Group):
         self.id = hospital_id
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
-        self.coordinates = coordinates
+        self.coordinates = coordinates.astype(np.float)
         self.msoa_name = msoa_name
         self.n_medics = 0
         self.people = []
