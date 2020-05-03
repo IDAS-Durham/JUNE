@@ -258,6 +258,10 @@ class World:
         Companies live in MSOA areas.
         """
         print("Initializing Companies...")
+        self.schools = Companies.from_file(
+            self.inputs.companysize_file,
+            self.inputs.company_per_sector_per_msoa_file,
+        )
         self.companies = Companies(self)
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
