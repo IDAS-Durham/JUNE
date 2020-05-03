@@ -353,9 +353,15 @@ class World:
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
+        #TODO: right now interaction is not running in hospitals, 
+        # because people in hospitals is empty, which means people are
+        # not being released when they heal
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
         self.interaction.time_step()
+        # Update people that recovered in hospitals
+        for hospital in self.hospitals.members:
+            hospital.update_status_lists()
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):

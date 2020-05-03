@@ -160,8 +160,7 @@ class Person:
 
     def get_into_hospital(self):
         if self.in_hospital==None:
-            hospital = self.world.hospitals.get_nearest(self)
-            hospital.add_as_patient(self)
+            self.world.hospitals.allocate_patient(self)
 
     def bury(self):
         cemetery = self.world.cemeteries.get_nearest(self)
