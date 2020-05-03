@@ -98,6 +98,7 @@ class Schools:
         school_df = pd.read_csv(filename, index_col=0)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        print("^school_df^", school_df)
         return Schools(school_df, config)
 
     def init_schools(self, school_df: pd.DataFrame):

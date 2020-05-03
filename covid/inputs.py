@@ -559,5 +559,5 @@ if __name__ == "__main__":
 
     ip = Inputs()
     #print(ip.workflow_df)
-    #print(ip.companysize_df)
-    #print(ip.companysector_df)
+    print("companysize_df\n", ip.companysize_df)
+    print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
