@@ -121,40 +121,40 @@ class Person:
             self,
             world=None,
             person_id=None,
-            area=None,
-            work_msoa=None,
             age=-1,
             nomis_bin=None,
             sex=None,
+            mode_of_transport=None
+            oarea=None,
             health_index=None,
             econ_index=None,
-            mode_of_transport=None
     ):
+        """
+        Inputs:
+        """
         # if not 0 <= age <= 120 or sex not in ("M", "F"):
         #    raise AssertionError(
         #        f"Attempting to initialise a person"
         #    )
-        self.id = person_id
         self.world = world
+        self.id = person_id
+        # biological attributes
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
+        # geo-graphical attributes
+        self.area = oarea
+        self.residence_msoa = oarea.msoarea
+        self.work_msoarea = None
+        self.household = None
+        # primary activity attributes
+        self.mode_of_transport = mode_of_transport
+        self.work_msoarea = work_msoa
+        self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
+        self.active_group = None
+        self.in_hospital = None
         self.health_index = health_index
         self.econ_index = econ_index
-        self.area = area
-        self.work_msoarea = work_msoa
-        self.mode_of_transport = mode_of_transport
-        self.active_group = None
-        self.household = None
-        self.school = None
-        self.industry = None
-        self.hospital = None
-        self.in_hospital = None
-        #TODO finda a different way to specify education
-        # and healthcare job subclasses since a lot of people
-        # will not use this flas
-        self.industry_specific = None
-        self.company_id = None
         self.health_information = HealthInformation(Counter(self))
 
     def get_into_hospital(self):
@@ -197,7 +197,6 @@ class Person:
 
 class People:
     def __init__(self, world):
-        self.world = world
         self.members = []
 
     #@classmethod

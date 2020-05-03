@@ -1,5 +1,5 @@
 from .group import Group
-from .areas import Area, Areas, AreaDistributor
+from .areas import OArea, OAreas, OAreaDistributor
 from .msoareas import MSOArea, MSOAreas, MSOAreaDistributor
 from .schools import School, Schools, SchoolDistributor
 from .companies import Company, Companies, CompanyDistributor
