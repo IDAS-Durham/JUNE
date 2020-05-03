@@ -1,5 +1,7 @@
+u
 import logging
 import numpy as np
+import pandas as pd
 from scipy.stats import rv_discrete
 from tqdm.auto import tqdm
 from covid.groups import Group
@@ -29,6 +31,17 @@ class Companies:
             compsize_per_msoa_df: pd.DataFrame,
             compsec_per_msoa_df: pd.DataFrame,
         ):
+        """
+        Create companies and provide functionality to allocate workers.
+
+        Parameters
+        ----------
+        compsize_per_msoa_df:
+            Nr. of companies within a size-range per MSOA.
+
+        compsec_per_msoa_df:
+            Nr. of companies per industry sector per MSOA.
+        """
         self.members = []
         self.msoareas = world.msoareas
         self.init_companies(
@@ -42,6 +55,10 @@ class Companies:
         companysize_file: str,
         company_per_sector_per_msoa_file: str,
         ) -> "Companies":
+        """
+        Parameters
+        ----------
+        """
         compsize_per_msoa_df = pd.read_csv(companysize_file, index_col=0)
         compsec_per_msoa_df = pd.read_csv(
             company_per_sector_per_msoa_file, index_col=0
