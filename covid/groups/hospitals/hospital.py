@@ -39,7 +39,7 @@ class Hospital(Group):
             name of the msoa area the hospital belongs to
 
         """
- 
+
         super().__init__("Hospital_%03d" % hospital_id, "hospital")
         self.id = hospital_id
         self.n_beds = n_beds
@@ -171,7 +171,9 @@ class Hospital(Group):
         super().update_status_lists()
         self.update_status_lists_for_patients()
         self.update_status_lists_for_ICUpatients()
-        ic_logger.info("=== update status list for hospital with ", self.size, " people ===")
+        ic_logger.info(
+            "=== update status list for hospital with ", self.size, " people ==="
+        )
         ic_logger.info(
             "=== hospital currently has ",
             len(self.patients),
@@ -183,8 +185,7 @@ class Hospital(Group):
 
 
 class Hospitals:
-
-    def __init__(self, hospital_df: pd.DataFrame, config: dict, box_mode: bool =False):
+    def __init__(self, hospital_df: pd.DataFrame, config: dict, box_mode: bool = False):
         """
         Create a group of hospitals, and provide functionality to  llocate patients to a nearby hospital
 
@@ -202,14 +203,12 @@ class Hospitals:
         self.max_distance = config["max_distance"]
         self.icu_fraction = config["icu_fraction"]
         if not self.box_mode:
-            ic_logger.info(
-                "There are %d hospitals in the world." % len(hospital_df)
-            )
+            ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
             self.init_hospitals(hospital_df)
             self.init_trees(hospital_df)
         else:
-            self.members.append(Hospital(1, 10, 2))
-            self.members.append(Hospital(2, 5000, 5000))
+            self.members.append(Hospital(1, 10, 2, None))
+            self.members.append(Hospital(2, 5000, 5000, None))
 
     @classmethod
     def from_file(
@@ -252,8 +251,9 @@ class Hospitals:
             n_icu_beds = round(self.icu_fraction * n_beds)
             n_beds -= n_icu_beds
             msoa_name = row["MSOA"]
+            coordinates = row[["Latitude", "Longitude"]].values
             # create hospital
-            hospital = Hospital(i, n_beds, n_icu_beds, msoa_name,)
+            hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name,)
             hospitals.append(hospital)
         self.members = hospitals
 
@@ -277,7 +277,7 @@ class Hospitals:
             metric="haversine",
         )
 
-    def allocate_patient(self, person: "Person")->"Hospital":
+    def allocate_patient(self, person: "Person") -> "Hospital":
         """
         Function to allocate patients into close by hospitals with available beds.
         If there are no available beds within a maximum distance, the patient is
@@ -303,7 +303,7 @@ class Hospitals:
             hospital = None
             # find hospitals  within radius of max distance
             distances, hospitals_idx = self.get_closest_hospitals(
-                person.area.coordinates, self.max_distance 
+                person.area.coordinates, self.max_distance
             )
             for distance, hospital_id in zip(distances, hospitals_idx):
                 hospital = self.members[hospital_id]
@@ -332,7 +332,7 @@ class Hospitals:
             return hospital
 
     def get_closest_hospitals(
-        self, coordinates: Tuple[float, float], r_max: float 
+        self, coordinates: Tuple[float, float], r_max: float
     ) -> Tuple[float, float]:
         """
         Get the closest hospitals to a given coordinate within r_max
@@ -351,7 +351,7 @@ class Hospitals:
 
         """
         earth_radius = 6371.0  # km
-        r_max  /= earth_radius
+        r_max /= earth_radius
         idx, distances = self.hospital_trees.query_radius(
             np.deg2rad(coordinates.reshape(1, -1)),
             r=r_max,
