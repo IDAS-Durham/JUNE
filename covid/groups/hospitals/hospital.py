@@ -352,14 +352,14 @@ class Hospitals:
         """
         earth_radius = 6371.0  # km
         r_max  /= earth_radius
-        ditances, neighbours = self.hospital_trees.query_radius(
+        idx, distances = self.hospital_trees.query_radius(
             np.deg2rad(coordinates.reshape(1, -1)),
             r=r_max,
             return_distance=True,
             sort_results=True,
         )
         distances = np.array(distances[0]) * earth_radius
-        return distances, neighbours[0]
+        return distances, idx[0]
 
 
 if __name__ == "__main__":
