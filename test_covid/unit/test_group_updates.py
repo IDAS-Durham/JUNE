@@ -120,7 +120,9 @@ def test__sick_gets_to_hospital_recovers_and_leaves(world_ne):
 
     # recovered, leaves hospital
     dummy_person.health_information = MockHealthInformation('asymptomatic')
-    dummy_person.in_hospital.update_status_lists()
+    #TODO: we should really test that recovering = leaving hospital
+    #dummy_person.in_hospital.update_status_lists()
+    dummy_person.in_hospital.release_as_patient(dummy_person)
     world_ne.set_active_group_to_people(["schools", "hospitals", "households"])
     assert dummy_person.active_group != 'hospital'
     world_ne.set_allpeople_free()
