@@ -12,6 +12,10 @@ according to census data.
 class CompanyDistributor:
     """
     Distributes people to different companies
+
+    TODO: atm. we don't treate hospitals and schools as companies but people
+    can be assign to (hospitals or schools) and companies. We need to think
+    about a clearer structure later.
     """
 
     def __init__(self, companies, msoarea):
@@ -20,14 +24,14 @@ class CompanyDistributor:
         self.companies = companies
 
     def distribute_adults_to_companies(self):
+        """
+        """
         STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
         ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
         OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
-        count = 0
 
         for person in self.msoarea.work_people:
 
-            count += 1
             comp_choice = np.random.choice(
                 len(self.msoarea.companies), len(self.msoarea.companies), replace=False
             )

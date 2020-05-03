@@ -21,6 +21,7 @@ class Area:
         self.check_census_freq_ratios()
         self.people = []
         self.households = []
+        self.schools = []
         self.coordinates = coordinates
 
     @property
@@ -46,3 +47,5 @@ class Areas:
     def __init__(self, world):
         self.world = world
         self.members = []
+        self.names_in_order = None
+
