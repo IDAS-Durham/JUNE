@@ -97,6 +97,9 @@ class Group:
         for person in self.people:
             if person.active_group is not None:
                 raise ValueError("Trying to set an already active person")
+            elif person.in_hospital is not None:
+                # Make sure that people in hospital arent set active elsewhere
+                continue 
             else:
                 person.active_group = self.spec
 
