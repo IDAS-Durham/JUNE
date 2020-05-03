@@ -86,9 +86,13 @@ class Hospital(Group):
         """
         if person.health_information.tag == "intensive care":
             self.icu_patients.append(person)
+            person.in_hospital = self
         elif person.health_information.tag == "hospitalised":
             self.patients.append(person)
-        person.in_hospital = self
+            person.in_hospital = self
+        else:
+            ic_logger.info("ERROR: This person shouldnt be trying to get to a hospital")
+            pass
 
     def release_as_patient(self, person):
         """

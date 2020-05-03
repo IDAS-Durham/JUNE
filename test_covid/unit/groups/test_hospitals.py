@@ -25,7 +25,7 @@ def test__total_number_hospitals_is_correct(hospitals, hospitals_df):
     assert len(hospitals.members) == len(hospitals_df)
 
 
-@pytest.mark.parametrize("index", [5, 500])
+@pytest.mark.parametrize("index", [5, 20])
 def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index):
 
     r_max = 150.
@@ -42,8 +42,20 @@ def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index)
     assert hospitals.members[closest_hospital_idx].name == hospitals.members[index].name
 
 
-#def test__add_patient():
+'''
+@pytest.mark.parametrize("health_info", ["hospitalised", "intensive care"])
+def test__add_patient(hospitals, hospitals_df, health_info):
+    dummy_person = Person()
+    dummy_person.health_information.tag = health_info
+    assert dummy_person.in_hospital is None
+    hospitals.members[0].add_as_patient(dummy_person)
+    if health_info == 'hospitalised':
+        assert hospitals.members[0].patients[0] == dummy_person
+    elif health_info == 'intensive care':
+        assert hospitals.members[0].icu_patients[0] == dummy_person
+    assert dummy_person.in_hospital is not None
 
+@pytest.mark.parametrize("health_info", ["hospitalised", "intensive care"])
+def test__allocate_patient
+'''
 
-
-#def test__add_icu_patient():
