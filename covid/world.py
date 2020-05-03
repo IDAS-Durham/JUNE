@@ -26,14 +26,18 @@ class World:
 
     def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
         print("Initializing world...")
+        # read configs
         self.read_config(config_file)
-        self.world_creation_logger(self.config["logger"]["save_path"])
-        relevant_groups = self.get_simulation_groups()
+        self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
+        # set up logging
+        print(self.config)
+        self.world_creation_logger(self.config["logger"]["save_path"])
+        # start initialization
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
         self.people = []
-        self.total_people = 0  #TODO is nowehere updated
+        self.total_people = 0
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
@@ -51,15 +55,15 @@ class World:
             self.initialize_households()
             self.initialize_hospitals()
             self.initialize_cemeteries()
-            if "schools" in relevant_groups:
+            if "schools" in self.relevant_groups:
                 self.initialize_schools()
             else:
                 print("schools not needed, skipping...")
-            if "companies" in relevant_groups:
+            if "companies" in self.relevant_groups:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
-            if "boundary" in relevant_groups:
+            if "boundary" in self.relevant_groups:
                 self.initialize_boundary()
             else:
                 print("nothing exists outside the simulated region")
@@ -140,18 +144,31 @@ class World:
         return active_groups
 
     def read_defaults(self):
-        default_config_path = os.path.join(
+        """
+        Read config files for the world and it's active groups.
+        """
+        basepath = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
             "configs",
             "defaults",
-            "world.yaml",
         )
+        # global world settings
+        default_config_path = os.path.join(basepath, "world.yaml")
         with open(default_config_path, "r") as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
         for key in default_config.keys():
             if key not in self.config:
                 self.config[key] = default_config[key]
+        # active group settings
+        for relevant_group in self.relevant_groups:
+            group_config_path = os.path.join(basepath, f"{relevant_group}.yaml")
+            if os.path.isfile(group_config_path):
+                with open(group_config_path, "r") as f:
+                    default_config = yaml.load(f, Loader=yaml.FullLoader)
+                for key in default_config.keys():
+                    if key not in self.config:
+                        self.config[key] = default_config[key]
 
     def initialize_box_mode(self, region=None, n_people=None):
         """
@@ -183,8 +200,8 @@ class World:
         demographic information about people living in it.
         """
         print("Initializing areas...")
-        self.areas = Areas(self)
-        areas_distributor = AreaDistributor(self.areas, self.inputs)
+        self.areas = OAreas(self)
+        areas_distributor = OAreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
 
     def initialize_msoa_areas(self):
@@ -194,7 +211,6 @@ class World:
         print("Initializing MSOAreas...")
         self.msoareas = MSOAreas(self)
         msoareas_distributor = MSOAreaDistributor(self.msoareas)
-        msoareas_distributor.read_msoareas_census()
 
     def initialize_people(self):
         """
