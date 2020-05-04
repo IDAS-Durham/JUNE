@@ -54,9 +54,7 @@ class Hospital(Group):
         self.coordinates = coordinates.astype(np.float)
         self.msoa_name = msoa_name
         self.n_medics = 0
-        self.people = []
-        self.nurses = []
-        self.doctors = []
+        self.employees = []
         self.patients = []
         self.icu_patients = []
 
