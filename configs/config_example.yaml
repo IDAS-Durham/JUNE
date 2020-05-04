@@ -11,20 +11,15 @@ time:
   step_duration: 
       weekday:
           1: 8
-          2: 2
-          3: 14
+          2: 16 
       weekend:
-          1: 20
-          2: 4
+          1: 24
   step_active_groups:
       weekday:
-          1: ['schools', 'companies', 'households'] # active groups during first time step
-          2: ['households', 'pubs'] 
-          3: ['households']
+          1: ['hospitals', 'companies', 'households'] # active groups during first time step
+          2: ['hospitals', 'households'] 
       weekend:
-          1: ['households']
-          2: ['households', 'pubs'] 
-
+          1: ['hospitals', 'households'] 
 
 interaction:
   type: collective
