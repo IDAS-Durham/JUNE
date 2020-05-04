@@ -1,6 +1,7 @@
 import os
 import pickle
-import warnings
+import logging
+import logging.config
 
 import numpy as np
 import yaml
@@ -25,9 +26,13 @@ class World:
 
     def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
         print("Initializing world...")
+        # read configs
         self.read_config(config_file)
-        relevant_groups = self.get_simulation_groups()
+        self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
+        # set up logging
+        self.world_creation_logger(self.config["logger"]["save_path"])
+        # start initialization
         self.box_mode = box_mode
         self.timer = Timer(self.config["time"])
         self.people = []
@@ -49,21 +54,53 @@ class World:
             self.initialize_households()
             self.initialize_hospitals()
             self.initialize_cemeteries()
-            if "schools" in relevant_groups:
+            if "schools" in self.relevant_groups:
                 self.initialize_schools()
             else:
                 print("schools not needed, skipping...")
-            if "companies" in relevant_groups:
+            if "companies" in self.relevant_groups:
                 self.initialize_companies()
             else:
                 print("companies not needed, skipping...")
-            if "boundary" in relevant_groups:
+            if "boundary" in self.relevant_groups:
                 self.initialize_boundary()
             else:
                 print("nothing exists outside the simulated region")
+            if "pubs" in self.relevant_groups:
+                self.initialize_pubs()
+            else:
+                print("pubs not needed, skipping...")
         self.interaction = self.initialize_interaction()
+        self.group_maker = GroupMaker(self)
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
+
+    def world_creation_logger(
+            self,
+            save_path,
+            config_file=None,
+            default_level=logging.INFO,
+        ):
+        """
+        """
+        # where to read and write files
+        if config_file is None:
+            config_file = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "configs",
+                "config_world_creation_logger.yaml",
+            )
+        # creating logger
+        log_file = os.path.join(save_path, "world_creation.log")
+        if os.path.isfile(config_file):
+            with open(config_file, 'rt') as f:
+                log_config = yaml.safe_load(f.read())
+            logging.config.dictConfig(log_config)
+        else:
+            logging.basicConfig(
+                filename=log_file, level=logging.INFO
+            )
 
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
         """
@@ -111,18 +148,31 @@ class World:
         return active_groups
 
     def read_defaults(self):
-        default_config_path = os.path.join(
+        """
+        Read config files for the world and it's active groups.
+        """
+        basepath = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..",
             "configs",
             "defaults",
-            "world.yaml",
         )
+        # global world settings
+        default_config_path = os.path.join(basepath, "world.yaml")
         with open(default_config_path, "r") as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
         for key in default_config.keys():
             if key not in self.config:
                 self.config[key] = default_config[key]
+        # active group settings
+        for relevant_group in self.relevant_groups:
+            group_config_path = os.path.join(basepath, f"{relevant_group}.yaml")
+            if os.path.isfile(group_config_path):
+                with open(group_config_path, "r") as f:
+                    default_config = yaml.load(f, Loader=yaml.FullLoader)
+                for key in default_config.keys():
+                    if key not in self.config:
+                        self.config[key] = default_config[key]
 
     def initialize_box_mode(self, region=None, n_people=None):
         """
@@ -142,6 +192,15 @@ class World:
 
     def initialize_hospitals(self):
         self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
+        pbar = tqdm(total=len(self.msoareas.members))
+        for msoarea in self.msoareas.members:
+            distributor = HospitalDistributor(self.hospitals, msoarea)
+            pbar.update(1)
+        pbar.close()
+
+    def initialize_pubs(self):
+        print("Creating Pubs **********")
+        self.pubs = Pubs(self, self.inputs.pubs_df, self.box_mode)
 
     def initialize_areas(self):
         """
@@ -149,8 +208,8 @@ class World:
         demographic information about people living in it.
         """
         print("Initializing areas...")
-        self.areas = Areas(self)
-        areas_distributor = AreaDistributor(self.areas, self.inputs)
+        self.areas = OAreas(self)
+        areas_distributor = OAreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
 
     def initialize_msoa_areas(self):
@@ -160,18 +219,21 @@ class World:
         print("Initializing MSOAreas...")
         self.msoareas = MSOAreas(self)
         msoareas_distributor = MSOAreaDistributor(self.msoareas)
-        msoareas_distributor.read_msoareas_census()
 
     def initialize_people(self):
         """
         Populates the world with person instances.
         """
         print("Initializing people...")
+        #self.people = People.from_file(
+        #    self.inputs.,
+        #    self.inputs.,
+        #)
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.name,)]
             person_distributor = PersonDistributor(
                 self.timer,
                 self.people,
@@ -206,12 +268,20 @@ class World:
         the closest age compatible school to a certain kid.
         """
         print("Initializing schools...")
-        self.schools = Schools(self, self.areas, self.inputs.school_df)
+        self.schools = Schools.from_file(
+            self.inputs.school_data_path,
+            self.inputs.school_config_path
+        )
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-            self.distributor = SchoolDistributor(self.schools, area)
-            self.distributor.distribute_kids_to_school()
-            pbar.update(1)
+           self.distributor = SchoolDistributor.from_file(
+                self.schools,
+                area,
+                self.inputs.school_config_path
+            )
+           self.distributor.distribute_kids_to_school()
+           self.distributor.distribute_teachers_to_school()
+           pbar.update(1)
         pbar.close()
 
     def initialize_companies(self):
@@ -219,16 +289,17 @@ class World:
         Companies live in MSOA areas.
         """
         print("Initializing Companies...")
-        self.companies = Companies(self)
+        self.companies = Companies.from_file(
+            self.inputs.companysize_file,
+            self.inputs.company_per_sector_per_msoa_file,
+        )
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
-            if not msoarea.work_people:
-                warnings.warn(
-                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
-                )
-            else:
-                self.distributor = CompanyDistributor(self.companies, msoarea)
-                self.distributor.distribute_adults_to_companies()
+            self.distributor = CompanyDistributor(
+                self.companies,
+                msoarea
+            )
+            self.distributor.distribute_adults_to_companies()
             pbar.update(1)
         pbar.close()
 
@@ -254,6 +325,7 @@ class World:
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
+            self.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
 
@@ -305,8 +377,8 @@ class World:
 
     def do_timestep(self, day_iter):
         active_groups = self.timer.active_groups()
-        # print ("=====================================================")
-        # print ("=== active groups: ",active_groups,".")
+        #print ("=====================================================")
+        #print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -316,6 +388,7 @@ class World:
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
         self.interaction.time_step()
+        print('Freeing people')
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
@@ -357,4 +430,4 @@ if __name__ == "__main__":
     #              box_mode=True,box_n_people=100)
 
     # world = World.from_pickle()
-    world.group_dynamics()
+    #world.group_dynamics()
