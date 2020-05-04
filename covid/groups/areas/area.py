@@ -20,7 +20,7 @@ class OArea:
         census_freq,
     ):
         self.world = world
-        self.coordinates = coordinates  # Lon. & Lat
+        self.coordinates = np.array(coordinates)  # Lon. & Lat
         self.name = oarea               # Output Area
         self.msoarea = msoarea          # Middle Super Output Area
         # distributions for distributing people
@@ -54,6 +54,7 @@ class OArea:
 
 class OAreas:
     def __init__(self, world):
-        self.world = world
-        self.members = []
-        self.names_in_order = None  # for fast search
+        self.world     = world
+        self.members   = []
+        self.area_tree = None
+        self.names_in_order = None
