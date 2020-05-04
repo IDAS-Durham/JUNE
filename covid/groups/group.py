@@ -157,9 +157,12 @@ class Group(AbstractGroup):
     def __getitem__(self, item="default"):
         return self.group_map[item]
 
+    def add(self, person, qualifier):
+        self[qualifier].append(person)
+
     @property
     def groups(self):
-        return self.group_map.values()
+        return list(self.group_map.values())
 
     def clear(self):
         for group in self.groups:
