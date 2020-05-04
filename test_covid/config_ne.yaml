@@ -17,7 +17,7 @@ time:
   step_active_groups:
       weekday:
           1: ['schools','copmanies','households'] # active groups during first time step
-          2: ['households'] 
+          2: ['households','pubs'] 
       weekend:
           1: ['households'] 
 

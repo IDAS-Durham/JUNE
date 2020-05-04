@@ -3,26 +3,35 @@ import numpy as np
 from covid.commute import RegionalGenerator
 
 
-class Area:
+class OArea:
     """
     Stores information about the area, like the total population
     number, universities, etc.
     """
 
     def __init__(
-        self, world, oarea, msoarea, n_residents, n_households, census_freq, coordinates
+        self,
+        world,
+        coordinates,
+        oarea,
+        msoarea,
+        n_residents,
+        n_households,
+        census_freq,
     ):
         self.world = world
-        self.name = oarea
-        self.msoarea = msoarea
-        self.n_residents = int(n_residents)
-        self.n_households = n_households
+        self.coordinates = np.array(coordinates)  # Lon. & Lat
+        self.name = oarea               # Output Area
+        self.msoarea = msoarea          # Middle Super Output Area
+        # distributions for distributing people
         self.census_freq = census_freq
         self.check_census_freq_ratios()
+        self.n_residents = int(n_residents)
+        self.n_households = n_households
+        # collect groups
         self.people = []
-        self.households = []
-        self.schools = []
-        self.coordinates = coordinates
+        for relevant_groups in world.relevant_groups:
+            setattr(self, relevant_groups, [])
 
     @property
     def regional_commute_generator(self) -> RegionalGenerator:
@@ -43,9 +52,9 @@ class Area:
                 raise ValueError(f"area {self.name} key {key}, ratios not adding to 1")
 
 
-class Areas:
+class OAreas:
     def __init__(self, world):
-        self.world = world
-        self.members = []
+        self.world     = world
+        self.members   = []
+        self.area_tree = None
         self.names_in_order = None
-
