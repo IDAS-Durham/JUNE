@@ -37,11 +37,7 @@ class PersonDistributor:
         self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
         self.relevant_groups = self.world.relevant_groups
-        self.key_compsec = {
-            key: value
-            for key, value in self.world.config.items()
-            if "sub_sector" in value
-        }
+        self._get_key_compsec_id(self.world.config)
         self.no_kids_area = False
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
@@ -50,6 +46,18 @@ class PersonDistributor:
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
         self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
+
+    def _get_key_compsec_id(self, config):
+        key_compsec = {
+            key: value
+            for key, value in config.items()
+            if "sub_sector" in value
+        }
+        self.key_compsec_id = []
+        for key1, value1 in key_compsec.items():
+            for key2, value2 in value1.items():
+                if key2 == "sector":
+                    self.key_compsec_id.append(value2)
 
     def _get_age_brackets(self, nomis_age_bin):
         try:
@@ -143,12 +151,6 @@ class PersonDistributor:
                     "sex must be with male or female. Intead got {}".format(sex_random)
                 )
             person.industry = self.industry_dict[industry_id]
-      
-            self.key_compsec_id = []
-            for key1, value1 in self.key_compsec.items():
-                for key2, value2 in value1.items():
-                    if key2 == "sector":
-                        self.key_compsec_id.append(value2)
                 
             if person.industry in self.key_compsec_id:
                 self._assign_key_industry(person)
