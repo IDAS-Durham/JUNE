@@ -62,7 +62,7 @@ class Companies:
         """
         companies = []
         comp_sec_col = self.world.inputs.companysector_df.columns.values.tolist()
-        comp_sec_col.remove('msoareas')
+        comp_sec_col.remove('MSOA')
 
         comp_size_col = companysize_df.columns.values
         comp_size_col_encoded = np.arange(1, len(comp_size_col) + 1)
@@ -72,7 +72,7 @@ class Companies:
             size_dict[idx+1] = self._compute_size_mean(column)
         
         #pbar = tqdm(total=len(companysector_df['msoareas']))
-        for idx, msoarea_name in enumerate(companysector_df['msoareas']):
+        for idx, msoarea_name in enumerate(companysector_df['MSOA']):
             try:
 
                 # create comany size distribution for MSOArea
