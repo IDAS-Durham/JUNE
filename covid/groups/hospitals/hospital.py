@@ -78,7 +78,7 @@ class Hospital(Group):
         """
         Set people in hospital active in hospital only
         """
-        #TODO: We need to check what we want to do with this,
+        # TODO: We need to check what we want to do with this,
         # it will probably be taken care by the supergroup
         for person in self.patients:
             if person.active_group is None:
@@ -87,7 +87,6 @@ class Hospital(Group):
             if person.active_group is None:
                 person.active_group = "hospital"
 
- 
     def add_as_patient(self, person: "Person"):
         """
         Add patient to hospital, depending on their healty information tag
@@ -198,12 +197,14 @@ class Hospital(Group):
             " patients",
             "and ",
             len(self.icu_patients),
-            " ICU patients"
+            " ICU patients",
         )
 
 
 class Hospitals:
-    def __init__(self, hospital_df: pd.DataFrame, config: dict, box_mode: bool = False):
+    def __init__(
+        self, hospitals: List["Hospital"], max_distance: float, box_mode: bool
+    ):
         """
         Create a group of hospitals, and provide functionality to  llocate patients to a nearby hospital
 
@@ -217,16 +218,13 @@ class Hospitals:
             whether to run in single box mode, or full simulation
         """
         self.box_mode = box_mode
+        self.max_distance = max_distance
         self.members = []
-        self.max_distance = config["max_distance"]
-        self.icu_fraction = config["icu_fraction"]
-        if not self.box_mode:
-            ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
-            self.init_hospitals(hospital_df)
-            self.init_trees(hospital_df)
-        else:
-            self.members.append(Hospital(1, 10, 2, None))
-            self.members.append(Hospital(2, 5000, 5000, None))
+
+        for hospital in hospitals:
+            self.members.append(hospital)
+        coordinates = np.array([hospital.coordinates for hospital in hospitals])
+        self.init_trees(coordinates)
 
     @classmethod
     def from_file(
@@ -250,9 +248,22 @@ class Hospitals:
         hospital_df = pd.read_csv(filename)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Hospitals(hospital_df, config, box_mode=box_mode)
 
-    def init_hospitals(self, hospital_df: pd.DataFrame):
+        max_distance = config["max_distance"]
+        icu_fraction = config["icu_fraction"]
+        hospitals = []
+        if not box_mode:
+            ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
+            hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
+        else:
+            hospitals.append(Hospital(1, 10, 2, None))
+            hospitals.append(Hospital(2, 5000, 5000, None))
+
+        return Hospitals(hospitals, max_distance, box_mode)
+
+    def init_hospitals(
+        self, hospital_df: pd.DataFrame, icu_fraction: float
+    ) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics, 
         as given by dataframe
@@ -266,16 +277,16 @@ class Hospitals:
         hospitals = []
         for i, (index, row) in enumerate(hospital_df.iterrows()):
             n_beds = row["beds"]
-            n_icu_beds = round(self.icu_fraction * n_beds)
+            n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
             msoa_name = row["MSOA"]
             coordinates = row[["Latitude", "Longitude"]].values
             # create hospital
             hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name,)
             hospitals.append(hospital)
-        self.members = hospitals
+        return hospitals
 
-    def init_trees(self, hospital_df: pd.DataFrame) -> BallTree:
+    def init_trees(self, hospital_coordinates: np.array) -> BallTree:
         """
         Reads hospital location and sizes, it initializes a KD tree on a sphere,
         to query the closest hospital to a given location.
@@ -291,8 +302,7 @@ class Hospitals:
         """
 
         self.hospital_trees = BallTree(
-            np.deg2rad(hospital_df[["Latitude", "Longitude"]].values),
-            metric="haversine",
+            np.deg2rad(hospital_coordinates), metric="haversine",
         )
 
     def allocate_patient(self, person: "Person"):
