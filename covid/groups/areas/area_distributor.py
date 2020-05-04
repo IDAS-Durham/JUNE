@@ -1,6 +1,8 @@
 import pandas as pd
+import numpy as np
 import os
 from covid.groups.areas import Area
+from sklearn.neighbors._ball_tree import BallTree
 
 
 class AreaDistributor:
@@ -62,3 +64,7 @@ class AreaDistributor:
             areas_list.append(self.mk_area(area_name))
         self.areas.members = areas_list
         self.areas.names_in_order = oa_in_sim
+        self.areas.area_tree = BallTree(
+            np.deg2rad(self.input.areas_coordinates_df[["Y", "X"]].values),
+            metric="haversine"
+        )
