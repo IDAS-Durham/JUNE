@@ -247,6 +247,7 @@ class Hospitals:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
+        config = config['hospitals']
         max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
         hospitals = []

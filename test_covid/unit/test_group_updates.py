@@ -8,6 +8,21 @@ import pandas as pd
 from pathlib import Path
 from covid import World
 
+def test__everyone_is_in_household(world_ne):
+    world_ne.set_active_group_to_people(["households"])
+    for person in world_ne.people.members:
+        assert person.active_group == "household" 
+    world_ne.set_allpeople_free()
+
+def test__everyone_is_freed(world_ne):
+    world_ne.set_active_group_to_people(["households"])
+    world_ne.set_allpeople_free()
+    for person in world_ne.people.members:
+        assert person.active_group == None
+    world_ne.set_allpeople_free()
+
+
+
 
 def test__everyone_is_in_school_household(world_ne):
     world_ne.set_active_group_to_people(["schools", "households"])
@@ -31,13 +46,6 @@ def test__everyone_is_active_somewhere(world_ne):
         assert person.active_group is not None
     world_ne.set_allpeople_free()
 
-
-def test__everyone_is_freed(world_ne):
-    world_ne.set_active_group_to_people(["schools", "households"])
-    world_ne.set_allpeople_free()
-    for person in world_ne.people.members:
-        assert person.active_group == None
-    world_ne.set_allpeople_free()
 
 
 def find_random_in_school(world_ne):

@@ -68,10 +68,10 @@ class World:
                 print("nothing exists outside the simulated region")
             if "pubs" in self.relevant_groups:
                 self.initialize_pubs()
+                self.group_maker = GroupMaker(self)
             else:
                 print("pubs not needed, skipping...")
         self.interaction = self.initialize_interaction()
-        self.group_maker = GroupMaker(self)
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
@@ -327,7 +327,8 @@ class World:
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
-            self.group_maker.distribute_people(group_name)
+            if 'pubs' in active_groups:
+                self.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
 
