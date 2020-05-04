@@ -66,10 +66,10 @@ class World:
                 print("nothing exists outside the simulated region")
             if "pubs" in self.relevant_groups:
                 self.initialize_pubs()
+                self.group_maker = GroupMaker(self)
             else:
                 print("pubs not needed, skipping...")
         self.interaction = self.initialize_interaction()
-        self.group_maker = GroupMaker(self)
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
@@ -189,7 +189,9 @@ class World:
         self.cemeteries = Cemeteries(self)
 
     def initialize_hospitals(self):
-        self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
+        self.hospitals = Hospitals.from_file(self.inputs.hospital_data_path,
+            self.inputs.hospital_config_path, box_mode = self.box_mode)
+
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
             distributor = HospitalDistributor(self.hospitals, msoarea)
@@ -309,8 +311,6 @@ class World:
         """
         print("Creating Boundary...")
         self.boundary = Boundary(self)
-
-
 if __name__ == "__main__":
     world = World(config_file=os.path.join("../configs", "config_example.yaml"))
 

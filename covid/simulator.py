@@ -56,8 +56,6 @@ class Simulator:
     def initialize_interaction(self):
         """
         Initialize interaction from config file
-
-
         """
         #TODO: Interaction should have a from config file
         interaction_type = self.config["interaction"]["type"]
@@ -163,9 +161,9 @@ class Simulator:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
         self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
 
-    def do_timestep(self, day_iter):
+    def do_timestep(self):
         '''
-        
+        Perform a time step in the simulation
 
         '''
         active_groups = self.timer.active_groups()
@@ -178,9 +176,10 @@ class Simulator:
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
         self.interaction.time_step()
+        #TODO: update people's status that is currently in interaction
         self.set_allpeople_free()
 
-    def group_dynamics(self, n_seed=100):
+    def run(self, n_seed=100):
         sim_logger.info(
             "Starting group_dynamics for ",
             self.timer.total_days,
@@ -190,14 +189,15 @@ class Simulator:
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
+        #TODO: should we do that in from_file ?? 
         if self.box_mode:
             self.seed_infections_box(n_seed)
         else:
-            print("Infecting individuals in their household,",
+            sim_logger.info("Infecting individuals in their household,",
                   "for in total ", len(self.households.members), " households.")
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
-        print(
+        sim_logger.info(
             "starting the loop ..., at ",
             self.timer.day,
             " days, to run for ",
