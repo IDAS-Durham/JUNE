@@ -65,7 +65,7 @@ class School(Group):
 
     def add(self, person, qualifier="students"):
         if qualifier == "students":
-            qualifier = person.age
+            qualifier = str(person.age)
         super().add(person, qualifier)
         person.school = self
 
