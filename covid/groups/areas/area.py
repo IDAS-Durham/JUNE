@@ -13,7 +13,6 @@ class OArea:
         self,
         world,
         coordinates,
-        pcd,
         oarea,
         msoarea,
         n_residents,
@@ -22,7 +21,6 @@ class OArea:
     ):
         self.world = world
         self.coordinates = coordinates  # Lon. & Lat
-        self.pcd = pcd                  # Postcode
         self.name = oarea               # Output Area
         self.msoarea = msoarea          # Middle Super Output Area
         # distributions for distributing people
