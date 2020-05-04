@@ -25,6 +25,7 @@ time:
           1: ['households']
           2: ['households', 'pubs'] 
 
+
 interaction:
   type: collective
   parameters:
