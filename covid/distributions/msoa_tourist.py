@@ -19,11 +19,24 @@ class MSOASearch():
         Parse input arguments
         '''
         parser = argparse.ArgumentParser(description='Run the Google Maps API by region at the MSOA level for a given type')
-
+        parser.add_argument(
+            '--apikey_file',
+            dest='apikey_file',
+            help='location of txt file containing apikey',
+            type=str
+        )
+        
         parser.add_argument(
             '--type',
             dest='location_type',
             help='Google maps type being selected (found on Google Cloud documentation)',
+            type=str
+        )
+
+        parser.add_argument(
+            '--msoa_coord_dir',
+            dest='msoa_coord',
+            help='directory containing MSOA centroids',
             type=str
         )
 
@@ -45,7 +58,7 @@ class MSOASearch():
             coordinates.append((msoas['Y'][i],msoas['X'][i]))
         outs = []
         for i in range(len(coordinates)):
-            out = apicall.nearby_search_loop(location=(coordinates[i][0],coordinates[i][1]),radius=4600,location_type='tourist_attraction')
+            out = apicall.nearby_search_loop(location=(coordinates[i][0],coordinates[i][1]),radius=4600,location_type=self.args.location_type)
             outs.append(out)
 
         return outs
@@ -56,10 +69,7 @@ if __name__ == "__main__":
 
     msoasearch = MSOASearch()
 
-    args = msoasearch.args
-    location_type = args.location_type
-
-    with open('/Users/josephbullock/Desktop/GMAPIkey.txt', 'r') as f:
+    with open(msoasearch.apikey_file, 'r') as f:
         api = f.read()
     apikey = api.split('\n')[0]
 
@@ -67,6 +77,6 @@ if __name__ == "__main__":
 
     for region in regions:
         print ('Working on region: {}'.format(region))
-        msoas = pd.read_csv('./../../custom_data/msoa_coordinates_{}.csv'.format(region))
-        outs = get_msoas_tourist(apikey,msoas)
+        msoas = pd.read_csv('{}/msoa_coordinates_{}.csv'.format(msoasearch.args.msoa_coord,region))
+        outs = msoasearch.get_msoas_tourist(apikey,msoas)
         np.save('./../../custom_data/outs_{}'.format(region), outs)
