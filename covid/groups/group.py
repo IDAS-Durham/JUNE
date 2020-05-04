@@ -87,6 +87,9 @@ class People(AbstractGroup):
     def append(self, person):
         self._people.append(person)
 
+    def remove(self, person):
+        self._people.remove(person)
+
 
 class Group(AbstractGroup):
     """
