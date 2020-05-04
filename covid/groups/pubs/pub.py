@@ -11,21 +11,13 @@ class Pub(Group):
 
     There are two sub-groups:
     0 - workers
-    1 - guests
+    1 - guestss
     """
     def __init__(self, pub_id=1,position=None):
-        super().__init__("Pub_%03d" % pub_id, "pub",Ngroups=2)
+        super().__init__("Pub_%03d" % pub_id, "pub", group_names=["workers", "guestss"])
         self.id       = pub_id
         self.position = position
-        
-    def add(self, person, qualifier="guest"):
-        if qualifier=="worker":
-            self.groups[0].append(person)
-        elif qualifier=="guest":
-            self.groups[1].append(person)
-        else:
-            print ("qualifier = ",qualifer," not known in pub")
-        
+
     def set_active_members(self):
         for person in self.people:
             if person.active_group is None:
@@ -132,15 +124,15 @@ class PubFiller:
         if self.make_weight(customer)<np.random.random():
             return False
         pub = np.random.choice(self.pubs)
-        pub.add(customer,"guest")
+        pub.add(customer,"guests")
         if self.world.timer.weekend and random.random()<self.full_household_in_pub:
             for person in customer.household.people:
                 if person!=customer:
-                    pub.add(person,"guest")
+                    pub.add(person,"guests")
         elif not(self.world.timer.weekend) and random.random()<self.adults_in_pub:
             for person in customer.household.people:
                 if person!=customer and person.age>=18:
-                    pub.add(person,"guest")
+                    pub.add(person,"guests")
         return True    
     
     def fill(self,area):

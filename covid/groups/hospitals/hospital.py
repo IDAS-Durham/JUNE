@@ -24,7 +24,7 @@ class Hospital(Group):
     """
 
     def __init__(self, hospital_id=1, structure=None, postcode=None, msoa_name=None):
-        super().__init__("Hospital_%03d" % hospital_id, "hospital",Ngroups=3)
+        super().__init__("Hospital_%03d" % hospital_id, "hospital", group_names=["workers", "patients", "ICU patients"])
         self.id = hospital_id
         self.postcode = postcode
         self.msoa_name = msoa_name
@@ -63,17 +63,8 @@ class Hospital(Group):
             if person.active_group is None:
                 person.active_group = "hospital"
 
-    def add(self, person, qualifier="worker"):
-        if qualifier=="worker":
-            self.groups[0].append(person)
-        elif qualifier=="patient":
-            if person.health_information.tag == "hospitalised":
-                self.groups[1].append(person)
-            elif person.health_information.tag == "intensive care":
-                self.groups[2].append(person)
-        else:
-            print ("qualifier = ",qualifer," not known in hospital")
-            return
+    def add(self, person, qualifier="workers"):
+        super().add(person, qualifier)
         person.in_hospital = self
 
     def release_as_patient(self, person):
