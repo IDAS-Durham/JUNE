@@ -147,7 +147,6 @@ class PersonDistributor:
             self.key_compsec_id = []
             for key1, value1 in self.key_compsec.items():
                 for key2, value2 in value1.items():
-                    print(key2, value2)
                     if key2 == "sector":
                         self.key_compsec_id.append(value2)
                 
