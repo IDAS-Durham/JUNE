@@ -11,11 +11,8 @@ according to census data.
 
 class CompanyDistributor:
     """
-    Distributes people to different companies
-
-    TODO: atm. we don't treate hospitals and schools as companies but people
-    can be assign to (hospitals or schools) and companies. We need to think
-    about a clearer structure later.
+    Distributes workers that are not yet working in key company sectors
+    (e.g. such as schools and hospitals) to companies.
     """
 
     def __init__(self, companies, msoarea):

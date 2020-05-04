@@ -23,7 +23,7 @@ class Interaction:
         for group_type in groups:
             for group in group_type.members:
                 if group.size != 0:
-                    self.single_time_step_for_group(group=group, time=time)
+                    self.single_time_step_for_group(group=group, time=time, delta_time=delta_time)
         # print ("-----------------------------------------------------")
         for group_type in groups:
             for group in group_type.members:
@@ -33,7 +33,7 @@ class Interaction:
 
     # TODO : The fact these functioonss use a group suggests the function above sould.
 
-    def single_time_step_for_group(self, group, time):
+    def single_time_step_for_group(self, group, time, delta_time):
         raise NotImplementedError()
 
     def get_intensity_from_group_type(self, group_type):
@@ -56,11 +56,11 @@ class InteractionCollective(Interaction):
         self.mode = mode
         self.alphas = {}
 
-    def single_time_step_for_group(self, group, time):
+    def single_time_step_for_group(self, group, time, delta_time):
 
         if group.must_timestep():
 
-            effective_load = self.calculate_effective_viral_load(group)
+            effective_load = self.calculate_effective_viral_load(group, delta_time)
 
             if effective_load <= 0.0:
                 return
@@ -118,7 +118,7 @@ class InteractionCollective(Interaction):
                 time=time, group_type=group.spec
             )
 
-    def calculate_effective_viral_load(self, delta_time, group):
+    def calculate_effective_viral_load(self, group, delta_time):
 
         group_type = group.spec
         summed_load = 0.0
