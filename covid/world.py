@@ -343,7 +343,7 @@ class World:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
         self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
 
-    def do_timestep(self, day_iter):
+    def do_timestep(self):
         active_groups = self.timer.active_groups()
         # print ("=====================================================")
         # print ("=== active groups: ",active_groups,".")
@@ -353,15 +353,12 @@ class World:
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
-        #TODO: right now interaction is not running in hospitals, 
-        # because people in hospitals is empty, which means people are
-        # not being released when they heal
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
         self.interaction.time_step()
         # Update people that recovered in hospitals
         for hospital in self.hospitals.members:
-            hospital.update_status_lists()
+            hospital.update_status_lists(self.timer.now, delta_time=0)
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
@@ -393,7 +390,7 @@ class World:
             if day > self.timer.total_days:
                 break
             self.logger.log_timestep(day)
-            self.do_timestep(self.timer)
+            self.do_timestep()
 
 
 if __name__ == "__main__":
