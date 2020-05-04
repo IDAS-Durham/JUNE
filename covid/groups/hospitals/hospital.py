@@ -127,13 +127,13 @@ class Hospital(Group):
     def size(self):
         return len(self.people) + len(self.patients) + len(self.icu_patients)
 
-    def update_status_lists_for_patients(self):
+    def update_status_lists_for_patients(self, time, delta_time):
         """
         Update the health information of patients, and move them around if necessary
         """
         dead = []
         for person in self.patients:
-            person.health_information.update_health_status()
+            person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
                 ic_logger.info(
                     "ERROR: in our current setup, only infected patients in the hospital"
@@ -155,14 +155,14 @@ class Hospital(Group):
         for person in dead:
             self.patients.remove(person)
 
-    def update_status_lists_for_ICUpatients(self):
+    def update_status_lists_for_ICUpatients(self, time, delta_time):
         """
         Update the health information of ICU patients, and move them around if necessary
         """
 
         dead = []
         for person in self.icu_patients:
-            person.health_information.update_health_status()
+            person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
                 ic_logger.info(
                     "ERROR: in our current setup, only infected patients in the hospital"
@@ -183,12 +183,12 @@ class Hospital(Group):
         for person in dead:
             self.icu_patients.remove(person)
 
-    def update_status_lists(self):
+    def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        #super().update_status_lists()
-        self.update_status_lists_for_patients()
-        self.update_status_lists_for_ICUpatients()
+        super().update_status_lists(time, delta_time)
+        self.update_status_lists_for_patients(time, delta_time)
+        self.update_status_lists_for_ICUpatients(time, delta_time)
         ic_logger.info(
             f"=== update status list for hospital with {self.size}  people ==="
         )
