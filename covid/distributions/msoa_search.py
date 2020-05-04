@@ -54,7 +54,7 @@ class MSOASearch():
         apicall = APICall(self.apikey)
 
         coordinates = []
-        for i in range(2):
+        for i in range(len(msoas)):
             coordinates.append((msoas['Y'][i],msoas['X'][i]))
         outs = []
         for i in range(len(coordinates)):
