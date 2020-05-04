@@ -143,12 +143,12 @@ class Person:
         self.econ_index = econ_index
         self.area = area
         self.work_msoarea = work_msoa
-        self.econ_index = econ_index
         self.mode_of_transport = mode_of_transport
         self.active_group = None
         self.household = None
         self.school = None
         self.industry = None
+        self.hospital = None
         self.in_hospital = None
         #TODO finda a different way to specify education
         # and healthcare job subclasses since a lot of people
