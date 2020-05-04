@@ -126,8 +126,7 @@ class SchoolDistributor:
                         school = self.closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.people.append(person)
-                person.school = school
+                school.add(person,"student")
                 school.n_pupils += 1
 
     def distribute_non_mandatory_kids_to_school(self):
@@ -150,15 +149,10 @@ class SchoolDistributor:
                 else:
                     schools_full = 0
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
-                        school = self.closest_schools_by_age[person.age][i]
+                        school       = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
-                        n_pupils_age = len(
-                            [
-                                pupil.age
-                                for pupil in school.people
-                                if pupil.age == person.age
-                            ]
-                        )
+                        yearindex    = person.age-school.age_min+1
+                        n_pupils_age = len(school.groups[yearindex].people)
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
                             school.n_pupils_max / (school.age_max - school.age_min)
                         ):
@@ -170,8 +164,7 @@ class SchoolDistributor:
 
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.people.append(person)
-                person.school = school
+                school.add(person,"student")
                 school.n_pupils += 1
 
     def distribute_teachers_to_school(self):
