@@ -1,0 +1,23 @@
+language: python
+python: 
+  - '3.6'
+
+branches:
+  only:
+    - master
+    - gh-pages
+
+
+install: 
+  - pip install -U pip
+  - pip install -r requirements.txt
+  - pip install -e .
+  - bash get_data.sh
+
+script:
+  - cd test_covid
+  - pytest
+
+after_install: 
+  - codecov
+

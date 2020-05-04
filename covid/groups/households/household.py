@@ -1,5 +1,6 @@
 from covid.groups import Group
 
+
 class Household(Group):
     """
     The Household class represents a household and contains information about 
@@ -7,25 +8,22 @@ class Household(Group):
     """
 
     def __init__(self, house_id, composition, area):
-        super().__init__("Household_%03d"%house_id, "Household") 
+        super().__init__("Household_%03d" % house_id, "household")
         self.id = house_id
         self.area = area
-        self.people = []
-        #self.residents = group(self.id,"household")
-        self.area = area
-        self.household_composition = composition 
+        self.household_composition = composition
+
+    def set_active_members(self):
+        for person in self.people:
+            if person.active_group is None:
+                person.active_group = "household"
+
 
 class Households:
     """
     Contains all households for the given area, and information about them.
     """
+
     def __init__(self, world):
         self.world = world
         self.members = []
-
-    def set_active_members(self):
-        for household in self.members:
-            for person in household.people:
-                if person.active_group == None:
-                    person.active_group = "household"
-

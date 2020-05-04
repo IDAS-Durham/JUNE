@@ -1,25 +1,92 @@
-from covid.inputs import Inputs
-from covid.groups import *
-from covid.logger import Logger
-from covid.infection_selector import InfectionSelector
-from covid.interaction import Interaction
-from covid.interaction_selector import InteractionSelector
-from covid.time import DayIterator
-import pandas as pd
-import numpy as np
-from tqdm.auto import tqdm  # for a fancy progress bar
-import yaml
 import os
-from covid import time
+import pickle
+import warnings
 
+import numpy as np
+import yaml
+from tqdm.auto import tqdm  # for a fancy progress bar
+
+from covid.box_generator import BoxGenerator
+from covid.commute import CommuteGenerator
+from covid.groups import *
+from covid.inputs import Inputs
+from covid.logger import Logger
+from covid.time import Timer
+from covid.interaction import *
+from covid.infection import transmission
+from covid.infection import symptoms
+from covid.infection import Infection
+from covid.groups.people import HealthIndex
 
 class World:
     """
     Stores global information about the simulation
     """
 
-    def __init__(self, config_file=None):
+    def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
         print("Initializing world...")
+        self.read_config(config_file)
+        relevant_groups = self.get_simulation_groups()
+        self.read_defaults()
+        self.box_mode = box_mode
+        self.timer = Timer(self.config["time"])
+        self.people = []
+        self.total_people = 0
+        print("Reading inputs...")
+        self.inputs = Inputs(zone=self.config["world"]["zone"])
+        if self.box_mode:
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
+            self.initialize_box_mode(box_region, box_n_people)
+        else:
+            print("Initializing commute generator...")
+            self.commute_generator = CommuteGenerator.from_file(
+                self.inputs.commute_generator_path
+            )
+            self.initialize_areas()
+            self.initialize_msoa_areas()
+            self.initialize_people()
+            self.initialize_households()
+            self.initialize_hospitals()
+            self.initialize_cemeteries()
+            if "schools" in relevant_groups:
+                self.initialize_schools()
+            else:
+                print("schools not needed, skipping...")
+            if "companies" in relevant_groups:
+                self.initialize_companies()
+            else:
+                print("companies not needed, skipping...")
+            if "boundary" in relevant_groups:
+                self.initialize_boundary()
+            else:
+                print("nothing exists outside the simulated region")
+        self.interaction = self.initialize_interaction()
+        self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
+        print("Done.")
+
+    def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
+        """
+        Write the world to file. Comes in handy when setting up the world
+        takes a long time.
+        """
+        with open(pickle_obj, "wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
+        """
+        Initializes a world instance from an already populated world.
+        """
+        with open(pickle_obj, "rb") as f:
+            world = pickle.load(f)
+        return world
+
+    @classmethod
+    def from_config(cls, config_file):
+        return cls(config_file)
+
+    def read_config(self, config_file):
         if config_file is None:
             config_file = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -30,33 +97,100 @@ class World:
         with open(config_file, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.people = []
-        self.total_people = 0
-        print("Reading inputs...")
-        self.inputs = Inputs(zone=self.config["world"]["zone"])
+    def get_simulation_groups(self):
+        """
+        Reads all the different groups specified in the time section of the configuration file.
+        """
+        timesteps_config = self.config["time"]["step_active_groups"]
+        active_groups = []
+        for daytype in timesteps_config.keys():
+            for timestep in timesteps_config[daytype].values():
+                for group in timestep:
+                    active_groups.append(group)
+        active_groups = np.unique(active_groups)
+        return active_groups
+
+    def read_defaults(self):
+        default_config_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "configs",
+            "defaults",
+            "world.yaml",
+        )
+        with open(default_config_path, "r") as f:
+            default_config = yaml.load(f, Loader=yaml.FullLoader)
+        for key in default_config.keys():
+            if key not in self.config:
+                self.config[key] = default_config[key]
+
+    def initialize_box_mode(self, region=None, n_people=None):
+        """
+        Sets the simulation to run in a single box, with everyone inside and no 
+        schools, households, etc.
+        Useful for testing interaction models and comparing to SIR.
+        """
+        print("Setting up box mode...")
+        self.boxes = Boxes()
+        box = BoxGenerator(self, region, n_people)
+        self.boxes.members = [box]
+        self.people = People(self)
+        self.people.members = box.people
+
+    def initialize_cemeteries(self):
+        self.cemeteries = Cemeteries(self)
+
+    def initialize_hospitals(self):
+        self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
+
+    def initialize_areas(self):
+        """
+        Each output area in the world is represented by an Area object. This Area object contains the
+        demographic information about people living in it.
+        """
         print("Initializing areas...")
-        self.msoareas = MSOAreas(self)
-        msoareas_distributor = MSOAreaDistributor(self.msoareas)
-        msoareas_distributor.read_msoareas_census()
         self.areas = Areas(self)
         areas_distributor = AreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
+
+    def initialize_msoa_areas(self):
+        """
+        An MSOA area is a group of output areas. We use them to store company data.
+        """
+        print("Initializing MSOAreas...")
+        self.msoareas = MSOAreas(self)
+        msoareas_distributor = MSOAreaDistributor(self.msoareas)
+        msoareas_distributor.read_msoareas_census()
+
+    def initialize_people(self):
+        """
+        Populates the world with person instances.
+        """
         print("Initializing people...")
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea, )]
+            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea,)]
             person_distributor = PersonDistributor(
+                self.timer,
                 self.people,
                 area,
                 self.msoareas,
-                self.inputs.companysector_by_sex_df,
+                self.inputs.compsec_by_sex_df,
                 wf_area_df,
+                self.inputs.key_compsec_ratio_by_sex_df,
+                self.inputs.key_compsec_distr_by_sex_df,
             )
             person_distributor.populate_area()
             pbar.update(1)
         pbar.close()
+
+    def initialize_households(self):
+        """
+        Calls the HouseholdDistributor to assign people to households following
+        the census household compositions.
+        """
         print("Initializing households...")
         pbar = tqdm(total=len(self.areas.members))
         self.households = Households(self)
@@ -65,6 +199,12 @@ class World:
             household_distributor.distribute_people_to_household()
             pbar.update(1)
         pbar.close()
+
+    def initialize_schools(self):
+        """
+        Schools are organized in NN k-d trees by age group, so we can quickly query
+        the closest age compatible school to a certain kid.
+        """
         print("Initializing schools...")
         self.schools = Schools(self, self.areas, self.inputs.school_df)
         pbar = tqdm(total=len(self.areas.members))
@@ -73,90 +213,100 @@ class World:
             self.distributor.distribute_kids_to_school()
             pbar.update(1)
         pbar.close()
-        #print("Initializing Companies...")
-        #self.companies = Companies(self)
-        #pbar = tqdm(total=len(self.msoareas.members))
-        #for area in self.msoareas.members:
-        #    self.distributor = CompanyDistributor(self.companies, area)
-        #    self.distributor.distribute_adults_to_companies()
-        #    pbar.update(1)
-        #pbar.close()
-        self.logger = Logger(self, self.config["logger"]["save_path"])
-        print("Done.")
 
-    @classmethod
-    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
+    def initialize_companies(self):
         """
-        Initializes a world instance from an already populated world.
+        Companies live in MSOA areas.
         """
-        import pickle
+        print("Initializing Companies...")
+        self.companies = Companies(self)
+        pbar = tqdm(total=len(self.msoareas.members))
+        for msoarea in self.msoareas.members:
+            if not msoarea.work_people:
+                warnings.warn(
+                    f"\n The MSOArea {0} has no people that work in it!".format(msoarea.id)
+                )
+            else:
+                self.distributor = CompanyDistributor(self.companies, msoarea)
+                self.distributor.distribute_adults_to_companies()
+            pbar.update(1)
+        pbar.close()
 
-        with open(pickle_obj, "rb") as f:
-            world = pickle.load(f)
-        return world
-
-    @classmethod
-    def from_config(cls, config_file):
-        return cls(config_file)
-
-    def read_msoareas_census(self, company_df):
+    def initialize_boundary(self):
         """
-        Creat link between OA and MSOA layers.
+        Create a population that lives in the boundary.
+        It interacts with the population in the simulated region only
+        in companies. No interaction takes place during leasure activities.
         """
-        dirs = "../data/census_data/area_code_translations/"
-        area_trans_df = pd.read_csv(
-            dirs + "./PCD11_OA11_LSOA11_MSOA11_LAD11_RGN17_FID_EW_LU.csv"
-        )
-        area_trans_df = area_trans_df.drop_duplicates(subset="OA11CD").set_index(
-            "OA11CD"
-        )["MSOA11CD"]
+        print("Creating Boundary...")
+        self.boundary = Boundary(self)
 
-        areas_dict = {}
-        for i, area_code in enumerate(company_df["MSOA11CD"].values):
-            area = MSOAres(
-                self,
-                area_code,
-                area_trans_df[area_trans_df["MSOA11CD"] == area_code].index.values,
-                company_df[company_df["msoa11cd"] == "E02002559"][
-                    [
-                        "Micro (0 to 9)",
-                        "10 to 19",
-                        "20 to 49",
-                        "50 to 99",
-                        "100 to 249",
-                        "250 to 499",
-                        "500 to 999",
-                        "1000+",
-                    ]
-                ].values,
-            )
-            areas_dict[i] = area
-        return areas_dict
+    def initialize_interaction(self):
+        interaction_type = self.config["interaction"]["type"]
+        if "parameters" in self.config["interaction"]:
+            interaction_parameters = self.config["interaction"]["parameters"]
+        else:
+            interaction_parameters = {}
+        interaction_class_name = "Interaction" + interaction_type.capitalize()
+        interaction = globals()[interaction_class_name](interaction_parameters, self)
+        return interaction
 
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
-            group = getattr(self, group_name)
-            group.set_active_members()
+            grouptype = getattr(self, group_name)
+            for group in grouptype.members:
+                group.set_active_members()
 
     def set_allpeople_free(self):
         for person in self.people.members:
             person.active_group = None
 
-    def _initialize_infection_selector_and_interaction(self, config):
-        self.selector        = InfectionSelector(config)
-        interaction_selector = InteractionSelector(config)
-        self.interaction     = interaction_selector.get(self.selector,config)
+    def initialize_infection(self):
+        if "parameters" in self.config["infection"]:
+            infection_parameters = self.config["infection"]["parameters"]
+        else:
+            infection_parameters = {}
+        if "transmission" in self.config["infection"]:
+            transmission_type = self.config["infection"]["transmission"]["type"]
+            transmission_parameters = self.config["infection"]["transmission"]["parameters"]
+            transmission_class_name = "Transmission" + transmission_type.capitalize()
+        else:
+            trans_class = "TransmissionConstant"
+            transmission_parameters = {}
+        trans_class = getattr(transmission, transmission_class_name)
+        transmission_class = trans_class(**transmission_parameters)
+        if "symptoms" in self.config["infection"]:
+            symptoms_type = self.config["infection"]["symptoms"]["type"]
+            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
+            symptoms_class_name= "Symptoms" + symptoms_type.capitalize()
+        else:
+            symptoms_class_name = "SymptomsGaussian"
+            symptoms_parameters = {}
+        symp_class = getattr(symptoms, symptoms_class_name)
+        reference_health_index = HealthIndex().get_index_for_age(40)
+        symptoms_class = symp_class(health_index=reference_health_index, **symptoms_parameters)
+        infection = Infection(self.timer.now, transmission_class, symptoms_class, **infection_parameters)
+        return infection
 
-    def seed_infections_group(self, group, n_infections, selector, time):
-    #    print (n_infections,group.people)
-        choices = np.random.choice(group.size(), n_infections)
+    def seed_infections_group(self, group, n_infections):
+        choices = np.random.choice(group.size, n_infections)
+        infecter_reference = self.initialize_infection()
         for choice in choices:
-            group.people[choice].set_infection(
-                self.selector.make_infection(group.people[choice], time)
-            )
+            infecter_reference.infect_person_at_time(group.people[choice], self.timer.now)
+        group.update_status_lists(self.timer.now, delta_time=0)
+
+    def seed_infections_box(self, n_infections):
+        print("seed ", n_infections, "infections in box")
+        choices = np.random.choice(self.people.members, n_infections, replace=False)
+        infecter_reference = self.initialize_infection()
+        for choice in choices:
+            infecter_reference.infect_person_at_time(choice, self.timer.now)
+        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
 
     def do_timestep(self, day_iter):
-        active_groups = day_iter.active_groups()
+        active_groups = self.timer.active_groups()
+        # print ("=====================================================")
+        # print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -164,30 +314,47 @@ class World:
         self.set_active_group_to_people(active_groups)
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
-        self.interaction.set_groups(groups_instances)
-        self.interaction.set_time(day_iter.day)
+        self.interaction.groups = groups_instances
         self.interaction.time_step()
         self.set_allpeople_free()
 
-    def group_dynamics(self):
-        day_iter = DayIterator(self.config["time"])
-        print("Starting group_dynamics for ", day_iter.total_days, " days at day",day_iter.day)
+    def group_dynamics(self, n_seed=100):
+        print(
+            "Starting group_dynamics for ",
+            self.timer.total_days,
+            " days at day",
+            self.timer.day,
+        )
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
         # initialize the interaction class with an infection selector
-        self._initialize_infection_selector_and_interaction(self.config)
-        print ("Infecting indivuals in their household.")
-        self.interaction.set_time(day_iter.day)
-        for household in self.households.members:
-            self.seed_infections_group(household, day_iter.day, self.selector, 0.)
-        print ("starting the loop ..., at ",day_iter.day," days, to run for ",day_iter.total_days," days")
-        while day_iter.day <= day_iter.total_days:
-            self.do_timestep(day_iter)
-            self.logger.log_timestep(day_iter.day)
-            next(day_iter)
+        if self.box_mode:
+            self.seed_infections_box(n_seed)
+        else:
+            print("Infecting individuals in their household,",
+                  "for in total ", len(self.households.members), " households.")
+            for household in self.households.members:
+                self.seed_infections_group(household, 1)
+        print(
+            "starting the loop ..., at ",
+            self.timer.day,
+            " days, to run for ",
+            self.timer.total_days,
+            " days",
+        )
+
+        for day in self.timer:
+            if day > self.timer.total_days:
+                break
+            self.logger.log_timestep(day)
+            self.do_timestep(self.timer)
 
 
 if __name__ == "__main__":
-    world = World()
+    world = World(config_file=os.path.join("../configs", "config_example.yaml"))
+
+    # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+    #              box_mode=True,box_n_people=100)
+
     # world = World.from_pickle()
     world.group_dynamics()

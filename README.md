@@ -1,8 +1,19 @@
+[![Build Status](https://travis-ci.com/JosephPB/covidmodelling.svg?token=RZpZVED1uFcNhmBpzes5&branch=master)](https://travis-ci.com/JosephPB/covidmodelling)
+
 # COVID Modelling
 
 Repository for data and models built
 
 Given the size of this team we should work in branches and merge regularly and separate folders for projects.
+
+# Tests
+
+Run the tests with
+
+```
+cd tests
+pytest
+```
 
 # Data
 ## How to get the data
@@ -27,7 +38,11 @@ Remember to push the updated script!
 
 [Working Google Doc with meeting notes](https://docs.google.com/document/d/1EwwHZ0s3uVWmkEdhiw94cqrhfoLsTu_Pay2H11LjVOw/edit)<br>
 
+[MVP Google Doc with testing strategy](https://docs.google.com/document/d/1O0v6O3rOlCDKFD66Y9KbZTfKLQPgmP1ScuwrFv4sspo/edit?usp=sharing)
+
 [UML class diagram](https://drive.google.com/file/d/1YMUAePtUvx1xLVObjnz1n5IkDfJOkmD8/view)
+
+[Epidem. Parameters of COVID-19](https://docs.google.com/document/d/1724PeV7bg9V0JRuQE1vpktB08bFWDmjHrd6HKyOG1Ns/edit#heading=h.xiukf7vmhszk)
 
 
 
@@ -43,30 +58,4 @@ and
 
 # Quickstart
 
-To run a quick test, make sure you set `zone: test` in the cofig.yaml file and run
-
-```
-from covid import World
-
-PATH_TO_CONFIG = "configs/config_example.yaml"
-world = World(PATH_TO_CONFIG)
-
-```
-This will populate a world with 20 output areas, a few thousand people to play with.
-
-
-# World class example
-
-A testing example of a populated world class (where world means the North East) can be found here:
-
-https://mega.nz/file/KjwXhYwL#AXiTRt8mEgwGiJeANGhtWwBLPmgoDWovx58ywnZQ1PM
-
-The world can be loaded with
-
-```
-import pickle
-with open("world.pkl", "rb") as f:
-  world = pickle.load(f)
-```
-
-The people habiting the world is ``world.people``, and the output areas are in ``world.areas``, people live in houses found at ``world.areas.households``, each person also has an attirube ``people.household`` that points to the household they belong.
+Refer to ``Notebooks/quickstart.ipynb``

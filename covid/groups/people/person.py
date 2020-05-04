@@ -1,6 +1,62 @@
-import sys
-import random
-from covid.infection import Infection
+class HealthInformation:
+    def __init__(self, counter):
+        self.counter = counter
+        self.susceptibility = 1.0
+        self.susceptible = True
+        self.infected = False
+        self.infection = None
+        self.recovered = False
+
+    def set_infection(self, infection):
+        self.infection = infection
+        self.infected = True
+        self.susceptible = False
+
+    @property
+    def tag(self):
+        if self.infection is not None:
+            return self.infection.symptoms.tag
+        return None
+
+    @property
+    def must_stay_at_home(self) -> bool:
+        return self.tag in ("influenza-like illness", "pneumonia")
+
+    @property
+    def in_hospital(self) -> bool:
+        return self.tag in ("hospitalised", "intensive care")
+
+    @property
+    def dead(self) -> bool:
+        return self.tag == "dead"
+
+    def update_health_status(self, time, delta_time):
+        if self.infected:
+            if self.infection.symptoms.is_recovered(delta_time):
+                self.set_recovered()
+            else:
+                self.infection.update_at_time(time)
+
+    def set_recovered(self):
+        # self.infection = None
+        self.recovered = True
+        self.infected = False
+        self.susceptible = False
+        self.susceptibility = 0.0
+        self.counter.set_length_of_infection()
+
+    def get_symptoms_tag(self, symptoms):
+        return self.infection.symptoms.tag(symptoms.severity)
+
+    def transmission_probability(self, time):
+        if self.infection is not None:
+            return 0.0
+        return self.infection.transmission_probability(time)
+
+    def symptom_severity(self, severity):
+        if self.infection is None:
+            return 0.0
+        return self.infection.symptom_severity(severity)
 
 
 class Counter:
@@ -14,19 +70,25 @@ class Counter:
         self.grouptype_of_infection = "none"
         self.length_of_infection = -1
 
-    def update_symptoms(self, symptoms, time):
-        if symptoms.severity > self.maximal_symptoms:
-            self.maximal_symptoms = symptoms.severity
-            self.maximal_symptoms_tag = self.person.get_symptoms_tag(symptoms)
-            self.maximal_symptoms_time = time - self.time_of_infection
+    @property
+    def timer(self):
+        return self.person.world.timer
+
+    def update_symptoms(self):  # , symptoms, time):
+        if self.person.infection.symptoms.severity > self.maximal_symptoms:
+            self.maximal_symptoms = self.person.infection.symptoms.severity
+            self.maximal_symptoms_tag = self.person.get_symptoms_tag(
+                self.person.infection.symptoms
+            )
+            self.maximal_symptoms_time = self.timer.now - self.time_of_infection
 
     def update_infection_data(self, time, grouptype=None):
         self.time_of_infection = time
-        if grouptype != None:
+        if grouptype is not None:
             self.grouptype_of_infection = grouptype
 
-    def set_length_of_infection(self, endtime):
-        self.length_of_infection = endtime - self.time_of_infection
+    def set_length_of_infection(self):
+        self.length_of_infection = self.timer.now - self.time_of_infection
 
     def increment_infected(self):
         self.number_of_infected += 1
@@ -56,11 +118,24 @@ class Person:
     """
 
     def __init__(
-        self, person_id, area, work_msoa, age, nomis_bin, sex, health_index, econ_index
+            self,
+            world=None,
+            person_id=None,
+            area=None,
+            work_msoa=None,
+            age=-1,
+            nomis_bin=None,
+            sex=None,
+            health_index=None,
+            econ_index=None,
+            mode_of_transport=None
     ):
-        # if not self.is_sane(self, person_id, area, age, sex, health_index, econ_index):
-        #    return
+        # if not 0 <= age <= 120 or sex not in ("M", "F"):
+        #    raise AssertionError(
+        #        f"Attempting to initialise a person"
+        #    )
         self.id = person_id
+        self.world = world
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
@@ -69,122 +144,28 @@ class Person:
         self.area = area
         self.work_msoarea = work_msoa
         self.econ_index = econ_index
-        self.area = area
+        self.mode_of_transport = mode_of_transport
         self.active_group = None
         self.household = None
         self.school = None
         self.industry = None
-        self.init_counter()
-        self.init_health_information()
+        self.in_hospital = None
+        #TODO finda a different way to specify education
+        # and healthcare job subclasses since a lot of people
+        # will not use this flas
+        self.industry_specific = None
+        self.company_id = None
+        self.health_information = HealthInformation(Counter(self))
 
-    def is_sane(self, person_id, area, age, sex, health_index, econ_index):
-        if age < 0 or age > 120 or not (sex == "M" or sex == "F"):
-            print("Error: tried to initialise person with descriptors out of range: ")
-            print("Id = ", person_id, " age / sex = ", age, "/", sex)
-            print("economical/health indices: ", econ_index, health_index)
-            sys.exit()
-        return True
+    def get_into_hospital(self):
+        if self.in_hospital==None:
+            hospital = self.world.hospitals.get_nearest(self)
+            hospital.add_as_patient(self)
 
-    def init_counter(self):
-        self.counter = Counter(self)
-
-    def get_counter(self):
-        return self.counter
-
-    def get_name(self):
-        return self.id
-
-    def get_age(self):
-        return self.age
-
-    def get_sex(self):
-        return self.sex
-
-    def get_health_index(self):
-        return self.health_index
-
-    def get_econ_index(self):
-        return self.econ_index
-
-    def get_susceptibility(self):
-        return self.susceptibility
-
-    def get_infection(self):
-        return self.infection
-
-    def set_household(self, household):
-        self.household = household
-
-    def init_health_information(self):
-        self.susceptibility = 1.0
-        self.susceptible = True
-        self.infected = False
-        self.infection = None
-        self.recovered = False
-
-    def set_infection(self, infection):
-        if not isinstance(infection, Infection) and not infection == None:
-            print("Error in Infection.Add(", infection, ") is not an infection")
-            print("--> Exit the code.")
-            sys.exit()
-        self.infection = infection
-        if self.infection == None:
-            if self.infected:
-                self.recovered = True
-                self.susceptible = False
-            self.infected = False
-        else:
-            self.infected = True
-            self.susceptible = False
-
-    def update_health_status(self, time):
-        if self.recovered == True:
-            self.infected = False
-            self.infection = None
-        if self.infection != None:
-            self.susceptible = False
-            if self.infection.still_infected(time):
-                self.infected = True
-                if self.infection.symptoms == None:
-                    print("error!")
-                self.counter.update_symptoms(self.infection.symptoms, time)
-            else:
-                self.infected = False
-                self.infection = None
-                self.counter.set_length_of_infection(time)
-
-    def is_susceptible(self):
-        return self.susceptible
-
-    def is_infected(self):
-        return self.infected
-
-    def set_recovered(self, is_recovered):
-        if self.infected == True:
-            self.recovered = is_recovered
-
-    def is_recovered(self):
-        return self.recovered
-
-    def get_symptoms_tag(self, symptoms):
-        return self.infection.get_symptoms().fix_tag(symptoms.severity)
-
-    def susceptibility(self):
-        return self.susceptibility
-
-    def set_susceptibility(self, susceptibility):
-        self.susceptibility = susceptibility
-
-    def transmission_probability(self, time):
-        if self.infection == None:
-            return 0.0
-        return self.infection.transmission_probability(time)
-
-    def symptom_severity(self, severity):
-        if self.infection == None:
-            return 0.0
-        return self.infection.symptom_severity(severity)
-
+    def bury(self):
+        cemetery = self.world.cemeteries.get_nearest(self)
+        cemetery.add(self)
+        
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
@@ -200,17 +181,17 @@ class Person:
             )
         else:
             print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
-        if self.is_susceptible():
+        if self.health_information.susceptible:
             print("-- person is susceptible.")
-        if self.is_infected():
+        if self.health_information.infected:
             print(
                 "-- person is infected: ",
-                self.get_symptoms_tag(time + 5),
+                self.health_information.get_symptoms_tag(time + 5),
                 "[",
-                self.infection.symptom_severity(time + 5),
+                self.health_information.infection.symptom_severity(time + 5),
                 "]",
             )
-        if self.is_recovered():
+        if self.health_information.recovered:
             print("-- person has recovered.")
 
 
@@ -218,8 +199,7 @@ class People:
     def __init__(self, world):
         self.world = world
         self.members = []
-        self.total_people = 0
 
-    def populate_area(self, area):
-        distributor = PersonDistributor(self, area)
-        distributor.populate_area()
+    @property
+    def total_people(self):
+        return len(self.members)
