@@ -50,13 +50,13 @@ def test__positive():
     assert np.sum(inputs.compsec_by_sex_df.values < 0.0) == 0
     assert np.sum(inputs.companysize_df.values < 0.0) == 0
 
-def test__area_intersections():
-    """
-    Check that the provided input data includes the same areas
-    """
-    inputs = Inputs()
-    school_df = pd.read_csv(
-        self.inputs.school_data_path,
-        index_col=0,
-    )
+#def test__area_intersections():
+#    """
+#    Check that the provided input data includes the same areas
+#    """
+#    inputs = Inputs()
+#    school_df = pd.read_csv(
+#        self.inputs.school_data_path,
+#        index_col=0,
+#    )
 
