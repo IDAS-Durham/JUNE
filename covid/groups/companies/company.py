@@ -12,9 +12,13 @@ class Company(Group):
     The Company class represents a company that contains information about 
     its workers which are not yet distributed to key company sectors
     (e.g. as schools and hospitals).
+
+    Currently we treat the workforce of a company as one single sub-group
+    and therefore we invoke the base class group with the default Ngroups = 1.
+    We made this explicit here, although it is not necessary.
     """
 
-    def __init__(self, company_id, msoa, n_employees_max, industry):
+    def __init__(self, company_id, msoa, n_employees_max, industry, Ngroups=1):
         super().__init__(name="Company_%05d" % company_id, spec="company")
         self.id = company_id
         self.msoa = msoa
@@ -23,6 +27,15 @@ class Company(Group):
         self.n_woman = 0
         self.employees = []
         self.industry = industry
+        
+    def add(self, person, qualifier="worker"):
+        if qualifier=="worker":
+            self.groups[0].append(person)
+        else:
+            print ("qualifier = ",qualifer," not known in company")
+            return
+        person.company_id = self.company_id
+
 
 
 class Companies:

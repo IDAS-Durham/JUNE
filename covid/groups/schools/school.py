@@ -43,8 +43,14 @@ class School(Group):
         sector:
             whether it is a "primary", "secondary" or both "primary_secondary"
 
+        number of groups N = age_max-age_min year +1 (student years) + 1 (teachers):
+        0 - teachers
+        1 - year of lowest age (age_min)
+        ...
+        n - year of highest age (age_max)
         """
-        super().__init__(name="School_%05d" % school_id, spec="school")
+        super().__init__(name="School_%05d" % school_id, spec="school",
+                         Ngroups=age_max-age_min+1+1)
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
@@ -57,6 +63,21 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.n_teachers = 0
 
+    def add(self,person,qualifier="student"):
+        if qualifier=="teacher":
+            self.groups[0].people.append(person)
+        elif qualifier=="student":
+            yearindex = person.age - self.age_min + 1
+            if yearindex>=len(self.groups):
+                print ("dodgy yearindex for school with age range = [",
+                       self.age_min,", ",self.age_max,"] and age = ",person.age)
+                return
+            else:
+                self.groups[yearindex].people.append(person)
+        else:
+            print ("qualifier = ",qualifer," not known in school")
+            return
+        person.school = self
 
 class Schools:
     def __init__(self, school_df: pd.DataFrame, config: dict):
@@ -77,7 +98,7 @@ class Schools:
         self.stud_nr_per_teacher = config['sub_sector']['teacher_secondary']['nr_of_clients']
         self.init_schools(school_df)
         self.init_trees(school_df)
-
+        
     @classmethod
     def from_file(cls, filename: str, config_filename: str) -> "Schools":
         """

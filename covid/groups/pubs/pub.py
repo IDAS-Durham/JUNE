@@ -8,12 +8,23 @@ class Pub(Group):
     """
     The Pub class represents a pub, and treats all people in it
     without any distinction of their role.
+
+    There are two sub-groups:
+    0 - workers
+    1 - guests
     """
     def __init__(self, pub_id=1,position=None):
-        super().__init__("Pub_%03d" % pub_id, "pub")
+        super().__init__("Pub_%03d" % pub_id, "pub",Ngroups=2)
         self.id       = pub_id
         self.position = position
-        self.people   = []
+        
+    def add(self, person, qualifier="guest"):
+        if qualifier=="worker":
+            self.groups[0].append(person)
+        elif qualifier=="guest":
+            self.groups[1].append(person)
+        else:
+            print ("qualifier = ",qualifer," not known in pub")
         
     def set_active_members(self):
         for person in self.people:
@@ -121,15 +132,15 @@ class PubFiller:
         if self.make_weight(customer)<np.random.random():
             return False
         pub = np.random.choice(self.pubs)
-        pub.people.append(customer)
+        pub.add(customer,"guest")
         if self.world.timer.weekend and random.random()<self.full_household_in_pub:
             for person in customer.household.people:
                 if person!=customer:
-                    pub.people.append(person)
+                    pub.add(person,"guest")
         elif not(self.world.timer.weekend) and random.random()<self.adults_in_pub:
             for person in customer.household.people:
                 if person!=customer and person.age>=18:
-                    pub.people.append(person)
+                    pub.add(person,"guest")
         return True    
     
     def fill(self,area):
