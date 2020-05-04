@@ -14,7 +14,7 @@ class Pub(Group):
     1 - guestss
     """
     def __init__(self, pub_id=1,position=None):
-        super().__init__("Pub_%03d" % pub_id, "pub", group_names=["workers", "guestss"])
+        super().__init__("Pub_%03d" % pub_id, "pub", group_names=["workers", "guests"])
         self.id       = pub_id
         self.position = position
 
