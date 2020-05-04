@@ -12,7 +12,6 @@ from covid.commute import CommuteGenerator
 from covid.groups import *
 from covid.inputs import Inputs
 from covid.logger import Logger
-from covid.time import Timer
 from covid.interaction import *
 from covid.infection import transmission
 from covid.infection import symptoms
@@ -34,7 +33,6 @@ class World:
         self.world_creation_logger(self.config["logger"]["save_path"])
         # start initialization
         self.box_mode = box_mode
-        self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
         print("Reading inputs...")
@@ -311,116 +309,6 @@ class World:
         """
         print("Creating Boundary...")
         self.boundary = Boundary(self)
-
-    def initialize_interaction(self):
-        interaction_type = self.config["interaction"]["type"]
-        if "parameters" in self.config["interaction"]:
-            interaction_parameters = self.config["interaction"]["parameters"]
-        else:
-            interaction_parameters = {}
-        interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters, self)
-        return interaction
-
-    def set_active_group_to_people(self, active_groups):
-        for group_name in active_groups:
-            grouptype = getattr(self, group_name)
-            self.group_maker.distribute_people(group_name)
-            for group in grouptype.members:
-                group.set_active_members()
-
-    def set_allpeople_free(self):
-        for person in self.people.members:
-            person.active_group = None
-
-    def initialize_infection(self):
-        if "parameters" in self.config["infection"]:
-            infection_parameters = self.config["infection"]["parameters"]
-        else:
-            infection_parameters = {}
-        if "transmission" in self.config["infection"]:
-            transmission_type = self.config["infection"]["transmission"]["type"]
-            transmission_parameters = self.config["infection"]["transmission"]["parameters"]
-            transmission_class_name = "Transmission" + transmission_type.capitalize()
-        else:
-            trans_class = "TransmissionConstant"
-            transmission_parameters = {}
-        trans_class = getattr(transmission, transmission_class_name)
-        transmission_class = trans_class(**transmission_parameters)
-        if "symptoms" in self.config["infection"]:
-            symptoms_type = self.config["infection"]["symptoms"]["type"]
-            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            symptoms_class_name= "Symptoms" + symptoms_type.capitalize()
-        else:
-            symptoms_class_name = "SymptomsGaussian"
-            symptoms_parameters = {}
-        symp_class = getattr(symptoms, symptoms_class_name)
-        reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(health_index=reference_health_index, **symptoms_parameters)
-        infection = Infection(self.timer.now, transmission_class, symptoms_class, **infection_parameters)
-        return infection
-
-    def seed_infections_group(self, group, n_infections):
-        choices = np.random.choice(group.size, n_infections)
-        infecter_reference = self.initialize_infection()
-        for choice in choices:
-            infecter_reference.infect_person_at_time(group.people[choice], self.timer.now)
-        group.update_status_lists(self.timer.now, delta_time=0)
-
-    def seed_infections_box(self, n_infections):
-        print("seed ", n_infections, "infections in box")
-        choices = np.random.choice(self.people.members, n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
-        for choice in choices:
-            infecter_reference.infect_person_at_time(choice, self.timer.now)
-        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
-
-    def do_timestep(self, day_iter):
-        active_groups = self.timer.active_groups()
-        #print ("=====================================================")
-        #print ("=== active groups: ",active_groups,".")
-        if active_groups == None or len(active_groups) == 0:
-            print("==== do_timestep(): no active groups found. ====")
-            return
-        # update people (where they are according to time)
-        self.set_active_group_to_people(active_groups)
-        # infect people in groups
-        groups_instances = [getattr(self, group) for group in active_groups]
-        self.interaction.groups = groups_instances
-        self.interaction.time_step()
-        print('Freeing people')
-        self.set_allpeople_free()
-
-    def group_dynamics(self, n_seed=100):
-        print(
-            "Starting group_dynamics for ",
-            self.timer.total_days,
-            " days at day",
-            self.timer.day,
-        )
-        assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
-        # TODO: move to function that checks the config file (types, values, etc...)
-        # initialize the interaction class with an infection selector
-        if self.box_mode:
-            self.seed_infections_box(n_seed)
-        else:
-            print("Infecting individuals in their household,",
-                  "for in total ", len(self.households.members), " households.")
-            for household in self.households.members:
-                self.seed_infections_group(household, 1)
-        print(
-            "starting the loop ..., at ",
-            self.timer.day,
-            " days, to run for ",
-            self.timer.total_days,
-            " days",
-        )
-
-        for day in self.timer:
-            if day > self.timer.total_days:
-                break
-            self.logger.log_timestep(day)
-            self.do_timestep(self.timer)
 
 
 if __name__ == "__main__":
