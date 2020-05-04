@@ -24,9 +24,7 @@ class Hospital(Group):
         self.postcode = postcode
         self.msoa_name = msoa_name
         self.n_medics = 0
-        self.people = []
-        self.nurses = []
-        self.doctors = []
+        self.employees = []
         self.patients = []
         self.ICUpatients = []
         """
@@ -160,7 +158,6 @@ class Hospitals:
             self.members.append(Hospital(2, {"n_beds": 5000, "n_ICUbeds": 5000}))
 
     def create_hospital_trees(self, hospital_df):
-        print("88888888", hospital_df)
         hospital_tree = BallTree(
             np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
