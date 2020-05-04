@@ -54,7 +54,7 @@ class MSOASearch():
         apicall = APICall(self.apikey)
 
         coordinates = []
-        for i in range(len(msoas)):
+        for i in range(2):
             coordinates.append((msoas['Y'][i],msoas['X'][i]))
         outs = []
         for i in range(len(coordinates)):
@@ -78,4 +78,4 @@ if __name__ == "__main__":
         print ('Working on region: {}'.format(region))
         msoas = pd.read_csv('{}/msoa_coordinates_{}.csv'.format(msoasearch.args.msoa_coord,region))
         outs = msoasearch.get_msoas_type(apikey,msoas)
-        np.save('{}/outs_{}'.format(msoasearch.args.msoa_coord, outs, allow_pickle=True))
+        np.save('{}/outs_{}_{}.npy'.format(msoasearch.args.msoa_coord, msoasearch.args.location_type, region), outs, allow_pickle=True)
