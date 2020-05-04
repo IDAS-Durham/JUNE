@@ -1,4 +1,16 @@
+test_covid/unit/results/
+.DS_Store
+test_covid/results/
+.idea/
 data
 *__pycache__*
 *.ipynb_checkpoints*
-
+*.pyc
+*.ipynb
+*.csv
+*.pkl
+*.egg-info
+.env
+cookie
+data.zip
+__MACOSX

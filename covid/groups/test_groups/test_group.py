@@ -12,11 +12,11 @@ class TestGroup(Group):
 
 
 class TestGroups:
-    def __init__(self, people_per_group=5000, total_people=100000,config=None):
+    def __init__(self, people_per_group=100000, total_people=100000,config=None):
         self.members = []
         self.total_people = total_people
         self.people_per_group = people_per_group
-        if config != None:
+        if config is not None:
             self.health_index_constructor = HealthIndex(config)
         else:
             self.health_index_constructor = None
