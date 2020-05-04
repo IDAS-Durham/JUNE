@@ -26,10 +26,10 @@ def clean(region_file, msoa_file):
 
 if __name__ == "__main__":
 
-    regions = ['East']#'Yorkshire', 'London', 'Wales', 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
+    regions = ['Yorkshire', 'London', 'Wales', 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
     for region in regions:
         print ('Working on region: {}'.format(region))
-        region_file = np.load('./../../outs_{}.npy'.format(region), allow_pickle=True)
-        msoa_file = pd.read_csv('./../../msoa_{}.csv'.format(region))
+        region_file = np.load('./../../custom_data/outs_{}.npy'.format(region), allow_pickle=True)
+        msoa_file = pd.read_csv('./../../custom_data/msoa_{}.csv'.format(region))
         df_clean = clean(region_file, msoa_file)
-        df_clean.to_csv('./../../outs_{}_clean.csv')
+        df_clean.to_csv('./../../custom_data/outs_{}_clean.csv')
