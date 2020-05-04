@@ -45,7 +45,7 @@ class Area:
 
 class Areas:
     def __init__(self, world):
-        self.world = world
-        self.members = []
+        self.world     = world
+        self.members   = []
+        self.area_tree = None
         self.names_in_order = None
-
