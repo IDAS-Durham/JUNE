@@ -63,20 +63,8 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.n_teachers = 0
 
-    def add(self, person, qualifier="student"):
-        if qualifier == "teacher":
-            self.groups[0].people.append(person)
-        elif qualifier == "student":
-            yearindex = person.age - self.age_min + 1
-            if yearindex >= len(self.groups):
-                print("dodgy yearindex for school with age range = [",
-                      self.age_min, ", ", self.age_max, "] and age = ", person.age)
-                return
-            else:
-                self.groups[yearindex].people.append(person)
-        else:
-            print("qualifier = ", qualifer, " not known in school")
-            return
+    def add(self, person, qualifier="students"):
+        super().add(person, qualifier)
         person.school = self
 
 
