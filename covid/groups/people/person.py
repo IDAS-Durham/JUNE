@@ -143,7 +143,6 @@ class Person:
         self.econ_index = econ_index
         self.area = area
         self.work_msoarea = work_msoa
-        self.econ_index = econ_index
         self.mode_of_transport = mode_of_transport
         self.active_group = None
         self.household = None
