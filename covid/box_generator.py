@@ -35,6 +35,7 @@ class BoxGenerator(Box):
             Number of people to initialize in the random mode.
         """
         super().__init__()
+        self.people = list()
         self.world = world
         self.health_index_gen = HealthIndex()
         if region is not None:
