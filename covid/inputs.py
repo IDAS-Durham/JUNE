@@ -56,6 +56,7 @@ class Inputs:
         
         self.pubs_df = pd.read_csv(
             os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
                 "..",
                 "data",
                 "geographical_data",
