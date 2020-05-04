@@ -68,7 +68,7 @@ class Companies:
         )
         return Companies(compsize_per_msoa_df, compsec_per_msoa_df)
 
-    def _compute_size_mean(self, sizegroup):
+    def _compute_size_mean(self, sizegroup: str) -> int:
         """
         Given company size group calculates mean
         """
@@ -84,9 +84,18 @@ class Companies:
 
         return int(size_mean)
     
-    def init_companies(self, compsize_per_msoa_df, compsec_per_msoa_df):
+    def init_companies(
+            self,
+            compsize_per_msoa_df: pd.DataFrame,
+            compsec_per_msoa_df: pd.DataFrame,
+        ):
         """
         Initializes all companies across all msoareas
+
+        Parameters
+        ----------
+        compsize_per_msoa_df: pd.DataFrame
+        compsec_per_msoa_df: pd.DataFrame
         """
         companies = []
         
@@ -99,18 +108,18 @@ class Companies:
         }
         
         # Run through each MSOArea
-        for idx, msoarea_name in enumerate(compsec_per_msoa_df['msoareas']):
+        for idx, msoarea_name in enumerate(compsec_per_msoa_df.index.values):
             compsec_in_msoa_df = compsec_per_msoa_df.loc[msoarea_name]
             compsize_freq_df = compsize_per_msoa_df.loc[msoarea_name]
             comp_size_rv = rv_discrete(
-                values=(comp_size_col_encoded, compsize_freq_df.values)
+                values=(compsize_labels_encoded, compsize_freq_df.values)
             )
             comp_size_rnd_array = comp_size_rv.rvs(
                 size=int(compsec_in_msoa_df.sum())
             )
             
             # Run through each industry sector
-            for compsec_label, nr_of_comp in compsec_in_msoa_df.iterrows():
+            for compsec_label, nr_of_comp in compsec_in_msoa_df.items():
                 
                 # Run through all companies within sector within MSOA
                 for i in range(int(nr_of_comp)):

@@ -74,7 +74,7 @@ class Schools:
         self.members = []
         self.config = config
         school_df.reset_index(drop=True, inplace=True)
-        self.stud_nr_per_teacher = config['student_nr_per_teacher']
+        self.stud_nr_per_teacher = config['sub_sector']['teacher_secondary']['nr_of_clients']
         self.init_schools(school_df)
         self.init_trees(school_df)
 
@@ -98,7 +98,8 @@ class Schools:
         school_df = pd.read_csv(filename, index_col=0)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        print("^school_df^", school_df)
+        for key, value in config.items():
+            config = value
         return Schools(school_df, config)
 
     def init_schools(self, school_df: pd.DataFrame):
@@ -143,13 +144,13 @@ class Schools:
         school_agegroup_to_global_indices = {
             k: []
             for k in range(
-                self.config["school_age_range"][0],
-                self.config["school_age_range"][1] + 1,
+                self.config["age_range"][0],
+                self.config["age_range"][1] + 1,
             )
         }
         # have a tree per age
         for age in range(
-            self.config["school_age_range"][0], self.config["school_age_range"][1] + 1
+            self.config["age_range"][0], self.config["age_range"][1] + 1
         ):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
