@@ -10,7 +10,8 @@ ic_logger = logging.getLogger(__name__)
 class Company(Group):
     """
     The Company class represents a company that contains information about 
-    its workers (19 - 74 years old).
+    its workers which are not yet distributed to key company sectors
+    (e.g. as schools and hospitals).
     """
 
     def __init__(self, company_id, msoa, n_employees_max, industry):

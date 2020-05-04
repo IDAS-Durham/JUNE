@@ -42,6 +42,32 @@ class Inputs:
         self.encoder_household_composition = {}
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
+
+        self.hospital_df = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "census_data",
+                "hospital_data",
+                "england_hospitals.csv",
+            )
+        )
+        
+        self.pubs_df = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "pubs_uk24727_latlong.txt"),
+            sep=" ",
+            header=None
+        )
+        self.pubs_df.columns = ["Latitude","Longitude"]
+        pub_ids = np.arange(len(self.pubs_df["Latitude"]))
+        self.pubs_df["Ids"] = pub_ids
+        
         self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
         
         self.areas_coordinates_df = self.read_coordinates()
@@ -120,6 +146,9 @@ class Inputs:
         decoder = {i: df.columns[i] for i in range(df.shape[-1])}
         return freq, decoder
 
+    def read_text_coordinates(self,filename):
+        pass
+        
     def read_coordinates(self):
         areas_coordinates_df_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
