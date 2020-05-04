@@ -32,4 +32,4 @@ if __name__ == "__main__":
         region_file = np.load('./../../custom_data/outs_{}.npy'.format(region), allow_pickle=True)
         msoa_file = pd.read_csv('./../../custom_data/msoa_{}.csv'.format(region))
         df_clean = clean(region_file, msoa_file)
-        df_clean.to_csv('./../../custom_data/outs_{}_clean.csv')
+        df_clean.to_csv('./../../custom_data/outs_{}_clean.csv'.format(region))
