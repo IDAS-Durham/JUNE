@@ -126,7 +126,7 @@ class SchoolDistributor:
                         school = self.closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.add(person,"student")
+                school.add(person,"students")
                 school.n_pupils += 1
 
     def distribute_non_mandatory_kids_to_school(self):
@@ -164,7 +164,7 @@ class SchoolDistributor:
 
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.add(person,"student")
+                school.add(person,"students")
                 school.n_pupils += 1
 
     def distribute_teachers_to_school(self):

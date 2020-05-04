@@ -50,7 +50,7 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__(name="School_%05d" % school_id, spec="school",
-                         group_names=[n for n in range(age_min, age_max + 1)])
+                         group_names=["teachers"] + [str(n) for n in range(age_min, age_max + 1)])
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
@@ -64,6 +64,8 @@ class School(Group):
         self.n_teachers = 0
 
     def add(self, person, qualifier="students"):
+        if qualifier == "students":
+            qualifier = person.age
         super().add(person, qualifier)
         person.school = self
 
