@@ -10,13 +10,10 @@ from covid import World
 
 
 def test__everyone_is_in_school_household(world_ne):
-    world_ne.set_active_group_to_people(["schools"])
-    # world_ne.set_allpeople_free()
-    world_ne.set_active_group_to_people(["households"])
+    world_ne.set_active_group_to_people(["schools", "households"])
     for person in world_ne.people.members:
         should_be_active = "school" if person.school is not None else "household"
         assert person.active_group == should_be_active
-        assert person.active_group is not None
     world_ne.set_allpeople_free()
 
 
@@ -36,20 +33,10 @@ def test__everyone_is_active_somewhere(world_ne):
 
 
 def test__everyone_is_freed(world_ne):
-    active_groups = world_ne.timer.active_groups()
+    world_ne.set_active_group_to_people(["schools", "households"])
     world_ne.set_allpeople_free()
     for person in world_ne.people.members:
         assert person.active_group == None
-    world_ne.set_allpeople_free()
-
-
-def test__everyone_is_in_school(world_ne):
-    active_groups = world_ne.timer.active_groups()
-    world_ne.set_allpeople_free()
-    world_ne.set_active_group_to_people(["schools"])
-    for person in world_ne.people.members:
-        if person.school is not None:
-            assert person.active_group == "school"
     world_ne.set_allpeople_free()
 
 
@@ -70,7 +57,7 @@ def find_random_in_company(world_ne):
     return selected_person
 
 
-def test__set_active_group_workers(world_ne):
+def test__follow_a_worker(world_ne):
     selected_person = find_random_in_company(world_ne)
     print(f"Industry : {selected_person.industry}")
     world_ne.set_allpeople_free()
@@ -86,7 +73,7 @@ def test__set_active_group_workers(world_ne):
     world_ne.set_allpeople_free()
 
 
-def test__set_active_group_pupils(world_ne):
+def test__follow_a_pupil(world_ne):
     selected_person = find_random_in_school(world_ne)
     world_ne.set_allpeople_free()
     for day in world_ne.timer:
