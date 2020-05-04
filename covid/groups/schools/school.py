@@ -1,9 +1,9 @@
-from sklearn.neighbors import BallTree
-from scipy import stats
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List, Tuple, Dict
+from sklearn.neighbors import BallTree
 
 from covid.groups import Group
 
@@ -16,14 +16,14 @@ class SchoolError(BaseException):
 
 class School(Group):
     def __init__(
-        self,
-        school_id: int,
-        coordinates: Tuple[float, float],
-        n_pupils: int,
-        n_teachers_max: int,
-        age_min: int,
-        age_max: int,
-        sector: str,
+            self,
+            school_id: int,
+            coordinates: Tuple[float, float],
+            n_pupils: int,
+            n_teachers_max: int,
+            age_min: int,
+            age_max: int,
+            sector: str,
     ):
         """
         Create a School given its description.
@@ -50,7 +50,7 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__(name="School_%05d" % school_id, spec="school",
-                         Ngroups=age_max-age_min+1+1)
+                         group_names=[n for n in range(age_min, age_max + 1)])
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
@@ -63,21 +63,22 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.n_teachers = 0
 
-    def add(self,person,qualifier="student"):
-        if qualifier=="teacher":
+    def add(self, person, qualifier="student"):
+        if qualifier == "teacher":
             self.groups[0].people.append(person)
-        elif qualifier=="student":
+        elif qualifier == "student":
             yearindex = person.age - self.age_min + 1
-            if yearindex>=len(self.groups):
-                print ("dodgy yearindex for school with age range = [",
-                       self.age_min,", ",self.age_max,"] and age = ",person.age)
+            if yearindex >= len(self.groups):
+                print("dodgy yearindex for school with age range = [",
+                      self.age_min, ", ", self.age_max, "] and age = ", person.age)
                 return
             else:
                 self.groups[yearindex].people.append(person)
         else:
-            print ("qualifier = ",qualifer," not known in school")
+            print("qualifier = ", qualifer, " not known in school")
             return
         person.school = self
+
 
 class Schools:
     def __init__(self, school_df: pd.DataFrame, config: dict):
@@ -98,7 +99,7 @@ class Schools:
         self.stud_nr_per_teacher = config['sub_sector']['teacher_secondary']['nr_of_clients']
         self.init_schools(school_df)
         self.init_trees(school_df)
-        
+
     @classmethod
     def from_file(cls, filename: str, config_filename: str) -> "Schools":
         """
@@ -171,11 +172,11 @@ class Schools:
         }
         # have a tree per age
         for age in range(
-            self.config["age_range"][0], self.config["age_range"][1] + 1
+                self.config["age_range"][0], self.config["age_range"][1] + 1
         ):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
-            ]
+                ]
             school_trees[age] = self._create_school_tree(_school_df_agegroup)
             school_agegroup_to_global_indices[age] = _school_df_agegroup.index.values
 
@@ -183,7 +184,7 @@ class Schools:
         self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
 
     def get_closest_schools(
-        self, age: int, coordinates: Tuple[float, float], k: int
+            self, age: int, coordinates: Tuple[float, float], k: int
     ) -> int:
         """
         Get the k-th closest school to a given coordinate, that accepts pupils
@@ -232,4 +233,3 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
-
