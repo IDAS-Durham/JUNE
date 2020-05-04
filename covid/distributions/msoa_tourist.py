@@ -14,7 +14,7 @@ class MSOASearch():
     def __init__(self):
         self.args = self.parse()
 
-    def parse():
+    def parse(self):
         '''
         Parse input arguments
         '''
