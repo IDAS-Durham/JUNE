@@ -4,8 +4,15 @@ import pytest
 
 from covid import commute as c
 
-test_data_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "data", "census_data",
-                                  "commute.csv")
+test_data_filename = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    "..",
+    "..",
+    "..",
+    "data",
+    "census_data",
+    "commute.csv"
+)
 
 
 class TestModeOfTransport:
@@ -169,7 +176,11 @@ class TestCommuteGenerator:
             ],
         )
 
-        commute_gen = c.CommuteGenerator(regional_generators={"north": regional_gen_0, "south": regional_gen_1})
+        commute_gen = c.CommuteGenerator(
+            regional_generators={
+                "north": regional_gen_0, "south": regional_gen_1
+            }
+        )
 
         regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="north")
 

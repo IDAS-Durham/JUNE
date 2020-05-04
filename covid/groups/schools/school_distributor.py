@@ -34,11 +34,9 @@ class SchoolDistributor:
         self.msoarea = area.msoarea
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = config["school_age_range"]
-        self.MANDATORY_SCHOOL_AGE_RANGE = config["school_mandatory_age_range"]
-        self.education_sector_label = (
-            self.world.config["companies"]["key_sector"]["schools"]
-        )
+        self.SCHOOL_AGE_RANGE = config["age_range"]
+        self.MANDATORY_SCHOOL_AGE_RANGE = config["mandatory_age_range"]
+        self.education_sector_label = self.find_jobs(config)
         self.closest_schools_by_age = {}
         self.is_school_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
@@ -54,6 +52,14 @@ class SchoolDistributor:
                 )
             self.closest_schools_by_age[agegroup] = closest_schools
             self.is_school_full[agegroup] = False
+
+    def find_jobs(self, config: dict):
+        education_sector_label = []
+        for key1, value1 in config.items():
+            if isinstance(value1, dict):
+                for key2, value2 in value1.items():
+                    education_sector_label.append(value2['sector_id'])
+        return education_sector_label
 
     @classmethod
     def from_file(
@@ -78,7 +84,8 @@ class SchoolDistributor:
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
+        for key, value in config.items():
+            config = value
         return SchoolDistributor(schools, area, config)
 
     def distribute_kids_to_school(self):
@@ -187,7 +194,7 @@ class SchoolDistributor:
         # Note: doing it this way rather then putting them into the area which
         # is currently chose in the for-loop in the world.py file ensure that
         # teachers are equally distr., no over-crowding
-        areas_in_msoa = self.msoarea.oareas
+        areas_in_msoa = self.msoarea.oarea
         areas_rv = stats.rv_discrete(
             values=(
                 np.arange(len(areas_in_msoa)),

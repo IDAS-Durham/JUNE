@@ -42,7 +42,22 @@ class Inputs:
         self.encoder_household_composition = {}
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
-        #self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
+
+       
+        self.pubs_df = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "pubs_uk24727_latlong.txt"),
+            sep=" ",
+            header=None
+        )
+        self.pubs_df.columns = ["Latitude","Longitude"]
+        pub_ids = np.arange(len(self.pubs_df["Latitude"]))
+        self.pubs_df["Ids"] = pub_ids
+        
         
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
@@ -73,11 +88,42 @@ class Inputs:
         self.commute_generator_path = (
             Path(__file__).parent.parent / "data/census_data/commute.csv"
         )
+        self.workflow_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/flow_in_msoa_wu01ew_2011.csv"
+        )
+        self.companysize_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+            "companysize_msoa11cd_2019.csv"
+        )
+        self.company_per_sector_per_msoa_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+            "companysector_msoa11cd_2011.csv"
+        )
+        self.sex_per_sector_per_msoa_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+            "companysector_by_sex_cleaned.csv"
+        )
+        self.companysector_education_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+            "education_by_sex_2011.csv"
+        )
+        self.companysector_healthcare_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+            "healthcare_by_sex_2011.csv"
+        )
         self.school_data_path = (
-            Path(__file__).parent.parent / "data/processed/school_data/england_schools_data.csv"
+            Path(__file__).parent.parent / \
+            "data/processed/school_data/england_schools_data.csv"
         )
         self.school_config_path = (
-            Path(__file__).parent.parent / "configs/defaults/schools.yaml"
+            Path(__file__).parent.parent / \
+            "configs/defaults/schools.yaml"
         )
 
         self.hospital_data_path = (
@@ -96,6 +142,9 @@ class Inputs:
         decoder = {i: df.columns[i] for i in range(df.shape[-1])}
         return freq, decoder
 
+    def read_text_coordinates(self,filename):
+        pass
+        
     def read_coordinates(self):
         areas_coordinates_df_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
@@ -167,31 +216,16 @@ class Inputs:
                   seems to be unavailable.
         )
         """
-        usecols = [1, 3, 4, 5, 6, 7, 8, 9, 10]
-        column_names = [
-            "MSOA",
-            "0-9",
-            "10-19",
-            "20-49",
-            "50-99",
-            "100-249",
-            "250-499",
-            "500-999",
-            "1000-xxx",
-        ]
         companysize_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
                 "data",
+                "processed",
                 "census_data",
-                "middle_output_area",
-                "EnglandWales",
+                "company_data",
                 "companysize_msoa11cd_2019.csv",
             ),
-            names=column_names,
-            usecols=usecols,
-            header=0,
         )
         companysize_df = companysize_df.set_index("MSOA")
 
@@ -216,14 +250,13 @@ class Inputs:
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
                 "data",
+                "processed",
                 "census_data",
-                "middle_output_area",
-                "NorthEast",
-                "company_sector_cleaned_msoa.csv",
+                "company_data",
+                "companysector_msoa11cd_2011.csv",
             ),
-            index_col=0,
         )
-        companysector_df = companysector_df.set_index("msoareas")
+        companysector_df = companysector_df.set_index("MSOA")
 
         # filter out MSOA areas that are simulated
         msoa = np.unique(area_mapping[
@@ -232,7 +265,7 @@ class Inputs:
         companysector_df = companysector_df.loc[msoa]
 
         companysector_df = companysector_df.reset_index()
-        companysector_df = companysector_df.rename(columns={"index": "msoareas"})
+        companysector_df = companysector_df.rename(columns={"index": "MSOA"})
 
         return companysector_df
 
@@ -251,15 +284,18 @@ class Inputs:
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
                 "data",
+                "processed",
                 "census_data",
-                "output_area",
-                "NorthEast",
-                "industry_by_sex_cleaned.csv",
+                "company_data",
+                "companysector_by_sex_cleaned.csv",
             ),
             index_col=0,
         )
         compsec_by_sex_df = compsec_by_sex_df.drop(
             ['date', 'geography', 'rural urban'], axis=1,
+        )
+        compsec_by_sex_df = compsec_by_sex_df.rename(
+            columns={"oareas": "OA"}
         )
 
         # define all columns in csv file relateing to males
@@ -276,9 +312,9 @@ class Inputs:
             uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
         )
         compsec_by_sex_df = compsec_by_sex_df[
-            compsec_by_sex_df["oareas"].isin(list(oa_in_world))
+            compsec_by_sex_df["OA"].isin(list(oa_in_world))
         ]
-        compsec_by_sex_df = compsec_by_sex_df.set_index('oareas')
+        compsec_by_sex_df = compsec_by_sex_df.set_index('OA')
 
         # use the counts to get key company sector ratios
         self.read_key_compsec_by_sex(compsec_by_sex_df)
@@ -527,9 +563,7 @@ class Inputs:
             os.path.dirname(os.path.realpath(__file__)),
             "..",
             "data",
-            "census_data",
-            "middle_output_area",
-            "EnglandWales/",
+            "processed/",
         )
         wf_df = pd.read_csv(
             dirs + "flow_in_msoa_wu01ew_2011.csv",
@@ -566,5 +600,5 @@ if __name__ == "__main__":
 
     ip = Inputs()
     #print(ip.workflow_df)
-    #print(ip.companysize_df)
-    #print(ip.companysector_df)
+    print("companysize_df\n", ip.companysize_df)
+    print("compsec_by_sex_df \n", ip.compsec_by_sex_df)

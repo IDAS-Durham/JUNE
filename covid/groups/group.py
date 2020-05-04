@@ -40,6 +40,7 @@ class Group:
         "hospital",
         "leisure_Outdoor",
         "leisure_Indoor",
+        "pub",
         "random",
         "referenceGroup",
         "shopping",
