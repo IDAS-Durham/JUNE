@@ -144,14 +144,17 @@ class Person:
         self.sex = sex
         # geo-graphical attributes
         self.area = oarea
-        self.residence_msoa = oarea.msoarea
         self.work_msoarea = None
         self.household = None
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
         self.work_msoarea = None
+        self.school = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
+        self.industry_specific = None
+        self.company_id = None
+        self.hospital = None
         self.in_hospital = None
         self.health_index = health_index
         self.econ_index = econ_index
