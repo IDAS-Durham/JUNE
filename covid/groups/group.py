@@ -2,9 +2,76 @@ import logging
 from typing import List
 from covid.exc import GroupException
 
-import matplotlib.pyplot as plt
+import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
+class People:
+    def __init__(self, intensity):
+        self.people    = []
+        self.intensity = intensity
+
+    def update_status_lists(self,time,delta_time):
+        for person in self.people:
+            person.health_information.update_health_status(time, delta_time)
+            if person.health_information.susceptible:
+                self.susceptible.append(person)
+            elif person.health_information.infected:
+                if person.health_information.must_stay_at_home:
+                    continue
+            elif person.health_information.dead:
+                person.bury()
+                self.people.remove(person)
+                
+    @property
+    def size(self):
+        return len(self.people)
+
+    @property
+    def size_susceptible(self):
+        return len(self.susceptible)
+
+    @property
+    def size_infected(self):
+        return len(self.infected)
+
+    @property
+    def size_recovered(self):
+        return len(self.recovered)
+    
+    @property
+    def susceptible(self) -> List:
+        """
+        People susceptible to the disease
+        """
+        return [
+            person for person in self.people
+            if person.health_information.susceptible
+        ]
+
+    @property
+    def infected(self) -> List:
+        """
+        People currently infected with the disease
+        """
+        return [
+            person for person in self.people
+            if person.health_information.infected and not (
+                    person.health_information.in_hospital
+                    or person.health_information.dead
+            )
+        ]
+
+    @property
+    def recovered(self) -> List:
+        """
+        People recovered from the disease
+        """
+        return [
+            person for person in self.people
+            if person.health_information.recovered
+        ]
 
 
 class Group:
@@ -50,64 +117,63 @@ class Group:
         "work_Indoor",
     ]
 
-    def __init__(self, name, spec):
+    def __init__(self, name, spec, Ngroups=1):
         self.sane(name, spec)
-        self.name = name
-        self.spec = spec
-        self.people = []
-        self.intensity = 1.0
-
-    @property
-    def susceptible(self) -> List:
-        """
-        People in this group who are susceptible to the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.susceptible
-        ]
-
-    @property
-    def infected(self) -> List:
-        """
-        People in this group who are currently infected with the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.infected and not (
-                    person.health_information.in_hospital
-                    or person.health_information.dead
-            )
-        ]
-
-    @property
-    def recovered(self) -> List:
-        """
-        People in this group who have recovered from the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-        ]
+        self.name     = name
+        self.spec     = spec
+        self.groups   = []
+        self.intensities = np.ones((Ngroups, Ngroups)) 
+        for i in range(Ngroups):
+            self.groups.append(People(self.intensities[i][i]))
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
             raise GroupException(f"{spec} is not an allowed group type")
 
+    def add(self,person,qualifier=""):
+        if len(self.groups)==1 or qualifier=="":
+            self.groups[0].append(person)
+
+    def clear(self):
+        for group in self.groups:
+            group.people = []
+        
+    @property
+    def size(self):
+        tot = 0
+        for group in self.groups:
+            tot += group.size
+        return tot
+
+    @property
+    def size_susceptible(self):
+        tot = 0
+        for group in self.groups:
+            tot += group.susceptible
+        return tot
+
+    @property
+    def size_infected(self):
+        tot = 0
+        for group in self.groups:
+            tot += group.infected
+        return tot
+
+
+    @property
+    def size_recovered(self):
+        tot = 0
+        for group in self.groups:
+            tot += group.recovered
+        return tot
+    
     def set_active_members(self):
-        for person in self.people:
-            if person.active_group is not None:
-                raise ValueError("Trying to set an already active person")
-            else:
-                person.active_group = self.spec
-
-    def set_intensity(self, intensity):
-        self.intensity = intensity
-
-    def get_intensity(self, time=0):
-        if self.intensity == None:
-            return 1.0
-        return self.intensity  # .intensity(time)
+        for group in self.groups:
+            for person in group.people:
+                if person.active_group is not None:
+                    raise ValueError("Trying to set an already active person")
+                else:
+                    person.active_group = self.spec
 
     def must_timestep(self):
         return (self.size > 1 and
@@ -115,34 +181,16 @@ class Group:
                 self.size_susceptible > 0)
 
     def update_status_lists(self, time, delta_time):
-        for person in self.people:
-            person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                self.susceptible.append(person)
-            elif person.health_information.infected:
-                if person.health_information.must_stay_at_home:
-                    continue
-            elif person.health_information.dead:
-                person.bury()
-                self.people.remove(person)
+        for group in self.groups:
+            group.update_status_lists(time,delta_time)
 
-    @property
-    def size(self):
-        return len(self.people)
 
-    @property
-    def size_susceptible(self):
-        return len(self.susceptible)
 
-    @property
-    def size_infected(self):
-        return len(self.infected)
 
-    @property
-    def size_recovered(self):
-        return len(self.recovered)
-
+            
     def output(self, plot=False, full=False, time=0):
+        import matplotlib.pyplot as plt
+
         print("==================================================")
         print("Group ", self.name, ", type = ", self.spec, " with ", len(self.people), " people.")
         print("* ",
