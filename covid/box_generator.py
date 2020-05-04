@@ -35,7 +35,6 @@ class BoxGenerator(Box):
             Number of people to initialize in the random mode.
         """
         super().__init__()
-        self.people = list()
         self.world = world
         self.health_index_gen = HealthIndex()
         if region is not None:
@@ -99,7 +98,7 @@ class BoxGenerator(Box):
                 world=self.world, age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
-            self.people.append(person)
+            self["default"].append(person)
 
         for _ in range(number_of_women):
             sex = 1
@@ -109,7 +108,7 @@ class BoxGenerator(Box):
                 world=self.world, age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
-            self.people.append(person)
+            self["default"].append(person)
 
         # shuffle people just in case
         np.random.shuffle(self.people)
@@ -153,7 +152,7 @@ class BoxGenerator(Box):
         )
         # initialize people
         assert len(age_shuffle_array) == len(sex_shuffle_array)
-        for i in range(0, n_people):
+        for i in range(n_people):
             age = age_shuffle_array[i]
             sex = sex_shuffle_array[i]
             health_index = self.health_index_gen.get_index_for_age(age)
@@ -164,4 +163,4 @@ class BoxGenerator(Box):
                 sex=sex,
                 health_index=health_index,
             )
-            self.people.append(person)
+            self["default"].append(person)

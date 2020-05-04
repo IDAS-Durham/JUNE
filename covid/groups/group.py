@@ -1,29 +1,20 @@
 import logging
+from abc import ABC, abstractmethod
 from typing import List
-from covid.exc import GroupException
 
 import numpy as np
+
+from covid.exc import GroupException
 
 logger = logging.getLogger(__name__)
 
 
-class People:
-    def __init__(self, intensity):
-        self.people    = []
-        self.intensity = intensity
+class AbstractGroup(ABC):
+    @property
+    @abstractmethod
+    def people(self):
+        pass
 
-    def update_status_lists(self,time,delta_time):
-        for person in self.people:
-            person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                self.susceptible.append(person)
-            elif person.health_information.infected:
-                if person.health_information.must_stay_at_home:
-                    continue
-            elif person.health_information.dead:
-                person.bury()
-                self.people.remove(person)
-                
     @property
     def size(self):
         return len(self.people)
@@ -39,7 +30,7 @@ class People:
     @property
     def size_recovered(self):
         return len(self.recovered)
-    
+
     @property
     def susceptible(self) -> List:
         """
@@ -74,7 +65,30 @@ class People:
         ]
 
 
-class Group:
+class People(AbstractGroup):
+    def __init__(self, intensity):
+        self._people = []
+        self.intensity = intensity
+
+    def clear(self):
+        self._people = []
+
+    @property
+    def people(self):
+        return self._people
+
+    def update_status_lists(self, time, delta_time):
+        for person in self.people:
+            person.health_information.update_health_status(time, delta_time)
+            if person.health_information.dead:
+                person.bury()
+                self._people.remove(person)
+
+    def append(self, person):
+        self._people.append(person)
+
+
+class Group(AbstractGroup):
     """
     A group of people enjoying social interactions.  It contains three lists,
     all people in the group, the healthy ones and the infected ones (we may
@@ -95,6 +109,14 @@ class Group:
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+
+    @property
+    def people(self):
+        return [
+            person for
+            group in self.groups
+            for person in group.people
+        ]
 
     allowed_groups = [
         "box",
@@ -117,56 +139,32 @@ class Group:
         "work_Indoor",
     ]
 
-    def __init__(self, name, spec, Ngroups=1):
+    def __init__(self, name, spec, group_names=None):
         self.sane(name, spec)
-        self.name     = name
-        self.spec     = spec
-        self.groups   = []
-        self.intensities = np.ones((Ngroups, Ngroups)) 
-        for i in range(Ngroups):
-            self.groups.append(People(self.intensities[i][i]))
+        self.name = name
+        self.spec = spec
+        self.group_map = dict()
+        group_names = group_names or ["default"]
+        number_of_groups = len(group_names)
+        self.intensities = np.ones((number_of_groups, number_of_groups))
+        for i, name in enumerate(group_names):
+            self.group_map[name] = People(self.intensities[i][i])
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
             raise GroupException(f"{spec} is not an allowed group type")
 
-    def add(self,person,qualifier=""):
-        if len(self.groups)==1 or qualifier=="":
-            self.groups[0].append(person)
+    def __getitem__(self, item="default"):
+        return self.group_map[item]
+
+    @property
+    def groups(self):
+        return self.group_map.values()
 
     def clear(self):
         for group in self.groups:
-            group.people = []
-        
-    @property
-    def size(self):
-        tot = 0
-        for group in self.groups:
-            tot += group.size
-        return tot
+            group.clear()
 
-    @property
-    def size_susceptible(self):
-        tot = 0
-        for group in self.groups:
-            tot += group.susceptible
-        return tot
-
-    @property
-    def size_infected(self):
-        tot = 0
-        for group in self.groups:
-            tot += group.infected
-        return tot
-
-
-    @property
-    def size_recovered(self):
-        tot = 0
-        for group in self.groups:
-            tot += group.recovered
-        return tot
-    
     def set_active_members(self):
         for group in self.groups:
             for person in group.people:
@@ -182,12 +180,8 @@ class Group:
 
     def update_status_lists(self, time, delta_time):
         for group in self.groups:
-            group.update_status_lists(time,delta_time)
+            group.update_status_lists(time, delta_time)
 
-
-
-
-            
     def output(self, plot=False, full=False, time=0):
         import matplotlib.pyplot as plt
 
@@ -219,15 +213,6 @@ class Group:
         if full:
             for p in self.people:
                 p.output(time)
-
-    def get_contact_matrix(self):
-        inputs = Inputs()
-        return symmetrize_matrix(inputs.contact_matrix)
-
-    def get_reciprocal_matrix(self):
-        inputs = Inputs()
-        demography = np.array([len(pool) for pool in self.age_pool])
-        return reciprocal_matrix(inputs.contact_matrix, demography)
 
 
 def symmetrize_matrix(matrix):
