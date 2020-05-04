@@ -1,10 +1,12 @@
 from .group import Group
+from .group_maker import GroupMaker
 from .areas import OArea, OAreas, OAreaDistributor
 from .msoareas import MSOArea, MSOAreas, MSOAreaDistributor
 from .schools import School, Schools, SchoolDistributor
 from .companies import Company, Companies, CompanyDistributor
 from .people import Person, People, PersonDistributor
 from .households import Household, Households, HouseholdDistributor
+from .pubs import Pub, Pubs, PubFiller
 from .hospitals import Hospital, Hospitals, HospitalDistributor
 from .test_groups import TestGroup, TestGroups
 from .box import Box, Boxes
