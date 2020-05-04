@@ -29,17 +29,24 @@ class PersonDistributor:
         """
         """
         self.timer = timer
+        self.world = area.world
         self.area = area
         self.msoareas = msoareas
         self.people = people
-        self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
-        self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
-        self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
+        self.STUDENT_THRESHOLD = self.world.config["people"]["student_age_group"]
+        self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
+        self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
+        self.relevant_groups = self.world.relevant_groups
+        self.key_compsec = {
+            key: value
+            for key, value in self.world.config.items()
+            if "sub_sector" in value
+        }
         self.no_kids_area = False
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
-        self.health_index = HealthIndex(self.area.world.config)
+        self.health_index = HealthIndex(self.world.config)
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
         self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
@@ -95,33 +102,10 @@ class PersonDistributor:
             )
         )
 
-        # company data
-        ## TODO add company data intilialisation from dict of distibutions in industry_distibutions.py
-        self.industry_dict = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
-            7: "G",
-            8: "H",
-            9: "I",
-            10: "J",
-            11: "K",
-            12: "L",
-            13: "M",
-            14: "N",
-            15: "O",
-            16: "P",
-            17: "Q",
-            18: "R",
-            19: "S",
-            20: "T",
-            21: "U",
-        }
+        # companies data
         numbers = np.arange(1, 22)
         m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
+        
         distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
@@ -132,6 +116,9 @@ class PersonDistributor:
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )
+        self.industry_dict = {
+            (idx+1): col.split(' ')[-1] for idx,col in enumerate(m_col)
+        }
 
     def _assign_industry(self, i, person, sector_man, sector_woman, employed=True):
         """
@@ -156,8 +143,14 @@ class PersonDistributor:
                     "sex must be with male or female. Intead got {}".format(sex_random)
                 )
             person.industry = self.industry_dict[industry_id]
-            
-            if (person.industry == "Q" or person.industry == "P"):
+      
+            self.key_compsec_id = []
+            for key1, value1 in self.key_compsec.items():
+                for key2, value2 in value1.items():
+                    if key2 == "sector":
+                        self.key_compsec_id.append(value2)
+                
+            if person.industry in self.key_compsec_id:
                 self._assign_key_industry(person)
         else:
             pass
@@ -184,6 +177,13 @@ class PersonDistributor:
                 2315: Primary and nursery education teaching professionals
                 2316: Special needs education teaching professionals
         """
+        #TODO if input date is provided nicely we don't need this anymore
+        #TODO this dictionary are the only key_compsec currently implemented
+        key_compsec_dict = {
+            2314: "secondary",
+            2315: "primary",
+            2316: "special_needs",
+        }
         compsec_decoder = {"Q": "healthcare", "P": "education"}
         sex_decoder = {0: "male", 1: "female"}
 
@@ -197,6 +197,7 @@ class PersonDistributor:
         ].values
         
         # Select people working in key industries
+
         if MC_random < ratio:
             key_industry_id = None
         else:
@@ -204,26 +205,36 @@ class PersonDistributor:
             numbers = np.arange(len(distribution))
             random_variable = stats.rv_discrete(values=(numbers, distribution))
             key_industry_id = random_variable.rvs(size=1)
-        
         if key_industry_id is not None:
             key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
                 (compsec_decoder[person.industry])
             ].index.values[key_industry_id[0]]
-            person.industry_specific = key_industry_code
+            
+            if key_industry_code in key_compsec_dict.keys():
+                person.industry_specific = key_compsec_dict[key_industry_code]
+            else:
+                person.industry_specific = key_industry_code
 
-    def assign_work_msoarea(self, i, sex, is_working_age, msoa_man, msoa_woman):
+    def _assign_work_msoarea(self, i, person, msoa_man, msoa_woman):
         """
         Return: str,
             MOSA11CD area code
         """
-        if is_working_age:
-            workmsoa = None
+        if person.sex == 1:
+            work_msoarea_name = self.workflow_df.index.values[msoa_woman[i]]
         else:
-            if sex == 1:
-                workmsoa = self.workflow_df.index.values[msoa_woman[i]]
-            else:
-                workmsoa = self.workflow_df.index.values[msoa_man[i]]
-        return workmsoa
+            work_msoarea_name = self.workflow_df.index.values[msoa_man[i]]
+        
+        person.work_msoarea = work_msoarea_name
+
+        idx = np.where(self.msoareas.names_in_order == work_msoarea_name)[0]
+        if len(idx) != 0:
+            self.msoareas.members[idx[0]].work_people.append(person)
+        else:
+            # TODO count people who work outside of the region
+            # we currently simulate
+            idx = np.random.choice(np.arange(len(self.msoareas.names_in_order)))
+            self.msoareas.members[idx].work_people.append(person)
 
     def populate_area(self):
         """
@@ -267,42 +278,39 @@ class PersonDistributor:
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
-            is_working_age = not self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
-            work_msoa_rnd = self.assign_work_msoarea(
-                i,
-                sex_random,
-                is_working_age,
-                work_msoa_man_rnd_array,
-                work_msoa_woman_rnd_array,
-            )
+            is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
-                self.area.world,
+                self.world,
                 self.people.total_people,
-                self.area,
-                work_msoa_rnd,
                 age_random,
                 nomis_bin,
                 sex_random,
+                self.area,
                 health_index,
                 0,
                 mode_of_transport=None,
             )  # self.area.regional_commute_generator.weighted_random_choice())
+            # assign person to an industry TODO: implement unemployment
+            if is_working_age:
+                self._assign_work_msoarea(
+                    i,
+                    person,
+                    work_msoa_man_rnd_array,
+                    work_msoa_woman_rnd_array,
+                )
+                self._assign_industry(
+                    i,
+                    person,
+                    companysector_male_rnd_array,
+                    companysector_female_rnd_array,
+                )
             self.people.members.append(person)
             self.area.people.append(person)
             # assign person to the right group:
             if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
             elif nomis_bin < self.OLD_THRESHOLD:
-                # find msoarea of work
-                idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
-                if len(idx) != 0:
-                    self.msoareas.members[idx[0]].work_people.append(person)
-                else:
-                    # TODO count people who work outside of the region
-                    # we currently simulate
-                    idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
-                    self.msoareas.members[idx].work_people.append(person)
                 if sex_random == 0:
                     self.area._men[i] = person
                 else:
@@ -314,15 +322,6 @@ class PersonDistributor:
                     self.area._oldmen[i] = person
                 else:
                     self.area._oldwomen[i] = person
-
-            # assign person to an industry TODO: implement unemployment
-            if is_working_age:
-                self._assign_industry(
-                    i,
-                    person,
-                    companysector_male_rnd_array,
-                    companysector_female_rnd_array,
-                )
 
         try:
             assert (

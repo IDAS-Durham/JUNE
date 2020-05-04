@@ -6,23 +6,48 @@ from covid.groups.msoareas import MSOArea
 
 class MSOAreaDistributor:
     def __init__(self, msoareas):
+        self.world = msoareas.world
         self.msoareas = msoareas
+        self.area_mapping_df = self.msoareas.world.inputs.area_mapping_df
+        self.create_msoareas()
 
-    def read_msoareas_census(self):
+    def create_msoareas(self):
         """
         Reads census data from the input dictionary, and initializes
         the encoders/decoders for company variables.
         It also initializes all the areas of the world.
         This is all on the MSOA layer.
         """
+        msoa_in_sim = np.unique(
+            np.array([
+                area.msoarea for area in self.world.areas.members
+            ])
+        )
         msoareas_list = []
-        msoa11cd = np.unique(self.msoareas.world.inputs.oa2msoa_df["MSOA11CD"].values)
-        for i, msoa in enumerate(msoa11cd):
+        for msoa_name in msoa_in_sim:
+            # centroid of msoa
+            coordinates = ['xxx', 'xxx']
+            # find postcode inside this msoarea
+            pcd_in_msoa = self.area_mapping_df[
+                self.area_mapping_df["MSOA"] == msoa_name
+            ]["PCD"].values
+            # find oareas inside this msoarea
+            oa_in_msoa = [
+                area
+                for area in self.world.areas.members
+                if area.msoarea == msoa_name
+            ]
+            # create msoarea
             msoarea = MSOArea(
-                self.msoareas.world,
-                msoa,
-                self.msoareas.world.inputs.companysize_df.loc[msoa].values.sum(),
+                self.world,
+                coordinates,
+                pcd_in_msoa,
+                oa_in_msoa,
+                msoa_name,
             )
             msoareas_list.append(msoarea)
+            # link  area to msoarea
+            for area in oa_in_msoa:
+                area.msoarea = msoarea
         self.msoareas.members = msoareas_list
-        self.msoareas.ids_in_order = msoa11cd
+        self.msoareas.names_in_order = msoa_in_sim
