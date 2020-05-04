@@ -86,7 +86,7 @@ class Pubs:
 
 
 class PubFiller:
-    def __init__(self,world):
+    def __init__(self, world):
         self.world   = world
         self.allpubs = self.world.pubs
         self.pub_weekend_ratio     = 0.1
