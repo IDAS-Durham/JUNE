@@ -101,6 +101,7 @@ def test__sick_gets_to_hospital_recovers_and_leaves(world_ne):
     dummy_person = world_ne.people.members[0]
     dummy_person.health_information = MockHealthInformation('hospitalised')
     dummy_person.get_into_hospital()
+    print('in hospital : ', dummy_person.in_hospital)
     world_ne.set_active_group_to_people(["schools", "hospitals", "households"])
     assert dummy_person.active_group == 'hospital'
     world_ne.set_allpeople_free()
