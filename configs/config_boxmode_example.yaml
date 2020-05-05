@@ -16,10 +16,10 @@ time:
           1: 24
   step_active_groups:
       weekday:
-          1: ['boxes','hospitals','cemeteries'] # active groups during first time step
-          2: ['boxes','hospitals','cemeteries'] # active groups during first time step
+          1: ['boxes','cemeteries'] # active groups during first time step
+          2: ['boxes','cemeteries'] # active groups during first time step
       weekend:
-          1: ['boxes','hospitals','cemeteries'] # active groups during first time step
+          1: ['boxes','cemeteries'] # active groups during first time step
 
 interaction:
   type: collective
@@ -28,6 +28,7 @@ interaction:
 
 infection:
   type: constant
+  asymptomatic_ratio: 0.4
   transmission:
     type: constant
     parameters:
