@@ -160,6 +160,9 @@ class Person:
         self.econ_index = econ_index
         self.health_information = HealthInformation(Counter(self))
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} age={self.age} sex={self.sex}>"
+
     def get_into_hospital(self):
         if self.in_hospital==None:
             self.world.hospitals.allocate_patient(self)
@@ -167,7 +170,7 @@ class Person:
     def bury(self):
         cemetery = self.world.cemeteries.get_nearest(self)
         cemetery.add(self)
-        
+
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
@@ -201,8 +204,8 @@ class People:
     def __init__(self, world):
         self.members = []
 
-    #@classmethod
-    #def from_file(cls, filename: str,: str) -> "People":
+    # @classmethod
+    # def from_file(cls, filename: str,: str) -> "People":
     #    """
     #    """
     #    = pd.read_csv(filename, index_col=0)
