@@ -1,11 +1,14 @@
 import logging
+from enum import IntEnum
+
 import numpy as np
 import pandas as pd
 from scipy.stats import rv_discrete
-from tqdm.auto import tqdm
+
 from covid.groups import Group
 
 ic_logger = logging.getLogger(__name__)
+
 
 class Company(Group):
     """
@@ -18,7 +21,10 @@ class Company(Group):
     We made this explicit here, although it is not necessary.
     """
 
-    def __init__(self, company_id, msoa, n_employees_max, industry, Ngroups=1):
+    class GroupType(IntEnum):
+        worker = 0
+
+    def __init__(self, company_id, msoa, n_employees_max, industry):
         super().__init__(name="Company_%05d" % company_id, spec="company")
         self.id = company_id
         self.msoa = msoa
@@ -27,15 +33,10 @@ class Company(Group):
         self.n_woman = 0
         self.employees = []
         self.industry = industry
-        
-    def add(self, person, qualifier="worker"):
-        if qualifier=="worker":
-            self.groups[0].append(person)
-        else:
-            print ("qualifier = ",qualifer," not known in company")
-            return
-        person.company_id = self.company_id
 
+    def add(self, person, qualifier=GroupType.worker):
+        super().add(person, qualifier)
+        person.company_id = self.id
 
 
 class Companies:
@@ -43,7 +44,7 @@ class Companies:
             self,
             compsize_per_msoa_df: pd.DataFrame,
             compsec_per_msoa_df: pd.DataFrame,
-        ):
+    ):
         """
         Create companies and provide functionality to allocate workers.
 
@@ -63,10 +64,10 @@ class Companies:
 
     @classmethod
     def from_file(
-        cls,
-        companysize_file: str,
-        company_per_sector_per_msoa_file: str,
-        ) -> "Companies":
+            cls,
+            companysize_file: str,
+            company_per_sector_per_msoa_file: str,
+    ) -> "Companies":
         """
         Parameters
         ----------
@@ -94,15 +95,15 @@ class Companies:
         else:
             size_min = float(size_min)
             size_max = float(size_max)
-            size_mean = (size_max - size_min)/2.0
+            size_mean = (size_max - size_min) / 2.0
 
         return int(size_mean)
-    
+
     def init_companies(
             self,
             compsize_per_msoa_df: pd.DataFrame,
             compsec_per_msoa_df: pd.DataFrame,
-        ):
+    ):
         """
         Initializes all companies across all msoareas
 
@@ -112,15 +113,15 @@ class Companies:
         compsec_per_msoa_df: pd.DataFrame
         """
         companies = []
-        
+
         compsize_labels = compsize_per_msoa_df.columns.values
         compsize_labels_encoded = np.arange(1, len(compsize_labels) + 1)
-        
+
         size_dict = {
-            (idx+1): self._compute_size_mean(size_label)
+            (idx + 1): self._compute_size_mean(size_label)
             for idx, size_label in enumerate(compsize_labels)
         }
-        
+
         # Run through each MSOArea
         for idx, msoarea_name in enumerate(compsec_per_msoa_df.index.values):
             compsec_in_msoa_df = compsec_per_msoa_df.loc[msoarea_name]
@@ -131,10 +132,10 @@ class Companies:
             comp_size_rnd_array = comp_size_rv.rvs(
                 size=int(compsec_in_msoa_df.sum())
             )
-            
+
             # Run through each industry sector
             for compsec_label, nr_of_comp in compsec_in_msoa_df.items():
-                
+
                 # Run through all companies within sector within MSOA
                 for i in range(int(nr_of_comp)):
                     company = Company(
@@ -143,7 +144,7 @@ class Companies:
                         n_employees_max=size_dict[comp_size_rnd_array[i]],
                         industry=compsec_label
                     )
-                        
+
                     companies.append(company)
 
         self.members = companies

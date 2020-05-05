@@ -1,9 +1,8 @@
 import numpy as np
-from random import uniform
-from scipy import stats
 import yaml
-import warnings
-from typing import List, Tuple, Dict
+from scipy import stats
+
+from covid.groups.schools.school import School
 
 # from covid.school import SchoolError
 
@@ -63,7 +62,7 @@ class SchoolDistributor:
 
     @classmethod
     def from_file(
-        cls, schools: "Schools", area: "Area", config_filename: str
+            cls, schools: "Schools", area: "Area", config_filename: str
     ) -> "SchoolDistributor":
         """
         Initialize SchoolDistributor from path to its config file 
@@ -104,8 +103,8 @@ class SchoolDistributor:
 
         for person in self.area.people:
             if (
-                person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[1]
-                and person.age >= self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                    person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[1]
+                    and person.age >= self.MANDATORY_SCHOOL_AGE_RANGE[0]
             ):
                 if self.is_school_full[person.age]:
                     random_number = np.random.randint(0, self.MAX_SCHOOLS, size=1)[0]
@@ -126,7 +125,7 @@ class SchoolDistributor:
                         school = self.closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.add(person,"students")
+                school.add(person, School.GroupType.students)
                 school.n_pupils += 1
 
     def distribute_non_mandatory_kids_to_school(self):
@@ -137,24 +136,24 @@ class SchoolDistributor:
         """
         for person in self.area.people:
             if (
-                self.SCHOOL_AGE_RANGE[0]
-                < person.age
-                < self.MANDATORY_SCHOOL_AGE_RANGE[0]
-                or self.MANDATORY_SCHOOL_AGE_RANGE[1]
-                < person.age
-                < self.SCHOOL_AGE_RANGE[1]
+                    self.SCHOOL_AGE_RANGE[0]
+                    < person.age
+                    < self.MANDATORY_SCHOOL_AGE_RANGE[0]
+                    or self.MANDATORY_SCHOOL_AGE_RANGE[1]
+                    < person.age
+                    < self.SCHOOL_AGE_RANGE[1]
             ):
                 if self.is_school_full[person.age]:
                     continue
                 else:
                     schools_full = 0
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
-                        school       = self.closest_schools_by_age[person.age][i]
+                        school = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
-                        yearindex    = person.age-school.age_min+1
+                        yearindex = person.age - school.age_min + 1
                         n_pupils_age = len(school.groups[yearindex].people)
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
-                            school.n_pupils_max / (school.age_max - school.age_min)
+                                school.n_pupils_max / (school.age_max - school.age_min)
                         ):
                             schools_full += 1
                         else:
@@ -164,7 +163,7 @@ class SchoolDistributor:
 
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.add(person,"students")
+                school.add(person, School.GroupType.students)
                 school.n_pupils += 1
 
     def distribute_teachers_to_school(self):
@@ -177,12 +176,12 @@ class SchoolDistributor:
             2316: Special needs education teaching professionals
         """
         # find people working in education
-        #TODO add key-company-sector id to config.yaml
+        # TODO add key-company-sector id to config.yaml
         teachers = [
-            person for idx,person in enumerate(self.msoarea.work_people)
+            person for idx, person in enumerate(self.msoarea.work_people)
             if person.industry == self.education_sector_label
         ]
-        
+
         # equal chance to work in any school nearest to any area within msoa
         # Note: doing it this way rather then putting them into the area which
         # is currently chose in the for-loop in the world.py file ensure that
@@ -191,24 +190,22 @@ class SchoolDistributor:
         areas_rv = stats.rv_discrete(
             values=(
                 np.arange(len(areas_in_msoa)),
-                np.array([1/len(areas_in_msoa)]*len(areas_in_msoa))
+                np.array([1 / len(areas_in_msoa)] * len(areas_in_msoa))
             )
         )
         areas_rnd_arr = areas_rv.rvs(size=len(teachers))
 
-        for i,teacher in enumerate(teachers):
+        for i, teacher in enumerate(teachers):
             if teacher.industry_specific != None:
                 area = areas_in_msoa[areas_rnd_arr[i]]
-                    
+
                 for school in area.schools:
                     if (teacher.industry_specific in school.sector):
-                        #(school.n_teachers < school.n_teachers_max) and \
+                        # (school.n_teachers < school.n_teachers_max) and \
                         teacher.school = school.id
                         school.n_teachers += 1
                     elif teacher.industry_specific is "special_needs":
                         # everyone has special needs :-)
-                        #TODO fine better why for filtering
+                        # TODO fine better why for filtering
                         teacher.school = school.id
                         school.n_teachers += 1
-
-
