@@ -11,7 +11,7 @@ class SuperAreaDistributor:
         self.relevant_groups = relevant_groups
         self.msoareas.names_in_order = np.unique(
                 np.array([
-                    area.msoarea for area in self.world.areas.members
+                    area.super_area for area in self.world.areas.members
                     ])
                 )
         mapping_df = self.msoareas.world.inputs.area_mapping_df
@@ -38,7 +38,7 @@ class SuperAreaDistributor:
             oa_in_msoa = [
                 area
                 for area in self.world.areas.members
-                if area.msoarea == msoa_name
+                if area.super_area == msoa_name
             ]
             # create msoarea
             msoarea = SuperArea(
@@ -50,5 +50,5 @@ class SuperAreaDistributor:
             msoareas_list.append(msoarea)
             # link  area to msoarea
             for area in oa_in_msoa:
-                area.msoarea = msoarea
+                area.super_area = msoarea
         self.msoareas.members = msoareas_list
