@@ -68,6 +68,9 @@ class AbstractGroup(ABC):
             if person.health_information.recovered
         ]
 
+    def __iter__(self):
+        return iter(self.people)
+
 
 class People(AbstractGroup):
     def __init__(self, intensity=1.0):
@@ -93,9 +96,6 @@ class People(AbstractGroup):
 
     def remove(self, person):
         self._people.remove(person)
-
-    def __iter__(self):
-        return self._people
 
 
 class Group(AbstractGroup):
