@@ -30,6 +30,7 @@ class Group:
     """
 
     allowed_groups = [
+        "area",
         "box",
         "boundary",
         "commute_Public",
@@ -45,6 +46,7 @@ class Group:
         "referenceGroup",
         "shopping",
         "school",
+        "super_area",
         "testGroup",
         "work_Outdoor",
         "work_Indoor",
@@ -55,6 +57,7 @@ class Group:
         self.name = name
         self.spec = spec
         self.people = []
+        self.members = []
         self.intensity = 1.0
 
     @property
