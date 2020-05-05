@@ -163,7 +163,7 @@ class TestAuxiliaryFunctions:
         assert parent.sex == 1
 
         # check if no adult women available it returns men
-        age_min_parent = kid.age + 18
+        age_min_parent = 18
         age_max_parent = household_distributor.MAX_AGE_TO_BE_PARENT
         for key in range(age_min_parent, age_max_parent + 1):
             del area.women_by_age[key]
@@ -291,7 +291,7 @@ class TestIndividualHouseholdCompositions:
             ) in [-1, 0, 1,]
 
     def test__fill_nokids_households(self, household_distributor):
-        area = create_area(age_min=18, people_per_age=10, age_max=70)
+        area = create_area(age_min=18, people_per_age=10, age_max=60)
         households_with_extrapeople_list = []
         household_distributor.fill_nokids_households(
             adults_per_household=2,
@@ -511,7 +511,7 @@ class TestMultipleHouseholdCompositions:
                 elif (
                     household_distributor.ADULT_MIN_AGE
                     <= person.age
-                    < household_distributor.OLD_MIN_AGE
+                    <= household_distributor.ADULT_MAX_AGE
                 ):
                     adults += 1
             assert kids in [0, 1, 2]
@@ -568,7 +568,9 @@ class TestSpecificArea:
         )
         return household_distributor
 
-    def test__all_household_have_reasonable_size(self, example_area, hd_area):
+    def test__all_household_have_reasonable_size(
+        self, example_area, hd_area
+    ):
         sizes_dict = {}
         for household in example_area.households:
             size = len(household.people)
@@ -580,7 +582,12 @@ class TestSpecificArea:
         assert sizes_dict[2] >= 35
         assert sizes_dict[1] >= 35
 
-    def test__oldpeople_have_suitable_accomodation(self, example_area):
+    def test__oldpeople_have_suitable_accomodation(
+        self, example_area,
+    ):
+        """
+        run the test ten times to be sure
+        """
         area = example_area
         oldpeople_household_sizes = {}
         maxsize = 0
@@ -670,6 +677,7 @@ class TestSpecificArea2:
     >=0 >=0 >=0 >=0 >=0     0
     Name: E00062386, dtype: int64
     """
+
     @pytest.fixture(name="example_area2")
     def get_example_area(self, world_ne):
         area_name = "E00062386"
@@ -681,16 +689,10 @@ class TestSpecificArea2:
     @pytest.fixture(name="hd_area2")
     def distribute_people_to_area(self, example_area2, world_ne):
         area = example_area2
-        household_distributor = HouseholdDistributor.from_inputs(
-            world_ne.inputs
-        )
-        composition = world_ne.inputs.household_composition_df.loc[
-            area.name
-        ].to_dict()
+        household_distributor = HouseholdDistributor.from_inputs(world_ne.inputs)
+        composition = world_ne.inputs.household_composition_df.loc[area.name].to_dict()
         n_students = world_ne.inputs.n_students.loc[area.name].values[0]
-        n_people_in_communal = world_ne.inputs.n_in_communal.loc[
-            area.name
-        ].values[0]
+        n_people_in_communal = world_ne.inputs.n_in_communal.loc[area.name].values[0]
         household_distributor.distribute_people_to_households(
             area,
             number_households_per_composition=composition,
@@ -706,4 +708,3 @@ class TestSpecificArea2:
             if len(household.people) == 1:
                 households_one += 1
         assert households_one == 20
-
