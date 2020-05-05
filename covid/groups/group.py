@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from enum import IntEnum
 from typing import List
 
 import numpy as np
@@ -66,7 +67,7 @@ class AbstractGroup(ABC):
 
 
 class People(AbstractGroup):
-    def __init__(self, intensity):
+    def __init__(self, intensity=1.0):
         self._people = []
         self.intensity = intensity
 
@@ -89,6 +90,10 @@ class People(AbstractGroup):
 
     def remove(self, person):
         self._people.remove(person)
+
+
+class GroupType(IntEnum):
+    default = 0
 
 
 class Group(AbstractGroup):
@@ -142,13 +147,15 @@ class Group(AbstractGroup):
         "work_Indoor",
     ]
 
-    def __init__(self, name, spec, Ngroups=1):
+    GroupType = GroupType
+
+    def __init__(self, name, spec):
         self.sane(name, spec)
         self.name    = name
         self.spec    = spec
-        self.Ngroups = Ngroups
-        self.groups  = [People() for i in range(self.Ngroups)]
-        self.intensities = np.ones((self.Ngroups, self.Ngroups))
+        n_groups = len(self.GroupType)
+        self.groups  = [People() for _ in range(n_groups)]
+        self.intensities = np.ones((n_groups, n_groups))
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
@@ -157,13 +164,8 @@ class Group(AbstractGroup):
     def __getitem__(self, item=0):
         return self.groups[item]
 
-    def add(self, person, qualifier=None):
-        if qualifier==None or self.Ngroups==1:
-            self.groups[0].append(person)
-
-    @property
-    def groups(self):
-        return self.groups
+    def add(self, person, qualifier=GroupType.default):
+        self.groups[qualifier].append(person)
 
     def clear(self):
         for group in self.groups:

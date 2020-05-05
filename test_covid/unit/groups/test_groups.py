@@ -1,7 +1,7 @@
 import pytest
 
 from covid import exc
-from covid.groups import group as g
+from covid.groups import group as g, Person
 
 
 class TestGroup:
@@ -20,3 +20,13 @@ class TestGroup:
         group["default"].intensity = 2.0
 
         assert group["default"].intensity == 2.0
+
+    def test_group_types(self):
+        group = g.Group(
+            name="name",
+            spec="household"
+        )
+        group.add(
+            Person()
+        )
+        assert group[g.GroupType.default].size == 1
