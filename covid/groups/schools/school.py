@@ -60,24 +60,28 @@ class School(Group):
 
 
 class Schools:
-    def __init__(self, school_df: pd.DataFrame, config: dict):
+    def __init__(self, schools: List["School"], 
+            age_range: Tuple[int],
+            student_nr_per_teacher: int):
         """
         Create a group of Schools, and provide functionality to access closest school
 
         Parameters
         ----------
-        school_df:
-            data frame with school data
-        config:
-            config dictionary
+        schools:
+            list of school instances
+        age_range:
+           tuple containing minimum and maximum age of pupils 
         """
 
         self.members = []
-        self.config = config
-        school_df.reset_index(drop=True, inplace=True)
-        self.stud_nr_per_teacher = config['sub_sector']['teacher_secondary']['nr_of_clients']
-        self.init_schools(school_df)
-        self.init_trees(school_df)
+        self.stud_nr_per_teacher = student_nr_per_teacher 
+
+        for hospital in hospitals:
+            self.members.append(hospital)
+        coordinates = np.array([hospital.coordinates for hospital in hospitals])
+        self.init_trees(coordinates)
+
 
     @classmethod
     def from_file(cls, filename: str, config_filename: str) -> "Schools":
@@ -101,6 +105,12 @@ class Schools:
             config = yaml.load(f, Loader=yaml.FullLoader)
         for key, value in config.items():
             config = value
+        stud_nr_per_teacher = config['sub_sector']['teacher_secondary']['nr_of_clients']
+
+        school_df.reset_index(drop=True, inplace=True)
+        self.init_schools(school_df)
+        self.init_trees(school_df)
+
         return Schools(school_df, config)
 
     def init_schools(self, school_df: pd.DataFrame):
@@ -145,13 +155,13 @@ class Schools:
         school_agegroup_to_global_indices = {
             k: []
             for k in range(
-                self.config["age_range"][0],
-                self.config["age_range"][1] + 1,
+                self.age_range[0],
+                self.age_range[1] + 1,
             )
         }
         # have a tree per age
         for age in range(
-            self.config["age_range"][0], self.config["age_range"][1] + 1
+            self.age_range[0], self.age_range[1] + 1
         ):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
