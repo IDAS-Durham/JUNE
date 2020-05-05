@@ -40,8 +40,8 @@ class World:
         print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
-            self.initialize_hospitals()
-            self.initialize_cemeteries()
+            #self.initialize_hospitals()
+            #self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
             print("Initializing commute generator...")
@@ -252,7 +252,7 @@ class World:
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             # get msoa flow data for this oa area
-            wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.name,)]
+            wf_area_df = self.inputs.workflow_df.loc[(area.super_area.name,)]
             person_distributor = PersonDistributor(
                 self,
                 self.timer,
@@ -454,7 +454,12 @@ class World:
 
 
 if __name__ == "__main__":
-    world = World(config_file=os.path.join("../configs", "config_example.yaml"))
+    world = World(
+        config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
+        box_mode=True,
+        box_region='test',
+    )
+
 
     # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)

@@ -23,8 +23,6 @@ def test__frequencies_sum():
         inputs.household_composition_freq_file,
     )[0]
     # sum up to 1 in all output areas
-    print("^^^^\n", age_freq_df.sum(axis=1).values)
-    print("^^^^\n", np.ones(len(age_freq_df)))
     np.testing.assert_allclose(
         age_freq_df.sum(axis=1).values, np.ones(len(age_freq_df))
     )
@@ -84,8 +82,3 @@ def test__area_intersections():
         inputs.household_composition_freq_file,
         index_col=0,
     )
-    print("test***\n", school_df)
-    print("test***\n", n_residents_df)
-    print("test***\n", age_freq_df)
-    print("test***\n", sex_freq_df)
-    print("test***\n", household_composition_freq_df)
