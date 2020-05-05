@@ -197,9 +197,9 @@ class World:
             box_mode = self.box_mode
         )
 
-        pbar = tqdm(total=len(self.msoareas.members))
-        for msoarea in self.msoareas.members:
-            distributor = HospitalDistributor(self.hospitals, msoarea)
+        pbar = tqdm(total=len(self.super_areas.members))
+        for super_area in self.super_areas.members:
+            distributor = HospitalDistributor(self.hospitals, super_area)
             pbar.update(1)
         pbar.close()
 
@@ -209,8 +209,9 @@ class World:
 
     def initialize_areas(self):
         """
-        Each output area in the world is represented by an Area object. This Area object contains the
-        demographic information about people living in it.
+        Each output area in the world is represented by an Area object.
+        This Area object contains the demographic information about
+        people living in it.
         """
         print("Initializing areas...")
         self.areas = Areas.from_file(
@@ -297,7 +298,7 @@ class World:
            self.distributor = SchoolDistributor.from_file(
                 self.schools,
                 area,
-                self.inputs.school_config_path
+                self.inputs.school_config_path,
             )
            self.distributor.distribute_kids_to_school()
            self.distributor.distribute_teachers_to_school()
@@ -306,18 +307,19 @@ class World:
 
     def initialize_companies(self):
         """
-        Companies live in MSOA areas.
+        Companies live in super_areas.
         """
         print("Initializing Companies...")
         self.companies = Companies.from_file(
             self.inputs.companysize_file,
             self.inputs.company_per_sector_per_msoa_file,
         )
-        pbar = tqdm(total=len(self.msoareas.members))
-        for msoarea in self.msoareas.members:
+        pbar = tqdm(total=len(self.super_areas.members))
+        for super_area in self.super_areas.members:
             self.distributor = CompanyDistributor(
                 self.companies,
-                msoarea
+                super_area,
+                self.config, 
             )
             self.distributor.distribute_adults_to_companies()
             pbar.update(1)
