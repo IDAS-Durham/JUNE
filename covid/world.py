@@ -342,9 +342,12 @@ class World:
             infection_parameters = {}
         if "transmission" in self.config["infection"]:
             transmission_type = self.config["infection"]["transmission"]["type"]
-            transmission_parameters = self.config["infection"]["transmission"][
+            if "parameters" in self.config["infection"]["transmission"]:
+                transmission_parameters = self.config["infection"]["transmission"][
                 "parameters"
             ]
+            else:
+                transmission_parameters = {}
             transmission_class_name = "Transmission" + transmission_type.capitalize()
         else:
             trans_class = "TransmissionConstant"
@@ -353,7 +356,11 @@ class World:
         transmission_class = trans_class(**transmission_parameters)
         if "symptoms" in self.config["infection"]:
             symptoms_type = self.config["infection"]["symptoms"]["type"]
-            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
+            if "parameters" in self.config["infection"]["symptoms"]:
+                symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
+            else:
+                symptoms_parameters = {}
+
             symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
         else:
             symptoms_class_name = "SymptomsGaussian"

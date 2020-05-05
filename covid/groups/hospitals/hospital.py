@@ -7,7 +7,7 @@ from covid.groups import Group
 from typing import List, Tuple, Dict
 
 
-#ic_logger = logging.getLogger(__name__)
+ic_logger = logging.getLogger(__name__)
 
 
 class Hospital(Group):
@@ -102,7 +102,7 @@ class Hospital(Group):
             self.patients.append(person)
             person.in_hospital = self
         else:
-            #ic_logger.info("ERROR: This person shouldnt be trying to get to a hospital")
+            ic_logger.info("ERROR: This person shouldnt be trying to get to a hospital")
             pass
 
     def release_as_patient(self, person):
@@ -132,14 +132,14 @@ class Hospital(Group):
         for person in self.patients:
             person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
-                #ic_logger.info(
-                #    "ERROR: in our current setup, only infected patients in the hospital"
-                #)
+                ic_logger.info(
+                    "ERROR: in our current setup, only infected patients in the hospital"
+                )
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if not (person.health_information.in_hospital):
                     # TODO: is this necessary? How could they have made it to hospital?
-                    #ic_logger.info("ERROR: wrong tag for infected patient in hospital")
+                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
                     self.patients.remove(person)
                 if person.health_information.tag == "intensive care":
                     self.icu_patients.append(person)
@@ -161,13 +161,13 @@ class Hospital(Group):
         for person in self.icu_patients:
             person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
-                #ic_logger.info(
-                #    "ERROR: in our current setup, only infected patients in the hospital"
-                #)
+                ic_logger.info(
+                    "ERROR: in our current setup, only infected patients in the hospital"
+                )
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if not (person.health_information.in_hospital):
-                    #ic_logger.info("ERROR: wrong tag for infected patient in hospital")
+                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
                     self.icu_patients.remove(person)
                 if person.health_information.tag == "hospitalised":
                     self.patients.append(person)
@@ -186,19 +186,12 @@ class Hospital(Group):
         super().update_status_lists(time, delta_time)
         self.update_status_lists_for_patients(time, delta_time)
         self.update_status_lists_for_ICUpatients(time, delta_time)
-        #ic_logger.info(
-        #    f"=== update status list for hospital with {self.size}  people ==="
-        #)
-        '''
         ic_logger.info(
-            "=== hospital currently has ",
-            len(self.patients),
-            " patients",
-            "and ",
-            len(self.icu_patients),
-            " ICU patients",
+            f"=== update status list for hospital with {self.size}  people ==="
         )
-        '''
+        ic_logger.info(
+            f"=== hospital currently has {len(self.patients)} patients, and {len(self.icu_patients)}, ICU patients"
+        )
 
 
 class Hospitals:
@@ -255,7 +248,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-            #ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
+            ic_logger.info("There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(Hospital(1, 10, 2, None))
@@ -348,20 +341,13 @@ class Hospitals:
                 ):
                     break
             if hospital is not None:
-                #ic_logger.info(
-                #    f"Receiving hospital for patient with {person.health_information.tag} at distance = {distance} km"
-                #)
+                ic_logger.info(
+                    f"Receiving hospital for patient with {person.health_information.tag} at distance = {distance} km"
+                )
                 hospital.add_as_patient(person)
             else:
-                '''
-                ic_logger.info(
-                    "no hospital found for patient with",
-                    person.health_information.tag,
-                    "in distance < ",
-                    self.max_distance,
-                    " km.",
+                ic_logger.info(f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
                 )
-                '''
 
     def get_closest_hospitals(
         self, coordinates: Tuple[float, float], r_max: float
