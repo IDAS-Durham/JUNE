@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class MSOArea:
+class SuperArea:
     """
     Stores information about the MSOA, like the total number of companies, etc.
     The n_companies_* represent the number of companies in a given msoa
@@ -17,21 +17,25 @@ class MSOArea:
     can be matched up with the businesses at the msoa level.
     """
 
-    def __init__(self, world, coordinates, pcd: list, oa: list, name: str):
+    def __init__(
+        self,
+        coordinates,
+        areas: list,
+        name: str,
+        relevant_groups: list
+    ):
         """
         """
-        self.world = world
         self.coordinates = coordinates  # Lon. & Lat
-        self.pcd = pcd                  # Postcode
-        self.oarea = oa                 # Output Area
+        self.areas = areas              # Output Area
         self.name = name                # Middle Super Output Area
         # collect people
         self.work_people = []
-        for relevant_groups in world.relevant_groups:
-            setattr(self, relevant_groups, [])
+        for relevant_group in relevant_groups:
+            setattr(self, relevant_group, [])
 
 
-class MSOAreas:
+class SuperAreas:
     def __init__(self, world):
         self.world = world
         self.members = []
