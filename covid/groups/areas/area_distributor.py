@@ -20,6 +20,8 @@ class AreaDistributor:
         sex_df = self.input.sex_freq
         areas_list = []
         for i, area_name in enumerate(n_residents_df.index):
+            #if area_name != 'E00105094':
+            #    continue
             area_coord = self.input.areas_coordinates_df.loc[area_name][
                 ["Y", "X"]
             ].values

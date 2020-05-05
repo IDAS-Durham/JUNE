@@ -1,4 +1,5 @@
 from covid.groups import Group
+import numpy as np
 
 
 class Household(Group):
@@ -7,7 +8,7 @@ class Household(Group):
     its residents.
     """
 
-    def __init__(self, house_id=None, composition=None, area=None):
+    def __init__(self, house_id=None, composition=None, communal=False, area=None, max_size=np.inf):
         if house_id is None:
             super().__init__(None, "household") 
         else:
@@ -15,6 +16,8 @@ class Household(Group):
         self.id = house_id
         self.area = area
         self.household_composition = composition
+        self.communal = communal
+        self.max_size = max_size
 
     def set_active_members(self):
         for person in self.people:

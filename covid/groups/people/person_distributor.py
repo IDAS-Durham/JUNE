@@ -36,18 +36,16 @@ class PersonDistributor:
         self.STUDENT_THRESHOLD = area.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = area.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = area.world.config["people"]["old_threshold"]
-        self.key_compsec_id = [
-            value for key, value in area.world.config["companies"]["key_sector"].items()
-        ]
-        self.no_kids_area = False
-        self.no_students_area = False
         self.area.men_by_age = {}
         self.area.women_by_age = {}
-        self.compsec_by_sex_df = compsec_by_sex_df
-        self.workflow_df = workflow_df
+        #self.key_compsec_id = [
+        #    value for key, value in area.world.config["companies"]["key_sector"].items()
+        #]
+        #self.compsec_by_sex_df = compsec_by_sex_df
+        #self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.area.world.config)
-        self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
-        self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
+        #self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
+        #self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
 
     def _get_age_brackets(self, nomis_age_bin):
@@ -86,36 +84,36 @@ class PersonDistributor:
         )
 
         # work msoa area/flow data
-        self.work_msoa_woman_rv = stats.rv_discrete(
-            values=(
-                np.arange(0, len(self.workflow_df.index.values)),
-                self.workflow_df["n_woman"].values,
-            )
-        )
-        self.work_msoa_man_rv = stats.rv_discrete(
-            values=(
-                np.arange(0, len(self.workflow_df.index.values)),
-                self.workflow_df["n_man"].values,
-            )
-        )
+        #self.work_msoa_woman_rv = stats.rv_discrete(
+        #    values=(
+        #        np.arange(0, len(self.workflow_df.index.values)),
+        #        self.workflow_df["n_woman"].values,
+        #    )
+        #)
+        #self.work_msoa_man_rv = stats.rv_discrete(
+        #    values=(
+        #        np.arange(0, len(self.workflow_df.index.values)),
+        #        self.workflow_df["n_man"].values,
+        #    )
+        #)
 
-        # companies data
-        numbers = np.arange(1, 22)
-        m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
+        ## companies data
+        #numbers = np.arange(1, 22)
+        #m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
 
-        distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
-        self.sector_distribution_male = stats.rv_discrete(
-            values=(numbers, distribution_male)
-        )
+        #distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
+        #self.sector_distribution_male = stats.rv_discrete(
+        #    values=(numbers, distribution_male)
+        #)
 
-        f_col = [col for col in self.compsec_by_sex_df.columns.values if "f " in col]
-        distribution_female = self.compsec_by_sex_df.loc[self.area.name][f_col].values
-        self.sector_distribution_female = stats.rv_discrete(
-            values=(numbers, distribution_female)
-        )
-        self.industry_dict = {
-            (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_col)
-        }
+        #f_col = [col for col in self.compsec_by_sex_df.columns.values if "f " in col]
+        #distribution_female = self.compsec_by_sex_df.loc[self.area.name][f_col].values
+        #self.sector_distribution_female = stats.rv_discrete(
+        #    values=(numbers, distribution_female)
+        #)
+        #self.industry_dict = {
+        #    (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_col)
+        #}
 
     def _assign_industry(self, i, person, sector_man, sector_woman, employed=True):
         """
@@ -244,29 +242,30 @@ class PersonDistributor:
             age = np.random.randint(age_1, age_2 + 1, 1)[0]
             age_random_array.append(age)
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
-        work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
-        work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(
-            size=self.area.n_residents
-        )
-        companysector_male_rnd_array = self.sector_distribution_male.rvs(
-            size=self.area.n_residents
-        )
-        companysector_female_rnd_array = self.sector_distribution_female.rvs(
-            size=self.area.n_residents
-        )
+        #work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
+        #work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(
+        #    size=self.area.n_residents
+        #)
+        #companysector_male_rnd_array = self.sector_distribution_male.rvs(
+        #    size=self.area.n_residents
+        #)
+        #companysector_female_rnd_array = self.sector_distribution_female.rvs(
+        #    size=self.area.n_residents
+        #)
 
         for i in range(self.area.n_residents):
             sex_random = sex_random_array[i]
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
-            is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
-            work_msoa_rnd = self.assign_work_msoarea(
-                i,
-                sex_random,
-                is_working_age,
-                work_msoa_man_rnd_array,
-                work_msoa_woman_rnd_array,
-            )
+            work_msoa_rnd=None
+            ##is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
+            ##work_msoa_rnd = self.assign_work_msoarea(
+            ##    i,
+            ##    sex_random,
+            ##    is_working_age,
+            ##    work_msoa_man_rnd_array,
+            ##    work_msoa_woman_rnd_array,
+            ##)
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
                 self.area.world,
@@ -290,28 +289,31 @@ class PersonDistributor:
                     self.area.women_by_age[age_random] = []
                 self.area.women_by_age[age_random].append(person)
 
-            if is_working_age:
-                self._assign_industry(
-                    i,
-                    person,
-                    companysector_male_rnd_array,
-                    companysector_female_rnd_array,
-                )
+            ##if is_working_age:
+            ##    self._assign_industry(
+            ##        i,
+            ##        person,
+            ##        companysector_male_rnd_array,
+            ##        companysector_female_rnd_array,
+            ##    )
             self.people.members.append(person)
             self.area.people.append(person)
-            if nomis_bin < self.OLD_THRESHOLD:
-                # find msoarea of work
-                idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
-                if len(idx) != 0:
-                    self.msoareas.members[idx[0]].work_people.append(person)
-                else:
-                    # TODO count people who work outside of the region
-                    # we currently simulate
-                    idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
-                    self.msoareas.members[idx].work_people.append(person)
+            ##if nomis_bin < self.OLD_THRESHOLD:
+            ##    # find msoarea of work
+            ##    idx = np.where(self.msoareas.ids_in_order == work_msoa_rnd)[0]
+            ##    if len(idx) != 0:
+            ##        self.msoareas.members[idx[0]].work_people.append(person)
+            ##    else:
+            ##        # TODO count people who work outside of the region
+            ##        # we currently simulate
+            ##        idx = np.random.choice(np.arange(len(self.msoareas.ids_in_order)))
+            ##        self.msoareas.members[idx].work_people.append(person)
 
         self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
         self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
+        #print("men by age")
+        #print(self.area.men_by_age)
+        #raise NotImplementedError
         total_people = 0
         for people_dict in [self.area.men_by_age, self.area.women_by_age]:
             for age in people_dict.keys():
