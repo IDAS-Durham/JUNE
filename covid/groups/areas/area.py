@@ -16,22 +16,21 @@ class Area(Group):
     def __init__(
         self,
         coordinates: list,
-        area: str,
+        name: str,
         super_area,
         n_residents: int,
         n_households: int,
         census_freq: dict,
         relevant_groups: list,
     ):
-        super().__init__(area, "area")
+        super().__init__(name, "area")
         self.coordinates = np.array(coordinates)  # Lon. & Lat
-        self.msoarea = super_area
+        self.super_area = super_area
         # distributions for distributing people
         self.census_freq = census_freq
         self.check_census_freq_ratios()
         self.n_residents = int(n_residents)
         self.n_households = n_households
-        self.household_composition_freq = decoder_household_composition
         # collect groups (such as hospitals schools, ...)
         self.people = []
         for relevant_groups in relevant_groups:
@@ -43,7 +42,7 @@ class Area(Group):
         Object that generates modes of transport randomly weighted by census data
         """
         return self.world.commute_generator.regional_gen_from_msoarea(
-            self.msoarea
+            self.super_area
         )
 
     def check_census_freq_ratios(self):
