@@ -1,2 +1,2 @@
-from .area import OArea, OAreas
-from .area_distributor import OAreaDistributor 
+from .area import Area, Areas
+from .area_distributor import AreaDistributor 

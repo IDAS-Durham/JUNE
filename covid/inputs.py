@@ -26,6 +26,12 @@ class Inputs:
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
 
         # This is the top-level of the hierarchy
+        self.n_residents_file = os.path.join(self.OUTPUT_AREA_DIR, "residents.csv")
+        self.age_freq_file = os.path.join(self.OUTPUT_AREA_DIR, "age_structure.csv")
+        self.sex_freq_file = os.path.join(self.OUTPUT_AREA_DIR, "sex.csv")
+        self.household_composition_freq_file = os.path.join(
+            self.OUTPUT_AREA_DIR, "household_composition.csv",
+        )
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
@@ -600,5 +606,6 @@ if __name__ == "__main__":
 
     ip = Inputs()
     #print(ip.workflow_df)
-    print("companysize_df\n", ip.companysize_df)
-    print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
+    #print("companysize_df\n", ip.companysize_df)
+    #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
+
