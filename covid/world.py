@@ -196,8 +196,8 @@ class World:
         )
 
         if not self.box_mode:
-            pbar = tqdm(total=len(self.msoareas.members))
-            for msoarea in self.msoareas.members:
+            pbar = tqdm(total=len(self.super_areas.members))
+            for msoarea in self.super_areas.members:
                 distributor = HospitalDistributor(self.hospitals, msoarea)
                 pbar.update(1)
             pbar.close()
@@ -298,7 +298,7 @@ class World:
         )
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
-           self.distributor = SchoolDistributor.from_file(
+            self.distributor = SchoolDistributor.from_file(
                 self.schools,
                 area,
                 self.inputs.school_config_path,
