@@ -44,7 +44,7 @@ class World:
         self.total_people = 0
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
-            #self.initialize_hospitals()
+            self.initialize_hospitals()
             #self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
