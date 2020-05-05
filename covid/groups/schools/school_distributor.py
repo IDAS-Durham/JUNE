@@ -161,8 +161,6 @@ class SchoolDistributor:
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
                         continue
 
-                    else:  # just keep the school saved in the previous for loop
-                        pass
                 school.people.append(person)
                 school.age_structure[person.age] += 1
                 person.school = school
