@@ -46,10 +46,10 @@ RKIdata = [
 
 class HealthIndex:
     def __init__(self, config=None):
-        if config==None or "health_datafiles" not in config:
+        if config is None or "health_datafiles" not in config:
             self.ICdata  = ICdata
             self.RKIdata = RKIdata
-        if config!=None:
+        if config is not None:
             self.ratio   = config["infection"]["asymptomatic_ratio"]
         else:
             self.ratio = 0.4
