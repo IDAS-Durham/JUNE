@@ -278,7 +278,12 @@ class World:
         pbar = tqdm(total=len(self.areas.members))
         self.households = Households(self)
         for area in self.areas.members:
-            household_distributor = HouseholdDistributor(self, area)
+            household_distributor = HouseholdDistributor(
+                self.households,
+                area,
+                self.areas,
+                self.config,
+            )
             household_distributor.distribute_people_to_household()
             pbar.update(1)
         pbar.close()
