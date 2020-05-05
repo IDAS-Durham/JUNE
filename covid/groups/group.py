@@ -42,6 +42,7 @@ class Group:
         "leisure_Indoor",
         "pub",
         "random",
+        "TestGroup",
         "referenceGroup",
         "shopping",
         "school",
@@ -109,6 +110,7 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
+    @property
     def must_timestep(self):
         return (self.size > 1 and
                 self.size_infected > 0 and
