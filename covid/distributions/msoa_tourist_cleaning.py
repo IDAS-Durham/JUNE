@@ -1,6 +1,31 @@
 import numpy as np
 import pandas as pd
+import argparse
 
+def parse():
+        '''
+        Parse input arguments
+        '''
+        parser = argparse.ArgumentParser(description='Clean Google Maps API data pulled using msoa_search.py')
+
+        parser.add_argument(
+            '--type',
+            dest='location_type',
+            help='Google maps type being selected (found on Google Cloud documentation)',
+            type=str
+        )
+
+        parser.add_argument(
+            '--msoa_coord_dir',
+            dest='msoa_coord',
+            help='directory containing MSOA centroids - assume also where file will be saved to',
+            type=str
+        )
+
+        args = parser.parse_args()
+
+        return args
+    
 def clean(region_file, msoa_file):
 
     msoa = []
@@ -26,10 +51,12 @@ def clean(region_file, msoa_file):
 
 if __name__ == "__main__":
 
+    args = parse()
+
     regions = ['Yorkshire', 'London', 'Wales', 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
     for region in regions:
         print ('Working on region: {}'.format(region))
-        region_file = np.load('./../../custom_data/outs_{}.npy'.format(region), allow_pickle=True)
-        msoa_file = pd.read_csv('./../../custom_data/msoa_{}.csv'.format(region))
+        region_file = np.load('{}/outs_{}_{}.npy'.format(args.msoa_coord, args.location_type, region), allow_pickle=True)
+        msoa_file = pd.read_csv('{}/msoa_{}.csv'.format(args.msoa_coord, region))
         df_clean = clean(region_file, msoa_file)
-        df_clean.to_csv('./../../custom_data/outs_{}_clean.csv'.format(region))
+        df_clean.to_csv('{}/outs_{}_{}_clean.csv'.format(args.msoa_coord, args.location_type, region))
