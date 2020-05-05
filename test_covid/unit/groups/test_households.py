@@ -12,12 +12,12 @@ def test_no_homeless(world_ne):
     """
     Check that no one belonging to an are is left without a house
     """
-    total_in_households = 0
-    for i in range(len(world_ne.areas.members)):
-        for j in range(len(world_ne.areas.members[i].households)):
-            total_in_households += len(world_ne.areas.members[i].households[j].people)
+    people_in_households = set()
+    for member in world_ne.areas.members:
+        for household in member.households:
+            people_in_households.update(household.people)
 
-    assert total_in_households == len(world_ne.people.members)
+    assert len(people_in_households) == len(world_ne.people.members)
 
 
 def test_enough_houses(world_ne):
