@@ -6,3 +6,5 @@ intensities:
   pub: 1.
   company: 1.
   household: 1.
+  box: 1.
+  cemetery: 1.

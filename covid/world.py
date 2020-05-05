@@ -194,11 +194,21 @@ class World:
             box_mode=self.box_mode,
         )
 
-        pbar = tqdm(total=len(self.msoareas.members))
-        for msoarea in self.msoareas.members:
-            distributor = HospitalDistributor(self.hospitals, msoarea)
-            pbar.update(1)
-        pbar.close()
+
+
+    def initialize_hospitals(self):
+        self.hospitals = Hospitals.from_file(
+            self.inputs.hospital_data_path,
+            self.inputs.hospital_config_path,
+            box_mode=self.box_mode,
+        )
+
+        if not self.box_mode:
+            pbar = tqdm(total=len(self.msoareas.members))
+            for msoarea in self.msoareas.members:
+                distributor = HospitalDistributor(self.hospitals, msoarea)
+                pbar.update(1)
+            pbar.close()
 
     def initialize_pubs(self):
         print("Creating Pubs **********")
@@ -359,7 +369,7 @@ class World:
         return infection
 
     def seed_infections_group(self, group, n_infections):
-        choices = np.random.choice(group.size, n_infections)
+        choices = np.random.choice(group.size, n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(
