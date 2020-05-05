@@ -97,7 +97,9 @@ class Group:
 
     def set_active_members(self):
         for person in self.people:
-            if person.active_group is not None:
+            if person.in_hospital is not None:
+                person.active_group = None
+            elif person.active_group is not None:
                 raise ValueError("Trying to set an already active person")
             else:
                 person.active_group = self.spec
@@ -124,6 +126,8 @@ class Group:
             elif person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
+            if person.health_information.in_hospital:
+                person.get_into_hospital()
             elif person.health_information.dead:
                 person.bury()
                 self.people.remove(person)

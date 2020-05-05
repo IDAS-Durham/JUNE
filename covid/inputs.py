@@ -43,17 +43,7 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
 
-        self.hospital_df = pd.read_csv(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "data",
-                "census_data",
-                "hospital_data",
-                "england_hospitals.csv",
-            )
-        )
-        
+       
         self.pubs_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -68,7 +58,6 @@ class Inputs:
         pub_ids = np.arange(len(self.pubs_df["Latitude"]))
         self.pubs_df["Ids"] = pub_ids
         
-        self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
         
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
@@ -135,6 +124,13 @@ class Inputs:
         self.school_config_path = (
             Path(__file__).parent.parent / \
             "configs/defaults/schools.yaml"
+        )
+
+        self.hospital_data_path = (
+            Path(__file__).parent.parent / "data/processed/hospital_data/england_hospitals.csv"
+        )
+        self.hospital_config_path = (
+            Path(__file__).parent.parent / "configs/defaults/hospitals.yaml"
         )
 
 

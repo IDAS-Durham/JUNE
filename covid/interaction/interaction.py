@@ -121,6 +121,7 @@ class InteractionCollective(Interaction):
 
         group_type = group.spec
         summed_load = 0.0
+        print(f'GROUP TYPE : {group_type}')
         interaction_intensity = (
             self.intensities.get(group_type)
             / (max(1, group.size) ** self.get_alpha(group_type=group_type))
