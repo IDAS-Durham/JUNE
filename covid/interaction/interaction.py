@@ -18,7 +18,7 @@ class Interaction:
         # with delta_time
         group.update_status_lists(time=time, delta_time=0)
         self.single_time_step_for_group(group=group, time=time, delta_time=delta_time)
-        group.update_status_lists(time=time, delta_time=0)
+        group.update_status_lists(time=time, delta_time=delta_time)
 
     def single_time_step_for_group(self, group, time, delta_time):
         raise NotImplementedError()

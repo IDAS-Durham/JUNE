@@ -48,7 +48,7 @@ class Logger:
             self.data_dict["world"][day]["susceptible"] = len(box.susceptible)
             self.data_dict["world"][day]["infected"] = len(box.infected)
             self.data_dict["world"][day]["recovered"] = len(box.recovered)
-            self.log_infection_generation(day)
+            #self.log_infection_generation(day)
             self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
@@ -258,9 +258,9 @@ class Logger:
             
 
             N = len(self.world.boxes.members[0].people)
-            I_0 = self.data_dict["world"][1]["infected"]
+            I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
+            beta = self.world.config["infection"]["transmission"]["parameters"]["probability"]
 
-            beta = self.world.config["infection"]["transmission"]["parameters"]["transmission_probability"]["parameters"]["value"]
             beta /= self.world.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
             gamma = self.world.config["infection"]["symptoms"]["parameters"]["recovery_rate"]
             gamma /= self.world.timer.get_number_shifts(None)
