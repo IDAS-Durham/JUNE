@@ -228,6 +228,22 @@ class InteractionCollective(Interaction):
 
         return self.weights[idx][0]
 
+    #TODO: Comes from IC, but do we want to get rid off it?
+    def get_alpha(self, group_type):
+
+        if group_type in self.alphas:
+            return self.alphas[group_type]
+
+        return 1.0
+
+    def set_alphas(self, alphas):
+
+        self.alphas = alphas
+
+    def set_alpha_of_group_type(self, group_type, alpha):
+
+        self.alphas[group_type] = alpha
+
 
 # TODO: ALL THIS NEEDS TO BE REFACTORED, NOT WORKING AT THE MOMENT
 # TODO: READ MAX AGE (100) FROM SOMEWHERE
