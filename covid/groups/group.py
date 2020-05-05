@@ -42,6 +42,9 @@ class AbstractGroup(ABC):
             if person.health_information.susceptible
         ]
 
+    def __contains__(self, item):
+        return item in self.people
+
     @property
     def infected(self) -> List:
         """
@@ -90,6 +93,9 @@ class People(AbstractGroup):
 
     def remove(self, person):
         self._people.remove(person)
+
+    def __iter__(self):
+        return self._people
 
 
 class Group(AbstractGroup):
