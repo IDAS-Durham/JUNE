@@ -122,7 +122,7 @@ class HouseholdDistributor:
                 oldwoman = self.area._oldwomen.popitem()[1]
                 household.add(oldwoman, "old adults")
                 return 1
-                if n_old >= 2 and self.area._oldwomen:
+            if n_old >= 2 and self.area._oldwomen:
                     oldwoman = self.area._oldwomen.popitem()[1]
                     household.add(oldwoman, "old adults")
                     return 2
