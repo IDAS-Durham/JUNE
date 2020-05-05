@@ -97,6 +97,9 @@ class People(AbstractGroup):
     def remove(self, person):
         self._people.remove(person)
 
+    def __getitem__(self, item):
+        return self._people[item]
+
 
 class Group(AbstractGroup):
     """
