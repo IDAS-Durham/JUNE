@@ -57,6 +57,7 @@ class InteractionCollective(Interaction):
         """
         super().__init__(intensities)
         self.mode = mode
+        self.alphas = {}
 
     @classmethod
     def from_file(
