@@ -31,9 +31,11 @@ infection:
   transmission:
     type: constant
     parameters:
-      probability: 0.6
+      probability: 0.3
 
   symptoms:
     type: constant
     parameters:
-      recovery_rate: 0.5
+      recovery_rate: 0.05
+
+
