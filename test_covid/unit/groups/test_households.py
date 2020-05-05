@@ -1,11 +1,14 @@
+from covid.groups import Household
+
+
 def test_no_lonely_children(world_ne):
     """
     Check there ar eno children living without adults
     """
     for member in world_ne.areas.members:
         for household in member.households:
-            if household["kids"].size > 0:
-                assert household["adults"].size > 0
+            if household[Household.GroupType.kids].size > 0:
+                assert household[Household.GroupType.adults].size > 0
 
 
 def test_no_homeless(world_ne):
