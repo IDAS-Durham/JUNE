@@ -3,7 +3,7 @@ import sys
 """
 organise data according to
  * lower age threshold,
- * probabilities for (non-symptomatic, influenza-like symptoms, pneumonia, 
+ * probabilities for (non-symptomatic, influenza-like symptoms, pneumonia,
                       hospitalisation, intensive care, fatality)
 The problem is to backwards calculate the rates for each one.  For a first model
 I use the IC data
@@ -37,7 +37,7 @@ ICdata = [
 
 RKIdata = [
     [0.,   4.0],
-    [5.,   4.0], 
+    [5.,   4.0],
     [15.,  1.5],
     [35.,  4.0],
     [60., 14.0],
@@ -46,11 +46,10 @@ RKIdata = [
 
 class HealthIndex:
     def __init__(self, config=None):
-        #print ("Init health index calculator")
         if config==None or "health_datafiles" not in config:
             self.ICdata  = ICdata
             self.RKIdata = RKIdata
-        if config!=None: 
+        if config!=None:
             self.ratio   = config["infection"]["asymptomatic_ratio"]
         else:
             self.ratio = 0.4
@@ -61,40 +60,37 @@ class HealthIndex:
                 self.ICdata[row][1][j] /= 100.
         for row in range(len(self.RKIdata)):
             self.RKIdata[row][1] /= 100.
-        self.make_list()
-            
-    def make_list(self):
-        self.index_list = []
+
+        self.index_dict = {}
+        self.make_dict()
+
+    def make_dict(self):
+        lenIC  = len(self.ICdata)
+        lenRKI = len(self.RKIdata)
         for age in range(120):
-            ageindex  = len(self.ICdata)-1
+            ageindex  = lenIC - 1
             threshold = self.ICdata[ageindex][0]
             while threshold> 1.*age and ageindex>=0:
                 ageindex  -= 1
                 threshold  = self.ICdata[ageindex][0]
+
             hospindex = self.ICdata[ageindex][1]
-            hospsum = 0.
-            for i in hospindex:
-                hospsum += i
-            ageindex  = len(self.RKIdata)-1
+            hospsum   = sum(hospindex)
+
+            ageindex  = lenRKI - 1
             threshold = self.RKIdata[ageindex][0]
             while threshold> 1.*age and ageindex>=0:
                 ageindex  -= 1
                 threshold  = self.RKIdata[ageindex][0]
-            prate = self.RKIdata[ageindex][1]
-            nohosp = 1.-self.ratio-hospsum
-            age_list = [self.ratio,
-                        self.ratio+nohosp*(1.-prate),self.ratio+nohosp]
-            hospdiff = 0. 
+
+            prate    = self.RKIdata[ageindex][1]
+            nohosp   = 1. - self.ratio - hospsum
+            age_list = [self.ratio, self.ratio + nohosp*(1.-prate), self.ratio + nohosp]
+            hospdiff = 0.
             for hosp in hospindex:
                 hospdiff += hosp
-                age_list.append(self.ratio+nohosp+hospdiff)
-            #if age%5==False:
-                #print ("HI for ",age,":",age_list)
-            self.index_list.append([age, age_list])
-                
-    def get_index_for_age(self,age):
-        roundage = round(age) 
-        for index in self.index_list:
-            if index[0]==roundage:
-                return index[1]
-        print ("oh oh")
+                age_list.append(self.ratio + nohosp + hospdiff)
+            self.index_dict[age] = age_list
+
+    def get_index_for_age(self, age):
+        return self.index_dict[round(age)]
