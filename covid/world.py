@@ -49,7 +49,7 @@ class World:
                 self.inputs.commute_generator_path
             )
             self.initialize_areas()
-            self.initialize_msoa_areas()
+            self.initialize_super_areas()
             self.initialize_people()
             self.initialize_households()
             self.initialize_hospitals()
@@ -191,8 +191,11 @@ class World:
         self.cemeteries = Cemeteries(self)
 
     def initialize_hospitals(self):
-        self.hospitals = Hospitals.from_file(self.inputs.hospital_data_path,
-            self.inputs.hospital_config_path, box_mode = self.box_mode)
+        self.hospitals = Hospitals.from_file(
+            self.inputs.hospital_data_path,
+            self.inputs.hospital_config_path,
+            box_mode = self.box_mode
+        )
 
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
@@ -210,17 +213,30 @@ class World:
         demographic information about people living in it.
         """
         print("Initializing areas...")
-        self.areas = OAreas(self)
-        areas_distributor = OAreaDistributor(self.areas, self.inputs)
+        self.areas = Areas.from_file(
+            self.inputs.n_residents_file,
+            self.inputs.age_freq_file,
+            self.inputs.sex_freq_file,
+            self.inputs.household_composition_freq_file,
+        )
+        areas_distributor = AreaDistributor(
+            self.areas,
+            self.inputs.area_mapping_df,
+            self.inputs.areas_coordinates_df,
+            self.relevant_groups,
+        )
         areas_distributor.read_areas_census()
 
-    def initialize_msoa_areas(self):
+    def initialize_super_areas(self):
         """
-        An MSOA area is a group of output areas. We use them to store company data.
+        An super_area is a group of areas. We use them to store company data.
         """
-        print("Initializing MSOAreas...")
-        self.msoareas = MSOAreas(self)
-        msoareas_distributor = MSOAreaDistributor(self.msoareas)
+        print("Initializing SuperAreas...")
+        self.super_areas = SuperAreas(self)
+        super_areas_distributor = SuperAreaDistributor(
+            self.super_areas,
+            self.relevant_groups,
+        )
 
     def initialize_people(self):
         """
@@ -237,10 +253,12 @@ class World:
             # get msoa flow data for this oa area
             wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.name,)]
             person_distributor = PersonDistributor(
+                self,
                 self.timer,
                 self.people,
+                self.areas,
                 area,
-                self.msoareas,
+                self.super_areas,
                 self.inputs.compsec_by_sex_df,
                 wf_area_df,
                 self.inputs.key_compsec_ratio_by_sex_df,
