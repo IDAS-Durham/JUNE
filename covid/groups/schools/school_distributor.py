@@ -29,7 +29,6 @@ class SchoolDistributor:
             config dictionary.
         """
         self.area = area
-        self.world = area.world
         self.msoarea = area.msoarea
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
@@ -186,7 +185,7 @@ class SchoolDistributor:
         # Note: doing it this way rather then putting them into the area which
         # is currently chose in the for-loop in the world.py file ensure that
         # teachers are equally distr., no over-crowding
-        areas_in_msoa = self.msoarea.oarea
+        areas_in_msoa = self.msoarea.areas
         areas_rv = stats.rv_discrete(
             values=(
                 np.arange(len(areas_in_msoa)),

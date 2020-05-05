@@ -4,6 +4,7 @@ backcall==0.1.0
 click==7.1.1
 click-plugins==1.1.1
 cligj==0.5.0
+codecov>=2.0
 cycler==0.10.0
 Cython==0.29.16
 decorator==4.4.2
