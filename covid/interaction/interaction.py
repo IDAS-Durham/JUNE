@@ -3,36 +3,60 @@ import numpy as np
 import yaml
 from pathlib import Path
 
-collective_default_config_filename = Path(
-    __file__
-).parent.parent.parent / "configs/defaults/interaction/InteractionCollective.yaml"
+collective_default_config_filename = (
+    Path(__file__).parent.parent.parent
+    / "configs/defaults/interaction/InteractionCollective.yaml"
+)
+
 
 class Interaction:
-
     def __init__(self, intensities: dict):
+        """
+        Interaction class, makes interactions between members of a group happen
+        leading to infections
+
+        Parameters
+        ----------
+
+        intensities:
+            dictionary of intensities for the different
+            group types
+        """
         self.intensities = intensities
 
-    def time_step(self, time, delta_time, group):
+    def time_step(self, time: float, delta_time: float, group: "Group"):
+        """
+        Runs the interaction model for a time step
 
-        # TODO think how we treat the double update_status_lists and make it consistent
-        # with delta_time
-        group.update_status_lists(time=time, delta_time=0)
+        Parameters
+        ----------
+
+        time:
+            time at which the
+        delta_time: 
+            duration of the timestep
+        group:
+            group to run the interaction on
+        """
+
         self.single_time_step_for_group(group=group, time=time, delta_time=delta_time)
         group.update_status_lists(time=time, delta_time=delta_time)
 
-    def single_time_step_for_group(self, group, time, delta_time):
-        raise NotImplementedError()
-
-
 
 class InteractionCollective(Interaction):
-
     def __init__(self, mode: str, intensities: dict):
+        """
+        Define an interaction model where probabilities are combined
 
+        Parameters
+        ---------
+        mode:
+            mode of interatio. Either probabilistic or 
+        intensities:
+            dictionary with group intensities depending on group type
+        """
         super().__init__(intensities)
-
         self.mode = mode
-        self.alphas = {}
 
     @classmethod
     def from_file(
@@ -40,6 +64,7 @@ class InteractionCollective(Interaction):
     ) -> "InteractionCollective":
         """
         Initialize Hospitals from path to data frame, and path to config file 
+
         Parameters
         ----------
         filename:
@@ -53,10 +78,23 @@ class InteractionCollective(Interaction):
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return InteractionCollective(config.get('mode'), config.get('intensities'))
+        return InteractionCollective(config.get("mode"), config.get("intensities"))
 
+    def single_time_step_for_group(
+        self, group: "Group", time: float, delta_time: float
+    ):
+        """
+        Runs the interaction model for a time step
 
-    def single_time_step_for_group(self, group, time, delta_time):
+        Parameters
+        ----------
+        group:
+            group to run the interaction on
+        time:
+            time at which the
+        delta_time: 
+            duration of the timestep
+        """
 
         if group.must_timestep:
 
@@ -67,13 +105,31 @@ class InteractionCollective(Interaction):
 
             for recipient in group.susceptible:
                 self.single_time_step_for_recipient(
-                    recipient=recipient, effective_load=effective_load, group=group, time=time
+                    recipient=recipient,
+                    effective_load=effective_load,
+                    group=group,
+                    time=time,
                 )
 
-        #if group.spec == "hospital":
-        #TODO: must allow for infection of workers by patients
+        # TODO: must allow for infection of workers by patients
 
-    def single_time_step_for_recipient(self, recipient, effective_load, group, time):
+    def single_time_step_for_recipient(
+        self, recipient: "Person", effective_load: float, group: "Group", time: float
+    ):
+        """
+        Run the interaction time step for a recipient of the interaction
+
+        Parameters
+        ----------
+        recipient:
+            person susceptible to be infected
+        effective_load:
+            combined probability of all the infected people in the group during the whole time step to infect recipient
+        group:
+            group in which to run the interaction
+        time:
+            time at which the interaction happens
+        """
 
         transmission_probability = 0.0
 
@@ -89,7 +145,9 @@ class InteractionCollective(Interaction):
             logic of the SI/SIR models --- and normalised to the time interval, given in
             units of full days.
             """
-            transmission_probability = recipient.health_information.susceptibility * effective_load
+            transmission_probability = (
+                recipient.health_information.susceptibility * effective_load
+            )
         elif self.mode == "probabilistic":
             """
             multiplicative probability from product of non-infection probabilities.
@@ -117,7 +175,18 @@ class InteractionCollective(Interaction):
                 time=time, group_type=group.spec
             )
 
-    def calculate_effective_viral_load(self, group, delta_time):
+    def calculate_effective_viral_load(self, group: "Group", delta_time: float):
+        """
+        Calculate the combined effect of all infected people over a time step
+        to infect the susceptible people in the group
+
+        Parameters
+        ---------
+        group:
+            group over which to compute the viral load
+        delta_time:
+            duration of the time step
+        """
 
         group_type = group.spec
         summed_load = 0.0
@@ -148,6 +217,10 @@ class InteractionCollective(Interaction):
         return summed_load
 
     def select_infecter(self):
+        """
+        Assign responsiblity to infecter for infecting someone
+
+        """
 
         choice_weights = [w[1] for w in self.weights]
 
@@ -155,22 +228,8 @@ class InteractionCollective(Interaction):
 
         return self.weights[idx][0]
 
-    def get_alpha(self, group_type):
 
-        if group_type in self.alphas:
-            return self.alphas[group_type]
-
-        return 1.0
-
-    def set_alphas(self, alphas):
-
-        self.alphas = alphas
-
-    def set_alpha_of_group_type(self, group_type, alpha):
-
-        self.alphas[group_type] = alpha
-
-
+# TODO: ALL THIS NEEDS TO BE REFACTORED, NOT WORKING AT THE MOMENT
 # TODO: READ MAX AGE (100) FROM SOMEWHERE
 class MatrixInteraction(Interaction):
     """
@@ -199,7 +258,9 @@ class MatrixInteraction(Interaction):
             for infecter in group.get_infected():
                 contact_ages = self.prepare_interaction_ages(infecter, group)
                 for age in contact_ages:
-                    self.make_interactions(time=time, infecter=infecter, group=group, age=age)
+                    self.make_interactions(
+                        time=time, infecter=infecter, group=group, age=age
+                    )
 
         if group.spec == "hospital":
             print("must allow for infection of workers by patients")
@@ -207,7 +268,11 @@ class MatrixInteraction(Interaction):
     def make_interactions(self, time, infecter, group, age):
         # randomly select someone with that age
         recipient = self.make_single_contact(infecter, group, age)
-        if recipient and not (recipient.is_infected()) and recipient.susceptibility > 0.0:
+        if (
+            recipient
+            and not (recipient.is_infected())
+            and recipient.susceptibility > 0.0
+        ):
             if random.random() <= 1.0 - np.exp(
                 -self.transmission_probability * recipient.susceptibility()
             ):

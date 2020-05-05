@@ -19,6 +19,8 @@ from covid.infection import symptoms
 from covid.infection import Infection
 from covid.groups.people import HealthIndex
 
+world_logger = logging.getLogger(__name__)
+
 
 class World:
     """
@@ -28,7 +30,7 @@ class World:
     def __init__(
         self, config_file=None, box_mode=False, box_n_people=None, box_region=None
     ):
-        print("Initializing world...")
+        world_logger.info("Initializing world...")
         # read configs
         self.read_config(config_file)
         self.relevant_groups = self.get_simulation_groups()
@@ -40,14 +42,12 @@ class World:
         self.timer = Timer(self.config["time"])
         self.people = []
         self.total_people = 0
-        print("Reading inputs...")
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
             self.initialize_hospitals()
             self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
-            print("Initializing commute generator...")
             self.commute_generator = CommuteGenerator.from_file(
                 self.inputs.commute_generator_path
             )
@@ -60,25 +60,25 @@ class World:
             if "schools" in self.relevant_groups:
                 self.initialize_schools()
             else:
-                print("schools not needed, skipping...")
+                world_logger.info("schools not needed, skipping...")
             if "companies" in self.relevant_groups:
                 self.initialize_companies()
             else:
-                print("companies not needed, skipping...")
+                world_logger.info("companies not needed, skipping...")
             if "boundary" in self.relevant_groups:
                 self.initialize_boundary()
             else:
-                print("nothing exists outside the simulated region")
+                world_logger.info("nothing exists outside the simulated region")
             if "pubs" in self.relevant_groups:
                 self.initialize_pubs()
                 self.group_maker = GroupMaker(self)
             else:
-                print("pubs not needed, skipping...")
+                world_logger.info("pubs not needed, skipping...")
         self.interaction = self.initialize_interaction()
         self.logger = Logger(
             self, self.config["logger"]["save_path"], box_mode=box_mode
         )
-        print("Done.")
+        world_logger.info("Done.")
 
     def world_creation_logger(
         self, save_path, config_file=None, default_level=logging.INFO,
@@ -177,7 +177,7 @@ class World:
         schools, households, etc.
         Useful for testing interaction models and comparing to SIR.
         """
-        print("Setting up box mode...")
+        world_logger.info("Setting up box mode...")
         self.boxes = Boxes()
         box = BoxGenerator(self, region, n_people)
         self.boxes.members = [box]
@@ -194,8 +194,6 @@ class World:
             box_mode=self.box_mode,
         )
 
-
-
     def initialize_hospitals(self):
         self.hospitals = Hospitals.from_file(
             self.inputs.hospital_data_path,
@@ -211,7 +209,6 @@ class World:
             pbar.close()
 
     def initialize_pubs(self):
-        print("Creating Pubs **********")
         self.pubs = Pubs(self, self.inputs.pubs_df, self.box_mode)
 
     def initialize_areas(self):
@@ -219,7 +216,6 @@ class World:
         Each output area in the world is represented by an Area object. This Area object contains the
         demographic information about people living in it.
         """
-        print("Initializing areas...")
         self.areas = OAreas(self)
         areas_distributor = OAreaDistributor(self.areas, self.inputs)
         areas_distributor.read_areas_census()
@@ -228,7 +224,6 @@ class World:
         """
         An MSOA area is a group of output areas. We use them to store company data.
         """
-        print("Initializing MSOAreas...")
         self.msoareas = MSOAreas(self)
         msoareas_distributor = MSOAreaDistributor(self.msoareas)
 
@@ -236,7 +231,6 @@ class World:
         """
         Populates the world with person instances.
         """
-        print("Initializing people...")
         # self.people = People.from_file(
         #    self.inputs.,
         #    self.inputs.,
@@ -265,7 +259,6 @@ class World:
         Calls the HouseholdDistributor to assign people to households following
         the census household compositions.
         """
-        print("Initializing households...")
         pbar = tqdm(total=len(self.areas.members))
         self.households = Households(self)
         for area in self.areas.members:
@@ -279,7 +272,6 @@ class World:
         Schools are organized in NN k-d trees by age group, so we can quickly query
         the closest age compatible school to a certain kid.
         """
-        print("Initializing schools...")
         self.schools = Schools.from_file(
             self.inputs.school_data_path, self.inputs.school_config_path
         )
@@ -297,7 +289,6 @@ class World:
         """
         Companies live in MSOA areas.
         """
-        print("Initializing Companies...")
         self.companies = Companies.from_file(
             self.inputs.companysize_file, self.inputs.company_per_sector_per_msoa_file,
         )
@@ -314,7 +305,6 @@ class World:
         It interacts with the population in the simulated region only
         in companies. No interaction takes place during leasure activities.
         """
-        print("Creating Boundary...")
         self.boundary = Boundary(self)
 
     def initialize_interaction(self):
@@ -344,8 +334,8 @@ class World:
             transmission_type = self.config["infection"]["transmission"]["type"]
             if "parameters" in self.config["infection"]["transmission"]:
                 transmission_parameters = self.config["infection"]["transmission"][
-                "parameters"
-            ]
+                    "parameters"
+                ]
             else:
                 transmission_parameters = {}
             transmission_class_name = "Transmission" + transmission_type.capitalize()
@@ -385,7 +375,7 @@ class World:
         group.update_status_lists(self.timer.now, delta_time=0)
 
     def seed_infections_box(self, n_infections):
-        print("seed ", n_infections, "infections in box")
+        world_logger.info("seed ", n_infections, "infections in box")
         choices = np.random.choice(self.people.members, n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
@@ -394,10 +384,8 @@ class World:
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()
-        # print ("=====================================================")
-        # print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
-            print("==== do_timestep(): no active groups found. ====")
+            world_logger.info("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
@@ -413,10 +401,7 @@ class World:
 
     def group_dynamics(self, n_seed=100):
         print(
-            "Starting group_dynamics for ",
-            self.timer.total_days,
-            " days at day",
-            self.timer.day,
+            f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
         )
         assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
         # TODO: move to function that checks the config file (types, values, etc...)
@@ -424,12 +409,6 @@ class World:
         if self.box_mode:
             self.seed_infections_box(n_seed)
         else:
-            print(
-                "Infecting individuals in their household,",
-                "for in total ",
-                len(self.households.members),
-                " households.",
-            )
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
         print(
