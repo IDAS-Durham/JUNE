@@ -17,8 +17,10 @@ class PersonDistributor:
 
     def __init__(
         self,
+        world,
         timer,
         people,
+        areas,
         area,
         msoareas,
         compsec_by_sex_df,
@@ -29,7 +31,8 @@ class PersonDistributor:
         """
         """
         self.timer = timer
-        self.world = area.world
+        self.world = world
+        self.areas = areas
         self.area = area
         self.msoareas = msoareas
         self.people = people
@@ -260,7 +263,7 @@ class PersonDistributor:
         age_random_array = []
         for nomis in nomis_bin_random_array:
             age_1, age_2 = self._get_age_brackets(
-                self.area.world.inputs.decoder_age[nomis]
+                self.areas.decoder_age[nomis]
             )
             age = np.random.randint(age_1, age_2 + 1, 1)[0]
             age_random_array.append(age)
