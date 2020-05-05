@@ -13,15 +13,13 @@ class Household(Group):
     """
 
     def __init__(self, house_id, composition, area):
-        super().__init__("Household_%03d" % house_id, "household", [
-            "kids", "young adults", "adults", "old adults"
-        ])
+        super().__init__("Household_%03d" % house_id, "household", 4)
         self.id = house_id
         self.area = area
         self.household_composition = composition
 
     def add(self, person, qualifier="adults"):
-        super().add(person, qualifier)
+        super().add(person, self.index(qualifier))
         person.household = self
 
     def set_active_members(self):

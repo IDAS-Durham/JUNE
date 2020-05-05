@@ -142,30 +142,28 @@ class Group(AbstractGroup):
         "work_Indoor",
     ]
 
-    def __init__(self, name, spec, group_names=None):
+    def __init__(self, name, spec, Ngroups=1):
         self.sane(name, spec)
-        self.name = name
-        self.spec = spec
-        self.group_map = dict()
-        group_names = group_names or ["default"]
-        number_of_groups = len(group_names)
-        self.intensities = np.ones((number_of_groups, number_of_groups))
-        for i, name in enumerate(group_names):
-            self.group_map[name] = People(self.intensities[i][i])
+        self.name    = name
+        self.spec    = spec
+        self.Ngroups = Ngroups
+        self.groups  = [People() for i in range(self.Ngroups)]
+        self.intensities = np.ones((self.Ngroups, self.Ngroups))
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
             raise GroupException(f"{spec} is not an allowed group type")
 
-    def __getitem__(self, item="default"):
-        return self.group_map[item]
+    def __getitem__(self, item=0):
+        return self.groups[item]
 
-    def add(self, person, qualifier):
-        self[qualifier].append(person)
+    def add(self, person, qualifier=None):
+        if qualifier==None or self.Ngroups==1:
+            self.groups[0].append(person)
 
     @property
     def groups(self):
-        return list(self.group_map.values())
+        return self.groups
 
     def clear(self):
         for group in self.groups:
