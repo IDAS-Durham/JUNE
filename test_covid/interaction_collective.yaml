@@ -1,8 +1,8 @@
-mode: superposition
-
+mode: probabilistic 
 intensities:
   schools: 1.
   hospitals: 1.
   pubs: 1.
   companies: 1.
   households: 1.
+  TestGroup: 1.
