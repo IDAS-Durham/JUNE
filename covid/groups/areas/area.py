@@ -15,7 +15,7 @@ class Area(Group):
 
     def __init__(
         self,
-        coordinates: list,
+        coordinates: [float, float],
         name: str,
         super_area,
         n_residents: int,

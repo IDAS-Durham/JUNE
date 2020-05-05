@@ -456,9 +456,9 @@ class World:
 
 if __name__ == "__main__":
     world = World(
-        config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
-        box_mode=True,
-        box_region='test',
+        config_file=os.path.join("../configs", "config_example.yaml"),
+        #box_mode=True,
+        #box_region='test',
     )
 
 

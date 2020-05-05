@@ -26,6 +26,13 @@ class Inputs:
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
             
         # For the new structure -----------------------------------------------
+
+        # set up main directory paths ------
+        company_data_path = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+        )
+        # ----------------------------------
         self.n_residents_file = os.path.join(
             self.OUTPUT_AREA_DIR, "residents.csv"
         )
@@ -43,31 +50,11 @@ class Inputs:
             Path(__file__).parent.parent / \
             "data/processed/flow_in_msoa_wu01ew_2011.csv"
         )
-        self.companysize_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "companysize_msoa11cd_2019.csv"
-        )
-        self.company_per_sector_per_msoa_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "companysector_msoa11cd_2011.csv"
-        )
-        self.sex_per_sector_per_msoa_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "companysector_by_sex_cleaned.csv"
-        )
-        self.companysector_education_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "education_by_sex_2011.csv"
-        )
-        self.companysector_healthcare_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "healthcare_by_sex_2011.csv"
-        )
+        self.companysize_file = company_data_path / "companysize_msoa11cd_2019.csv"
+        self.company_per_sector_per_msoa_file = company_data_path / "companysector_msoa11cd_2011.csv"
+        self.sex_per_sector_per_msoa_file = company_data_path / "companysector_by_sex_cleaned.csv"
+        self.companysector_education_file = company_data_path / "education_by_sex_2011.csv"
+        self.companysector_healthcare_file = company_data_path / "healthcare_by_sex_2011.csv"
         self.school_data_path = (
             Path(__file__).parent.parent / \
             "data/processed/school_data/england_schools_data.csv"

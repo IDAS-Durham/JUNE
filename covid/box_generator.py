@@ -56,7 +56,7 @@ class BoxGenerator(Box):
         We sample uniformly inside each age bin, and we assign a health index based on the age.
         """
         inputs = Inputs(zone=region)
-        (n_residents, age_freq, sex_freq) = self.from_file(inputs)
+        n_residents, age_freq, sex_freq = self.from_file(inputs)
         # sex numbers
         number_of_men = (
             n_residents["n_residents"].values * sex_freq["males"].values
@@ -116,10 +116,7 @@ class BoxGenerator(Box):
         np.random.shuffle(self.people)
 
 
-    def from_file(
-        self,
-        inputs: "Inputs",
-    ):
+    def from_file(self, inputs):
         """
         Parameters
         ----------
@@ -140,7 +137,7 @@ class BoxGenerator(Box):
         age_freq = age_freq.div(age_freq.sum(axis=1), axis=0)
         sex_freq = pd.read_csv(inputs.sex_freq_file, index_col="output_area")
         sex_freq = sex_freq.div(sex_freq.sum(axis=1), axis=0)
-        return (n_residents, age_freq, sex_freq)
+        return n_residents, age_freq, sex_freq
 
 
     def create_random_box(self, n_people):
