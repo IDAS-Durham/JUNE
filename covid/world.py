@@ -49,7 +49,7 @@ class World:
                 self.inputs.commute_generator_path
             )
             self.initialize_areas()
-            self.initialize_msoa_areas()
+            self.initialize_super_areas()
             self.initialize_people()
             self.initialize_households()
             self.initialize_hospitals()
@@ -191,12 +191,15 @@ class World:
         self.cemeteries = Cemeteries(self)
 
     def initialize_hospitals(self):
-        self.hospitals = Hospitals.from_file(self.inputs.hospital_data_path,
-            self.inputs.hospital_config_path, box_mode = self.box_mode)
+        self.hospitals = Hospitals.from_file(
+            self.inputs.hospital_data_path,
+            self.inputs.hospital_config_path,
+            box_mode = self.box_mode
+        )
 
-        pbar = tqdm(total=len(self.msoareas.members))
-        for msoarea in self.msoareas.members:
-            distributor = HospitalDistributor(self.hospitals, msoarea)
+        pbar = tqdm(total=len(self.super_areas.members))
+        for super_area in self.super_areas.members:
+            distributor = HospitalDistributor(self.hospitals, super_area)
             pbar.update(1)
         pbar.close()
 
@@ -206,21 +209,35 @@ class World:
 
     def initialize_areas(self):
         """
-        Each output area in the world is represented by an Area object. This Area object contains the
-        demographic information about people living in it.
+        Each output area in the world is represented by an Area object.
+        This Area object contains the demographic information about
+        people living in it.
         """
         print("Initializing areas...")
-        self.areas = OAreas(self)
-        areas_distributor = OAreaDistributor(self.areas, self.inputs)
+        self.areas = Areas.from_file(
+            self.inputs.n_residents_file,
+            self.inputs.age_freq_file,
+            self.inputs.sex_freq_file,
+            self.inputs.household_composition_freq_file,
+        )
+        areas_distributor = AreaDistributor(
+            self.areas,
+            self.inputs.area_mapping_df,
+            self.inputs.areas_coordinates_df,
+            self.relevant_groups,
+        )
         areas_distributor.read_areas_census()
 
-    def initialize_msoa_areas(self):
+    def initialize_super_areas(self):
         """
-        An MSOA area is a group of output areas. We use them to store company data.
+        An super_area is a group of areas. We use them to store company data.
         """
-        print("Initializing MSOAreas...")
-        self.msoareas = MSOAreas(self)
-        msoareas_distributor = MSOAreaDistributor(self.msoareas)
+        print("Initializing SuperAreas...")
+        self.super_areas = SuperAreas(self)
+        super_areas_distributor = SuperAreaDistributor(
+            self.super_areas,
+            self.relevant_groups,
+        )
 
     def initialize_people(self):
         """
@@ -237,10 +254,12 @@ class World:
             # get msoa flow data for this oa area
             wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.name,)]
             person_distributor = PersonDistributor(
+                self,
                 self.timer,
                 self.people,
+                self.areas,
                 area,
-                self.msoareas,
+                self.super_areas,
                 self.inputs.compsec_by_sex_df,
                 wf_area_df,
                 self.inputs.key_compsec_ratio_by_sex_df,
@@ -279,7 +298,7 @@ class World:
            self.distributor = SchoolDistributor.from_file(
                 self.schools,
                 area,
-                self.inputs.school_config_path
+                self.inputs.school_config_path,
             )
            self.distributor.distribute_kids_to_school()
            self.distributor.distribute_teachers_to_school()
@@ -288,18 +307,19 @@ class World:
 
     def initialize_companies(self):
         """
-        Companies live in MSOA areas.
+        Companies live in super_areas.
         """
         print("Initializing Companies...")
         self.companies = Companies.from_file(
             self.inputs.companysize_file,
             self.inputs.company_per_sector_per_msoa_file,
         )
-        pbar = tqdm(total=len(self.msoareas.members))
-        for msoarea in self.msoareas.members:
+        pbar = tqdm(total=len(self.super_areas.members))
+        for super_area in self.super_areas.members:
             self.distributor = CompanyDistributor(
                 self.companies,
-                msoarea
+                super_area,
+                self.config, 
             )
             self.distributor.distribute_adults_to_companies()
             pbar.update(1)
@@ -321,7 +341,7 @@ class World:
         else:
             interaction_parameters = {}
         interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters, self)
+        interaction = globals()[interaction_class_name](interaction_parameters)
         return interaction
 
     def set_active_group_to_people(self, active_groups):
@@ -390,10 +410,11 @@ class World:
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
-        self.interaction.time_step()
+        self.interaction.time_step(time=self.timer.now, delta_time=self.timer.duration, groups=groups_instances)
         # Update people that recovered in hospitals
         for hospital in self.hospitals.members:
             hospital.update_status_lists(self.timer.now, delta_time=0)
+        print('Freeing people')
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):

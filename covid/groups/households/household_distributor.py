@@ -24,7 +24,7 @@ class HouseholdDistributor:
 
     def __init__(self, world, area):
         self.world = world
-        self.SAME_SEX_COUPLE_RATIO = area.world.config["households"]["same_sex_couple_ratio"]
+        self.SAME_SEX_COUPLE_RATIO = self.world.config["households"]["same_sex_couple_ratio"]
         self.area = area
         self._init_random_variables()
 
