@@ -1,8 +1,8 @@
 mode: superposition
 
 intensities:
-  schools: 1.
-  hospitals: 1.
-  pubs: 1.
-  companies: 1.
-  households: 1.
+  school: 1.
+  hospital: 1.
+  pub: 1.
+  company: 1.
+  household: 1.

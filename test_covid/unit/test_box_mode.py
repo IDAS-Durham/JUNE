@@ -101,3 +101,5 @@ def test__region_box_has_correct_health_index(box_region, ne_inputs):
     """Need help testing this"""
     person = np.random.choice(box_region.people)
     assert hasattr(person, "health_index")
+
+
