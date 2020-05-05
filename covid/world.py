@@ -70,8 +70,8 @@ class World:
                 self.initialize_pubs()
             else:
                 print("pubs not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.group_maker = GroupMaker(self)
+        #self.interaction = self.initialize_interaction()
+        #self.group_maker = GroupMaker(self)
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
@@ -314,12 +314,8 @@ class World:
 
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
-        if "parameters" in self.config["interaction"]:
-            interaction_parameters = self.config["interaction"]["parameters"]
-        else:
-            interaction_parameters = {}
         interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters)
+        interaction = globals()[interaction_class_name].from_file()
         return interaction
 
     def set_active_group_to_people(self, active_groups):
@@ -386,8 +382,9 @@ class World:
         self.set_active_group_to_people(active_groups)
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
-        self.interaction.time_step(self.timer.now, self.timer.duration, groups_instances)
-        print('Freeing people')
+        for group_type in group_instances:
+            for group in group_type.members:
+                self.interaction.time_step(self.timer.now, self.timer.duration, group)
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):

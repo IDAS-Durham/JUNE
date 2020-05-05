@@ -1,7 +1,5 @@
 interaction:
   type: collective
-  parameters:
-    mode: probabilistic
 
 people:
   adult_threshold: 6 # 18 yo
