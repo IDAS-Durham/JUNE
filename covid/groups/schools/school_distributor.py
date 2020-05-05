@@ -30,7 +30,7 @@ class SchoolDistributor:
             config dictionary.
         """
         self.area = area
-        self.msoarea = area.msoarea
+        self.msoarea = area.super_area
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
         self.SCHOOL_AGE_RANGE = config["age_range"]

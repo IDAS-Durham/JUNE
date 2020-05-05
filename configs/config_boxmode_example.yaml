@@ -28,6 +28,7 @@ interaction:
 
 infection:
   type: constant
+  asymptomatic_ratio: 0.4
   transmission:
     type: constant
     parameters:
