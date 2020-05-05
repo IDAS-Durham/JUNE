@@ -48,6 +48,7 @@ class World:
             self.initialize_areas()
             self.initialize_msoa_areas()
             self.initialize_people()
+            self.initialize_carehomes()
             self.initialize_households()
             self.initialize_hospitals()
             self.initialize_cemeteries()
@@ -168,6 +169,8 @@ class World:
         self.people = People(self)
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
+            #if area.name != 'E00105094':
+            #    continue
             # get msoa flow data for this oa area
             wf_area_df = self.inputs.workflow_df.loc[(area.msoarea.id,)]
             person_distributor = PersonDistributor(
@@ -197,6 +200,8 @@ class World:
         household_composition_per_area = self.inputs.household_composition_df
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
+            #if area.name != 'E00105094':
+            #    continue
             n_students = n_students_per_area.loc[area.name].values[0]
             n_people_in_communal = n_people_in_communal_per_area.loc[area.name].values[
                 0
