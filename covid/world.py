@@ -195,28 +195,28 @@ class World:
         print("Initializing households...")
         self.households = Households(self)
         household_distributor = HouseholdDistributor.from_inputs(self.inputs)
-        n_students_per_area = self.inputs.n_students
-        n_people_in_communal_per_area = self.inputs.n_in_communal
-        household_composition_per_area = self.inputs.household_composition_df
-        pbar = tqdm(total=len(self.areas.members))
-        for area in self.areas.members:
-            #if area.name != 'E00105094':
-            #    continue
-            n_students = n_students_per_area.loc[area.name].values[0]
-            n_people_in_communal = n_people_in_communal_per_area.loc[area.name].values[
-                0
-            ]
-            house_composition_numbers = household_composition_per_area.loc[
-                area.name
-            ].to_dict()
-            household_distributor.distribute_people_to_households(
-                area,
-                number_households_per_composition=house_composition_numbers,
-                n_students=n_students,
-                n_people_in_communal=n_people_in_communal,
-            )
-            pbar.update(1)
-        pbar.close()
+        #n_students_per_area = self.inputs.n_students
+        #n_people_in_communal_per_area = self.inputs.n_in_communal
+        #household_composition_per_area = self.inputs.household_composition_df
+        #pbar = tqdm(total=len(self.areas.members))
+        #for area in self.areas.members:
+        #    #if area.name != 'E00105094':
+        #    #    continue
+        #    n_students = n_students_per_area.loc[area.name].values[0]
+        #    n_people_in_communal = n_people_in_communal_per_area.loc[area.name].values[
+        #        0
+        #    ]
+        #    house_composition_numbers = household_composition_per_area.loc[
+        #        area.name
+        #    ].to_dict()
+        #    household_distributor.distribute_people_to_households(
+        #        area,
+        #        number_households_per_composition=house_composition_numbers,
+        #        n_students=n_students,
+        #        n_people_in_communal=n_people_in_communal,
+        #    )
+        #    pbar.update(1)
+        #pbar.close()
 
     def initialize_carehomes(self):
         print("Initializing carehomes...")
