@@ -26,6 +26,12 @@ class Inputs:
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
 
         # This is the top-level of the hierarchy
+        self.n_residents_file = os.path.join(self.OUTPUT_AREA_DIR, "residents.csv")
+        self.age_freq_file = os.path.join(self.OUTPUT_AREA_DIR, "age_structure.csv")
+        self.sex_freq_file = os.path.join(self.OUTPUT_AREA_DIR, "sex.csv")
+        self.household_composition_freq_file = os.path.join(
+            self.OUTPUT_AREA_DIR, "household_composition.csv",
+        )
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
@@ -43,17 +49,7 @@ class Inputs:
         for i, column in enumerate(self.household_composition_freq.columns):
             self.encoder_household_composition[column] = i
 
-        self.hospital_df = pd.read_csv(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "data",
-                "census_data",
-                "hospital_data",
-                "england_hospitals.csv",
-            )
-        )
-        
+       
         self.pubs_df = pd.read_csv(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -68,7 +64,6 @@ class Inputs:
         pub_ids = np.arange(len(self.pubs_df["Latitude"]))
         self.pubs_df["Ids"] = pub_ids
         
-        self.read_hospitals(self.area_mapping_df, self.n_residents.index.values)
         
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(
@@ -135,6 +130,13 @@ class Inputs:
         self.school_config_path = (
             Path(__file__).parent.parent / \
             "configs/defaults/schools.yaml"
+        )
+
+        self.hospital_data_path = (
+            Path(__file__).parent.parent / "data/processed/hospital_data/england_hospitals.csv"
+        )
+        self.hospital_config_path = (
+            Path(__file__).parent.parent / "configs/defaults/hospitals.yaml"
         )
 
 
@@ -604,5 +606,6 @@ if __name__ == "__main__":
 
     ip = Inputs()
     #print(ip.workflow_df)
-    print("companysize_df\n", ip.companysize_df)
-    print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
+    #print("companysize_df\n", ip.companysize_df)
+    #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
+
