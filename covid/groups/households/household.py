@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 from covid.groups import Group
 
 
@@ -12,14 +14,20 @@ class Household(Group):
     3 - old adults
     """
 
+    class GroupType(IntEnum):
+        kids = 0
+        young_adults = 1
+        adults = 2
+        old_adults = 3
+
     def __init__(self, house_id, composition, area):
-        super().__init__("Household_%03d" % house_id, "household", 4)
+        super().__init__("Household_%03d" % house_id, "household")
         self.id = house_id
         self.area = area
         self.household_composition = composition
 
-    def add(self, person, qualifier="adults"):
-        super().add(person, self.index(qualifier))
+    def add(self, person, qualifier=GroupType.adults):
+        super().add(person, qualifier)
         person.household = self
 
     def set_active_members(self):

@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Tuple
 
 import numpy as np
@@ -6,6 +7,7 @@ import yaml
 from sklearn.neighbors import BallTree
 
 from covid.groups import Group
+from covid.groups.group import People
 
 
 class SchoolError(BaseException):
@@ -15,6 +17,10 @@ class SchoolError(BaseException):
 
 
 class School(Group):
+    class GroupType(IntEnum):
+        teachers = 0
+        students = 1
+
     def __init__(
             self,
             school_id: int,
@@ -49,8 +55,8 @@ class School(Group):
         ...
         n - year of highest age (age_max)
         """
-        super().__init__(name="School_%05d" % school_id, spec="school",
-                         group_names=["teachers"] + [str(n) for n in range(age_min, age_max + 1)])
+        super().__init__(name="School_%05d" % school_id, spec="school")
+        self.groups = [People() for _ in range(age_min, age_max + 2)]
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
@@ -63,10 +69,14 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.n_teachers = 0
 
-    def add(self, person, qualifier="students"):
-        if qualifier == "students":
-            qualifier = str(person.age)
-        super().add(person, qualifier)
+    def add(self, person, qualifier=GroupType.students):
+        if qualifier == self.GroupType.students:
+            self.groups[1 + person.age - self.age_min].append(person)
+        else:
+            super().add(
+                person,
+                qualifier
+            )
         person.school = self
 
 
