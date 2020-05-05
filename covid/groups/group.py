@@ -92,10 +92,6 @@ class People(AbstractGroup):
         self._people.remove(person)
 
 
-class GroupType(IntEnum):
-    default = 0
-
-
 class Group(AbstractGroup):
     """
     A group of people enjoying social interactions.  It contains three lists,
@@ -147,21 +143,26 @@ class Group(AbstractGroup):
         "work_Indoor",
     ]
 
-    GroupType = GroupType
+    class GroupType(IntEnum):
+        default = 0
 
     def __init__(self, name, spec):
         self.sane(name, spec)
-        self.name    = name
-        self.spec    = spec
-        n_groups = len(self.GroupType)
-        self.groups  = [People() for _ in range(n_groups)]
-        self.intensities = np.ones((n_groups, n_groups))
+        self.name = name
+        self.spec = spec
+        self.groups = [People() for _ in range(self.n_groups)]
+        self.intensities = np.ones((self.n_groups, self.n_groups))
+
+    @property
+    def n_groups(self):
+        # noinspection PyTypeChecker
+        return len(self.GroupType)
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
             raise GroupException(f"{spec} is not an allowed group type")
 
-    def __getitem__(self, item=0):
+    def __getitem__(self, item):
         return self.groups[item]
 
     def add(self, person, qualifier=GroupType.default):
