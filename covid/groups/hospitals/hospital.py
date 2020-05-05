@@ -66,23 +66,20 @@ class Hospital(Group):
         self.coordinates = coordinates.astype(np.float)
         self.msoa_name = msoa_name
         self.n_medics = 0
-        self.employees = []
-        self.patients = []
-        self.icu_patients = []
 
     @property
     def full(self):
         """
         Check whether all regular beds are being used
         """
-        return len(self.patients) >= self.n_beds
+        return self[self.GroupType.patients].size >= self.n_beds
 
     @property
     def full_ICU(self):
         """
         Check whether all ICU beds are being used
         """
-        return len(self.icu_patients) >= self.n_icu_beds
+        return self[self.GroupType.icu_patients].size >= self.n_icu_beds
 
     def set_active_members(self):
         """
@@ -90,10 +87,10 @@ class Hospital(Group):
         """
         # TODO: We need to check what we want to do with this,
         # it will probably be taken care by the supergroup
-        for person in self.patients:
+        for person in self[self.GroupType.patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
-        for person in self.icu_patients:
+        for person in self[self.GroupType.icu_patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
 
@@ -102,7 +99,29 @@ class Hospital(Group):
         person.in_hospital = self
 
     def add_as_patient(self, person):
-        pass
+        """
+        Add patient to hospital, depending on their healty information tag
+        they'll go to intensive care or regular beds.
+
+        Parameters
+        ----------
+        person:
+            person instance to add as patient
+        """
+        if person.health_information.tag == "intensive care":
+            self.add(
+                person,
+                self.GroupType.icu_patients
+            )
+            person.in_hospital = self
+        elif person.health_information.tag == "hospitalised":
+            self.add(
+                person,
+                self.GroupType.patients
+            )
+            person.in_hospital = self
+        else:
+            raise AssertionError("ERROR: This person shouldn't be trying to get to a hospital")
 
     def release_as_patient(self, person):
         """
@@ -113,22 +132,23 @@ class Hospital(Group):
         person: 
             person instance to remove as patient
         """
-        if person in self.patients:
-            self.patients.remove(person)
-        elif person in self.icu_patients:
-            self.icu_patients.remove(person)
+        for group_type in (
+                self.GroupType.icu_patients,
+                self.GroupType.patients
+        ):
+            patient_group = self[group_type]
+            if person in patient_group:
+                patient_group.remove(person)
         person.in_hospital = None
-
-    @property
-    def size(self):
-        return len(self.people) + len(self.patients) + len(self.icu_patients)
 
     def update_status_lists_for_patients(self, time, delta_time):
         """
         Update the health information of patients, and move them around if necessary
         """
         dead = []
-        for person in self.patients:
+        patient_group = self[self.GroupType.patients]
+        icu_group = self[self.GroupType.icu_patients]
+        for person in patient_group.people:
             person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
                 ic_logger.info(
@@ -139,25 +159,27 @@ class Hospital(Group):
                 if not (person.health_information.in_hospital):
                     # TODO: is this necessary? How could they have made it to hospital?
                     ic_logger.info("ERROR: wrong tag for infected patient in hospital")
-                    self.patients.remove(person)
+                    patient_group.remove(person)
                 if person.health_information.tag == "intensive care":
-                    self.icu_patients.append(person)
-                    self.patients.remove(person)
+                    icu_group.append(person)
+                    patient_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
                 person.bury()
                 dead.append(person)
         for person in dead:
-            self.patients.remove(person)
+            patient_group.remove(person)
 
     def update_status_lists_for_ICUpatients(self, time, delta_time):
         """
         Update the health information of ICU patients, and move them around if necessary
         """
+        patient_group = self[self.GroupType.patients]
+        icu_group = self[self.GroupType.icu_patients]
 
         dead = []
-        for person in self.icu_patients:
+        for person in icu_group.people:
             person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
                 ic_logger.info(
@@ -167,17 +189,17 @@ class Hospital(Group):
             if person.health_information.infected:
                 if not (person.health_information.in_hospital):
                     ic_logger.info("ERROR: wrong tag for infected patient in hospital")
-                    self.icu_patients.remove(person)
+                    icu_group.remove(person)
                 if person.health_information.tag == "hospitalised":
-                    self.patients.append(person)
-                    self.icu_patients.remove(person)
+                    patient_group.append(person)
+                    icu_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
                 person.bury()
                 dead.append(person)
         for person in dead:
-            self.icu_patients.remove(person)
+            icu_group.remove(person)
 
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
@@ -190,10 +212,10 @@ class Hospital(Group):
         )
         ic_logger.info(
             "=== hospital currently has ",
-            len(self.patients),
+            self[self.GroupType.patients].size,
             " patients",
             "and ",
-            len(self.icu_patients),
+            self[self.GroupType.icu_patients].size,
             " ICU patients",
         )
 
