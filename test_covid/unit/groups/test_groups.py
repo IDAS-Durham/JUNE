@@ -17,6 +17,6 @@ class TestGroup:
 
         assert group["default"].intensity == 1.0
 
-        group.intensity = 2.0
+        group["default"].intensity = 2.0
 
         assert group["default"].intensity == 2.0
