@@ -134,15 +134,15 @@ class PubFiller:
         if self.make_weight(customer) < np.random.random():
             return False
         pub = np.random.choice(self.pubs)
-        pub.add(customer, Pubs.GroupType.guests)
+        pub.add(customer, Pub.GroupType.guests)
         if self.world.timer.weekend and random.random() < self.full_household_in_pub:
             for person in customer.household.people:
                 if person != customer:
-                    pub.add(person, Pubs.GroupType.guests)
+                    pub.add(person, Pub.GroupType.guests)
         elif not (self.world.timer.weekend) and random.random() < self.adults_in_pub:
             for person in customer.household.people:
                 if person != customer and person.age >= 18:
-                    pub.add(person, Pubs.GroupType.guests)
+                    pub.add(person, Pub.GroupType.guests)
         return True
 
     def fill(self, area):
