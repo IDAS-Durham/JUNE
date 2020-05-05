@@ -39,16 +39,6 @@ class Inputs:
             index_col="output_area",
         )
         self.area_mapping_df = self.read_area_mapping()
-
-        self.age_freq, self.decoder_age = self.read("age_structure.csv")
-        self.sex_freq, self.decoder_sex = self.read("sex.csv")
-        self.household_composition_freq, self.decoder_household_composition = self.read(
-            "household_composition.csv"
-        )
-        self.encoder_household_composition = {}
-        for i, column in enumerate(self.household_composition_freq.columns):
-            self.encoder_household_composition[column] = i
-
        
         self.pubs_df = pd.read_csv(
             os.path.join(
