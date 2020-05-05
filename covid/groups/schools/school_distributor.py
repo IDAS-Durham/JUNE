@@ -151,13 +151,7 @@ class SchoolDistributor:
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
                         school = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
-                        n_pupils_age = len(
-                            [
-                                pupil.age
-                                for pupil in school.people
-                                if pupil.age == person.age
-                            ]
-                        )
+                        n_pupils_age = school.age_structure[person.age]
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
                             school.n_pupils_max / (school.age_max - school.age_min)
                         ):
@@ -170,6 +164,7 @@ class SchoolDistributor:
                     else:  # just keep the school saved in the previous for loop
                         pass
                 school.people.append(person)
+                school.age_structure[person.age] += 1
                 person.school = school
                 school.n_pupils += 1
 
