@@ -163,7 +163,7 @@ class TestCommuteGenerator:
 
         commute_gen = c.CommuteGenerator(regional_generators={"north": regional_gen_0})
 
-        regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="north")
+        regional_gen = commute_gen.regional_gen_from_msoarea(super_area="north")
 
         assert regional_gen == regional_gen_0
 
@@ -182,11 +182,11 @@ class TestCommuteGenerator:
             }
         )
 
-        regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="north")
+        regional_gen = commute_gen.regional_gen_from_msoarea(super_area="north")
 
         assert regional_gen == regional_gen_0
 
-        regional_gen = commute_gen.regional_gen_from_msoarea(msoarea="south")
+        regional_gen = commute_gen.regional_gen_from_msoarea(super_area="south")
 
         assert regional_gen == regional_gen_1
 

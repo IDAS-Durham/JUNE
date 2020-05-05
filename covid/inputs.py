@@ -24,8 +24,54 @@ class Inputs:
         self.zone = zone
         self.DATA_DIR = DATA_DIR
         self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
+            
+        # For the new structure -----------------------------------------------
 
-        # This is the top-level of the hierarchy
+        # set up main directory paths ------
+        company_data_path = (
+            Path(__file__).parent.parent / \
+            "data/processed/census_data/company_data/" \
+        )
+        # ----------------------------------
+        self.n_residents_file = os.path.join(
+            self.OUTPUT_AREA_DIR, "residents.csv"
+        )
+        self.age_freq_file = os.path.join(
+            self.OUTPUT_AREA_DIR, "age_structure.csv"
+        )
+        self.sex_freq_file = os.path.join(self.OUTPUT_AREA_DIR, "sex.csv")
+        self.household_composition_freq_file = os.path.join(
+            self.OUTPUT_AREA_DIR, "household_composition.csv",
+        )
+        self.commute_generator_path = (
+            Path(__file__).parent.parent / "data/census_data/commute.csv"
+        )
+        self.workflow_file = (
+            Path(__file__).parent.parent / \
+            "data/processed/flow_in_msoa_wu01ew_2011.csv"
+        )
+        self.companysize_file = company_data_path / "companysize_msoa11cd_2019.csv"
+        self.company_per_sector_per_msoa_file = company_data_path / "companysector_msoa11cd_2011.csv"
+        self.sex_per_sector_per_msoa_file = company_data_path / "companysector_by_sex_cleaned.csv"
+        self.companysector_education_file = company_data_path / "education_by_sex_2011.csv"
+        self.companysector_healthcare_file = company_data_path / "healthcare_by_sex_2011.csv"
+        self.school_data_path = (
+            Path(__file__).parent.parent / \
+            "data/processed/school_data/england_schools_data.csv"
+        )
+        self.school_config_path = (
+            Path(__file__).parent.parent / \
+            "configs/defaults/schools.yaml"
+        )
+        self.hospital_data_path = (
+            Path(__file__).parent.parent / \
+            "data/processed/hospital_data/england_hospitals.csv"
+        )
+        self.hospital_config_path = (
+            Path(__file__).parent.parent / \
+            "configs/defaults/hospitals.yaml"
+        )
+        # For the old structure (will be removed soon) ------------------------
         self.n_residents = pd.read_csv(
             os.path.join(self.OUTPUT_AREA_DIR, "residents.csv"),
             names=["output_area", "n_residents"],
@@ -33,16 +79,6 @@ class Inputs:
             index_col="output_area",
         )
         self.area_mapping_df = self.read_area_mapping()
-
-        self.age_freq, self.decoder_age = self.read("age_structure.csv")
-        self.sex_freq, self.decoder_sex = self.read("sex.csv")
-        self.household_composition_freq, self.decoder_household_composition = self.read(
-            "household_composition.csv"
-        )
-        self.encoder_household_composition = {}
-        for i, column in enumerate(self.household_composition_freq.columns):
-            self.encoder_household_composition[column] = i
-
        
         self.pubs_df = pd.read_csv(
             os.path.join(
@@ -85,53 +121,6 @@ class Inputs:
             self.n_residents.index.values,
         )
         self.compsec_by_sex_df = self.read_compsec_by_sex(self.n_residents.index.values)
-        self.commute_generator_path = (
-            Path(__file__).parent.parent / "data/census_data/commute.csv"
-        )
-        self.workflow_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/flow_in_msoa_wu01ew_2011.csv"
-        )
-        self.companysize_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "companysize_msoa11cd_2019.csv"
-        )
-        self.company_per_sector_per_msoa_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "companysector_msoa11cd_2011.csv"
-        )
-        self.sex_per_sector_per_msoa_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "companysector_by_sex_cleaned.csv"
-        )
-        self.companysector_education_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "education_by_sex_2011.csv"
-        )
-        self.companysector_healthcare_file = (
-            Path(__file__).parent.parent / \
-            "data/processed/census_data/company_data/" \
-            "healthcare_by_sex_2011.csv"
-        )
-        self.school_data_path = (
-            Path(__file__).parent.parent / \
-            "data/processed/school_data/england_schools_data.csv"
-        )
-        self.school_config_path = (
-            Path(__file__).parent.parent / \
-            "configs/defaults/schools.yaml"
-        )
-
-        self.hospital_data_path = (
-            Path(__file__).parent.parent / "data/processed/hospital_data/england_hospitals.csv"
-        )
-        self.hospital_config_path = (
-            Path(__file__).parent.parent / "configs/defaults/hospitals.yaml"
-        )
 
 
     def read(self, filename):
@@ -600,5 +589,6 @@ if __name__ == "__main__":
 
     ip = Inputs()
     #print(ip.workflow_df)
-    print("companysize_df\n", ip.companysize_df)
-    print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
+    #print("companysize_df\n", ip.companysize_df)
+    #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
+
