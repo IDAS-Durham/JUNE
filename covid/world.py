@@ -341,7 +341,7 @@ class World:
         else:
             interaction_parameters = {}
         interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters, self)
+        interaction = globals()[interaction_class_name](interaction_parameters)
         return interaction
 
     def set_active_group_to_people(self, active_groups):
@@ -410,10 +410,11 @@ class World:
         # infect people in groups
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
-        self.interaction.time_step()
+        self.interaction.time_step(time=self.timer.now, delta_time=self.timer.duration, groups=groups_instances)
         # Update people that recovered in hospitals
         for hospital in self.hospitals.members:
             hospital.update_status_lists(self.timer.now, delta_time=0)
+        print('Freeing people')
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
