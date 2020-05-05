@@ -7,19 +7,19 @@ world:
   zone: test # NorthEast # available are all UK regions, and EnglandWales together.
 
 time:
-  total_days: 5
+  total_days: 50
   step_duration: 
       weekday:
-          1: 8
-          2: 16
+          1: 12
+          2: 12
       weekend:
           1: 24
   step_active_groups:
       weekday:
-          1: ['boxes','hospitals','cemeteries'] # active groups during first time step
-          2: ['boxes','hospitals','cemeteries'] # active groups during first time step
+          1: ['boxes'] # active groups during first time step
+          2: ['boxes'] # active groups during first time step
       weekend:
-          1: ['boxes','hospitals','cemeteries'] # active groups during first time step
+          1: ['boxes'] # active groups during first time step
 
 interaction:
   type: collective
@@ -31,10 +31,7 @@ infection:
   transmission:
     type: constant
     parameters:
-      transmission_probability:
-        distribution: constant
-        parameters:
-          value: 0.05
+      probability: 0.3
   symptoms:
     type: constant
     parameters:
