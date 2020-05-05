@@ -15,10 +15,10 @@ class Household(Group):
     """
 
     class GroupType(IntEnum):
-        kids = 0
+        kids         = 0
         young_adults = 1
-        adults = 2
-        old_adults = 3
+        adults       = 2
+        old_adults   = 3
 
     def __init__(self, house_id, composition, area):
         super().__init__("Household_%03d" % house_id, "household")
@@ -33,7 +33,9 @@ class Household(Group):
     def set_active_members(self):
         for group in self.groups:
             for person in group.people:
-                if person.active_group is None:
+                if (person.active_group is None and
+                    person.health_information.tag!="intensive care" and
+                    person.health_information.tag!="hospitalised"):
                     person.active_group = "household"
 
 

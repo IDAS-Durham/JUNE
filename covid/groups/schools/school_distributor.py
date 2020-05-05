@@ -202,10 +202,10 @@ class SchoolDistributor:
                 for school in area.schools:
                     if (teacher.industry_specific in school.sector):
                         # (school.n_teachers < school.n_teachers_max) and \
-                        teacher.school = school.id
+                        school.add(person, School.GroupType.teacher)
                         school.n_teachers += 1
                     elif teacher.industry_specific is "special_needs":
                         # everyone has special needs :-)
                         # TODO fine better why for filtering
-                        teacher.school = school.id
+                        school.add(person, School.GroupType.teacher)
                         school.n_teachers += 1
