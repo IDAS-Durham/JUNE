@@ -21,7 +21,7 @@ class Household(Group):
         self.household_composition = composition
 
     def add(self, person, qualifier="adults"):
-        self[qualifier].append(person)
+        super().add(person, qualifier)
         person.household = self
 
     def set_active_members(self):
