@@ -41,6 +41,7 @@ class Area(Group):
         """
         Object that generates modes of transport randomly weighted by census data
         """
+        #TODO update for new code structure
         return self.world.commute_generator.regional_gen_from_msoarea(
             self.super_area
         )
