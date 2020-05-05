@@ -52,9 +52,9 @@ def test__add_patient_release_patient(hospitals, health_info):
     assert dummy_person.in_hospital is None
     hospitals.members[0].add_as_patient(dummy_person)
     if health_info == 'hospitalised':
-        assert hospitals.members[0][Hospital.GroupType.patients] == dummy_person
+        assert hospitals.members[0][Hospital.GroupType.patients][0] == dummy_person
     elif health_info == 'intensive care':
-        assert hospitals.members[0][Hospital.GroupType.icu_patients] == dummy_person
+        assert hospitals.members[0][Hospital.GroupType.icu_patients][0] == dummy_person
     assert dummy_person.in_hospital is not None
 
     hospitals.members[0].release_as_patient(dummy_person)
