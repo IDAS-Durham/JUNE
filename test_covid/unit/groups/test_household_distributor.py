@@ -1,6 +1,7 @@
 import numpy as np
 import os
-from covid.groups import Household, HouseholdDistributor, Households, Person
+from covid.groups import Household, Households, Person
+from covid.distributors import HouseholdDistributor
 import pytest
 from collections import OrderedDict
 from covid.groups import Person
@@ -58,19 +59,13 @@ def create_area(age_min=0, age_max=99, people_per_age=5):
 
 @pytest.fixture(name="household_distributor")
 def create_household_distributor():
-    first_kid_parent_age_differences = [20, 21]
-    first_kid_parent_age_differences_probabilities = [0.5, 0.5]
-    second_kid_parent_age_differences = [30, 31]
-    second_kid_parent_age_differences_probabilities = [0.5, 0.5]
-    couples_age_differences = [0, 1]
-    couples_age_differences_probabilities = [0.5, 0.5]
+    first_kid_parent_age_differences ={20 : 0.5, 21 : 0.5}
+    second_kid_parent_age_differences = {30 : 0.5, 31 : 0.5}
+    couples_age_differences = {0 : 0.5, 1 : 0.5}
     hd = HouseholdDistributor(
         first_kid_parent_age_differences,
-        first_kid_parent_age_differences_probabilities,
         second_kid_parent_age_differences,
-        second_kid_parent_age_differences_probabilities,
         couples_age_differences,
-        couples_age_differences_probabilities,
     )
     return hd
 
@@ -164,7 +159,7 @@ class TestAuxiliaryFunctions:
 
         # check if no adult women available it returns men
         age_min_parent = 18
-        age_max_parent = household_distributor.MAX_AGE_TO_BE_PARENT
+        age_max_parent = household_distributor.max_age_to_be_parent
         for key in range(age_min_parent, age_max_parent + 1):
             del area.women_by_age[key]
         male_parent = household_distributor._get_matching_parent(kid, area)
@@ -204,9 +199,9 @@ class TestIndividualHouseholdCompositions:
             for person in household.people:
                 counter += 1
                 assert (
-                    household_distributor.STUDENT_MIN_AGE
+                    household_distributor.student_min_age
                     <= person.age
-                    <= household_distributor.STUDENT_MAX_AGE
+                    <= household_distributor.student_max_age
                 )
         assert counter == 20
         area.households = []
@@ -228,7 +223,7 @@ class TestIndividualHouseholdCompositions:
         for household in area.households:
             assert len(household.people) == 2
             for person in household.people:
-                assert person.age >= household_distributor.OLD_MIN_AGE
+                assert person.age >= household_distributor.old_min_age
         households_with_extrapeople_list = []
         household_distributor.fill_oldpeople_households(
             2,
@@ -242,7 +237,7 @@ class TestIndividualHouseholdCompositions:
         for household in area.households:
             assert len(household.people) == 2
             for person in household.people:
-                assert person.age >= household_distributor.OLD_MIN_AGE
+                assert person.age >= household_distributor.old_min_age
 
     def test__fill_families_households(self, household_distributor):
         area = create_area(people_per_age=20, age_max=65)
@@ -307,11 +302,11 @@ class TestIndividualHouseholdCompositions:
             oldpeople = 0
             for person in household.people:
                 assert (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    <= household_distributor.OLD_MAX_AGE
+                    <= household_distributor.old_max_age
                 )
-                if person.age >= household_distributor.OLD_MIN_AGE:
+                if person.age >= household_distributor.old_min_age:
                     oldpeople += 1
                 if person.sex == 0:
                     man = person
@@ -332,9 +327,9 @@ class TestIndividualHouseholdCompositions:
         for household in area.households:
             for person in household.people:
                 assert (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    <= household_distributor.YOUNG_ADULT_MAX_AGE
+                    <= household_distributor.young_adult_max_age
                 )
 
     def test__fill_youngadult_with_parents_households(self, household_distributor):
@@ -348,9 +343,9 @@ class TestIndividualHouseholdCompositions:
         for household in area.households:
             for person in household.people:
                 assert (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    <= household_distributor.YOUNG_ADULT_MAX_AGE
+                    <= household_distributor.young_adult_max_age
                 )
 
     def test__fill_communal_establishments(self, household_distributor):
@@ -402,18 +397,18 @@ class TestMultipleHouseholdCompositions:
             youngadults = 0
             old = 0
             for person in household.people:
-                if 0 <= person.age < household_distributor.ADULT_MIN_AGE:
+                if 0 <= person.age < household_distributor.adult_min_age:
                     kids += 1
                 elif (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    <= household_distributor.YOUNG_ADULT_MAX_AGE
+                    <= household_distributor.young_adult_max_age
                 ):
                     youngadults += 1
                 elif (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    < household_distributor.OLD_MIN_AGE
+                    < household_distributor.old_min_age
                 ):
                     adults += 1
                 else:
@@ -458,15 +453,15 @@ class TestMultipleHouseholdCompositions:
             old = 0
             for person in household.people:
                 if (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    <= household_distributor.YOUNG_ADULT_MAX_AGE
+                    <= household_distributor.young_adult_max_age
                 ):
                     youngadults += 1
                 elif (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    < household_distributor.OLD_MIN_AGE
+                    < household_distributor.old_min_age
                 ):
                     adults += 1
                 else:
@@ -506,12 +501,12 @@ class TestMultipleHouseholdCompositions:
             kids = 0
             adults = 0
             for person in household.people:
-                if 0 <= person.age < household_distributor.ADULT_MIN_AGE:
+                if 0 <= person.age < household_distributor.adult_min_age:
                     kids += 1
                 elif (
-                    household_distributor.ADULT_MIN_AGE
+                    household_distributor.adult_min_age
                     <= person.age
-                    <= household_distributor.ADULT_MAX_AGE
+                    <= household_distributor.adult_max_age
                 ):
                     adults += 1
             assert kids in [0, 1, 2]
