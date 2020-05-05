@@ -57,6 +57,6 @@ if __name__ == "__main__":
     for region in regions:
         print ('Working on region: {}'.format(region))
         region_file = np.load('{}/outs_{}_{}.npy'.format(args.msoa_coord, args.location_type, region), allow_pickle=True)
-        msoa_file = pd.read_csv('{}/msoa_{}.csv'.format(args.msoa_coord, region))
+        msoa_file = pd.read_csv('{}/msoa_coordinates_{}.csv'.format(args.msoa_coord, region))
         df_clean = clean(region_file, msoa_file)
         df_clean.to_csv('{}/outs_{}_{}_clean.csv'.format(args.msoa_coord, args.location_type, region))
