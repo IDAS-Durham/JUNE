@@ -1,11 +1,14 @@
 import logging
 import numpy as np
+import pandas as pd
+import yaml
 from sklearn.neighbors._ball_tree import BallTree
-
 from covid.groups import Group
+from typing import List, Tuple, Dict
 
 
 ic_logger = logging.getLogger(__name__)
+
 
 class Hospital(Group):
     """
@@ -23,43 +26,67 @@ class Hospital(Group):
     2 - ICU patients
     """
 
-    def __init__(self, hospital_id=1, structure=None, postcode=None, msoa_name=None):
-        super().__init__("Hospital_%03d" % hospital_id, "hospital", group_names=["workers", "patients", "ICU patients"])
+    def __init__(
+        self,
+        hospital_id: int,
+        n_beds: int,
+        n_icu_beds: int,
+        coordinates: Tuple[float, float],
+        msoa_name: str = None,
+    ):
+        """
+        Create a Hospital given its description.
+
+        Parameters
+        ----------
+        hospital_id:
+            unique identifier of the hospital 
+        n_beds:
+            total number of regular beds in the hospital
+        n_icu_beds:
+            total number of ICU beds in the hospital
+        coordinates:
+            latitude and longitude 
+        msoa_name:
+            name of the msoa area the hospital belongs to
+
+        """
+
+        super().__init__("Hospital_%03d" % hospital_id, "hospital")
         self.id = hospital_id
-        self.postcode = postcode
+        self.n_beds = n_beds
+        self.n_icu_beds = n_icu_beds
+        self.coordinates = coordinates.astype(np.float)
         self.msoa_name = msoa_name
         self.n_medics = 0
         self.employees = []
         self.patients = []
-        self.ICUpatients = []
-        """
-        I foresee that we get information about beds/ICU beds etc.
-        into the composition
-        """
-        self.structure = structure
-
-    @property
-    def n_beds(self):
-        if "n_beds" in self.structure:
-            return self.structure["n_beds"]
-        return 0
-
-    @property
-    def n_ICUbeds(self):
-        if "n_ICUbeds" in self.structure:
-            return self.structure["n_ICUbeds"]
-        return 0
+        self.icu_patients = []
 
     @property
     def full(self):
+        """
+        Check whether all regular beds are being used
+        """
         return len(self.patients) >= self.n_beds
 
     @property
     def full_ICU(self):
-        return len(self.ICUpatients) >= self.n_ICUbeds
+        """
+        Check whether all ICU beds are being used
+        """
+        return len(self.icu_patients) >= self.n_icu_beds
 
     def set_active_members(self):
-        for person in self.people:
+        """
+        Set people in hospital active in hospital only
+        """
+        # TODO: We need to check what we want to do with this,
+        # it will probably be taken care by the supergroup
+        for person in self.patients:
+            if person.active_group is None:
+                person.active_group = "hospital"
+        for person in self.icu_patients:
             if person.active_group is None:
                 person.active_group = "hospital"
 
@@ -68,29 +95,43 @@ class Hospital(Group):
         person.in_hospital = self
 
     def release_as_patient(self, person):
+        """
+        Release a patient from hospital
+
+        Parameters
+        ----------
+        person: 
+            person instance to remove as patient
+        """
         if person in self.patients:
             self.patients.remove(person)
-        elif person in self.ICUpatients:
-            self.ICUpatients.remove(person)
+        elif person in self.icu_patients:
+            self.icu_patients.remove(person)
         person.in_hospital = None
 
     @property
     def size(self):
-        return len(self.people) + len(self.patients) + len(self.ICUpatients)
+        return len(self.people) + len(self.patients) + len(self.icu_patients)
 
-    def update_status_lists_for_patients(self):
+    def update_status_lists_for_patients(self, time, delta_time):
+        """
+        Update the health information of patients, and move them around if necessary
+        """
         dead = []
         for person in self.patients:
-            person.health_information.update_health_status()
+            person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
-                print("Error: in our current setup, only infected patients in the hospital")
+                ic_logger.info(
+                    "ERROR: in our current setup, only infected patients in the hospital"
+                )
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if not (person.health_information.in_hospital):
-                    print("Error: wrong tag for infected patient in hospital")
+                    # TODO: is this necessary? How could they have made it to hospital?
+                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
                     self.patients.remove(person)
                 if person.health_information.tag == "intensive care":
-                    self.ICUpatients.append(person)
+                    self.icu_patients.append(person)
                     self.patients.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
@@ -100,93 +141,174 @@ class Hospital(Group):
         for person in dead:
             self.patients.remove(person)
 
-    def update_status_lists_for_ICUpatients(self):
+    def update_status_lists_for_ICUpatients(self, time, delta_time):
+        """
+        Update the health information of ICU patients, and move them around if necessary
+        """
+
         dead = []
-        for person in self.ICUpatients:
-            person.health_information.update_health_status()
+        for person in self.icu_patients:
+            person.health_information.update_health_status(time, delta_time)
             if person.health_information.susceptible:
-                print("Error: in our current setup, only infected patients in the hospital")
+                ic_logger.info(
+                    "ERROR: in our current setup, only infected patients in the hospital"
+                )
                 self.susceptible.append(person)
             if person.health_information.infected:
                 if not (person.health_information.in_hospital):
-                    print("Error: wrong tag for infected patient in hospital")
-                    self.ICUpatients.remove(person)
+                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
+                    self.icu_patients.remove(person)
                 if person.health_information.tag == "hospitalised":
                     self.patients.append(person)
-                    self.ICUpatients.remove(person)
+                    self.icu_patients.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
                 person.bury()
                 dead.append(person)
         for person in dead:
-            self.ICUpatients.remove(person)
+            self.icu_patients.remove(person)
 
-    def update_status_lists(self):
+    def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        super().update_status_lists()
-        self.update_status_lists_for_patients()
-        self.update_status_lists_for_ICUpatients()
-        print("=== update status list for hospital with ", self.size, " people ===")
-        print("=== hospital currently has ", len(self.patients), " patients",
-              "and ", len(self.ICUpatients), " ICU patients")
+        super().update_status_lists(time, delta_time)
+        self.update_status_lists_for_patients(time, delta_time)
+        self.update_status_lists_for_ICUpatients(time, delta_time)
+        ic_logger.info(
+            f"=== update status list for hospital with {self.size}  people ==="
+        )
+        ic_logger.info(
+            "=== hospital currently has ",
+            len(self.patients),
+            " patients",
+            "and ",
+            len(self.icu_patients),
+            " ICU patients",
+        )
 
 
 class Hospitals:
-    """
-    Contains all hospitals for the given area, and information about them.
-    """
+    def __init__(
+        self, hospitals: List["Hospital"], max_distance: float, box_mode: bool
+    ):
+        """
+        Create a group of hospitals, and provide functionality to  llocate patients to a nearby hospital
 
-    def __init__(self, world, hospital_df=None, box_mode=False):
-        self.world = world
+        Parameters
+        ----------
+        hospital_df:
+            data frame with hospital data
+        config:
+            config dictionary
+        box_mode:
+            whether to run in single box mode, or full simulation
+        """
         self.box_mode = box_mode
-        self.area_mapping_df = world.inputs.area_mapping_df
+        self.max_distance = max_distance
         self.members = []
-        # translate identifier from csv to position in members
-        self.finder = {}
-        # maximal distance of patient to receiving hospital - parameter needs to be fixed/adjusted
-        self.max_distance = 100.
-        # number of ICU beds per hospital from simple fraction, numbers
-        # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
-        self.icu_fraction = 5900. / 141000.
-        if not self.box_mode:
-            ic_logger.info(
-                "There are %d hospitals in the world." % len(hospital_df.index.values)
-            )
-            self.hospital_trees = self.create_hospital_trees(hospital_df)
-        else:
-            self.members.append(Hospital(1, {"n_beds": 10, "n_ICUbeds": 2}))
-            self.members.append(Hospital(2, {"n_beds": 5000, "n_ICUbeds": 5000}))
 
-    def create_hospital_trees(self, hospital_df):
-        hospital_tree = BallTree(
-            np.deg2rad(hospital_df[["Latitude", "Longitude"]].values), metric="haversine"
-        )
-        for row in range(hospital_df.shape[0]):
-            # create hospital attributes
-            n_beds = hospital_df.iloc[row]["beds"]
-            n_icu_beds = round(self.icu_fraction * n_beds)
-            n_beds -= n_icu_beds
-            postcode = hospital_df.iloc[row]["PCD"]
-            msoa_name = self.area_mapping_df[
-                self.area_mapping_df["PCD"] == postcode
-            ]["MSOA"].values[0]
-            # create hospital
-            hospital = Hospital(
-                hospital_df.iloc[row]["Unnamed: 0"],
-                {"n_beds": int(n_beds), "n_ICUbeds": int(n_icu_beds)},
-                postcode,
-                msoa_name,
-            )
-            # add hospital to it's group
+        for hospital in hospitals:
             self.members.append(hospital)
-            self.finder[hospital_df.iloc[row]["Unnamed: 0"]] = len(self.members) - 1
-        return hospital_tree
+        coordinates = np.array([hospital.coordinates for hospital in hospitals])
+        self.init_trees(coordinates)
 
-    def get_nearest(self, person):
-        tagICU = person.health_information.tag == "intensive care"
-        tag = person.health_information.tag == "hospitalised"
+    @classmethod
+    def from_file(
+        cls, filename: str, config_filename: str, box_mode: bool = False
+    ) -> "Hospitals":
+        """
+        Initialize Hospitals from path to data frame, and path to config file 
+
+        Parameters
+        ----------
+        filename:
+            path to hospital dataframe
+        config_filename:
+            path to hospital config dictionary
+
+        Returns
+        -------
+        Hospitals instance
+        """
+
+        hospital_df = pd.read_csv(filename)
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        config = config['hospitals']
+        max_distance = config["max_distance"]
+        icu_fraction = config["icu_fraction"]
+        hospitals = []
+        if not box_mode:
+            ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
+            hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
+        else:
+            hospitals.append(Hospital(1, 10, 2, None))
+            hospitals.append(Hospital(2, 5000, 5000, None))
+
+        return Hospitals(hospitals, max_distance, box_mode)
+
+    def init_hospitals(
+        self, hospital_df: pd.DataFrame, icu_fraction: float
+    ) -> List["Hospital"]:
+        """
+        Create Hospital objects with the right characteristics, 
+        as given by dataframe
+
+        Parameters
+        ----------
+        hospital_df:
+            dataframe with hospital characteristics data
+
+        """
+        hospitals = []
+        for i, (index, row) in enumerate(hospital_df.iterrows()):
+            n_beds = row["beds"]
+            n_icu_beds = round(icu_fraction * n_beds)
+            n_beds -= n_icu_beds
+            msoa_name = row["MSOA"]
+            coordinates = row[["Latitude", "Longitude"]].values
+            # create hospital
+            hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name,)
+            hospitals.append(hospital)
+        return hospitals
+
+    def init_trees(self, hospital_coordinates: np.array) -> BallTree:
+        """
+        Reads hospital location and sizes, it initializes a KD tree on a sphere,
+        to query the closest hospital to a given location.
+
+        Parameters
+        ----------
+        hospital_df: 
+            dataframe with hospital characteristics data
+
+        Returns
+        -------
+        Tree to query nearby schools
+        """
+
+        self.hospital_trees = BallTree(
+            np.deg2rad(hospital_coordinates), metric="haversine",
+        )
+
+    def allocate_patient(self, person: "Person"):
+        """
+        Function to allocate patients into close by hospitals with available beds.
+        If there are no available beds within a maximum distance, the patient is
+        not allocated.
+
+        Parameters
+        ----------
+        person: 
+            patient to allocate into a hospital 
+        Returns
+        -------
+        hospital with availability
+
+        """
+
         if self.box_mode:
             for hospital in self.members:
                 if tag and not (hospital.full):
@@ -194,31 +316,71 @@ class Hospitals:
                 if tagICU and not (hospital.full_ICU):
                     return hospital
         else:
-            winner = None
-            windist = 1.e12
-            # find 100 nearest hospitals
-            angles, hospitals = self.get_closest_hospital(person.area, 100)
-            for angle, hospitaltag in zip(angles[0], hospitals[0]):
-                hospital = self.members[self.finder[hospitaltag]]
-                distance = angle * 6371.
+            hospital = None
+            # find hospitals  within radius of max distance
+            distances, hospitals_idx = self.get_closest_hospitals(
+                person.area.coordinates, self.max_distance
+            )
+            for distance, hospital_id in zip(distances, hospitals_idx):
+                hospital = self.members[hospital_id]
                 if distance > self.max_distance:
                     break
-                if ((tag and not (hospital.full)) or
-                        (tagICU and not (hospital.full_ICU))):
-                    winner = hospital
-                    windist = distance
+                if (
+                    person.health_information.tag == "intensive care"
+                    and not (hospital.full)
+                ) or (
+                    person.health_information.tag == "hospitalised"
+                    and not (hospital.full_ICU)
+                ):
                     break
-            if winner != None:
-                print("Receiving hospital for patient with ", person.health_information.tag, ": ",
-                      winner.structure, " distance = ", windist, " km at ", winner.postcode)
-                return winner
-        print("no hospital found for patient with", person.health_information.tag,
-              "in distance < ", self.maxdistance, " km.")
-        return None
+            if hospital is not None:
+                ic_logger.info(
+                    f"Receiving hospital for patient with {person.health_information.tag} at distance = {distance} km"
+                )
+                hospital.add_as_patient(person)
+            else:
+                ic_logger.info(
+                    "no hospital found for patient with",
+                    person.health_information.tag,
+                    "in distance < ",
+                    self.max_distance,
+                    " km.",
+                )
 
-    def get_closest_hospital(self, area, k):
-        hospital_tree = self.hospital_trees
-        return hospital_tree.query(
-            np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True
+    def get_closest_hospitals(
+        self, coordinates: Tuple[float, float], r_max: float
+    ) -> Tuple[float, float]:
+        """
+        Get the closest hospitals to a given coordinate within r_max
+
+        Parameters
+        ----------
+        coordinates: 
+            latitude and longitude
+        r_max:
+            maximum distance to hospital
+
+        Returns
+        -------
+        Distance to the closest hospitals, in km 
+        ID of the hospitals within r_max, ordered by distance
+
+        """
+        earth_radius = 6371.0  # km
+        r_max /= earth_radius
+        idx, distances = self.hospital_trees.query_radius(
+            np.deg2rad(coordinates.reshape(1, -1)),
+            r=r_max,
+            return_distance=True,
+            sort_results=True,
         )
-    
+        distances = np.array(distances[0]) * earth_radius
+        return distances, idx[0]
+
+
+if __name__ == "__main__":
+
+    Hospitals.from_file(
+        "~/covidmodelling/data/processed/hospital_data/england_hospitals.csv",
+        "/home/florpi/covidmodelling/configs/defaults/hospitals.yaml",
+    )

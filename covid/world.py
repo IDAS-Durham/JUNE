@@ -68,10 +68,10 @@ class World:
                 print("nothing exists outside the simulated region")
             if "pubs" in self.relevant_groups:
                 self.initialize_pubs()
+                self.group_maker = GroupMaker(self)
             else:
                 print("pubs not needed, skipping...")
         self.interaction = self.initialize_interaction()
-        self.group_maker = GroupMaker(self)
         self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
         print("Done.")
 
@@ -191,7 +191,9 @@ class World:
         self.cemeteries = Cemeteries(self)
 
     def initialize_hospitals(self):
-        self.hospitals = Hospitals(self, self.inputs.hospital_df, self.box_mode)
+        self.hospitals = Hospitals.from_file(self.inputs.hospital_data_path,
+            self.inputs.hospital_config_path, box_mode = self.box_mode)
+
         pbar = tqdm(total=len(self.msoareas.members))
         for msoarea in self.msoareas.members:
             distributor = HospitalDistributor(self.hospitals, msoarea)
@@ -325,7 +327,8 @@ class World:
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
-            self.group_maker.distribute_people(group_name)
+            if 'pubs' in active_groups:
+                self.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
 
@@ -375,7 +378,7 @@ class World:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
         self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
 
-    def do_timestep(self, day_iter):
+    def do_timestep(self):
         active_groups = self.timer.active_groups()
         #print ("=====================================================")
         #print ("=== active groups: ",active_groups,".")
@@ -388,7 +391,9 @@ class World:
         groups_instances = [getattr(self, group) for group in active_groups]
         self.interaction.groups = groups_instances
         self.interaction.time_step()
-        print('Freeing people')
+        # Update people that recovered in hospitals
+        for hospital in self.hospitals.members:
+            hospital.update_status_lists(self.timer.now, delta_time=0)
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
@@ -420,7 +425,7 @@ class World:
             if day > self.timer.total_days:
                 break
             self.logger.log_timestep(day)
-            self.do_timestep(self.timer)
+            self.do_timestep()
 
 
 if __name__ == "__main__":

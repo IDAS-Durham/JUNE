@@ -17,18 +17,19 @@ class HospitalDistributor:
     """
 
     def __init__(self, hospitals, msoarea):
-        self.world = hospitals.world
         self.msoarea = msoarea
         # check if this msoarea has hospitals
         self.hospitals_in_msoa(hospitals)
+        '''
         if len(self.msoarea.hospitals) != 0:
             self.healthcare_sector_label = (
                 self.world.config["companies"]["key_sector"]["hospitals"]
             )
-            patience_nr_per_nurse = self.world.config["hospitals"]["patience_nr_per_nurse"]
-            patience_nr_per_doctor = self.world.config["hospitals"]["patience_nr_per_doctor"]
+            patience_nr_per_nurse =  self.world.config["hospitals"]["patience_nr_per_nurse"]
+            patience_nr_per_doctor =  self.world.config["hospitals"]["patience_nr_per_doctor"]
             self.hospitals_in_msoa(hospitals)
             self.distribute_medics_to_hospitals()
+        '''
 
     def hospitals_in_msoa(self, hospitals):
         """
