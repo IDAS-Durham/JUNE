@@ -440,14 +440,6 @@ class HouseholdDistributor:
                     n_people_in_communal=to_fill_in_communal,
                     area=area,
                 )
-                # self.fill_random_people_to_existing_households(
-                #    households_with_extra_kids,
-                #    households_with_kids,
-                #    households_with_extra_youngadults,
-                #    households_with_extra_adults,
-                #    households_with_extra_oldpeople,
-                #    area=area,
-                # )
 
         # remaining
         self.fill_random_people_to_existing_households(
@@ -464,24 +456,18 @@ class HouseholdDistributor:
         for household in area.households:
             area.world.households.members.append(household)
             total_people += household.size
-        # try:
-        #    assert (
-        #        total_number_of_households - communal_houses
-        #        <= len(area.households)
-        #        <= total_number_of_households
-        #    )
-        # except:
-        #    raise HouseholdError("Number of households does not match.")
-        # try:
-        #    assert total_people == area.n_residents
-        # except:
-        #    raise HouseholdError(
-        #        f"Number of people in households {total_people} does not match number of people in area {area.n_residents}"
-        #    )
+        try:
+            assert (
+                total_number_of_households - communal_houses
+                <= len(area.households)
+                <= total_number_of_households
+            )
+        except:
+            raise HouseholdError("Number of households does not match.")
         ## destroy any empty houses
-        # area.households = [
-        #    household for household in area.households if household.size > 0
-        # ]
+        area.households = [
+            household for household in area.households if household.size > 0
+        ]
 
     def _create_household(
         self, area: Area, communal=False, max_household_size=np.inf
@@ -812,24 +798,24 @@ class HouseholdDistributor:
         max_household_size:
             maximum size of the created households.
         """
-        for i in range(0, n_households):
+        for _ in range(0, n_households):
             household = self._create_household(
                 area, max_household_size=max_household_size
             )
-            # if self._check_if_oldpeople_left(area):
-            #    # if there are old people left, then put them here together with another adult.
-            #    first_adult = self._get_random_person_in_age_bracket(
-            #        area, min_age=self.OLD_MIN_AGE, max_age=self.OLD_MAX_AGE
-            #    )
-            #    if first_adult is None:
-            #        raise HouseholdError("But you said there were old people left!")
-            # else:
-            #    first_adult = self._get_random_person_in_age_bracket(
-            #        area, min_age=self.ADULT_MIN_AGE, max_age=self.ADULT_MAX_AGE
-            #    )
-            first_adult = self._get_random_person_in_age_bracket(
-                area, min_age=self.ADULT_MIN_AGE, max_age=self.ADULT_MAX_AGE
-            )
+            if self._check_if_oldpeople_left(area):
+               # if there are old people left, then put them here together with another adult.
+               first_adult = self._get_random_person_in_age_bracket(
+                   area, min_age=self.OLD_MIN_AGE, max_age=self.OLD_MAX_AGE
+               )
+               if first_adult is None:
+                   raise HouseholdError("But you said there were old people left!")
+            else:
+               first_adult = self._get_random_person_in_age_bracket(
+                   area, min_age=self.ADULT_MIN_AGE, max_age=self.ADULT_MAX_AGE
+               )
+            #first_adult = self._get_random_person_in_age_bracket(
+            #    area, min_age=self.ADULT_MIN_AGE, max_age=self.ADULT_MAX_AGE
+            #)
             if first_adult is not None:
                 household.people.append(first_adult)
             if adults_per_household == 1:
@@ -840,8 +826,8 @@ class HouseholdDistributor:
             # second_adult = self._get_matching_partner(first_adult, area, under_65=True)
             if first_adult is not None:
                 second_adult = self._get_matching_partner(first_adult, area)
-            if second_adult is not None:
-                household.people.append(second_adult)
+                if second_adult is not None:
+                    household.people.append(second_adult)
             if household.size < household.max_size:
                 for array in extra_people_lists:
                     array.append(household)
@@ -941,7 +927,7 @@ class HouseholdDistributor:
         people_left = n_people_in_communal
         communal_houses = []
         no_adults=False
-        for _ in range(0, n_people_in_communal):
+        for _ in range(0, n_establishments):
             for i in range(ratio):
                 if i == 0:
                     person = self._get_random_person_in_age_bracket(area, min_age=18)
@@ -950,8 +936,12 @@ class HouseholdDistributor:
                         break
                     household = self._create_household(area, communal=True)
                     communal_houses.append(household)
-                household.people.append(person)
-                people_left -= 1
+                    household.people.append(person)
+                    people_left -= 1
+                else:
+                    person = self._get_random_person_in_age_bracket(area)
+                    household.people.append(person)
+                    people_left -= 1
             if no_adults:
                 break
 
@@ -1096,7 +1086,6 @@ class HouseholdDistributor:
         for age in range(self.YOUNG_ADULT_MIN_AGE, self.YOUNG_ADULT_MAX_AGE + 1):
             if age in people_left_dict:
                 for person in people_left_dict[age]:
-                    # print("selecting house for young adults...")
                     household = self._find_household_for_nonkid(
                         [households_with_extra_youngadults,]
                     )
@@ -1115,7 +1104,6 @@ class HouseholdDistributor:
         for age in range(self.YOUNG_ADULT_MAX_AGE + 1, self.ADULT_MAX_AGE + 1):
             if age in people_left_dict:
                 for person in people_left_dict[age]:
-                    # print("selecting house for adults...")
                     household = self._find_household_for_nonkid(
                         [households_with_extra_adults,]
                     )
