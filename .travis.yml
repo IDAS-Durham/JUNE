@@ -18,6 +18,6 @@ script:
   - cd test_covid
   - pytest
 
-after_install: 
+after_success:
   - codecov
 
