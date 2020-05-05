@@ -938,21 +938,31 @@ class HouseholdDistributor:
             the area in which to put the household
         """
         ratio = max(int(n_people_in_communal / n_establishments), 1)
-        surplus = n_people_in_communal % n_establishments
-        people_counter = 0
-        while people_counter < n_people_in_communal:
-            household = self._create_household(area, communal=True)
-            for _ in range(ratio):
-                person = self._get_random_person_in_age_bracket(area)
-                if person is None:  # this cannot fail, as we have the number.
-                    raise HouseholdError("Failed to match communal people.")
+        people_left = n_people_in_communal
+        communal_houses = []
+        no_adults=False
+        for _ in range(0, n_people_in_communal):
+            for i in range(ratio):
+                if i == 0:
+                    person = self._get_random_person_in_age_bracket(area, min_age=18)
+                    if person is None:
+                        no_adults = True
+                        break
+                    household = self._create_household(area, communal=True)
+                    communal_houses.append(household)
                 household.people.append(person)
-                people_counter += 1
-                if people_counter == n_people_in_communal - surplus:
-                    for _ in range(surplus):
-                        person = self._get_random_person_in_age_bracket(area)
-                        household.people.append(person)
-                    return None
+                people_left -= 1
+            if no_adults:
+                break
+
+        index = 0
+        while people_left > 0:
+            person = self._get_random_person_in_age_bracket(area)
+            household = communal_houses[index]
+            household.people.append(person)
+            people_left -= 1
+            index += 1
+            index = index % len(communal_houses)
 
     def _remove_household_from_all_lists(self, household, lists: list) -> None:
         """
