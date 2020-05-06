@@ -150,14 +150,6 @@ class Person:
         self.econ_index = econ_index
         self.health_information = HealthInformation()
 
-    def get_into_hospital(self):
-        if self.in_hospital is None:
-            self.world.hospitals.allocate_patient(self)
-
-    def bury(self):
-        cemetery = self.world.cemeteries.get_nearest(self)
-        cemetery.add(self)
-
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
