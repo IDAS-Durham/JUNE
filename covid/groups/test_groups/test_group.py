@@ -1,6 +1,7 @@
 from covid.groups import Group
 from covid.groups import Person
 from covid.groups.people import HealthIndex
+from enum import IntEnum
 from scipy import stats
 import numpy as np
 
@@ -9,6 +10,13 @@ class TestGroup(Group):
     def __init__(self, number):
         super().__init__(f"test_{number}", "TestGroup")
         self.people = []
+
+    class GroupType(IntEnum):
+        kids         = 0
+        adults       = 1
+
+    def add(self, person, qualifier):
+        super().add(person, qualifier)
 
 
 class TestGroups:
