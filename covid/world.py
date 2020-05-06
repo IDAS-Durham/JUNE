@@ -340,14 +340,7 @@ class World:
         self.boundary = Boundary(self)
 
     def initialize_interaction(self):
-        interaction_type = self.config["interaction"]["type"]
-        if "parameters" in self.config["interaction"]:
-            interaction_parameters = self.config["interaction"]["parameters"]
-        else:
-            interaction_parameters = {}
-        interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters)
-        return interaction
+        return DefaultInteraction()
 
     def set_active_group_to_people(self, active_groups):
         for group_name in active_groups:
