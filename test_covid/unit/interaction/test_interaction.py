@@ -1,15 +1,15 @@
-from covid.interaction import interaction as inter
+from covid.interaction import *
 from pathlib import Path
 from covid.groups import *
 import numpy as np
 import pytest
 
-test_config_file = Path(__file__).parent.parent.parent / "interaction_collective.yaml"
+test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
 
 
 def test__set_up_collective_from_file():
-    interaction = inter.InteractionCollective.from_file(test_config_file)
-    assert type(interaction).__name__ == "InteractionCollective"
+    interaction = DefaultInteraction.from_file(test_config_file)
+    assert type(interaction).__name__ == "DefaultInteraction"
 
 
 def days_to_infection(interaction, susceptible_person, group, timer):
@@ -31,16 +31,10 @@ def days_to_infection(interaction, susceptible_person, group, timer):
 
 
 @pytest.mark.parametrize(
-    "interaction_type, group_size",
-    [
-        ("probabilistic", 2),
-        ("superposition", 2),
-        ("probabilistic", 5),
-        ("superposition", 5),
-    ],
+    "group_size", (2,5)
 )
-def test__time_it_takes_to_infect(interaction_type, group_size, world_ne):
-    interaction = inter.InteractionCollective(
+def test__time_it_takes_to_infect(group_size, world_ne):
+    interaction = DefaultInteraction(
         mode=interaction_type, intensities={"TestGroup": 1.0}
     )
     infected_reference = world_ne.initialize_infection()
@@ -50,10 +44,10 @@ def test__time_it_takes_to_infect(interaction_type, group_size, world_ne):
         group = TestGroup(1)
         infected_person = Person(world_ne)
         infected_reference.infect_person_at_time(infected_person, world_ne.timer.now)
-        group.people.append(infected_person)
+        group.add(infected_person, qualifier=TestGroup.GroupType.kids)
         for i in range(group_size - 1):
             susceptible_person = Person(world_ne)
-            group.people.append(susceptible_person)
+            group.add(susceptible_person, qualifier=TestGroup.GroupType.kids)
         n_days.append(
             days_to_infection(interaction, susceptible_person, group, world_ne.timer)
         )
