@@ -2,6 +2,8 @@ import csv
 from pathlib import Path
 from typing import List, Dict
 
+import numpy as np
+
 from covid.groups.people.person import Person
 
 default_data_path = Path(__file__).parent.parent.parent.parent / "data"
@@ -21,18 +23,13 @@ class Population:
     def __iter__(self):
         return iter(self.people)
 
-    def create_person(self):
-        person = Person(
-            age=age_random,
-            nomis_bin=nomis_bin,
-            sex=sex_random,
-            health_index=health_index
-        )
-
-    def random_sex(self):
-        return self.area.sex_rv.rvs(
-            size=self.area.n_residents
-        )
+    # def create_person(self):
+    #     person = Person(
+    #         age=age_random,
+    #         nomis_bin=nomis_bin,
+    #         sex=sex_random,
+    #         health_index=health_index
+    #     )
 
 
 class Demography:
@@ -78,4 +75,31 @@ class Demography:
         return Demography(
             super_area,
             residents_map=residents_map
+        )
+
+
+class WeightedGenerator:
+    def __init__(self, *possibilities):
+        self.possibilities = possibilities
+
+    @property
+    def values(self):
+        return [
+            possibility[1]
+            for possibility
+            in self.possibilities
+        ]
+
+    @property
+    def weights(self):
+        return [
+            possibility[0]
+            for possibility
+            in self.possibilities
+        ]
+
+    def __call__(self):
+        return np.random.choice(
+            self.values,
+            p=self.weights
         )
