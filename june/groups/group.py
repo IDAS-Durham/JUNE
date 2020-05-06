@@ -1,8 +1,8 @@
 import logging
-from typing import List
-from june.exc import GroupException
 
 import matplotlib.pyplot as plt
+
+from june.exc import GroupException
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class Group:
         "leisure_Indoor",
         "pub",
         "random",
+        "TestGroup",
         "referenceGroup",
         "shopping",
         "school",
@@ -56,42 +57,15 @@ class Group:
         self.sane(name, spec)
         self.name = name
         self.spec = spec
-        self.people = []
-        self.members = []
+        self.people = set()
+
+        self.susceptible = set()
+        self.infected = set()
+        self.recovered = set()
+        self.in_hospital = set()
+        self.dead = set()
+
         self.intensity = 1.0
-
-    @property
-    def susceptible(self) -> List:
-        """
-        People in this group who are susceptible to the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.susceptible
-        ]
-
-    @property
-    def infected(self) -> List:
-        """
-        People in this group who are currently infected with the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.infected and not (
-                    person.health_information.in_hospital
-                    or person.health_information.dead
-            )
-        ]
-
-    @property
-    def recovered(self) -> List:
-        """
-        People in this group who have recovered from the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-        ]
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
@@ -114,24 +88,32 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
+    @property
     def must_timestep(self):
         return (self.size > 1 and
                 self.size_infected > 0 and
                 self.size_susceptible > 0)
 
     def update_status_lists(self, time, delta_time):
+        self.susceptible.clear()
+        self.infected.clear()
+        self.in_hospital.clear()
+        self.recovered.clear()
+        self.dead.clear()
+
         for person in self.people:
-            person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                self.susceptible.append(person)
-            elif person.health_information.infected:
-                if person.health_information.must_stay_at_home:
-                    continue
-            if person.health_information.in_hospital:
-                person.get_into_hospital()
+            health_information = person.health_information
+            health_information.update_health_status(time, delta_time)
+            if health_information.susceptible:
+                self.susceptible.add(person)
+            elif health_information.infected_at_home:
+                self.infected.add(person)
+            elif health_information.in_hospital:
+                self.in_hospital.add(person)
+            elif health_information.recovered:
+                self.recovered.add(person)
             elif person.health_information.dead:
-                person.bury()
-                self.people.remove(person)
+                self.dead.add(person)
 
     @property
     def size(self):
