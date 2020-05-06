@@ -15,6 +15,12 @@ class Population:
         self.area = area
         self.people = people
 
+    def __len__(self):
+        return len(self.people)
+
+    def __iter__(self):
+        return iter(self.people)
+
     def create_person(self):
         person = Person(
             age=age_random,
@@ -39,7 +45,17 @@ class Demography:
         self.residents_map = residents_map
 
     def population_for_area(self, area: str):
-        pass
+        people = list()
+        for _ in range(
+                self.residents_map[area]
+        ):
+            people.append(
+                Person()
+            )
+        return Population(
+            area=area,
+            people=people
+        )
 
     @classmethod
     def from_super_area(
