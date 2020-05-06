@@ -137,8 +137,10 @@ class PubFiller:
     def fill(self, area):
         ncustomers = self.fix_number(area)
         self.pubs = self.allpubs.get_nearest(area)
+        people_in_area = [person for person in area.people if person.carehome is not None]
         while ncustomers > 0:
-            if self.place(np.random.choice(area.people)):
+            if self.place(np.random.choice(people_in_area)):
+                #TODO think whether people in carehomes go to pubs
                 ncustomers -= 1
         # for pub in self.pubs:
         #    print ("pub with",len(pub.people)," customers:")

@@ -162,12 +162,12 @@ class Hospital(Group):
         super().update_status_lists(time, delta_time)
         self.update_status_lists_for_patients(time, delta_time)
         self.update_status_lists_for_ICUpatients(time, delta_time)
-        ic_logger.info(
-            f"=== update status list for hospital with {self.size}  people ==="
-        )
-        ic_logger.info(
-            f"=== hospital currently has {len(self.patients)} patients, and {len(self.icu_patients)}, ICU patients"
-        )
+        #ic_logger.info(
+        #    f"=== update status list for hospital with {self.size}  people ==="
+        #)
+        #ic_logger.info(
+        #    f"=== hospital currently has {len(self.patients)} patients, and {len(self.icu_patients)}, ICU patients"
+        #)
 
 
 class Hospitals:
