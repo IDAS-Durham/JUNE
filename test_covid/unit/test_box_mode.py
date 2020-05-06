@@ -33,7 +33,7 @@ def test__random_box_has_correct_age_distribution(box_random):
 
 def test__random_box_has_correct_health_index_distribution(box_random):
     """Need help testing this"""
-    person = np.random.choice(box_random.people)
+    person = np.random.choice(list(box_random.people))
     assert hasattr(person, "health_index")
 
 # tests of box based on census data
@@ -118,7 +118,7 @@ def test__region_box_has_correct_age_distribution(box_region, inputs):
 
 def test__region_box_has_correct_health_index(box_region, inputs):
     """Need help testing this"""
-    person = np.random.choice(box_region.people)
+    person = np.random.choice(list(box_region.people))
     assert hasattr(person, "health_index")
 
 
