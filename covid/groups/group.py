@@ -145,6 +145,7 @@ class Group(AbstractGroup):
         "leisure_Indoor",
         "pub",
         "random",
+        "TestGroup",
         "referenceGroup",
         "shopping",
         "school",
@@ -187,6 +188,7 @@ class Group(AbstractGroup):
                 else:
                     person.active_group = self.spec
 
+    @property
     def must_timestep(self):
         return (self.size > 1 and
                 self.size_infected > 0 and
