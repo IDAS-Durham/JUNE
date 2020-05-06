@@ -1,4 +1,5 @@
 import logging
+import sys
 from enum import IntEnum
 from typing import List, Tuple
 
@@ -210,7 +211,8 @@ class Hospital(Group):
         ic_logger.info(
             f"=== update status list for hospital with {self.size}  people ==="
         )
-        ic_logger.info(
+        print(
+            #ic_logger.info(
             "=== hospital currently has ",
             self[self.GroupType.patients].size,
             " patients",

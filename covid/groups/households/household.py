@@ -31,8 +31,8 @@ class Household(Group):
         person.household = self
 
     def set_active_members(self):
-        for group in self.groups:
-            for person in group.people:
+        for grouping in self.groupings:
+            for person in grouping.people:
                 if (person.active_group is None and
                     person.health_information.tag!="intensive care" and
                     person.health_information.tag!="hospitalised"):
