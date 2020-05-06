@@ -14,7 +14,6 @@ class CareHomeDistributor:
             minimum age to put people in carehome.
         """
         self.min_age_in_carehome = min_age_in_carehome
-        self.carehome_counter = 0
         pass
 
     def create_carehome_in_area(self, area: "Area", carehome_residents_number: int):
@@ -31,9 +30,8 @@ class CareHomeDistributor:
         """
         if carehome_residents_number == 0:
             return None
-        carehome = CareHome(self.carehome_counter, area, carehome_residents_number)
+        carehome = CareHome(area, carehome_residents_number)
         area.carehome = carehome
-        self.carehome_counter += 1
         self._put_people_to_carehome(carehome, area.men_by_age, area.women_by_age)
         return carehome
 
@@ -65,15 +63,15 @@ class CareHomeDistributor:
                     len(men_by_age[current_age_to_fill]) == 0
                 ):  # delete age key if empty list
                     del men_by_age[current_age_to_fill]
+                carehome.people.add(man_to_fill)
                 man_to_fill.carehome = carehome
-                carehome.people.append(man_to_fill)
                 people_counter += 1
             elif current_age_to_fill in women_by_age:
                 woman_to_fill = women_by_age[current_age_to_fill].pop()
                 if len(women_by_age[current_age_to_fill]) == 0:
                     del women_by_age[current_age_to_fill]
+                carehome.people.add(woman_to_fill)
                 woman_to_fill.carehome = carehome
-                carehome.people.append(woman_to_fill)
                 people_counter += 1
             else:
                 current_age_to_fill -= 1

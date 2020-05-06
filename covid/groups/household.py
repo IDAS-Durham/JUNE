@@ -1,5 +1,6 @@
 from covid.groups import Group
 import numpy as np
+from itertools import count
 
 
 class Household(Group):
@@ -8,12 +9,11 @@ class Household(Group):
     its residents.
     """
 
-    def __init__(self, house_id=None, composition=None, communal=False, area=None, max_size=np.inf):
-        if house_id is None:
-            super().__init__(None, "household") 
-        else:
-            super().__init__("Household_%03d"%house_id, "household") 
-        self.id = house_id
+    _id = count()
+
+    def __init__(self, composition=None, communal=False, area=None, max_size=np.inf):
+        house_id = next(self._id)
+        super().__init__(f"Household_{house_id}", "household")
         self.area = area
         self.household_composition = composition
         self.communal = communal
@@ -24,6 +24,7 @@ class Household(Group):
             if person.active_group is None:
                 person.active_group = "household"
 
+
 class Households:
     """
     Contains all households for the given area, and information about them.
@@ -32,7 +33,7 @@ class Households:
     def __init__(self):
         self.members = []
 
-    def __add__(self, households:"Households"):
+    def __add__(self, households: "Households"):
         """
         Adding two households instances concatenates the members
         list.
