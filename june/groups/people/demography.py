@@ -184,7 +184,7 @@ class Demography:
         )
 
     @classmethod
-    def from_super_area(
+    def for_super_area(
             cls,
             super_area,
             data_path: str = default_data_path,

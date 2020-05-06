@@ -7,7 +7,7 @@ from covid.groups.people import demography as d
     name="demography"
 )
 def make_demography(super_area):
-    return d.Demography.from_super_area(
+    return d.Demography.for_super_area(
         super_area
     )
 
