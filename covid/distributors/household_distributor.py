@@ -229,24 +229,6 @@ class HouseholdDistributor:
             self._second_kid_parent_age_diff_rv.rvs(size=n)
         )
         self._random_sex_list = list(self._random_sex_rv.rvs(size=n))
-        self._random_student_age = list(
-            np.random.randint(self.student_min_age, self.student_max_age + 1, size=n)
-        )
-        self._random_oldpeople_age = list(
-            np.random.randint(self.old_min_age, self.old_max_age + 1, size=n)
-        )
-        self._random_age = list(np.random.randint(0, 99, size=n))
-        self._random_kid_age = list(np.random.randint(0, self.adult_min_age, size=n))
-        siblings_age_gap1 = list(np.random.randint(-5, -2, size=n // 2))
-        siblings_age_gap2 = list(np.random.randint(2, 5, size=n // 2))
-        self._random_siblings_age_gap = siblings_age_gap1 + siblings_age_gap2
-        random.shuffle(self._random_siblings_age_gap)
-        self._random_adult_age = list(
-            np.random.randint(self.adult_min_age, self.old_min_age, size=n)
-        )
-        self._random_youngpeople_age = list(
-            np.random.randint(self.adult_min_age, self.young_adult_max_age + 1, size=n)
-        )
 
     def distribute_people_to_households(
         self,
