@@ -422,7 +422,11 @@ class World:
         reference to the world as that makes it impossible to perform population generation prior
         to world construction.
         """
-        pass
+        for person in group.in_hospital:
+            person.get_into_hospital()
+        for person in group.dead:
+            person.bury()
+            group.people.remove(person)
 
     def bury_the_dead(self, group):
         pass
