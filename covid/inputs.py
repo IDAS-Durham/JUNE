@@ -33,6 +33,10 @@ class Inputs:
             "data/processed/census_data/company_data/" \
         )
         # ----------------------------------
+        self.area_mapping_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "../data/census_data/area_code_translations/areas_mapping.csv",
+        )
         self.n_residents_file = os.path.join(
             self.OUTPUT_AREA_DIR, "residents.csv"
         )
