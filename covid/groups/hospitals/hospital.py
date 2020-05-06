@@ -51,7 +51,7 @@ class Hospital(Group):
         self.id = hospital_id
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
-        self.coordinates = coordinates.astype(np.float)
+        self.coordinates = coordinates
         self.msoa_name = msoa_name
         self.n_medics = 0
         self.employees = []
@@ -190,12 +190,7 @@ class Hospital(Group):
             f"=== update status list for hospital with {self.size}  people ==="
         )
         ic_logger.info(
-            "=== hospital currently has ",
-            len(self.patients),
-            " patients",
-            "and ",
-            len(self.icu_patients),
-            " ICU patients",
+            f"=== hospital currently has {len(self.patients)} patients, and {len(self.icu_patients)}, ICU patients"
         )
 
 
@@ -222,7 +217,8 @@ class Hospitals:
         for hospital in hospitals:
             self.members.append(hospital)
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
-        self.init_trees(coordinates)
+        if not box_mode:
+            self.init_trees(coordinates)
 
     @classmethod
     def from_file(
@@ -252,7 +248,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-            ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
+            ic_logger.info("There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(Hospital(1, 10, 2, None))
@@ -279,7 +275,7 @@ class Hospitals:
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
             msoa_name = row["MSOA"]
-            coordinates = row[["Latitude", "Longitude"]].values
+            coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name,)
             hospitals.append(hospital)
@@ -350,12 +346,7 @@ class Hospitals:
                 )
                 hospital.add_as_patient(person)
             else:
-                ic_logger.info(
-                    "no hospital found for patient with",
-                    person.health_information.tag,
-                    "in distance < ",
-                    self.max_distance,
-                    " km.",
+                ic_logger.info(f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
                 )
 
     def get_closest_hospitals(
