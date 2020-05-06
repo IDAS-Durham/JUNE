@@ -73,13 +73,14 @@ class School(Group):
 
     def add(self, person, qualifier=GroupType.students):
         if qualifier == self.GroupType.students:
+            #print(f'age difference {1 + person.age - self.age_min}')
             self.groupings[1 + person.age - self.age_min].append(person)
+            person.school = self
         else:
             super().add(
                 person,
                 qualifier
             )
-        person.school = self
 
 
 class Schools:

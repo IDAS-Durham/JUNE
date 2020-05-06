@@ -20,10 +20,8 @@ def days_to_infection(interaction, susceptible_person, group, timer):
         not susceptible_person.health_information.infected
         and days_to_infection < 100
     ):
-        effective_load = interaction.calculate_effective_viral_load(group, delta_time,)
-
-        interaction.single_time_step_for_recipient(
-            susceptible_person, effective_load, group, timer.now
+        interaction.single_time_step_for_group(
+            group, timer.now, delta_time
         )
 
         days_to_infection += 1
@@ -35,12 +33,12 @@ def days_to_infection(interaction, susceptible_person, group, timer):
 )
 def test__time_it_takes_to_infect(group_size, world_ne):
     interaction = DefaultInteraction(
-        mode=interaction_type, intensities={"TestGroup": 1.0}
+        intensities={"TestGroup": 1.0}
     )
     infected_reference = world_ne.initialize_infection()
 
     n_days = []
-    for n in range(1000):
+    for n in range(2000):
         group = TestGroup(1)
         infected_person = Person(world_ne)
         infected_reference.infect_person_at_time(infected_person, world_ne.timer.now)
@@ -55,5 +53,5 @@ def test__time_it_takes_to_infect(group_size, world_ne):
     np.testing.assert_allclose(
         np.mean(n_days),
         1.0 / (infected_reference.transmission.probability / group_size),
-        rtol=0.1,
+        rtol=0.15,
     )

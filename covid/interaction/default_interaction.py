@@ -43,21 +43,23 @@ class DefaultInteraction(Interaction):
         delta_time: 
             duration of the interaction 
         """
+        self.probabilities = []
+        self.weights = []
 
         if group.must_timestep:
-            probabilities, weights = self.calculate_probabilities()
+            self.calculate_probabilities(group)
             for i in range(group.n_groupings):
                 for j in range(group.n_groupings):
                     # grouping[i] infected infects grouping[j] susceptible
-                    self.contaminate(group, time, probabilities, weights,i,j)
+                    self.contaminate(group, time, delta_time, i,j)
                     if i!=j:
                         # =grouping[j] infected infects grouping[i] susceptible
-                        self.contaminate(group, time, probabilities, weights,j,i)
+                        self.contaminate(group, time, delta_time, j,i)
 
-    def contaminate(self,group, time, delta_time, probabilities, weights, infecters,recipients):
+    def contaminate(self,group, time, delta_time,  infecters,recipients):
         if (
             group.intensity[infecters][recipients] <= 0. or
-            probabilities[infecters] <= 0.
+            self.probabilities[infecters] <= 0.
         ):
             return
         for recipient in group.groupings[recipients]:
@@ -65,10 +67,10 @@ class DefaultInteraction(Interaction):
                 -delta_time *
                 recipient.health_information.susceptibility *
                 group.intensity[infecters][recipients] *
-                probabilities[infecters]
+                self.probabilities[infecters]
             )
             if random.random() <= transmission_probability:
-                infecter = self.select_infecter(weights)
+                infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
                     person=recipient, time=time
                 )
@@ -86,17 +88,16 @@ class DefaultInteraction(Interaction):
                     person.health_information.infection.transmission.probability
                 )
                 summed += individual*norm
-                weights.append([person, individual])
-            probabilities.append(summed)
-            return probabilities, weights
+                self.weights.append([person, individual])
+            self.probabilities.append(summed)
 
-    def select_infecter(self, weights):
+    def select_infecter(self):
         """
         Assign responsiblity to infecter for infecting someone
         """
         summed_weight = 0.
-        for weight in weights:
+        for weight in self.weights:
             summed_weight += weight[1]
-        choice_weights = [w[1]/summed_weight for w in weights]
-        idx = np.random.choice(range(len(weights)), 1, p=choice_weights)[0]
-        return weights[idx][0]
+        choice_weights = [w[1]/summed_weight for w in self.weights]
+        idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
+        return self.weights[idx][0]

@@ -44,27 +44,16 @@ def get_input_data():
     }
     return inputs
 
-
 def test_no_lonely_children(world_ne, inputs):
     """
     Check there ar eno children living without adults
     """
-
-    attribute = "nomis_bin"
-    decoder = inputs["decoder_age"]
-    only_children = 0
-    for i in range(len(world_ne.areas.members)):
-        for j in range(len(world_ne.areas.members[i].households)):
-            freq = np.zeros(len(decoder))
-            for k in range(len(world_ne.areas.members[i].households[j].people)):
-                freq[
-                    getattr(world_ne.areas.members[i].households[j].people[k], attribute)
-                ] += 1
-                # if no adults, but at least one child
-                if (np.sum(freq[5:]) == 0.0) & (np.sum(freq[:5]) > 0.0):
-                    only_children += 1
-
-    assert only_children == 0
+    for area in world_ne.areas.members:
+        for household in area.households:
+            adults = [person for person in household.people if person.age >= 18]
+            children = [person for person in household.people if person.age < 18]
+            if len(adults) == 0 and len(children) > 0:
+                assert False
 
 
 def test_no_homeless(world_ne):
