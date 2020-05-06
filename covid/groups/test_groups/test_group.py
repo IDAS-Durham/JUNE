@@ -7,7 +7,7 @@ import numpy as np
 
 class TestGroup(Group):
     def __init__(self, number):
-        super().__init__("test_%05d" % number, "TestGroup")
+        super().__init__(f"test_{number}", "TestGroup")
         self.people = []
 
 
