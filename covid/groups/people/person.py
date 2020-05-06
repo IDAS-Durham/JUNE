@@ -11,6 +11,7 @@ class HealthInformation:
         self.infection = infection
         self.infected = True
         self.susceptible = False
+        self.susceptibility = 0.
 
     @property
     def tag(self):
