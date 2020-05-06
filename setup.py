@@ -11,10 +11,10 @@ with open("LICENSE") as f:
     license = f.read()
 
 setup(
-        name="covid",
+        name="june",
         version="0.1.0",
         description="The most amazing covid simulation",
-        author="Durham Data Miners",
+        author="IDAS-Durham",
         long_description=readme,
         license=license,
         packages=find_packages(exclude=("tests", "docs")),
