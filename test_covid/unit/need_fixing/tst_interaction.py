@@ -24,7 +24,7 @@ def ratio_SI_simulated(beta, N, I_0, times, mode):
     groups = TestGroups(people_per_group=N, total_people=N)
     group = groups.members[0]
     if mode == "superposition":
-        group.set_intensity(group.get_intensity())
+        group.set_intensity_of_group_type(group.get_intensity_from_group_type())
     for i in range(I_0):
         group.people[i].set_infection(selector.make_infection(group.people[i], 0))
     interaction = CollectiveInteraction(selector, config)
@@ -71,7 +71,7 @@ def ratio_SIR_simulated(beta, gamma, N, I_0, times, mode):
     groups = TestGroups(people_per_group=N, total_people=N)
     group = groups.members[0]
     if mode == "Superposition":
-        group.set_intensity(group.get_intensity())
+        group.set_intensity_of_group_type(group.get_intensity_from_group_type())
     for i in range(I_0):
         group.people[i].set_infection(
             selector.make_infection(group.people[i], times[0] - 1)

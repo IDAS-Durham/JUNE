@@ -2,7 +2,7 @@ import yaml
 import logging
 
 from covid.time import Timer
-from covid.interaction import *
+from covid import interaction
 from covid.infection import Infection
 
 default_config_filename = Path(__file__).parent.parent / "configs/defaults/world.yaml"
@@ -53,20 +53,10 @@ class Simulator:
         return Simulator(cls, world, config)
 
     def initialize_interaction(self):
-        """
-        Initialize interaction from config file
-        """
-        # TODO: Interaction should have a from config file
         interaction_type = self.config["interaction"]["type"]
-        if "parameters" in self.config["interaction"]:
-            interaction_parameters = self.config["interaction"]["parameters"]
-        else:
-            interaction_parameters = {}
         interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](
-            interaction_parameters, self.world
-        )
-        return interaction
+        interaction_instance = getattr(interaction, interaction_class_name).from_file()
+        return interaction_instance
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
@@ -80,7 +70,7 @@ class Simulator:
         """
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
-            if 'pubs' in active_groups:
+            if "pubs" in active_groups:
                 world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
@@ -95,20 +85,18 @@ class Simulator:
             person.active_group = None
 
     def initialize_infection(self):
-        """
-        Initialize infection from config file
-        """
-
-        # TODO: Infection should have a from config file
         if "parameters" in self.config["infection"]:
             infection_parameters = self.config["infection"]["parameters"]
         else:
             infection_parameters = {}
         if "transmission" in self.config["infection"]:
             transmission_type = self.config["infection"]["transmission"]["type"]
-            transmission_parameters = self.config["infection"]["transmission"][
-                "parameters"
-            ]
+            try:
+                transmission_parameters = self.config["infection"]["transmission"][
+                    "parameters"
+                ]
+            except KeyError:
+                transmission_parameters = dict()
             transmission_class_name = "Transmission" + transmission_type.capitalize()
         else:
             trans_class = "TransmissionConstant"
@@ -117,7 +105,11 @@ class Simulator:
         transmission_class = trans_class(**transmission_parameters)
         if "symptoms" in self.config["infection"]:
             symptoms_type = self.config["infection"]["symptoms"]["type"]
-            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
+            try:
+                symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
+            except KeyError:
+                symptoms_parameters = dict()
+
             symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
         else:
             symptoms_class_name = "SymptomsGaussian"
@@ -176,25 +168,34 @@ class Simulator:
 
         """
         active_groups = self.timer.active_groups()
+        if not active_groups or len(active_groups) == 0:
+            world_logger.info("==== do_timestep(): no active groups found. ====")
+            return
+        # update people (where they are according to time)
+        self.set_active_group_to_people(active_groups)
+        # infect people in groups
+        group_instances = [getattr(self, group) for group in active_groups]
+        for group_type in group_instances:
+            for group in group_type.members:
+                self.interaction.time_step(self.timer.now, self.timer.duration, group)
+        # Update people that recovered in hospitals
+        for hospital in self.hospitals.members:
+            hospital.update_status_lists(self.timer.now, delta_time=0)
+        self.set_allpeople_free()
+
+        active_groups = self.timer.active_groups()
         if active_groups == None or len(active_groups) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
-        self.set_active_group_to_people(active_groups)
 
         # TODO: update people's status that is currently in interaction
         # needs to change time_step updates before and after running interaction
 
         # i) Run on world people (health update status to infected only on susceptible people? is it different than recovered only on infected?
         # Do it within this loop
-        groups_instances = [getattr(self, group) for group in active_groups]
-        self.interaction.groups = groups_instances
-        self.interaction.time_step()
         # Update people that recovered in hospitals
         # TODO: only if hospitals are in the world
         # + this should be a method of Hospitals
-        for hospital in self.hospitals.members:
-            hospital.update_status_lists(self.timer.now, delta_time=0)
-        self.set_allpeople_free()
 
     def run(self, n_seed: int = 100):
         """
@@ -207,28 +208,15 @@ class Simulator:
 
         """
         sim_logger.info(
-            "Starting group_dynamics for ",
-            self.timer.total_days,
-            " days at day",
-            self.timer.day,
+            f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
         )
         if self.box_mode:
             self.seed_infections_box(n_seed)
         else:
-            sim_logger.info(
-                "Infecting individuals in their household,",
-                "for in total ",
-                len(self.households.members),
-                " households.",
-            )
             for household in self.households.members:
                 self.seed_infections_group(household, 1)
         sim_logger.info(
-            "starting the loop ..., at ",
-            self.timer.day,
-            " days, to run for ",
-            self.timer.total_days,
-            " days",
+            f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
 
         for day in self.timer:
