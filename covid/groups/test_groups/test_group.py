@@ -8,7 +8,6 @@ import numpy as np
 class TestGroup(Group):
     def __init__(self, number):
         super().__init__(f"test_{number}", "TestGroup")
-        self.people = []
 
 
 class TestGroups:
