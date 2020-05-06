@@ -5,15 +5,20 @@ from interaction import Interaction
 class DefaultInteraction(Interaction):
     def __init__(self):
         super().__init__()
+        print("initialized default interaction model.")
 
     def single_time_step_for_group(self):
+        self.probabilities = []
+        self.weights       = []
         if self.group.must_timestep():
-            calculate_probabilties()
-            for gi in group.groupings:
-                for gj in group.groupings:
-                    self.contaminate(self,i,j)
+            self.calculate_probabilities()
+            for i in range(self.group.n_groupings):
+                for j in range(self.group.n_groupings):
+                    # grouping[i] infects grouping[j]
+                    self.contaminate(i,j)
                     if i!=j:
-                        self.contaminate(self,j,i)
+                        # =grouping[j] infects grouping[i]
+                        self.contaminate(j,i)
 
     def contaminate(self,infecters,recipients):
         if (
@@ -23,7 +28,7 @@ class DefaultInteraction(Interaction):
             return
         for recipient in self.group.groupings[recipients]:
             transmission_probability = 1.0 - np.exp(
-                -self.delta_t *
+                -self.delta_time *
                 recipient.health_information.susceptibility *
                 self.group.intensity[infecters][recipients] *
                 self.probabilities[infecters]
@@ -35,23 +40,25 @@ class DefaultInteraction(Interaction):
                 )
                 infecter.health_information.counter.increment_infected()
                 recipient.health_information.counter.update_infection_data(
-                    time=self.time, group_type=group.spec
+                    time=self.time, group_type=self.group.spec
                 )
 
-    def calculate_probabilities():
-        self.probabilities = []
+    def calculate_probabilities(self):
         for grouping in self.group.groupings:
             summed = 0.
-            norm   = 1./max(1, self.grouping.size)
+            norm   = 1./max(1, grouping.size)
             for person in grouping.infected:
                 individual = (
                     person.health_information.infection.transmission.probability
                 )
                 summed += individual*norm
                 self.weights.append([person, individual])
-            self.probabilities.append(summed) 
+            self.probabilities.append(summed)
 
     def select_infecter(self):
-        choice_weights = [w[1] for w in self.weights]
+        summed_weight = 0.
+        for weight in self.weights:
+            summed_weight += weight[1]
+        choice_weights = [w[1]/summed_weight for w in self.weights]
         idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
         return self.weights[idx][0]

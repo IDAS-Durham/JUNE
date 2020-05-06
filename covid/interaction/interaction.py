@@ -11,7 +11,7 @@ class Interaction:
 
         # TODO think how we treat the double update_status_lists and make it consistent
         # with delta_time
-        
+        print ("entering time_step with time = ",time," delta = ",delta_time)
         self.time       = time
         self.delta_time = delta_time
         for group_type in groups:
