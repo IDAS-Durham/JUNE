@@ -97,7 +97,7 @@ class BoxGenerator(Box):
             age = ages_expanded[age_counter]
             health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                world=self.world, age=age, sex=sex, health_index=health_index
+                age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
             self.people.append(person)
@@ -107,7 +107,7 @@ class BoxGenerator(Box):
             age = ages_expanded[age_counter]
             health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                world=self.world, age=age, sex=sex, health_index=health_index
+                age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
             self.people.append(person)
@@ -184,8 +184,6 @@ class BoxGenerator(Box):
             sex = sex_shuffle_array[i]
             health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                world=self.world,
-                person_id=i,
                 age=age,
                 sex=sex,
                 health_index=health_index,
