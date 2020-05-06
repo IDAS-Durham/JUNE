@@ -1,29 +1,31 @@
 from collections import Counter
-import pandas as pd
-from june.inputs import Inputs 
 from june.world import World
-import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from june.inputs import Inputs
 import seaborn as sns
 import pickle
+import pytest
 
-sns.set_context('paper')
+sns.set_context("paper")
 
 
-
-def company_size(world):
-    # get company size distribution from input data
+def test_company_size():
+    """
+    """
     in_compsize_distr = world.inputs.companysize_df.sum(axis='rows')
     in_compsize_distr = in_compsize_distr.to_frame(name="in_counts")
     in_compsize_distr = in_compsize_distr.reset_index()
     in_compsize_distr = in_compsize_distr.rename(columns={"index": "bins"})
 
-    # get company size distribution from output data
     out_compsize_distr = np.zeros(len(world.companies.members))
     for i, company in enumerate(world.companies.members):
         out_compsize_distr[i] = company.n_employees
-    bins = np.array([0,9,19,20,50,100,250,500,1000,999999]) #TODO can be done without hardcode
+        
+    bins = np.array([0,9,19,20,50,100,250,500,1000,999999])
     inds = np.digitize(out_compsize_distr, bins)
     bins, counts = np.unique(inds, return_counts=True)
+
     out_compsize_distr = pd.DataFrame(
         data=np.array([bins, counts]).T,
         columns=['size','out_counts'],
@@ -38,27 +40,51 @@ def company_size(world):
     out_compsize_distr = out_compsize_distr.fillna(0)
     out_compsize_distr = out_compsize_distr.drop(["size", "in_counts"], axis=1)
 
-    # merge the two pd.DataFrames into one
+
     in_compsize_distr = in_compsize_distr.rename(columns={"in_counts": "counts"})
     out_compsize_distr = out_compsize_distr.rename(columns={"out_counts": "counts"})
     in_compsize_distr["src"] = ["input"] * len(in_compsize_distr.index.values)
     out_compsize_distr["src"] = ["output"] * len(out_compsize_distr.values)
+
     compsize_distr = pd.concat([in_compsize_distr, out_compsize_distr], axis=0)
-    return compsize_distr
 
-if __name__=='__main__':
+
+def test_company_number_per_msoa():
+    """ 
+    Check the number of companies in the world is correct
+
+    Problem:
+        This test will faile if the simulated area is not
+        enough isolated and companies are drawing to many
+        people from outside the simulated area.
+    """
     world = World.from_pickle()
-    compsize_distr = company_size(world)
-
-    sns.catplot(
-        x="bins",
-        y="counts",
-        hue="src",
-        data=compsize_distr,
-        height=6,
-        kind="bar",
-        palette="muted",
+    inputs = Inputs()
+    msoas = np.unique(inputs.oa2msoa_df["MSOA11CD"].values)
+    assert (
+        abs(1 - len(world.companies.members) / \
+            world.inputs.companysize_df.sum(axis=1).sum()
+        ) < 0.15
     )
 
+def test_company_sex_ratio():
+    """
+    """
+    world = World.from_pickle()
+    inputs = Inputs()
+
+    comp_size_bins = [0,9,19,20,50,100,250,500,1000,999999]  #TODO don't hardcode
+    
+    comp_sizes = np.zeros(len(world.companies.members))
+    for i, company in enumerate(world.companies.members):
+        comp_sizes[i] = company.n_employees_max
+
+    world_hist = np.histogram(comp_sizes, bins=comp_size_bins, normed=True)[0]
+    input_hist = worksize_df.sum(axis=0).values / worksize_df.sum(axis=0).sum()
+
+    #TODO judge the difference in distribution
 
 
+#def test_company_sex_ratio():
+#    """
+#    """
