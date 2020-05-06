@@ -7,6 +7,7 @@ import pandas as pd
 from pathlib import Path
 
 
+'''
 def test__total_number_schools_is_correct():
     data_directory = Path(__file__).parent.parent.parent.parent
     school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
@@ -97,4 +98,26 @@ def test__non_mandatory_dont_go_if_school_full(world_ne):
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
+'''
 
+def test__all_go_to_school_have_attribute(world_ne):
+
+    for school in world_ne.schools.members:
+
+        print(school.people)
+        print(school.groupings[0].people)
+        for person in school.groupings[0].people:
+            assert person.school is None
+
+    assert 1 == 0
+
+def test__all_go_to_school_have_attribute_2(world_ne):
+
+    n_school = 0
+    for person in world_ne.people.members:
+        if person.school is not None:
+            n_school += 1
+    print(n_school)
+
+    assert n_school > 0
+ 
