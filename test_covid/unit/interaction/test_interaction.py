@@ -28,7 +28,7 @@ def days_to_infection(interaction, susceptible_person, group):
         effective_load = interaction.calculate_effective_viral_load(group, delta_time,)
 
         interaction.single_time_step_for_recipient(
-            susceptible_person, effective_load, group, days_to_infection
+            susceptible_person, effective_load, group, 1
         )
 
         days_to_infection += 1
