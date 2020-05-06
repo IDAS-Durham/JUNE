@@ -56,6 +56,11 @@ def test_sex(population):
     assert "f" in sexes
 
 
+def test_age(population):
+    for person in population:
+        assert 0 <= person.age <= 100
+
+
 def test_weighted_generator():
     weighted_generator = d.WeightedGenerator(
         (0.0, 10),
