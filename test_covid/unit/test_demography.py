@@ -68,3 +68,21 @@ def test_weighted_generator():
         (0.0, 20)
     )
     assert weighted_generator() == 10
+
+
+def test_age_generator():
+    age_generator = d.AgeGenerator.from_range_string(
+        "0-10"
+    )
+    assert age_generator.lower == 0
+    assert age_generator.upper == 10
+
+    age_generator = d.AgeGenerator.from_range_string(
+        "90-XXX"
+    )
+    assert age_generator.lower == 90
+    assert age_generator.upper == 100
+
+    assert d.AgeGenerator(
+        10, 10
+    )() == 10
