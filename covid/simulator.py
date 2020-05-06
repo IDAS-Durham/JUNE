@@ -157,7 +157,7 @@ class Simulator:
         # TODO: only if hospitals are in the world
         # + this should be a method of Hospitals
 
-    def run(self, n_seed: int = 100):
+    def run(self, n_seed: int = 100, n_days):
         """
         Run simulation with n_seed initial infections
 
