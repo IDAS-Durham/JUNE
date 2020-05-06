@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/JosephPB/covidmodelling.svg?token=RZpZVED1uFcNhmBpzes5&branch=master)](https://travis-ci.com/JosephPB/covidmodelling)
+[![Build Status](https://travis-ci.com/IDAS-Durham/JUNE.svg?token=RZpZVED1uFcNhmBpzes5&branch=master)](https://travis-ci.com/IDAS-Durham/JUNE)
 
 # COVID Modelling
 
