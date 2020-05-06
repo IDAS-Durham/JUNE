@@ -32,7 +32,7 @@ class World:
     ):
         world_logger.info("Initializing world...")
         # read configs
-        self.read_config(config_file)
+        self.config = read_config(config_file)
         self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         # set up logging
@@ -122,17 +122,6 @@ class World:
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
-
-    def read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "configs",
-                "config_example.yaml",
-            )
-        with open(config_file, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
 
     def get_simulation_groups(self):
         """
@@ -354,44 +343,10 @@ class World:
             person.active_group = None
 
     def initialize_infection(self):
-        if "parameters" in self.config["infection"]:
-            infection_parameters = self.config["infection"]["parameters"]
-        else:
-            infection_parameters = {}
-        if "transmission" in self.config["infection"]:
-            transmission_type = self.config["infection"]["transmission"]["type"]
-            try:
-                transmission_parameters = self.config["infection"]["transmission"][
-                    "parameters"
-                ]
-            except KeyError:
-                transmission_parameters = dict()
-            transmission_class_name = "Transmission" + transmission_type.capitalize()
-        else:
-            trans_class = "TransmissionConstant"
-            transmission_parameters = {}
-        trans_class = getattr(transmission, transmission_class_name)
-        transmission_class = trans_class(**transmission_parameters)
-        if "symptoms" in self.config["infection"]:
-            symptoms_type = self.config["infection"]["symptoms"]["type"]
-            try:
-                symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            except KeyError:
-                symptoms_parameters = dict()
-
-            symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-        else:
-            symptoms_class_name = "SymptomsGaussian"
-            symptoms_parameters = {}
-        symp_class = getattr(symptoms, symptoms_class_name)
-        reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(
-            health_index=reference_health_index, **symptoms_parameters
+        return _initialize_infection(
+            self.config,
+            self.timer.now
         )
-        infection = Infection(
-            self.timer.now, transmission_class, symptoms_class, **infection_parameters
-        )
-        return infection
 
     def seed_infections_group(self, group, n_infections):
         choices = np.random.choice(group.size, n_infections, replace=False)
@@ -477,6 +432,59 @@ class World:
                 break
             self.logger.log_timestep(day)
             self.do_timestep()
+
+
+def read_config(config_file):
+    if config_file is None:
+        config_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "configs",
+            "config_example.yaml",
+        )
+    with open(config_file, "r") as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
+
+
+def _initialize_infection(config, time):
+    if "parameters" in config["infection"]:
+        infection_parameters = config["infection"]["parameters"]
+    else:
+        infection_parameters = {}
+    if "transmission" in config["infection"]:
+        transmission_type = config["infection"]["transmission"]["type"]
+        try:
+            transmission_parameters = config["infection"]["transmission"][
+                "parameters"
+            ]
+        except KeyError:
+            transmission_parameters = dict()
+        transmission_class_name = "Transmission" + transmission_type.capitalize()
+    else:
+        trans_class = "TransmissionConstant"
+        transmission_parameters = {}
+    trans_class = getattr(transmission, transmission_class_name)
+    transmission_class = trans_class(**transmission_parameters)
+    if "symptoms" in config["infection"]:
+        symptoms_type = config["infection"]["symptoms"]["type"]
+        try:
+            symptoms_parameters = config["infection"]["symptoms"]["parameters"]
+        except KeyError:
+            symptoms_parameters = dict()
+
+        symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
+    else:
+        symptoms_class_name = "SymptomsGaussian"
+        symptoms_parameters = {}
+    symp_class = getattr(symptoms, symptoms_class_name)
+    reference_health_index = HealthIndex().get_index_for_age(40)
+    symptoms_class = symp_class(
+        health_index=reference_health_index, **symptoms_parameters
+    )
+    infection = Infection(
+        time, transmission_class, symptoms_class, **infection_parameters
+    )
+    return infection
 
 
 if __name__ == "__main__":
