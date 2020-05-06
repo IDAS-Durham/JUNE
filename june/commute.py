@@ -207,8 +207,6 @@ class RegionalGenerator:
             in self.weighted_modes
         ]
 
-    # TODO : Make property (too scared to do this myself atm)
-
     def weighted_random_choice(self) -> "ModeOfTransport":
         """
         Randomly choose a mode of transport, weighted by usage in this region.

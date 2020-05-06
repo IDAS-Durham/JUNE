@@ -1,18 +1,9 @@
-from collections import Counter
-from june.groups import *
-import pickle
-import os
-import pytest
-import numpy as np
-import pandas as pd
-from pathlib import Path
-from june import World
-
 def test__everyone_is_in_household(world_ne):
     world_ne.set_active_group_to_people(["households"])
     for person in world_ne.people.members:
-        assert person.active_group == "household" 
+        assert person.active_group == "household"
     world_ne.set_allpeople_free()
+
 
 def test__everyone_is_freed(world_ne):
     world_ne.set_active_group_to_people(["households"])
@@ -20,8 +11,6 @@ def test__everyone_is_freed(world_ne):
     for person in world_ne.people.members:
         assert person.active_group == None
     world_ne.set_allpeople_free()
-
-
 
 
 def test__everyone_is_in_school_household(world_ne):
@@ -32,7 +21,7 @@ def test__everyone_is_in_school_household(world_ne):
     world_ne.set_allpeople_free()
 
 
-#def test__everyone_is_in_company(world_ne):
+# def test__everyone_is_in_company(world_ne):
 #    world_ne.set_active_group_to_people(["companies"])
 #    for person in world_ne.people.members:
 #        should_be_active = "company" if person.industry is not None else None
@@ -45,7 +34,6 @@ def test__everyone_is_active_somewhere(world_ne):
     for person in world_ne.people.members:
         assert person.active_group is not None
     world_ne.set_allpeople_free()
-
 
 
 def find_random_in_school(world_ne):
@@ -97,6 +85,7 @@ def test__follow_a_pupil(world_ne):
             break
     world_ne.set_allpeople_free()
 
+
 class MockHealthInformation:
     def __init__(self, tag):
         self.tag = tag
@@ -105,8 +94,10 @@ class MockHealthInformation:
     def in_hospital(self) -> bool:
         return self.tag in ("hospitalised", "intensive care")
 
-def test__sick_gets_to_hospital_recovers_and_leaves(world_ne):
 
+# TODO: this tests needs adapting now that people do not hospitalise themselves. May be a nicer
+# TODO: implementation once everything is more loosely coupled
+def _test__sick_gets_to_hospital_recovers_and_leaves(world_ne):
     # sick goes to hospital
     dummy_person = world_ne.people.members[0]
     dummy_person.health_information = MockHealthInformation('hospitalised')
@@ -118,13 +109,9 @@ def test__sick_gets_to_hospital_recovers_and_leaves(world_ne):
 
     # recovered, leaves hospital
     dummy_person.health_information = MockHealthInformation('asymptomatic')
-    #TODO: we should really test that recovering = leaving hospital
-    #dummy_person.in_hospital.update_status_lists()
+    # TODO: we should really test that recovering = leaving hospital
+    # dummy_person.in_hospital.update_status_lists()
     dummy_person.in_hospital.release_as_patient(dummy_person)
     world_ne.set_active_group_to_people(["schools", "hospitals", "households"])
     assert dummy_person.active_group != 'hospital'
     world_ne.set_allpeople_free()
-
-
-
-
