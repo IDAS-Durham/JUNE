@@ -330,8 +330,8 @@ class HouseholdDistributor:
             raise HouseholdError("error number of adults have to be 0,1 or 2")
 
     def distribute_people_to_household(self):
-        if len(self.area.people) == 0:
-            self.populate_area()
+        #if len(self.area.people) == 0:
+        #    self.populate_area()
         house_id = 0
         aux = False
         composition_id_array = self.household_rv.rvs(size=self.area.n_residents)
