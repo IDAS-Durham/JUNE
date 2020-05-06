@@ -9,6 +9,7 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 
 from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
+from covid.distributors import *
 from covid.groups import *
 from covid.groups.people import HealthIndex
 from covid.infection import Infection
