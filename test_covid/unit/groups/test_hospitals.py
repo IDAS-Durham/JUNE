@@ -78,6 +78,9 @@ def test__allocate_patient_release_patient(hospitals, health_info):
         assert hospitals.members[0][Hospital.GroupType.patients][0] == dummy_person
     elif health_info == 'intensive care':
         assert hospitals.members[0][Hospital.GroupType.icu_patients][0] == dummy_person
+        #assert list(dummy_person.in_hospital.patients)[0] == dummy_person
+    #elif health_info == 'intensive care':
+    #    assert list(dummy_person.in_hospital.icu_patients)[0] == dummy_person
     selected_hospital = dummy_person.in_hospital
     assert dummy_person.in_hospital is not None
     dummy_person.in_hospital.release_as_patient(dummy_person)

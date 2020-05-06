@@ -1,10 +1,10 @@
-from collections import Counter
-from covid.groups import *
-import pickle
-import pytest
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+import pytest
+
+from covid.groups import *
 
 
 def test__total_number_schools_is_correct():
@@ -78,14 +78,3 @@ def test__age_range_schools(world_ne):
     assert n_outside_range == 0
 
 
-'''
-def test__non_mandatory_dont_go_if_school_full(world_ne):
-
-    mandatory_age_range = world_ne.schools.mandatory_age_range
-    for school in world_ne.schools.members:
-        if school.n_pupils > school.n_pupils_max:
-            ages = np.array(
-                [person.age for person in grouping for grouping in school.groopings]
-            )
-            assert np.sum((mandatory_age_range[0] <= ages) & (ages  <= mandatory_age_range[1])) == school.n_pupils
-'''
