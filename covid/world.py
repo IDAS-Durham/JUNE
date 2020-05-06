@@ -11,77 +11,37 @@ from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
 from covid.inputs import Inputs
-from covid.logger import Logger
-from covid.interaction import *
-from covid.infection import transmission
-from covid.infection import symptoms
-from covid.infection import Infection
-from covid.groups.people import HealthIndex
 
 class World:
     """
-    Stores global information about the simulation
+    This Class creates the world that will later be simulated.
+    The world will be stored in pickle, but a better option needs to be found.
     """
-
-    def __init__(self, config_file=None, box_mode=False, box_n_people=None, box_region=None):
-        print("Initializing world...")
-        # read configs
-        self.read_config(config_file)
-        self.relevant_groups = self.get_simulation_groups()
-        self.read_defaults()
-        # set up logging
-        self.world_creation_logger(self.config["logger"]["save_path"])
-        # start initialization
-        self.box_mode = box_mode
-        self.people = []
-        self.total_people = 0
-        print("Reading inputs...")
+    
+    def __init__(
+        self,
+        output_dir: str = None,
+        box_mode: Dict[int, str] = None,
+    ):
+        self.output_dir = output_dir
+        self.box = box_mode
+        
         self.inputs = Inputs(zone=self.config["world"]["zone"])
-        if self.box_mode:
-            #self.initialize_hospitals()
-            #self.initialize_cemeteries()
-            self.initialize_box_mode(box_region, box_n_people)
-        else:
-            print("Initializing commute generator...")
-            self.commute_generator = CommuteGenerator.from_file(
-                self.inputs.commute_generator_path
-            )
-            self.initialize_areas()
-            self.initialize_super_areas()
-            self.initialize_people()
-            self.initialize_households()
-            self.initialize_hospitals()
-            self.initialize_cemeteries()
-            if "schools" in self.relevant_groups:
-                self.initialize_schools()
-            else:
-                print("schools not needed, skipping...")
-            if "companies" in self.relevant_groups:
-                self.initialize_companies()
-            else:
-                print("companies not needed, skipping...")
-            if "boundary" in self.relevant_groups:
-                self.initialize_boundary()
-            else:
-                print("nothing exists outside the simulated region")
-            if "pubs" in self.relevant_groups:
-                self.initialize_pubs()
-                self.group_maker = GroupMaker(self)
-            else:
-                print("pubs not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.logger = Logger(self, self.config["logger"]["save_path"], box_mode=box_mode)
-        print("Done.")
-
-    def world_creation_logger(
+        #self.inputs = Inputs(
+        
+        # read configs
+        #self.read_config(config_file)
+        #self.read_defaults()
+    
+    def logger(
             self,
-            save_path,
-            config_file=None,
+            save_path: str = None,
+            config_file: str = None,
             default_level=logging.INFO,
         ):
         """
+        Create logger to make debugging easier
         """
-        # where to read and write files
         if config_file is None:
             config_file = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -96,9 +56,42 @@ class World:
                 log_config = yaml.safe_load(f.read())
             logging.config.dictConfig(log_config)
         else:
+            print("The provided logging config file does not exist.")
             logging.basicConfig(
                 filename=log_file, level=logging.INFO
             )
+    
+    def geography():
+        self.initialize_areas()
+        self.initialize_super_areas()
+    
+    def humanity():
+        self.people = []
+        self.total_people = 0
+        self.initialize_people()
+    
+    def sociology():
+        self.relevant_groups = self.get_simulation_groups()
+        self.commute_generator = CommuteGenerator.from_file(
+            self.inputs.commute_generator_path
+        )
+        self.initialize_households()
+        self.initialize_hospitals()
+        self.initialize_cemeteries()
+        self.initialize_schools()
+        self.initialize_companies()
+        #self.initialize_boundary() #TODO
+        self.initialize_pubs()
+        #self.group_maker = GroupMaker(self)
+
+    def box():
+        self.people = []
+        self.total_people = 0
+        self.initialize_people()
+        self.initialize_hospitals()
+        self.initialize_cemeteries()
+        self.initialize_box_mode(box_region, box_n_people)
+
 
     def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
         """
@@ -107,15 +100,6 @@ class World:
         """
         with open(pickle_obj, "wb") as f:
             pickle.dump(self, f)
-
-    @classmethod
-    def from_pickle(cls, pickle_obj="/cosma7/data/dp004/dc-quer1/world.pkl"):
-        """
-        Initializes a world instance from an already populated world.
-        """
-        with open(pickle_obj, "rb") as f:
-            world = pickle.load(f)
-        return world
 
     @classmethod
     def from_config(cls, config_file):
@@ -340,7 +324,7 @@ class World:
 
 if __name__ == "__main__":
     world = World(
-        config_file=os.path.join("../configs", "config_example.yaml"),
+        config_file=os.path.join("../configs", "config_create_world.yaml"),
         #box_mode=True,
         #box_region='test',
     )
