@@ -14,4 +14,6 @@ interaction = InteractionCollective()
 
 simulator = Simulator(world, infection, interaction)
 
+simulator.run(n_seed=100, n_days=50)
+
 
