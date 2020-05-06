@@ -1,4 +1,6 @@
 import random
+from abc import ABC, abstractmethod
+
 import numpy as np
 import yaml
 from pathlib import Path
@@ -9,7 +11,7 @@ collective_default_config_filename = (
 )
 
 
-class Interaction:
+class Interaction(ABC):
     def __init__(self, intensities: dict):
         """
         Interaction class, makes interactions between members of a group happen
@@ -23,6 +25,10 @@ class Interaction:
             group types
         """
         self.intensities = intensities
+
+    @abstractmethod
+    def single_time_step_for_group(self, group, time, delta_time):
+        pass
 
     def time_step(self, time: float, delta_time: float, group: "Group"):
         """
@@ -170,9 +176,9 @@ class InteractionCollective(Interaction):
                 person=recipient, time=time
             )
 
-            infecter.health_information.counter.increment_infected()
+            infecter.health_information.increment_infected()
 
-            recipient.health_information.counter.update_infection_data(
+            recipient.health_information.update_infection_data(
                 time=time, group_type=group.spec
             )
 
