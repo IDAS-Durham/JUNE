@@ -304,9 +304,9 @@ class MatrixInteraction(Interaction):
             delta_time=delta_time, infecter=infecter, group=group
         )
         if self.transmission_probability > 1.0e-12:
-            N_average = self.contacts[infecter.age]
+            n_average = self.contacts[infecter.age]
             # find column infecter, and sum
-            N_contacts = self.calculate_actual_N_contacts(N_average)
+            N_contacts = self.calculate_actual_N_contacts(n_average)
             draw_contacts = np.random.rand(N_contacts)
             contact_ages = np.searchsorted(
                 self.probability[:, infecter.age], draw_contacts
@@ -342,9 +342,9 @@ class MatrixInteraction(Interaction):
         self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
 
         for infecter in people:
-            N_average = self.contacts[infecter.age]
+            n_average = self.contacts[infecter.age]
             # find column infecter, and sum
-            N_contacts = self.calculate_actual_N_contacts(N_average)
+            N_contacts = self.calculate_actual_N_contacts(n_average)
             draw_contacts = np.random.rand(N_contacts)
             contact_ages = np.searchsorted(
                 self.probability[:, infecter.age], draw_contacts
@@ -365,9 +365,9 @@ class MatrixInteraction(Interaction):
         self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
 
         for infecter in people:
-            N_average = self.contacts[infecter.age]
+            n_average = self.contacts[infecter.age]
             # find column infecter, and sum
-            N_contacts = self.calculate_actual_N_contacts(N_average)
+            N_contacts = self.calculate_actual_N_contacts(n_average)
             draw_contacts = np.random.rand(N_contacts)
             contact_ages = np.searchsorted(
                 self.probability[:, infecter.age], draw_contacts
