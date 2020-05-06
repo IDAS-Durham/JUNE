@@ -17,7 +17,7 @@ def days_to_infection(interaction, susceptible_person, group, timer):
     days_to_infection = 0
 
     while (
-        susceptible_person.health_information.infected == False
+        not susceptible_person.health_information.infected
         and days_to_infection < 100
     ):
         effective_load = interaction.calculate_effective_viral_load(group, delta_time,)

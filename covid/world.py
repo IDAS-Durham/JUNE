@@ -361,12 +361,12 @@ class World:
             infection_parameters = {}
         if "transmission" in self.config["infection"]:
             transmission_type = self.config["infection"]["transmission"]["type"]
-            if "parameters" in self.config["infection"]["transmission"]:
+            try:
                 transmission_parameters = self.config["infection"]["transmission"][
                     "parameters"
                 ]
-            else:
-                transmission_parameters = {}
+            except KeyError:
+                transmission_parameters = dict()
             transmission_class_name = "Transmission" + transmission_type.capitalize()
         else:
             trans_class = "TransmissionConstant"
@@ -375,10 +375,10 @@ class World:
         transmission_class = trans_class(**transmission_parameters)
         if "symptoms" in self.config["infection"]:
             symptoms_type = self.config["infection"]["symptoms"]["type"]
-            if "parameters" in self.config["infection"]["symptoms"]:
+            try:
                 symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            else:
-                symptoms_parameters = {}
+            except KeyError:
+                symptoms_parameters = dict() 
 
             symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
         else:
@@ -413,7 +413,7 @@ class World:
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()
-        if active_groups == None or len(active_groups) == 0:
+        if not active_groups or len(active_groups) == 0:
             world_logger.info("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
