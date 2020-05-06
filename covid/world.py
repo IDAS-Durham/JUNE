@@ -406,7 +406,7 @@ class World:
 
     def seed_infections_box(self, n_infections):
         world_logger.info("seed ", n_infections, "infections in box")
-        choices = np.random.choice(self.people.members, n_infections, replace=False)
+        choices = np.random.choice(list(self.people.members), n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
@@ -423,13 +423,14 @@ class World:
         to world construction.
         """
         for person in group.in_hospital:
-            person.get_into_hospital()
-        for person in group.dead:
-            person.bury()
-            group.people.remove(person)
+            if person.in_hospital is None:
+                self.hospitals.allocate_patient(person)
 
     def bury_the_dead(self, group):
-        pass
+        for person in group.dead:
+            cemetery = self.cemeteries.get_nearest(person)
+            cemetery.add(person)
+            group.people.remove(person)
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()

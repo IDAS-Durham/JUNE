@@ -286,7 +286,6 @@ class PersonDistributor:
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
-                self.people.total_people,
                 age_random,
                 nomis_bin,
                 sex_random,
