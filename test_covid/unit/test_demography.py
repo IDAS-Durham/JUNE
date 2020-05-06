@@ -37,3 +37,17 @@ def test_get_population(demography, area):
     )
     assert population.area == area
     assert len(population) == 242
+
+
+def test_weighted_generator():
+    weighted_generator = d.WeightedGenerator(
+        (0.0, 10),
+        (1.0, 20)
+    )
+    assert weighted_generator() == 20
+
+    weighted_generator = d.WeightedGenerator(
+        (1.0, 10),
+        (0.0, 20)
+    )
+    assert weighted_generator() == 10
