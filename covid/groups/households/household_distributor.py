@@ -419,9 +419,9 @@ class HouseholdDistributor:
         self.kids_left = len(self.area._kids)
         if self.kids_left > 0:
             random_houses = np.random.choice(self.area.households, size=self.kids_left) 
-            for i, kid in enumerate(self.area._kids.values()):
-                random_houses[i].people.add(kid)
-                kid.household = random_houses[i]
+            for household, kid in zip(random_houses, self.area._kids.values()):
+                household.people.add(kid)
+                kid.household = household
 
 
 
