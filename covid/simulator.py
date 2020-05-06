@@ -10,9 +10,10 @@ default_config_filename = Path(__file__).parent.parent / "configs/defaults/world
 
 sim_logger = logging.getLogger(__name__)
 
+valid_group_hierarchy = ['hospital', 'company', 'school', 'pub', 'household']
 
 class Simulator:
-    def __init__(self, world: "World", config: dict):
+    def __init__(self, world: "World", interaction: "Interaction", infection: Infection, config: dict):
         """
         Class to run an epidemic spread simulation on the world
 
@@ -20,6 +21,8 @@ class Simulator:
         ----------
         world: 
             instance of World class
+        interaction:
+            instance of Interaction class, determines
              
         config:
             dictionary with configuration to set up the simulation
@@ -52,12 +55,6 @@ class Simulator:
 
         return Simulator(cls, world, config)
 
-    def initialize_interaction(self):
-        interaction_type = self.config["interaction"]["type"]
-        interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction_instance = getattr(interaction, interaction_class_name).from_file()
-        return interaction_instance
-
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
         Calls the set_active_members() method of each group, if the group
@@ -68,6 +65,8 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
+        #TODO: group hierarchy, order them
+        #TODO:take care of temporary groups with group_maker 
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
             if "pubs" in active_groups:
@@ -84,45 +83,6 @@ class Simulator:
         for person in self.world.people.members:
             person.active_group = None
 
-    def initialize_infection(self):
-        if "parameters" in self.config["infection"]:
-            infection_parameters = self.config["infection"]["parameters"]
-        else:
-            infection_parameters = {}
-        if "transmission" in self.config["infection"]:
-            transmission_type = self.config["infection"]["transmission"]["type"]
-            try:
-                transmission_parameters = self.config["infection"]["transmission"][
-                    "parameters"
-                ]
-            except KeyError:
-                transmission_parameters = dict()
-            transmission_class_name = "Transmission" + transmission_type.capitalize()
-        else:
-            trans_class = "TransmissionConstant"
-            transmission_parameters = {}
-        trans_class = getattr(transmission, transmission_class_name)
-        transmission_class = trans_class(**transmission_parameters)
-        if "symptoms" in self.config["infection"]:
-            symptoms_type = self.config["infection"]["symptoms"]["type"]
-            try:
-                symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            except KeyError:
-                symptoms_parameters = dict()
-
-            symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-        else:
-            symptoms_class_name = "SymptomsGaussian"
-            symptoms_parameters = {}
-        symp_class = getattr(symptoms, symptoms_class_name)
-        reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(
-            health_index=reference_health_index, **symptoms_parameters
-        )
-        infection = Infection(
-            self.timer.now, transmission_class, symptoms_class, **infection_parameters
-        )
-        return infection
 
     def seed_infections_group(self, group: "Group", n_infections: int):
         """
