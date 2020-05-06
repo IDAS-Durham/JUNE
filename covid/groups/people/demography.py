@@ -1,8 +1,8 @@
-from typing import List
+import csv
+from pathlib import Path
+from typing import List, Dict
 
 from covid.groups.people.person import Person
-from pathlib import Path
-
 
 default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
@@ -32,9 +32,11 @@ class Population:
 class Demography:
     def __init__(
             self,
-            super_area: str
+            super_area: str,
+            residents_map: Dict[str, int]
     ):
         self.super_area = super_area
+        self.residents_map = residents_map
 
     def population_for_area(self, area: str):
         pass
@@ -43,9 +45,21 @@ class Demography:
     def from_super_area(
             cls,
             super_area,
-            data_path: str=default_data_path
+            data_path: str = default_data_path
     ):
-        age_structure_path = f"{data_path}/census_data/output_area/{super_area}/age_structure.csv"
+        output_area_path = f"{data_path}/processed/census_data/output_area/{super_area}"
+        age_structure_path = f"{output_area_path}/age_structure.csv"
+        residents_path = f"{output_area_path}/residents.csv"
+
+        with open(residents_path) as f:
+            reader = csv.reader(f)
+            next(reader)
+            residents_map = {
+                row[0]: int(row[1])
+                for row in reader
+            }
+
         return Demography(
-            super_area
+            super_area,
+            residents_map=residents_map
         )
