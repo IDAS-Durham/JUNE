@@ -5,8 +5,8 @@ from typing import List, Dict, Optional
 
 import numpy as np
 
-from covid.groups.people.health_index import HealthIndex
-from covid.groups.people.person import Person
+from june.groups.people.health_index import HealthIndex
+from june.groups.people.person import Person
 
 default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
