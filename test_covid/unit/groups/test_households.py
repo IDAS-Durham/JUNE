@@ -50,8 +50,8 @@ def test_no_lonely_children(world_ne, inputs):
     """
     for area in world_ne.areas.members:
         for household in area.households:
-            adults = [person for person in grouping for grouping in household.groupings if person.age >= 18]
-            children = [person for person in grouping for grouping in household.groupings if person.age < 18]
+            adults = [person for grouping in household.groupings for person in grouping  if person.age >= 18]
+            children = [person for grouping in household.groupings for person in grouping if person.age < 18]
             if len(adults) == 0 and len(children) > 0:
                 assert False
 
