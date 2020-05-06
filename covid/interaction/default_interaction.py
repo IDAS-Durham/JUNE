@@ -2,7 +2,7 @@ import random
 import numpy as np
 import yaml
 from pathlib import Path
-from interaction import Interaction
+from covid.interaction.interaction import Interaction
 
 default_config_filename = (
     Path(__file__).parent.parent.parent
@@ -10,9 +10,18 @@ default_config_filename = (
 )
 
 class DefaultInteraction(Interaction):
-    def __init__(self,parameters):
-        super().__init__()
-        print("initialized default interaction model.")
+    def __init__(self,intensities):
+        """
+        Default Interaction class, makes interactions between members of a group happen
+        leading to infections
+
+        Parameters
+        ----------
+        intensities:
+            dictionary of intensities for the different
+            group types
+        """
+        self.intensities = intensities
 
     @classmethod
     def from_file(
@@ -22,44 +31,54 @@ class DefaultInteraction(Interaction):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return DefaultInteraction(config.get("intensities"))
     
-    def single_time_step_for_group(self):
-        self.probabilities = []
-        self.weights       = []
-        if self.group.must_timestep:
-            self.calculate_probabilities()
-            for i in range(self.group.n_groupings):
-                for j in range(self.group.n_groupings):
-                    # grouping[i] infects grouping[j]
-                    self.contaminate(i,j)
-                    if i!=j:
-                        # =grouping[j] infects grouping[i]
-                        self.contaminate(j,i)
+    def single_time_step_for_group(self, group, time, delta_time):
+        """
+        Runs the interaction model for a time step
+        Parameters
+        ----------
+        group:
+            group to run the interaction on
+        time:
+            time at which the interaction starts to take place
+        delta_time: 
+            duration of the interaction 
+        """
 
-    def contaminate(self,infecters,recipients):
+        if group.must_timestep:
+            probabilities, weights = self.calculate_probabilities()
+            for i in range(group.n_groupings):
+                for j in range(group.n_groupings):
+                    # grouping[i] infected infects grouping[j] susceptible
+                    self.contaminate(group, time, probabilities, weights,i,j)
+                    if i!=j:
+                        # =grouping[j] infected infects grouping[i] susceptible
+                        self.contaminate(group, time, probabilities, weights,j,i)
+
+    def contaminate(self,group, time, delta_time, probabilities, weights, infecters,recipients):
         if (
-            self.group.intensity[infecters][recipients] <= 0. or
-            self.probabilities[infecters] <= 0.
+            group.intensity[infecters][recipients] <= 0. or
+            probabilities[infecters] <= 0.
         ):
             return
-        for recipient in self.group.groupings[recipients]:
+        for recipient in group.groupings[recipients]:
             transmission_probability = 1.0 - np.exp(
-                -self.delta_time *
+                -delta_time *
                 recipient.health_information.susceptibility *
-                self.group.intensity[infecters][recipients] *
-                self.probabilities[infecters]
+                group.intensity[infecters][recipients] *
+                probabilities[infecters]
             )
             if random.random() <= transmission_probability:
-                infecter = self.select_infecter()
+                infecter = self.select_infecter(weights)
                 infecter.health_information.infection.infect_person_at_time(
-                    person=recipient, time=self.time
+                    person=recipient, time=time
                 )
                 infecter.health_information.counter.increment_infected()
                 recipient.health_information.counter.update_infection_data(
-                    time=self.time, group_type=self.group.spec
+                    time=time, group_type=group.spec
                 )
 
-    def calculate_probabilities(self):
-        for grouping in self.group.groupings:
+    def calculate_probabilities(self, group):
+        for grouping in group.groupings:
             summed = 0.
             norm   = 1./max(1, grouping.size)
             for person in grouping.infected:
@@ -67,13 +86,17 @@ class DefaultInteraction(Interaction):
                     person.health_information.infection.transmission.probability
                 )
                 summed += individual*norm
-                self.weights.append([person, individual])
-            self.probabilities.append(summed)
+                weights.append([person, individual])
+            probabilities.append(summed)
+            return probabilities, weights
 
-    def select_infecter(self):
+    def select_infecter(self, weights):
+        """
+        Assign responsiblity to infecter for infecting someone
+        """
         summed_weight = 0.
-        for weight in self.weights:
+        for weight in weights:
             summed_weight += weight[1]
-        choice_weights = [w[1]/summed_weight for w in self.weights]
-        idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
-        return self.weights[idx][0]
+        choice_weights = [w[1]/summed_weight for w in weights]
+        idx = np.random.choice(range(len(weights)), 1, p=choice_weights)[0]
+        return weights[idx][0]
