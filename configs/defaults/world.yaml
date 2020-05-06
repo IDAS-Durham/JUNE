@@ -1,16 +1,5 @@
 interaction:
   type: collective
-  parameters:
-    mode: probabilistic
-
-households:
-  same_sex_couple_ratio: 0.1
-
-companies:
-  work_age_range: [8,13] # numbers correspond to age groups defined by NOMIS dataset.
-  key_sector:  # associated to groups existing in the world (e.g. schools & hospitals)
-    schools: 'P'
-    hospitals: 'Q'
 
 people:
   adult_threshold: 6 # 18 yo

@@ -29,6 +29,18 @@ class Households:
     Contains all households for the given area, and information about them.
     """
 
-    def __init__(self, world):
-        self.world = world
+    def __init__(self):
         self.members = []
+
+    def __add__(self, households:"Households"):
+        """
+        Adding two households instances concatenates the members
+        list.
+
+        Parameters
+        ----------
+        households:
+            instance of Households to sum with.
+        """
+        self.members += households.members
+        return self
