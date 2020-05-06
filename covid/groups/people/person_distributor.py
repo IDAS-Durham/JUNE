@@ -30,7 +30,6 @@ class PersonDistributor:
     ):
         """
         """
-        self.timer = timer
         self.world = world
         self.areas = areas
         self.area = area
