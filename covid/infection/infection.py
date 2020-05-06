@@ -13,7 +13,7 @@ class Infection:
     can be added/modified a posteriori.
     """
 
-    def __init__(self, start_time, transmission, symptoms):
+    def __init__(self, transmission, symptoms, start_time=-1):
 
         self.start_time = start_time
         self.last_time_updated = start_time

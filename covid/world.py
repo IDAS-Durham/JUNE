@@ -73,10 +73,10 @@ class World:
                 self.group_maker = GroupMaker(self)
             else:
                 world_logger.info("pubs not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.logger = Logger(
-            self, self.config["logger"]["save_path"], box_mode=box_mode
-        )
+        #self.interaction = self.initialize_interaction()
+        #self.logger = Logger(
+        #    self, self.config["logger"]["save_path"], box_mode=box_mode
+        #)
         world_logger.info("Done.")
 
     def world_creation_logger(
@@ -253,7 +253,6 @@ class World:
             wf_area_df = self.inputs.workflow_df.loc[(area.super_area.name,)]
             person_distributor = PersonDistributor(
                 self,
-                self.timer,
                 self.people,
                 self.areas,
                 area,
