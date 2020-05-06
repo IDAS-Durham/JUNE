@@ -20,9 +20,9 @@ def parse_age(age_string):
 
 
 class AgeGenerator:
-    def __init__(self, lower, upper):
+    def __init__(self, lower, upper=None):
         self.lower = lower
-        self.upper = upper
+        self.upper = upper or lower
 
     def __call__(self):
         return randint(
@@ -70,23 +70,27 @@ class Demography:
             self,
             super_area: str,
             residents_map: Dict[str, int],
-            sex_generators: Dict[str, "WeightedGenerator"]
+            sex_generators: Dict[str, "WeightedGenerator"],
+            age_generators: Dict[str, "WeightedGenerator"]
     ):
         self.super_area = super_area
         self.residents_map = residents_map
         self.sex_generators = sex_generators
+        self.age_generators = age_generators
 
     def population_for_area(self, area: str):
         people = list()
-        for _, sex in zip(
+        for _, sex, age_range in zip(
                 range(
                     self.residents_map[area]
                 ),
-                self.sex_generators[area]
+                self.sex_generators[area],
+                self.age_generators[area]
         ):
             people.append(
                 Person(
-                    sex=sex
+                    sex=sex,
+                    age=age_range()
                 )
             )
         return Population(
@@ -105,34 +109,74 @@ class Demography:
         sex_path = f"{output_area_path}/sex.csv"
         residents_path = f"{output_area_path}/residents.csv"
 
-        with open(residents_path) as f:
-            reader = csv.reader(f)
-            next(reader)
-            residents_map = {
-                row[0]: int(row[1])
-                for row in reader
-            }
-
-        with open(sex_path) as f:
-            reader = csv.reader(f)
-            headers = next(reader)
-            if not ("m" in headers[MALE_INDEX] and "f" in headers[FEMALE_INDEX]):
-                raise AssertionError(
-                    f"sex dataset at {sex_path} does not match expected structure"
-                )
-            sex_generators = {
-                row[0]: WeightedGenerator(
-                    (int(row[MALE_INDEX]), "m"),
-                    (int(row[FEMALE_INDEX]), "f")
-                )
-                for row in reader
-            }
+        residents_map = _load_residents_map(
+            residents_path
+        )
+        sex_generators = _load_sex_generators(
+            sex_path
+        )
+        age_generators = _load_age_generators(
+            age_structure_path
+        )
 
         return Demography(
             super_area,
             residents_map=residents_map,
-            sex_generators=sex_generators
+            sex_generators=sex_generators,
+            age_generators=age_generators
         )
+
+
+def _load_age_generators(
+        age_structure_path
+):
+    with open(age_structure_path) as f:
+        reader = csv.reader(f)
+        age_generators = map(
+            AgeGenerator.from_range_string,
+            next(reader)[1:]
+        )
+        return {
+            row[0]: WeightedGenerator(
+                *[
+                    (int(weight), age_generator)
+                    for weight, age_generator
+                    in zip(row[1:], age_generators)
+                ]
+            )
+            for row in reader
+        }
+
+
+def _load_residents_map(
+        residents_path: str
+):
+    with open(residents_path) as f:
+        reader = csv.reader(f)
+        next(reader)
+        return {
+            row[0]: int(row[1])
+            for row in reader
+        }
+
+
+def _load_sex_generators(
+        sex_path: str
+):
+    with open(sex_path) as f:
+        reader = csv.reader(f)
+        headers = next(reader)
+        if not ("m" in headers[MALE_INDEX] and "f" in headers[FEMALE_INDEX]):
+            raise AssertionError(
+                f"sex dataset at {sex_path} does not match expected structure"
+            )
+        return {
+            row[0]: WeightedGenerator(
+                (int(row[MALE_INDEX]), "m"),
+                (int(row[FEMALE_INDEX]), "f")
+            )
+            for row in reader
+        }
 
 
 class WeightedGenerator:
