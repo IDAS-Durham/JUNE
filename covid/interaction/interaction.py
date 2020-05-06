@@ -1,5 +1,7 @@
 import random
 import numpy as np
+import yaml
+from pathlib import Path
 
 class Interaction:
     def __init__(self,parameters=None):
@@ -24,6 +26,8 @@ class Interaction:
     def single_time_step_for_group(self):
         raise NotImplementedError()
 
-    
-    
+collective_default_config_filename = (
+    Path(__file__).parent.parent.parent
+    / "configs/defaults/interaction/DefaultInteraction.yaml"
+)
 
