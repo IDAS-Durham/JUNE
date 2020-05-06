@@ -84,7 +84,7 @@ def test__non_mandatory_dont_go_if_school_full(world_ne):
     for school in world_ne.schools.members:
         if school.n_pupils > school.n_pupils_max:
             ages = np.array(
-                [person.age for person in list(school.people[int(school.n_pupils_max):])]
+                [person.age for person in list(school.people)[int(school.n_pupils_max):]]
             )
             older_kids_when_full = np.sum(
                 ages > mandatory_age_range[1]
