@@ -1,23 +1,23 @@
-import os
-import pickle
 import logging
 import logging.config
+import os
+import pickle
 
 import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from covid import interaction
 from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
+from covid.groups.people import HealthIndex
+from covid.infection import Infection
+from covid.infection import symptoms
+from covid.infection import transmission
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
-from covid.infection import transmission
-from covid import interaction
-from covid.infection import symptoms
-from covid.infection import Infection
-from covid.groups.people import HealthIndex
 
 world_logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class World:
     """
 
     def __init__(
-        self, config_file=None, box_mode=False, box_n_people=None, box_region=None
+            self, config_file=None, box_mode=False, box_n_people=None, box_region=None
     ):
         world_logger.info("Initializing world...")
         # read configs
@@ -45,7 +45,7 @@ class World:
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
             self.initialize_hospitals()
-            #self.initialize_cemeteries()
+            # self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
             self.commute_generator = CommuteGenerator.from_file(
@@ -81,7 +81,7 @@ class World:
         world_logger.info("Done.")
 
     def world_creation_logger(
-        self, save_path, config_file=None, default_level=logging.INFO,
+            self, save_path, config_file=None, default_level=logging.INFO,
     ):
         """
         """
@@ -187,7 +187,6 @@ class World:
     def initialize_cemeteries(self):
         self.cemeteries = Cemeteries(self)
 
-
     def initialize_hospitals(self):
         self.hospitals = Hospitals.from_file(
             self.inputs.hospital_data_path,
@@ -242,7 +241,7 @@ class World:
         Populates the world with person instances.
         """
         print("Initializing people...")
-        #TODO:
+        # TODO:
         # self.people = People.from_file(
         #    self.inputs.,
         #    self.inputs.,
@@ -321,7 +320,7 @@ class World:
             self.distributor = CompanyDistributor(
                 self.companies,
                 super_area,
-                self.config, 
+                self.config,
             )
             self.distributor.distribute_adults_to_companies()
             pbar.update(1)
@@ -378,7 +377,7 @@ class World:
             try:
                 symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
             except KeyError:
-                symptoms_parameters = dict() 
+                symptoms_parameters = dict()
 
             symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
         else:
@@ -402,6 +401,8 @@ class World:
                 group.people[choice], self.timer.now
             )
         group.update_status_lists(self.timer.now, delta_time=0)
+        self.hospitalise_the_sick(group)
+        self.bury_the_dead(group)
 
     def seed_infections_box(self, n_infections):
         world_logger.info("seed ", n_infections, "infections in box")
@@ -409,7 +410,22 @@ class World:
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
-        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
+        group = self.boxes.members[0]
+        group.update_status_lists(self.timer.now, delta_time=0)
+        self.hospitalise_the_sick(group)
+        self.bury_the_dead(group)
+
+    def hospitalise_the_sick(self, group):
+        """
+        These functions could be more elegantly handled by an implementation inside a group collection.
+        I'm putting them here for now to maintain the same functionality whilst removing a person's
+        reference to the world as that makes it impossible to perform population generation prior
+        to world construction.
+        """
+        pass
+
+    def bury_the_dead(self, group):
+        pass
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()
@@ -423,9 +439,12 @@ class World:
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
+                self.hospitalise_the_sick(group)
+                self.bury_the_dead(group)
         # Update people that recovered in hospitals
         for hospital in self.hospitals.members:
             hospital.update_status_lists(self.timer.now, delta_time=0)
+            self.hospitalise_the_sick(hospital)
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
@@ -458,10 +477,9 @@ class World:
 if __name__ == "__main__":
     world = World(
         config_file=os.path.join("../configs", "config_example.yaml"),
-        #box_mode=True,
-        #box_region='test',
+        # box_mode=True,
+        # box_region='test',
     )
-
 
     # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)
