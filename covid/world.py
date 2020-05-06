@@ -9,6 +9,7 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
+from covid.distributors import *
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
@@ -194,7 +195,7 @@ class World:
         """
         print("Initializing households...")
         self.households = Households(self)
-        household_distributor = HouseholdDistributor.from_inputs(self.inputs)
+        household_distributor = HouseholdDistributor.from_file()
         #n_students_per_area = self.inputs.n_students
         #n_people_in_communal_per_area = self.inputs.n_in_communal
         #household_composition_per_area = self.inputs.household_composition_df
