@@ -212,7 +212,7 @@ class Hospital(Group):
             f"=== update status list for hospital with {self.size}  people ==="
         )
         ic_logger.info(
-            f"=== hospital currently has {len(self.patients)} patients, and {len(self.icu_patients)}, ICU patients"
+            f"=== hospital currently has {self[self.GroupType.patients].size} patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
         )
 
 

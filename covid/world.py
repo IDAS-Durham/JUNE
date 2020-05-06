@@ -414,7 +414,8 @@ class World:
     def do_timestep(self):
         active_groups = self.timer.active_groups()
         print ("=====================================================")
-        print ("=== active groups: ",active_groups,".")
+        print ("=== active groups: ",active_groups,", ",
+               "time = ",self.timer.now,", delta = ",self.timer.duration)
         if not active_groups or len(active_groups) == 0:
             world_logger.info("==== do_timestep(): no active groups found. ====")
             return
