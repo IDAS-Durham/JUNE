@@ -3,10 +3,18 @@ import numpy as np
 from interaction import Interaction
 
 class DefaultInteraction(Interaction):
-    def __init__(self):
+    def __init__(self,parameters):
         super().__init__()
         print("initialized default interaction model.")
 
+    @classmethod
+    def from_file(
+        cls, config_filename: str = default_config_filename
+    ) -> "DefaultInteraction":
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return InteractionCollective(config.get("intensities"))
+    
     def single_time_step_for_group(self):
         self.probabilities = []
         self.weights       = []
