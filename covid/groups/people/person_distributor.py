@@ -289,7 +289,6 @@ class PersonDistributor:
                 age=age_random,
                 nomis_bin=nomis_bin,
                 sex=sex_random,
-                oarea=self.area,
                 health_index=health_index,
                 econ_index=0,
                 mode_of_transport=None,

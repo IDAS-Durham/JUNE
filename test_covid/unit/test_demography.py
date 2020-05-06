@@ -6,3 +6,4 @@ def test_create_demography():
         "NorthEast"
     )
     assert demography.super_area == "NorthEast"
+    assert demography.residents_map["E00062207"] == 242
