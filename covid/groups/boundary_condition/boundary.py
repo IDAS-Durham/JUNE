@@ -63,7 +63,7 @@ class Boundary(Group):
                 company.people.append(person)
                 idx = [
                     idx for idx, msoa in enumerate(self.world.msoareas.members)
-                    if msoa.id == company.msoa
+                    if msoa.name == company.msoa
                 ][0]
                 self.world.msoareas.members[idx].work_people.append(person)
 

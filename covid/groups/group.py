@@ -30,6 +30,7 @@ class Group:
     """
 
     allowed_groups = [
+        "area",
         "box",
         "boundary",
         "carehome",
@@ -41,10 +42,13 @@ class Group:
         "hospital",
         "leisure_Outdoor",
         "leisure_Indoor",
+        "pub",
         "random",
+        "TestGroup",
         "referenceGroup",
         "shopping",
         "school",
+        "super_area",
         "testGroup",
         "work_Outdoor",
         "work_Indoor",
@@ -55,6 +59,7 @@ class Group:
         self.name = name
         self.spec = spec
         self.people = []
+        self.members = []
         self.intensity = 1.0
 
     @property
@@ -96,7 +101,9 @@ class Group:
 
     def set_active_members(self):
         for person in self.people:
-            if person.active_group is not None:
+            if person.in_hospital is not None:
+                person.active_group = None
+            elif person.active_group is not None:
                 raise ValueError("Trying to set an already active person")
             else:
                 person.active_group = self.spec
@@ -109,6 +116,7 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
+    @property
     def must_timestep(self):
         return (self.size > 1 and
                 self.size_infected > 0 and
@@ -122,6 +130,8 @@ class Group:
             elif person.health_information.infected:
                 if person.health_information.must_stay_at_home:
                     continue
+            if person.health_information.in_hospital:
+                person.get_into_hospital()
             elif person.health_information.dead:
                 person.bury()
                 self.people.remove(person)

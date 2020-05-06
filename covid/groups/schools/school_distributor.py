@@ -30,15 +30,12 @@ class SchoolDistributor:
             config dictionary.
         """
         self.area = area
-        self.world = area.world
-        self.msoarea = area.msoarea
+        self.msoarea = area.super_area
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = config["school_age_range"]
-        self.MANDATORY_SCHOOL_AGE_RANGE = config["school_mandatory_age_range"]
-        self.education_sector_label = (
-            self.world.config["companies"]["key_sector"]["schools"]
-        )
+        self.SCHOOL_AGE_RANGE = config["age_range"]
+        self.MANDATORY_SCHOOL_AGE_RANGE = config["mandatory_age_range"]
+        self.education_sector_label = self.find_jobs(config)
         self.closest_schools_by_age = {}
         self.is_school_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
@@ -54,6 +51,14 @@ class SchoolDistributor:
                 )
             self.closest_schools_by_age[agegroup] = closest_schools
             self.is_school_full[agegroup] = False
+
+    def find_jobs(self, config: dict):
+        education_sector_label = []
+        for key1, value1 in config.items():
+            if isinstance(value1, dict):
+                for key2, value2 in value1.items():
+                    education_sector_label.append(value2['sector_id'])
+        return education_sector_label
 
     @classmethod
     def from_file(
@@ -78,7 +83,8 @@ class SchoolDistributor:
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
+        for key, value in config.items():
+            config = value
         return SchoolDistributor(schools, area, config)
 
     def distribute_kids_to_school(self):
@@ -145,13 +151,7 @@ class SchoolDistributor:
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
                         school = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
-                        n_pupils_age = len(
-                            [
-                                pupil.age
-                                for pupil in school.people
-                                if pupil.age == person.age
-                            ]
-                        )
+                        n_pupils_age = school.age_structure[person.age]
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
                             school.n_pupils_max / (school.age_max - school.age_min)
                         ):
@@ -161,9 +161,8 @@ class SchoolDistributor:
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
                         continue
 
-                    else:  # just keep the school saved in the previous for loop
-                        pass
                 school.people.append(person)
+                school.age_structure[person.age] += 1
                 person.school = school
                 school.n_pupils += 1
 
@@ -187,7 +186,7 @@ class SchoolDistributor:
         # Note: doing it this way rather then putting them into the area which
         # is currently chose in the for-loop in the world.py file ensure that
         # teachers are equally distr., no over-crowding
-        areas_in_msoa = self.msoarea.oareas
+        areas_in_msoa = self.msoarea.areas
         areas_rv = stats.rv_discrete(
             values=(
                 np.arange(len(areas_in_msoa)),

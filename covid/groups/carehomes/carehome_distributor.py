@@ -2,16 +2,32 @@ import numpy as np
 from collections import OrderedDict
 from covid.groups.carehomes import CareHome
 
+
 class CareHomeDistributor:
-    def __init__(self, min_age_in_carehome=65):
+    def __init__(self, min_age_in_carehome: int = 65):
+        """
+        Tool to distribute people from a certain area into a carehome, if there is one.
+
+        Parameters
+        ----------
+        min_age_in_carehome
+            minimum age to put people in carehome.
+        """
         self.min_age_in_carehome = min_age_in_carehome
         self.carehome_counter = 0
         pass
 
-    def create_carehome_in_area(self, area, carehome_residents_number):
+    def create_carehome_in_area(self, area: "Area", carehome_residents_number: int):
         """
         Crates carehome in area, if there needs to be one, and fills it with the
-        oldest people.
+        oldest people in that area.
+
+        Parameters
+        ----------
+        area:
+            area in which to create the carehome
+        carehome_residents_number:
+            number of people to put in the carehome.
         """
         if carehome_residents_number == 0:
             return None
@@ -27,6 +43,15 @@ class CareHomeDistributor:
         """
         Takes the oldest men and women from men_by_age and women_by_age dictionaries,
         and puts them into the care home until max capacity is reached.
+
+        Parameters
+        ----------
+        carehome:
+            carehome where to put people
+        men_by_age:
+            dictionary containing age as keys and lists of men as values.
+        women_by_age:
+            dictionary containing age as keys and lists of women as values.
         """
         current_age_to_fill = max(
             np.max(list(men_by_age.keys())), np.max(list(women_by_age.keys()))

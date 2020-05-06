@@ -11,25 +11,25 @@ according to census data.
 
 class CompanyDistributor:
     """
-    Distributes people to different companies
+    Distributes workers that are not yet working in key company sectors
+    (e.g. such as schools and hospitals) to companies.
     """
 
-    def __init__(self, companies, msoarea):
+    def __init__(self, companies, super_area, config):
         """Get all companies within MSOArea"""
-        self.msoarea = msoarea
+        self.msoarea = super_area
         self.companies = companies
+        self.config = config
 
     def distribute_adults_to_companies(self):
         """
         """
-        STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
-        ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
-        OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
-        count = 0
+        STUDENT_THRESHOLD = self.config["people"]["student_age_group"]
+        ADULT_THRESHOLD = self.config["people"]["adult_threshold"]
+        OLD_THRESHOLD = self.config["people"]["old_threshold"]
 
         for person in self.msoarea.work_people:
 
-            count += 1
             comp_choice = np.random.choice(
                 len(self.msoarea.companies), len(self.msoarea.companies), replace=False
             )
