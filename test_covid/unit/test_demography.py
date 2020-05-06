@@ -91,3 +91,12 @@ def test_age_generator():
     assert d.AgeGenerator(
         10, 10
     )() == 10
+
+
+def test_health_index(population):
+    health_indices = [
+        person.health_index
+        for person
+        in population
+    ]
+    assert isinstance(health_indices[0][0], float)

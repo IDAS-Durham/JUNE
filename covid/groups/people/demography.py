@@ -1,10 +1,11 @@
 import csv
 from pathlib import Path
 from random import randint
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import numpy as np
 
+from covid.groups.people.health_index import HealthIndex
 from covid.groups.people.person import Person
 
 default_data_path = Path(__file__).parent.parent.parent.parent / "data"
@@ -56,14 +57,6 @@ class Population:
     def __iter__(self):
         return iter(self.people)
 
-    # def create_person(self):
-    #     person = Person(
-    #         age=age_random,
-    #         nomis_bin=nomis_bin,
-    #         sex=sex_random,
-    #         health_index=health_index
-    #     )
-
 
 class Demography:
     def __init__(
@@ -71,12 +64,14 @@ class Demography:
             super_area: str,
             residents_map: Dict[str, int],
             sex_generators: Dict[str, "WeightedGenerator"],
-            age_generators: Dict[str, "WeightedGenerator"]
+            age_generators: Dict[str, "WeightedGenerator"],
+            health_index: HealthIndex
     ):
         self.super_area = super_area
         self.residents_map = residents_map
         self.sex_generators = sex_generators
         self.age_generators = age_generators
+        self.health_index = health_index
 
     def population_for_area(self, area: str):
         people = list()
@@ -87,10 +82,13 @@ class Demography:
                 self.sex_generators[area],
                 self.age_generators[area]
         ):
+            age = age_range()
+            health_index = self.health_index.get_index_for_age(age)
             people.append(
                 Person(
                     sex=sex,
-                    age=age_range()
+                    age=age_range(),
+                    health_index=health_index
                 )
             )
         return Population(
@@ -102,8 +100,13 @@ class Demography:
     def from_super_area(
             cls,
             super_area,
-            data_path: str = default_data_path
+            data_path: str = default_data_path,
+            config: Optional[dict] = None
     ):
+        health_index = HealthIndex(
+            config=config
+        )
+
         output_area_path = f"{data_path}/processed/census_data/output_area/{super_area}"
         age_structure_path = f"{output_area_path}/age_structure.csv"
         sex_path = f"{output_area_path}/sex.csv"
@@ -123,7 +126,8 @@ class Demography:
             super_area,
             residents_map=residents_map,
             sex_generators=sex_generators,
-            age_generators=age_generators
+            age_generators=age_generators,
+            health_index=health_index
         )
 
 
