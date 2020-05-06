@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+from random import randint
 from typing import List, Dict
 
 import numpy as np
@@ -10,6 +11,35 @@ default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
 MALE_INDEX = 1
 FEMALE_INDEX = 2
+
+
+def parse_age(age_string):
+    if age_string == "XXX":
+        return 100
+    return int(age_string)
+
+
+class AgeGenerator:
+    def __init__(self, lower, upper):
+        self.lower = lower
+        self.upper = upper
+
+    def __call__(self):
+        return randint(
+            self.lower,
+            self.upper
+        )
+
+    @classmethod
+    def from_range_string(cls, string):
+        return AgeGenerator(
+            *map(
+                parse_age,
+                string.split(
+                    "-"
+                )
+            )
+        )
 
 
 class Population:
