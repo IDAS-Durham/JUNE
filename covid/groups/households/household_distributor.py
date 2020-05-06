@@ -381,3 +381,4 @@ class HouseholdDistributor:
             random_houses = np.random.choice(self.area.households, size=self.kids_left)
             for i, kid in enumerate(self.area._kids.values()):
                 random_houses[i].add(kid, Household.GroupType.kids)
+

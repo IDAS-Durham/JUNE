@@ -163,6 +163,7 @@ class SchoolDistributor:
                     else:  # just keep the school saved in the previous for loop
                         pass
                 school.add(person, School.GroupType.students)
+                school.age_structure[person.age] += 1
                 school.n_pupils += 1
 
     def distribute_teachers_to_school(self):
