@@ -1,28 +1,31 @@
 import numpy as np
 import pandas as pd
-
+from covid.groups import Group
 from covid.commute import RegionalGenerator
 
 
-class Area:
+class Area(Group):
     """
     Stores information about the area, like the total population
     number, universities, etc.
+
+    Inherits from Group class since people living in the same area
+    can have social interaction.
     """
 
     def __init__(
         self,
-        coordinates,
-        oarea,
-        msoarea,
-        n_residents,
-        n_households,
-        census_freq,
-        relevant_groups,
+        coordinates: [float, float],
+        name: str,
+        super_area,
+        n_residents: int,
+        n_households: int,
+        census_freq: dict,
+        relevant_groups: list,
     ):
+        super().__init__(name, "area")
         self.coordinates = np.array(coordinates)  # Lon. & Lat
-        self.name = oarea               # Output Area
-        self.msoarea = msoarea          # Middle Super Output Area
+        self.super_area = super_area
         # distributions for distributing people
         self.census_freq = census_freq
         self.check_census_freq_ratios()
@@ -38,8 +41,9 @@ class Area:
         """
         Object that generates modes of transport randomly weighted by census data
         """
+        #TODO update for new code structure
         return self.world.commute_generator.regional_gen_from_msoarea(
-            self.msoarea
+            self.super_area
         )
 
     def check_census_freq_ratios(self):
@@ -55,24 +59,25 @@ class Area:
 class Areas:
     def __init__(
         self,
-        n_residents,
-        age_freq,
-        decoder_age,
-        sex_freq,
-        decoder_sex,
-        household_composition_freq,
-        decoder_household_composition,
-        encoder_household_composition,
+        n_residents: pd.DataFrame,
+        age_freq: pd.DataFrame,
+        decoder_age: dict,
+        sex_freq: pd.DataFrame,
+        decoder_sex: dict,
+        household_composition_freq: pd.DataFrame,
+        decoder_household_composition: dict,
+        encoder_household_composition: dict,
     ):
         self.members   = []
         self.area_tree = None
         self.names_in_order = None
         self.n_residents = n_residents
         self.age_freq = age_freq
-        self.decoder_age = decoder_age
         self.sex_freq = sex_freq
-        self.decoder_sex = decoder_sex
         self.household_composition_freq = household_composition_freq
+        
+        self.decoder_age = decoder_age
+        self.decoder_sex = decoder_sex
         self.decoder_household_composition = decoder_household_composition
         self.encoder_household_composition = encoder_household_composition
 

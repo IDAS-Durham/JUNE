@@ -132,6 +132,7 @@ class Group(AbstractGroup):
         ]
 
     allowed_groups = [
+        "area",
         "box",
         "boundary",
         "commute_Public",
@@ -147,6 +148,7 @@ class Group(AbstractGroup):
         "referenceGroup",
         "shopping",
         "school",
+        "super_area",
         "testGroup",
         "work_Outdoor",
         "work_Indoor",
