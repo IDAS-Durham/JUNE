@@ -3,7 +3,7 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 from covid.groups import Group
 
@@ -63,10 +63,10 @@ class Schools:
     def __init__(
         self,
         schools: List["School"],
-        age_range: Tuple[int],
-        mandatory_age_range: Tuple[int],
+        age_range: Tuple[int, int],
+        mandatory_age_range: Tuple[int, int],
         student_nr_per_teacher: int,
-        school_tree: Dict[int, "BallTree"] = None,
+        school_tree: Optional[Dict[int, BallTree]] = None,
         agegroup_to_global_indices: dict = None,
     ):
         """
@@ -164,7 +164,7 @@ class Schools:
             schools.append(school)
         return schools
 
-    def init_trees(self, school_df: pd.DataFrame, age_range: Tuple[int]):
+    def init_trees(self, school_df: pd.DataFrame, age_range: Tuple[int, int]):
         """
         Create trees to easily find the closest school that
         accepts a pupil given their age
