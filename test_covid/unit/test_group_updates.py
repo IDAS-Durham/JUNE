@@ -39,7 +39,7 @@ def test__everyone_is_active_somewhere(world_ne):
 def find_random_in_school(world_ne):
     for school in world_ne.schools.members:
         for grouping in school.groupings:
-            for person in grooping.people:
+            for person in grouping._people:
                 selected_person = person
                 break
     return selected_person

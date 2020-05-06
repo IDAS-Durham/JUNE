@@ -311,7 +311,7 @@ class PersonDistributor:
                     companysector_female_rnd_array,
                 )
             self.people.members.append(person)
-            self.area.people.append(person)
+            self.area.add(person)
             # assign person to the right group:
             if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
