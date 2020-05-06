@@ -23,10 +23,12 @@ class DefaultInteraction(Interaction):
         return DefaultInteraction(config.get("intensities"))
     
     def single_time_step_for_group(self):
+        print("----------------------------------------------")
         self.probabilities = []
         self.weights       = []
         if self.group.must_timestep:
             self.calculate_probabilities()
+            print (self.probabilities)
             for i in range(self.group.n_groupings):
                 for j in range(self.group.n_groupings):
                     # grouping[i] infects grouping[j]
@@ -48,6 +50,9 @@ class DefaultInteraction(Interaction):
                 self.group.intensity[infecters][recipients] *
                 self.probabilities[infecters]
             )
+            print(" infecters (",infecters,")[",self.group.groupings[infecters].size,"]: ",
+                  self.probabilities[infecters],"-->",transmission_probability,
+                  "for mixing = ",self.group.intensity[infecters][recipients])
             if random.random() <= transmission_probability:
                 infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
@@ -59,9 +64,9 @@ class DefaultInteraction(Interaction):
                 )
 
     def calculate_probabilities(self):
+        norm   = 1./max(1, self.group.size)
         for grouping in self.group.groupings:
             summed = 0.
-            norm   = 1./max(1, grouping.size)
             for person in grouping.infected:
                 individual = (
                     person.health_information.infection.transmission.probability
