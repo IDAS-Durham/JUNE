@@ -398,7 +398,7 @@ class World:
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(
-                group.people[choice], self.timer.now
+                list(group.people)[choice], self.timer.now
             )
         group.update_status_lists(self.timer.now, delta_time=0)
         self.hospitalise_the_sick(group)

@@ -1,10 +1,10 @@
-from collections import Counter
-from covid.groups import *
-import pickle
-import pytest
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+import pytest
+
+from covid.groups import *
 
 
 def test__total_number_schools_is_correct():
@@ -44,7 +44,7 @@ def test__all_kids_mandatory_school(world_ne):
     for i in range(len(world_ne.areas.members)):
         for j in range(len(world_ne.areas.members[i].people)):
             if (world_ne.areas.members[i].people[j].age >= KIDS_LOW) and (
-                world_ne.areas.members[i].people[j].age <= KIDS_UP
+                    world_ne.areas.members[i].people[j].age <= KIDS_UP
             ):
                 if world_ne.areas.members[i].people[j].school is None:
                     lost_kids += 1
@@ -79,13 +79,12 @@ def test__age_range_schools(world_ne):
 
 
 def test__non_mandatory_dont_go_if_school_full(world_ne):
-
     non_mandatory_added = 0
     mandatory_age_range = world_ne.schools.mandatory_age_range
     for school in world_ne.schools.members:
         if school.n_pupils > school.n_pupils_max:
             ages = np.array(
-                [person.age for person in school.people[int(school.n_pupils_max) :]]
+                [person.age for person in list(school.people[int(school.n_pupils_max):])]
             )
             older_kids_when_full = np.sum(
                 ages > mandatory_age_range[1]
@@ -97,4 +96,3 @@ def test__non_mandatory_dont_go_if_school_full(world_ne):
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
-
