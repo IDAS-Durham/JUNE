@@ -1,13 +1,25 @@
+
+from june.infection import infection as infect
+from june.infection import symptoms as sym
+from june.infection import transmission as trans
+
+from june import World
+from june.time import Timer 
+
+
 import os
 from pathlib import Path
 
 import pytest
 import yaml
 
-from covid import world
-from june import World
+
+from june import old_world
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
+
+from june import World
+
 from june.time import Timer
 
 test_directory = Path(__file__).parent.parent
@@ -15,7 +27,7 @@ test_directory = Path(__file__).parent.parent
 
 @pytest.fixture(name="config")
 def read_config():
-    return world.read_config(test_directory / "config_ne.yaml")
+    return old_world.read_config(test_directory / "config_ne.yaml")
 
 
 @pytest.fixture(name="world_ne", scope="session")
