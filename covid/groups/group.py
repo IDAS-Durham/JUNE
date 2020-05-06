@@ -161,13 +161,9 @@ class Group(AbstractGroup):
         self.sane(name, spec)
         self.name        = name
         self.spec        = spec
+        self.n_groupings = len(self.GroupType)
         self.groupings   = [People() for _ in range(self.n_groupings)]
         self.intensity   = np.ones((self.n_groupings, self.n_groupings))
-
-    @property
-    def n_groupings(self):
-        # noinspection PyTypeChecker
-        return len(self.GroupType)
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:

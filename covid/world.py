@@ -398,8 +398,8 @@ class World:
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()
-        #print ("=====================================================")
-        #print ("=== active groups: ",active_groups,".")
+        print ("=====================================================")
+        print ("=== active groups: ",active_groups,".")
         if active_groups == None or len(active_groups) == 0:
             print("==== do_timestep(): no active groups found. ====")
             return
@@ -459,4 +459,4 @@ if __name__ == "__main__":
     #              box_mode=True,box_n_people=100)
 
     # world = World.from_pickle()
-    #world.group_dynamics()
+    world.group_dynamics()
