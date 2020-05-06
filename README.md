@@ -15,23 +15,6 @@ cd tests
 pytest
 ```
 
-# Data
-## How to get the data
-
-Use the ``get_data.sh`` script to fetch the latest data from google drive:
-
-```
-bash get_data.sh
-```
-
-If you are using Windows, or you want to downloaded it manually, go [here](https://drive.google.com/open?id=1A2rhq8JiCTOqOhUaSgFyIO01vDPnDUGj).
-
-## How to add new data
-
-To add new data, first add the new files into your existing data folder, then zip the folder and upload it [here](https://drive.google.com/open?id=1A2rhq8JiCTOqOhUaSgFyIO01vDPnDUGj). Then right click on the updated uploaded data.zip file and select 'get shareable link'. Copy the url, and edit the ``get_data.sh`` script appropriately (changing the fileId as it is shown inside the script). 
-
-Remember to push the updated script!
-
 # Ongoing documentation sources
 
 [Main documentation](https://josephpb.github.io/covidmodelling)
@@ -59,3 +42,51 @@ and
 # Quickstart
 
 Refer to ``Notebooks/quickstart.ipynb``
+
+# Data
+
+The IDAS gitlab repo is used for storing all data files associated with JUNE covid modelling project. The repo makes use of git-lfs which works in a very similar way to regular git versioning but requires a few more steps.
+
+**ATTENTION:** Please read the instructions below before doing anything with this repository.
+
+**Note** Currently all files in the data directory will be tracked (the line `**` in the `.gitattributes` file does this). This means that all new files in the data folder should be tracked recursively, but this needs testing.
+
+## Instructions
+
+Large files are handled by git-lfs. First, git-lfs must be set up locally on your computer, please download it [here](https://git-lfs.github.com)
+
+Once downloaded and installed, set up Git LFS for your user account by running:
+```
+git lfs install
+```
+
+To **pull**:
+
+1. Pull `.gitattributes` file using: `git pull` - this defines what lfs data to pull later
+
+2. Pull data according to `.gitattributes`: `git lfs pull`
+
+To **add** data files:
+
+1. Run: `git lfs track "[file]"` and remember the quotation marks
+
+2. As normal: `git add [file]`
+
+3. As normal:
+```
+git commit -m "[commit message]"
+git push origin master
+```
+
+To **remove** files:
+
+1. Open `.gitattributes`
+
+2. Find and remove the associated Git LFS tracking rule within the .gitattributes file
+
+3. Save and exit the .gitattributes file
+
+4. Commit and push as normal the changes to the file
+
+
+This procedure will stop the file from being tracked but will not remove it permanently. This is not an issue at the moemnt and should be left to admin to do.
