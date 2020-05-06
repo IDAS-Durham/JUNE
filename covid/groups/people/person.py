@@ -119,7 +119,6 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
-            oarea=None,
             health_index=None,
             econ_index=None,
             mode_of_transport=None,
@@ -133,7 +132,6 @@ class Person:
         self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
-        self.area = oarea
         self.work_msoarea = None
         self.household = None
         # primary activity attributes
