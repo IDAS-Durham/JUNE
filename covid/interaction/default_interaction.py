@@ -1,6 +1,13 @@
 import random
 import numpy as np
+import yaml
+from pathlib import Path
 from interaction import Interaction
+
+default_config_filename = (
+    Path(__file__).parent.parent.parent
+    / "configs/defaults/interaction/DefaultInteraction.yaml"
+)
 
 class DefaultInteraction(Interaction):
     def __init__(self,parameters):
@@ -13,12 +20,12 @@ class DefaultInteraction(Interaction):
     ) -> "DefaultInteraction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return InteractionCollective(config.get("intensities"))
+        return DefaultInteraction(config.get("intensities"))
     
     def single_time_step_for_group(self):
         self.probabilities = []
         self.weights       = []
-        if self.group.must_timestep():
+        if self.group.must_timestep:
             self.calculate_probabilities()
             for i in range(self.group.n_groupings):
                 for j in range(self.group.n_groupings):
