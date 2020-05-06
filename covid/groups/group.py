@@ -127,8 +127,8 @@ class Group(AbstractGroup):
     def people(self):
         return [
             person for
-            group in self.groups
-            for person in group.people
+            grouping in self.groupings
+            for person in grouping.people
         ]
 
     allowed_groups = [
@@ -157,13 +157,13 @@ class Group(AbstractGroup):
 
     def __init__(self, name, spec):
         self.sane(name, spec)
-        self.name = name
-        self.spec = spec
-        self.groups = [People() for _ in range(self.n_groups)]
-        self.intensities = np.ones((self.n_groups, self.n_groups))
+        self.name        = name
+        self.spec        = spec
+        self.groupings   = [People() for _ in range(self.n_groupings)]
+        self.intensity   = np.ones((self.n_groupings, self.n_groupings))
 
     @property
-    def n_groups(self):
+    def n_groupings(self):
         # noinspection PyTypeChecker
         return len(self.GroupType)
 
@@ -172,18 +172,18 @@ class Group(AbstractGroup):
             raise GroupException(f"{spec} is not an allowed group type")
 
     def __getitem__(self, item):
-        return self.groups[item]
+        return self.groupings[item]
 
     def add(self, person, qualifier=GroupType.default):
-        self.groups[qualifier].append(person)
+        self.groupings[qualifier].append(person)
 
     def clear(self):
-        for group in self.groups:
-            group.clear()
+        for grouping in self.groupings:
+            grouping.clear()
 
     def set_active_members(self):
-        for group in self.groups:
-            for person in group.people:
+        for grouping in self.groupings:
+            for person in grouping.people:
                 if person.active_group is not None:
                     raise ValueError("Trying to set an already active person")
                 else:
@@ -195,9 +195,9 @@ class Group(AbstractGroup):
                 self.size_susceptible > 0)
 
     def update_status_lists(self, time, delta_time):
-        for group in self.groups:
-            group.update_status_lists(time, delta_time)
-
+        for grouping in self.groupings:
+            grouping.update_status_lists(time, delta_time)
+            
     def output(self, plot=False, full=False, time=0):
         import matplotlib.pyplot as plt
 
