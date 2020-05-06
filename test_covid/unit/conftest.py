@@ -2,7 +2,7 @@ from covid.infection import infection as infect
 from covid.infection import symptoms as sym
 from covid.infection import transmission as trans
 
-from covid import World
+from covid import world
 from covid.time import Timer 
 
 import os
@@ -15,6 +15,11 @@ from covid import World
 from covid.time import Timer
 
 test_directory = Path(__file__).parent.parent
+
+
+@pytest.fixture(name="config")
+def read_config():
+    return world.read_config(test_directory / "config_ne.yaml")
 
 
 @pytest.fixture(name="world_ne", scope="session")
