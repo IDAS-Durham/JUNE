@@ -1,7 +1,7 @@
-import os
-import pickle
 import logging
 import logging.config
+import os
+import pickle
 
 import numpy as np
 import yaml
@@ -10,15 +10,14 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
+from covid.groups.people import HealthIndex
+from covid.infection import Infection
+from covid.infection import symptoms
+from covid.infection import transmission
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
-from covid.distributors import *
-from covid.infection import transmission
 from covid import interaction
-from covid.infection import symptoms
-from covid.infection import Infection
-from covid.groups.people import HealthIndex
 
 world_logger = logging.getLogger(__name__)
 
@@ -29,11 +28,11 @@ class World:
     """
 
     def __init__(
-        self, config_file=None, box_mode=False, box_n_people=None, box_region=None
+            self, config_file=None, box_mode=False, box_n_people=None, box_region=None
     ):
         world_logger.info("Initializing world...")
         # read configs
-        self.read_config(config_file)
+        self.config = read_config(config_file)
         self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         # set up logging
@@ -46,7 +45,7 @@ class World:
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
             self.initialize_hospitals()
-            #self.initialize_cemeteries()
+            # self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
             self.commute_generator = CommuteGenerator.from_file(
@@ -83,7 +82,7 @@ class World:
         world_logger.info("Done.")
 
     def world_creation_logger(
-        self, save_path, config_file=None, default_level=logging.INFO,
+            self, save_path, config_file=None, default_level=logging.INFO,
     ):
         """
         """
@@ -124,17 +123,6 @@ class World:
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
-
-    def read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "configs",
-                "config_example.yaml",
-            )
-        with open(config_file, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
 
     def get_simulation_groups(self):
         """
@@ -188,7 +176,6 @@ class World:
 
     def initialize_cemeteries(self):
         self.cemeteries = Cemeteries(self)
-
 
     def initialize_hospitals(self):
         self.hospitals = Hospitals.from_file(
@@ -244,7 +231,7 @@ class World:
         Populates the world with person instances.
         """
         print("Initializing people...")
-        #TODO:
+        # TODO:
         # self.people = People.from_file(
         #    self.inputs.,
         #    self.inputs.,
@@ -350,7 +337,7 @@ class World:
             self.distributor = CompanyDistributor(
                 self.companies,
                 super_area,
-                self.config, 
+                self.config,
             )
             self.distributor.distribute_adults_to_companies()
             pbar.update(1)
@@ -384,61 +371,49 @@ class World:
             person.active_group = None
 
     def initialize_infection(self):
-        if "parameters" in self.config["infection"]:
-            infection_parameters = self.config["infection"]["parameters"]
-        else:
-            infection_parameters = {}
-        if "transmission" in self.config["infection"]:
-            transmission_type = self.config["infection"]["transmission"]["type"]
-            try:
-                transmission_parameters = self.config["infection"]["transmission"][
-                    "parameters"
-                ]
-            except KeyError:
-                transmission_parameters = dict()
-            transmission_class_name = "Transmission" + transmission_type.capitalize()
-        else:
-            trans_class = "TransmissionConstant"
-            transmission_parameters = {}
-        trans_class = getattr(transmission, transmission_class_name)
-        transmission_class = trans_class(**transmission_parameters)
-        if "symptoms" in self.config["infection"]:
-            symptoms_type = self.config["infection"]["symptoms"]["type"]
-            try:
-                symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            except KeyError:
-                symptoms_parameters = dict() 
-
-            symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-        else:
-            symptoms_class_name = "SymptomsGaussian"
-            symptoms_parameters = {}
-        symp_class = getattr(symptoms, symptoms_class_name)
-        reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(
-            health_index=reference_health_index, **symptoms_parameters
+        return _initialize_infection(
+            self.config,
+            self.timer.now
         )
-        infection = Infection(
-            self.timer.now, transmission_class, symptoms_class, **infection_parameters
-        )
-        return infection
 
     def seed_infections_group(self, group, n_infections):
         choices = np.random.choice(group.size, n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(
-                group.people[choice], self.timer.now
+                list(group.people)[choice], self.timer.now
             )
         group.update_status_lists(self.timer.now, delta_time=0)
+        self.hospitalise_the_sick(group)
+        self.bury_the_dead(group)
 
     def seed_infections_box(self, n_infections):
         world_logger.info("seed ", n_infections, "infections in box")
-        choices = np.random.choice(self.people.members, n_infections, replace=False)
+        choices = np.random.choice(list(self.people.members), n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
-        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
+        group = self.boxes.members[0]
+        group.update_status_lists(self.timer.now, delta_time=0)
+        self.hospitalise_the_sick(group)
+        self.bury_the_dead(group)
+
+    def hospitalise_the_sick(self, group):
+        """
+        These functions could be more elegantly handled by an implementation inside a group collection.
+        I'm putting them here for now to maintain the same functionality whilst removing a person's
+        reference to the world as that makes it impossible to perform population generation prior
+        to world construction.
+        """
+        for person in group.in_hospital:
+            if person.in_hospital is None:
+                self.hospitals.allocate_patient(person)
+
+    def bury_the_dead(self, group):
+        for person in group.dead:
+            cemetery = self.cemeteries.get_nearest(person)
+            cemetery.add(person)
+            group.people.remove(person)
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()
@@ -452,9 +427,12 @@ class World:
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
+                self.hospitalise_the_sick(group)
+                self.bury_the_dead(group)
         # Update people that recovered in hospitals
         for hospital in self.hospitals.members:
             hospital.update_status_lists(self.timer.now, delta_time=0)
+            self.hospitalise_the_sick(hospital)
         self.set_allpeople_free()
 
     def group_dynamics(self, n_seed=100):
@@ -484,13 +462,65 @@ class World:
             self.do_timestep()
 
 
+def read_config(config_file):
+    if config_file is None:
+        config_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "configs",
+            "config_example.yaml",
+        )
+    with open(config_file, "r") as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
+
+
+def _initialize_infection(config, time):
+    if "parameters" in config["infection"]:
+        infection_parameters = config["infection"]["parameters"]
+    else:
+        infection_parameters = {}
+    if "transmission" in config["infection"]:
+        transmission_type = config["infection"]["transmission"]["type"]
+        try:
+            transmission_parameters = config["infection"]["transmission"][
+                "parameters"
+            ]
+        except KeyError:
+            transmission_parameters = dict()
+        transmission_class_name = "Transmission" + transmission_type.capitalize()
+    else:
+        trans_class = "TransmissionConstant"
+        transmission_parameters = {}
+    trans_class = getattr(transmission, transmission_class_name)
+    transmission_class = trans_class(**transmission_parameters)
+    if "symptoms" in config["infection"]:
+        symptoms_type = config["infection"]["symptoms"]["type"]
+        try:
+            symptoms_parameters = config["infection"]["symptoms"]["parameters"]
+        except KeyError:
+            symptoms_parameters = dict()
+
+        symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
+    else:
+        symptoms_class_name = "SymptomsGaussian"
+        symptoms_parameters = {}
+    symp_class = getattr(symptoms, symptoms_class_name)
+    reference_health_index = HealthIndex().get_index_for_age(40)
+    symptoms_class = symp_class(
+        health_index=reference_health_index, **symptoms_parameters
+    )
+    infection = Infection(
+        time, transmission_class, symptoms_class, **infection_parameters
+    )
+    return infection
+
+
 if __name__ == "__main__":
     world = World(
         config_file=os.path.join("../configs", "config_example.yaml"),
-        #box_mode=True,
-        #box_region='test',
+        # box_mode=True,
+        # box_region='test',
     )
-
 
     # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
     #              box_mode=True,box_n_people=100)

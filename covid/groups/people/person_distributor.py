@@ -285,14 +285,11 @@ class PersonDistributor:
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
-                self.world,
-                self.people.total_people,
-                age_random,
-                nomis_bin,
-                sex_random,
-                self.area,
-                health_index,
-                0,
+                age=age_random,
+                nomis_bin=nomis_bin,
+                sex=sex_random,
+                health_index=health_index,
+                econ_index=0,
                 mode_of_transport=None,
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment

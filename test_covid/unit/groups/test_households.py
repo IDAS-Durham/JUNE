@@ -1,20 +1,18 @@
-import os
-import numpy as np
 import pandas as pd
 import pytest
+
 from covid.inputs import Inputs
 from covid.groups import Household, Households
 
 
 @pytest.fixture(name="inputs")
 def get_input_data():
-    
     def read(filename: str):
         df = pd.read_csv(filename, index_col="output_area")
         freq = df.div(df.sum(axis=1), axis=0)
         decoder = {i: df.columns[i] for i in range(df.shape[-1])}
         return freq, decoder
-    
+
     inputs = Inputs(zone="test")
     n_residents = pd.read_csv(
         inputs.n_residents_file,
@@ -39,7 +37,7 @@ def get_input_data():
         "decoder_age": decoder_age,
         "sex_freq": sex_freq,
         "decoder_sex": decoder_sex,
-        "household_composition_freq": household_composition_freq,    
+        "household_composition_freq": household_composition_freq,
         "decoder_household_composition": decoder_household_composition,
         "encoder_household_composition": encoder_household_composition,
     }
@@ -86,6 +84,4 @@ def test__households_adding():
     households2.members = [4,5]
     households3 = households1 + households2
     assert households3.members == [1,2,3,4,5]
-
-
 
