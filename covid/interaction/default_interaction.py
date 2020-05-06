@@ -69,9 +69,6 @@ class DefaultInteraction(Interaction):
                 group.intensity[infecters][recipients] *
                 self.probabilities[infecters]
             )
-            #print(" infecters (",infecters,")[",self.group.groupings[infecters].size,"]: ",
-            #      self.probabilities[infecters],"-->",transmission_probability,
-            #      "for mixing = ",self.group.intensity[infecters][recipients])
             if random.random() <= transmission_probability:
                 infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
