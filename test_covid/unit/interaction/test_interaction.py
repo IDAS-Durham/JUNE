@@ -50,10 +50,10 @@ def test__time_it_takes_to_infect(interaction_type, group_size, world_ne):
         group = TestGroup(1)
         infected_person = Person()
         infected_reference.infect_person_at_time(infected_person, world_ne.timer.now)
-        group.people.append(infected_person)
+        group.people.add(infected_person)
         for i in range(group_size - 1):
             susceptible_person = Person()
-            group.people.append(susceptible_person)
+            group.people.add(susceptible_person)
         n_days.append(
             days_to_infection(interaction, susceptible_person, group, world_ne.timer)
         )
