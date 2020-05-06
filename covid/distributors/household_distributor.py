@@ -749,11 +749,6 @@ class HouseholdDistributor:
                 target_age,
                 min_age=self.adult_min_age,
             )
-            if partner is None:
-                print("failed")
-                print(f"target age: {target_age}")
-                print(area.men_by_age.keys())
-                print(area.women_by_age.keys())
             return partner
         else:
             partner = self._get_closest_person_of_age(
@@ -762,11 +757,6 @@ class HouseholdDistributor:
                 target_age,
                 min_age=self.adult_min_age,
             )
-            if partner is None:
-                print("failed")
-                print(f"target age: {target_age}")
-                print(area.men_by_age.keys())
-                print(area.women_by_age.keys())
             return partner
 
     def _get_matching_parent(self, kid: Person, area: Area) -> Person:
