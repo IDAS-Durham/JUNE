@@ -100,7 +100,7 @@ class SchoolDistributor:
         at random (making it larger than it should be)
         """
 
-        for person in self.area.people:
+        for person in self.area.groupings[0].people:
             if (
                     person.age <= self.MANDATORY_SCHOOL_AGE_RANGE[1]
                     and person.age >= self.MANDATORY_SCHOOL_AGE_RANGE[0]
@@ -133,7 +133,7 @@ class SchoolDistributor:
         send them to the closest school that has vacancies among the self.MAX_SCHOOLS closests.
         If none of them has vacancies do not send them to school
         """
-        for person in self.area.people:
+        for person in self.area.groupings[0].people:
             if (
                     self.SCHOOL_AGE_RANGE[0]
                     < person.age
@@ -150,7 +150,7 @@ class SchoolDistributor:
                         school = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
                         yearindex = person.age - school.age_min + 1
-                        n_pupils_age = len(school.groups[yearindex].people)
+                        n_pupils_age = len(school.groupings[yearindex].people)
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
                                 school.n_pupils_max / (school.age_max - school.age_min)
                         ):
