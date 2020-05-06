@@ -607,7 +607,7 @@ class HouseholdDistributor:
         Adds person to household and assigns them the correct subgroup.
         """
         #TODO modify to set the person to the right subgroup.
-        household.people.append(person)
+        household.people.add(person)
         person.household = household
         return None
 
