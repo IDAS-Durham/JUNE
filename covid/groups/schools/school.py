@@ -64,6 +64,7 @@ class School(Group):
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
+        self.age_structure = {a:0 for a in range(age_min, age_max+1)}
         self.sector = sector
         self.is_full = False
         self.n_teachers_max = n_teachers_max
