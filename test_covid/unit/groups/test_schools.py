@@ -38,8 +38,8 @@ def test__all_kids_mandatory_school(world_ne):
     """
     Check that all kids in mandatory school ages are assigned a school 
     """
-    KIDS_LOW = world_ne.schools.config["school_mandatory_age_range"][0]
-    KIDS_UP = world_ne.schools.config["school_mandatory_age_range"][1]
+    KIDS_LOW = world_ne.schools.mandatory_age_range[0]
+    KIDS_UP = world_ne.schools.mandatory_age_range[1]
     lost_kids = 0
     for i in range(len(world_ne.areas.members)):
         for j in range(len(world_ne.areas.members[i].people)):
@@ -81,16 +81,17 @@ def test__age_range_schools(world_ne):
 def test__non_mandatory_dont_go_if_school_full(world_ne):
 
     non_mandatory_added = 0
+    mandatory_age_range = world_ne.schools.mandatory_age_range
     for school in world_ne.schools.members:
         if school.n_pupils > school.n_pupils_max:
             ages = np.array(
                 [person.age for person in school.people[int(school.n_pupils_max) :]]
             )
             older_kids_when_full = np.sum(
-                ages > world_ne.schools.config["school_mandatory_age_range"][1]
+                ages > mandatory_age_range[1]
             )
             younger_kids_when_full = np.sum(
-                ages < world_ne.schools.config["school_mandatory_age_range"][0]
+                ages < mandatory_age_range[0]
             )
             if older_kids_when_full > 0 or younger_kids_when_full > 0:
                 non_mandatory_added += 1

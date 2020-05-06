@@ -40,10 +40,12 @@ class PersonDistributor:
         self.STUDENT_THRESHOLD = self.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
-        self.relevant_groups = self.world.relevant_groups
-        self._get_key_compsec_id(self.world.config)
         self.area.men_by_age = {}
         self.area.women_by_age = {}
+        self.relevant_groups = self.world.relevant_groups
+        self._get_key_compsec_id(self.world.config)
+        self.no_kids_area = False
+        self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.world.config)
@@ -82,6 +84,13 @@ class PersonDistributor:
         age_kids_freq = age_freq.values[: self.ADULT_THRESHOLD]
         # check if there are no kids in the area, and if so,
         # declare it a no kids area.
+        if np.sum(age_kids_freq) == 0.0:
+            self.no_kids_area = True
+        else:
+            age_kid_freqs_norm = age_kids_freq / np.sum(age_kids_freq)
+            self.area.kid_age_rv = stats.rv_discrete(
+                values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm)
+            )
         self.area.nomis_bin_rv = stats.rv_discrete(
             values=(np.arange(0, len(age_freq)), age_freq.values)
         )
@@ -299,7 +308,7 @@ class PersonDistributor:
                 )
             self.people.members.append(person)
             self.area.people.append(person)
-            # create age groups for the household distributor
+            # assign person to the right group, this is used in the household distributor.:
             if sex_random == 0:
                 if age_random not in self.area.men_by_age:
                     self.area.men_by_age[age_random] = []
@@ -308,16 +317,17 @@ class PersonDistributor:
                 if age_random not in self.area.women_by_age:
                     self.area.women_by_age[age_random] = []
                 self.area.women_by_age[age_random].append(person)
-            self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
-            self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
-            total_people = 0
-            for people_dict in [self.area.men_by_age, self.area.women_by_age]:
-                for age in people_dict.keys():
-                    total_people += len(people_dict[age])
 
-            try:
-                assert total_people == self.area.n_residents
-            except AssertionError:
-                raise PersonError(
-                    f"Number of created people {total_people} does not match area's population {self.area.n_residents}"
+        self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
+        self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
+        total_people = 0
+        for people_dict in [self.area.men_by_age, self.area.women_by_age]:
+            for age in people_dict.keys():
+                total_people += len(people_dict[age])
+
+        try:
+            assert total_people == self.area.n_residents
+        except AssertionError:
+            raise PersonError(
+                f"The number of people created {total_people} does not match the areas' number of residents {self.area.n_residents}"
                 )
