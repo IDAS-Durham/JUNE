@@ -67,6 +67,9 @@ class Hospital(Group):
         self.coordinates = coordinates
         self.msoa_name = msoa_name
         self.n_medics = 0
+        self.employees = set()
+        self.patients = set()
+        self.icu_patients = set()
 
     @property
     def full(self):
@@ -114,13 +117,11 @@ class Hospital(Group):
                 person,
                 self.GroupType.icu_patients
             )
-            person.in_hospital = self
         elif person.health_information.tag == "hospitalised":
             self.add(
                 person,
                 self.GroupType.patients
             )
-            person.in_hospital = self
         else:
             raise AssertionError("ERROR: This person shouldn't be trying to get to a hospital")
 
@@ -151,23 +152,13 @@ class Hospital(Group):
         icu_group = self[self.GroupType.icu_patients]
         for person in patient_group.people:
             person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                ic_logger.info(
-                    "ERROR: in our current setup, only infected patients in the hospital"
-                )
-                self.susceptible.append(person)
             if person.health_information.infected:
-                if not (person.health_information.in_hospital):
-                    # TODO: is this necessary? How could they have made it to hospital?
-                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
-                    patient_group.remove(person)
                 if person.health_information.tag == "intensive care":
                     icu_group.append(person)
                     patient_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                person.bury()
                 dead.append(person)
         for person in dead:
             patient_group.remove(person)
@@ -182,25 +173,18 @@ class Hospital(Group):
         dead = []
         for person in icu_group.people:
             person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                ic_logger.info(
-                    "ERROR: in our current setup, only infected patients in the hospital"
-                )
-                self.susceptible.append(person)
             if person.health_information.infected:
-                if not (person.health_information.in_hospital):
-                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
-                    icu_group.remove(person)
                 if person.health_information.tag == "hospitalised":
                     patient_group.append(person)
                     icu_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                person.bury()
+                #TODO: check what to do with dead!! bury is not there anymore
                 dead.append(person)
         for person in dead:
             icu_group.remove(person)
+
 
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
@@ -368,8 +352,9 @@ class Hospitals:
                 )
                 hospital.add_as_patient(person)
             else:
-                ic_logger.info(f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
-                )
+                ic_logger.info(
+                    f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
+                    )
 
     def get_closest_hospitals(
             self, coordinates: Tuple[float, float], r_max: float

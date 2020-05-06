@@ -7,6 +7,8 @@ import numpy as np
 
 from covid.exc import GroupException
 
+from covid.exc import GroupException
+
 logger = logging.getLogger(__name__)
 
 
@@ -165,6 +167,14 @@ class Group(AbstractGroup):
         self.n_groupings = len(self.GroupType)
         self.groupings   = [People() for _ in range(self.n_groupings)]
         self.intensity   = np.ones((self.n_groupings, self.n_groupings))
+        #self.people = set()
+        #self.susceptible = set()
+        #self.infected = set()
+        #self.recovered = set()
+        #self.in_hospital = set()
+        self.dead = set()
+
+        self.intensity = 1.0
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
@@ -198,37 +208,41 @@ class Group(AbstractGroup):
         for grouping in self.groupings:
             grouping.update_status_lists(time, delta_time)
             
-    def output(self, plot=False, full=False, time=0):
-        import matplotlib.pyplot as plt
+        self.susceptible.clear()
+        self.infected.clear()
+        self.in_hospital.clear()
+        self.recovered.clear()
+        self.dead.clear()
 
-        print("==================================================")
-        print("Group ", self.name, ", type = ", self.spec, " with ", len(self.people), " people.")
-        print("* ",
-              self.size_susceptible, "(", round(self.size_susceptible / self.size * 100), "%) are susceptible, ",
-              self.size_infected, "(", round(self.size_infected / self.size * 100), "%) are infected,",
-              self.size_recovered, "(", round(self.size_recovered / self.size * 100), "%) have recovered.",
-              )
+        for person in self.people:
+            health_information = person.health_information
+            health_information.update_health_status(time, delta_time)
+            if health_information.susceptible:
+                self.susceptible.add(person)
+            elif health_information.infected_at_home:
+                self.infected.add(person)
+            elif health_information.in_hospital:
+                self.in_hospital.add(person)
+            elif health_information.recovered:
+                self.recovered.add(person)
+            elif person.health_information.dead:
+                self.dead.add(person)
 
-        ages = []
-        M = 0
-        F = 0
-        for p in self.people:
-            ages.append(p.get_age())
-            if p.get_sex() == 0:
-                M += 1
-            else:
-                F += 1
-        print("* ",
-              F, "(", round(F / self.size * 100.0), "%) females, ",
-              M, "(", round(M / self.size * 100.0), "%) males;",
-              )
-        if plot:
-            fig, axes = plt.subplots()
-            axes.hist(ages, 20, range=(0, 100), density=True, facecolor="blue", alpha=0.5)
-            plt.show()
-        if full:
-            for p in self.people:
-                p.output(time)
+    @property
+    def size(self):
+        return len(self.people)
+
+    @property
+    def size_susceptible(self):
+        return len(self.susceptible)
+
+    @property
+    def size_infected(self):
+        return len(self.infected)
+
+    @property
+    def size_recovered(self):
+        return len(self.recovered)
 
 
 def symmetrize_matrix(matrix):
