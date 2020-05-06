@@ -3,175 +3,86 @@ import numpy as np
 
 
 class Interaction:
-
-    def __init__(self):
-        self.intensities = {}
-
+    def __init__(self,parameters=None):
+        pass
+        
     def time_step(self, time, delta_time, groups):
-
         # TODO : Is there any reason for this to be passed all groups, as opposed to one group at a time?
         # TODO : If not, make the class assume it always acts on one group (which could have sub groups internally).
 
         # TODO think how we treat the double update_status_lists and make it consistent
         # with delta_time
-        # print ("-----------------------------------------------------")
+        
+        self.time       = time
+        self.delta_time = delta_time
         for group_type in groups:
-            for group in group_type.members:
-                if group.size != 0:
-                    group.update_status_lists(time=time, delta_time=0)
-        # print ("-----------------------------------------------------")
-        for group_type in groups:
-            for group in group_type.members:
-                if group.size != 0:
-                    self.single_time_step_for_group(group=group, time=time, delta_time=delta_time)
-        # print ("-----------------------------------------------------")
-        for group_type in groups:
-            for group in group_type.members:
-                if group.size != 0:
-                    group.update_status_lists(time=time, delta_time=delta_time)
-        # print ("-----------------------------------------------------")
-
-    # TODO : The fact these functioonss use a group suggests the function above sould.
-
-    def single_time_step_for_group(self, group, time, delta_time):
+            for self.group in group_type.members:
+                if self.group.size != 0:
+                    self.group.update_status_lists(time=self.time, delta_time=0)
+                    self.single_time_step_for_group()
+                    self.group.update_status_lists(time=self.time, delta_time=self.delta_time)
+                    
+    def single_time_step_for_group(self):
         raise NotImplementedError()
 
-    def get_intensity_from_group_type(self, group_type):
-        if group_type in self.intensities:
-            return self.intensities[group_type]
-        return 1
-
-    def set_intensity_of_group_type(self, group_type, intensity):
-        self.intensities[group_type] = intensity
-
-    def set_intensities(self, intensities):
-        self.intensities = intensities
-
-
+    
+    
 class InteractionCollective(Interaction):
-    def __init__(self, mode):
-
+    def __init__(self):
         super().__init__()
 
-        self.mode = mode
-        self.alphas = {}
+    def single_time_step_for_group(self):
+        if self.group.must_timestep():
+            calculate_probabilties()
+            for gi in group.groupings:
+                for gj in group.groupings:
+                    self.contaminate(self,i,j)
+                    if i!=j:
+                        self.contaminate(self,j,i)
 
-    def single_time_step_for_group(self, group, time, delta_time):
-
-        if group.must_timestep():
-
-            effective_load = self.calculate_effective_viral_load(group, delta_time)
-
-            if effective_load <= 0.0:
-                return
-
-            for recipient in group.susceptible:
-                self.single_time_step_for_recipient(
-                    recipient=recipient, effective_load=effective_load, group=group, time=time
+    def contaminate(self,infecters,recipients):
+        if (
+            self.group.intensity[infecters][recipients] <= 0. or
+            self.probabilities[infecters] <= 0.
+        ):
+            return
+        for recipient in self.group.groupings[recipients]:
+            transmission_probability = 1.0 - np.exp(
+                -self.delta_t *
+                recipient.health_information.susceptibility *
+                self.group.intensity[infecters][recipients] *
+                self.probabilities[infecters]
+            )
+            if random.random() <= transmission_probability:
+                infecter = self.select_infecter()
+                infecter.health_information.infection.infect_person_at_time(
+                    person=recipient, time=self.time
+                )
+                infecter.health_information.counter.increment_infected()
+                recipient.health_information.counter.update_infection_data(
+                    time=self.time, group_type=group.spec
                 )
 
-        if group.spec == "hospital":
-            print("must allow for infection of workers by patients")
-
-    def single_time_step_for_recipient(self, recipient, effective_load, group, time):
-
-        transmission_probability = 0.0
-        recipient_probability = recipient.health_information.susceptibility
-
-        if recipient_probability <= 0.0:
-            return
-
-        if self.mode == "superposition":
-            """
-            added probability from product of non-infection probabilities.
-            for each time step, the infection probabilities per infected person are given
-            by their individual, time-dependent infection probability times the
-            interaction intensity normalised to the group size --- this is to recover the
-            logic of the SI/SIR models --- and normalised to the time interval, given in
-            units of full days.
-            """
-            transmission_probability = recipient_probability * effective_load
-        elif self.mode == "probabilistic":
-            """
-            multiplicative probability from product of non-infection probabilities.
-            for each time step, the infection probabilities per infected person are given
-            by their individual, time-dependent infection probability times the
-            interaction intensity normalised to the group size --- this is to recover the
-            logic of the SI/SIR models --- and normalised to the time interval, given in
-            units of full days.
-            """
-            transmission_probability = 1.0 - np.exp(
-                -recipient_probability * effective_load
-            )
-
-        if random.random() <= transmission_probability:
-
-            infecter = self.select_infecter()
-
-            infecter.health_information.infection.infect_person_at_time(
-                person=recipient, time=time
-            )
-
-            infecter.health_information.counter.increment_infected()
-
-            recipient.health_information.counter.update_infection_data(
-                time=time, group_type=group.spec
-            )
-
-    def calculate_effective_viral_load(self, group, delta_time):
-
-        group_type = group.spec
-        summed_load = 0.0
-
-        interaction_intensity = (
-            self.get_intensity_from_group_type(group_type)
-            / (max(1, group.size) ** self.get_alpha(group_type=group_type))
-            * (delta_time)
-        )
-
-        if interaction_intensity > 0.0:
-
-            self.weights = []
-
-            for person in group.infected:
-
-                viral_load = (
+    def calculate_loads():
+        self.probabilities = []
+        norm               = 1./max(1, self.group.size)
+        #TODO: add back this scaling exponent if you need to but make it
+        #      part of the group information.
+        #      **self.get_alpha(group_type=group_type))
+        for grouping in self.group.groupings:
+            summed = 0.
+            for person in grouping.infected:
+                individual = (
                     person.health_information.infection.transmission.probability
                 )
-                summed_load += viral_load
-                self.weights.append([person, viral_load])
-
-            for i in range(len(self.weights)):
-
-                self.weights[i][1] /= summed_load
-
-            summed_load *= interaction_intensity
-
-        return summed_load
+                summed += individual
+                self.weights.append([person, individual])
+            self.probabilities.append(summed*norm) 
 
     def select_infecter(self):
-
         choice_weights = [w[1] for w in self.weights]
-
         idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
-
         return self.weights[idx][0]
-
-    def get_alpha(self, group_type):
-
-        if group_type in self.alphas:
-            return self.alphas[group_type]
-
-        return 1.0
-
-    def set_alphas(self, alphas):
-
-        self.alphas = alphas
-
-    def set_alpha_of_group_type(self, group_type, alpha):
-
-        self.alphas[group_type] = alpha
-
 
 # TODO: READ MAX AGE (100) FROM SOMEWHERE
 class MatrixInteraction(Interaction):
@@ -187,11 +98,9 @@ class MatrixInteraction(Interaction):
     """
 
     def __init__(self):
-
         super().__init__()
 
     def single_time_step_for_group(self, time, group):
-
         if group.must_timestep():
 
             self.matrix = group.get_contact_matrix()
