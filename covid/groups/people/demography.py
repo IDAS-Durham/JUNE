@@ -8,6 +8,9 @@ from covid.groups.people.person import Person
 
 default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
+MALE_INDEX = 1
+FEMALE_INDEX = 2
+
 
 class Population:
     def __init__(
@@ -36,18 +39,25 @@ class Demography:
     def __init__(
             self,
             super_area: str,
-            residents_map: Dict[str, int]
+            residents_map: Dict[str, int],
+            sex_generators: Dict[str, "WeightedGenerator"]
     ):
         self.super_area = super_area
         self.residents_map = residents_map
+        self.sex_generators = sex_generators
 
     def population_for_area(self, area: str):
         people = list()
-        for _ in range(
-                self.residents_map[area]
+        for _, sex in zip(
+                range(
+                    self.residents_map[area]
+                ),
+                self.sex_generators[area]
         ):
             people.append(
-                Person()
+                Person(
+                    sex=sex
+                )
             )
         return Population(
             area=area,
@@ -62,6 +72,7 @@ class Demography:
     ):
         output_area_path = f"{data_path}/processed/census_data/output_area/{super_area}"
         age_structure_path = f"{output_area_path}/age_structure.csv"
+        sex_path = f"{output_area_path}/sex.csv"
         residents_path = f"{output_area_path}/residents.csv"
 
         with open(residents_path) as f:
@@ -72,9 +83,25 @@ class Demography:
                 for row in reader
             }
 
+        with open(sex_path) as f:
+            reader = csv.reader(f)
+            headers = next(reader)
+            if not ("m" in headers[MALE_INDEX] and "f" in headers[FEMALE_INDEX]):
+                raise AssertionError(
+                    f"sex dataset at {sex_path} does not match expected structure"
+                )
+            sex_generators = {
+                row[0]: WeightedGenerator(
+                    (int(row[MALE_INDEX]), "m"),
+                    (int(row[FEMALE_INDEX]), "f")
+                )
+                for row in reader
+            }
+
         return Demography(
             super_area,
-            residents_map=residents_map
+            residents_map=residents_map,
+            sex_generators=sex_generators
         )
 
 
@@ -98,8 +125,23 @@ class WeightedGenerator:
             in self.possibilities
         ]
 
+    @property
+    def normalised_weights(self):
+        weights = self.weights
+        return [
+            weight / sum(weights)
+            for weight
+            in weights
+        ]
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self()
+
     def __call__(self):
         return np.random.choice(
             self.values,
-            p=self.weights
+            p=self.normalised_weights
         )
