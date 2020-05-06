@@ -30,6 +30,7 @@ class Group:
     """
 
     allowed_groups = [
+        "area",
         "box",
         "boundary",
         "commute_Public",
@@ -42,9 +43,11 @@ class Group:
         "leisure_Indoor",
         "pub",
         "random",
+        "TestGroup",
         "referenceGroup",
         "shopping",
         "school",
+        "super_area",
         "testGroup",
         "work_Outdoor",
         "work_Indoor",
@@ -55,6 +58,7 @@ class Group:
         self.name = name
         self.spec = spec
         self.people = []
+        self.members = []
         self.intensity = 1.0
 
     @property
@@ -111,6 +115,7 @@ class Group:
             return 1.0
         return self.intensity  # .intensity(time)
 
+    @property
     def must_timestep(self):
         return (self.size > 1 and
                 self.size_infected > 0 and

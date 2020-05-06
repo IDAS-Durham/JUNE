@@ -3,7 +3,7 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 from covid.groups import Group
 
@@ -52,6 +52,7 @@ class School(Group):
         self.n_pupils = 0
         self.age_min = age_min
         self.age_max = age_max
+        self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
         self.is_full = False
         self.n_teachers_max = n_teachers_max
@@ -59,24 +60,45 @@ class School(Group):
 
 
 class Schools:
-    def __init__(self, school_df: pd.DataFrame, config: dict):
+    def __init__(
+        self,
+        schools: List["School"],
+        age_range: Tuple[int, int],
+        mandatory_age_range: Tuple[int, int],
+        student_nr_per_teacher: int,
+        school_tree: Optional[Dict[int, BallTree]] = None,
+        agegroup_to_global_indices: dict = None,
+    ):
         """
         Create a group of Schools, and provide functionality to access closest school
 
         Parameters
         ----------
-        school_df:
-            data frame with school data
-        config:
-            config dictionary
+        schools:
+            list of school instances
+        age_range:
+           tuple containing minimum and maximum age of pupils 
+        mandator_age_range:
+           tuple containing minimum and maximum mandatory age of pupils 
+        student_nr_per_teacher:
+            number of students for one teacher
+        school_tree:
+            BallTree built on all schools coordinates
+        agegroup_to_global_indices:
+            dictionary to map the
         """
 
         self.members = []
-        self.config = config
-        school_df.reset_index(drop=True, inplace=True)
-        self.stud_nr_per_teacher = config['sub_sector']['teacher_secondary']['nr_of_clients']
-        self.init_schools(school_df)
-        self.init_trees(school_df)
+        self.age_range = age_range
+        self.mandatory_age_range = mandatory_age_range
+        self.stud_nr_per_teacher = student_nr_per_teacher
+
+        for school in schools:
+            self.members.append(school)
+
+        if school_tree is not None:
+            self.school_trees = school_tree
+            self.school_agegroup_to_global_indices = agegroup_to_global_indices
 
     @classmethod
     def from_file(cls, filename: str, config_filename: str) -> "Schools":
@@ -95,14 +117,28 @@ class Schools:
         Schools instance
         """
 
-        school_df = pd.read_csv(filename, index_col=0)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         for key, value in config.items():
             config = value
-        return Schools(school_df, config)
+        school_df = pd.read_csv(filename, index_col=0)
+        school_df.reset_index(drop=True, inplace=True)
+        stud_nr_per_teacher = config["sub_sector"]["teacher_secondary"]["nr_of_clients"]
+        schools = cls.init_schools(cls, school_df, stud_nr_per_teacher)
+        school_tree, agegroup_to_global_indices = cls.init_trees(
+            cls, school_df, config["age_range"]
+        )
 
-    def init_schools(self, school_df: pd.DataFrame):
+        return Schools(
+            schools,
+            config["age_range"],
+            config["mandatory_age_range"],
+            stud_nr_per_teacher,
+            school_tree,
+            agegroup_to_global_indices,
+        )
+
+    def init_schools(self, school_df: pd.DataFrame, stud_nr_per_teacher: int):
         """
         Create School objects with the right characteristics, 
         as given by dataframe
@@ -115,20 +151,20 @@ class Schools:
         """
         schools = []
         for i, (index, row) in enumerate(school_df.iterrows()):
-            n_teachers_max = int(row["NOR"] / self.stud_nr_per_teacher)
+            n_teachers_max = int(row["NOR"] / stud_nr_per_teacher)
             school = School(
                 i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 row["NOR"],
                 n_teachers_max,
-                row["age_min"],
-                row["age_max"],
+                int(row["age_min"]),
+                int(row["age_max"]),
                 row["sector"],
             )
             schools.append(school)
-        self.members = schools
+        return schools
 
-    def init_trees(self, school_df: pd.DataFrame):
+    def init_trees(self, school_df: pd.DataFrame, age_range: Tuple[int, int]):
         """
         Create trees to easily find the closest school that
         accepts a pupil given their age
@@ -142,24 +178,17 @@ class Schools:
 
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: []
-            for k in range(
-                self.config["age_range"][0],
-                self.config["age_range"][1] + 1,
-            )
+            k: [] for k in range(int(age_range[0]), int(age_range[1]) + 1,)
         }
         # have a tree per age
-        for age in range(
-            self.config["age_range"][0], self.config["age_range"][1] + 1
-        ):
+        for age in range(int(age_range[0]), int(age_range[1]) + 1):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
             ]
-            school_trees[age] = self._create_school_tree(_school_df_agegroup)
+            school_trees[age] = self._create_school_tree(self, _school_df_agegroup)
             school_agegroup_to_global_indices[age] = _school_df_agegroup.index.values
 
-        self.school_trees = school_trees
-        self.school_agegroup_to_global_indices = school_agegroup_to_global_indices
+        return school_trees, school_agegroup_to_global_indices
 
     def get_closest_schools(
         self, age: int, coordinates: Tuple[float, float], k: int
@@ -211,4 +240,3 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
-

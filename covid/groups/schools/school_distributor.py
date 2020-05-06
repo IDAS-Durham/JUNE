@@ -30,8 +30,7 @@ class SchoolDistributor:
             config dictionary.
         """
         self.area = area
-        self.world = area.world
-        self.msoarea = area.msoarea
+        self.msoarea = area.super_area
         self.schools = schools
         self.MAX_SCHOOLS = config["neighbour_schools"]
         self.SCHOOL_AGE_RANGE = config["age_range"]
@@ -152,13 +151,7 @@ class SchoolDistributor:
                     for i in range(0, self.MAX_SCHOOLS):  # look for non full school
                         school = self.closest_schools_by_age[person.age][i]
                         # check number of students in that age group
-                        n_pupils_age = len(
-                            [
-                                pupil.age
-                                for pupil in school.people
-                                if pupil.age == person.age
-                            ]
-                        )
+                        n_pupils_age = school.age_structure[person.age]
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
                             school.n_pupils_max / (school.age_max - school.age_min)
                         ):
@@ -168,9 +161,8 @@ class SchoolDistributor:
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
                         continue
 
-                    else:  # just keep the school saved in the previous for loop
-                        pass
                 school.people.append(person)
+                school.age_structure[person.age] += 1
                 person.school = school
                 school.n_pupils += 1
 
@@ -194,7 +186,7 @@ class SchoolDistributor:
         # Note: doing it this way rather then putting them into the area which
         # is currently chose in the for-loop in the world.py file ensure that
         # teachers are equally distr., no over-crowding
-        areas_in_msoa = self.msoarea.oarea
+        areas_in_msoa = self.msoarea.areas
         areas_rv = stats.rv_discrete(
             values=(
                 np.arange(len(areas_in_msoa)),
