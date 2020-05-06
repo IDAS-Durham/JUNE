@@ -18,7 +18,6 @@ class PersonDistributor:
     def __init__(
         self,
         world,
-        timer,
         people,
         areas,
         area,
@@ -30,7 +29,6 @@ class PersonDistributor:
     ):
         """
         """
-        self.timer = timer
         self.world = world
         self.areas = areas
         self.area = area

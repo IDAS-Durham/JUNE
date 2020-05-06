@@ -1,11 +1,13 @@
 import yaml
 import logging
+from pathlib import Path
+from typing import List, Tuple, Dict, Optional
 
 from covid.time import Timer
 from covid import interaction
 from covid.infection import Infection
 
-default_config_filename = Path(__file__).parent.parent / "configs/defaults/world.yaml"
+default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
 
 sim_logger = logging.getLogger(__name__)
@@ -28,12 +30,13 @@ class Simulator:
             dictionary with configuration to set up the simulation
         """
         self.world = world
-        self.config = config
-        self.timer = Timer(self.config["time"])
+        self.interaction = interaction
+        self.infection = infection
+        self.timer = Timer(config)
 
     @classmethod
-    def load_from_file(
-        cls, world, config_filename=default_config_filename
+    def from_file(
+        cls, world, interaction, infection, config_filename=default_config_filename
     ) -> "Simulator":
 
         """
@@ -53,7 +56,7 @@ class Simulator:
 
         assert sum(config["time"]["step_duration"]["weekday"].values()) == 24
 
-        return Simulator(cls, world, config)
+        return Simulator(world, interaction, infection, config["time"])
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
@@ -97,6 +100,7 @@ class Simulator:
             number of random people to infect in the given group
 
         """
+        #TODO: add attribute susceptible to people
         choices = np.random.choice(group.size, n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
@@ -157,7 +161,7 @@ class Simulator:
         # TODO: only if hospitals are in the world
         # + this should be a method of Hospitals
 
-    def run(self, n_seed: int = 100, n_days):
+    def run(self, n_days, n_seed: int = 100):
         """
         Run simulation with n_seed initial infections
 
