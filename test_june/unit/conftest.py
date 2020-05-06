@@ -1,3 +1,4 @@
+
 from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
@@ -5,16 +6,28 @@ from june.infection import transmission as trans
 from june import World
 from june.time import Timer 
 
+
 import os
 from pathlib import Path
 
 import pytest
 import yaml
 
+
+from june import old_world
+from june.infection import symptoms as sym
+from june.infection import transmission as trans
+
 from june import World
+
 from june.time import Timer
 
 test_directory = Path(__file__).parent.parent
+
+
+@pytest.fixture(name="config")
+def read_config():
+    return old_world.read_config(test_directory / "config_ne.yaml")
 
 
 @pytest.fixture(name="world_ne", scope="session")
@@ -39,6 +52,7 @@ def create_timer():
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
     return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
+
 
 @pytest.fixture(name="transmission", scope="session")
 def create_transmission():
