@@ -26,17 +26,34 @@ def make_area():
     return "E00062207"
 
 
+@pytest.fixture(
+    name="population"
+)
+def make_population(demography, area):
+    return demography.population_for_area(
+        area
+    )
+
+
 def test_create_demography(demography, super_area, area):
     assert demography.super_area == super_area
     assert demography.residents_map[area] == 242
+    assert len(demography.sex_generators) == 8802
 
 
-def test_get_population(demography, area):
-    population = demography.population_for_area(
-        area
-    )
+def test_get_population(population, area):
     assert population.area == area
     assert len(population) == 242
+
+
+def test_sex(population):
+    sexes = [
+        person.sex
+        for person
+        in population
+    ]
+    assert "m" in sexes
+    assert "f" in sexes
 
 
 def test_weighted_generator():
