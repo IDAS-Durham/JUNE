@@ -13,6 +13,8 @@ from covid.commute import CommuteGenerator
 from covid.groups import *
 from covid.inputs import Inputs
 
+from june import sociology
+
 class World:
     """
     This Class creates the world that will later be simulated.
@@ -23,6 +25,10 @@ class World:
         self,
         configs_dir: str = os.path.dirname(os.path.realpath(__file__))+"../configs/",
         output_dir: str = "./results/",
+        geography: "Geography",
+        demography: "Demography",
+        sociology: "Sociology",
+        #box: "Box",
         box_mode: Optional[Dict[int, str]] = None,
     ):
         self.configs_dir = configs_dir
@@ -30,7 +36,6 @@ class World:
         self.output_dir = output_dir
         self.box = box_mode
         
-        self.inputs = Inputs(zone="test")
         # read configs
         #self.read_config(config_file)
         #self.read_defaults()
@@ -58,6 +63,17 @@ class World:
             logging.basicConfig(
                 filename=log_file, level=logging.DEBUG
             )
+    
+
+    def to_pickle(self, filename: str = None):
+        """
+        Write the world to file. Comes in handy when setting up the world
+        takes a long time.
+        """
+        if filename is None:
+            filename = os.path.join(self.output_dir, "world.log")
+        with open(filename, "wb") as f:
+            pickle.dump(self, f)
     
 #    def geography():
 #        self.initialize_areas()
