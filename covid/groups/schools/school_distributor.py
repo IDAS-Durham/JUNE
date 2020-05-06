@@ -125,7 +125,7 @@ class SchoolDistributor:
                         school = self.closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.people.append(person)
+                school.people.add(person)
                 person.school = school
                 school.n_pupils += 1
 
@@ -161,7 +161,7 @@ class SchoolDistributor:
                     if schools_full == self.MAX_SCHOOLS:  # all schools are full
                         continue
 
-                school.people.append(person)
+                school.people.add(person)
                 school.age_structure[person.age] += 1
                 person.school = school
                 school.n_pupils += 1
