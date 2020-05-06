@@ -45,13 +45,17 @@ Refer to ``Notebooks/quickstart.ipynb``
 
 # Data
 
-The IDAS gitlab repo is used for storing all data files associated with JUNE covid modelling project. The repo makes use of git-lfs which works in a very similar way to regular git versioning but requires a few more steps.
+The [IDAS gitlab](https://idas-gitlab.dur.scotgrid.ac.uk) [data repo](https://idas-gitlab.dur.scotgrid.ac.uk/JUNE/data) is used for storing all data files associated with JUNE covid modelling project. The repo makes use of git-lfs which works in a very similar way to regular git versioning but requires a few more steps.
 
 **ATTENTION:** Please read the instructions below before doing anything with this repository.
 
 **Note** Currently all files in the data directory will be tracked (the line `**` in the `.gitattributes` file does this). This means that all new files in the data folder should be tracked recursively, but this needs testing.
 
 ## Instructions
+
+Before going any further, make a clean `JUNE/data/` folder to ensure nothing is overwritten.
+
+To make data changes you must be in the `JUNE/data` foler which will have it's own git history separate from this one.
 
 Large files are handled by git-lfs. First, git-lfs must be set up locally on your computer, please download it [here](https://git-lfs.github.com)
 
@@ -89,4 +93,4 @@ To **remove** files:
 4. Commit and push as normal the changes to the file
 
 
-This procedure will stop the file from being tracked but will not remove it permanently. This is not an issue at the moemnt and should be left to admin to do.
+This procedure will stop the file from being tracked but will not remove it permanently. This is not an issue at the moment and should be left to admin to do.
