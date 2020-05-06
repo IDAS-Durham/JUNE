@@ -75,7 +75,7 @@ class Logger:
             for area in self.world.areas.members:
                 for person in area.people:
                     if person.health_information.infected:
-                        infection_generation_global += person.health_information.counter.infection_generation
+                        infection_generation_global += person.health_information.infection_generation
                         global_counter +=1
                         
             if infection_generation_global == 0:
@@ -85,7 +85,7 @@ class Logger:
         else:
             box = self.world.boxes.members[0]
             for person in box.people:
-                infection_generation_global += person.health_information.counter.infection_generation
+                infection_generation_global += person.health_information.infection_generation
                 global_counter += 1
                 
                 self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
@@ -102,20 +102,20 @@ class Logger:
                 r0s_recon = []
                 day_infs = []
                 for person in box.recovered:
-                    day_inf = person.health_information.counter.time_of_infection
+                    day_inf = person.health_information.time_of_infection
                     day_infs.append([day_inf, person])
                     if (day_inf > 1 and day_inf < 5): # need to think about how to define this better
-                        day_recover = day_inf + person.health_information.counter.length_of_infection
+                        day_recover = day_inf + person.health_information.length_of_infection
                         s_ti = self.data_dict["world"][day_inf]["susceptible"]
                         s_tr = self.data_dict["world"][day_recover]["susceptible"]
                         s_frac = (s_ti + s_tr) / (2 * len(box.people))
-                        r0 = person.health_information.counter.number_of_infected
+                        r0 = person.health_information.number_of_infected
                         r0s_raw.append(r0)
                         r0s_recon.append(r0 / s_frac)
 
                         inner_dict[person.id] = {"start" : day_inf,
-                                                "length" : person.health_information.counter.length_of_infection,
-                                                "num_infected" : person.health_information.counter.number_of_infected,
+                                                "length" : person.health_information.length_of_infection,
+                                                "num_infected" : person.health_information.number_of_infected,
                                                 "R0_raw" : r0,
                                                 "R0_recon" : r0 / s_frac}
                 
@@ -153,8 +153,8 @@ class Logger:
                 area_counter = 0
                 for person in area.people:
                     if person.health_information.infected == True:
-                        r0_area += person.health_information.counter.number_of_infected
-                        r0_global += person.health_information.counter.number_of_infected
+                        r0_area += person.health_information.number_of_infected
+                        r0_global += person.health_information.number_of_infected
                         area_counter += 1
                         global_counter += 1
                 if area_counter == 0:
@@ -264,7 +264,7 @@ class Logger:
         predictions = []
         for person in self.world.people.members:
             if person.health_information.recovered:
-                lengths.append(person.health_information.counter.length_of_infection)
+                lengths.append(person.health_information.length_of_infection)
                 predictions.append(person.health_information.infection.symptoms.predicted_recovery_time)
         return lengths
 
