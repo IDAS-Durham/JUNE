@@ -292,7 +292,7 @@ class World:
         Initializes carehomes using carehome data from Nomis.
         """
         print("Initializing carehomes...")
-        self.carehomes = CareHomes(self)
+        self.carehomes = CareHomes()
         carehome_distributor = CareHomeDistributor()
         carehomes_df = self.inputs.carehomes_df
         for area in self.areas.members:
