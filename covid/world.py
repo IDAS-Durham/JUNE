@@ -322,9 +322,3 @@ class World:
         print("Creating Boundary...")
         self.boundary = Boundary(self)
 
-    def initialize_interaction(self):
-        interaction_type = self.config["interaction"]["type"]
-        interaction_class_name = interaction_type.capitalize()+"Interaction" 
-        interaction_instance = getattr(interaction, interaction_class_name)()
-        return interaction_instance
-
