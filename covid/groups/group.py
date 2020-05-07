@@ -1,13 +1,128 @@
 import logging
+from abc import ABC, abstractmethod
+from enum import IntEnum
 from typing import List
-from covid.exc import GroupException
 
-import matplotlib.pyplot as plt
+import numpy as np
+
+from covid.exc import GroupException
 
 logger = logging.getLogger(__name__)
 
 
-class Group:
+class AbstractGroup(ABC):
+    @property
+    @abstractmethod
+    def people(self):
+        pass
+
+    @property
+    @abstractmethod
+    def susceptible(self) -> List:
+        """
+        People susceptible to the disease
+        """
+
+    @property
+    @abstractmethod
+    def infected(self) -> List:
+        """
+        People currently infected with the disease
+        """
+
+    @property
+    @abstractmethod
+    def recovered(self) -> List:
+        """
+        People recovered from the disease
+        """
+
+    @property
+    def size(self):
+        return len(self.people)
+
+    @property
+    def size_susceptible(self):
+        return len(self.susceptible)
+
+    @property
+    def size_infected(self):
+        return len(self.infected)
+
+    @property
+    def size_recovered(self):
+        return len(self.recovered)
+
+    def __contains__(self, item):
+        return item in self.people
+
+    def __iter__(self):
+        return iter(self.people)
+
+
+class People(AbstractGroup):
+    def __init__(self, intensity=1.0):
+        self._people = set()
+        self.intensity = intensity
+
+    @property
+    def susceptible(self) -> set:
+        """
+        People susceptible to the disease
+        """
+        return {
+            person for person in self.people
+            if person.health_information.susceptible
+        }
+
+    @property
+    def infected(self) -> set:
+        """
+        People currently infected with the disease
+        """
+        return {
+            person for person in self.people
+            if person.health_information.infected and not (
+                    person.health_information.in_hospital
+                    or person.health_information.dead
+            )
+        }
+
+    @property
+    def recovered(self) -> set:
+        """
+        People recovered from the disease
+        """
+        return {
+            person for person in self.people
+            if person.health_information.recovered
+        }
+
+    def clear(self):
+        self._people = []
+
+    @property
+    def people(self):
+        return self._people
+
+    def update_status_lists(self, time, delta_time):
+        for person in self.people:
+            person.health_information.update_health_status(time, delta_time)
+            if person.health_information.dead:
+                person.bury()
+                self._people.remove(person)
+
+    def append(self, person):
+        self._people.add(person)
+
+    def remove(self, person):
+        self._people.remove(person)
+
+    def __getitem__(self, item):
+        return list(self._people)[item]
+
+
+class Group(AbstractGroup):
     """
     A group of people enjoying social interactions.  It contains three lists,
     all people in the group, the healthy ones and the infected ones (we may
@@ -28,6 +143,26 @@ class Group:
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+
+    @property
+    def susceptible(self) -> set:
+        return self._susceptible
+
+    @property
+    def infected(self) -> set:
+        return self._infected
+
+    @property
+    def recovered(self) -> set:
+        return self._recovered
+
+    @property
+    def people(self):
+        return [
+            person for
+            grouping in self.groupings
+            for person in grouping.people
+        ]
 
     allowed_groups = [
         "area",
@@ -53,67 +188,50 @@ class Group:
         "work_Indoor",
     ]
 
+    class GroupType(IntEnum):
+        default = 0
+
     def __init__(self, name, spec):
         self.sane(name, spec)
         self.name = name
         self.spec = spec
-        self.people = []
-        self.members = []
+        self.n_groupings = len(self.GroupType)
+        self.groupings = [People() for _ in range(self.n_groupings)]
+        self.intensity = np.ones((self.n_groupings, self.n_groupings))
+        self._susceptible = set()
+        self._infected = set()
+        self._recovered = set()
+        self.in_hospital = set()
+        self.dead = set()
+
         self.intensity = 1.0
 
-    @property
-    def susceptible(self) -> List:
-        """
-        People in this group who are susceptible to the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.susceptible
-        ]
-
-    @property
-    def infected(self) -> List:
-        """
-        People in this group who are currently infected with the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.infected and not (
-                    person.health_information.in_hospital
-                    or person.health_information.dead
-            )
-        ]
-
-    @property
-    def recovered(self) -> List:
-        """
-        People in this group who have recovered from the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-        ]
+    def remove_person(self, person):
+        for grouping in self.groupings:
+            if person in grouping:
+                grouping.remove(person)
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
             raise GroupException(f"{spec} is not an allowed group type")
 
+    def __getitem__(self, item):
+        return self.groupings[item]
+
+    def add(self, person, qualifier=GroupType.default):
+        self.groupings[qualifier].append(person)
+
+    def clear(self):
+        for grouping in self.groupings:
+            grouping.clear()
+
     def set_active_members(self):
-        for person in self.people:
-            if person.in_hospital is not None:
-                person.active_group = None
-            elif person.active_group is not None:
-                raise ValueError("Trying to set an already active person")
-            else:
-                person.active_group = self.spec
-
-    def set_intensity(self, intensity):
-        self.intensity = intensity
-
-    def get_intensity(self, time=0):
-        if self.intensity == None:
-            return 1.0
-        return self.intensity  # .intensity(time)
+        for grouping in self.groupings:
+            for person in grouping.people:
+                if person.active_group is not None:
+                    raise ValueError("Trying to set an already active person")
+                else:
+                    person.active_group = self.spec
 
     @property
     def must_timestep(self):
@@ -122,18 +240,32 @@ class Group:
                 self.size_susceptible > 0)
 
     def update_status_lists(self, time, delta_time):
+        for grouping in self.groupings:
+            grouping.update_status_lists(time, delta_time)
+
+        self._susceptible.clear()
+        self._infected.clear()
+        self._recovered.clear()
+        self.in_hospital.clear()
+        self.dead.clear()
+
         for person in self.people:
-            person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                self.susceptible.append(person)
-            elif person.health_information.infected:
-                if person.health_information.must_stay_at_home:
-                    continue
-            if person.health_information.in_hospital:
-                person.get_into_hospital()
+            health_information = person.health_information
+            health_information.update_health_status(time, delta_time)
+            if health_information.susceptible:
+                self._susceptible.add(person)
+            elif health_information.infected_at_home:
+                self._infected.add(person)
+            elif health_information.in_hospital:
+                self.in_hospital.add(person)
+            elif health_information.recovered:
+                self._recovered.add(person)
             elif person.health_information.dead:
-                person.bury()
-                self.people.remove(person)
+                self.dead.add(person)
+                
+    @property 
+    def intensities(self):
+        return np.eye(len(self.groupings), len(self.groupings))
 
     @property
     def size(self):
@@ -150,45 +282,6 @@ class Group:
     @property
     def size_recovered(self):
         return len(self.recovered)
-
-    def output(self, plot=False, full=False, time=0):
-        print("==================================================")
-        print("Group ", self.name, ", type = ", self.spec, " with ", len(self.people), " people.")
-        print("* ",
-              self.size_susceptible, "(", round(self.size_susceptible / self.size * 100), "%) are susceptible, ",
-              self.size_infected, "(", round(self.size_infected / self.size * 100), "%) are infected,",
-              self.size_recovered, "(", round(self.size_recovered / self.size * 100), "%) have recovered.",
-              )
-
-        ages = []
-        M = 0
-        F = 0
-        for p in self.people:
-            ages.append(p.get_age())
-            if p.get_sex() == 0:
-                M += 1
-            else:
-                F += 1
-        print("* ",
-              F, "(", round(F / self.size * 100.0), "%) females, ",
-              M, "(", round(M / self.size * 100.0), "%) males;",
-              )
-        if plot:
-            fig, axes = plt.subplots()
-            axes.hist(ages, 20, range=(0, 100), density=True, facecolor="blue", alpha=0.5)
-            plt.show()
-        if full:
-            for p in self.people:
-                p.output(time)
-
-    def get_contact_matrix(self):
-        inputs = Inputs()
-        return symmetrize_matrix(inputs.contact_matrix)
-
-    def get_reciprocal_matrix(self):
-        inputs = Inputs()
-        demography = np.array([len(pool) for pool in self.age_pool])
-        return reciprocal_matrix(inputs.contact_matrix, demography)
 
 
 def symmetrize_matrix(matrix):
