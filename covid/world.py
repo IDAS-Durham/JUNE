@@ -7,9 +7,9 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-from covid import interaction
 from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
+from covid.distributors import *
 from covid.groups import *
 from covid.groups.people import HealthIndex
 from covid.infection import Infection
@@ -18,6 +18,7 @@ from covid.infection import transmission
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
+from covid import interaction
 
 world_logger = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ class World:
             self.initialize_areas()
             self.initialize_super_areas()
             self.initialize_people()
+            self.initialize_carehomes() # It's crucial for now that carehomes go BEFORE households.
             self.initialize_households()
             self.initialize_hospitals()
             self.initialize_cemeteries()
@@ -262,18 +264,45 @@ class World:
         the census household compositions.
         """
         print("Initializing households...")
+        household_distributor = HouseholdDistributor.from_file()
+        n_students_per_area = self.inputs.n_students
+        n_people_in_communal_per_area = self.inputs.n_in_communal
+        household_composition_per_area = self.inputs.household_composition_df
         pbar = tqdm(total=len(self.areas.members))
-        self.households = Households(self)
+        self.households = Households()
         for area in self.areas.members:
-            household_distributor = HouseholdDistributor(
-                self.households,
+            n_students = n_students_per_area.loc[area.name].values[0]
+            n_people_in_communal = n_people_in_communal_per_area.loc[area.name].values[
+                0
+            ]
+            house_composition_numbers = household_composition_per_area.loc[
+                area.name
+            ].to_dict()
+            self.households += household_distributor.distribute_people_to_households(
                 area,
-                self.areas,
-                self.config,
+                number_households_per_composition=house_composition_numbers,
+                n_students=n_students,
+                n_people_in_communal=n_people_in_communal,
             )
-            household_distributor.distribute_people_to_household()
             pbar.update(1)
         pbar.close()
+
+    def initialize_carehomes(self):
+        """
+        Initializes carehomes using carehome data from Nomis.
+        """
+        print("Initializing carehomes...")
+        self.carehomes = CareHomes()
+        carehome_distributor = CareHomeDistributor()
+        carehomes_df = self.inputs.carehomes_df
+        for area in self.areas.members:
+            people_in_carehome = carehomes_df.loc[area.name]["N_carehome_residents"]
+            if people_in_carehome == 0:
+                continue
+            carehome = carehome_distributor.create_carehome_in_area(
+                area, people_in_carehome
+            )
+            self.carehomes.members.append(carehome)
 
     def initialize_schools(self):
         """
