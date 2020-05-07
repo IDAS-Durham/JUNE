@@ -102,13 +102,13 @@ class Simulator:
         #TODO: add attribute susceptible to people
 
         sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(group.size, n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
+        choices = np.random.choice(len(self.world.people.members), n_infections, replace=False)
+        infecter_reference = self.infection
         for choice in choices:
             infecter_reference.infect_person_at_time(
-                list(group.people)[choice], self.timer.now
+                list(self.world.people.members)[choice], self.timer.now
             )
-        group.update_status_lists(self.timer.now, delta_time=0)
+        #group.update_status_lists(self.timer.now, delta_time=0)
         self.hospitalise_the_sick(group)
         self.bury_the_dead(group)
 
@@ -177,11 +177,6 @@ class Simulator:
         sim_logger.info(
             f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
         )
-        if self.box_mode:
-            self.seed_infections_box(n_seed)
-        else:
-            for household in self.households.members:
-                self.seed_infections_group(household, 1)
         sim_logger.info(
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
