@@ -121,6 +121,62 @@ class Inputs:
             self.n_residents.index.values,
         )
         self.compsec_by_sex_df = self.read_compsec_by_sex(self.n_residents.index.values)
+            
+        self.household_composition_df = pd.read_csv(
+                os.path.join(
+                    self.OUTPUT_AREA_DIR,
+                    'minimum_household_composition.csv',
+                ),
+                index_col="output_area"
+        )
+        self.n_students = pd.read_csv(
+            os.path.join(
+                self.OUTPUT_AREA_DIR,
+                'n_students.csv'
+            ),
+            index_col=0
+        )
+
+        self.carehomes_df = pd.read_csv(
+               os.path.join(
+                   self.OUTPUT_AREA_DIR,
+                   'carehomes.csv'
+               ),
+               skiprows=1,
+               names=['output_area', 'N_carehome_residents'],
+               index_col=0
+               )
+
+        self.n_in_communal = pd.read_csv(
+                os.path.join(
+                    self.OUTPUT_AREA_DIR,
+                    'n_people_in_communal.csv'
+                ),
+                index_col=0
+                )
+ 
+        AGE_DIFF_DIR =  os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "data",
+            "processed",
+            "age_difference",
+            )
+
+        self.husband_wife_df = pd.read_csv(
+                os.path.join(
+                    AGE_DIFF_DIR,
+                    'husband_wife.csv'
+                ),
+                index_col=0
+                )
+        self.parent_child_df = pd.read_csv(
+                os.path.join(
+                    AGE_DIFF_DIR,
+                    'parent_child.csv'
+                ),
+                index_col=0
+                )
 
 
     def read(self, filename):
