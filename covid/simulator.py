@@ -2,7 +2,7 @@ import yaml
 import logging
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
-
+import numpy as np
 from covid.time import Timer
 from covid import interaction
 from covid.infection import Infection
@@ -101,9 +101,7 @@ class Simulator:
         """
         #TODO: add attribute susceptible to people
 
-        if group.spec == 'box':
-            group = world.boxes.members[0]
-
+        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
         choices = np.random.choice(group.size, n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
@@ -114,26 +112,6 @@ class Simulator:
         self.hospitalise_the_sick(group)
         self.bury_the_dead(group)
 
-
-    def seed_infections_box(self, n_infections: int):
-        """
-        Randomly pick people in box to seed the infection
-
-        Parameters
-        ----------
-        n_infections:
-            number of random people to infect in the box
-
-        """
-        sim_logger.info("seed ", n_infections, "infections in box")
-        choices = np.random.choice(list(self.people.members), n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
-        for choice in choices:
-            infecter_reference.infect_person_at_time(choice, self.timer.now)
-        group = self.boxes.members[0]
-        group.update_status_lists(self.timer.now, delta_time=0)
-        self.hospitalise_the_sick(group)
-        self.bury_the_dead(group)
 
     def hospitalise_the_sick(self, group):
         """
@@ -186,7 +164,7 @@ class Simulator:
         # TODO: only if hospitals are in the world
         # + this should be a method of Hospitals
 
-    def run(self, n_days, n_seed: int = 100):
+    def run(self, n_days):
         """
         Run simulation with n_seed initial infections
 
