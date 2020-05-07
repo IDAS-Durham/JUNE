@@ -26,9 +26,7 @@ time:
           2: ['pubs', 'households'] 
 
 interaction:
-  type: collective
-  parameters:
-    mode: probabilistic 
+  type: default
 
 infection:
   type: constant

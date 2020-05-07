@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
+from enum import IntEnum
 from covid.groups import Group
 from covid.commute import RegionalGenerator
 
 
 class Area(Group):
+    class GroupType(IntEnum):
+        default = 0
+        
     """
     Stores information about the area, like the total population
     number, universities, etc.
@@ -33,7 +37,8 @@ class Area(Group):
         self.n_households = n_households
         self.carehome = None
         # collect groups (such as hospitals schools, ...)
-        self.people = []
+        # people tag already taken ...
+        # self.people = []
         for relevant_groups in relevant_groups:
             setattr(self, relevant_groups, [])
 

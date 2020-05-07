@@ -101,7 +101,7 @@ class BoxGenerator(Box):
                 age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
-            self.people.add(person)
+            self[self.GroupType.default].append(person)
 
         for _ in range(number_of_women):
             sex = 1
@@ -111,7 +111,11 @@ class BoxGenerator(Box):
                 age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
-            self.people.add(person)
+            self[self.GroupType.default].append(person)
+
+        # shuffle people just in case
+        np.random.shuffle(self.people)
+
 
     def from_file(self, inputs):
         """
@@ -175,7 +179,7 @@ class BoxGenerator(Box):
         )
         # initialize people
         assert len(age_shuffle_array) == len(sex_shuffle_array)
-        for i in range(0, n_people):
+        for i in range(n_people):
             age = age_shuffle_array[i]
             sex = sex_shuffle_array[i]
             health_index = self.health_index_gen.get_index_for_age(age)
@@ -184,4 +188,4 @@ class BoxGenerator(Box):
                 sex=sex,
                 health_index=health_index,
             )
-            self.people.add(person)
+            self[self.GroupType.default].append(person)
