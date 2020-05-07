@@ -5,7 +5,6 @@ from random import randint
 from itertools import count
 from typing import List, Dict, Optional
 
-
 import numpy as np
 
 from june.geography.areas import Area
@@ -25,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class Areas:
-    def __init__(self, areas: Optional[List[Area]] =):
+    def __init__(self, areas: List[Area]):
         self.members = areas
        
     def __len__(self):
@@ -53,7 +52,7 @@ class Area:
 
 
 class SuperAreas:
-    def __init__(self, super_areas: Optional[List[SuperArea]] = []):
+    def __init__(self, super_areas: List[SuperArea]):
         self.members = super_areas
        
     def __len__(self):
@@ -139,10 +138,23 @@ class Geography:
         """
         Read two numbers from input df, return as array.
         """
-        import numpy as np
         df_entry = self.coordinates.loc[area_name]
         # NOTE df["X"] ~5 times faster than df[ ["Y", "X"] ]
         return [df_entry["Y"], df_entry["X"]]
+    
+    def get_super_area_coord(self, area_name):
+        """
+        Read two numbers from input df, return as array.
+        """
+        return [df_entry["Y"], df_entry["X"]]
+
+oa = pd.read_csv('./../data/geographical_data/oa_coorindates.csv')
+oa_msoa = pd.read_csv(
+    './../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv'
+)
+oa_msoa_ll = pd.merge(oa_msoa, oa, on='OA11CD')
+oa_msoa_ll_mean = oa_msoa_ll.groupby('MSOA11CD', as_index=False)[['X','Y']].mean()
+oa_msoa_ll_mean.to_csv('msoa_coordinates_englandwales.csv')
 
     @classmethod
     def from_file(
@@ -207,18 +219,6 @@ def _load_area_coords(
     return pd.read_csv(
         coords_path
     ).set_index("OA11CD", inplace=True)
-
-
-oa = pd.read_csv('./../data/geographical_data/oa_coorindates.csv')
-oa_msoa = pd.read_csv(
-    './../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv'
-)
-oa_msoa_ll = pd.merge(oa_msoa, oa, on='OA11CD')
-oa_msoa_ll_mean = oa_msoa_ll.groupby('MSOA11CD', as_index=False)[['X','Y']].mean()
-oa_msoa_ll_mean.to_csv('msoa_coordinates_englandwales.csv')
-
-
-
 
 
 def _filtering(
