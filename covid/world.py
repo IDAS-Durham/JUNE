@@ -322,3 +322,15 @@ class World:
         print("Creating Boundary...")
         self.boundary = Boundary(self)
 
+
+def read_config(config_file):
+    if config_file is None:
+        config_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+            "configs",
+            "config_example.yaml",
+        )
+    with open(config_file, "r") as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
+
