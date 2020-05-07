@@ -6,7 +6,6 @@ class CommuteCityDistributor:
         self.commutecities = commutecities
         self.msoas = msoas
 
-
     def distribute_people(self):
 
         for commutecity in self.commutecities:
