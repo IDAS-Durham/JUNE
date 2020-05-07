@@ -168,6 +168,7 @@ class Group(AbstractGroup):
         "area",
         "box",
         "boundary",
+        "carehome",
         "commute_Public",
         "commute_Private",
         "cemetery",

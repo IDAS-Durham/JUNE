@@ -1,4 +1,6 @@
-from june.groups import Group
+from covid.groups import Group
+import numpy as np
+from itertools import count
 from enum import IntEnum
 
 
@@ -13,17 +15,21 @@ class Household(Group):
     3 - old adults
     """
 
+    _id = count()
+
     class GroupType(IntEnum):
         kids         = 0
         young_adults = 1
         adults       = 2
         old_adults   = 3
 
-    def __init__(self, house_id, composition, area):
-        super().__init__("Household_%03d" % house_id, "household")
-        self.id = house_id
+    def __init__(self, composition=None, communal=False, area=None, max_size=np.inf):
+        house_id = next(self._id)
+        super().__init__(f"Household_{house_id}", "household")
         self.area = area
         self.household_composition = composition
+        self.communal = communal
+        self.max_size = max_size
 
     def add(self, person, qualifier=GroupType.adults):
         super().add(person, qualifier)
@@ -38,11 +44,24 @@ class Household(Group):
                     person.active_group = "household"
 
 
+
 class Households:
     """
     Contains all households for the given area, and information about them.
     """
 
-    def __init__(self, world):
-        self.world = world
+    def __init__(self):
         self.members = []
+
+    def __add__(self, households: "Households"):
+        """
+        Adding two households instances concatenates the members
+        list.
+
+        Parameters
+        ----------
+        households:
+            instance of Households to sum with.
+        """
+        self.members += households.members
+        return self
