@@ -1,10 +1,15 @@
-from covid.interaction import *
 from pathlib import Path
 
 import numpy as np
 import pytest
 
+from covid import world
+from covid.groups.people import Person
+from covid.groups.test_groups import TestGroup
+from covid.interaction import *
+
 test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
+
 
 def test__set_up_collective_from_file():
     interaction = DefaultInteraction.from_file(test_config_file)
@@ -20,17 +25,17 @@ def days_to_infection(interaction, susceptible_person, group):
             and days_to_infection < 100
     ):
         interaction.single_time_step_for_group(
-            group, timer.now, delta_time
+            group, 1, delta_time
         )
 
         days_to_infection += 1
     return days_to_infection
 
 
-#@pytest.mark.parametrize(
-#    "group_size", (2, 5)
-#)
-def test__time_it_takes_to_infect(world_ne, group_size=2):
+@pytest.mark.parametrize(
+    "group_size", (2, 5)
+)
+def test__time_it_takes_to_infect(group_size, config):
     interaction = DefaultInteraction(
         intensities={"TestGroup": 1.0}
     )
@@ -47,7 +52,7 @@ def test__time_it_takes_to_infect(world_ne, group_size=2):
         infected_reference.infect_person_at_time(infected_person, 1)
         group.add(infected_person, qualifier=TestGroup.GroupType.kids)
         susceptible_person = Person()
-        group.people.add(susceptible_person)
+        group.add(susceptible_person, qualifier=TestGroup.GroupType.kids)
         for i in range(group_size - 2):
             group.add(Person(), qualifier=TestGroup.GroupType.kids)
 
