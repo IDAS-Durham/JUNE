@@ -7,7 +7,7 @@ world:
   zone: test # NorthEast # available are all UK regions, and EnglandWales together.
 
 time:
-  total_days: 20
+  total_days: 7
   step_duration: 
       weekday:
           1: 8
@@ -16,10 +16,10 @@ time:
           1: 24
   step_active_groups:
       weekday:
-          1: ['companies', 'schools','households'] # active groups during first time step
-          2: ['households'] 
+          1: ['companies', 'schools', 'carehomes', 'households'] # active groups during first time step
+          2: ['pubs', 'carehomes', 'households'] 
       weekend:
-          1: ['households'] 
+          1: ['carehomes', 'households'] 
 
 interaction:
   type: default 

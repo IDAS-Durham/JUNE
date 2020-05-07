@@ -35,6 +35,7 @@ class Area(Group):
         self.check_census_freq_ratios()
         self.n_residents = int(n_residents)
         self.n_households = n_households
+        self.carehome = None
         # collect groups (such as hospitals schools, ...)
         # people tag already taken ...
         # self.people = []
