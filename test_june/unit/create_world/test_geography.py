@@ -1,12 +1,12 @@
 import pytest
 
-from covid.demography import demographics as d
+from covid.geography import geographics as d
 
 
 @pytest.fixture(
-    name="demography"
+    name="geography"
 )
-def make_demography(super_area):
+def make_geography(super_area):
     return d.Demography.for_super_area(
         super_area
     )

@@ -1,6 +1,5 @@
 import csv
 import logging
-import logging.config
 from pathlib import Path
 from random import randint
 from typing import List, Dict, Optional
@@ -9,12 +8,17 @@ import numpy as np
 
 from june.geography.areas import Area
 from june.geography.super_areas import SuperArea
+from june import get_creation_logger
 
 default_data_path = Path(__file__).parent.parent.parent.parent / \
         "data/census_data/area_code_translations"
 
 default_logging_config_filename = Path(__file__).parent.parent.parent.parent / \
         "configs/config_world_creation_logger.yaml"
+
+get_creation_logger(default_logging_config_filename)
+logger = logging.getLogger(__name__)
+
 
 class Area:
     def __init__(
@@ -34,8 +38,6 @@ class SuperArea:
     ):
         """
         A collection of any geographical divisions (e.g. area/OA and super_area/MSOA).
-        A Zones is: a portion of the surface of a sphere included between
-                    two parallel planes.
 
         Behaves mostly like a list but also has the name of the area attached.
 
@@ -74,30 +76,12 @@ class Geography:
         Sort fin granular geographical units into their coarse granular units.
         """
 
-    def find_hierarchy(self):
-        """
-        Find which geographical units are coarse and fine granular.
-
-        Parameters
-        ----------
-        area
-            An area within the super-area represented by this demography
-
-        Returns
-        -------
-        A population of people
-        """
-        all_zones = self.hierarchy.columns.values
-        self.hierarchy = self.hierarchy.groupby(all_zones).size()
-        hierarchy = [
-            [zone, len(self.hierarchy[zone].values)]
-            for zone in self.hierarchy.columns.values]
-        ]
 
     @classmethod
     def from_file(
             cls,
             data_path: str = default_data_path,
+            filter_key: Optional[Dict[str, list]] = None,
             logging_config_filename: str = default_logging_config_filename,
     ) -> "Geography":
         """
@@ -108,6 +92,9 @@ class Geography:
         ----------
         data_path
             The path to the data directory
+        filter_key
+            Filter out geo-units which should enter the world.
+            At the moment this can only be one of [PCD, OA, MSOA]
 
         Returns
         -------
@@ -122,27 +109,34 @@ class Geography:
             names=column_names,
             usecols=usecols,
         )
+        
+        if filter_key not None:
+            geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
-        _logger(logging_config_filename)
+        geo_hierarchy = _sorting(geo_hierarchy)
 
         return Geography(geo_hierarchy)
 
 
-def _logger(self, config_file: str = None):
+def _filtering(data: pd.DataFrame, filter_key: Optional[Dict[str, list]] = None):
     """
-    Create logger to make debugging easier
+    Filter DataFrame for given geo-unit and it's listed names
     """
-    #TODO this function can be made global to be used by any file
-    if config_file is None:
-        config_file = self.configs_dir + "config_create_world.yaml"
-    if os.path.isfile(config_file):
-        with open(config_file, 'rt') as f:
-            #log_config = yaml.safe_load(f.read())
-            configs = yaml.load(f, Loader=yaml.FullLoader)
-        logging.config.dictConfig(log_config)
-    else:
-        print("The provided logging config file does not exist.")
-        log_file = os.path.join(self.output_dir, "world_creation.log")
-        logging.basicConfig(
-            filename=log_file, level=logging.DEBUG
-        )
+    return data[ data[filter_key["unit"]].isin(filter_key["names"]) ]
+
+
+def _sorting(self, hierarchy: pd.DataFrame):
+    """
+    Find the order for available geographical units from coarse
+    to fine granular.
+    
+    Returns
+    -------
+    A DataFrame with the first colume the most coarse and the last
+    column the finest division of geography.
+    """
+    nr_unique_units = [len(dic[unit].unique())
+        for unit in dic.columns.values
+    ]
+    idx = np.argsort(np.array(nr_unique_units))
+    return hierarchy[hierarchy.columns.values[idx]]
