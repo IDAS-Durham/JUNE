@@ -1,3 +1,4 @@
+![Python package](https://github.com/IDAS-Durham/JUNE/workflows/Python%20package/badge.svg?branch=master)
 [![Build Status](https://travis-ci.com/IDAS-Durham/JUNE.svg?token=RZpZVED1uFcNhmBpzes5&branch=master)](https://travis-ci.com/IDAS-Durham/JUNE)
 [![codecov](https://codecov.io/gh/idas-durham/june/branch/master/graph/badge.svg?token=6TKUHtWxJZ)](https://codecov.io/gh/idas-durham/june)
 
