@@ -59,10 +59,14 @@ class CommuteCities():
 
         return lat_lon_msoa_stat, msoa_stat
 
-    def _get_nearest_msoas(self,lat_lon_stat):
+    def _get_nearest_msoas(self,lat_lon_stat,nearest=20):
 
-        pass
+        metro_indices = spatial.KDTree(self.lat_lon_msoas).query(lat_lon_stat,nearest)[1]
+        city_metro_lat_lon = self.lat_lon_msoas[indices]
+        city_metro_msoas = self.msoas[metro_indices]
+        city_metro_centroid = [np.mean(self.lat_msoas[metro_indices]),np.mean(self.lon_msoas[metro_indices])]
         
+        return city_metro_msoas, city_metro_centroid
         
     def init_non_london(self):
 
@@ -78,15 +82,12 @@ class CommuteCities():
             lat_lon_stat, msoa_stat = self._get_msoa(lat_lon_stat)
             
             # find 20 nerest msoas to define metropolitan area
-            metro_indices = spatial.KDTree(self.lat_lon_msoas).query(lat_lon_stat,20)[1]
-            city_metro_lat_lon = self.lat_lon_msoas[indices]
-            city_metro_msoas = self.msoas[metro_indices]
-            city_metro_centroid = [np.mean(self.lat_msoas[metro_indices]),np.mean(self.lon_msoas[metro_indices])]
+            city_metro_msoas, city_metro_centroid = self._get_nearest_msoas(lat_lon_stat)
 
             commute_city = CommuteCity(
                 commutecity_id = idx,
                 city = stations[idx],
-                metro_mdoas = city_metro_msoas
+                metro_msoas = city_metro_msoas,
                 metro_centroid = city_metro_centroid
             )
 
@@ -98,11 +99,30 @@ class CommuteCities():
         stations = list(self.stat_pcs_df['station'])
         postcodes = list(self.stat_pcs_df['postcode'])
 
+        city_metro_msoas_all = []
+        city_metro_centroid_all = []
         for idx, stat_pc in enumerate(postcodes):
             
             lat_lon_stat = self._get_lat_lon_stat(stat_pc)
             lat_lon_stat, msoa_stat = self._get_msoa(lat_lon_stat)
 
-            # find 20 nerest msoas to define metropolitan area
+            # find 20 nerest msoas to local define metropolitan area
+            city_metro_msoas, city_metro_centroid = self._get_nearest_msoas(lat_lon_stat)
+            for i in city_metre_msoas:
+                city_metro_msoas_all.append(i)
+            city_metro_centroid_all.append(city_metro_centroid)
+
+        # get global centroid
+        city_metro_centroid_all = np.array(city_metro_centroid_all)
+        city_metro_centroid = [np.mean(city_metro_centroid_all[:,0]), np.mean(city_metro_centroid_all[:,1])]
+
+        commute_city = CommuteCity(
+            commutecity_id = len(self.members)
+            city = 'London',
+            metro_msoas = city_metro_msoas_all,
+            metro_centroid = city_metro_centroid
+        )
+
+        self.members.append(commute_city)
             
             
