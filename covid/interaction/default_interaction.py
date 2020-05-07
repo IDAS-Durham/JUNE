@@ -26,6 +26,8 @@ class DefaultInteraction(Interaction):
 
  
     def read_contact_matrix(self, group):
+        #TODO use to intialize the different config matrices at the init,
+        # ideally inside from_file
         pass
    
     def single_time_step_for_group(self, group, time, delta_time):
