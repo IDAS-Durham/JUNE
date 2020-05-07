@@ -4,12 +4,10 @@ from scipy import spatial
 
 class CommuteHubDistributor:
 
-    def __init__(self, oa_coordinates, commutecities, commutehubs, people):
+    def __init__(self, oa_coordinates, commutecities, commutehubs):
         self.oa_coordinates = oa_coordinates
         self.commutecities = commutecities
         self.commutehubs = commutehubs
-        self.people = people
-
 
     def _get_area_lat_lon(self, oa):
         lat = float(self.oa_coordinates['Y'][self.oa_coordinates['OA11CD'] == oa])

@@ -8,19 +8,21 @@ from commutecity import CommuteCity, CommuteCities
 
 class CommuteHub:
 
-    def __init__(self, commutehub_id, lat_lon, station):
+    def __init__(self, commutehub_id, lat_lon, city):
         self.id = commutehub_id
         self.lat_lon
-        self.city # station the hub is affiliated to
+        self.city = city # station the hub is affiliated to
         self.passengers = [] # passengers flowing through commute hub
+        self.commuteunits = []
 
 class CommuteHubs:
 
-    def __init__(self, people, commutecities):
-        self.people = people
+    def __init__(self, commutecities):
         self.commutecities = commutecities
         self.msoa_coordinates = msoa_coordinates
         self.members = []
+
+        self.init_hubs()
 
     def _get_msoa_lat_lon(self, msoa):
 
