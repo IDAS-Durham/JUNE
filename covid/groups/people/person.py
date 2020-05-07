@@ -20,6 +20,7 @@ class HealthInformation:
         self.infection = infection
         self.infected = True
         self.susceptible = False
+        self.susceptibility = 0.
 
     @property
     def tag(self):
@@ -48,7 +49,7 @@ class HealthInformation:
             if self.infection.symptoms.is_recovered(delta_time):
                 self.set_recovered(time)
             else:
-                self.infection.update_at_time(time)
+                self.infection.update_at_time(time+delta_time)
 
     def set_recovered(self, time):
         self.recovered = True

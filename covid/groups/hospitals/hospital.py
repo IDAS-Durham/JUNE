@@ -1,4 +1,6 @@
 import logging
+import sys
+from enum import IntEnum
 from typing import List, Tuple
 
 import numpy as np
@@ -20,7 +22,17 @@ class Hospital(Group):
     be an admixture of household and company.
     I will also assume that the patients cannot infect anybody - this may
     become a real problem as it is manifestly not correct.
+
+    We currently use three subgroups: 
+    0 - workers (i.e. nurses, doctors, etc.),
+    1 - patients
+    2 - ICU patients
     """
+
+    class GroupType(IntEnum):
+        workers = 0
+        patients = 1
+        icu_patients = 2
 
     def __init__(
             self,
@@ -64,14 +76,14 @@ class Hospital(Group):
         """
         Check whether all regular beds are being used
         """
-        return len(self.patients) >= self.n_beds
+        return self[self.GroupType.patients].size >= self.n_beds
 
     @property
     def full_ICU(self):
         """
         Check whether all ICU beds are being used
         """
-        return len(self.icu_patients) >= self.n_icu_beds
+        return self[self.GroupType.icu_patients].size >= self.n_icu_beds
 
     def set_active_members(self):
         """
@@ -79,32 +91,39 @@ class Hospital(Group):
         """
         # TODO: We need to check what we want to do with this,
         # it will probably be taken care by the supergroup
-        for person in self.patients:
+        for person in self[self.GroupType.patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
-        for person in self.icu_patients:
+        for person in self[self.GroupType.icu_patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
 
-    def add_as_patient(self, person: "Person"):
+    def add(self, person, qualifier=GroupType.workers):
+        super().add(person, qualifier)
+        person.in_hospital = self
+
+    def add_as_patient(self, person):
         """
         Add patient to hospital, depending on their healty information tag
         they'll go to intensive care or regular beds.
 
         Parameters
         ----------
-        person: 
+        person:
             person instance to add as patient
         """
         if person.health_information.tag == "intensive care":
-            self.icu_patients.add(person)
-            person.in_hospital = self
+            self.add(
+                person,
+                self.GroupType.icu_patients
+            )
         elif person.health_information.tag == "hospitalised":
-            self.patients.add(person)
-            person.in_hospital = self
+            self.add(
+                person,
+                self.GroupType.patients
+            )
         else:
-            ic_logger.info("ERROR: This person shouldnt be trying to get to a hospital")
-            pass
+            raise AssertionError("ERROR: This person shouldn't be trying to get to a hospital")
 
     def release_as_patient(self, person):
         """
@@ -115,46 +134,57 @@ class Hospital(Group):
         person: 
             person instance to remove as patient
         """
-        if person in self.patients:
-            self.patients.remove(person)
-        elif person in self.icu_patients:
-            self.icu_patients.remove(person)
+        for group_type in (
+                self.GroupType.icu_patients,
+                self.GroupType.patients
+        ):
+            patient_group = self[group_type]
+            if person in patient_group:
+                patient_group.remove(person)
         person.in_hospital = None
-
-    @property
-    def size(self):
-        return len(self.people) + len(self.patients) + len(self.icu_patients)
 
     def update_status_lists_for_patients(self, time, delta_time):
         """
         Update the health information of patients, and move them around if necessary
         """
-        for person in self.patients:
+        dead = []
+        patient_group = self[self.GroupType.patients]
+        icu_group = self[self.GroupType.icu_patients]
+        for person in patient_group.people:
             person.health_information.update_health_status(time, delta_time)
             if person.health_information.infected:
                 if person.health_information.tag == "intensive care":
-                    self.icu_patients.add(person)
-                    self.patients.remove(person)
+                    icu_group.append(person)
+                    patient_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                self.dead.add(person)
+                dead.append(person)
+        for person in dead:
+            patient_group.remove(person)
 
     def update_status_lists_for_ICUpatients(self, time, delta_time):
         """
         Update the health information of ICU patients, and move them around if necessary
         """
+        patient_group = self[self.GroupType.patients]
+        icu_group = self[self.GroupType.icu_patients]
 
-        for person in self.icu_patients:
+        dead = []
+        for person in icu_group.people:
             person.health_information.update_health_status(time, delta_time)
             if person.health_information.infected:
                 if person.health_information.tag == "hospitalised":
-                    self.patients.add(person)
-                    self.icu_patients.remove(person)
+                    patient_group.append(person)
+                    icu_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                self.dead.add(person)
+                #TODO: check what to do with dead!! bury is not there anymore
+                dead.append(person)
+        for person in dead:
+            icu_group.remove(person)
+
 
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
@@ -166,7 +196,7 @@ class Hospital(Group):
             f"=== update status list for hospital with {self.size}  people ==="
         )
         ic_logger.info(
-            f"=== hospital currently has {len(self.patients)} patients, and {len(self.icu_patients)}, ICU patients"
+            f"=== hospital currently has {self[self.GroupType.patients].size} patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
         )
 
 
