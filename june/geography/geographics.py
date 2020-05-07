@@ -123,11 +123,12 @@ class Geography:
         self.hierarchy = hierarchy
 
 
-    def aggregate(self):
+    def create_geographical_units(self):
         """
         Create geo-graph of the used geographical units.
         """
-
+        for unit in self.hierarchy.columns:
+            self.hierarchy[unit]
 
     @classmethod
     def from_file(
@@ -147,15 +148,12 @@ class Geography:
         filter_key
             Filter out geo-units which should enter the world.
             At the moment this can only be one of [PCD, OA, MSOA]
-
-        Returns
-        -------
         """
         #TODO this file is missing option to filter for Region etc.
         geo_hierarchy_file = f"{data_path}/areas_mapping.csv"
 
-        usecols = [0, 1, 2, 3, 4]
-        column_names = ["PCD", "OA", "LSOA", "MSOA", "LAD"]
+        usecols = [1 ,3, 4]
+        column_names = ["OA", "MSOA", "LAD"]
         geo_hierarchy = pd.read_csv(
             geo_hierarchy_file,
             names=column_names,
@@ -165,10 +163,9 @@ class Geography:
         if filter_key not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
-        # At the moment the _sorting function is not needed since
-        # we only support data at the OA & MSOA level.
-        # geo_hierarchy = _sorting(geo_hierarchy)
+        # At the moment we only support data at the UK OA & MSOA level.
         geo_hierarchy = geo_hierarchy[["MSOA", "OA"]]
+        geo_hierarchy = _sorting_and_grouping(geo_hierarchy)
         return Geography(geo_hierarchy)
 
 
@@ -179,18 +176,26 @@ def _filtering(data: pd.DataFrame, filter_key: Optional[Dict[str, list]] = None)
     return data[ data[filter_key["unit"]].isin(filter_key["names"]) ]
 
 
-def _sorting(self, hierarchy: pd.DataFrame):
+def _sorting_and_grouping(self, hierarchy: pd.DataFrame):
     """
-    Find the order for available geographical units from coarse
-    to fine granular.
+    Find the order for available geographical units from fine (left column)
+    to coarse (right column) granular and group them.
     
     Returns
     -------
-    A DataFrame with the first colume the most coarse and the last
-    column the finest division of geography.
+    hierarchy
+        Multi-indexed DataFrame with the first index the most coarse
+        and the column the smallest geographical unit.
     """
+    # sorting
     nr_unique_units = [len(dic[unit].unique())
         for unit in dic.columns.values
     ]
     idx = np.argsort(np.array(nr_unique_units))
-    return hierarchy[hierarchy.columns.values[idx]]
+    sorted_unit_labels = list(hierarchy.columns.values[idx])
+    hierarchy = hierarchy[sorted_unit_labels]
+
+    # grouping
+    hierarchy = hierarchy.groupby(sorted_unit_labels[:-1], as_index=True)
+    hierarchy = hierarchy.agg(lambda x : ' '.join(x))
+    return hierarchy
