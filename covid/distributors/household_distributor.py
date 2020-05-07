@@ -97,7 +97,8 @@ class HouseholdDistributor:
         self.young_adult_max_age = young_adult_max_age
         self.max_age_to_be_parent = max_age_to_be_parent
         self.max_household_size = max_household_size
-        if allowed_household_compositions is None:
+        self.allowed_household_compositions = allowed_household_compositions
+        if self.allowed_household_compositions is None:
             self.allowed_household_compositions = [
                 "1 0 >=0 1 0",
                 ">=2 0 >=0 1 0",
@@ -593,16 +594,17 @@ class HouseholdDistributor:
         Adds person to household and assigns them the correct subgroup.
         """
         if subgroup == "kids":
-            household.people.add(person, household.GroupType.kids)
+            household.add(person, household.GroupType.kids)
         elif subgroup == "young_adults":
-            household.people.add(person, household.GroupType.young_adults)
+            household.add(person, household.GroupType.young_adults)
         elif subgroup == "adults":
-            household.people.add(person, household.GroupType.adults)
+            household.add(person, household.GroupType.adults)
         elif subgroup == "old":
-            household.people.add(person, household.GroupType.old_adults)
+            household.add(person, household.GroupType.old_adults)
+        elif subgroup == "default":
+            household.add(person, household.GroupType.adults)
         else:
             raise HouseholdError(f"Subgroup {subgroup} not recognized")
-        person.household = household
 
     def _check_if_age_dict_is_empty(self, people_dict: dict, age: int) -> bool:
         """
@@ -843,7 +845,7 @@ class HouseholdDistributor:
                 )
                 if student is None:
                     raise HouseholdError("Students do not match!")
-                self._add_to_household(household, student, subgroup="young_adult")
+                self._add_to_household(household, student, subgroup="young_adults")
                 students_left -= 1
         assert students_left >= 0
         index = 0
@@ -852,7 +854,7 @@ class HouseholdDistributor:
             student = self._get_random_person_in_age_bracket(
                 area, min_age=self.student_min_age, max_age=self.student_max_age
             )
-            self._add_to_household(household, student, subgroup="young_adult")
+            self._add_to_household(household, student, subgroup="young_adults")
             students_left -= 1
             index += 1
             index = index % len(student_houses)
@@ -1163,11 +1165,11 @@ class HouseholdDistributor:
                         break
                     household = self._create_household(area, communal=True)
                     communal_houses.append(household)
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="default")
                     people_left -= 1
                 else:
                     person = self._get_random_person_in_age_bracket(area)
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="default")
                     people_left -= 1
             if no_adults:
                 break
@@ -1176,7 +1178,7 @@ class HouseholdDistributor:
         while people_left > 0:
             person = self._get_random_person_in_age_bracket(area)
             household = communal_houses[index]
-            self._add_to_household(household, person, subgroup=None)
+            self._add_to_household(household, person, subgroup="default")
             people_left -= 1
             index += 1
             index = index % len(communal_houses)
@@ -1288,7 +1290,7 @@ class HouseholdDistributor:
                         )
                     # if household is None:
                     #    household = self._find_household_for_nonkid([area.households])
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="old")
                     if self._check_if_household_is_full(household):
                         self._remove_household_from_all_lists(
                             household, available_lists
@@ -1307,7 +1309,7 @@ class HouseholdDistributor:
                         )
                     # if household is None:
                     #    household = self._find_household_for_nonkid([area.households])
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="young_adults")
                     if self._check_if_household_is_full(household):
                         self._remove_household_from_all_lists(
                             household, available_lists
@@ -1325,7 +1327,7 @@ class HouseholdDistributor:
                         )
                     # if household is None:
                     #    household = self._find_household_for_nonkid([area.households])
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="adults")
                     if self._check_if_household_is_full(household):
                         self._remove_household_from_all_lists(
                             household, available_lists
@@ -1350,7 +1352,7 @@ class HouseholdDistributor:
                         household = self._find_household_for_nonkid(
                             [households_with_space, all_households]
                         )
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="kids")
                     if self._check_if_household_is_full(household):
                         self._remove_household_from_all_lists(
                             household, available_lists
