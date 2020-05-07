@@ -37,6 +37,7 @@ class DefaultInteraction(Interaction):
                     self.contaminate(group, time, delta_time, j,i)
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
+        contact_matrix = np.eye((group.n_groupings, group.n_groupings))
         if (
             group.intensities[infecters][recipients] <= 0. or
             self.probabilities[infecters] <= 0.
