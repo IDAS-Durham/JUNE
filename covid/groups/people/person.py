@@ -1,16 +1,26 @@
+from itertools import count
+
+
 class HealthInformation:
-    def __init__(self, counter):
-        self.counter = counter
+    def __init__(self):
         self.susceptibility = 1.0
         self.susceptible = True
         self.infected = False
         self.infection = None
         self.recovered = False
+        self.number_of_infected = 0
+        self.maximal_symptoms = 0
+        self.maximal_symptoms_time = -1
+        self.maximal_symptoms_tag = "none"
+        self.time_of_infection = -1
+        self.group_type_of_infection = "none"
+        self.length_of_infection = -1
 
     def set_infection(self, infection):
         self.infection = infection
         self.infected = True
         self.susceptible = False
+        self.susceptibility = 0.
 
     @property
     def tag(self):
@@ -27,23 +37,26 @@ class HealthInformation:
         return self.tag in ("hospitalised", "intensive care")
 
     @property
+    def infected_at_home(self) -> bool:
+        return self.infected and not (self.dead or self.in_hospital)
+
+    @property
     def dead(self) -> bool:
         return self.tag == "dead"
 
     def update_health_status(self, time, delta_time):
         if self.infected:
             if self.infection.symptoms.is_recovered(delta_time):
-                self.set_recovered()
+                self.set_recovered(time)
             else:
-                self.infection.update_at_time(time)
+                self.infection.update_at_time(time+delta_time)
 
-    def set_recovered(self):
-        # self.infection = None
+    def set_recovered(self, time):
         self.recovered = True
         self.infected = False
         self.susceptible = False
         self.susceptibility = 0.0
-        self.counter.set_length_of_infection()
+        self.set_length_of_infection(time)
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.tag(symptoms.severity)
@@ -58,37 +71,21 @@ class HealthInformation:
             return 0.0
         return self.infection.symptom_severity(severity)
 
-
-class Counter:
-    def __init__(self, person):
-        self.person = person
-        self.number_of_infected = 0
-        self.maximal_symptoms = 0
-        self.maximal_symptoms_time = -1
-        self.maximal_symptoms_tag = "none"
-        self.time_of_infection = -1
-        self.group_type_of_infection = "none"
-        self.length_of_infection = -1
-
-    @property
-    def timer(self):
-        return self.person.world.timer
-
-    def update_symptoms(self):  # , symptoms, time):
-        if self.person.infection.symptoms.severity > self.maximal_symptoms:
-            self.maximal_symptoms = self.person.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.person.get_symptoms_tag(
-                self.person.infection.symptoms
+    def update_symptoms(self, time):  # , symptoms, time):
+        if self.infection.symptoms.severity > self.maximal_symptoms:
+            self.maximal_symptoms = self.infection.symptoms.severity
+            self.maximal_symptoms_tag = self.get_symptoms_tag(
+                self.infection.symptoms
             )
-            self.maximal_symptoms_time = self.timer.now - self.time_of_infection
+            self.maximal_symptoms_time = time - self.time_of_infection
 
     def update_infection_data(self, time, group_type=None):
         self.time_of_infection = time
         if group_type is not None:
             self.group_type_of_infection = group_type
 
-    def set_length_of_infection(self):
-        self.length_of_infection = self.timer.now - self.time_of_infection
+    def set_length_of_infection(self, time):
+        self.length_of_infection = time - self.time_of_infection
 
     def increment_infected(self):
         self.number_of_infected += 1
@@ -116,15 +113,13 @@ class Person:
     according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
+    _id = count()
 
     def __init__(
             self,
-            world=None,
-            person_id=None,
             age=-1,
             nomis_bin=None,
             sex=None,
-            oarea=None,
             health_index=None,
             econ_index=None,
             mode_of_transport=None,
@@ -132,18 +127,12 @@ class Person:
         """
         Inputs:
         """
-        # if not 0 <= age <= 120 or sex not in ("M", "F"):
-        #    raise AssertionError(
-        #        f"Attempting to initialise a person"
-        #    )
-        self.world = world
-        self.id = person_id
+        self.id = next(self._id)
         # biological attributes
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
-        self.area = oarea
         self.work_msoarea = None
         self.household = None
         # primary activity attributes
@@ -158,16 +147,8 @@ class Person:
         self.in_hospital = None
         self.health_index = health_index
         self.econ_index = econ_index
-        self.health_information = HealthInformation(Counter(self))
+        self.health_information = HealthInformation()
 
-    def get_into_hospital(self):
-        if self.in_hospital==None:
-            self.world.hospitals.allocate_patient(self)
-
-    def bury(self):
-        cemetery = self.world.cemeteries.get_nearest(self)
-        cemetery.add(self)
-        
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
@@ -201,8 +182,8 @@ class People:
     def __init__(self, world):
         self.members = []
 
-    #@classmethod
-    #def from_file(cls, filename: str,: str) -> "People":
+    # @classmethod
+    # def from_file(cls, filename: str,: str) -> "People":
     #    """
     #    """
     #    = pd.read_csv(filename, index_col=0)

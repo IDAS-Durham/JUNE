@@ -1,23 +1,23 @@
-import os
-import pickle
 import logging
 import logging.config
+import os
+import pickle
 
 import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from covid import interaction
 from covid.box_generator import BoxGenerator
 from covid.commute import CommuteGenerator
 from covid.groups import *
+from covid.groups.people import HealthIndex
+from covid.infection import Infection
+from covid.infection import symptoms
+from covid.infection import transmission
 from covid.inputs import Inputs
 from covid.logger import Logger
 from covid.time import Timer
-from covid.infection import transmission
-from covid import interaction
-from covid.infection import symptoms
-from covid.infection import Infection
-from covid.groups.people import HealthIndex
 
 world_logger = logging.getLogger(__name__)
 
@@ -28,11 +28,11 @@ class World:
     """
 
     def __init__(
-        self, config_file=None, box_mode=False, box_n_people=None, box_region=None
+            self, config_file=None, box_mode=False, box_n_people=None, box_region=None
     ):
         world_logger.info("Initializing world...")
         # read configs
-        self.read_config(config_file)
+        self.config = read_config(config_file)
         self.relevant_groups = self.get_simulation_groups()
         self.read_defaults()
         # set up logging
@@ -44,7 +44,7 @@ class World:
         self.inputs = Inputs(zone=self.config["world"]["zone"])
         if self.box_mode:
             self.initialize_hospitals()
-            #self.initialize_cemeteries()
+            # self.initialize_cemeteries()
             self.initialize_box_mode(box_region, box_n_people)
         else:
             self.commute_generator = CommuteGenerator.from_file(
@@ -80,7 +80,7 @@ class World:
         world_logger.info("Done.")
 
     def world_creation_logger(
-        self, save_path, config_file=None, default_level=logging.INFO,
+            self, save_path, config_file=None, default_level=logging.INFO,
     ):
         """
         """
@@ -121,17 +121,6 @@ class World:
     @classmethod
     def from_config(cls, config_file):
         return cls(config_file)
-
-    def read_config(self, config_file):
-        if config_file is None:
-            config_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..",
-                "configs",
-                "config_example.yaml",
-            )
-        with open(config_file, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
 
     def get_simulation_groups(self):
         """
@@ -185,7 +174,6 @@ class World:
 
     def initialize_cemeteries(self):
         self.cemeteries = Cemeteries(self)
-
 
     def initialize_hospitals(self):
         self.hospitals = Hospitals.from_file(
@@ -241,7 +229,7 @@ class World:
         Populates the world with person instances.
         """
         print("Initializing people...")
-        #TODO:
+        # TODO:
         # self.people = People.from_file(
         #    self.inputs.,
         #    self.inputs.,
@@ -319,7 +307,7 @@ class World:
             self.distributor = CompanyDistributor(
                 self.companies,
                 super_area,
-                self.config, 
+                self.config,
             )
             self.distributor.distribute_adults_to_companies()
             pbar.update(1)
@@ -333,4 +321,10 @@ class World:
         """
         print("Creating Boundary...")
         self.boundary = Boundary(self)
+
+    def initialize_interaction(self):
+        interaction_type = self.config["interaction"]["type"]
+        interaction_class_name = interaction_type.capitalize()+"Interaction" 
+        interaction_instance = getattr(interaction, interaction_class_name)()
+        return interaction_instance
 
