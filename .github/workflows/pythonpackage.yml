@@ -28,7 +28,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        bash get_data.sh
+    - name: Get data
+      run: bash get_data.sh
+    - name: Install simulation
+      run: python setup.py install
 #       Exclude linting for now
 #     - name: Lint with flake8
 #       run: |
