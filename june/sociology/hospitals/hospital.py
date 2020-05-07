@@ -1,15 +1,21 @@
 import logging
-from typing import List, Tuple
+import yaml
+from itertools import count
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
-import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
 
-ic_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
+default_config_filename = Path(
+    __file__
+).parent.parent / "configs/defaults/hospitals.yaml"
+
+default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
 class Hospital(Group):
     """
@@ -21,14 +27,15 @@ class Hospital(Group):
     I will also assume that the patients cannot infect anybody - this may
     become a real problem as it is manifestly not correct.
     """
+    _id = count()
 
     def __init__(
             self,
             hospital_id: int,
+            super_area: str = None,
+            coordinates: Optional[Tuple[float, float]] = None,
             n_beds: int,
             n_icu_beds: int,
-            coordinates: Tuple[float, float],
-            msoa_name: str = None,
     ):
         """
         Create a Hospital given its description.
@@ -47,14 +54,12 @@ class Hospital(Group):
             name of the msoa area the hospital belongs to
 
         """
-
-        super().__init__("Hospital_%03d" % hospital_id, "hospital")
-        self.id = hospital_id
+        super().__init__(f"Hospital_{hospital_id}", "hospital")
+        self.id = next(self._id)
+        self.super_area = super_area
+        self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
-        self.coordinates = coordinates
-        self.msoa_name = msoa_name
-        self.n_medics = 0
         self.employees = set()
         self.patients = set()
         self.icu_patients = set()

@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from june.groups import Person, Box
-from june.groups.people import HealthIndex
+from june.box import Box
+from june.demography import Person
+from june.demography.people import HealthIndex
 from june.inputs import Inputs
 
 

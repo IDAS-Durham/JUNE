@@ -8,17 +8,16 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-from june.box_generator import BoxGenerator
-from june.commute import CommuteGenerator
-from june.groups import *
-from june.inputs import Inputs
-
-from june import sociology
+from june import Geography
+from june import Demography
+from june import Sociology
 
 class World:
     """
     This Class creates the world that will later be simulated.
     The world will be stored in pickle, but a better option needs to be found.
+    
+    Note: BoxMode = Demography +- Sociology - Geography
     """
     
     def __init__(
@@ -28,13 +27,10 @@ class World:
         geography: "Geography",
         demography: "Demography",
         sociology: "Sociology",
-        #box: "Box",
-        box_mode: Optional[Dict[int, str]] = None,
     ):
         self.configs_dir = configs_dir
         self.test_output_dir(output_dir)
         self.output_dir = output_dir
-        self.box = box_mode
         
         # read configs
         #self.read_config(config_file)
@@ -97,15 +93,6 @@ class World:
 #        #self.initialize_boundary() #TODO
 #        self.initialize_pubs()
 #        #self.group_maker = GroupMaker(self)
-#
-#    def box():
-#        self.people = []
-#        self.total_people = 0
-#        self.initialize_people()
-#        self.initialize_hospitals()
-#        self.initialize_cemeteries()
-#        self.initialize_box_mode(box_region, box_n_people)
-#
 #
 #    def to_pickle(self, pickle_obj=os.path.join("..", "data", "world.pkl")):
 #        """

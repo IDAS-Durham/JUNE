@@ -1,8 +1,12 @@
+import os
+
 import pandas as pd
 import numpy as np
-import os
-from june.groups.areas import Area
 from sklearn.neighbors._ball_tree import BallTree
+
+from june.geography.areas import Area
+
+default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
 
 class AreaDistributor:
