@@ -385,7 +385,7 @@ class World:
         for person in group.dead:
             cemetery = self.cemeteries.get_nearest(person)
             cemetery.add(person)
-            group.people.remove(person)
+            group.remove_person(person)
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()

@@ -7,8 +7,6 @@ import numpy as np
 
 from covid.exc import GroupException
 
-from covid.exc import GroupException
-
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +15,27 @@ class AbstractGroup(ABC):
     @abstractmethod
     def people(self):
         pass
+
+    @property
+    @abstractmethod
+    def susceptible(self) -> List:
+        """
+        People susceptible to the disease
+        """
+
+    @property
+    @abstractmethod
+    def infected(self) -> List:
+        """
+        People currently infected with the disease
+        """
+
+    @property
+    @abstractmethod
+    def recovered(self) -> List:
+        """
+        People recovered from the disease
+        """
 
     @property
     def size(self):
@@ -34,41 +53,8 @@ class AbstractGroup(ABC):
     def size_recovered(self):
         return len(self.recovered)
 
-    @property
-    def susceptible(self) -> List:
-        """
-        People susceptible to the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.susceptible
-        ]
-
     def __contains__(self, item):
         return item in self.people
-
-    @property
-    def infected(self) -> List:
-        """
-        People currently infected with the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.infected and not (
-                    person.health_information.in_hospital
-                    or person.health_information.dead
-            )
-        ]
-
-    @property
-    def recovered(self) -> List:
-        """
-        People recovered from the disease
-        """
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-        ]
 
     def __iter__(self):
         return iter(self.people)
@@ -76,8 +62,41 @@ class AbstractGroup(ABC):
 
 class People(AbstractGroup):
     def __init__(self, intensity=1.0):
-        self._people = []
+        self._people = set()
         self.intensity = intensity
+
+    @property
+    def susceptible(self) -> set:
+        """
+        People susceptible to the disease
+        """
+        return {
+            person for person in self.people
+            if person.health_information.susceptible
+        }
+
+    @property
+    def infected(self) -> set:
+        """
+        People currently infected with the disease
+        """
+        return {
+            person for person in self.people
+            if person.health_information.infected and not (
+                    person.health_information.in_hospital
+                    or person.health_information.dead
+            )
+        }
+
+    @property
+    def recovered(self) -> set:
+        """
+        People recovered from the disease
+        """
+        return {
+            person for person in self.people
+            if person.health_information.recovered
+        }
 
     def clear(self):
         self._people = []
@@ -94,13 +113,13 @@ class People(AbstractGroup):
                 self._people.remove(person)
 
     def append(self, person):
-        self._people.append(person)
+        self._people.add(person)
 
     def remove(self, person):
         self._people.remove(person)
 
     def __getitem__(self, item):
-        return self._people[item]
+        return list(self._people)[item]
 
 
 class Group(AbstractGroup):
@@ -124,6 +143,18 @@ class Group(AbstractGroup):
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+
+    @property
+    def susceptible(self) -> set:
+        return self._susceptible
+
+    @property
+    def infected(self) -> set:
+        return self._infected
+
+    @property
+    def recovered(self) -> set:
+        return self._recovered
 
     @property
     def people(self):
@@ -162,19 +193,23 @@ class Group(AbstractGroup):
 
     def __init__(self, name, spec):
         self.sane(name, spec)
-        self.name        = name
-        self.spec        = spec
+        self.name = name
+        self.spec = spec
         self.n_groupings = len(self.GroupType)
-        self.groupings   = [People() for _ in range(self.n_groupings)]
-        self.intensity   = np.ones((self.n_groupings, self.n_groupings))
-        #self.people = set()
-        #self.susceptible = set()
-        #self.infected = set()
-        #self.recovered = set()
-        #self.in_hospital = set()
+        self.groupings = [People() for _ in range(self.n_groupings)]
+        self.intensity = np.ones((self.n_groupings, self.n_groupings))
+        self._susceptible = set()
+        self._infected = set()
+        self._recovered = set()
+        self.in_hospital = set()
         self.dead = set()
 
         self.intensity = 1.0
+
+    def remove_person(self, person):
+        for grouping in self.groupings:
+            if person in grouping:
+                grouping.remove(person)
 
     def sane(self, name, spec):
         if spec not in self.allowed_groups:
@@ -207,24 +242,24 @@ class Group(AbstractGroup):
     def update_status_lists(self, time, delta_time):
         for grouping in self.groupings:
             grouping.update_status_lists(time, delta_time)
-            
-        self.susceptible.clear()
-        self.infected.clear()
+
+        self._susceptible.clear()
+        self._infected.clear()
+        self._recovered.clear()
         self.in_hospital.clear()
-        self.recovered.clear()
         self.dead.clear()
 
         for person in self.people:
             health_information = person.health_information
             health_information.update_health_status(time, delta_time)
             if health_information.susceptible:
-                self.susceptible.add(person)
+                self._susceptible.add(person)
             elif health_information.infected_at_home:
-                self.infected.add(person)
+                self._infected.add(person)
             elif health_information.in_hospital:
                 self.in_hospital.add(person)
             elif health_information.recovered:
-                self.recovered.add(person)
+                self._recovered.add(person)
             elif person.health_information.dead:
                 self.dead.add(person)
 
