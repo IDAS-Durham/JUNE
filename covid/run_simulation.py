@@ -15,7 +15,7 @@ transmission = TransmissionConstant()
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction()
 
-simulator = Simulator.from_file(world, infection, interaction)
+simulator = Simulator.from_file(world, interaction, infection)
 
 simulator.seed(world.boxes.members[0], n_infections=100)
 simulator.run(n_days=50)
