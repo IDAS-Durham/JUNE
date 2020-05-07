@@ -2,7 +2,9 @@ import csv
 import logging
 from pathlib import Path
 from random import randint
+from itertools import count
 from typing import List, Dict, Optional
+
 
 import numpy as np
 
@@ -20,38 +22,88 @@ get_creation_logger(default_logging_config_filename)
 logger = logging.getLogger(__name__)
 
 
+class Areas:
+    def __init__(self, areas: List[Area]):
+        self.members = super_areas
+       
+    def __len__(self):
+        return len(self.members)
+
+    def __iter__(self):
+        return iter(self.members)
+
+
 class Area:
+    """
+    Fine geographical resolution.
+    """
+    _id = count()
+    
     def __init__(
             self,
+            name: str = None,
+            coordinates: [float, float],
+            super_area: str,
     ):
         """
-        Each fine Area should know to which SuperArea it belongs.
-        Parameters
-        ----------
         """
+        self.id = next(self._id)
+
+
+class SuperAreas:
+    def __init__(self, super_areas: List[SuperArea]):
+        self.members = super_areas
+       
+    def __len__(self):
+        return len(self.members)
+
+    def __iter__(self):
+        return iter(self.members)
+
 
 class SuperArea:
+    """
+    Coarse geographical resolution.
+    """
+    _id = count()
+    
     def __init__(
             self,
-            super_area: str,
+            name: str,
+            coordinates: Optional[[float, float]] = None,
             area: List[Area],
     ):
-        """
-        A collection of any geographical divisions (e.g. area/OA and super_area/MSOA).
-
-        Behaves mostly like a list but also has the name of the area attached.
-
-        Parameters
-        ----------
-        """
+        self.id = next(self._id)
         self.super_area = super_area
         self.area = area
 
-    def __len__(self):
-        return len(self.area)
+        msoareas_list = []
+        for msoa_name in self.msoareas.names_in_order:
+            # centroid of msoa
+            coordinates = ['xxx', 'xxx']
+            # find postcode inside this msoarea
+            pcd_in_msoa = self.area_mapping_df[
+                self.area_mapping_df["MSOA"].isin([msoa_name])
+            ]["PCD"].values
+            # find oareas inside this msoarea
+            oa_in_msoa = [
+                area
+                for area in self.world.areas.members
+                if area.super_area == msoa_name
+            ]
+            # create msoarea
+            msoarea = SuperArea(
+                coordinates,
+                oa_in_msoa,
+                msoa_name,
+                self.relevant_groups,
+            )
+            msoareas_list.append(msoarea)
+            # link  area to msoarea
+            for area in oa_in_msoa:
+                area.super_area = msoarea
+        self.msoareas.members = msoareas_list
 
-    def __iter__(self):
-        return iter(self.area)
 
 
 class Geography:
@@ -73,7 +125,7 @@ class Geography:
 
     def aggregate(self):
         """
-        Sort fin granular geographical units into their coarse granular units.
+        Create geo-graph of the used geographical units.
         """
 
 
@@ -102,8 +154,8 @@ class Geography:
         #TODO this file is missing option to filter for Region etc.
         geo_hierarchy_file = f"{data_path}/areas_mapping.csv"
 
-        usecols = [0, 1, 3]
-        column_names = ["PCD", "OA", "MSOA"]
+        usecols = [0, 1, 2, 3, 4]
+        column_names = ["PCD", "OA", "LSOA", "MSOA", "LAD"]
         geo_hierarchy = pd.read_csv(
             geo_hierarchy_file,
             names=column_names,
@@ -113,8 +165,10 @@ class Geography:
         if filter_key not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
-        geo_hierarchy = _sorting(geo_hierarchy)
-
+        # At the moment the _sorting function is not needed since
+        # we only support data at the OA & MSOA level.
+        # geo_hierarchy = _sorting(geo_hierarchy)
+        geo_hierarchy = geo_hierarchy[["MSOA", "OA"]]
         return Geography(geo_hierarchy)
 
 
