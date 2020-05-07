@@ -11,7 +11,6 @@ from june import World
 def test_full_run(world_ne):
     world_ne.group_dynamics()
 
-
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     config_path = os.path.join(
@@ -19,9 +18,11 @@ if __name__ == "__main__":
                 os.path.realpath(__file__)
             ),
             "..",
-            "config_ne.yaml"
+            "..",
+            "configs",
+            "config_example.yaml"
     )
     world = World(config_path, box_mode=False)
     world.group_dynamics()
-    world.logger.plot_infection_curves_per_day()
-    plt.show()
+    #world.logger.plot_infection_curves_per_day()
+    #plt.show()

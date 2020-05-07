@@ -77,4 +77,21 @@ def test__age_range_schools(world_ne):
                 n_outside_range += 1
     assert n_outside_range == 0
 
+def test__non_mandatory_dont_go_if_school_full(world_ne):
+    non_mandatory_added = 0
+    mandatory_age_range = world_ne.schools.mandatory_age_range
+    for school in world_ne.schools.members:
+        if school.n_pupils > school.n_pupils_max:
+            ages = np.array(
+                [person.age for person in list(school.people)[int(school.n_pupils_max):]]
+            )
+            older_kids_when_full = np.sum(
+                ages > mandatory_age_range[1]
+            )
+            younger_kids_when_full = np.sum(
+                ages < mandatory_age_range[0]
+            )
+            if older_kids_when_full > 0 or younger_kids_when_full > 0:
+                non_mandatory_added += 1
 
+    assert non_mandatory_added == 0

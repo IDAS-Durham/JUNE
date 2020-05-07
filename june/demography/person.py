@@ -139,6 +139,7 @@ class Person:
         self.mode_of_transport = mode_of_transport
         self.work_msoarea = None
         self.school = None
+        self.carehome = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
         self.industry_specific = None
