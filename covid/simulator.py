@@ -86,8 +86,7 @@ class Simulator:
         for person in self.world.people.members:
             person.active_group = None
 
-
-    def seed_infections_group(self, group: "Group", n_infections: int):
+    def seed(self, group: "Group", n_infections: int):
         """
         Randomly pick people in group to seed the infection
 
@@ -101,13 +100,20 @@ class Simulator:
 
         """
         #TODO: add attribute susceptible to people
+
+        if group.spec == 'box':
+            group = world.boxes.members[0]
+
         choices = np.random.choice(group.size, n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(
-                group.people[choice], self.timer.now
+                list(group.people)[choice], self.timer.now
             )
         group.update_status_lists(self.timer.now, delta_time=0)
+        self.hospitalise_the_sick(group)
+        self.bury_the_dead(group)
+
 
     def seed_infections_box(self, n_infections: int):
         """
@@ -120,11 +126,31 @@ class Simulator:
 
         """
         sim_logger.info("seed ", n_infections, "infections in box")
-        choices = np.random.choice(self.people.members, n_infections, replace=False)
+        choices = np.random.choice(list(self.people.members), n_infections, replace=False)
         infecter_reference = self.initialize_infection()
         for choice in choices:
             infecter_reference.infect_person_at_time(choice, self.timer.now)
-        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
+        group = self.boxes.members[0]
+        group.update_status_lists(self.timer.now, delta_time=0)
+        self.hospitalise_the_sick(group)
+        self.bury_the_dead(group)
+
+    def hospitalise_the_sick(self, group):
+        """
+        These functions could be more elegantly handled by an implementation inside a group collection.
+        I'm putting them here for now to maintain the same functionality whilst removing a person's
+        reference to the world as that makes it impossible to perform population generation prior
+        to world construction.
+        """
+        for person in group.in_hospital:
+            if person.in_hospital is None:
+                self.hospitals.allocate_patient(person)
+
+    def bury_the_dead(self, group):
+        for person in group.dead:
+            cemetery = self.cemeteries.get_nearest(person)
+            cemetery.add(person)
+            group.remove_person(person)
 
     def do_timestep(self):
         """
@@ -142,15 +168,14 @@ class Simulator:
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
+                self.hospitalise_the_sick(group)
+                self.bury_the_dead(group)
+
         # Update people that recovered in hospitals
         for hospital in self.hospitals.members:
             hospital.update_status_lists(self.timer.now, delta_time=0)
+            self.hospitalise_the_sick(hospital)
         self.set_allpeople_free()
-
-        active_groups = self.timer.active_groups()
-        if active_groups == None or len(active_groups) == 0:
-            sim_logger.info("==== do_timestep(): no active groups found. ====")
-            return
 
         # TODO: update people's status that is currently in interaction
         # needs to change time_step updates before and after running interaction
