@@ -32,12 +32,12 @@ def days_to_infection(interaction, susceptible_person, group):
     return days_to_infection
 
 
-@pytest.mark.parametrize(
-    "group_size", (2, 5)
-)
-def test__time_it_takes_to_infect(group_size, config):
+#@pytest.mark.parametrize(
+#    "group_size", (2, 5)
+#)
+def test__time_it_takes_to_infect(config, group_size=2):
     interaction = DefaultInteraction(
-        intensities={"TestGroup": 1.0}
+        intensities={"TestGroup": [[1.0]]}
     )
 
     infected_reference = world._initialize_infection(
@@ -50,11 +50,11 @@ def test__time_it_takes_to_infect(group_size, config):
         group = TestGroup(1)
         infected_person = Person()
         infected_reference.infect_person_at_time(infected_person, 1)
-        group.add(infected_person, qualifier=TestGroup.GroupType.kids)
+        group.add(infected_person, qualifier=TestGroup.GroupType.default)
         susceptible_person = Person()
-        group.add(susceptible_person, qualifier=TestGroup.GroupType.kids)
+        group.add(susceptible_person, qualifier=TestGroup.GroupType.default)
         for i in range(group_size - 2):
-            group.add(Person(), qualifier=TestGroup.GroupType.kids)
+            group.add(Person(), qualifier=TestGroup.GroupType.default)
 
         n_days.append(
             days_to_infection(interaction, susceptible_person, group)

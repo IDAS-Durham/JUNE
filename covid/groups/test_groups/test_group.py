@@ -11,8 +11,7 @@ class TestGroup(Group):
         super().__init__(f"test_{number}", "TestGroup")
 
     class GroupType(IntEnum):
-        kids         = 0
-        adults       = 1
+        default = 0
 
     def add(self, person, qualifier):
         super().add(person, qualifier)

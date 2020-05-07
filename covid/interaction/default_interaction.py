@@ -46,19 +46,19 @@ class DefaultInteraction(Interaction):
         self.probabilities = []
         self.weights = []
 
-        if group.must_timestep:
-            self.calculate_probabilities(group)
-            for i in range(group.n_groupings):
-                for j in range(group.n_groupings):
-                    # grouping[i] infected infects grouping[j] susceptible
-                    self.contaminate(group, time, delta_time, i,j)
-                    if i!=j:
-                        # =grouping[j] infected infects grouping[i] susceptible
-                        self.contaminate(group, time, delta_time, j,i)
+        #if group.must_timestep:
+        self.calculate_probabilities(group)
+        for i in range(group.n_groupings):
+            for j in range(group.n_groupings):
+                # grouping[i] infected infects grouping[j] susceptible
+                self.contaminate(group, time, delta_time, i,j)
+                if i!=j:
+                    # =grouping[j] infected infects grouping[i] susceptible
+                    self.contaminate(group, time, delta_time, j,i)
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
         if (
-            group.intensity[infecters][recipients] <= 0. or
+            self.intensities.get(group.spec)[infecters][recipients] <= 0. or
             self.probabilities[infecters] <= 0.
         ):
             return
@@ -66,7 +66,7 @@ class DefaultInteraction(Interaction):
             transmission_probability = 1.0 - np.exp(
                 -delta_time *
                 recipient.health_information.susceptibility *
-                group.intensity[infecters][recipients] *
+                self.intensities.get(group.spec)[infecters][recipients] *
                 self.probabilities[infecters]
             )
             if random.random() <= transmission_probability:
@@ -74,8 +74,8 @@ class DefaultInteraction(Interaction):
                 infecter.health_information.infection.infect_person_at_time(
                     person=recipient, time=time
                 )
-                infecter.health_information.counter.increment_infected()
-                recipient.health_information.counter.update_infection_data(
+                infecter.health_information.increment_infected()
+                recipient.health_information.update_infection_data(
                     time=time, group_type=group.spec
                 )
 
