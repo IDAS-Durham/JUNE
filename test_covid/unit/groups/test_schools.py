@@ -1,10 +1,10 @@
-from collections import Counter
-from covid.groups import *
-import pickle
-import pytest
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+import pytest
+
+from covid.groups import *
 
 
 def test__total_number_schools_is_correct():
@@ -41,12 +41,12 @@ def test__all_kids_mandatory_school(world_ne):
     KIDS_LOW = world_ne.schools.mandatory_age_range[0]
     KIDS_UP = world_ne.schools.mandatory_age_range[1]
     lost_kids = 0
-    for i in range(len(world_ne.areas.members)):
-        for j in range(len(world_ne.areas.members[i].people)):
-            if (world_ne.areas.members[i].people[j].age >= KIDS_LOW) and (
-                world_ne.areas.members[i].people[j].age <= KIDS_UP
+    for area in world_ne.areas.members:
+        for person in area.groupings[0]._people:
+            if (person.age >= KIDS_LOW) and (
+                person.age <= KIDS_UP
             ):
-                if world_ne.areas.members[i].people[j].school is None:
+                if person.school is None:
                     lost_kids += 1
     assert lost_kids == 0
 
@@ -54,10 +54,10 @@ def test__all_kids_mandatory_school(world_ne):
 def test__only_kids_school(world_ne):
     ADULTS_LOW = 20
     schooled_adults = 0
-    for i in range(len(world_ne.areas.members)):
-        for j in range(len(world_ne.areas.members[i].people)):
-            if world_ne.areas.members[i].people[j].age >= ADULTS_LOW:
-                if world_ne.areas.members[i].people[j].school is not None:
+    for area in world_ne.areas.members:
+        for person in area.groupings[0]._people:
+            if person.age >= ADULTS_LOW:
+                if person.school is not None:
                     schooled_adults += 1
 
     assert schooled_adults == 0
@@ -65,7 +65,7 @@ def test__only_kids_school(world_ne):
 
 def test__n_pupils_counter(world_ne):
     for school in world_ne.schools.members:
-        n_pupils = len(school.people)
+        n_pupils = np.sum([len(grouping.people) for grouping in school.groupings])
         assert n_pupils == school.n_pupils
 
 
@@ -77,24 +77,4 @@ def test__age_range_schools(world_ne):
                 n_outside_range += 1
     assert n_outside_range == 0
 
-
-def test__non_mandatory_dont_go_if_school_full(world_ne):
-
-    non_mandatory_added = 0
-    mandatory_age_range = world_ne.schools.mandatory_age_range
-    for school in world_ne.schools.members:
-        if school.n_pupils > school.n_pupils_max:
-            ages = np.array(
-                [person.age for person in school.people[int(school.n_pupils_max) :]]
-            )
-            older_kids_when_full = np.sum(
-                ages > mandatory_age_range[1]
-            )
-            younger_kids_when_full = np.sum(
-                ages < mandatory_age_range[0]
-            )
-            if older_kids_when_full > 0 or younger_kids_when_full > 0:
-                non_mandatory_added += 1
-
-    assert non_mandatory_added == 0
 

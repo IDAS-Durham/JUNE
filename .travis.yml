@@ -16,7 +16,7 @@ install:
 
 script:
   - cd test_covid
-  - pytest
+  - pytest 
 
 after_success:
   - codecov
