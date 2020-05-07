@@ -16,7 +16,7 @@ class DefaultInteraction(Interaction):
 
     @classmethod
     def from_file(
-            cls, config_filename: str 
+            cls, config_filename: str  = default_config_filename
     ) -> "DefaultInteraction":
 
         with open(config_filename) as f:
