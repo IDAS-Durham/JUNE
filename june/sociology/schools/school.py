@@ -1,12 +1,17 @@
-from sklearn.neighbors import BallTree
-from scipy import stats
+from enum import IntEnum
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 import yaml
 from typing import List, Tuple, Dict, Optional
+from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
-
+from june import Geography
+from june import Demography
+from june import Sociology
+from june import get_creation_logger
 
 class SchoolError(BaseException):
     """Class for throwing school related errors."""
@@ -15,15 +20,19 @@ class SchoolError(BaseException):
 
 
 class School(Group):
+    class GroupType(IntEnum):
+        teachers = 0
+        students = 1
+
     def __init__(
-        self,
-        school_id: int,
-        coordinates: Tuple[float, float],
-        n_pupils: int,
-        n_teachers_max: int,
-        age_min: int,
-        age_max: int,
-        sector: str,
+            self,
+            school_id: int,
+            coordinates: Tuple[float, float],
+            n_pupils: int,
+            n_teachers_max: int,
+            age_min: int,
+            age_max: int,
+            sector: str,
     ):
         """
         Create a School given its description.
@@ -43,8 +52,14 @@ class School(Group):
         sector:
             whether it is a "primary", "secondary" or both "primary_secondary"
 
+        number of groups N = age_max-age_min year +1 (student years) + 1 (teachers):
+        0 - teachers
+        1 - year of lowest age (age_min)
+        ...
+        n - year of highest age (age_max)
         """
         super().__init__(name="School_%05d" % school_id, spec="school")
+        self.groupings = [People() for _ in range(age_min, age_max + 2)]
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
@@ -58,6 +73,15 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.n_teachers = 0
 
+    def add(self, person, qualifier=GroupType.students):
+        if qualifier == self.GroupType.students:
+            self.groupings[1 + person.age - self.age_min].append(person)
+            person.school = self
+        else:
+            super().add(
+                person,
+                qualifier
+            )
 
 class Schools:
     def __init__(
@@ -191,7 +215,7 @@ class Schools:
         return school_trees, school_agegroup_to_global_indices
 
     def get_closest_schools(
-        self, age: int, coordinates: Tuple[float, float], k: int
+            self, age: int, coordinates: Tuple[float, float], k: int
     ) -> int:
         """
         Get the k-th closest school to a given coordinate, that accepts pupils
