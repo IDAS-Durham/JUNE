@@ -13,7 +13,6 @@ class DefaultInteraction(Interaction):
 
     def __init__(self, intensities):
         self.intensities = intensities
-        print(self.intensities)
 
     @classmethod
     def from_file(
@@ -56,7 +55,7 @@ class DefaultInteraction(Interaction):
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
         #TODO: subtitute by matrices read from file when ready
-        contact_matrix = np.ones((len(group.groupings), len(group.groupings)))
+        contact_matrix = np.ones((group.n_groupings, group.n_groupings))
         if (
             contact_matrix[infecters][recipients] <= 0. or
             self.probabilities[infecters] <= 0.
