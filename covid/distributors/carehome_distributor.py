@@ -1,6 +1,11 @@
 import numpy as np
 from collections import OrderedDict
 from covid.groups import CareHome
+from covid.groups import Area
+
+
+class CareHomeError(BaseException):
+    pass
 
 
 class CareHomeDistributor:
@@ -14,9 +19,8 @@ class CareHomeDistributor:
             minimum age to put people in carehome.
         """
         self.min_age_in_carehome = min_age_in_carehome
-        pass
 
-    def create_carehome_in_area(self, area: "Area", carehome_residents_number: int):
+    def create_carehome_in_area(self, area: Area, carehome_residents_number: int):
         """
         Crates carehome in area, if there needs to be one, and fills it with the
         oldest people in that area.
@@ -29,11 +33,17 @@ class CareHomeDistributor:
             number of people to put in the carehome.
         """
         if carehome_residents_number == 0:
-            return None
+            raise CareHomeError("No carehome residents in this area.")
         carehome = CareHome(area, carehome_residents_number)
         area.carehome = carehome
         self._put_people_to_carehome(carehome, area.men_by_age, area.women_by_age)
         return carehome
+
+    def _get_person_of_age(self, people_dict: dict, age: int):
+        person = people_dict[age].pop()
+        if len(people_dict[age]) == 0:  # delete age key if empty list
+            del people_dict[age]
+        return person
 
     def _put_people_to_carehome(
         self, carehome: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
@@ -57,24 +67,22 @@ class CareHomeDistributor:
         people_counter = 0
         while people_counter < carehome.n_residents:
             # fill until no old people or care home full
-            if current_age_to_fill in men_by_age:
-                man_to_fill = men_by_age[current_age_to_fill].pop()
-                if (
-                    len(men_by_age[current_age_to_fill]) == 0
-                ):  # delete age key if empty list
-                    del men_by_age[current_age_to_fill]
-                carehome.people.add(man_to_fill)
-                man_to_fill.carehome = carehome
-                people_counter += 1
-            elif current_age_to_fill in women_by_age:
-                woman_to_fill = women_by_age[current_age_to_fill].pop()
-                if len(women_by_age[current_age_to_fill]) == 0:
-                    del women_by_age[current_age_to_fill]
-                carehome.people.add(woman_to_fill)
-                woman_to_fill.carehome = carehome
-                people_counter += 1
-            else:
-                current_age_to_fill -= 1
+            next_age = True
+            for people_dict in [men_by_age, women_by_age]:
+                if current_age_to_fill in people_dict.keys():
+                    person = self._get_person_of_age(people_dict, current_age_to_fill)
+                    person.carehome = carehome
+                    carehome.people.add(person)
+                    people_counter += 1
+                    if people_counter == carehome.n_residents:
+                        break
+                    next_age = next_age and False
+                else:
+                    next_age = (
+                        next_age and True
+                    )  # only decrease age if there are no man nor women left
 
-            if current_age_to_fill <= self.min_age_in_carehome:
-                break
+            if next_age:
+                current_age_to_fill -= 1
+                if current_age_to_fill < self.min_age_in_carehome:
+                    break
