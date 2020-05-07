@@ -25,30 +25,9 @@ This file contains routines to distribute people to households
 according to census data.
 """
 
-ALLOWED_HOUSEHOLD_COMPOSITIONS = [
-    "1 0 >=0 1 0",
-    ">=2 0 >=0 1 0",
-    "1 0 >=0 2 0",
-    ">=2 0 >=0 2 0",
-    "1 0 >=0 >=1 >=0",
-    ">=2 0 >=0 >=1 >=0",
-    "0 0 0 0 >=2",
-    "0 >=1 0 0 0",
-    "0 0 0 0 1",
-    "0 0 0 0 2",
-    "0 0 0 1 0",
-    "0 0 0 2 0",
-    "0 0 >=1 1 0",
-    "0 0 >=1 2 0",
-    "0 0 >=0 >=0 >=0",
-    ">=0 >=0 >=0 >=0 >=0",
-]
-
 
 class HouseholdError(BaseException):
     """ class for throwing household related errors """
-
-    pass
 
 
 def get_closest_element_in_array(array, value):
@@ -58,7 +37,7 @@ def get_closest_element_in_array(array, value):
 
 def count_items_in_dict(dictionary):
     counter = 0
-    for age in dictionary.keys():
+    for age in dictionary:
         counter += len(dictionary[age])
     return counter
 
@@ -85,6 +64,7 @@ class HouseholdDistributor:
         young_adult_max_age=35,
         max_age_to_be_parent=64,
         max_household_size=8,
+        allowed_household_compositions: dict = None,
     ):
         """
         Tool to populate areas with households and fill them with the correct composition based on census data.
@@ -117,6 +97,25 @@ class HouseholdDistributor:
         self.young_adult_max_age = young_adult_max_age
         self.max_age_to_be_parent = max_age_to_be_parent
         self.max_household_size = max_household_size
+        if allowed_household_compositions is None:
+            self.allowed_household_compositions = [
+                "1 0 >=0 1 0",
+                ">=2 0 >=0 1 0",
+                "1 0 >=0 2 0",
+                ">=2 0 >=0 2 0",
+                "1 0 >=0 >=1 >=0",
+                ">=2 0 >=0 >=1 >=0",
+                "0 0 0 0 >=2",
+                "0 >=1 0 0 0",
+                "0 0 0 0 1",
+                "0 0 0 0 2",
+                "0 0 0 1 0",
+                "0 0 0 2 0",
+                "0 0 >=1 1 0",
+                "0 0 >=1 2 0",
+                "0 0 >=0 >=0 >=0",
+                ">=0 >=0 >=0 >=0 >=0",
+            ]
 
         self._first_kid_parent_age_diff_rv = stats.rv_discrete(
             values=(
@@ -182,7 +181,12 @@ class HouseholdDistributor:
             )
         else:
             parent_child_df = pd.read_csv(parent_child_filename)
-        return cls.from_df(husband_wife_df, parent_child_df, number_of_random_numbers=number_of_random_numbers, **config)
+        return cls.from_df(
+            husband_wife_df,
+            parent_child_df,
+            number_of_random_numbers=number_of_random_numbers,
+            **config,
+        )
 
     @classmethod
     def from_df(
@@ -292,7 +296,7 @@ class HouseholdDistributor:
         total_number_of_households = 0
         for key in number_households_per_composition:
             total_number_of_households += number_households_per_composition[key]
-            if key not in ALLOWED_HOUSEHOLD_COMPOSITIONS:
+            if key not in self.allowed_household_compositions:
                 raise HouseholdError(f"Household composition {key} not supported")
 
         # student households
@@ -546,13 +550,11 @@ class HouseholdDistributor:
         )
 
         # make sure we have the correct number of households
-        try:
-            assert (
-                total_number_of_households - communal_houses
-                <= len(area.households)
-                <= total_number_of_households
-            )
-        except:
+        if not (
+            total_number_of_households - communal_houses
+            <= len(area.households)
+            <= total_number_of_households
+        ):
             raise HouseholdError("Number of households does not match.")
         # destroy any empty houses
         area.households = [
@@ -566,7 +568,7 @@ class HouseholdDistributor:
         return households
 
     def _create_household(
-            self, area: Area, communal: bool = False, max_household_size: int = np.inf
+        self, area: Area, communal: bool = False, max_household_size: int = np.inf
     ) -> Household:
         """Creates household in the area.
 
@@ -584,14 +586,15 @@ class HouseholdDistributor:
         area.households.append(household)
         return household
 
-    def _add_to_household(self, household: Household, person: Person, subgroup=None) -> None:
+    def _add_to_household(
+        self, household: Household, person: Person, subgroup=None
+    ) -> None:
         """
         Adds person to household and assigns them the correct subgroup.
         """
-        #TODO modify to set the person to the right subgroup.
+        # TODO modify to set the person to the right subgroup.
         household.people.add(person)
         person.household = household
-        return None
 
     def _check_if_age_dict_is_empty(self, people_dict: dict, age: int) -> bool:
         """
@@ -605,11 +608,10 @@ class HouseholdDistributor:
         age:
             age to check if empty.
         """
-        ret = False
         if len(people_dict[age]) == 0:
-            ret = True
             del people_dict[age]
-        return ret
+            return True
+        return False
 
     def _check_if_oldpeople_left(self, area: Area) -> bool:
         """
@@ -1362,7 +1364,6 @@ class HouseholdDistributor:
                 continue
             household = np.random.choice(list2)
             return household
-        return None
 
     def _find_household_for_nonkid(self, priority_lists):
         """
