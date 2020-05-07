@@ -10,27 +10,7 @@ default_config_filename = (
 )
 
 class DefaultInteraction(Interaction):
-    def __init__(self,intensities):
-        """
-        Default Interaction class, makes interactions between members of a group happen
-        leading to infections
-
-        Parameters
-        ----------
-        intensities:
-            dictionary of intensities for the different
-            group types
-        """
-        self.intensities = intensities
-
-    @classmethod
-    def from_file(
-        cls, config_filename: str = default_config_filename
-    ) -> "DefaultInteraction":
-        with open(config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        return DefaultInteraction(config.get("intensities"))
-    
+   
     def single_time_step_for_group(self, group, time, delta_time):
         """
         Runs the interaction model for a time step
@@ -58,7 +38,7 @@ class DefaultInteraction(Interaction):
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
         if (
-            self.intensities.get(group.spec)[infecters][recipients] <= 0. or
+            group.intensities[infecters][recipients] <= 0. or
             self.probabilities[infecters] <= 0.
         ):
             return
@@ -66,7 +46,7 @@ class DefaultInteraction(Interaction):
             transmission_probability = 1.0 - np.exp(
                 -delta_time *
                 recipient.health_information.susceptibility *
-                self.intensities.get(group.spec)[infecters][recipients] *
+                group.intensities[infecters][recipients] *
                 self.probabilities[infecters]
             )
             if random.random() <= transmission_probability:
