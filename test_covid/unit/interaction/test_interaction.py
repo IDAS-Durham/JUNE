@@ -12,7 +12,7 @@ test_config_file = Path(__file__).parent.parent.parent / "default_interaction.ya
 
 
 def test__set_up_collective_from_file():
-    interaction = DefaultInteraction()
+    interaction = DefaultInteraction.from_file(test_config_file)
     assert type(interaction).__name__ == "DefaultInteraction"
 
 
@@ -36,7 +36,7 @@ def days_to_infection(interaction, susceptible_person, group):
 #    "group_size", (2, 5)
 #)
 def test__time_it_takes_to_infect(config, group_size=2):
-    interaction = DefaultInteraction()
+    interaction = DefaultInteraction.from_file(test_config_file)
 
     infected_reference = world._initialize_infection(
         config,

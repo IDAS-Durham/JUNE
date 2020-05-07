@@ -356,7 +356,7 @@ class World:
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
         interaction_class_name = interaction_type.capitalize()+"Interaction" 
-        interaction_instance = getattr(interaction, interaction_class_name)()
+        interaction_instance = getattr(interaction, interaction_class_name).from_file()
         return interaction_instance
 
     def set_active_group_to_people(self, active_groups):

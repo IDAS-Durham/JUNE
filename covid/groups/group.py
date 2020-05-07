@@ -198,14 +198,12 @@ class Group(AbstractGroup):
         self.spec = spec
         self.n_groupings = len(self.GroupType)
         self.groupings = [People() for _ in range(self.n_groupings)]
-        self.intensity = np.ones((self.n_groupings, self.n_groupings))
         self._susceptible = set()
         self._infected = set()
         self._recovered = set()
         self.in_hospital = set()
         self.dead = set()
 
-        self.intensity = 1.0
 
     def remove_person(self, person):
         for grouping in self.groupings:
@@ -264,9 +262,6 @@ class Group(AbstractGroup):
             elif person.health_information.dead:
                 self.dead.add(person)
                 
-    @property 
-    def intensities(self):
-        return np.eye(len(self.groupings), len(self.groupings))
 
     @property
     def size(self):
