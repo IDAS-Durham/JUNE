@@ -22,9 +22,7 @@ time:
           1: ['households'] 
 
 interaction:
-  type: collective
-  parameters:
-    mode: probabilistic 
+  type: default 
 
 infection:
   asymptomatic_ratio: 0.4

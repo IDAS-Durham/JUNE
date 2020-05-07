@@ -4,15 +4,16 @@ import numpy as np
 import pytest
 
 from covid import world
-from covid.groups import *
-from covid.interaction import interaction as inter
+from covid.groups.people import Person
+from covid.groups.test_groups import TestGroup
+from covid.interaction import *
 
-test_config_file = Path(__file__).parent.parent.parent / "interaction_collective.yaml"
+test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
 
 
 def test__set_up_collective_from_file():
-    interaction = inter.InteractionCollective.from_file(test_config_file)
-    assert type(interaction).__name__ == "InteractionCollective"
+    interaction = DefaultInteraction()
+    assert type(interaction).__name__ == "DefaultInteraction"
 
 
 def days_to_infection(interaction, susceptible_person, group):
@@ -23,29 +24,19 @@ def days_to_infection(interaction, susceptible_person, group):
             not susceptible_person.health_information.infected
             and days_to_infection < 100
     ):
-        effective_load = interaction.calculate_effective_viral_load(group, delta_time, )
-
-        interaction.single_time_step_for_recipient(
-            susceptible_person, effective_load, group, 1
+        interaction.single_time_step_for_group(
+            group, 1, delta_time
         )
 
         days_to_infection += 1
     return days_to_infection
 
 
-@pytest.mark.parametrize(
-    "interaction_type, group_size",
-    [
-        ("probabilistic", 2),
-        ("superposition", 2),
-        ("probabilistic", 5),
-        ("superposition", 5),
-    ],
-)
-def test__time_it_takes_to_infect(interaction_type, group_size, config):
-    interaction = inter.InteractionCollective(
-        mode=interaction_type, intensities={"TestGroup": 1.0}
-    )
+#@pytest.mark.parametrize(
+#    "group_size", (2, 5)
+#)
+def test__time_it_takes_to_infect(config, group_size=2):
+    interaction = DefaultInteraction()
 
     infected_reference = world._initialize_infection(
         config,
@@ -57,12 +48,12 @@ def test__time_it_takes_to_infect(interaction_type, group_size, config):
         group = TestGroup(1)
         infected_person = Person()
         infected_reference.infect_person_at_time(infected_person, 1)
-        group.people.add(infected_person)
-        group.infected.add(infected_person)
+        group.add(infected_person, qualifier=TestGroup.GroupType.default)
         susceptible_person = Person()
-        group.people.add(susceptible_person)
+        group.add(susceptible_person, qualifier=TestGroup.GroupType.default)
         for i in range(group_size - 2):
-            group.people.add(Person())
+            group.add(Person(), qualifier=TestGroup.GroupType.default)
+
         n_days.append(
             days_to_infection(interaction, susceptible_person, group)
         )
