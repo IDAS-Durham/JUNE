@@ -147,6 +147,8 @@ class Person:
         self.in_hospital = None
         self.health_index = health_index
         self.econ_index = econ_index
+        self.health_information = HealthInformation()
+
     def output(self, time=0):
         print("--------------------------------------------------")
         if self.health_index != 0:
