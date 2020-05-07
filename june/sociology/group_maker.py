@@ -1,4 +1,4 @@
-from june.groups.pubs import PubFiller
+from june.sociology.pubs import PubFiller
 import sys
 
 class GroupMaker:
