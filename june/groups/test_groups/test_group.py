@@ -1,13 +1,22 @@
+
+from scipy import stats
+import numpy as np
+
 from june.groups import Group
 from june.groups import Person
 from june.groups.people import HealthIndex
-from scipy import stats
-import numpy as np
+from enum import IntEnum
 
 
 class TestGroup(Group):
     def __init__(self, number):
         super().__init__(f"test_{number}", "TestGroup")
+
+    class GroupType(IntEnum):
+        default = 0
+
+    def add(self, person, qualifier):
+        super().add(person, qualifier)
 
 
 class TestGroups:

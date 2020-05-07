@@ -1,7 +1,11 @@
 from june.groups import Group
+from enum import IntEnum
 
 
 class Cemetery(Group):
+    class GroupType(IntEnum):
+        default = 0
+        
     def __init__(self):
         super().__init__("Cemetery", "cemetery")
 

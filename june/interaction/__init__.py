@@ -1,2 +1,3 @@
-from .interaction import Interaction,InteractionCollective
+from .interaction import Interaction
+from .default_interaction import DefaultInteraction
 
