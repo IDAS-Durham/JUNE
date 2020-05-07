@@ -42,9 +42,8 @@ class CompanyDistributor:
                     and company.n_employees < company.n_employees_max
                 ):
                     company.n_employees += 1
-                    company.n_woman += person.sex  # remember: woman=1;man=0
-                    company.people.append(person)
-                    person.company_id = company.id
+                    company.n_woman     += person.sex  # remember: woman=1;man=0
+                    company.add(person,"worker")
                     break
                 # TODO: Take care if cases where people did not find any
                 # company at all

@@ -1,7 +1,9 @@
-import numpy as np
 import random
-import sys
+from enum import IntEnum
+
+import numpy as np
 from sklearn.neighbors._ball_tree import BallTree
+
 from covid.groups import Group
 
 
@@ -9,13 +11,20 @@ class Pub(Group):
     """
     The Pub class represents a pub, and treats all people in it
     without any distinction of their role.
+
+    There are two sub-groups:
+    0 - workers
+    1 - guestss
     """
+
+    class GroupType(IntEnum):
+        workers = 0
+        guests = 1
 
     def __init__(self, pub_id=1, position=None):
         super().__init__("Pub_%03d" % pub_id, "pub")
         self.id = pub_id
         self.position = position
-        self.people = []
 
     def set_active_members(self):
         for person in self.people:
@@ -34,7 +43,7 @@ class Pubs:
         self.members = []
         # maximal distance of customer going to a pub, with a minimum
         # of five choices
-        self.maxdistance = 5.0
+        self.maxdistance = 5.
         self.minchoices = 5
         if not self.box_mode:
             self.pub_trees = self.create_pub_trees(pub_df)
@@ -63,7 +72,8 @@ class Pubs:
         index = 0
         pubs = []
         for angle in angles[0]:
-            if angle * 6500.0 < self.maxdistance or len(pubs) < self.minchoices:
+            if (angle * 6500. < self.maxdistance or
+                    len(pubs) < self.minchoices):
                 pubs.append(self.members[index])
             index += 1
         return pubs
@@ -109,8 +119,8 @@ class PubFiller:
 
     def make_weight(self, customer):
         if customer.age < 18:
-            return 0.0
-        weight = 1.0
+            return 0.
+        weight = 1.
         if customer.age >= 35 and customer.age < 55:
             weight *= self.pub_over35_ratio
         elif customer.age >= 55:
@@ -123,15 +133,15 @@ class PubFiller:
         if self.make_weight(customer) < np.random.random():
             return False
         pub = np.random.choice(self.pubs)
-        pub.people.append(customer)
+        pub.add(customer, Pub.GroupType.guests)
         if self.world.timer.weekend and random.random() < self.full_household_in_pub:
             for person in customer.household.people:
                 if person != customer:
-                    pub.people.append(person)
+                    pub.add(person, Pub.GroupType.guests)
         elif not (self.world.timer.weekend) and random.random() < self.adults_in_pub:
             for person in customer.household.people:
                 if person != customer and person.age >= 18:
-                    pub.people.append(person)
+                    pub.add(person, Pub.GroupType.guests)
         return True
 
     def fill(self, area):
