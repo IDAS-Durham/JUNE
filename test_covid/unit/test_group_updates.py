@@ -41,10 +41,11 @@ def test__everyone_is_active_somewhere(world_ne):
 
 
 def find_random_in_school(world_ne):
-    for person in world_ne.people.members:
-        if person.school is not None:
-            selected_person = person
-            break
+    for school in world_ne.schools.members:
+        for grouping in school.groupings:
+            for person in grouping._people:
+                selected_person = person
+                break
     return selected_person
 
 
@@ -62,6 +63,7 @@ def test__follow_a_worker(world_ne):
     selected_person = find_random_in_company(world_ne)
     print(f"Industry : {selected_person.industry}")
     world_ne.set_allpeople_free()
+    world_ne.timer.reset()
     for day in world_ne.timer:
         active_groups = world_ne.timer.active_groups()
         world_ne.set_active_group_to_people(active_groups)
@@ -78,6 +80,7 @@ def test__follow_a_worker(world_ne):
 def test__follow_a_pupil(world_ne):
     selected_person = find_random_in_school(world_ne)
     world_ne.set_allpeople_free()
+    world_ne.timer.reset()
     for day in world_ne.timer:
         active_groups = world_ne.timer.active_groups()
         world_ne.set_active_group_to_people(active_groups)

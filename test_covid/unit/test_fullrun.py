@@ -9,19 +9,7 @@ from covid import World
 
 
 def test_full_run(world_ne):
-    #world = World(
-    #    os.path.join(
-    #        os.path.dirname(
-    #            os.path.realpath(__file__)
-    #        ),
-    #        "../..",
-    #        "configs",
-    #        "config_example.yaml"
-    #    ),
-    #    box_mode=False
-    #)
     world_ne.group_dynamics()
-
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt

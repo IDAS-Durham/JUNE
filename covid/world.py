@@ -355,8 +355,8 @@ class World:
 
     def initialize_interaction(self):
         interaction_type = self.config["interaction"]["type"]
-        interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction_instance = getattr(interaction, interaction_class_name).from_file()
+        interaction_class_name = interaction_type.capitalize()+"Interaction" 
+        interaction_instance = getattr(interaction, interaction_class_name)()
         return interaction_instance
 
     def set_active_group_to_people(self, active_groups):
@@ -414,10 +414,13 @@ class World:
         for person in group.dead:
             cemetery = self.cemeteries.get_nearest(person)
             cemetery.add(person)
-            group.people.remove(person)
+            group.remove_person(person)
 
     def do_timestep(self):
         active_groups = self.timer.active_groups()
+        print ("=====================================================")
+        print ("=== active groups: ",active_groups,", ",
+               "time = ",self.timer.now,", delta = ",self.timer.duration)
         if not active_groups or len(active_groups) == 0:
             world_logger.info("==== do_timestep(): no active groups found. ====")
             return
@@ -527,4 +530,4 @@ if __name__ == "__main__":
     #              box_mode=True,box_n_people=100)
 
     # world = World.from_pickle()
-    # world.group_dynamics()
+    world.group_dynamics()

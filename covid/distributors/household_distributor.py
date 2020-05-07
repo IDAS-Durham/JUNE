@@ -592,8 +592,16 @@ class HouseholdDistributor:
         """
         Adds person to household and assigns them the correct subgroup.
         """
-        # TODO modify to set the person to the right subgroup.
-        household.people.add(person)
+        if subgroup == "kids":
+            household.people.add(person, household.GroupType.kids)
+        elif subgroup == "young_adults":
+            household.people.add(person, household.GroupType.young_adults)
+        elif subgroup == "adults":
+            household.people.add(person, household.GroupType.adults)
+        elif subgroup == "old":
+            household.people.add(person, household.GroupType.old_adults)
+        else:
+            raise HouseholdError(f"Subgroup {subgroup} not recognized")
         person.household = household
 
     def _check_if_age_dict_is_empty(self, people_dict: dict, age: int) -> bool:
@@ -835,7 +843,7 @@ class HouseholdDistributor:
                 )
                 if student is None:
                     raise HouseholdError("Students do not match!")
-                self._add_to_household(household, student, subgroup=None)
+                self._add_to_household(household, student, subgroup="young_adult")
                 students_left -= 1
         assert students_left >= 0
         index = 0
@@ -844,7 +852,7 @@ class HouseholdDistributor:
             student = self._get_random_person_in_age_bracket(
                 area, min_age=self.student_min_age, max_age=self.student_max_age
             )
-            self._add_to_household(household, student, subgroup=None)
+            self._add_to_household(household, student, subgroup="young_adult")
             students_left -= 1
             index += 1
             index = index % len(student_houses)
@@ -890,13 +898,13 @@ class HouseholdDistributor:
                     for array in extra_people_lists:
                         array.append(household)
                 return None
-            self._add_to_household(household, person, subgroup=None)
+            self._add_to_household(household, person, subgroup="old")
             if people_per_household > 1 and person is not None:
                 partner = self._get_matching_partner(person, area, over_65=True)
                 # if partner is None:
                 #    partner = self._get_matching_partner(person, area, under_65=True)
                 if partner is not None:
-                    self._add_to_household(household, partner, subgroup=None)
+                    self._add_to_household(household, partner, subgroup="old")
             if household.size < household.max_size:
                 for array in extra_people_lists:
                     array.append(household)
@@ -958,13 +966,13 @@ class HouseholdDistributor:
                         for array in extra_people_lists:
                             array.append(household)
                     return None
-            self._add_to_household(household, first_kid, subgroup=None)
+            self._add_to_household(household, first_kid, subgroup="kids")
             first_parent = self._get_matching_parent(first_kid, area)
             if first_parent is None:
                 raise HouseholdError(
                     "Orphan kid. Check household configuration and population."
                 )
-            self._add_to_household(household, first_parent, subgroup=None)
+            self._add_to_household(household, first_parent, subgroup="adults")
             for array in extra_people_lists:
                 array.append(household)
             if old_per_house > 0:
@@ -974,13 +982,13 @@ class HouseholdDistributor:
                     )
                     if random_old is None:
                         break
-                    self._add_to_household(household, random_old, subgroup=None)
+                    self._add_to_household(household, random_old, subgroup="old")
 
             if parents_per_house == 2 and first_parent is not None:
                 second_parent = self._get_matching_partner(first_parent, area)
                 if second_parent is not None:
                     # return None
-                    self._add_to_household(household, second_parent, subgroup=None)
+                    self._add_to_household(household, second_parent, subgroup="adults")
 
             if kids_per_house == 2:
                 second_kid = self._get_matching_second_kid(first_parent, area)
@@ -991,7 +999,7 @@ class HouseholdDistributor:
                         max_age=self.young_adult_max_age,
                     )
                 if second_kid is not None:
-                    self._add_to_household(household, second_kid, subgroup=None)
+                    self._add_to_household(household, second_kid, subgroup="kids")
 
     def fill_nokids_households(
         self,
@@ -1036,7 +1044,7 @@ class HouseholdDistributor:
             #    area, min_age=self.adult_min_age, max_age=self.adult_max_age
             # )
             if first_adult is not None:
-                self._add_to_household(household, first_adult, subgroup=None)
+                self._add_to_household(household, first_adult, subgroup="adults")
             if adults_per_household == 1:
                 if household.size < household.max_size:
                     for array in extra_people_lists:
@@ -1046,7 +1054,7 @@ class HouseholdDistributor:
             if first_adult is not None:
                 second_adult = self._get_matching_partner(first_adult, area)
                 if second_adult is not None:
-                    self._add_to_household(household, second_adult, subgroup=None)
+                    self._add_to_household(household, second_adult, subgroup="adults")
             if household.size < household.max_size:
                 for array in extra_people_lists:
                     array.append(household)
@@ -1081,7 +1089,7 @@ class HouseholdDistributor:
                     max_age=self.young_adult_max_age,
                 )
                 if person is not None:
-                    self._add_to_household(household, person, subgroup=None)
+                    self._add_to_household(household, person, subgroup="young_adults")
             for array in extra_people_lists:
                 array.append(household)
 
@@ -1114,7 +1122,7 @@ class HouseholdDistributor:
                 area, min_age=self.young_adult_min_age, max_age=self.young_adult_max_age
             )
             if youngadult is not None:
-                self._add_to_household(household, youngadult, subgroup=None)
+                self._add_to_household(household, youngadult, subgroup="young_adults")
             for _ in range(adults_per_household):
                 if youngadult is not None:
                     adult = self._get_random_person_in_age_bracket(
@@ -1125,7 +1133,7 @@ class HouseholdDistributor:
                         area, min_age=self.adult_min_age, max_age=self.adult_max_age
                     )
                 if adult is not None:
-                    self._add_to_household(household, adult, subgroup=None)
+                    self._add_to_household(household, adult, subgroup="adults")
 
     def fill_all_communal_establishments(
         self, n_establishments: int, n_people_in_communal: int, area: Area

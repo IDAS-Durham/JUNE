@@ -152,7 +152,7 @@ class PersonDistributor:
                 industry_id = sector_woman[i]
             else:
                 raise ValueError(
-                    "sex must be with male or female. Intead got {}".format(sex_random)
+                    "sex must be with male or female. Intead got {person.sex}"
                 )
             person.industry = self.industry_dict[industry_id]
 
@@ -304,7 +304,7 @@ class PersonDistributor:
                     companysector_female_rnd_array,
                 )
             self.people.members.append(person)
-            self.area.people.append(person)
+            self.area.add(person)
             # assign person to the right group, this is used in the household distributor.:
             if sex_random == 0:
                 if age_random not in self.area.men_by_age:
@@ -322,9 +322,7 @@ class PersonDistributor:
             for age in people_dict.keys():
                 total_people += len(people_dict[age])
 
-        try:
-            assert total_people == self.area.n_residents
-        except AssertionError:
+        if total_people != self.area.n_residents:
             raise PersonError(
                 f"The number of people created {total_people} does not match the areas' number of residents {self.area.n_residents}"
-                )
+            )
