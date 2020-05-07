@@ -81,7 +81,6 @@ class School(Group):
                 qualifier
             )
 
-
 class Schools:
     def __init__(
         self,

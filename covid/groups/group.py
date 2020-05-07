@@ -262,6 +262,10 @@ class Group(AbstractGroup):
                 self._recovered.add(person)
             elif person.health_information.dead:
                 self.dead.add(person)
+                
+    @property 
+    def intensities(self):
+        return np.eye((len(self.groupings), len(self.groupings)))
 
     @property
     def size(self):
