@@ -17,6 +17,6 @@ install:
 script:
   - pytest --cov=covid test_covid/
 
-after_success:
+after_build:
   - codecov
 
