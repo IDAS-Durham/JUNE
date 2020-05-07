@@ -12,8 +12,6 @@ default_config_filename = Path(__file__).parent.parent / "configs/config_example
 
 sim_logger = logging.getLogger(__name__)
 
-valid_group_hierarchy = ['hospital', 'company', 'school', 'pub', 'household']
-
 class Simulator:
     def __init__(self, world: "World", interaction: "Interaction", infection: Infection, config: dict):
         """
@@ -33,6 +31,8 @@ class Simulator:
         self.interaction = interaction
         self.infection = infection
         self.timer = Timer(config)
+        self.permanent_group_hierarchy = ['hospital', 'company', 'school', 'household']
+        self.valid_group_hierarchy = ['hospital', 'company', 'school', 'pub', 'household']
 
     @classmethod
     def from_file(
@@ -53,10 +53,13 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        return Simulator(world, interaction, infection, config["time"])
+
+    def check_inputs(self):
+        # Check that all groups given in config file are in the valid group hierarchy
 
         assert sum(config["time"]["step_duration"]["weekday"].values()) == 24
 
-        return Simulator(world, interaction, infection, config["time"])
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
