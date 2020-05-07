@@ -265,7 +265,7 @@ class Group(AbstractGroup):
                 
     @property 
     def intensities(self):
-        return np.eye((len(self.groupings), len(self.groupings)))
+        return np.eye(len(self.groupings), len(self.groupings))
 
     @property
     def size(self):
