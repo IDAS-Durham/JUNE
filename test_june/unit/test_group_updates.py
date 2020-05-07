@@ -1,6 +1,8 @@
 def test__everyone_is_in_household(world_ne):
     world_ne.set_active_group_to_people(["households"])
     for person in world_ne.people.members:
+        if person.carehome is not None:
+            continue
         assert person.active_group == "household"
     world_ne.set_allpeople_free()
 
@@ -16,6 +18,8 @@ def test__everyone_is_freed(world_ne):
 def test__everyone_is_in_school_household(world_ne):
     world_ne.set_active_group_to_people(["schools", "households"])
     for person in world_ne.people.members:
+        if person.carehome is not None:
+            continue
         should_be_active = "school" if person.school is not None else "household"
         assert person.active_group == should_be_active
     world_ne.set_allpeople_free()
@@ -30,7 +34,7 @@ def test__everyone_is_in_school_household(world_ne):
 
 
 def test__everyone_is_active_somewhere(world_ne):
-    world_ne.set_active_group_to_people(["schools", "households"])
+    world_ne.set_active_group_to_people(["schools", "carehomes", "households"])
     for person in world_ne.people.members:
         assert person.active_group is not None
     world_ne.set_allpeople_free()

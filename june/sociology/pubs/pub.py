@@ -55,8 +55,7 @@ class Pubs:
     def create_pub_trees(self, pub_df):
         # print (pub_df[["Latitude", "Longitude"]].values)
         pub_tree = BallTree(
-            np.deg2rad(pub_df[["Latitude", "Longitude"]].values),
-            metric="haversine"
+            np.deg2rad(pub_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
         counter = 0
         for row in range(pub_df.shape[0]):
@@ -91,7 +90,7 @@ class Pubs:
 # https://howtorunapub.co.uk/uk-pub-customer-demographics-behaviours/
 # will assume that WE visits are abot twice as frequent as weekdays -
 # so 6% of population visit on Saturday/Sunday and 3% visit weekdays
-# 
+#
 # about 50% of pub goers are age 18-34, 32% are 34-55, 18% are 55 or over,
 # gender ratio 66%(M)-34%(F),
 # groups going to the pub: 23% familes, 22% couples (-> will treat both as households)
@@ -148,8 +147,10 @@ class PubFiller:
     def fill(self, area):
         ncustomers = self.fix_number(area)
         self.pubs = self.allpubs.get_nearest(area)
+        people_in_area = [person for person in area.people if person.carehome is None]
         while ncustomers > 0:
-            if self.place(np.random.choice(area.people)):
+            if self.place(np.random.choice(people_in_area)):
+                #TODO think whether people in carehomes go to pubs
                 ncustomers -= 1
         # for pub in self.pubs:
         #    print ("pub with",len(pub.people)," customers:")
