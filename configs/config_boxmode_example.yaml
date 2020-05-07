@@ -22,7 +22,9 @@ time:
           1: ['boxes'] # active groups during first time step
 
 interaction:
-  type: default 
+  type: collective
+  parameters:
+    mode: superposition 
 
 infection:
   type: constant
