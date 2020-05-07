@@ -5,7 +5,7 @@ from pathlib import Path
 from covid.interaction.interaction import Interaction
 
 default_config_filename = (
-    Path(__file__).parent.parent.parent
+    Path(__file__).parent.parent
     / "configs/defaults/interaction/DefaultInteraction.yaml"
 )
 
