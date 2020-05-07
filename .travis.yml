@@ -15,9 +15,8 @@ install:
   - bash get_data.sh
 
 script:
-  - cd test_covid
-  - pytest
+  - pytest --cov=covid test_covid/
 
-after_success:
+after_build:
   - codecov
 
