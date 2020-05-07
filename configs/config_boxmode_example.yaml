@@ -7,7 +7,7 @@ world:
   zone: test # NorthEast # available are all UK regions, and EnglandWales together.
 
 time:
-  total_days: 30 
+  total_days: 25 
   step_duration: 
       weekday:
           1: 12 
@@ -22,9 +22,7 @@ time:
           1: ['boxes'] # active groups during first time step
 
 interaction:
-  type: collective
-  parameters:
-    mode: superposition 
+  type: default 
 
 infection:
   type: constant
