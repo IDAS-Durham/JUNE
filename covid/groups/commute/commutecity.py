@@ -4,7 +4,7 @@ from scipy import spatial
 import matplotlib.pyplot as plt
 
 
-class CommuteCity():
+class CommuteCity:
 
     def __init__(commutecity_id, city, metro_msoas, metro_centroid):
         self.id = commutecity_id
@@ -13,7 +13,7 @@ class CommuteCity():
         self.city
         self.passengers = [] # people commuting to the city
 
-class CommuteCities():
+class CommuteCities:
 
     def __init__(self, stat_pcs_df, is_london, uk_pcs_coordinates, msoa_coordinates):
         self.stat_pcs_df = stat_pcs_df
@@ -23,9 +23,9 @@ class CommuteCities():
         self.members = []
 
         if self.is_london:
-            self.init_london
+            self.init_london()
         else:
-            self.init_non_london
+            self.init_non_london()
 
         self._msoa_get_lat_lon()
         
