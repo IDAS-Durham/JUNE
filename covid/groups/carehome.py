@@ -1,9 +1,23 @@
 from covid.groups import Group
 from itertools import count
+from enum import IntEnum
 
 class CareHome(Group):
+    """
+    The Carehome class represents a carehome and contains information about 
+    its residents, workers and visitors.
+    We assume three subgroups:
+    0 - workers
+    1 - residents 
+    2 - visitors 
+    """
 
     _id = count()
+
+    class GroupType(IntEnum):
+        workers = 0
+        residents = 1
+        visitors = 2
 
     def __init__(self, area, n_residents):
         carehome_id = next(self._id)
