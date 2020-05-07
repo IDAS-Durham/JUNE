@@ -12,8 +12,10 @@ from june.geography.areas import Area
 from june.geography.super_areas import SuperArea
 from june import get_creation_logger
 
-default_data_path = Path(__file__).parent.parent.parent.parent / \
+default_data_path_1 = Path(__file__).parent.parent.parent.parent / \
         "data/census_data/area_code_translations"
+default_data_path_2 = Path(__file__).parent.parent.parent.parent / \
+        "data/processed/geographical_data"
 
 default_logging_config_filename = Path(__file__).parent.parent.parent.parent / \
         "configs/config_world_creation_logger.yaml"
@@ -23,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class Areas:
-    def __init__(self, areas: List[Area]):
-        self.members = super_areas
+    def __init__(self, areas: Optional[List[Area]] =):
+        self.members = areas
        
     def __len__(self):
         return len(self.members)
@@ -41,9 +43,9 @@ class Area:
     
     def __init__(
             self,
-            name: str = None,
-            coordinates: [float, float],
-            super_area: str,
+            name: str,
+            coordinates: Optional[[float, float]] = None,
+            super_area: str = None,
     ):
         """
         """
@@ -51,7 +53,7 @@ class Area:
 
 
 class SuperAreas:
-    def __init__(self, super_areas: List[SuperArea]):
+    def __init__(self, super_areas: Optional[List[SuperArea]] = []):
         self.members = super_areas
        
     def __len__(self):
@@ -71,39 +73,11 @@ class SuperArea:
             self,
             name: str,
             coordinates: Optional[[float, float]] = None,
-            area: List[Area],
+            area: Optional[List[Area]] = None,
     ):
         self.id = next(self._id)
         self.super_area = super_area
         self.area = area
-
-        msoareas_list = []
-        for msoa_name in self.msoareas.names_in_order:
-            # centroid of msoa
-            coordinates = ['xxx', 'xxx']
-            # find postcode inside this msoarea
-            pcd_in_msoa = self.area_mapping_df[
-                self.area_mapping_df["MSOA"].isin([msoa_name])
-            ]["PCD"].values
-            # find oareas inside this msoarea
-            oa_in_msoa = [
-                area
-                for area in self.world.areas.members
-                if area.super_area == msoa_name
-            ]
-            # create msoarea
-            msoarea = SuperArea(
-                coordinates,
-                oa_in_msoa,
-                msoa_name,
-                self.relevant_groups,
-            )
-            msoareas_list.append(msoarea)
-            # link  area to msoarea
-            for area in oa_in_msoa:
-                area.super_area = msoarea
-        self.msoareas.members = msoareas_list
-
 
 
 class Geography:
@@ -121,19 +95,45 @@ class Geography:
             hierachical structure will be constructed.
         """
         self.hierarchy = hierarchy
-
+        self.hierarchy = _sorting_and_grouping(self.hierarchy)
 
     def create_geographical_units(self):
         """
         Create geo-graph of the used geographical units.
+
+        Note: This function looks a bit more complicated than need be,
+        but it was created with a eye on the future.
         """
-        for unit in self.hierarchy.columns:
-            self.hierarchy[unit]
+        self.areas = Areas()
+        self.super_areas = SuperAreas()
+
+        # loop through all but the smallest geo-unit
+        for geo_unit_level in range(self.hierarchy.index.nlevels):  #Atm. only one level
+            geo_units_labels = dic.index.get_level_values(geo_unit_level).unique()
+            
+            # loop through this geo-unit
+            for unit_label in geo_units_labels:
+                smaller_unit_df = self.hierarchy.loc[unit_label]
+                
+                # loop over smallest geo-unit
+                for smaller_unit_label in smaller_unit_df.values[0].split(' '):
+                
+                    Area(
+                        name=smaller_unit_label,
+                    )
+                    self.areas.members.append(Area)
+                
+                SuperArea(
+                    name=unit_label,
+                    area=areas,
+                )
+                self.super_areas.append(SuperArea)
 
     @classmethod
     def from_file(
             cls,
-            data_path: str = default_data_path,
+            names_path: str = default_data_path_1,
+            coords_path: str = default_data_path_2,
             filter_key: Optional[Dict[str, list]] = None,
             logging_config_filename: str = default_logging_config_filename,
     ) -> "Geography":
@@ -143,40 +143,82 @@ class Geography:
 
         Parameters
         ----------
-        data_path
-            The path to the data directory
+        names_path
+            The path to the data directory in which the names
+            of areas can be found.
+        coords_path
+            The path to the data directory in which the coordinates
+            of areas can be found.
         filter_key
             Filter out geo-units which should enter the world.
             At the moment this can only be one of [PCD, OA, MSOA]
+
+        Note: It would be nice to find a better way to handle coordinates.
         """
         #TODO this file is missing option to filter for Region etc.
-        geo_hierarchy_file = f"{data_path}/areas_mapping.csv"
+        unit_hierarchy_file = f"{names_path}/areas_mapping.csv"
+        smallest_unit_coords_file = f"{coords_path}/oa_coorindates.csv"
 
-        usecols = [1 ,3, 4]
-        column_names = ["OA", "MSOA", "LAD"]
-        geo_hierarchy = pd.read_csv(
-            geo_hierarchy_file,
-            names=column_names,
-            usecols=usecols,
-        )
+        geo_hierarchy = _load_geo_file(unit_hierarchy_file)
+        smallest_unit_coord = _load_area_coords(smallest_unit_coords_file)
         
         if filter_key not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
         # At the moment we only support data at the UK OA & MSOA level.
         geo_hierarchy = geo_hierarchy[["MSOA", "OA"]]
-        geo_hierarchy = _sorting_and_grouping(geo_hierarchy)
         return Geography(geo_hierarchy)
 
 
-def _filtering(data: pd.DataFrame, filter_key: Optional[Dict[str, list]] = None):
+def _load_geo_file(
+        names_path: str
+) -> pd.pd.DataFrame:
+    """
+    """
+    usecols = [1 ,3, 4]
+    column_names = ["OA", "MSOA", "LAD"]
+    return pd.read_csv(
+        unit_hierarchy_file,
+        names=column_names,
+        usecols=usecols,
+    )
+    
+
+def _load_area_coords(
+        coords_path: str
+) -> pd.pd.DataFrame:
+    """
+    """
+    return pd.read_csv(
+        coords_path
+    ).set_index("OA11CD", inplace=True)
+
+
+oa = pd.read_csv('./../data/geographical_data/oa_coorindates.csv')
+oa_msoa = pd.read_csv(
+    './../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv'
+)
+oa_msoa_ll = pd.merge(oa_msoa, oa, on='OA11CD')
+oa_msoa_ll_mean = oa_msoa_ll.groupby('MSOA11CD', as_index=False)[['X','Y']].mean()
+oa_msoa_ll_mean.to_csv('msoa_coordinates_englandwales.csv')
+
+
+
+
+
+def _filtering(
+        data: pd.DataFrame,
+        filter_key: Optional[Dict[str, list]] = None
+) -> pd.pd.DataFrame:
     """
     Filter DataFrame for given geo-unit and it's listed names
     """
     return data[ data[filter_key["unit"]].isin(filter_key["names"]) ]
 
 
-def _sorting_and_grouping(self, hierarchy: pd.DataFrame):
+def _sorting_and_grouping(
+        hierarchy: pd.DataFrame
+) -> pd.DataFrame:
     """
     Find the order for available geographical units from fine (left column)
     to coarse (right column) granular and group them.
