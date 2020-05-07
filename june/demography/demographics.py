@@ -5,8 +5,9 @@ from typing import List, Dict, Optional
 
 import numpy as np
 
-from june.groups.people.health_index import HealthIndex
-from june.groups.people.person import Person
+from june import Geography
+from june.demography.health_index import HealthIndex
+from june.demography.person import Person
 
 default_data_path = Path(__file__).parent.parent.parent.parent / "data"
 
@@ -27,7 +28,7 @@ class AgeGenerator:
     def __init__(
             self,
             lower: int,
-            upper:
+            upper: int = None,
             Optional[int] = None
     ):
         """
@@ -116,7 +117,8 @@ class Population:
 class Demography:
     def __init__(
             self,
-            super_area: str,
+            super_area: str = None,
+            geography: "Geography",
             residents_map: Dict[str, int],
             sex_generators: Dict[str, "WeightedGenerator"],
             age_generators: Dict[str, "WeightedGenerator"],
