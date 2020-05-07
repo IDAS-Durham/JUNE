@@ -84,18 +84,23 @@ class Geography:
     def __init__(
             self,
             hierarchy: pd.DataFrame,
+            coordinates: pd.DataFrame,
     ):
         """
         Generate hierachical devision of geography.
 
         Parameters
         ----------
-        geo_hierarchy
+        hierarchy
             The different geographical division units from which the
             hierachical structure will be constructed.
+        coordinates
+
+        Note: It would be nice to find a better way to handle coordinates.
         """
         self.hierarchy = hierarchy
         self.hierarchy = _sorting_and_grouping(self.hierarchy)
+        self.coordinates = coordinates
 
     def create_geographical_units(self):
         """
@@ -117,9 +122,10 @@ class Geography:
                 
                 # loop over smallest geo-unit
                 for smaller_unit_label in smaller_unit_df.values[0].split(' '):
-                
+                     
                     Area(
                         name=smaller_unit_label,
+                        coordinates=self.get_area_coord(smaller_unit_label),
                     )
                     self.areas.members.append(Area)
                 
@@ -128,6 +134,15 @@ class Geography:
                     area=areas,
                 )
                 self.super_areas.append(SuperArea)
+
+    def get_area_coord(self, area_name):
+        """
+        Read two numbers from input df, return as array.
+        """
+        import numpy as np
+        df_entry = self.coordinates.loc[area_name]
+        # NOTE df["X"] ~5 times faster than df[ ["Y", "X"] ]
+        return [df_entry["Y"], df_entry["X"]]
 
     @classmethod
     def from_file(
