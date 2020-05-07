@@ -595,4 +595,4 @@ if __name__ == "__main__":
     #print(ip.workflow_df)
     #print("companysize_df\n", ip.companysize_df)
     #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
-
+    print(ip.areas_coordinates_df)
