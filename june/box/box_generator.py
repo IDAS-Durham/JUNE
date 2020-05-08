@@ -114,10 +114,6 @@ class BoxGenerator(Box):
             age_counter += 1
             self[self.GroupType.default].append(person)
 
-        # shuffle people just in case
-        np.random.shuffle(self.people)
-
-
     def from_file(self, inputs):
         """
         Parameters

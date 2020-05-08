@@ -11,15 +11,6 @@ class TestGroup:
         with pytest.raises(exc.GroupException):
             g.Group(name="house1", spec="invalid")
 
-    def test__intensity_can_be_set(self):
-        group = g.Group(name="house1", spec="household")
-
-        assert group[0].intensity == 1.0
-
-        group[0].intensity = 2.0
-
-        assert group[0].intensity == 2.0
-
     def test_group_types(self):
         group = g.Group(
             name="name",
