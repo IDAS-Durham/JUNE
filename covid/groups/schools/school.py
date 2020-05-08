@@ -1,14 +1,13 @@
 from enum import IntEnum
-from typing import Tuple
+from typing import List, Tuple, Dict, Optional
 
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List, Tuple, Dict, Optional
 from sklearn.neighbors._ball_tree import BallTree
 
 from covid.groups import Group
-from covid.groups.group import People
+from covid.groups.group import Subgroup
 
 
 class SchoolError(BaseException):
@@ -21,6 +20,12 @@ class School(Group):
     class GroupType(IntEnum):
         teachers = 0
         students = 1
+
+    __slots__ = (
+        "id", "coordinates", "msoa", "n_pupils_max",
+        "n_pupils", "age_min", "age_max", "age_structure",
+        "sector", "is_full", "n_teachers_max", "n_teachers"
+    )
 
     def __init__(
         self,
@@ -57,7 +62,7 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__(name="School_%05d" % school_id, spec="school")
-        self.groupings = [People() for _ in range(age_min, age_max + 2)]
+        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
@@ -73,10 +78,11 @@ class School(Group):
 
     def add(self, person, qualifier=GroupType.students):
         if qualifier == self.GroupType.students:
-            self.groupings[1 + person.age - self.age_min].append(person)
+            self.subgroups[1 + person.age - self.age_min].append(person)
             person.school = self
         else:
             super().add(person, qualifier)
+
 
 
 class Schools:
@@ -90,6 +96,7 @@ class Schools:
         student_nr_per_teacher: int = 30,
         school_tree: Optional[Dict[int, BallTree]] = None,
         agegroup_to_global_indices: dict = None,
+
     ):
         """
         Create a group of Schools, and provide functionality to access closest school
@@ -214,13 +221,13 @@ class Schools:
 
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: [] for k in range(int(age_range[0]), int(age_range[1]) + 1,)
+            k: [] for k in range(int(age_range[0]), int(age_range[1]) + 1, )
         }
         # have a tree per age
         for age in range(int(age_range[0]), int(age_range[1]) + 1):
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
-            ]
+                ]
             school_trees[age] = self._create_school_tree(self, _school_df_agegroup)
             school_agegroup_to_global_indices[age] = _school_df_agegroup.index.values
 

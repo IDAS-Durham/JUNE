@@ -43,9 +43,9 @@ def test__all_kids_mandatory_school(world_ne):
     KIDS_UP = world_ne.schools.mandatory_age_range[1]
     lost_kids = 0
     for area in world_ne.areas.members:
-        for person in area.groupings[0]._people:
+        for person in area.subgroups[0]._people:
             if (person.age >= KIDS_LOW) and (
-                person.age <= KIDS_UP
+                    person.age <= KIDS_UP
             ):
                 if person.school is None:
                     lost_kids += 1
@@ -56,7 +56,7 @@ def test__only_kids_school(world_ne):
     ADULTS_LOW = 20
     schooled_adults = 0
     for area in world_ne.areas.members:
-        for person in area.groupings[0]._people:
+        for person in area.subgroups[0]._people:
             if person.age >= ADULTS_LOW:
                 if person.school is not None:
                     schooled_adults += 1
@@ -66,7 +66,7 @@ def test__only_kids_school(world_ne):
 
 def test__n_pupils_counter(world_ne):
     for school in world_ne.schools.members:
-        n_pupils = np.sum([len(grouping.people) for grouping in school.groupings])
+        n_pupils = np.sum([len(grouping.people) for grouping in school.subgroups])
         assert n_pupils == school.n_pupils
 
 
@@ -78,13 +78,17 @@ def test__age_range_schools(world_ne):
                 n_outside_range += 1
     assert n_outside_range == 0
 
+
 def test__non_mandatory_dont_go_if_school_full(world_ne):
     non_mandatory_added = 0
     mandatory_age_range = world_ne.schools.mandatory_age_range
     for school in world_ne.schools.members:
         if school.n_pupils > school.n_pupils_max:
             ages = np.array(
-                [person.age for person in list(school.people)[int(school.n_pupils_max):]]
+                [person.age for person in list(sorted(
+                    school.people,
+                    key=lambda person: person.age
+                ))[int(school.n_pupils_max):]]
             )
             older_kids_when_full = np.sum(
                 ages > mandatory_age_range[1]
