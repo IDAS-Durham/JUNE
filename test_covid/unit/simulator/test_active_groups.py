@@ -1,13 +1,9 @@
 
-
-
 def test__right_group_hierarchy(simulator):
     permanent_group_hierarchy = simulator.permanent_group_hierarchy.copy()
     permanent_group_hierarchy.reverse()
     active_groups = permanent_group_hierarchy.copy()
-    print('Inputs : ', active_groups)
     ordered_active_groups = simulator.apply_group_hierarchy(active_groups)
-
     assert ordered_active_groups == simulator.permanent_group_hierarchy
 
 def test__right_group_hierarchy_random_groups(simulator):
@@ -16,14 +12,10 @@ def test__right_group_hierarchy_random_groups(simulator):
     permanent_group_hierarchy.reverse()
     active_groups = permanent_group_hierarchy.copy()
     active_groups += ['pubs']
-    print('Inputs : ', active_groups)
     ordered_active_groups = simulator.apply_group_hierarchy(active_groups)
     true_ordered_active_groups = [group for group in simulator.permanent_group_hierarchy if group not in ['carehomes', 'households']]
     true_ordered_active_groups.append('pubs')
     true_ordered_active_groups += ['carehomes', 'households']
-
-    print('ordered active groups : ', ordered_active_groups)
-    print('true ordered active groups : ', true_ordered_active_groups)
     assert  ordered_active_groups == true_ordered_active_groups
 
 
@@ -32,7 +24,6 @@ def test__right_group_hierarchy_in_box(simulator_box):
 
     assert ordered_active_groups == ['boxes']
 
-'''
 def test__everyone_is_freed(simulator):
     simulator.set_active_group_to_people(["households"])
     simulator.set_allpeople_free()
@@ -63,5 +54,4 @@ def test__everyone_is_active_somewhere(world_ne):
         assert person.active_group is not None
     world_ne.set_allpeople_free()
 
-'''
 
