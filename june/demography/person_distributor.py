@@ -291,6 +291,7 @@ class PersonDistributor:
                 health_index=health_index,
                 econ_index=0,
                 mode_of_transport=None,
+                area = self.area
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment
             if is_working_age:
