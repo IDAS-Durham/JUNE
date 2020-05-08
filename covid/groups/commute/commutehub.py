@@ -116,7 +116,7 @@ class CommuteHubs:
 
                 ids += 1
 
-                commutecity.commutehubs.append(hub)
+                commutecity.commutehubs.append(commute_hub)
                 
                 self.members.append(commute_hub)
             
