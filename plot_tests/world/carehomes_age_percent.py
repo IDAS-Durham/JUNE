@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-#from covid.world import World
+#from june.world import World
 
 #pie chart taken from https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/ageing/articles/changesintheolderresidentcarehomepopulationbetween2001and2011/2014-08-01
 

@@ -18,13 +18,13 @@ with open(join(this_dir, "requirements.txt")) as f:
 setup(
         name="june",
         version="0.1.0",
-        description="The most amazing Covid simulation",
+        description="The most amazing june simulation",
         url="https://github.com/idas-durham/june",
         long_description=long_description,
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
         license="MIT license",
-        packages=find_packages(exclude=("test_covid", "docs")),
+        packages=find_packages(exclude=("test_june", "docs")),
         install_requires=requirements
 )
 
