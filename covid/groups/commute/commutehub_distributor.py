@@ -32,7 +32,6 @@ class CommuteHubDistributor:
     def distirbute_people(self):
 
         for commutecity in self.commutecities:
-            print ('Working on {}'.format(commutecity.city))
             # people commuting into city
             work_people = commutecity.passengers
 
@@ -49,7 +48,6 @@ class CommuteHubDistributor:
                 else:
                     to_commute_out.append(work_person)
 
-            print ('Worked out in and out')
             # possible commutehubs
             commutehub_in_city = commutecity.commutehubs
             commutehub_in_city_lat_lon = []
