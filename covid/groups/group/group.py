@@ -63,6 +63,8 @@ class Group(AbstractGroup):
         """
         default = 0
 
+    __slots__ = "name", "spec", "subgroups"
+
     def __init__(self, name: str, spec: str):
         """
         A group of people such as in a hospital or a school.
@@ -80,8 +82,13 @@ class Group(AbstractGroup):
         self.name = name
         self.spec = spec
         # noinspection PyTypeChecker
-        self.n_subgroups = len(self.GroupType)
-        self.subgroups = [Subgroup() for _ in range(self.n_subgroups)]
+        self.subgroups = [
+            Subgroup()
+            for _
+            in range(len(
+                self.GroupType
+            ))
+        ]
 
     def remove_person(self, person: Person):
         """

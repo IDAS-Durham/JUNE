@@ -3,6 +3,8 @@ from .abstract import AbstractGroup
 
 
 class Subgroup(AbstractGroup):
+    __slots__ = "_people", "_susceptible", "_infected", "_recovered", "_in_hospital", "_dead"
+
     def __init__(self):
         """
         A group within a group. For example, children in a household.
