@@ -138,7 +138,7 @@ class Simulator:
 
     def update_health_status(self, time, delta_time):
 
-        for person in world.people.infected:
+        for person in self.world.people.infected:
             health_information = person.health_information
             health_information.update_health_status(time, delta_time)
             if health_information.in_hospital:
@@ -146,12 +146,6 @@ class Simulator:
             # release patients that recovered
             elif health_information.recovered and person.hospital is not None:
                 person.hospital.release_as_patient(person)
-            elif health_information.must_stay_at_home:
-                if person.age <= 14:
-            #TODO: force set active at home for those with symptoms,
-            # if <14 yo carry a parent
-            # add complacency probability (for now very high)
-                
             elif health_information.dead:
                 self.bury_the_dead(person)
 
@@ -176,7 +170,8 @@ class Simulator:
             infecter_reference.infect_person_at_time(
                 list(self.world.people.members)[choice], self.timer.now
             )
-        self.update_health_status()
+        self.update_health_status(0, 0)
+        # in case someone has to go directly to the hospital
 
     def do_timestep(self):
         """
@@ -201,7 +196,7 @@ class Simulator:
         # assert conservation of people
         assert n_people  == len(world.people.members)
 
-        self.update_health_status()
+        self.update_health_status(self.timer.now, self.timer.duration)
         self.set_allpeople_free()
 
     def run(self, n_days, save=False):

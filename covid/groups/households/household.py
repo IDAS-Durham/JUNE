@@ -3,6 +3,9 @@ from enum import IntEnum
 from covid.groups import Group
 
 
+must_stay_at_home_complacency = 0.98
+must_supervise_age = 14
+
 class Household(Group):
     """
     The Household class represents a household and contains information about 
@@ -36,6 +39,19 @@ class Household(Group):
             for person in grouping.people:
                 if person.active_group is None:
                     person.active_group = "household"
+                elif person.health_information.must_stay_at_home:
+                    if person.age <= must_supervise_age:
+                        person.active_group = 'household'
+                        # randomly pick a parent to stay with the kid
+                        parents = self.subgroup[GroupType.adults].people
+                        random_parent = np.random.choice(parents)
+                        random_parent.active_group = 'household'
+                    else:
+                        if random.random() <= must_stay_at_home_complacency:
+                            person.active_group = 'household'
+                        else:
+                            continue
+
 
 
 class Households:
