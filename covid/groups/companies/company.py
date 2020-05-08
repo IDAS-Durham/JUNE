@@ -21,6 +21,8 @@ class Company(Group):
     We made this explicit here, although it is not necessary.
     """
 
+    __slots__ = "id", "msoa", "n_employees_max", "n_woman", "employees", "industry"
+
     class GroupType(IntEnum):
         worker = 0
 
