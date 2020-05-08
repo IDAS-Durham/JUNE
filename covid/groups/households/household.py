@@ -39,7 +39,9 @@ class Household(Group):
     def set_active_members(self):
         for grouping in self.groupings:
             for person in grouping.people:
-                if person.active_group is None:
+                if person.health_information.dead:
+                    continue
+                elif person.active_group is None: 
                     person.active_group = "household"
                 elif person.health_information.must_stay_at_home:
                     if person.age <= must_supervise_age:

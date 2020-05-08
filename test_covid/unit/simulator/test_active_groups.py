@@ -118,6 +118,7 @@ def test__must_stay_at_home(simulator, severity):
         print(f'persons tag must stay home : {dummy_person.health_information.tag}')
         simulator.set_active_group_to_people(["hospitals", "companies", "households"])
         assert dummy_person.active_group == 'household'
+    simulator.set_allpeople_free()
 
 
 '''
@@ -129,10 +130,12 @@ def test__must_stay_at_home_kid_drags_parents(simulator, severity):
     while len(school.people) <= 1:
         counter += 1
         school = simulator.world.schools.members[counter]
+
+    simulator.infection.symptoms.health_index= [0., 0.1, 0.3, 0.5, 0.7,0.9,1.]
+    simulator.infection.symptoms.severity = severity 
+
     for dummy_person in school.people[:10]:
         simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
-        simulator.infection.symptoms.health_index= [0., 0.1, 0.3, 0.5, 0.7,0.9,1.]
-        simulator.infection.symptoms.severity = severity 
         simulator.set_active_group_to_people(["hospitals", "companies", "households"])
         assert dummy_person.active_group == 'household'
         if dummy_person.age <= 14:
@@ -141,17 +144,25 @@ def test__must_stay_at_home_kid_drags_parents(simulator, severity):
                 if person.age > 18 and person.active_group == 'household':
                     parent_at_home += 1
             assert parent_at_home != 0
+    simulator.set_allpeople_free()
 
 def test__bury_the_dead(simulator):
     #TODO : bring them back to life if you want to keep using the simulator clean
     # in the future we will be able to create a test simulator
     # that is quick, and therefore doesn't need to be a fixture
     dummy_person = simulator.world.people.members[0]
+    simulator.infection.symptoms.health_index= [0., 0.1, 0.3, 0.5, 0.7,0.9,1.]
+    simulator.infection.symptoms.severity = 0.99 
+
+    simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
+     
     assert dummy_person.household is not None
     assert dummy_person in dummy_person.household.people
     simulator.bury_the_dead(dummy_person)
+    print('Is dead ? ', dummy_person.health_information.dead)
     assert dummy_person not in dummy_person.household.people
     simulator.set_active_group_to_people(["hospitals", "companies", "households"])
     assert dummy_person.active_group is None
+    simulator.set_allpeople_free()
 
 
