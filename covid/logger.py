@@ -48,7 +48,7 @@ class Logger:
             self.data_dict["world"][day]["susceptible"] = len(box.susceptible)
             self.data_dict["world"][day]["infected"] = len(box.infected)
             self.data_dict["world"][day]["recovered"] = len(box.recovered)
-            self.log_infection_generation(day)
+            # self.log_infection_generation(day)
             self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
@@ -75,7 +75,7 @@ class Logger:
             for area in self.world.areas.members:
                 for person in area.people:
                     if person.health_information.infected:
-                        infection_generation_global += person.health_information.counter.infection_generation
+                        infection_generation_global += person.health_information.infection_generation
                         global_counter +=1
                         
             if infection_generation_global == 0:
@@ -85,7 +85,7 @@ class Logger:
         else:
             box = self.world.boxes.members[0]
             for person in box.people:
-                infection_generation_global += person.health_information.counter.infection_generation
+                infection_generation_global += person.health_information.infection_generation
                 global_counter += 1
                 
                 self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
@@ -102,45 +102,26 @@ class Logger:
                 r0s_recon = []
                 day_infs = []
                 for person in box.recovered:
-                    day_inf = person.health_information.counter.time_of_infection
+                    day_inf = person.health_information.time_of_infection
                     day_infs.append([day_inf, person])
                     if (day_inf > 1 and day_inf < 5): # need to think about how to define this better
-                        day_recover = day_inf + person.health_information.counter.length_of_infection
+                        day_recover = day_inf + person.health_information.length_of_infection
                         s_ti = self.data_dict["world"][day_inf]["susceptible"]
                         s_tr = self.data_dict["world"][day_recover]["susceptible"]
                         s_frac = (s_ti + s_tr) / (2 * len(box.people))
-                        r0 = person.health_information.counter.number_of_infected
+                        r0 = person.health_information.number_of_infected
                         r0s_raw.append(r0)
                         r0s_recon.append(r0 / s_frac)
 
                         inner_dict[person.id] = {"start" : day_inf,
-                                                "length" : person.health_information.counter.length_of_infection,
-                                                "num_infected" : person.health_information.counter.number_of_infected,
+                                                "length" : person.health_information.length_of_infection,
+                                                "num_infected" : person.health_information.number_of_infected,
                                                 "R0_raw" : r0,
                                                 "R0_recon" : r0 / s_frac}
                 
                 self.data_dict["data"] = inner_dict
                 self.data_dict["R0_raw"] = np.mean(r0s_raw)
                 self.data_dict["R0_recon"] = np.mean(r0s_recon)
-
-                # first attempt at rolling day tracker
-                day_infs = sorted(day_infs, key = lambda x : x[0])
-                rolling_days = np.arange(5, self.world.timer.total_days+1, 1)
-                r0s_raw = []
-                r0s_recon = []
-                for day_person in day_infs:
-                    for i in range(len(rolling_days)-1):
-                        if (day_person[0] > rolling_days[i] and day_person[0] < rolling_days[i+1]):
-                            day_recover = day_person[0] + day_person[1].health_information.counter.length_of_infection
-                            s_ti = self.data_dict["world"][day_person[0]]["susceptible"]
-                            s_tr = self.data_dict["world"][day_recover]["susceptible"]
-                            s_frac = (s_ti + s_tr) / (2 * len(box.people))
-                            r0 = day_person[1].health_information.counter.number_of_infected
-                            r0s_raw.append(r0)
-                            r0s_recon.append(r0 / s_frac)
-
-                            self.data_dict["world"][rolling_days[i+1]]["R0_raw"] = np.mean(r0s_raw)
-                            self.data_dict["world"][rolling_days[i+1]]["R0_recon"] = np.mean(r0s_recon)
 
 
     def plot_infection_generation(self):
@@ -172,8 +153,8 @@ class Logger:
                 area_counter = 0
                 for person in area.people:
                     if person.health_information.infected == True:
-                        r0_area += person.health_information.counter.number_of_infected
-                        r0_global += person.health_information.counter.number_of_infected
+                        r0_area += person.health_information.number_of_infected
+                        r0_global += person.health_information.number_of_infected
                         area_counter += 1
                         global_counter += 1
                 if area_counter == 0:
@@ -258,9 +239,9 @@ class Logger:
             
 
             N = len(self.world.boxes.members[0].people)
-            I_0 = self.data_dict["world"][1]["infected"]
+            I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
-            beta = self.world.config["infection"]["transmission"]["parameters"]["transmission_probability"]["parameters"]["value"]
+            beta = self.world.config["infection"]["transmission"]["parameters"]["probability"]
             beta /= self.world.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
             gamma = self.world.config["infection"]["symptoms"]["parameters"]["recovery_rate"]
             gamma /= self.world.timer.get_number_shifts(None)
@@ -283,7 +264,7 @@ class Logger:
         predictions = []
         for person in self.world.people.members:
             if person.health_information.recovered:
-                lengths.append(person.health_information.counter.length_of_infection)
+                lengths.append(person.health_information.length_of_infection)
                 predictions.append(person.health_information.infection.symptoms.predicted_recovery_time)
         return lengths
 

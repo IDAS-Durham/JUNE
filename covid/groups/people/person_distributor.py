@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import stats
+from collections import OrderedDict
 
 from covid.groups.people import Person
 from covid.groups.people.health_index import HealthIndex
@@ -17,8 +18,10 @@ class PersonDistributor:
 
     def __init__(
         self,
+        world,
         timer,
         people,
+        areas,
         area,
         msoareas,
         compsec_by_sex_df,
@@ -29,13 +32,16 @@ class PersonDistributor:
         """
         """
         self.timer = timer
-        self.world = area.world
+        self.world = world
+        self.areas = areas
         self.area = area
         self.msoareas = msoareas
         self.people = people
         self.STUDENT_THRESHOLD = self.world.config["people"]["student_age_group"]
         self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
+        self.area.men_by_age = {}
+        self.area.women_by_age = {}
         self.relevant_groups = self.world.relevant_groups
         self._get_key_compsec_id(self.world.config)
         self.no_kids_area = False
@@ -49,9 +55,7 @@ class PersonDistributor:
 
     def _get_key_compsec_id(self, config):
         key_compsec = {
-            key: value
-            for key, value in config.items()
-            if "sub_sector" in value
+            key: value for key, value in config.items() if "sub_sector" in value
         }
         self.key_compsec_id = []
         for key1, value1 in key_compsec.items():
@@ -113,19 +117,19 @@ class PersonDistributor:
         # companies data
         numbers = np.arange(1, 22)
         m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
-        
+
         distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
         )
-        
+
         f_col = [col for col in self.compsec_by_sex_df.columns.values if "f " in col]
         distribution_female = self.compsec_by_sex_df.loc[self.area.name][f_col].values
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )
         self.industry_dict = {
-            (idx+1): col.split(' ')[-1] for idx,col in enumerate(m_col)
+            (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_col)
         }
 
     def _assign_industry(self, i, person, sector_man, sector_woman, employed=True):
@@ -148,10 +152,10 @@ class PersonDistributor:
                 industry_id = sector_woman[i]
             else:
                 raise ValueError(
-                    "sex must be with male or female. Intead got {}".format(sex_random)
+                    "sex must be with male or female. Intead got {person.sex}"
                 )
             person.industry = self.industry_dict[industry_id]
-                
+
             if person.industry in self.key_compsec_id:
                 self._assign_key_industry(person)
         else:
@@ -179,8 +183,8 @@ class PersonDistributor:
                 2315: Primary and nursery education teaching professionals
                 2316: Special needs education teaching professionals
         """
-        #TODO if input date is provided nicely we don't need this anymore
-        #TODO this dictionary are the only key_compsec currently implemented
+        # TODO if input date is provided nicely we don't need this anymore
+        # TODO this dictionary are the only key_compsec currently implemented
         key_compsec_dict = {
             2314: "secondary",
             2315: "primary",
@@ -195,9 +199,9 @@ class PersonDistributor:
             compsec_decoder[person.industry], sex_decoder[person.sex]
         ]
         distribution = self.compsec_specic_distr_by_sex_df.loc[
-            (compsec_decoder[person.industry], ), sex_decoder[person.sex]
+            (compsec_decoder[person.industry],), sex_decoder[person.sex]
         ].values
-        
+
         # Select people working in key industries
 
         if MC_random < ratio:
@@ -211,7 +215,7 @@ class PersonDistributor:
             key_industry_code = self.compsec_specic_distr_by_sex_df.loc[
                 (compsec_decoder[person.industry])
             ].index.values[key_industry_id[0]]
-            
+
             if key_industry_code in key_compsec_dict.keys():
                 person.industry_specific = key_compsec_dict[key_industry_code]
             else:
@@ -226,7 +230,7 @@ class PersonDistributor:
             work_msoarea_name = self.workflow_df.index.values[msoa_woman[i]]
         else:
             work_msoarea_name = self.workflow_df.index.values[msoa_man[i]]
-        
+
         person.work_msoarea = work_msoarea_name
 
         idx = np.where(self.msoareas.names_in_order == work_msoarea_name)[0]
@@ -259,9 +263,7 @@ class PersonDistributor:
         nomis_bin_random_array = self.area.nomis_bin_rv.rvs(size=self.area.n_residents)
         age_random_array = []
         for nomis in nomis_bin_random_array:
-            age_1, age_2 = self._get_age_brackets(
-                self.area.world.inputs.decoder_age[nomis]
-            )
+            age_1, age_2 = self._get_age_brackets(self.areas.decoder_age[nomis])
             age = np.random.randint(age_1, age_2 + 1, 1)[0]
             age_random_array.append(age)
         sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
@@ -283,23 +285,17 @@ class PersonDistributor:
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
             health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
-                self.world,
-                self.people.total_people,
-                age_random,
-                nomis_bin,
-                sex_random,
-                self.area,
-                health_index,
-                0,
+                age=age_random,
+                nomis_bin=nomis_bin,
+                sex=sex_random,
+                health_index=health_index,
+                econ_index=0,
                 mode_of_transport=None,
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment
             if is_working_age:
                 self._assign_work_msoarea(
-                    i,
-                    person,
-                    work_msoa_man_rnd_array,
-                    work_msoa_woman_rnd_array,
+                    i, person, work_msoa_man_rnd_array, work_msoa_woman_rnd_array,
                 )
                 self._assign_industry(
                     i,
@@ -308,40 +304,25 @@ class PersonDistributor:
                     companysector_female_rnd_array,
                 )
             self.people.members.append(person)
-            self.area.people.append(person)
-            # assign person to the right group:
-            if nomis_bin < self.ADULT_THRESHOLD:
-                self.area._kids[i] = person
-            elif nomis_bin < self.OLD_THRESHOLD:
-                if sex_random == 0:
-                    self.area._men[i] = person
-                else:
-                    self.area._women[i] = person
-                if person.nomis_bin in [6, 7]:  # that person can be a student
-                    self.area._student_keys[i] = person
+            self.area.add(person)
+            # assign person to the right group, this is used in the household distributor.:
+            if sex_random == 0:
+                if age_random not in self.area.men_by_age:
+                    self.area.men_by_age[age_random] = []
+                self.area.men_by_age[age_random].append(person)
             else:
-                if sex_random == 0:
-                    self.area._oldmen[i] = person
-                else:
-                    self.area._oldwomen[i] = person
+                if age_random not in self.area.women_by_age:
+                    self.area.women_by_age[age_random] = []
+                self.area.women_by_age[age_random].append(person)
 
-        try:
-            assert (
-                sum(
-                    map(
-                        len,
-                        [
-                            self.area._kids.keys(),
-                            self.area._men.keys(),
-                            self.area._women.keys(),
-                            self.area._oldmen.keys(),
-                            self.area._oldwomen.keys(),
-                        ],
-                    )
-                )
-                == self.area.n_residents
-            )
-        except:
-            raise (
-                "Number of men, women, oldmen, oldwomen, and kids doesnt add up to total population"
+        self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
+        self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
+        total_people = 0
+        for people_dict in [self.area.men_by_age, self.area.women_by_age]:
+            for age in people_dict.keys():
+                total_people += len(people_dict[age])
+
+        if total_people != self.area.n_residents:
+            raise PersonError(
+                f"The number of people created {total_people} does not match the areas' number of residents {self.area.n_residents}"
             )

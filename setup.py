@@ -3,20 +3,28 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.install import install
 import subprocess
 import os
+from os.path import abspath, dirname, join
 
-with open("README.md") as f:
-    readme = f.read()
-
-with open("LICENSE") as f:
+this_dir = abspath(dirname(__file__))
+with open(join(this_dir, "LICENSE")) as f:
     license = f.read()
+    
+with open(join(this_dir, "README.md"), encoding="utf-8") as file:
+    long_description = file.read()
+
+with open(join(this_dir, "requirements.txt")) as f:
+    requirements = f.read().split("\n")
 
 setup(
-        name="covid",
+        name="june",
         version="0.1.0",
-        description="The most amazing covid simulation",
-        author="Durham Data Miners",
-        long_description=readme,
-        license=license,
-        packages=find_packages(exclude=("tests", "docs")),
+        description="The most amazing Covid simulation",
+        url="https://github.com/idas-durham/june",
+        long_description=long_description,
+        author="IDAS-Durham",
+        author_email='arnauq@protonmail.com',
+        license="MIT license",
+        packages=find_packages(exclude=("test_covid", "docs")),
+        install_requires=requirements
 )
 
