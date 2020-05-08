@@ -12,10 +12,10 @@ import pandas as pd
 
 from june import get_creation_logger
 
-default_data_path_1 = Path(os.path.abspath(__file__)).parent.parent / \
-    "data/census_data/area_code_translations"
-default_data_path_2 = Path(os.path.abspath(__file__)).parent.parent / \
-    "data/processed/geographical_data"
+default_hierarchy_filename = Path(os.path.abspath(__file__)).parent.parent / \
+    "data/census_data/area_code_translations/areas_mapping.csv"
+default_coord_filename = Path(os.path.abspath(__file__)).parent.parent / \
+    "data/processed/geographical_data/oa_coorindates.csv"
 default_logging_config_filename = Path(__file__).parent.parent / \
     "configs/config_world_creation_logger.yaml"
 
@@ -34,8 +34,6 @@ class Area:
             super_area: "SuperArea" = None,
             coordinate: [float, float] = [None, None],
     ):
-        """
-        """
         self.id = next(self._id)
         self.name = name
         self.coordinate = coordinate
@@ -157,6 +155,11 @@ class Geography:
         )
         self.super_areas = SuperAreas(super_areas_list)
         del superarea_areas_list, areas_list, super_areas_list
+        print(len(self.areas), len(self.super_areas))
+        logger.info(
+            f"There are {len(self.areas)} areas and " / \
+            f"{len(self.super_areas)} super_areas in the world."
+        )
 
     def get_unit_coord(self, unit, name) -> list:
         """
@@ -178,8 +181,8 @@ class Geography:
     @classmethod
     def from_file(
             cls,
-            names_path: str = default_data_path_1,
-            coords_path: str = default_data_path_2,
+            names_filename: str = default_hierarchy_filename,
+            coords_filename: str = default_coord_filename,
             filter_key: Optional[Dict[str, list]] = None,
             logging_config_filename: str = default_logging_config_filename,
     ) -> "Geography":
@@ -202,8 +205,8 @@ class Geography:
         Note: It would be nice to find a better way to handle coordinates.
         """
         #TODO this file is missing option to filter for Region etc.
-        unit_hierarchy_file = f"{names_path}/areas_mapping.csv"
-        smallest_unit_coords_file = f"{coords_path}/oa_coorindates.csv"
+        unit_hierarchy_file = f"{names_filename}"
+        smallest_unit_coords_file = f"{coords_filename}"
         geo_hierarchy = _load_geo_file(unit_hierarchy_file)
         areas_coord = _load_area_coords(smallest_unit_coords_file)
         
