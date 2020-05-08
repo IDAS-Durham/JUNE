@@ -45,7 +45,7 @@ class CommuteCities:
         stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
         uk_pcs_coodinates: (pd.Dataframe) Dataframe containing all UK postcodes and their coordinates
         msoa_coordinates: (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
-        init: if True then initialise all commute cities, if False make this manual
+        init: (bool) if True then initialise all commute cities, if False make this manual
         members: (list) list of all commute cities
 
         Note: The London stat df is separate anc contains postcodes for all major Zone 1 stations in London

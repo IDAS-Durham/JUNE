@@ -40,7 +40,7 @@ class CommuteHubs:
         """
         commutecities: (list) members of CommuteCities
         msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
-        init: if True, initialise hubs, if False do this manually
+        init: (bool) if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
         self.commutecities = commutecities
