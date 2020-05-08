@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 from collections import Counter
 import pandas as pd
-from covid.inputs import Inputs 
+from june.inputs import Inputs 
 import seaborn as sns
 
 sns.set_context('paper')
