@@ -3,10 +3,10 @@ import random
 import yaml
 from scipy import stats
 import warnings
-from covid.groups import Household, Households
+from june.groups import Household, Households
 from collections import OrderedDict
-from covid.groups import Person
-from covid.groups import Area
+from june.groups import Person
+from june.groups import Area
 import pandas as pd
 from pathlib import Path
 

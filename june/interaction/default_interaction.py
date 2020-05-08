@@ -2,7 +2,7 @@ import random
 import numpy as np
 import yaml
 from pathlib import Path
-from covid.interaction.interaction import Interaction
+from june.interaction.interaction import Interaction
 
 default_config_filename = (
     Path(__file__).parent.parent.parent

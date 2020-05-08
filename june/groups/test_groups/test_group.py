@@ -1,10 +1,9 @@
-
-from scipy import stats
 import numpy as np
+from scipy import stats
 
 from june.groups import Group
-from june.groups import Person
-from june.groups.people import HealthIndex
+from june.demography.person import Person
+from june.demography.health_index import HealthIndex
 from enum import IntEnum
 
 

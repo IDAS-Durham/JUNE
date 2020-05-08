@@ -1,5 +1,5 @@
 from collections import Counter
-from covid.groups import *
+from june.groups import *
 import pickle
 import pytest
 import numpy as np

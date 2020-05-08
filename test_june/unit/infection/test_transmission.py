@@ -1,4 +1,4 @@
-from covid.infection import transmission as trans
+from june.infection import transmission as trans
 
 import pytest
 
