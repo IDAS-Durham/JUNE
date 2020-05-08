@@ -21,9 +21,10 @@ def test__given_school_coordinate_finds_itself_as_closest(index):
     data_directory = Path(__file__).parent.parent.parent.parent
     school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
     config_path = data_directory / "configs/defaults/schools.yaml"
-    schools = Schools.from_file(school_path, config_path)
-
+    #schools = Schools.from_file(school_path, config_path)
     school_df = pd.read_csv(school_path)
+    school_df = school_df.iloc[:1000]
+    schools = Schools.from_df(school_df)
     age = int(0.5 * (school_df.iloc[index].age_min + school_df.iloc[index].age_max))
     closest_school = schools.get_closest_schools(
         age, school_df[["latitude", "longitude"]].iloc[index].values, 1,
