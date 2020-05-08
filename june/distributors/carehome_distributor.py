@@ -5,7 +5,7 @@ import numpy as np
 
 from june.groups import CareHome
 from june.geography import Area
-from june import 
+from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
 

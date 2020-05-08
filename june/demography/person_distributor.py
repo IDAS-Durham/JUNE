@@ -6,7 +6,7 @@ from scipy import stats
 
 from june.demography.person import Person
 from june.demography.health_index import HealthIndex
-from june import get_creation_logger
+from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
 
