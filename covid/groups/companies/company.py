@@ -41,6 +41,7 @@ class Company(Group):
     """
 
     _id = count()
+    __slots__ = "id", "msoa", "n_employees_max", "n_woman", "employees", "industry"
 
     class GroupType(IntEnum):
         worker = 0

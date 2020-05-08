@@ -1,7 +1,9 @@
-from covid.groups import Group
-import numpy as np
-from itertools import count
 from enum import IntEnum
+from itertools import count
+
+import numpy as np
+
+from covid.groups import Group
 
 
 class Household(Group):
@@ -14,14 +16,15 @@ class Household(Group):
     2 - adults
     3 - old adults
     """
+    __slots__ = "area", "household_composition", "communal", "max_size"
 
     _id = count()
 
     class GroupType(IntEnum):
-        kids         = 0
+        kids = 0
         young_adults = 1
-        adults       = 2
-        old_adults   = 3
+        adults = 2
+        old_adults = 3
 
     def __init__(self, composition=None, communal=False, area=None, max_size=np.inf):
         house_id = next(self._id)
@@ -36,13 +39,12 @@ class Household(Group):
         person.household = self
 
     def set_active_members(self):
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             for person in grouping.people:
                 if (person.active_group is None and
-                    person.health_information.tag!="intensive care" and
-                    person.health_information.tag!="hospitalised"):
+                        person.health_information.tag != "intensive care" and
+                        person.health_information.tag != "hospitalised"):
                     person.active_group = "household"
-
 
 
 class Households:
