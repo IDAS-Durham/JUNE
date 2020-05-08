@@ -6,7 +6,7 @@ from .schools import School, Schools, SchoolDistributor
 from .companies import Company, Companies, CompanyDistributor
 from .people import Person, People, PersonDistributor
 from .household import Household, Households
-from .hospitals import Hospital, Hospitals, HospitalDistributor
+from .Hospitals import Hospital, Hospitals, HospitalDistributor
 from .pubs import Pub, Pubs, PubFiller
 from .test_groups import TestGroup, TestGroups
 from .box import Box, Boxes
