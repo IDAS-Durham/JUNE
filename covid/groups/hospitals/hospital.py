@@ -33,6 +33,8 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
+
     def __init__(
             self,
             hospital_id: int,
@@ -64,6 +66,7 @@ class Hospital(Group):
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.coordinates = coordinates
+        self.msoa_name = msoa_name
 
     @property
     def full(self):
@@ -314,12 +317,14 @@ class Hospitals:
         hospital with availability
 
         """
+        assign_icu = person.health_information.tag == "intensive care"
+        assign_patient = person.health_information.tag == "hospitalised"
 
         if self.box_mode:
             for hospital in self.members:
-                if tag and not hospital.full:
+                if assign_patient and not hospital.full:
                     return hospital
-                if tagICU and not hospital.full_ICU:
+                if assign_icu and not hospital.full_ICU:
                     return hospital
         else:
             hospital = None
@@ -332,10 +337,10 @@ class Hospitals:
                 if distance > self.max_distance:
                     break
                 if (
-                        person.health_information.tag == "intensive care"
+                        assign_icu
                         and not hospital.full
                 ) or (
-                        person.health_information.tag == "hospitalised"
+                        assign_patient
                         and not hospital.full_ICU
                 ):
                     break
@@ -372,9 +377,7 @@ class Hospitals:
         r_max /= earth_radius
         idx, distances = self.hospital_trees.query_radius(
             np.deg2rad(coordinates.reshape(1, -1)),
-            r=r_max,
-            return_distance=True,
-            sort_results=True,
+            r=r_max
         )
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
