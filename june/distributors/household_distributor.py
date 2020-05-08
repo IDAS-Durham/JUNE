@@ -10,17 +10,19 @@ from scipy import stats
 from june.groups import Household, Households
 from june.demography import Person
 from june.geography import Area
+from june import get_creation_logger
+
 
 default_config_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent
     / "configs/defaults/distributors/HouseholdDistributor.yaml"
 )
-
 default_age_difference_files_folder = (
     Path(os.path.abspath(__file__).parent.parent.parent
     / "data/processed/age_difference"
 )
 
+logger = logging.getLogger(__name__)
 
 """
 This file contains routines to distribute people to households

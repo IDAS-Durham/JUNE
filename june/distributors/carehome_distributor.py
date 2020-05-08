@@ -1,8 +1,13 @@
-import numpy as np
-from collections import OrderedDict
-from june.groups import CareHome
-from june.groups import Area
 
+from collections import OrderedDict
+
+import numpy as np
+
+from june.groups import CareHome
+from june.geography import Area
+from june import 
+
+logger = logging.getLogger(__name__)
 
 class CareHomeError(BaseException):
     pass

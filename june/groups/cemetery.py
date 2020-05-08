@@ -1,4 +1,5 @@
-from june.groups import Group
+from june.groups.group import Group
+from june import get_creation_logger
 from enum import IntEnum
 
 
