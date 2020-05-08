@@ -49,6 +49,7 @@ def test__time_it_takes_to_infect(config, group_size=2):
         infected_person = Person()
         infected_reference.infect_person_at_time(infected_person, 1)
         group.add(infected_person, qualifier=TestGroup.GroupType.default)
+        group[TestGroup.GroupType.default].infected.add(infected_person)
         susceptible_person = Person()
         group.add(susceptible_person, qualifier=TestGroup.GroupType.default)
         for i in range(group_size - 2):
