@@ -1,6 +1,8 @@
 from covid.infection import infection as infect
 from covid.infection import symptoms as sym
 from covid.infection import transmission as trans
+import covid.interaction as inter
+from covid.simulator import Simulator
 
 from covid import world
 from covid.time import Timer 
@@ -53,11 +55,11 @@ def create_transmission():
 
 @pytest.fixture(name="infection", scope="session")
 def create_infection(transmission, symptoms):
-    return Infection(transmission, symptoms)
+    return infect.Infection(transmission, symptoms)
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    return DefaultInteraction()
+    return inter.DefaultInteraction()
 
 @pytest.fixture(name="simulator", scope="session")
 def create_simulator(world_ne, interaction, infection):
@@ -65,4 +67,5 @@ def create_simulator(world_ne, interaction, infection):
 
 @pytest.fixture(name="simulator_box", scope="session")
 def create_simulator_box(world_box, interaction, infection):
-    return Simulator.from_file(world_box, interaction, infection)
+    config_file = Path(__file__).parent.parent.parent / "configs/config_boxmode_example.yaml"
+    return Simulator.from_file(world_box, interaction, infection, config_filename=config_file)

@@ -29,13 +29,12 @@ class Household(Group):
     def add(self, person, qualifier=GroupType.adults):
         super().add(person, qualifier)
         person.household = self
+        person.groups.append(self)
 
     def set_active_members(self):
         for grouping in self.groupings:
             for person in grouping.people:
-                if (person.active_group is None and
-                    person.health_information.tag!="intensive care" and
-                    person.health_information.tag!="hospitalised"):
+                if person.active_group is None:
                     person.active_group = "household"
 
 

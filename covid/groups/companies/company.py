@@ -37,6 +37,7 @@ class Company(Group):
     def add(self, person, qualifier=GroupType.worker):
         super().add(person, qualifier)
         person.company_id = self.id
+        person.groups.append(self)
 
 
 class Companies:

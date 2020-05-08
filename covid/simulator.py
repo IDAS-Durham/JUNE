@@ -13,6 +13,7 @@ default_config_filename = Path(__file__).parent.parent / "configs/config_example
 
 sim_logger = logging.getLogger(__name__)
 
+#TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(self, world: "World", interaction: "Interaction", infection: Infection, config: dict):
         """
@@ -28,13 +29,13 @@ class Simulator:
         config:
             dictionary with configuration to set up the simulation
         """
-        print('Default config : ', default_config_filename)
         self.world = world
         self.interaction = interaction
         self.infection = infection
+        self.permanent_group_hierarchy = ['boxes', 'hospitals', 'companies', 'schools', 'carehomes', 'households']
+        self.randomly_order_groups = ['pubs', 'churches',]
+        self.check_inputs(config)
         self.timer = Timer(config)
-        self.permanent_group_hierarchy = ['box', 'hospital', 'company', 'school', 'carehome', 'household']
-        self.randomly_order_groups = ['pub', 'church',]
        
     @classmethod
     def from_file(
@@ -57,19 +58,40 @@ class Simulator:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return Simulator(world, interaction, infection, config["time"])
 
-    def check_inputs(self):
+    def check_inputs(self, config: dict):
+
+        # Sadly, days only have 24 hours
+        assert sum(config["step_duration"]["weekday"].values()) == 24
+        # even during the weekend :(
+        assert sum(config["step_duration"]["weekend"].values()) == 24
+
         # Check that all groups given in config file are in the valid group hierarchy
+        all_groups = self.permanent_group_hierarchy + self.randomly_order_groups
+        for step, active_groups in config['step_active_groups']['weekday'].items():
+            assert all(group in all_groups for group in active_groups) 
 
-        assert sum(config["time"]["step_duration"]["weekday"].values()) == 24
+        for step, active_groups in config['step_active_groups']['weekend'].items():
+            assert all(group in all_groups for group in active_groups) 
 
+    def apply_group_hierarchy(self, active_groups: List[str]) -> List[str]:
+        """
+        Returns a list of active groups with the right order, obeying the permanent group hierarcy
+        and shuflling the random one. It is very important having carehomes and households at the very end.
 
-    def apply_group_hierarchy(self, active_groups):
-        #TODO: group hierarchy, order them
-        randomly_order_groups = random.shuffle(self.randomly_order_groups)
-        group_hierarchy = self.permanent_group_hierarchy.remove(['carehome', 'household'])
-        group_hierarchy += randomly_order_groups + ['carehome', 'household']
-        # order active groups
-        active_groups = active_groups.sort(key=lambda x: group_hierarchy.index(x))
+        Parameters
+        ----------
+        active_groups:
+            list of groups that are active at a given time step
+        Returns
+        -------
+        Ordered list of active groups according to hierarchy
+        """
+        random.shuffle(self.randomly_order_groups)
+        group_hierarchy = [group for group in self.permanent_group_hierarchy if group not in ['carehome', 'household']]
+        group_hierarchy += self.randomly_order_groups + ['carehome', 'household']
+        print('full group hierarchy ', group_hierarchy)
+        active_groups.sort(key=lambda x: group_hierarchy.index(x))
+        print('Ordered active groups ', active_groups)
         return active_groups
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
@@ -85,7 +107,7 @@ class Simulator:
         active_groups = self.apply_group_hierarchy(active_groups)
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
-            if "pubs" in active_groups or "church" in active_groups:
+            if "pubs" in active_groups:
                 world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
@@ -113,7 +135,6 @@ class Simulator:
 
         """
         #TODO: add attribute susceptible to people
-
         sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
         choices = np.random.choice(len(self.world.people.members), n_infections, replace=False)
         infecter_reference = self.infection
@@ -126,22 +147,40 @@ class Simulator:
         self.bury_the_dead(group)
 
 
-    def hospitalise_the_sick(self, group):
+    def hospitalise_the_sick(self, person):
         """
         These functions could be more elegantly handled by an implementation inside a group collection.
         I'm putting them here for now to maintain the same functionality whilst removing a person's
         reference to the world as that makes it impossible to perform population generation prior
         to world construction.
         """
-        for person in group.in_hospital:
-            if person.in_hospital is None:
-                self.hospitals.allocate_patient(person)
+        if person.in_hospital is None:
+            self.hospitals.allocate_patient(person)
 
-    def bury_the_dead(self, group):
-        for person in group.dead:
-            cemetery = self.cemeteries.get_nearest(person)
-            cemetery.add(person)
+    def bury_the_dead(self, person):
+        cemetery = self.cemeteries.get_nearest(person)
+        cemetery.add(person)
+        person.household.remove_person(person)
+        for group in person.groups:
             group.remove_person(person)
+
+    def update_health_status(self, time, delta_time):
+
+        for person in world.people.infected:
+            health_information = person.health_information
+            health_information.update_health_status(time, delta_time)
+            if health_information.in_hospital:
+                self.hospitalise_the_sick(person)
+            # release patients that recovered
+            elif health_information.recovered and person.hospital is not None:
+                person.hospital.release_as_patient(person)
+            #elif health_information.infected_at_home:
+            #TODO: force set active at home for those with symptoms,
+            # if <14 yo carry a parent
+            # add complacency probability (for now very high)
+                
+            elif health_information.dead:
+                self.bury_the_dead(person)
 
     def do_timestep(self):
         """
@@ -159,23 +198,8 @@ class Simulator:
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
-                self.hospitalise_the_sick(group)
-                self.bury_the_dead(group)
-
-        # Update people that recovered in hospitals
-        for hospital in self.hospitals.members:
-            hospital.update_status_lists(self.timer.now, delta_time=0)
-            self.hospitalise_the_sick(hospital)
+        self.update_health_status()
         self.set_allpeople_free()
-
-        # TODO: update people's status that is currently in interaction
-        # needs to change time_step updates before and after running interaction
-
-        # i) Run on world people (health update status to infected only on susceptible people? is it different than recovered only on infected?
-        # Do it within this loop
-        # Update people that recovered in hospitals
-        # TODO: only if hospitals are in the world
-        # + this should be a method of Hospitals
 
     def run(self, n_days):
         """

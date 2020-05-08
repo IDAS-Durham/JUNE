@@ -101,6 +101,7 @@ class Hospital(Group):
     def add(self, person, qualifier=GroupType.workers):
         super().add(person, qualifier)
         person.in_hospital = self
+        person.groups.append(self)
 
     def add_as_patient(self, person):
         """
