@@ -22,6 +22,8 @@ def test__right_group_hierarchy_random_groups(simulator):
     true_ordered_active_groups.append('pubs')
     true_ordered_active_groups += ['carehomes', 'households']
 
+    print('ordered active groups : ', ordered_active_groups)
+    print('true ordered active groups : ', true_ordered_active_groups)
     assert  ordered_active_groups == true_ordered_active_groups
 
 
