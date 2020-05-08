@@ -1,4 +1,5 @@
 from itertools import count
+from june.logger_creation import logger
 
 
 class HealthInformation:

@@ -8,12 +8,10 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-#from june import Geography
-#from june import Demography
-#from june import Sociology
-from june.creation_logger import get_creation_logger
+from june.geography import Geography
+from june.demography import Demography
+from june.logger_creation import logger
 
-get_creation_logger()
 logger = logging.getLogger(__name__)
 
 

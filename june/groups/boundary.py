@@ -1,3 +1,4 @@
+import logging
 from tqdm.auto import tqdm
 import numpy as np
 import pandas as pd
@@ -6,8 +7,9 @@ from scipy.stats import rv_discrete
 from june.groups.group import Group
 from june.demography.person import Person
 from june.demography.health_index import HealthIndex
-from june import get_creation_logger
+from june.logger_creation import logger
 
+logger = logging.getLogger(__name__)
 
 class BoundaryError(BaseException):
     """Class for throwing boundary related errors."""
