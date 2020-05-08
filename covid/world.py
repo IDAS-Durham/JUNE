@@ -55,6 +55,7 @@ class World:
             self.initialize_areas()
             self.initialize_super_areas()
             self.initialize_people()
+            self.initialize_commute()
             self.initialize_carehomes() # It's crucial for now that carehomes go BEFORE households.
             self.initialize_households()
             self.initialize_hospitals()
@@ -257,6 +258,33 @@ class World:
             person_distributor.populate_area()
             pbar.update(1)
         pbar.close()
+
+    def initialize_commute(self):
+        """
+        Populates the world with stations and commtute hubs and distibutes people accordingly
+        """
+        print ("Initializing commute...")
+        # CommuteCity
+        self.commutecities = CommuteCities(self.inputs.uk_pcs_coordinates,self.inputs.msoa_coordinates)
+        # Crucial that London is initialise second, after non-London
+        self.commutecities.init_non_london(self.inputs.non_london_stat_pcs)
+        self.commutecities.init_london(self.inputs.london_stat_pcs)
+
+        self.commutecity_distributor = CommuteCityDistributor(self.commutecities.members, self.super_areas.members)
+        self.commutecity_distributor.distribute_people()
+
+        # CommuteHub
+        self.commutehubs = CommuteHubs(self.commutecities.members, self.inputs.msoa_coordinates, init=True)
+
+        self.commutehub_distributor = CommuteHubDistributor(self.inputs.msoa_oa_coordinates, self.commutecities.members)
+        self.commutehub_distributor.distribute_people()
+
+        # CommuteUnit
+        self.commuteunits = CommuteUnits(self.commutehubs.members, init=True)
+
+        self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
+        # unit distirbutor is dynamic and should be called at each time step - leave this until later
+        #self.commuteunit_distributor.distribute_people()
 
     def initialize_households(self):
         """
