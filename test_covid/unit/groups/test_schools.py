@@ -42,7 +42,7 @@ def test__all_kids_mandatory_school(world_ne):
     KIDS_UP = world_ne.schools.mandatory_age_range[1]
     lost_kids = 0
     for area in world_ne.areas.members:
-        for person in area.groupings[0]._people:
+        for person in area.subgroups[0]._people:
             if (person.age >= KIDS_LOW) and (
                 person.age <= KIDS_UP
             ):
@@ -55,7 +55,7 @@ def test__only_kids_school(world_ne):
     ADULTS_LOW = 20
     schooled_adults = 0
     for area in world_ne.areas.members:
-        for person in area.groupings[0]._people:
+        for person in area.subgroups[0]._people:
             if person.age >= ADULTS_LOW:
                 if person.school is not None:
                     schooled_adults += 1
@@ -65,7 +65,7 @@ def test__only_kids_school(world_ne):
 
 def test__n_pupils_counter(world_ne):
     for school in world_ne.schools.members:
-        n_pupils = np.sum([len(grouping.people) for grouping in school.groupings])
+        n_pupils = np.sum([len(grouping.people) for grouping in school.subgroups])
         assert n_pupils == school.n_pupils
 
 

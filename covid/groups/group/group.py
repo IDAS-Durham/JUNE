@@ -1,10 +1,11 @@
 import logging
 from enum import IntEnum
+from typing import Set
 
 from covid.exc import GroupException
+from covid.groups.people.person import Person
 from .abstract import AbstractGroup
 from .subgroup import Subgroup
-from covid.groups.people.person import Person
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +80,8 @@ class Group(AbstractGroup):
         self.name = name
         self.spec = spec
         # noinspection PyTypeChecker
-        self.n_groupings = len(self.GroupType)
-        self.subgroups = [Subgroup() for _ in range(self.n_groupings)]
+        self.n_subgroups = len(self.GroupType)
+        self.subgroups = [Subgroup() for _ in range(self.n_subgroups)]
 
     def remove_person(self, person: Person):
         """
@@ -117,12 +118,8 @@ class Group(AbstractGroup):
             A person
         qualifier
             An enumerated so the student can be added to a given group
-
-        Returns
-        -------
-
         """
-        self.subgroups[qualifier].append(person)
+        self[qualifier].append(person)
 
     def set_active_members(self):
         for person in self.people:
@@ -132,57 +129,66 @@ class Group(AbstractGroup):
                 person.active_group = self.spec
 
     @property
-    def people(self):
-        return [
-            person for
-            grouping in self.subgroups
-            for person in grouping.people
-        ]
+    def people(self) -> Set[Person]:
+        """
+        All the people in this group
+        """
+        return self._collate_from_subgroups(
+            "people"
+        )
+
+    def _collate_from_subgroups(
+            self,
+            attribute: str
+    ) -> Set[Person]:
+        """
+        Return a set of all of the people in the subgroups with a particular health status
+
+        Parameters
+        ----------
+        attribute
+            The name of the attribute in the subgroup, e.g. "in_hospital"
+
+        Returns
+        -------
+        The union of all the sets with the given attribute name in all of the sub groups.
+        """
+        collection = set()
+        for grouping in self.subgroups:
+            collection.update(
+                getattr(grouping, attribute)
+            )
+        return collection
 
     @property
     def susceptible(self):
-        susceptible = set()
-        for grouping in self.subgroups:
-            susceptible.update(
-                grouping.susceptible
-            )
-        return susceptible
+        return self._collate_from_subgroups(
+            "susceptible"
+        )
 
     @property
     def infected(self):
-        infected = set()
-        for grouping in self.subgroups:
-            infected.update(
-                grouping.infected
-            )
-        return infected
+        return self._collate_from_subgroups(
+            "infected"
+        )
 
     @property
     def recovered(self):
-        recovered = set()
-        for grouping in self.subgroups:
-            recovered.update(
-                grouping.recovered
-            )
-        return recovered
+        return self._collate_from_subgroups(
+            "recovered"
+        )
 
     @property
     def in_hospital(self):
-        in_hospital = set()
-        for grouping in self.subgroups:
-            in_hospital.update(
-                grouping.in_hospital
-            )
-        return in_hospital
+        return self._collate_from_subgroups(
+            "in_hospital"
+        )
 
     @property
     def dead(self):
-        dead = set()
-        for grouping in self.subgroups:
-            dead.update(
-                grouping.dead
-            )
-        return dead
+        return self._collate_from_subgroups(
+            "dead"
+        )
 
     @property
     def must_timestep(self):
