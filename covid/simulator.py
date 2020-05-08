@@ -104,7 +104,7 @@ class Simulator:
         """
         active_groups = self.apply_group_hierarchy(active_groups)
         for group_name in active_groups:
-            grouptype = getattr(self, group_name)
+            grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
                 world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
@@ -146,7 +146,8 @@ class Simulator:
             # release patients that recovered
             elif health_information.recovered and person.hospital is not None:
                 person.hospital.release_as_patient(person)
-            #elif health_information.infected_at_home:
+            elif health_information.must_stay_at_home:
+                if person.age <= 14:
             #TODO: force set active at home for those with symptoms,
             # if <14 yo carry a parent
             # add complacency probability (for now very high)
@@ -189,7 +190,7 @@ class Simulator:
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
-        group_instances = [getattr(self, group) for group in active_groups]
+        group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
         for group_type in group_instances:
             for group in group_type.members:
