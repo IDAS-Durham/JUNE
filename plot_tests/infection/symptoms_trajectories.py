@@ -2,10 +2,10 @@ import sys
 import numpy as np
 import os
 import yaml
-from covid.world import World
-from covid.time import Timer
-from covid.infection import Infection
-from covid.groups.people import Person
+from june.world import World
+from june.time import Timer
+from june.infection import Infection
+from june.groups.people import Person
 
 
 

@@ -1,7 +1,7 @@
 from collections import Counter
 import pandas as pd
-from covid.inputs import Inputs 
-from covid.world import World
+from june.inputs import Inputs 
+from june.world import World
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
