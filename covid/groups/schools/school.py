@@ -8,7 +8,7 @@ from typing import List, Tuple, Dict, Optional
 from sklearn.neighbors._ball_tree import BallTree
 
 from covid.groups import Group
-from covid.groups.group import People
+from covid.groups.group import Grouping
 
 
 class SchoolError(BaseException):
@@ -57,7 +57,7 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__(name="School_%05d" % school_id, spec="school")
-        self.groupings = [People() for _ in range(age_min, age_max + 2)]
+        self.groupings = [Grouping() for _ in range(age_min, age_max + 2)]
         self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
