@@ -87,11 +87,9 @@ class Simulator:
         Ordered list of active groups according to hierarchy
         """
         random.shuffle(self.randomly_order_groups)
-        group_hierarchy = [group for group in self.permanent_group_hierarchy if group not in ['carehome', 'household']]
-        group_hierarchy += self.randomly_order_groups + ['carehome', 'household']
-        print('full group hierarchy ', group_hierarchy)
+        group_hierarchy = [group for group in self.permanent_group_hierarchy if group not in ['carehomes', 'households']]
+        group_hierarchy += self.randomly_order_groups + ['carehomes', 'households']
         active_groups.sort(key=lambda x: group_hierarchy.index(x))
-        print('Ordered active groups ', active_groups)
         return active_groups
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
