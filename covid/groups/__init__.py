@@ -13,3 +13,4 @@ from .box import Box, Boxes
 from .carehome import CareHome, CareHomes
 from .cemetery import Cemetery, Cemeteries
 from .boundary_condition import Boundary
+from .commute import CommuteCity, CommuteCities, CommuteCityDistributor, CommuteHub, CommuteHubs, CommuteHubDistributor, CommuteUnit, CommuteUnits, CommuteUnitDistributor
