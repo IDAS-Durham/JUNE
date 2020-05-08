@@ -36,17 +36,21 @@ class CommuteHubs:
        the real stations, but we believe this gives a good approximation at the sub-regional level)
     """
 
-    def __init__(self, commutecities):
+    def __init__(self, commutecities, msoa_coordinates):
         """
-        
+        commutecities: (list) members of CommuteCities
+        msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
+        members: (list) list of all commute hubs
         """
         self.commutecities = commutecities
         self.msoa_coordinates = msoa_coordinates
         self.members = []
 
+        # initialise commute hubs
         self.init_hubs()
 
     def _get_msoa_lat_lon(self, msoa):
+        'Given an MSOA, get the lat/lon'
 
         msoa_lat = float(self.msoa_coordinates['Y'][self.msoa_coordinates['MSOA11CD'] == msoa])
         msoa_lon = float(self.msoa_coordinates['X'][self.msoa_coordinates['MSOA11CD'] == msoa])
@@ -54,19 +58,24 @@ class CommuteHubs:
         return [msoa_lat, msoa_lon]
             
     def init_hubs(self):
+        'Initialise all hubs'
         
         ids = 0
         for commutecity in self.commutecities:
             metro_centroid = commutecity.metro_centroid
             metro_msoas = commutecity.metro_msoas
             metro_msoas_lat_lon = []
+
+            # get lat/lon of all metropolitan msoas
             for msoa in metro_msoas:
                 metro_msoas_lat_lon.append(self._get_msoa_lat_lon(msoa))
 
+            # find the distance between the metropolitan centriod and all associates metropolitan msoas
             distances = spatial.KDTree(metro_msoas_lat_lon).query(metro_centroid,len(metro_msoas_lat_lon))[0]
+            # get distance from metropolitan centroid to furthest away metropolitan msoa
             distance_max = np.max(distances)
 
-            # add fixed offsewt of 0.005
+            # add fixed offset of 0.005
             distance_away = distance_max += 0.005
 
             # handle London separately
@@ -83,7 +92,7 @@ class CommuteHubs:
                 hubs[2][0] += distance_away
                 hubs[3][0] -= distance_away
                 
-            # give non-London stations hubs
+            # give non-London stations 4 hubs
             else:
                 hubs = np.zeros(4*2).reshape(4,2)
                 hubs[:,0] = metro_centroid[0]
@@ -94,6 +103,7 @@ class CommuteHubs:
                 hubs[2][0] += distance_away
                 hubs[3][0] -= distance_away
 
+            # loop through all hubs to initialise and append to member and assign to commutecity too
             for hub in hubs:
                 commute_hub = CommuteHub(
                     commutehub_id = ids,

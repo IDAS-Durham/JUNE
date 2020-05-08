@@ -3,8 +3,15 @@ from scipy import spatial
 
 
 class CommuteHubDistributor:
+    """
+    Distribute people to commute hubs based on where they live and where they are commuting to
+    """
 
     def __init__(self, oa_coordinates, commutecities):
+        """
+        oa_coordinates: (pd.Dataframe) Dataframe of all OA postcodes and lat/lon coordinates
+        commutecities: (list) members of CommuteCities
+        """
         self.oa_coordinates = oa_coordinates
         self.commutecities = commutecities
 
@@ -35,6 +42,7 @@ class CommuteHubDistributor:
                 else:
                     live_area = work_person.area
                     live_lat_lon = self._get_area_lat_lon(live_area)
+                    # find nearest commute hub to the person given where they live
                     _, hub_index = spatial.KDTree(commutehub_in_city).query(live_lat_lon,1)
 
                     commutehub_in_city[hub_index].passengers.append(work_person)
