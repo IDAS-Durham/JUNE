@@ -67,9 +67,10 @@ class HouseholdDistributor:
         allowed_household_compositions: dict = None,
     ):
         """
-        Tool to populate areas with households and fill them with the correct composition based on census data.
-        The most important function is ``distribute_people_to_households`` which takes people in an area and fills 
-        them into households.
+        Tool to populate areas with households and fill them with the correct
+        composition based on census data. The most important function is
+        "distribute_people_to_households" which takes people in an area
+        and fills them into households.
 
         Parameters
         ----------
