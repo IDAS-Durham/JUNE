@@ -1,4 +1,6 @@
 from enum import IntEnum
+import random
+import numpy as np
 
 from covid.groups import Group
 
@@ -43,8 +45,9 @@ class Household(Group):
                     if person.age <= must_supervise_age:
                         person.active_group = 'household'
                         # randomly pick a parent to stay with the kid
-                        parents = self.subgroup[GroupType.adults].people
-                        random_parent = np.random.choice(parents)
+                        parents = [person for person in self.people if person not in list(self.groupings[self.GroupType.kids].people)]
+
+                        random_parent = random.choice(parents)
                         random_parent.active_group = 'household'
                     else:
                         if random.random() <= must_stay_at_home_complacency:

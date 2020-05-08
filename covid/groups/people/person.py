@@ -57,6 +57,7 @@ class HealthInformation:
         self.susceptible = False
         self.susceptibility = 0.0
         self.set_length_of_infection(time)
+        self.infection = None
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.tag(symptoms.severity)

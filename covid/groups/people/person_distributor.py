@@ -307,6 +307,7 @@ class PersonDistributor:
                 )
             self.people.members.append(person)
             self.area.add(person)
+            person.area = self.area
             # assign person to the right group:
             if nomis_bin < self.ADULT_THRESHOLD:
                 self.area._kids[i] = person
