@@ -1,7 +1,9 @@
-from covid.inputs import Inputs
-from covid.groups.people import HealthIndex
-from covid.groups import Person, Box
 import numpy as np
+import pandas as pd
+
+from covid.groups import Person, Box
+from covid.groups.people import HealthIndex
+from covid.inputs import Inputs
 
 
 def get_age_brackets(nomis_age_bin):
@@ -43,7 +45,7 @@ class BoxGenerator(Box):
                     "warning, specifying number of people has no effect when specifying",
                     "a region as well. Number of people will be read from census data directly."
                 )
-                self.create_box_from_region(region)
+            self.create_box_from_region(region)
         if region is None or region == "random":
             if n_people is None:
                 n_people = 1000
@@ -55,21 +57,22 @@ class BoxGenerator(Box):
         We sample uniformly inside each age bin, and we assign a health index based on the age.
         """
         inputs = Inputs(zone=region)
+        n_residents, age_freq, sex_freq = self.from_file(inputs)
         # sex numbers
         number_of_men = (
-            inputs.n_residents["n_residents"].values * inputs.sex_freq["males"].values
+                n_residents["n_residents"].values * sex_freq["males"].values
         )
         number_of_men = int(number_of_men.sum())
         number_of_women = (
-            inputs.n_residents["n_residents"].values * inputs.sex_freq["females"].values
+                n_residents["n_residents"].values * sex_freq["females"].values
         )
         number_of_women = int(number_of_women.sum())
         self.n_people = number_of_men + number_of_women
         # ages. since Nomis works in bins, I have to sample an age, this will be improved in the future TODO
-        age_counts = inputs.age_freq
+        age_counts = age_freq
         age_bins = age_counts.columns  # get age bins from column names
         # need to add for all output areas
-        age_counts_total = age_counts.values * inputs.n_residents.values
+        age_counts_total = age_counts.values * n_residents.values
         # and sum over all areas
         age_counts_total = age_counts_total.sum(axis=0).astype(np.int)
         assert age_counts_total.sum() == self.n_people
@@ -95,23 +98,47 @@ class BoxGenerator(Box):
             age = ages_expanded[age_counter]
             health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                world=self.world, age=age, sex=sex, health_index=health_index
+                age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
-            self.people.append(person)
+            self[self.GroupType.default].append(person)
 
         for _ in range(number_of_women):
             sex = 1
             age = ages_expanded[age_counter]
             health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                world=self.world, age=age, sex=sex, health_index=health_index
+                age=age, sex=sex, health_index=health_index
             )
             age_counter += 1
-            self.people.append(person)
+            self[self.GroupType.default].append(person)
 
         # shuffle people just in case
         np.random.shuffle(self.people)
+
+
+    def from_file(self, inputs):
+        """
+        Parameters
+        ----------
+        n_residents_file:
+            Nr. of residents per area
+        age_freq_file:
+            Nr of people wihin age-range per area
+        sex_freq_file:
+            Nr of people per sec per area
+        """
+        n_residents = pd.read_csv(
+            inputs.n_residents_file,
+            names=["output_area", "n_residents"],
+            header=0,
+            index_col="output_area",
+        )
+        age_freq = pd.read_csv(inputs.age_freq_file, index_col="output_area")
+        age_freq = age_freq.div(age_freq.sum(axis=1), axis=0)
+        sex_freq = pd.read_csv(inputs.sex_freq_file, index_col="output_area")
+        sex_freq = sex_freq.div(sex_freq.sum(axis=1), axis=0)
+        return n_residents, age_freq, sex_freq
 
     def create_random_box(self, n_people):
         """
@@ -152,15 +179,13 @@ class BoxGenerator(Box):
         )
         # initialize people
         assert len(age_shuffle_array) == len(sex_shuffle_array)
-        for i in range(0, n_people):
+        for i in range(n_people):
             age = age_shuffle_array[i]
             sex = sex_shuffle_array[i]
             health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                world=self.world,
-                person_id=i,
                 age=age,
                 sex=sex,
                 health_index=health_index,
             )
-            self.people.append(person)
+            self[self.GroupType.default].append(person)

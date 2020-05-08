@@ -1,11 +1,14 @@
 import logging
+import sys
+from enum import IntEnum
+from typing import List, Tuple
+
 import numpy as np
 import pandas as pd
 import yaml
 from sklearn.neighbors._ball_tree import BallTree
-from covid.groups import Group
-from typing import List, Tuple, Dict
 
+from covid.groups import Group
 
 ic_logger = logging.getLogger(__name__)
 
@@ -19,15 +22,25 @@ class Hospital(Group):
     be an admixture of household and company.
     I will also assume that the patients cannot infect anybody - this may
     become a real problem as it is manifestly not correct.
+
+    We currently use three subgroups: 
+    0 - workers (i.e. nurses, doctors, etc.),
+    1 - patients
+    2 - ICU patients
     """
 
+    class GroupType(IntEnum):
+        workers = 0
+        patients = 1
+        icu_patients = 2
+
     def __init__(
-        self,
-        hospital_id: int,
-        n_beds: int,
-        n_icu_beds: int,
-        coordinates: Tuple[float, float],
-        msoa_name: str = None,
+            self,
+            hospital_id: int,
+            n_beds: int,
+            n_icu_beds: int,
+            coordinates: Tuple[float, float],
+            msoa_name: str = None,
     ):
         """
         Create a Hospital given its description.
@@ -51,26 +64,26 @@ class Hospital(Group):
         self.id = hospital_id
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
-        self.coordinates = coordinates.astype(np.float)
+        self.coordinates = coordinates
         self.msoa_name = msoa_name
         self.n_medics = 0
-        self.employees = []
-        self.patients = []
-        self.icu_patients = []
+        self.employees = set()
+        self.patients = set()
+        self.icu_patients = set()
 
     @property
     def full(self):
         """
         Check whether all regular beds are being used
         """
-        return len(self.patients) >= self.n_beds
+        return self[self.GroupType.patients].size >= self.n_beds
 
     @property
     def full_ICU(self):
         """
         Check whether all ICU beds are being used
         """
-        return len(self.icu_patients) >= self.n_icu_beds
+        return self[self.GroupType.icu_patients].size >= self.n_icu_beds
 
     def set_active_members(self):
         """
@@ -78,32 +91,39 @@ class Hospital(Group):
         """
         # TODO: We need to check what we want to do with this,
         # it will probably be taken care by the supergroup
-        for person in self.patients:
+        for person in self[self.GroupType.patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
-        for person in self.icu_patients:
+        for person in self[self.GroupType.icu_patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
 
-    def add_as_patient(self, person: "Person"):
+    def add(self, person, qualifier=GroupType.workers):
+        super().add(person, qualifier)
+        person.in_hospital = self
+
+    def add_as_patient(self, person):
         """
         Add patient to hospital, depending on their healty information tag
         they'll go to intensive care or regular beds.
 
         Parameters
         ----------
-        person: 
+        person:
             person instance to add as patient
         """
         if person.health_information.tag == "intensive care":
-            self.icu_patients.append(person)
-            person.in_hospital = self
+            self.add(
+                person,
+                self.GroupType.icu_patients
+            )
         elif person.health_information.tag == "hospitalised":
-            self.patients.append(person)
-            person.in_hospital = self
+            self.add(
+                person,
+                self.GroupType.patients
+            )
         else:
-            ic_logger.info("ERROR: This person shouldnt be trying to get to a hospital")
-            pass
+            raise AssertionError("ERROR: This person shouldn't be trying to get to a hospital")
 
     def release_as_patient(self, person):
         """
@@ -114,71 +134,57 @@ class Hospital(Group):
         person: 
             person instance to remove as patient
         """
-        if person in self.patients:
-            self.patients.remove(person)
-        elif person in self.icu_patients:
-            self.icu_patients.remove(person)
+        for group_type in (
+                self.GroupType.icu_patients,
+                self.GroupType.patients
+        ):
+            patient_group = self[group_type]
+            if person in patient_group:
+                patient_group.remove(person)
         person.in_hospital = None
-
-    @property
-    def size(self):
-        return len(self.people) + len(self.patients) + len(self.icu_patients)
 
     def update_status_lists_for_patients(self, time, delta_time):
         """
         Update the health information of patients, and move them around if necessary
         """
         dead = []
-        for person in self.patients:
+        patient_group = self[self.GroupType.patients]
+        icu_group = self[self.GroupType.icu_patients]
+        for person in patient_group.people:
             person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                ic_logger.info(
-                    "ERROR: in our current setup, only infected patients in the hospital"
-                )
-                self.susceptible.append(person)
             if person.health_information.infected:
-                if not (person.health_information.in_hospital):
-                    # TODO: is this necessary? How could they have made it to hospital?
-                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
-                    self.patients.remove(person)
                 if person.health_information.tag == "intensive care":
-                    self.icu_patients.append(person)
-                    self.patients.remove(person)
+                    icu_group.append(person)
+                    patient_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                person.bury()
                 dead.append(person)
         for person in dead:
-            self.patients.remove(person)
+            patient_group.remove(person)
 
     def update_status_lists_for_ICUpatients(self, time, delta_time):
         """
         Update the health information of ICU patients, and move them around if necessary
         """
+        patient_group = self[self.GroupType.patients]
+        icu_group = self[self.GroupType.icu_patients]
 
         dead = []
-        for person in self.icu_patients:
+        for person in icu_group.people:
             person.health_information.update_health_status(time, delta_time)
-            if person.health_information.susceptible:
-                ic_logger.info(
-                    "ERROR: in our current setup, only infected patients in the hospital"
-                )
-                self.susceptible.append(person)
             if person.health_information.infected:
-                if not (person.health_information.in_hospital):
-                    ic_logger.info("ERROR: wrong tag for infected patient in hospital")
-                    self.icu_patients.remove(person)
                 if person.health_information.tag == "hospitalised":
-                    self.patients.append(person)
-                    self.icu_patients.remove(person)
+                    patient_group.append(person)
+                    icu_group.remove(person)
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                person.bury()
+                #TODO: check what to do with dead!! bury is not there anymore
                 dead.append(person)
         for person in dead:
-            self.icu_patients.remove(person)
+            icu_group.remove(person)
+
 
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
@@ -190,18 +196,13 @@ class Hospital(Group):
             f"=== update status list for hospital with {self.size}  people ==="
         )
         ic_logger.info(
-            "=== hospital currently has ",
-            len(self.patients),
-            " patients",
-            "and ",
-            len(self.icu_patients),
-            " ICU patients",
+            f"=== hospital currently has {self[self.GroupType.patients].size} patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
         )
 
 
 class Hospitals:
     def __init__(
-        self, hospitals: List["Hospital"], max_distance: float, box_mode: bool
+            self, hospitals: List["Hospital"], max_distance: float, box_mode: bool
     ):
         """
         Create a group of hospitals, and provide functionality to  llocate patients to a nearby hospital
@@ -222,11 +223,12 @@ class Hospitals:
         for hospital in hospitals:
             self.members.append(hospital)
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
-        self.init_trees(coordinates)
+        if not box_mode:
+            self.init_trees(coordinates)
 
     @classmethod
     def from_file(
-        cls, filename: str, config_filename: str, box_mode: bool = False
+            cls, filename: str, config_filename: str, box_mode: bool = False
     ) -> "Hospitals":
         """
         Initialize Hospitals from path to data frame, and path to config file 
@@ -252,7 +254,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-            ic_logger.info("There are %d hospitals in the world." % len(hospital_df))
+            ic_logger.info("There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(Hospital(1, 10, 2, None))
@@ -261,7 +263,7 @@ class Hospitals:
         return Hospitals(hospitals, max_distance, box_mode)
 
     def init_hospitals(
-        self, hospital_df: pd.DataFrame, icu_fraction: float
+            self, hospital_df: pd.DataFrame, icu_fraction: float
     ) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics, 
@@ -279,9 +281,9 @@ class Hospitals:
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
             msoa_name = row["MSOA"]
-            coordinates = row[["Latitude", "Longitude"]].values
+            coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
-            hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name,)
+            hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name, )
             hospitals.append(hospital)
         return hospitals
 
@@ -337,11 +339,11 @@ class Hospitals:
                 if distance > self.max_distance:
                     break
                 if (
-                    person.health_information.tag == "intensive care"
-                    and not (hospital.full)
+                        person.health_information.tag == "intensive care"
+                        and not (hospital.full)
                 ) or (
-                    person.health_information.tag == "hospitalised"
-                    and not (hospital.full_ICU)
+                        person.health_information.tag == "hospitalised"
+                        and not (hospital.full_ICU)
                 ):
                     break
             if hospital is not None:
@@ -351,15 +353,11 @@ class Hospitals:
                 hospital.add_as_patient(person)
             else:
                 ic_logger.info(
-                    "no hospital found for patient with",
-                    person.health_information.tag,
-                    "in distance < ",
-                    self.max_distance,
-                    " km.",
-                )
+                    f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
+                    )
 
     def get_closest_hospitals(
-        self, coordinates: Tuple[float, float], r_max: float
+            self, coordinates: Tuple[float, float], r_max: float
     ) -> Tuple[float, float]:
         """
         Get the closest hospitals to a given coordinate within r_max

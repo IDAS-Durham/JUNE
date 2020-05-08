@@ -1,29 +1,30 @@
 import numpy as np
 import pandas as pd
 import os
-from covid.groups.msoareas import MSOArea
+from covid.groups.super_areas import SuperArea
 
 
-class MSOAreaDistributor:
-    def __init__(self, msoareas):
+class SuperAreaDistributor:
+    def __init__(self, msoareas, relevant_groups):
         self.world = msoareas.world
         self.msoareas = msoareas
+        self.relevant_groups = relevant_groups
         self.msoareas.names_in_order = np.unique(
                 np.array([
-                    area.msoarea for area in self.world.areas.members
+                    area.super_area for area in self.world.areas.members
                     ])
                 )
         mapping_df = self.msoareas.world.inputs.area_mapping_df
         # Search space reduction as we know where to look
         self.area_mapping_df = mapping_df[mapping_df["MSOA"].isin(self.msoareas.names_in_order)]
-        self.create_msoareas()
+        self.create_super_areas()
 
-    def create_msoareas(self):
+    def create_super_areas(self):
         """
         Reads census data from the input dictionary, and initializes
         the encoders/decoders for company variables.
         It also initializes all the areas of the world.
-        This is all on the MSOA layer.
+        This is all on the super_area layer.
         """
         msoareas_list = []
         for msoa_name in self.msoareas.names_in_order:
@@ -37,18 +38,17 @@ class MSOAreaDistributor:
             oa_in_msoa = [
                 area
                 for area in self.world.areas.members
-                if area.msoarea == msoa_name
+                if area.super_area == msoa_name
             ]
             # create msoarea
-            msoarea = MSOArea(
-                self.world,
+            msoarea = SuperArea(
                 coordinates,
-                pcd_in_msoa,
                 oa_in_msoa,
                 msoa_name,
+                self.relevant_groups,
             )
             msoareas_list.append(msoarea)
             # link  area to msoarea
             for area in oa_in_msoa:
-                area.msoarea = msoarea
+                area.super_area = msoarea
         self.msoareas.members = msoareas_list

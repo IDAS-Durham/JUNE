@@ -1,2 +1,3 @@
-from .base import Interaction
-from .collective import InteractionCollective
+from .interaction import Interaction
+from .default_interaction import DefaultInteraction
+

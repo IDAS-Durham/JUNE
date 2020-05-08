@@ -1,31 +1,27 @@
 import random
-
 import numpy as np
+import interaction
 
-from covid.interaction import Interaction
-from covid.world import World
-
-"""
-We assume that the matrices are symmetric, with age indexing rows and
-columns, and that they are organised in a dictionary with the grouptype
-as key.  The sum over a row then gives th total number of interactions
-a person of a given age has per day in this group (we can vary this
-number on a daily base with a Poissonian distribution) - if we call
-each group only once per day, this translates immediately into contacts
-per call.  The resulting number of interactions is then distributed
-over group members according to the frequency in the matrix.
-"""
-
-
-# TODO: READ MAX AGE (100) FROM SOMEWHERE
+# TODO: We have to rework this to acount for the grouping-structure in groups.
+# READ MAX AGE (100) FROM SOMEWHERE
 class MatrixInteraction(Interaction):
-    def __init__(self, world, user_parameters={}):
-        self.world = world
-        required_parameters = []
-        super().__init__(user_parameters, required_parameters)
+    """
+    We assume that the matrices are symmetric, with age indexing rows and
+    columns, and that they are organised in a dictionary with the group_type
+    as key.  The sum over a row then gives th total number of interactions
+    a person of a given age has per day in this group (we can vary this
+    number on a daily base with a Poissonian distribution) - if we call
+    each group only once per day, this translates immediately into contacts
+    per call.  The resulting number of interactions is then distributed
+    over group members according to the frequency in the matrix.
+    """
 
-    def single_time_step_for_group(self, group):
+    def __init__(self):
+        super().__init__()
+
+    def single_time_step_for_group(self, time, group):
         if group.must_timestep():
+
             self.matrix = group.get_contact_matrix()
             self.matrix = self.reduce_matrix(group)
             self.contacts, self.probability = self.normalize_contact_matrix(self.matrix)
@@ -33,30 +29,33 @@ class MatrixInteraction(Interaction):
             for infecter in group.get_infected():
                 contact_ages = self.prepare_interaction_ages(infecter, group)
                 for age in contact_ages:
-                    self.make_interactions(infecter, group, age)
+                    self.make_interactions(time=time, infecter=infecter, group=group, age=age)
+
         if group.spec == "hospital":
             print("must allow for infection of workers by patients")
 
-    def make_interactions(self, infecter, group, age):
+    def make_interactions(self, time, infecter, group, age):
         # randomly select someone with that age
         recipient = self.make_single_contact(infecter, group, age)
-        if (recipient and
-                not (recipient.is_infected()) and
-                recipient.susceptibility > 0.0):
+        if (
+            recipient
+            and not (recipient.is_infected())
+            and recipient.susceptibility > 0.0
+        ):
             if random.random() <= 1.0 - np.exp(
-                    -transmission_probability * recipient.susceptibility()
+                -self.transmission_probability * recipient.susceptibility()
             ):
-                infecter.infection.infect(recipient)
+                infecter.infection.infect_person_at_time(person=recipient, time=time)
                 recipient.counter.update_infection_data(
-                    self.world.timer.now, group.get_spec()
+                    time=time, group_type=group.get_spec()
                 )
                 infecter.counter.increment_infected()
 
-    def prepare_interaction_ages(self, infecter, group):
+    def prepare_interaction_ages(self, delta_time, time, infecter, group):
         self.transmission_probability = self.calculate_single_transmission_probability(
-            infecter, group
+            delta_time=delta_time, infecter=infecter, group=group
         )
-        if self.transmission_probability > 1.e-12:
+        if self.transmission_probability > 1.0e-12:
             Naverage = self.contacts[infecter.age]
             # find column infecter, and sum
             Ncontacts = self.calculate_actual_Ncontacts(Naverage)
@@ -68,24 +67,22 @@ class MatrixInteraction(Interaction):
                 # randomly select someone with that age
                 recipient = self.make_single_contact(infecter, group, contact_ages[i])
                 if recipient and (
-                        not (recipient.is_infected()) and recipient.susceptibility > 0.0
+                    not (recipient.is_infected()) and recipient.susceptibility > 0.0
                 ):
                     if random.random() <= 1.0 - np.exp(
-                            -self.transmission_probability * recipient.susceptibility()
+                        -self.transmission_probability * recipient.susceptibility()
                     ):
                         infecter.infection.infect_person_at_time(recipient)
                         recipient.counter.update_infection_data(
-                            self.world.timer.now, group.get_spec()
+                            time=time, group_type=group.get_spec()
                         )
                         infecter.counter.increment_infected()
 
-    def calculate_single_transmission_probability(self, infecter, group):
+    def calculate_single_transmission_probability(self, delta_time, infecter, group):
         intensity = group.intensity
-        probability = infecter.transmission.transmission_probability
+        probability = infecter.infection.transmission.probability
         # probability *= self.severity_multiplier(group.get_spec())
-        return (
-                probability * intensity * (self.world.timer.now - self.world.timer.before)
-        )
+        return probability * intensity * delta_time
 
     def test_single_time_step_for_group(self, group):
 
@@ -177,9 +174,3 @@ class MatrixInteraction(Interaction):
         if np.random.random() < Nover:
             Nint += 1
         return Nint
-
-
-if __name__ == "__main__":
-    world = World()
-    mi = MatrixInteraction(world)
-    mi.single_time_step_for_group(world.households.members[0])
