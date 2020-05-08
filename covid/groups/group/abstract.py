@@ -2,6 +2,12 @@ from abc import abstractmethod, ABC
 
 
 class AbstractGroup(ABC):
+    """
+    Represents properties common to groups and subgroups.
+
+    Both groups and subgroups comprise people in known states of health.
+    """
+
     @property
     @abstractmethod
     def people(self):

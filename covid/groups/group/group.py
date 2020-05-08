@@ -3,7 +3,8 @@ from enum import IntEnum
 
 from covid.exc import GroupException
 from .abstract import AbstractGroup
-from .grouping import Grouping
+from .subgroup import Subgroup
+from covid.groups.people.person import Person
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +57,22 @@ class Group(AbstractGroup):
     ]
 
     class GroupType(IntEnum):
+        """
+        Defines the indices of subgroups within the subgroups array
+        """
         default = 0
 
-    def __init__(self, name, spec):
+    def __init__(self, name: str, spec: str):
+        """
+        A group of people such as in a hospital or a school.
+
+        Parameters
+        ----------
+        name
+            The name of this particular instance.
+        spec
+            The kind of group this is
+        """
         if spec not in self.allowed_groups:
             raise GroupException(f"{spec} is not an allowed group type")
 
@@ -66,18 +80,49 @@ class Group(AbstractGroup):
         self.spec = spec
         # noinspection PyTypeChecker
         self.n_groupings = len(self.GroupType)
-        self.groupings = [Grouping() for _ in range(self.n_groupings)]
+        self.subgroups = [Subgroup() for _ in range(self.n_groupings)]
 
-    def remove_person(self, person):
-        for grouping in self.groupings:
+    def remove_person(self, person: Person):
+        """
+        Remove a person from this group by removing them
+        from the subgroup to which they belong
+
+        Parameters
+        ----------
+        person
+            A person
+        """
+        for grouping in self.subgroups:
             if person in grouping:
                 grouping.remove(person)
 
-    def __getitem__(self, item):
-        return self.groupings[item]
+    def __getitem__(self, item: GroupType) -> "Subgroup":
+        """
+        A subgroup with a given index
+        """
+        return self.subgroups[item]
 
-    def add(self, person, qualifier=GroupType.default):
-        self.groupings[qualifier].append(person)
+    def add(
+            self,
+            person: Person,
+            qualifier=GroupType.default
+    ):
+        """
+        Add a person to a given subgroup. For example, in a school
+        a student is added to the subgroup matching their age.
+
+        Parameters
+        ----------
+        person
+            A person
+        qualifier
+            An enumerated so the student can be added to a given group
+
+        Returns
+        -------
+
+        """
+        self.subgroups[qualifier].append(person)
 
     def set_active_members(self):
         for person in self.people:
@@ -90,14 +135,14 @@ class Group(AbstractGroup):
     def people(self):
         return [
             person for
-            grouping in self.groupings
+            grouping in self.subgroups
             for person in grouping.people
         ]
 
     @property
     def susceptible(self):
         susceptible = set()
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             susceptible.update(
                 grouping.susceptible
             )
@@ -106,7 +151,7 @@ class Group(AbstractGroup):
     @property
     def infected(self):
         infected = set()
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             infected.update(
                 grouping.infected
             )
@@ -115,7 +160,7 @@ class Group(AbstractGroup):
     @property
     def recovered(self):
         recovered = set()
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             recovered.update(
                 grouping.recovered
             )
@@ -124,7 +169,7 @@ class Group(AbstractGroup):
     @property
     def in_hospital(self):
         in_hospital = set()
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             in_hospital.update(
                 grouping.in_hospital
             )
@@ -133,7 +178,7 @@ class Group(AbstractGroup):
     @property
     def dead(self):
         dead = set()
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             dead.update(
                 grouping.dead
             )
@@ -146,7 +191,7 @@ class Group(AbstractGroup):
                 self.size_susceptible > 0)
 
     def update_status_lists(self, time, delta_time):
-        for grouping in self.groupings:
+        for grouping in self.subgroups:
             grouping.update_status_lists(
                 time, delta_time
             )
