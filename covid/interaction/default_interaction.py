@@ -63,7 +63,7 @@ class DefaultInteraction(Interaction):
             self.probabilities[infecters] <= 0.
         ):
             return
-        for recipient in group.groupings[recipients]:
+        for recipient in group.subgroups[recipients]:
             transmission_probability = 1.0 - np.exp(
                 -delta_time *
                 recipient.health_information.susceptibility *
@@ -83,7 +83,7 @@ class DefaultInteraction(Interaction):
 
     def calculate_probabilities(self, group):
         norm   = 1./max(1, group.size)
-        for grouping in group.groupings:
+        for grouping in group.subgroups:
             summed = 0.
             for person in grouping.infected:
                 individual = (
