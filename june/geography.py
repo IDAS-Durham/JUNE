@@ -1,5 +1,7 @@
+import os
 import csv
 import logging
+import pathlib
 from pathlib import Path
 from random import randint
 from itertools import chain, count
@@ -10,13 +12,12 @@ import pandas as pd
 
 from june import get_creation_logger
 
-default_data_path_1 = Path(__file__).parent.parent / \
-        "data/census_data/area_code_translations"
-default_data_path_2 = Path(__file__).parent.parent / \
-        "data/processed/geographical_data"
-
+default_data_path_1 = Path(os.path.abspath(__file__)).parent.parent / \
+    "data/census_data/area_code_translations"
+default_data_path_2 = Path(os.path.abspath(__file__)).parent.parent / \
+    "data/processed/geographical_data"
 default_logging_config_filename = Path(__file__).parent.parent / \
-        "configs/config_world_creation_logger.yaml"
+    "configs/config_world_creation_logger.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class Geography:
     def __init__(
             self,
             hierarchy: pd.DataFrame,
-            coordinates: pd.DataFrame,
+            units_coordinate: dict, 
     ):
         """
         Generate hierachical devision of geography.
@@ -98,7 +99,7 @@ class Geography:
         """
         self.hierarchy = hierarchy
         self.hierarchy = _sorting_and_grouping(self.hierarchy)
-        self.coordinates = coordinates
+        self.units_coordinate = units_coordinate
         self.create_geographical_units()
 
     def create_geographical_units(self):
@@ -113,7 +114,9 @@ class Geography:
 
         # loop through all but the smallest geo-unit
         for geo_unit_level in range(self.hierarchy.index.nlevels):  #Atm. only one level
-            geo_units_labels = self.hierarchy.index.get_level_values(geo_unit_level).unique()
+            geo_units_labels = self.hierarchy.index.get_level_values(
+                geo_unit_level
+            ).unique()
             
             # loop through this geo-unit
             for unit_label in geo_units_labels:
@@ -126,13 +129,20 @@ class Geography:
                     superarea_areas_list.append(
                         Area(
                             name=smaller_unit_label,
-                            #coordinates=self.get_area_coord(smaller_unit_label),
+                            coordinates=self.get_unit_coord(
+                                smaller_unit_df.index.values[0],
+                                smaller_unit_label,
+                            ),
                         )
                     )
                 
                 areas_list.append(superarea_areas_list)
                 super_area = SuperArea(
                     name=unit_label,
+                    coordinates=self.get_unit_coord(
+                        geo_units_labels.name,
+                        unit_label,
+                    ),
                     area=superarea_areas_list,
                 )
                 for area in superarea_areas_list:
@@ -145,26 +155,35 @@ class Geography:
         self.super_areas = SuperAreas(super_areas_list)
         del superarea_areas_list, areas_list, super_areas_list
 
-    def get_area_coord(self, area_name):
+    def get_unit_coord(self, unit, name) -> list:
+        """
+        Read two numbers from input df, return as array.
+
+        Parameters
+        ----------
+        unit
+            Geographical units (e.g. OA, MSOA)
+        name
+            Name of the selected member of a unit (e.g. E02000001)
+        """
+        # NOTE df["X"] ~5 times faster than df[ ["Y", "X"] ]
+        return [
+            self.units_coordinate[unit][name]['Y'],
+            self.units_coordinate[unit][name]['X'],
+        ]
+    
+    def get_super_area_coord(self, area_name):
         """
         Read two numbers from input df, return as array.
         """
-        df_entry = self.coordinates.loc[area_name]
-        # NOTE df["X"] ~5 times faster than df[ ["Y", "X"] ]
-        return [df_entry["Y"], df_entry["X"]]
-    
-    #def get_super_area_coord(self, area_name):
-    #    """
-    #    Read two numbers from input df, return as array.
-    #    """
     #    oa = pd.read_csv('./../data/geographical_data/oa_coorindates.csv')
     #    oa_msoa = pd.read_csv(
     #        './../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv'
     #    )
-    #    oa_msoa_ll = pd.merge(oa_msoa, oa, on='OA11CD')
-    #    oa_msoa_ll_mean = oa_msoa_ll.groupby('MSOA11CD', as_index=False)[['X','Y']].mean()
-    #    oa_msoa_ll_mean.to_csv('msoa_coordinates_englandwales.csv')
-    #    return [df_entry["Y"], df_entry["X"]]
+        #oa_msoa_ll = pd.merge(oa_msoa, oa, on='OA11CD')
+        #oa_msoa_ll_mean = oa_msoa_ll.groupby('MSOA11CD', as_index=False)[['X','Y']].mean()
+        #oa_msoa_ll_mean.to_csv('msoa_coordinates_englandwales.csv')
+        #return [df_entry["Y"], df_entry["X"]]
 
     @classmethod
     def from_file(
@@ -195,16 +214,25 @@ class Geography:
         #TODO this file is missing option to filter for Region etc.
         unit_hierarchy_file = f"{names_path}/areas_mapping.csv"
         smallest_unit_coords_file = f"{coords_path}/oa_coorindates.csv"
-
         geo_hierarchy = _load_geo_file(unit_hierarchy_file)
-        smallest_unit_coord = _load_area_coords(smallest_unit_coords_file)
+        areas_coord = _load_area_coords(smallest_unit_coords_file)
         
         if filter_key is not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
         # At the moment we only support data at the UK OA & MSOA level.
         geo_hierarchy = geo_hierarchy[["MSOA", "OA"]]
-        return Geography(geo_hierarchy, smallest_unit_coord)
+        
+        super_areas_coord = pd.merge(areas_coord, geo_hierarchy, on='OA')
+        super_areas_coord = super_areas_coord.groupby(
+            'MSOA', as_index=True,
+        )[['X','Y']].mean()
+        
+        units_coord = {
+            "OA": areas_coord.T.to_dict(),
+            "MSOA": super_areas_coord.T.to_dict(),
+        }
+        return Geography(geo_hierarchy, units_coord)
 
 
 def _load_geo_file(
@@ -226,9 +254,14 @@ def _load_area_coords(
 ) -> pd.DataFrame:
     """
     """
+    usecols = [0,1,3]
+    column_names = ["X", "Y", "OA"]
     return pd.read_csv(
-        coords_path
-    ).set_index("OA11CD", inplace=True)
+        coords_path,
+        skiprows=1,
+        names=column_names,
+        usecols=usecols,
+    ).set_index("OA")
 
 
 def _filtering(
@@ -266,3 +299,6 @@ def _sorting_and_grouping(
     hierarchy = hierarchy.groupby(sorted_unit_labels[:-1], as_index=True)
     hierarchy = hierarchy.agg(lambda x : ' '.join(x))
     return hierarchy
+
+if __name__ == "__main__":
+    Geography.from_file(filter_key={"MSOA": ["E02000140"]})
