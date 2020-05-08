@@ -1,7 +1,7 @@
 import numpy as np
 from collections import OrderedDict
-from covid.groups import CareHome
-from covid.groups import Area
+from june.groups import CareHome
+from june.groups import Area
 
 
 class CareHomeError(BaseException):

@@ -3,9 +3,9 @@ import pickle
 import pytest
 import pandas as pd
 from pathlib import Path
-from covid.distributors import CareHomeDistributor
-from covid.distributors.carehome_distributor import CareHomeError
-from covid.groups import Person
+from june.distributors import CareHomeDistributor
+from june.distributors.carehome_distributor import CareHomeError
+from june.groups import Person
 
 @pytest.fixture(name="carehomes_df")
 def load_carehomes_df():

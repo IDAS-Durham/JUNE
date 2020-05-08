@@ -1,10 +1,10 @@
 import numpy as np
 import os
-from covid.groups import Household, Households, Person
-from covid.distributors import HouseholdDistributor
+from june.groups import Household, Households, Person
+from june.distributors import HouseholdDistributor
 import pytest
 from collections import OrderedDict
-from covid.groups import Person
+from june.groups import Person
 from pathlib import Path
 
 

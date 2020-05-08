@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("../covid")
+sys.path.append("../june")
 import numpy as np
 import os
 import yaml

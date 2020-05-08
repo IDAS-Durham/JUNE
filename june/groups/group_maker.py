@@ -1,5 +1,5 @@
-from june.sociology.pubs import PubFiller
 import sys
+from june.groups.pubs import PubFiller
 
 class GroupMaker:
     def __init__(self,world):

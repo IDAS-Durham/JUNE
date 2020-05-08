@@ -3,7 +3,7 @@ from itertools import count
 
 import numpy as np
 
-from covid.groups import Group
+from june.groups import Group
 
 
 class Household(Group):

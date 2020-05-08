@@ -1,4 +1,4 @@
-from covid.groups import Group
+from june.groups import Group
 from itertools import count
 from enum import IntEnum
 
