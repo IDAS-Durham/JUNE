@@ -32,12 +32,14 @@ class Area:
             self,
             name: str,
             super_area: "SuperArea" = None,
-            coordinates: [float, float] = [None, None],
+            coordinate: [float, float] = [None, None],
     ):
         """
         """
         self.id = next(self._id)
         self.name = name
+        self.coordinate = coordinate
+        self.super_area = super_area
 
 
 class Areas:
@@ -60,12 +62,13 @@ class SuperArea:
     def __init__(
             self,
             name: str,
-            area: List[Area] = [None],
-            coordinates: [float, float] = [None, None],
+            areas: List[Area] = [None],
+            coordinate: [float, float] = [None, None],
     ):
         self.id = next(self._id)
         self.name = name
-        self.area = area
+        self.coordinate = coordinate
+        self.areas = areas
 
 
 class SuperAreas:
@@ -129,7 +132,7 @@ class Geography:
                     superarea_areas_list.append(
                         Area(
                             name=smaller_unit_label,
-                            coordinates=self.get_unit_coord(
+                            coordinate=self.get_unit_coord(
                                 smaller_unit_df.index.values[0],
                                 smaller_unit_label,
                             ),
@@ -139,11 +142,11 @@ class Geography:
                 areas_list.append(superarea_areas_list)
                 super_area = SuperArea(
                     name=unit_label,
-                    coordinates=self.get_unit_coord(
+                    coordinate=self.get_unit_coord(
                         geo_units_labels.name,
                         unit_label,
                     ),
-                    area=superarea_areas_list,
+                    areas=superarea_areas_list,
                 )
                 for area in superarea_areas_list:
                     area.super_area = super_area
@@ -172,19 +175,6 @@ class Geography:
             self.units_coordinate[unit][name]['X'],
         ]
     
-    def get_super_area_coord(self, area_name):
-        """
-        Read two numbers from input df, return as array.
-        """
-    #    oa = pd.read_csv('./../data/geographical_data/oa_coorindates.csv')
-    #    oa_msoa = pd.read_csv(
-    #        './../data/census_data/area_code_translations/oa_msoa_englandwales_2011.csv'
-    #    )
-        #oa_msoa_ll = pd.merge(oa_msoa, oa, on='OA11CD')
-        #oa_msoa_ll_mean = oa_msoa_ll.groupby('MSOA11CD', as_index=False)[['X','Y']].mean()
-        #oa_msoa_ll_mean.to_csv('msoa_coordinates_englandwales.csv')
-        #return [df_entry["Y"], df_entry["X"]]
-
     @classmethod
     def from_file(
             cls,
