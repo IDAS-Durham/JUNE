@@ -18,7 +18,7 @@ class CommuteHub:
         commuteunits: (list) commute units associated with the commute hub
         """
         self.id = commutehub_id
-        self.lat_lon
+        self.lat_lon = lat_lon
         self.city = city # station the hub is affiliated to
         self.passengers = [] # passengers flowing through commute hub
         self.commuteunits = []
@@ -36,18 +36,21 @@ class CommuteHubs:
        the real stations, but we believe this gives a good approximation at the sub-regional level)
     """
 
-    def __init__(self, commutecities, msoa_coordinates):
+    def __init__(self, commutecities, msoa_coordinates, init = False):
         """
         commutecities: (list) members of CommuteCities
         msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
+        init: if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
         self.commutecities = commutecities
         self.msoa_coordinates = msoa_coordinates
+        self.init = init
         self.members = []
 
         # initialise commute hubs
-        self.init_hubs()
+        if self.init:
+            self.init_hubs()
 
     def _get_msoa_lat_lon(self, msoa):
         'Given an MSOA, get the lat/lon'
@@ -76,7 +79,7 @@ class CommuteHubs:
             distance_max = np.max(distances)
 
             # add fixed offset of 0.005
-            distance_away = distance_max += 0.005
+            distance_away = distance_max + 0.005
 
             # handle London separately
             # give London 8 hubs
