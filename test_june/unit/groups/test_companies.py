@@ -1,5 +1,5 @@
-from covid.groups import Company, Companies
-from covid.groups import Person
+from june.groups import Company, Companies
+from june.groups import Person
 from pathlib import Path
 import pandas as pd
 
