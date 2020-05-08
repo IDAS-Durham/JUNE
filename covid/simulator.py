@@ -119,32 +119,6 @@ class Simulator:
         for person in self.world.people.members:
             person.active_group = None
 
-    def seed(self, group: "Group", n_infections: int):
-        """
-        Randomly pick people in group to seed the infection
-
-        Parameters
-        ----------
-        group:
-            group instance in which to seed the infection
-
-        n_infections:
-            number of random people to infect in the given group
-
-        """
-        #TODO: add attribute susceptible to people
-        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(len(self.world.people.members), n_infections, replace=False)
-        infecter_reference = self.infection
-        for choice in choices:
-            infecter_reference.infect_person_at_time(
-                list(self.world.people.members)[choice], self.timer.now
-            )
-        #group.update_status_lists(self.timer.now, delta_time=0)
-        self.hospitalise_the_sick(group)
-        self.bury_the_dead(group)
-
-
     def hospitalise_the_sick(self, person):
         """
         These functions could be more elegantly handled by an implementation inside a group collection.
@@ -180,6 +154,29 @@ class Simulator:
             elif health_information.dead:
                 self.bury_the_dead(person)
 
+    def seed(self, group: "Group", n_infections: int):
+        """
+        Randomly pick people in group to seed the infection
+
+        Parameters
+        ----------
+        group:
+            group instance in which to seed the infection
+
+        n_infections:
+            number of random people to infect in the given group
+
+        """
+        #TODO: add attribute susceptible to people
+        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
+        choices = np.random.choice(len(self.world.people.members), n_infections, replace=False)
+        infecter_reference = self.infection
+        for choice in choices:
+            infecter_reference.infect_person_at_time(
+                list(self.world.people.members)[choice], self.timer.now
+            )
+        self.update_health_status()
+
     def do_timestep(self):
         """
         Perform a time step in the simulation
@@ -206,7 +203,7 @@ class Simulator:
         self.update_health_status()
         self.set_allpeople_free()
 
-    def run(self, n_days):
+    def run(self, n_days, save=False):
         """
         Run simulation with n_seed initial infections
 
@@ -228,3 +225,6 @@ class Simulator:
                 break
             self.logger.log_timestep(day)
             self.do_timestep(self.timer)
+        # Save the world
+        if save:
+            self.world.to_pickle()
