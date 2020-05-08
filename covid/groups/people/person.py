@@ -141,6 +141,7 @@ class Person:
         self.school = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
+        self.groups = []
         self.industry_specific = None
         self.company_id = None
         self.hospital = None
@@ -192,3 +193,15 @@ class People:
     @property
     def total_people(self):
         return len(self.members)
+
+    @property
+    def infected(self):
+        return [
+            person for person in self.members
+            if person.health_information.infected and not (
+                    person.health_information.in_hospital
+                    or person.health_information.dead
+            )
+        ]
+
+

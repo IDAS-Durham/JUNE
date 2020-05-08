@@ -75,6 +75,7 @@ class School(Group):
         if qualifier == self.GroupType.students:
             self.groupings[1 + person.age - self.age_min].append(person)
             person.school = self
+            person.groups.append(self)
         else:
             super().add(
                 person,
