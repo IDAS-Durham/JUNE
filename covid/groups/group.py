@@ -220,6 +220,7 @@ class Group(AbstractGroup):
 
     def add(self, person, qualifier=GroupType.default):
         self.groupings[qualifier].append(person)
+        person.groups.append(self)
 
     def clear(self):
         for grouping in self.groupings:
@@ -229,7 +230,8 @@ class Group(AbstractGroup):
         for grouping in self.groupings:
             for person in grouping.people:
                 if person.active_group is not None:
-                    raise ValueError("Trying to set an already active person")
+                    #raise ValueError("Trying to set an already active person")
+                    continue 
                 else:
                     person.active_group = self.spec
 
