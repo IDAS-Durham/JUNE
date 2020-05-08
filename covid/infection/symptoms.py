@@ -33,7 +33,7 @@ class Symptoms:
     def tag(self):
         if self.severity <= 0.0:
             return "healthy"
-        index = np.searchsorted(self.health_index, self.severity)
+        index = np.searchsorted(self.health_index, self.severity)-1
         return self.tags[index]
 
 

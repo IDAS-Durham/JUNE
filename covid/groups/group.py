@@ -232,9 +232,6 @@ class Group(AbstractGroup):
                 if person.active_group is not None:
                     #raise ValueError("Trying to set an already active person")
                     continue 
-                elif person.health_information.must_stay_at_home:
-                    person.active_group = 'household'
-                    if person.age < 14:
                 else:
                     person.active_group = self.spec
 
