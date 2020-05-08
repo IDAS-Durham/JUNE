@@ -4,10 +4,9 @@ from scipy import spatial
 
 class CommuteHubDistributor:
 
-    def __init__(self, oa_coordinates, commutecities, commutehubs):
+    def __init__(self, oa_coordinates, commutecities):
         self.oa_coordinates = oa_coordinates
         self.commutecities = commutecities
-        self.commutehubs = commutehubs
 
     def _get_area_lat_lon(self, oa):
         lat = float(self.oa_coordinates['Y'][self.oa_coordinates['OA11CD'] == oa])
@@ -21,12 +20,11 @@ class CommuteHubDistributor:
             # people commuting into city
             work_people = commutecity.passengers
 
-            commutehub_in_city = []
+            # possible commutehubs
+            commutehub_in_city = commutecity.commutehubs
             commutehub_in_city_lat_lon = []
-            for commutehub in self.commutehubs:
-                if commutehub.city == commutecity.city:
-                    commutehub_in_city.append(commutehub)
-                    commutehub_in_city_lat_lon.append(commutehub.lat_lon)
+            for commutehub in commutehub_in_city:
+                commutehub_in_city_lat_lon.append(commuthub.lat_lon)
 
             for work_person in work_people:
                 # check if live AND work in metropolitan area
