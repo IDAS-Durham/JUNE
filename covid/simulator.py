@@ -195,9 +195,16 @@ class Simulator:
         self.set_active_group_to_people(active_groups)
         # infect people in groups
         group_instances = [getattr(self, group) for group in active_groups]
+        n_people = 0
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
+                n_people += len(group.people)
+        for cemetery in self.cemeteries.members:
+            n_people += len(cemetery.people)
+        # assert conservation of people
+        assert n_people  == len(world.people.members)
+
         self.update_health_status()
         self.set_allpeople_free()
 
