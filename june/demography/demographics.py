@@ -5,7 +5,7 @@ from typing import List, Dict, Optional
 
 import numpy as np
 
-from june import Geography
+from june.geography import Geography
 from june.demography.health_index import HealthIndex
 from june.demography.person import Person
 
@@ -28,8 +28,7 @@ class AgeGenerator:
     def __init__(
             self,
             lower: int,
-            upper: int = None,
-            Optional[int] = None
+            upper: Optional[int] = None,
     ):
         """
         Encapsulates an age range and can be called to randomly generate
@@ -117,7 +116,7 @@ class Population:
 class Demography:
     def __init__(
             self,
-            super_area: str = None,
+            super_area: str,
             geography: "Geography",
             residents_map: Dict[str, int],
             sex_generators: Dict[str, "WeightedGenerator"],

@@ -10,7 +10,7 @@ from typing import List, Dict, Optional
 import numpy as np
 import pandas as pd
 
-from june import get_creation_logger
+from june.logger_creation import logger
 
 default_hierarchy_filename = Path(os.path.abspath(__file__)).parent.parent / \
     "data/census_data/area_code_translations/areas_mapping.csv"
@@ -155,9 +155,8 @@ class Geography:
         )
         self.super_areas = SuperAreas(super_areas_list)
         del superarea_areas_list, areas_list, super_areas_list
-        print(len(self.areas), len(self.super_areas))
         logger.info(
-            f"There are {len(self.areas)} areas and " / \
+            f"There are {len(self.areas)} areas and " + \
             f"{len(self.super_areas)} super_areas in the world."
         )
 

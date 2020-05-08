@@ -8,7 +8,7 @@ default_logging_config_filename = Path(__file__).parent.parent / \
     "configs/config_world_creation_logger.yaml"
 
 
-def logging(config_file: str = None):
+def logger(config_file: str = None):
     """
     Create logger to make debugging easier
     """
