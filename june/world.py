@@ -1,20 +1,19 @@
 import os
 import pickle
 import logging
+from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 
 import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-from june import Geography
-from june import Demography
-from june import Sociology
-from june import get_creation_logger
+#from june import Geography
+#from june import Demography
+#from june import Sociology
+from june.creation_logger import get_creation_logger
 
-default_logging_config_filename = Path(__file__).parent.parent.parent.parent / \
-    "configs/config_world_creation_logger.yaml"
-get_creation_logger(default_logging_config_filename)
+get_creation_logger()
 logger = logging.getLogger(__name__)
 
 
@@ -28,11 +27,11 @@ class World:
     
     def __init__(
         self,
+        #geography: "Geography",
+        #demography: "Demography",
+        #sociology: "Sociology",
         configs_dir: str = os.path.dirname(os.path.realpath(__file__))+"../configs/",
         output_dir: str = "./results/",
-        geography: "Geography",
-        demography: "Demography",
-        sociology: "Sociology",
     ):
         self.configs_dir = configs_dir
         self.test_output_dir(output_dir)
@@ -318,5 +317,4 @@ class World:
 
 if __name__ == "__main__":
     world = World(
-        box_mode = {"n_people": 10, "zone": "Trisolaris"},
     )
