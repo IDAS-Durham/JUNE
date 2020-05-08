@@ -1,7 +1,7 @@
 from .abstract import AbstractGroup
 
 
-class Grouping(AbstractGroup):
+class Subgroup(AbstractGroup):
     def __init__(self, intensity=1.0):
         self._people = set()
         self.intensity = intensity
