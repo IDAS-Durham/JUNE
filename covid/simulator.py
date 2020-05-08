@@ -127,10 +127,10 @@ class Simulator:
         to world construction.
         """
         if person.in_hospital is None:
-            self.hospitals.allocate_patient(person)
+            self.world.hospitals.allocate_patient(person)
 
     def bury_the_dead(self, person):
-        cemetery = self.cemeteries.get_nearest(person)
+        cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.household.remove_person(person)
         for group in person.groups:
@@ -144,8 +144,8 @@ class Simulator:
             if health_information.in_hospital:
                 self.hospitalise_the_sick(person)
             # release patients that recovered
-            elif health_information.recovered and person.hospital is not None:
-                person.hospital.release_as_patient(person)
+            elif health_information.recovered and person.in_hospital is not None:
+                person.in_hospital.release_as_patient(person)
             elif health_information.dead:
                 self.bury_the_dead(person)
 
