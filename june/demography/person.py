@@ -123,6 +123,7 @@ class Person:
             health_index=None,
             econ_index=None,
             mode_of_transport=None,
+            area=None
     ):
         """
         Inputs:
@@ -135,6 +136,7 @@ class Person:
         # geo-graphical attributes
         self.work_msoarea = None
         self.household = None
+        self.area = area
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
         self.work_msoarea = None
