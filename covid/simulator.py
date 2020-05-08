@@ -1,5 +1,6 @@
 import yaml
 import logging
+import random
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 import numpy as np
@@ -27,13 +28,14 @@ class Simulator:
         config:
             dictionary with configuration to set up the simulation
         """
+        print('Default config : ', default_config_filename)
         self.world = world
         self.interaction = interaction
         self.infection = infection
         self.timer = Timer(config)
-        self.permanent_group_hierarchy = ['hospital', 'company', 'school', 'household']
-        self.valid_group_hierarchy = ['hospital', 'company', 'school', 'pub', 'household']
-
+        self.permanent_group_hierarchy = ['box', 'hospital', 'company', 'school', 'carehome', 'household']
+        self.randomly_order_groups = ['pub', 'church',]
+       
     @classmethod
     def from_file(
         cls, world, interaction, infection, config_filename=default_config_filename
@@ -61,6 +63,15 @@ class Simulator:
         assert sum(config["time"]["step_duration"]["weekday"].values()) == 24
 
 
+    def apply_group_hierarchy(self, active_groups):
+        #TODO: group hierarchy, order them
+        randomly_order_groups = random.shuffle(self.randomly_order_groups)
+        group_hierarchy = self.permanent_group_hierarchy.remove(['carehome', 'household'])
+        group_hierarchy += randomly_order_groups + ['carehome', 'household']
+        # order active groups
+        active_groups = active_groups.sort(key=lambda x: group_hierarchy.index(x))
+        return active_groups
+
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
         Calls the set_active_members() method of each group, if the group
@@ -71,11 +82,10 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
-        #TODO: group hierarchy, order them
-        #TODO:take care of temporary groups with group_maker 
+        active_groups = self.apply_group_hierarchy(active_groups)
         for group_name in active_groups:
             grouptype = getattr(self, group_name)
-            if "pubs" in active_groups:
+            if "pubs" in active_groups or "church" in active_groups:
                 world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
