@@ -1,10 +1,10 @@
-import numpy as np
 import yaml
+
+import numpy as np
 from scipy import stats
 
-from covid.groups.schools.school import School
+from covid.groups.school import School
 
-# from june.school import SchoolError
 
 EARTH_RADIUS = 6371  # km
 
