@@ -47,8 +47,8 @@ class DefaultInteraction(Interaction):
 
         #if group.must_timestep:
         self.calculate_probabilities(group)
-        for i in range(group.n_groupings):
-            for j in range(group.n_groupings):
+        for i in range(group.n_subgroups):
+            for j in range(group.n_subgroups):
                 # grouping[i] infected infects grouping[j] susceptible
                 self.contaminate(group, time, delta_time, i,j)
                 if i!=j:
@@ -57,7 +57,7 @@ class DefaultInteraction(Interaction):
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
         #TODO: subtitute by matrices read from file when ready
-        contact_matrix = np.ones((group.n_groupings, group.n_groupings))
+        contact_matrix = np.ones((group.n_subgroups, group.n_subgroups))
         if (
             contact_matrix[infecters][recipients] <= 0. or
             self.probabilities[infecters] <= 0.
