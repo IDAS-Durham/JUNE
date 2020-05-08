@@ -27,31 +27,31 @@ def test__right_group_hierarchy_in_box(simulator_box):
 def test__everyone_is_freed(simulator):
     simulator.set_active_group_to_people(["households"])
     simulator.set_allpeople_free()
-    for person in simulator.people.members:
+    for person in simulator.world.people.members:
         assert person.active_group == None
     simulator.set_allpeople_free()
 
 
-def test__everyone_is_in_household(world_ne):
-    world_ne.set_active_group_to_people(["households"])
-    for person in world_ne.people.members:
+def test__everyone_is_in_household(simulator):
+    simulator.set_active_group_to_people(["households"])
+    for person in simulator.world.people.members:
         assert person.active_group == "household"
-    world_ne.set_allpeople_free()
+    simulator.set_allpeople_free()
 
 
-def test__everyone_is_in_school_household(world_ne):
-    world_ne.set_active_group_to_people(["schools", "households"])
-    for person in world_ne.people.members:
+def test__everyone_is_in_school_household(simulator):
+    simulator.set_active_group_to_people(["schools", "households"])
+    for person in simulator.world.people.members:
         should_be_active = "school" if person.school is not None else "household"
         assert person.active_group == should_be_active
-    world_ne.set_allpeople_free()
+    simulator.set_allpeople_free()
 
 
 
-def test__everyone_is_active_somewhere(world_ne):
-    world_ne.set_active_group_to_people(["schools", "households"])
-    for person in world_ne.people.members:
+def test__everyone_is_active_somewhere(simulator):
+    simulator.set_active_group_to_people(["schools", "households"])
+    for person in simulator.world.people.members:
         assert person.active_group is not None
-    world_ne.set_allpeople_free()
+    simulator.set_allpeople_free()
 
 
