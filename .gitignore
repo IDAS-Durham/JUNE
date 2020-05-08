@@ -1,3 +1,4 @@
+coverage.xml
 test_covid/unit/results/
 .DS_Store
 test_covid/results/
