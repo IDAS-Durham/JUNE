@@ -75,7 +75,9 @@ class Companies:
         self.members = companies
 
     @classmethod
-    def from_df(cls, company_size_per_superarea_df: str, company_sector_per_superarea_df: str) -> "Companies":
+    def from_df(
+        cls, company_size_per_superarea_df: str, company_sector_per_superarea_df: str
+    ) -> "Companies":
         """
         Initializes Companies class from a list of companies read from a DataFrame.
 
@@ -100,12 +102,10 @@ class Companies:
         msoa_names = company_size_per_superarea_df.index.values
         # Run through each MSOArea
         compsec_labels = company_sector_per_superarea_df.columns
-        for area_counter, (company_sizes, company_sectors) in enumerate(zip(
-            companysize_data_per_area, company_per_sector_data_per_area
-        )):
-            comp_size_rv = rv_discrete(
-                values=(compsize_labels_encoded, company_sizes)
-            )
+        for area_counter, (company_sizes, company_sectors) in enumerate(
+            zip(companysize_data_per_area, company_per_sector_data_per_area)
+        ):
+            comp_size_rv = rv_discrete(values=(compsize_labels_encoded, company_sizes))
             comp_size_rnd_array = comp_size_rv.rvs(
                 size=np.sum(company_sectors).astype(int)
             )
@@ -135,8 +135,12 @@ class Companies:
         company_per_sector_per_msoa_file: str
         """
         company_size_per_superarea_df = pd.read_csv(companysize_file, index_col=0)
-        company_size_per_superarea_df.set_index("MSOA", inplace=True)
-        company_size_per_superarea_df = company_size_per_superarea_df.div(company_size_per_superarea_df.sum(axis=1), axis=0)
-        company_sector_per_superarea_df = pd.read_csv(company_per_sector_file, index_col=0)
-        company_sector_per_superarea_df.set_index("MSOA", inplace=True)
-        return Companies.from_df(company_size_per_superarea_df, company_sector_per_superarea_df)
+        company_size_per_superarea_df = company_size_per_superarea_df.div(
+            company_size_per_superarea_df.sum(axis=1), axis=0
+        )
+        company_sector_per_superarea_df = pd.read_csv(
+            company_per_sector_file, index_col=0
+        )
+        return Companies.from_df(
+            company_size_per_superarea_df, company_sector_per_superarea_df
+        )
