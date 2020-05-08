@@ -1,14 +1,15 @@
-import numpy as np
-import random
 import yaml
-from scipy import stats
-import warnings
-from june.groups import Household, Households
-from collections import OrderedDict
-from june.groups import Person
-from june.groups import Area
-import pandas as pd
+import random
 from pathlib import Path
+from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+
+from june.groups import Household, Households
+from june.demography import Person
+from june.geography import Area
 
 default_config_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent
