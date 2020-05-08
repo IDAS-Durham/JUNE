@@ -1,14 +1,18 @@
+from enum import IntEnum
 from covid.groups import Group
 
 
 class Cemetery(Group):
+    class GroupType(IntEnum):
+        default = 0
+        
     def __init__(self):
         super().__init__("Cemetery", "cemetery")
 
     def must_timestep(self):
         return False
 
-    def update_status_lists(self, time=1):
+    def update_status_lists(self, time=1, delta_time=1):
         pass
 
     def set_active_members(self):

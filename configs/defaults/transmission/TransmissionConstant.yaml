@@ -1,4 +1,1 @@
-probability:
-  distribution: constant
-  parameters:
-    value: 0.3
+probability: 0.3

@@ -15,17 +15,18 @@ class CompanyDistributor:
     (e.g. such as schools and hospitals) to companies.
     """
 
-    def __init__(self, companies, msoarea):
+    def __init__(self, companies, super_area, config):
         """Get all companies within MSOArea"""
-        self.msoarea = msoarea
+        self.msoarea = super_area
         self.companies = companies
+        self.config = config
 
     def distribute_adults_to_companies(self):
         """
         """
-        STUDENT_THRESHOLD = self.msoarea.world.config["people"]["student_age_group"]
-        ADULT_THRESHOLD = self.msoarea.world.config["people"]["adult_threshold"]
-        OLD_THRESHOLD = self.msoarea.world.config["people"]["old_threshold"]
+        STUDENT_THRESHOLD = self.config["people"]["student_age_group"]
+        ADULT_THRESHOLD = self.config["people"]["adult_threshold"]
+        OLD_THRESHOLD = self.config["people"]["old_threshold"]
 
         for person in self.msoarea.work_people:
 
@@ -41,9 +42,8 @@ class CompanyDistributor:
                     and company.n_employees < company.n_employees_max
                 ):
                     company.n_employees += 1
-                    company.n_woman += person.sex  # remember: woman=1;man=0
-                    company.people.append(person)
-                    person.company_id = company.id
+                    company.n_woman     += person.sex  # remember: woman=1;man=0
+                    company.add(person,"worker")
                     break
                 # TODO: Take care if cases where people did not find any
                 # company at all
