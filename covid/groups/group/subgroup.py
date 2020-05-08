@@ -37,10 +37,10 @@ class Subgroup(AbstractGroup):
         return self._dead
 
     def __contains__(self, item):
-        return item in self.people
+        return item in self._people
 
     def __iter__(self):
-        return iter(self.people)
+        return iter(self._people)
 
     def clear(self):
         self._people = set()
