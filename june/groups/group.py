@@ -2,8 +2,8 @@ import logging
 from enum import IntEnum
 from typing import Set
 
-from covid.exc import GroupException
-from covid.groups.people.person import Person
+from june.exc import GroupException
+from june.demography.person import Person
 from .abstract import AbstractGroup
 from .subgroup import Subgroup
 

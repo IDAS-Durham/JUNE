@@ -1,13 +1,14 @@
-import numpy as np
-from scipy import stats
+import logging
 from collections import OrderedDict
 
-from june.groups.people import Person
-from june.groups.people.health_index import HealthIndex
+import numpy as np
+from scipy import stats
 
+from june.demography.person import Person
+from june.demography.health_index import HealthIndex
+from june import get_creation_logger
 
-class PersonError(BaseException):
-    pass
+logger = logging.getLogger(__name__)
 
 
 class PersonDistributor:
@@ -322,6 +323,7 @@ class PersonDistributor:
                 total_people += len(people_dict[age])
 
         if total_people != self.area.n_residents:
-            raise PersonError(
-                f"The number of people created {total_people} does not match the areas' number of residents {self.area.n_residents}"
+            raise BaseException(
+                f"The number of people created {total_people} does not match" / \
+                " the areas' number of residents {self.area.n_residents}"
             )

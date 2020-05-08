@@ -1,4 +1,4 @@
-from covid.groups.people.person import Person
+from june.demography.person import Person
 from .abstract import AbstractGroup
 
 

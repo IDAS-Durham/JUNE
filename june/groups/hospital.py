@@ -1,5 +1,7 @@
-import logging
+import os
 import yaml
+import logging
+from pathlib import Path
 from itertools import count
 from typing import List, Tuple, Optional
 from enum import IntEnum
@@ -9,18 +11,22 @@ import pandas as pd
 from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
+from june import get_creation_logger
 
 logger = logging.getLogger(__name__)
 
-default_config_filename = Path(
-    __file__
-).parent.parent / "configs/defaults/hospitals.yaml"
-
-default_data_path = Path(__file__).parent.parent.parent.parent / "data"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent / \
+    "configs/defaults/hospitals.yaml"
+default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "data"
+    Hospitals.from_file(
+        "~/covidmodelling/data/processed/hospital_data/england_hospitals.csv",
+        "/home/florpi/covidmodelling/configs/defaults/hospitals.yaml",
+        )
 
 class Hospital(Group):
     """
-    The Hospital class represents a hospital and contains information about 
+    The Hospital class represents a hospital and contains information about
     its patients and workers - the latter being the usual "people".
 
     TODO: we have to figure out the inheritance structure; I think it will
@@ -45,8 +51,8 @@ class Hospital(Group):
     def __init__(
             self,
             hospital_id: int,
-            super_area: str = None,
-            coordinates: Optional[Tuple[float, float]] = None,
+            super_area: str,
+            coordinates: tuple, # Optional[Tuple[float, float]] = None,
             n_beds: int,
             n_icu_beds: int,
     ):
@@ -65,7 +71,6 @@ class Hospital(Group):
             latitude and longitude 
         msoa_name:
             name of the msoa area the hospital belongs to
-
         """
         super().__init__(f"Hospital_{hospital_id}", "hospital")
         self.id = next(self._id)
@@ -126,7 +131,9 @@ class Hospital(Group):
                 self.GroupType.patients
             )
         else:
-            raise AssertionError("ERROR: This person shouldn't be trying to get to a hospital")
+            raise AssertionError(
+                "ERROR: This person shouldn't be trying to get to a hospital"
+            )
 
     def release_as_patient(self, person):
         """
@@ -194,11 +201,12 @@ class Hospital(Group):
         super().update_status_lists(time, delta_time)
         self.update_status_lists_for_patients(time, delta_time)
         self.update_status_lists_for_ICUpatients(time, delta_time)
-        ic_logger.info(
-            f"=== update status list for hospital with {self.size}  people ==="
+        logger.info(
+            f"=== update status list for hospital with {self.size} people ==="
         )
-        ic_logger.info(
-            f"=== hospital currently has {self[self.GroupType.patients].size} patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
+        logger.info(
+            f"=== hospital currently has {self[self.GroupType.patients].size} " / \
+            "patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
         )
 
 
@@ -207,7 +215,8 @@ class Hospitals:
             self, hospitals: List["Hospital"], max_distance: float, box_mode: bool
     ):
         """
-        Create a group of hospitals, and provide functionality to  llocate patients to a nearby hospital
+        Create a group of hospitals, and provide functionality to locate patients
+        to a nearby hospital.
 
         Parameters
         ----------
@@ -222,8 +231,10 @@ class Hospitals:
         self.max_distance = max_distance
         self.members = []
 
+        print("**1**", len(hospitals), hospitals[0])
         for hospital in hospitals:
             self.members.append(hospital)
+        print("**2**", len(members), members[0])
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
             self.init_trees(coordinates)
@@ -233,7 +244,7 @@ class Hospitals:
             cls, filename: str, config_filename: str, box_mode: bool = False
     ) -> "Hospitals":
         """
-        Initialize Hospitals from path to data frame, and path to config file 
+        Initialize Hospitals from path to data frame, and path to config file.
 
         Parameters
         ----------
@@ -256,7 +267,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-            ic_logger.info("There are {len(hospital_df)} hospitals in the world.")
+            logger.info("There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(Hospital(1, 10, 2, None))
@@ -268,14 +279,13 @@ class Hospitals:
             self, hospital_df: pd.DataFrame, icu_fraction: float
     ) -> List["Hospital"]:
         """
-        Create Hospital objects with the right characteristics, 
-        as given by dataframe
+        Create Hospital objects with the right characteristics,
+        as given by dataframe.
 
         Parameters
         ----------
         hospital_df:
             dataframe with hospital characteristics data
-
         """
         hospitals = []
         for i, (index, row) in enumerate(hospital_df.iterrows()):
@@ -351,12 +361,12 @@ class Hospitals:
                 ):
                     break
             if hospital is not None:
-                ic_logger.info(
+                logger.info(
                     f"Receiving hospital for patient with {person.health_information.tag} at distance = {distance} km"
                 )
                 hospital.add_as_patient(person)
             else:
-                ic_logger.info(
+                logger.info(
                     f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
                 )
 
