@@ -8,7 +8,7 @@ organise data according to
 The problem is to backwards calculate the rates for each one.  For a first model
 I use the IC data
 (table 1 of
-     https://www.imperial.ac.uk/media/imperial-college/medicine/sph/ide/gida-fellowships/ImperialCollege-june19-NPI-modelling-16-03-2020.pdf)
+     https://www.imperial.ac.uk/media/imperial-college/medicine/sph/ide/gida-fellowships/ImperialCollege-COVID19-NPI-modelling-16-03-2020.pdf)
 in the following way: I will assume that a certain value of cases is non-symptomatic
 (IC gives 40-50 %, this is a model parameter), and will assume that the symptomatic
 cases that do not need hospitalisation have either influenza-like or penumonia-like
