@@ -3,12 +3,20 @@ import pandas as pd
 from scipy import spatial
 import matplotlib.pyplot as plt
 
-from commutecity import CommuteCity, CommuteCities
-
 
 class CommuteHub:
+    """
+    Defines hubs around cities through with people commute and assigns people to those commute hubs
+    """
 
     def __init__(self, commutehub_id, lat_lon, city):
+        """
+        id: (int) id of the commute hub
+        lat_lon: (array) lat/lon of the commute hub
+        city: (string) name of the city the commute hub is associated to
+        passengers: (list) passengers commuting through this commute hub
+        commuteunits: (list) commute units associated with the commute hub
+        """
         self.id = commutehub_id
         self.lat_lon
         self.city = city # station the hub is affiliated to
@@ -16,8 +24,22 @@ class CommuteHub:
         self.commuteunits = []
 
 class CommuteHubs:
+    """
+    Initialises commute hubs given the location of the commute cities they are affiliated to
+
+    Assumptions:
+    - Each non-London station has 4 commute hubs associated with it
+      (this is based on the Network Rail maps showing most major stations have 4 incoming lines)
+    - London has 8 commmute hubs associated with it
+    - The locations of the hubs are uniformly distibuted around a circle
+      (this means we may not exactly account for the correct mixing as we draw from different locations
+       the real stations, but we believe this gives a good approximation at the sub-regional level)
+    """
 
     def __init__(self, commutecities):
+        """
+        
+        """
         self.commutecities = commutecities
         self.msoa_coordinates = msoa_coordinates
         self.members = []
@@ -80,6 +102,8 @@ class CommuteHubs:
                 )
 
                 ids += 1
+
+                commutecity.commutehubs.append(hub)
                 
                 self.members.append(commute_hub)
             
