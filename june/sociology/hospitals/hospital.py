@@ -396,4 +396,4 @@ if __name__ == "__main__":
     Hospitals.from_file(
         "~/covidmodelling/data/processed/hospital_data/england_hospitals.csv",
         "/home/florpi/covidmodelling/configs/defaults/hospitals.yaml",
-    )
+        )
