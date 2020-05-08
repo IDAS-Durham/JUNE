@@ -1,7 +1,7 @@
-import numpy as np
 from random import uniform
+
+import numpy as np
 from scipy import stats
-import warnings
 
 """
 This file contains routines to attribute people with different characteristics

@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 from itertools import count
 from typing import List, Tuple, Optional
-from enum import IntEnum
 
 import numpy as np
 import pandas as pd
@@ -12,6 +11,7 @@ from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
 from june import get_creation_logger
+from enum import IntEnum
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,7 @@ default_config_filename = Path(os.path.abspath(__file__)).parent.parent / \
     "configs/defaults/hospitals.yaml"
 default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "data"
-    Hospitals.from_file(
-        "~/covidmodelling/data/processed/hospital_data/england_hospitals.csv",
-        "/home/florpi/covidmodelling/configs/defaults/hospitals.yaml",
-        )
+
 
 class Hospital(Group):
     """

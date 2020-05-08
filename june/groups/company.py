@@ -7,7 +7,8 @@ import pandas as pd
 from scipy.stats import rv_discrete
 from typing import List, Tuple
 
-from june.groups import Group
+from june.groups.group import Group
+from june import get_creation_logger
 
 ic_logger = logging.getLogger(__name__)
 
