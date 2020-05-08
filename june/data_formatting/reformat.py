@@ -1,4 +1,5 @@
-# Code to reformat UK data into our code's input system
+# Code to reformat of school, household, and social matrices
+# UK data into our code's input system
 
 import pandas as pd
 import numpy as np

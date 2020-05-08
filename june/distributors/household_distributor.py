@@ -11,12 +11,13 @@ import pandas as pd
 from pathlib import Path
 
 default_config_filename = (
-    Path(__file__).parent.parent.parent
+    Path(os.path.abspath(__file__)).parent.parent.parent
     / "configs/defaults/distributors/HouseholdDistributor.yaml"
 )
 
 default_age_difference_files_folder = (
-    Path(__file__).parent.parent.parent / "data/processed/age_difference"
+    Path(os.path.abspath(__file__).parent.parent.parent
+    / "data/processed/age_difference"
 )
 
 
@@ -75,17 +76,20 @@ class HouseholdDistributor:
         Parameters
         ----------
         first_kid_parent_age_differences:
-            dictionary where keys are the age differences between a mother and her FIRST kid.
-            The values are the probabilities of each age difference.
+            dictionary where keys are the age differences between a mother and
+            her FIRST kid. The values are the probabilities of each age difference.
         second_kid_parent_age_differences:
-            dictionary where keys are the age differences between a mother and her SECOND kid.
-            The values are the probabilities of each age difference.
+            dictionary where keys are the age differences between a mother and
+            her SECOND kid. The values are the probabilities of
+            each age difference.
         couples_age_differences:
-            dictionary where keys are the age differences between a woman and a man at the time of marriage. A value of 20
-            means that the man is 20 years older than the woman.
-            The values are the probabilities of each age difference.
+            dictionary where keys are the age differences between a woman and
+            a man at the time of marriage. A value of 20 means that the man
+            is 20 years older than the woman. The values are the probabilities
+            of each age difference.
         number_of_random_numbers:
-            Number of random numbers required. This should be set to the number of people living in the area, minimum.
+            Number of random numbers required. This should be set to the
+            number of people living in the area, minimum.
         """
         self.kid_max_age = kid_max_age
         self.student_min_age = student_min_age
