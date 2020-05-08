@@ -13,8 +13,9 @@ def test__add_person_to_company():
     company = Company()
     person = Person()
     company.add(person)
-    assert company.people[0] == person
-    assert person.company == company
+    person2 = company.people.pop()
+    assert person2 == person
+    assert person2.company == company
 
 
 def test__create_company_from_file():
