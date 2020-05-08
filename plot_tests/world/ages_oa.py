@@ -1,4 +1,4 @@
-from covid.inputs import Inputs 
+from june.inputs import Inputs 
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
