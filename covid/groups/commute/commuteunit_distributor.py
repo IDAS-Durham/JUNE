@@ -16,7 +16,7 @@ class CommuteUnitDistributor:
 
     def distribute_people(self):
 
-        for hub in self.commutehub:
+        for hub in self.commutehubs:
 
             possible_units = hub.commuteunits
             to_commute = hub.passengers
@@ -25,11 +25,11 @@ class CommuteUnitDistributor:
             for passenger in to_commute:
 
                 # assign passengers to commute units
-                assigned = False:
+                assigned = False
                 while assigned == False:
                 
                     unit_choice = np.random.randint(len(possible_units))
-                    unit = possible_unit[unit_choice]
+                    unit = possible_units[unit_choice]
                     
                     if unit.no_passengers < unit.max_passengers:
                         unit.passengers.append(passenger)

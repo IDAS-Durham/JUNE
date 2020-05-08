@@ -5,7 +5,7 @@ class CommuteCityDistributor:
     Distirbute people to cities based on where they work
     """
 
-    def __init__(self, commutecities, msoa):
+    def __init__(self, commutecities, msoas):
         """
         commutecities: members of CommuteCities class
         msoa: members of the MSOArea class
@@ -19,7 +19,7 @@ class CommuteCityDistributor:
             metro_msoas = commutecity.metro_msoas
 
             for msoa in self.msoas:
-                if msoa.name in metro_msoa:
+                if msoa.name in metro_msoas:
                     for person in msoa.work_people:
                         # assign people who commute to the given city
                         commutecity.passengers.append(person)
