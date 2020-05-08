@@ -1,5 +1,4 @@
 import logging
-import sys
 from enum import IntEnum
 from typing import List, Tuple
 
@@ -65,11 +64,6 @@ class Hospital(Group):
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.coordinates = coordinates
-        self.msoa_name = msoa_name
-        self.n_medics = 0
-        self.employees = set()
-        self.patients = set()
-        self.icu_patients = set()
 
     @property
     def full(self):
@@ -180,11 +174,10 @@ class Hospital(Group):
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                #TODO: check what to do with dead!! bury is not there anymore
+                # TODO: check what to do with dead!! bury is not there anymore
                 dead.append(person)
         for person in dead:
             icu_group.remove(person)
-
 
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
@@ -324,9 +317,9 @@ class Hospitals:
 
         if self.box_mode:
             for hospital in self.members:
-                if tag and not (hospital.full):
+                if tag and not hospital.full:
                     return hospital
-                if tagICU and not (hospital.full_ICU):
+                if tagICU and not hospital.full_ICU:
                     return hospital
         else:
             hospital = None
@@ -340,10 +333,10 @@ class Hospitals:
                     break
                 if (
                         person.health_information.tag == "intensive care"
-                        and not (hospital.full)
+                        and not hospital.full
                 ) or (
                         person.health_information.tag == "hospitalised"
-                        and not (hospital.full_ICU)
+                        and not hospital.full_ICU
                 ):
                     break
             if hospital is not None:
@@ -354,7 +347,7 @@ class Hospitals:
             else:
                 ic_logger.info(
                     f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
-                    )
+                )
 
     def get_closest_hospitals(
             self, coordinates: Tuple[float, float], r_max: float
