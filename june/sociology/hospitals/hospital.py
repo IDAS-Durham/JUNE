@@ -40,6 +40,8 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
+
     def __init__(
             self,
             hospital_id: int,
@@ -71,9 +73,6 @@ class Hospital(Group):
         self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
-        self.employees = set()
-        self.patients = set()
-        self.icu_patients = set()
 
     @property
     def full(self):
@@ -184,11 +183,10 @@ class Hospital(Group):
             if person.health_information.recovered:
                 self.release_as_patient(person)
             if person.health_information.dead:
-                #TODO: check what to do with dead!! bury is not there anymore
+                # TODO: check what to do with dead!! bury is not there anymore
                 dead.append(person)
         for person in dead:
             icu_group.remove(person)
-
 
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
@@ -325,12 +323,14 @@ class Hospitals:
         hospital with availability
 
         """
+        assign_icu = person.health_information.tag == "intensive care"
+        assign_patient = person.health_information.tag == "hospitalised"
 
         if self.box_mode:
             for hospital in self.members:
-                if tag and not (hospital.full):
+                if assign_patient and not hospital.full:
                     return hospital
-                if tagICU and not (hospital.full_ICU):
+                if assign_icu and not hospital.full_ICU:
                     return hospital
         else:
             hospital = None
@@ -343,11 +343,11 @@ class Hospitals:
                 if distance > self.max_distance:
                     break
                 if (
-                        person.health_information.tag == "intensive care"
-                        and not (hospital.full)
+                        assign_icu
+                        and not hospital.full
                 ) or (
-                        person.health_information.tag == "hospitalised"
-                        and not (hospital.full_ICU)
+                        assign_patient
+                        and not hospital.full_ICU
                 ):
                     break
             if hospital is not None:
