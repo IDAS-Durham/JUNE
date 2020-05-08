@@ -10,6 +10,25 @@ default_config_filename = (
 )
 
 class DefaultInteraction(Interaction):
+
+    def __init__(self, intensities):
+        self.intensities = intensities
+
+    @classmethod
+    def from_file(
+            cls, config_filename: str  = default_config_filename
+    ) -> "DefaultInteraction":
+
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        return DefaultInteraction(config['intensities'])
+
+ 
+    def read_contact_matrix(self, group):
+        #TODO use to intialize the different config matrices at the init,
+        # ideally inside from_file
+        pass
    
     def single_time_step_for_group(self, group, time, delta_time):
         """
@@ -37,8 +56,10 @@ class DefaultInteraction(Interaction):
                     self.contaminate(group, time, delta_time, j,i)
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
+        #TODO: subtitute by matrices read from file when ready
+        contact_matrix = np.ones((group.n_groupings, group.n_groupings))
         if (
-            group.intensities[infecters][recipients] <= 0. or
+            contact_matrix[infecters][recipients] <= 0. or
             self.probabilities[infecters] <= 0.
         ):
             return
@@ -46,7 +67,8 @@ class DefaultInteraction(Interaction):
             transmission_probability = 1.0 - np.exp(
                 -delta_time *
                 recipient.health_information.susceptibility *
-                group.intensities[infecters][recipients] *
+                self.intensities.get(group.spec) *
+                contact_matrix[infecters][recipients] *
                 self.probabilities[infecters]
             )
             if random.random() <= transmission_probability:
