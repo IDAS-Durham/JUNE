@@ -8,6 +8,7 @@ from covid.groups import Group
 must_stay_at_home_complacency = 0.98
 must_supervise_age = 14
 
+
 class Household(Group):
     """
     The Household class represents a household and contains information about 
@@ -20,10 +21,10 @@ class Household(Group):
     """
 
     class GroupType(IntEnum):
-        kids         = 0
+        kids = 0
         young_adults = 1
-        adults       = 2
-        old_adults   = 3
+        adults = 2
+        old_adults = 3
 
     def __init__(self, house_id, composition, area):
         super().__init__("Household_%03d" % house_id, "household")
@@ -41,22 +42,26 @@ class Household(Group):
             for person in grouping.people:
                 if person.health_information.dead:
                     continue
-                elif person.active_group is None: 
+                elif person.active_group is None:
                     person.active_group = "household"
                 elif person.health_information.must_stay_at_home:
                     if person.age <= must_supervise_age:
-                        person.active_group = 'household'
+                        person.active_group = "household"
                         # randomly pick a parent to stay with the kid
-                        parents = [person for person in self.people if person not in list(self.groupings[self.GroupType.kids].people)]
+                        parents = [
+                            person
+                            for person in self.people
+                            if person
+                            not in list(self.groupings[self.GroupType.kids].people)
+                        ]
 
                         random_parent = random.choice(parents)
-                        random_parent.active_group = 'household'
+                        random_parent.active_group = "household"
                     else:
                         if random.random() <= must_stay_at_home_complacency:
-                            person.active_group = 'household'
+                            person.active_group = "household"
                         else:
                             continue
-
 
 
 class Households:
