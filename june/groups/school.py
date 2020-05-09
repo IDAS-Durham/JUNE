@@ -6,8 +6,8 @@ import pandas as pd
 import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
-from covid.groups import Group
-from covid.groups.group import Subgroup
+from june.groups.group import Group
+from june.groups.group import Subgroup
 
 
 class SchoolError(BaseException):
