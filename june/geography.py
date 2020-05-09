@@ -5,19 +5,29 @@ import pathlib
 from pathlib import Path
 from random import randint
 from itertools import chain, count
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Optional
+from june.demography import Person
 
 import numpy as np
 import pandas as pd
 
-from june.logger_creation import logger
+# from june import get_creation_logger
 
-default_hierarchy_filename = Path(os.path.abspath(__file__)).parent.parent / \
-    "data/census_data/area_code_translations/areas_mapping.csv"
-default_coord_filename = Path(os.path.abspath(__file__)).parent.parent / \
-    "data/processed/geographical_data/oa_coorindates.csv"
-default_logging_config_filename = Path(__file__).parent.parent / \
-    "configs/config_world_creation_logger.yaml"
+default_hierarchy_filename = (
+    Path(os.path.abspath(__file__)).parent.parent
+    / "data/processed/geographical_data/oa_msoa_region.csv"
+)
+default_area_coord_filename = (
+    Path(os.path.abspath(__file__)).parent.parent
+    / "data/processed/geographical_data/oa_coordinates.csv"
+)
+default_superarea_coord_filename = (
+    Path(os.path.abspath(__file__)).parent.parent
+    / "data/processed/geographical_data/msoa_coordinates.csv"
+)
+default_logging_config_filename = (
+    Path(__file__).parent.parent / "configs/config_world_creation_logger.yaml"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,24 +36,35 @@ class Area:
     """
     Fine geographical resolution.
     """
+
     _id = count()
-    
+
     def __init__(
-            self,
-            name: str,
-            super_area: "SuperArea" = None,
-            coordinate: Tuple[float, float] = Tuple[None, None],
+        self,
+        name: str,
+        super_area: "SuperArea" = None,
+        coordinates: [float, float] = [None, None],
     ):
+        """
+        Coordinate is given in the format X, Y where X is longitude and Y is latitude.
+        We store them in the reverse order to have latitude and longitude.
+        """
         self.id = next(self._id)
         self.name = name
-        self.coordinate = coordinate
+        self.coordinates = coordinates[[1, 0]]
         self.super_area = super_area
+        self.people = set()
 
+    def add(self, person: Person):
+        self.people.add(person)
+        person.area = self
 
 class Areas:
-    def __init__(self, areas: List[Area]):
+    def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
-       
+        self.super_area = super_area
+        self.people = set()
+
     def __len__(self):
         return len(self.members)
 
@@ -51,28 +72,31 @@ class Areas:
         return iter(self.members)
 
 
+
+
 class SuperArea:
     """
     Coarse geographical resolution.
     """
+
     _id = count()
-    
+
     def __init__(
-            self,
-            name: str,
-            areas: List[Area] = [None],
-            coordinate: Tuple[float, float] = Tuple[None, None],
+        self,
+        name: str,
+        areas: List[Area] = [None],
+        coordinates: [float, float] = [None, None],
     ):
         self.id = next(self._id)
         self.name = name
-        self.coordinate = coordinate
+        self.coordinates = coordinates[[1, 0]]
         self.areas = areas
 
 
 class SuperAreas:
     def __init__(self, super_areas: List[SuperArea]):
         self.members = super_areas
-       
+
     def __len__(self):
         return len(self.members)
 
@@ -82,9 +106,10 @@ class SuperAreas:
 
 class Geography:
     def __init__(
-            self,
-            hierarchy: pd.DataFrame,
-            units_coordinate: dict, 
+        self,
+        hierarchy: pd.DataFrame,
+        area_coordinates: pd.DataFrame,
+        super_area_coordinates: pd.DataFrame,
     ):
         """
         Generate hierachical devision of geography.
@@ -98,202 +123,143 @@ class Geography:
 
         Note: It would be nice to find a better way to handle coordinates.
         """
-        self.hierarchy = hierarchy
-        self.hierarchy = _sorting_and_grouping(self.hierarchy)
-        self.units_coordinate = units_coordinate
-        self.create_geographical_units()
+        self.create_geographical_units(
+            hierarchy, area_coordinates, super_area_coordinates
+        )
 
-    def create_geographical_units(self):
+    def _create_area(self, row, super_area):
+        area = Area(name=row.name, coordinates=row.values, super_area=super_area)
+        return area
+
+    def _create_areas(
+        self, area_coords: pd.DataFrame, super_area: pd.DataFrame
+    ) -> List[Area]:
+        """
+        Applies the _create_area function throught the area_coords dataframe.
+        If area_coords is a series object, then it does not use the apply()
+        function as it does not support the axis=1 parameter.
+
+        Parameters
+        ----------
+        area_coords
+            pandas Dataframe with the area name as index and the coordinates
+            X, Y where X is longitude and Y is latitude.
+        """
+        # if a single area is given, then area_coords is a series
+        # and apply doesnt support the axis parameter.
+        try:
+            areas = area_coords.apply(
+                lambda row: self._create_area(row, super_area), axis=1
+            )
+        except TypeError:
+            return [self._create_area(area_coords, super_area)]
+        return areas
+
+    def create_geographical_units(
+        self,
+        hierarchy: pd.DataFrame,
+        area_coordinates: pd.DataFrame,
+        super_area_coordinates: pd.DataFrame,
+    ):
         """
         Create geo-graph of the used geographical units.
 
         Note: This function looks a bit more complicated than need be,
         but it was created with a eye on the future.
         """
-        areas_list = [] 
+        total_areas_list = []
         super_areas_list = []
+        for superarea_name, row in super_area_coordinates.iterrows():
+            super_area = SuperArea(name=superarea_name, coordinates=row.values)
+            areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
+            areas_list = self._create_areas(areas_df, super_area)
+            super_area.areas = areas_list
+            total_areas_list += list(areas_list)
+            super_areas_list.append(super_area)
 
-        # loop through all but the smallest geo-unit
-        for geo_unit_level in range(self.hierarchy.index.nlevels):  #Atm. only one level
-            geo_units_labels = self.hierarchy.index.get_level_values(
-                geo_unit_level
-            ).unique()
-            
-            # loop through this geo-unit
-            for unit_label in geo_units_labels:
-                smaller_unit_df = self.hierarchy.loc[unit_label]
-                superarea_areas_list = []
-
-                # loop over smallest geo-unit
-                for smaller_unit_label in smaller_unit_df.values[0].split(' '):
-                     
-                    superarea_areas_list.append(
-                        Area(
-                            name=smaller_unit_label,
-                            coordinate=self.get_unit_coord(
-                                smaller_unit_df.index.values[0],
-                                smaller_unit_label,
-                            ),
-                        )
-                    )
-                
-                areas_list.append(superarea_areas_list)
-                super_area = SuperArea(
-                    name=unit_label,
-                    coordinate=self.get_unit_coord(
-                        geo_units_labels.name,
-                        unit_label,
-                    ),
-                    areas=superarea_areas_list,
-                )
-                for area in superarea_areas_list:
-                    area.super_area = super_area
-                super_areas_list.append(super_area)
-       
-        self.areas = Areas(
-            list(chain.from_iterable(areas_list))
-        )
+        self.areas = Areas(total_areas_list)
         self.super_areas = SuperAreas(super_areas_list)
-        
         logger.info(
-            f"There are {len(self.areas)} areas and " + \
-            f"{len(self.super_areas)} super_areas in the world."
+            f"There are {len(self.areas)} areas and "
+            + f"{len(self.super_areas)} super_areas in the world."
         )
 
-    def get_unit_coord(self, unit, name) -> list:
-        """
-        Read two numbers from input df, return as array.
-
-        Parameters
-        ----------
-        unit
-            Geographical units (e.g. OA, MSOA)
-        name
-            Name of the selected member of a unit (e.g. E02000001)
-        """
-        # NOTE df["X"] ~5 times faster than df[ ["Y", "X"] ]
-        return [
-            self.units_coordinate[unit][name]['Y'],
-            self.units_coordinate[unit][name]['X'],
-        ]
-    
     @classmethod
     def from_file(
-            cls,
-            names_filename: str = default_hierarchy_filename,
-            coords_filename: str = default_coord_filename,
-            filter_key: Optional[Dict[str, list]] = None,
-            logging_config_filename: str = default_logging_config_filename,
+        cls,
+        filter_key: Optional[Dict[str, list]] = None,
+        hierarchy_filename: str = default_hierarchy_filename,
+        area_coordinates_filename: str = default_area_coord_filename,
+        super_area_coordinates_filename: str = default_superarea_coord_filename,
+        logging_config_filename: str = default_logging_config_filename,
     ) -> "Geography":
         """
         Load data from files and construct classes capable of generating
         hierarchical structure of geographical areas.
 
+        Example usage:
+            ```
+            geography = Geography.from_file(filter_key={"region" : "North East"})
+            geography = Geography.from_file(filter_key={"msoa" : ["E02005728"]})
+            ```
         Parameters
         ----------
-        names_path
-            The path to the data directory in which the names
-            of areas can be found.
-        coords_path
-            The path to the data directory in which the coordinates
-            of areas can be found.
         filter_key
             Filter out geo-units which should enter the world.
-            At the moment this can only be one of [PCD, OA, MSOA]
-
-        Note: It would be nice to find a better way to handle coordinates.
+            At the moment this can only be one of [oa, msoa, region]
+        hierarchy_filename
+            Pandas df file containing the relationships between the different
+            geographical units.
+        area_coordinates_filename:
+            coordinates of the area units
+        super_area_coordinates_filename
+            coordinates of the super area units
+        logging_config_filename
+            file path of the logger configuration
         """
-        #TODO this file is missing option to filter for Region etc.
-        unit_hierarchy_file = f"{names_filename}"
-        smallest_unit_coords_file = f"{coords_filename}"
-        geo_hierarchy = _load_geo_file(unit_hierarchy_file)
-        areas_coord = _load_area_coords(smallest_unit_coords_file)
-        
+        geo_hierarchy = pd.read_csv(hierarchy_filename)
+        areas_coord = pd.read_csv(area_coordinates_filename, index_col=0)
+        super_areas_coord = pd.read_csv(super_area_coordinates_filename, index_col=0)
+
         if filter_key is not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
-        # At the moment we only support data at the UK OA & MSOA level.
-        geo_hierarchy = geo_hierarchy[["MSOA", "OA"]]
-        
-        super_areas_coord = pd.merge(areas_coord, geo_hierarchy, on='OA')
-        super_areas_coord = super_areas_coord.groupby(
-            'MSOA', as_index=True,
-        )[['X','Y']].mean()
-        
-        units_coord = {
-            "OA": areas_coord.T.to_dict(),
-            "MSOA": super_areas_coord.T.to_dict(),
-        }
-        return Geography(geo_hierarchy, units_coord)
+        areas_coord = areas_coord.loc[geo_hierarchy["oa"]]
+        super_areas_coord = super_areas_coord.loc[
+            geo_hierarchy["msoa"]
+        ].drop_duplicates()
+        geo_hierarchy.set_index("msoa", inplace=True)
+        return Geography(geo_hierarchy, areas_coord, super_areas_coord)
 
 
-def _load_geo_file(
-        names_path: str
-) -> pd.DataFrame:
-    """
-    """
-    usecols = [1,3, 4]
-    column_names = ["OA", "MSOA", "LAD"]
-    return pd.read_csv(
-        names_path,
-        names=column_names,
-        usecols=usecols,
-    )
-    
-
-def _load_area_coords(
-        coords_path: str
-) -> pd.DataFrame:
-    """
-    """
-    usecols = [0,1,3]
-    column_names = ["X", "Y", "OA"]
-    return pd.read_csv(
-        coords_path,
-        skiprows=1,
-        names=column_names,
-        usecols=usecols,
-    ).set_index("OA")
-
-
-def _filtering(
-        data: pd.DataFrame,
-        filter_key: Dict[str, list],
-) -> pd.DataFrame:
+def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
     """
     Filter DataFrame for given geo-unit and it's listed names
     """
-
     return data[
         data[list(filter_key.keys())[0]].isin(list(filter_key.values())[0]).values
     ]
 
 
-def _sorting_and_grouping(
-        hierarchy: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Find the order for available geographical units from fine (left column)
-    to coarse (right column) granular and group them.
-    
-    Returns
-    -------
-    hierarchy
-        Multi-indexed DataFrame with the first index the most coarse
-        and the column the smallest geographical unit.
-    """
-    # sorting
-    nr_unique_units = [len(hierarchy[unit].unique())
-        for unit in hierarchy.columns.values
-    ]
-    idx = np.argsort(np.array(nr_unique_units))
-    sorted_unit_labels = list(hierarchy.columns.values[idx])
-    hierarchy = hierarchy[sorted_unit_labels]
-
-    # grouping
-    hierarchy = hierarchy.groupby(sorted_unit_labels[:-1], as_index=True)
-    hierarchy = hierarchy.agg(lambda x : ' '.join(x))
-    return hierarchy
-
 if __name__ == "__main__":
-    Geography.from_file(filter_key={"MSOA": ["E02000140"]})
+    from time import time
+    import resource
+
+    def using(point=""):
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        return """%s: usertime=%s systime=%s mem=%s mb
+               """ % (
+            point,
+            usage[0],
+            usage[1],
+            usage[2] / 1024.0,
+        )
+
+    t1 = time()
+    print(using("before"))
+    geography = Geography.from_file(
+        #        filter_key={"region": ["North East"]}
+    )
+    t2 = time()
+    print(using("after"))
+    print(f"Took {t2-t1} seconds to create the UK.")
