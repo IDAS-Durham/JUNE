@@ -25,9 +25,4 @@ def test__n_infected(world_ne, interaction, infection_constant):
     simulator.seed(household, n_infections=n_infections)
 
     assert len(household.infected) == n_infections
-
-    for person in simulator.world.people.members:
-        if person.health_information.infected:
-            print(person.health_information.infected)
-
     assert len(simulator.world.people.infected) == n_infections
