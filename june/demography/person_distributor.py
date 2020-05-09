@@ -305,25 +305,12 @@ class PersonDistributor:
                 )
             self.people.members.append(person)
             self.area.add(person)
-<<<<<<< HEAD:covid/groups/people/person_distributor.py
             person.area = self.area
-            # assign person to the right group:
-            if nomis_bin < self.ADULT_THRESHOLD:
-                self.area._kids[i] = person
-            elif nomis_bin < self.OLD_THRESHOLD:
-                if sex_random == 0:
-                    self.area._men[i] = person
-                else:
-                    self.area._women[i] = person
-                if person.nomis_bin in [6, 7]:  # that person can be a student
-                    self.area._student_keys[i] = person
-=======
             # assign person to the right group, this is used in the household distributor.:
             if sex_random == 0:
                 if age_random not in self.area.men_by_age:
                     self.area.men_by_age[age_random] = []
                 self.area.men_by_age[age_random].append(person)
->>>>>>> master:june/demography/person_distributor.py
             else:
                 if age_random not in self.area.women_by_age:
                     self.area.women_by_age[age_random] = []

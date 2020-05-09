@@ -127,6 +127,7 @@ class Group(AbstractGroup):
             An enumerated so the student can be added to a given group
         """
         self[qualifier].append(person)
+        person.groups.append(self)
 
     def set_active_members(self):
         for person in self.people:
@@ -203,8 +204,4 @@ class Group(AbstractGroup):
                 self.size_infected > 0 and
                 self.size_susceptible > 0)
 
-    def update_status_lists(self, time, delta_time):
-        for grouping in self.subgroups:
-            grouping.update_status_lists(
-                time, delta_time
-            )
+
