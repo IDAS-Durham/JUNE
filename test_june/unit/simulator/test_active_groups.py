@@ -52,8 +52,9 @@ def test__everyone_is_freed(simulator):
 def test__everyone_is_in_household(simulator):
     simulator.set_active_group_to_people(["carehomes", "households"])
     for person in simulator.world.people.members:
-        assert person.active_group in  ["carehome", "household"]
+        assert person.active_group in ["carehome", "household"]
     simulator.set_allpeople_free()
+
 
 def test__households_carehomes_are_exclusive(simulator):
     for person in simulator.world.people.members:
@@ -63,15 +64,16 @@ def test__households_carehomes_are_exclusive(simulator):
             assert person.carehome is not None
             assert person.household is None
 
+
 def test__everyone_is_in_school_household(simulator):
     simulator.set_active_group_to_people(["schools", "carehomes", "households"])
     for person in simulator.world.people.members:
         if person.school is not None:
-            should_be_active = "school" 
+            should_be_active = "school"
         elif person.carehome is not None:
-            should_be_active = 'carehome'
+            should_be_active = "carehome"
         elif person.household is not None:
-            should_be_active = 'household'
+            should_be_active = "household"
         assert person.active_group == should_be_active
     simulator.set_allpeople_free()
 
@@ -144,15 +146,22 @@ def test__must_stay_at_home_kid_drags_parents(simulator, severity):
         simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
         simulator.set_active_group_to_people(["hospitals", "companies", "households"])
         assert dummy_person.active_group == "household"
-        assert dummy_person.health_information.tag in ("influenza-like illness", "pneumonia")
+        assert dummy_person.health_information.tag in (
+            "influenza-like illness",
+            "pneumonia",
+        )
 
-        if dummy_person.age <= 14: 
+        if dummy_person.age <= 14:
             parent_at_home = 0
             parents = [
                 person
                 for person in dummy_person.household.people
                 if person
-                not in list(dummy_person.household.subgroups[dummy_person.household.GroupType.kids].people)
+                not in list(
+                    dummy_person.household.subgroups[
+                        dummy_person.household.GroupType.kids
+                    ].people
+                )
             ]
             for person in parents:
                 if person.active_group == "household":
