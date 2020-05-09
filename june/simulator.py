@@ -126,11 +126,14 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
+        print('Active groups are : ', active_groups)
         active_groups = self.apply_group_hierarchy(active_groups)
+        print('Ordered Active groups are : ', active_groups)
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
-                world.group_maker.distribute_people(group_name)
+                self.world.group_maker.distribute_people(group_name)
+            print('Activating group ', grouptype)
             for group in grouptype.members:
                 group.set_active_members()
 
@@ -220,7 +223,7 @@ class Simulator:
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
-                n_people += len(group.people)
+                n_people += group.size_active
 
         self.update_health_status(self.timer.now, self.timer.duration)
         n_dead = 0
@@ -230,8 +233,11 @@ class Simulator:
                 n_people += len(cemetery.people)
                 n_dead += len(cemetery.people)
             for hospital in self.world.hospitals.members:
-                n_hospitals += len(hospital.people)
+                n_hospitals += len(hospital.subgroups[hospital.GroupType.patients].people) + len(hospital.subgroups[hospital.GroupType.icu_patients].people)
 
+        print('Active people ', n_people)
+        print('All people ', len(self.world.people.members))
+        print('Dead ', n_dead)
         # assert conservation of people
         assert n_people == len(self.world.people.members)
 

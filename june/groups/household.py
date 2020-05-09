@@ -40,32 +40,34 @@ class Household(Group):
     def add(self, person, qualifier=GroupType.adults):
         super().add(person, qualifier)
         person.household = self
+        person.groups.append(self)
 
     def select_random_parent(self):
+        print('Everyone ', self.people)
         parents = [
             person
             for person in self.people
             if person
-            not in list(self.groupings[self.GroupType.kids].people)
+            not in list(self.subgroups[self.GroupType.kids].people)
         ]
+        print('Possible parents ', parents)
 
         return random.choice(parents)
 
     def set_active_members(self):
-        for grouping in self.subgroups:
-            for person in grouping.people:
+        for person in self.people:
+            if person.active_group is None:
                 if person.health_information.dead:
                     continue
-                elif person.active_group is None:
+                person.active_group = 'household'
+            elif person.health_information.must_stay_at_home:
+                if person.age <= self.must_supervise_age:
                     person.active_group = 'household'
-                elif person.health_information.must_stay_at_home:
-                    if person.age <= self.must_supervise_age:
+                    random_parent = self.select_random_parent()
+                    random_parent.active_group = 'household'
+                else:
+                    if random.random() <= self.stay_at_home_complacency:
                         person.active_group = 'household'
-                        random_parent = self.select_random_parent()
-                        random_parent.active_group = 'household'
-                    else:
-                        if random.random() <= self.stay_at_home_complacency:
-                            person.active_group = 'household'
 
 class Households:
     """

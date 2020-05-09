@@ -14,7 +14,7 @@ class TestSymptoms:
 
         assert symptom.tag == "healthy"
 
-        symptom = sym.Symptoms(health_index=[0.1, 0.2, 0.3, 0.4, 0.5])
+        symptom = sym.Symptoms(health_index=[0.,0.1, 0.2, 0.3, 0.4, 0.5,1.])
 
         symptom.severity = 0.01
 
