@@ -124,6 +124,8 @@ class Geography:
         return area
 
     def _create_areas(self, area_coords, super_area):
+        print(area_coords)
+        print(super_area)
         areas = area_coords.apply(
             lambda row: self._create_area(row, super_area), axis=1
         )
