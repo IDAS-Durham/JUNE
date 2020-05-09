@@ -294,7 +294,7 @@ class Hospitals:
             dataframe with hospital characteristics data
         """
         hospitals = []
-        for i, (index, row) in enumerate(hospital_df.iterrows()):
+        for (index, row) in hospital_df.iterrows():
             n_beds = row["beds"]
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
@@ -302,7 +302,7 @@ class Hospitals:
             coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
-                hospital_id=i,
+                hospital_id=index,
                 super_area=msoa_name,
                 coordinates=coordinates,
                 n_beds=n_beds,
