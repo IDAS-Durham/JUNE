@@ -1,3 +1,4 @@
+import os
 import yaml
 import random
 from pathlib import Path
@@ -10,19 +11,20 @@ from scipy import stats
 from june.groups import Household, Households
 from june.demography import Person
 from june.geography import Area
-from june import get_creation_logger
-
+from june.logger_creation import logger
 
 default_config_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent
     / "configs/defaults/distributors/HouseholdDistributor.yaml"
 )
 default_age_difference_files_folder = (
-    Path(os.path.abspath(__file__).parent.parent.parent
+    Path(os.path.abspath(__file__)).parent.parent.parent
     / "data/processed/age_difference"
 )
+default_logging_config_filename = Path(__file__).parent.parent / \
+    "configs/config_world_creation_logger.yaml"
+logger(default_logging_config_filename)
 
-logger = logging.getLogger(__name__)
 
 """
 This file contains routines to distribute people to households

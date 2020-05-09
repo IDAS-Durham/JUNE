@@ -6,12 +6,11 @@ import pandas as pd
 import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
-from june import Geography
-from june import Demography
-from june import Sociology
-from june import get_creation_logger
-from june.groups import Group
+from june.geography import Geography
+from june.demography import Demography
+from june.groups.group import Group
 from june.groups.group import Subgroup
+from june.logger_creation import logger
 
 
 class SchoolError(BaseException):

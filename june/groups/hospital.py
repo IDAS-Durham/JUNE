@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
-from june import get_creation_logger
+from june.logger_creation import logger
 from enum import IntEnum
 
 logger = logging.getLogger(__name__)
@@ -48,10 +48,10 @@ class Hospital(Group):
     def __init__(
             self,
             hospital_id: int,
-            super_area: str,
-            coordinates: tuple, # Optional[Tuple[float, float]] = None,
+            coordinates: list, # Optional[Tuple[float, float]] = None,
             n_beds: int,
             n_icu_beds: int,
+            super_area: str = None,
     ):
         """
         Create a Hospital given its description.
@@ -202,7 +202,7 @@ class Hospital(Group):
             f"=== update status list for hospital with {self.size} people ==="
         )
         logger.info(
-            f"=== hospital currently has {self[self.GroupType.patients].size} " / \
+            f"=== hospital currently has {self[self.GroupType.patients].size} " + \
             "patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
         )
 
@@ -226,12 +226,7 @@ class Hospitals:
         """
         self.box_mode = box_mode
         self.max_distance = max_distance
-        self.members = []
-
-        print("**1**", len(hospitals), hospitals[0])
-        for hospital in hospitals:
-            self.members.append(hospital)
-        print("**2**", len(members), members[0])
+        self.members = hospitals
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
             self.init_trees(coordinates)
@@ -267,8 +262,22 @@ class Hospitals:
             logger.info("There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
-            hospitals.append(Hospital(1, 10, 2, None))
-            hospitals.append(Hospital(2, 5000, 5000, None))
+            hospitals.append(
+                Hospital(
+                    hospital_id=1,
+                    coordinates=None,
+                    n_beds=10,
+                    n_icu_beds=2,
+                )
+            )
+            hospitals.append(
+                Hospital(
+                    hospital_id=2,
+                    coordinates=None,
+                    n_beds=5000,
+                    n_icu_beds=5000,
+                )
+            )
 
         return Hospitals(hospitals, max_distance, box_mode)
 
@@ -292,7 +301,13 @@ class Hospitals:
             msoa_name = row["MSOA"]
             coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
-            hospital = Hospital(i, n_beds, n_icu_beds, coordinates, msoa_name, )
+            hospital = Hospital(
+                hospital_id=i,
+                super_area=msoa_name,
+                coordinates=coordinates,
+                n_beds=n_beds,
+                n_icu_beds=n_icu_beds,
+            )
             hospitals.append(hospital)
         return hospitals
 
@@ -310,7 +325,6 @@ class Hospitals:
         -------
         Tree to query nearby schools
         """
-
         self.hospital_trees = BallTree(
             np.deg2rad(hospital_coordinates), metric="haversine",
         )
@@ -359,12 +373,15 @@ class Hospitals:
                     break
             if hospital is not None:
                 logger.info(
-                    f"Receiving hospital for patient with {person.health_information.tag} at distance = {distance} km"
+                    f"Receiving hospital for patient with " + \
+                    f"{person.health_information.tag} at distance = {distance} km"
                 )
                 hospital.add_as_patient(person)
             else:
                 logger.info(
-                    f"no hospital found for patient with {person.health_information.tag} in distance < {self.max_distance} km."
+                    f"no hospital found for patient with " + \
+                    f"{person.health_information.tag} in distance " + \
+                    f"< {self.max_distance} km."
                 )
 
     def get_closest_hospitals(
@@ -401,6 +418,6 @@ class Hospitals:
 if __name__ == "__main__":
 
     Hospitals.from_file(
-        "~/covidmodelling/data/processed/hospital_data/england_hospitals.csv",
-        "/home/florpi/covidmodelling/configs/defaults/hospitals.yaml",
+        "/cosma7/data/dp004/dc-beck3/JUNE/data/processed/hospital_data/england_hospitals.csv",
+        "/cosma7/data/dp004/dc-beck3/JUNE/configs/defaults/hospitals.yaml",
         )

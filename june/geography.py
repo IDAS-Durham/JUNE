@@ -154,7 +154,7 @@ class Geography:
             list(chain.from_iterable(areas_list))
         )
         self.super_areas = SuperAreas(super_areas_list)
-        del superarea_areas_list, areas_list, super_areas_list
+        
         logger.info(
             f"There are {len(self.areas)} areas and " + \
             f"{len(self.super_areas)} super_areas in the world."

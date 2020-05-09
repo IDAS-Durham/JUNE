@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 import pytest
-from june.box_generator import BoxGenerator
+
 from june.inputs import Inputs
-from june.box_generator import get_age_brackets
+from june.box.box_generator import BoxGenerator, get_age_brackets
 
 
 # random box tests
