@@ -164,8 +164,10 @@ class Simulator:
             if health_information.in_hospital:
                 self.hospitalise_the_sick(person)
             # release patients that recovered
-            elif health_information.recovered and person.in_hospital is not None:
-                person.in_hospital.release_as_patient(person)
+            elif health_information.recovered:
+                health_information.set_recovered(time)
+                if person.in_hospital is not None:
+                    person.in_hospital.release_as_patient(person)
             elif health_information.dead:
                 self.bury_the_dead(person)
 
