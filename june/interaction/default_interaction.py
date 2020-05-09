@@ -84,7 +84,7 @@ class DefaultInteraction(Interaction):
                 )
 
     def calculate_probabilities(self, group):
-        norm   = 1./max(1, group.size)
+        norm   = 1./max(1, group.size_active)
         for grouping in group.subgroups:
             summed = 0.
             for person in grouping.infected_active(group.spec):
