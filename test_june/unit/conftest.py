@@ -1,15 +1,9 @@
-<<<<<<< HEAD:test_covid/unit/conftest.py
-from covid.infection import infection as infect
-from covid.infection import symptoms as sym
-from covid.infection import transmission as trans
-import covid.interaction as inter
-from covid.simulator import Simulator
-=======
 from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
->>>>>>> master:test_june/unit/conftest.py
-
+import june.interaction as inter
+from june.simulator import Simulator
+from june.groups.people.health_index import HealthIndex
 from june import world
 from june.time import Timer 
 
@@ -18,15 +12,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
-<<<<<<< HEAD:test_covid/unit/conftest.py
-from covid.groups.people.health_index import HealthIndex
-from covid import World
-from covid.time import Timer
-=======
-from june import World
-from june.time import Timer
->>>>>>> master:test_june/unit/conftest.py
 
 test_directory = Path(__file__).parent.parent
 
