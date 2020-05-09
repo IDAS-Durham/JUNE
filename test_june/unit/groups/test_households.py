@@ -11,4 +11,3 @@ def test__households_adding():
     households2.members = [4,5]
     households3 = households1 + households2
     assert households3.members == [1,2,3,4,5]
-

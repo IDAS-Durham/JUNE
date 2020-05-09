@@ -1,10 +1,14 @@
+
+from pathlib import Path
 from collections import Counter
-from june.groups import *
 import pickle
 import pytest
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+from june.groups import *
+from june.demography import Person
 
 @pytest.fixture(name="hospitals", scope="session")
 def create_hospitals():
