@@ -1,3 +1,4 @@
+import autofit as af
 import copy
 
 class Infection:
@@ -22,7 +23,24 @@ class Infection:
 
         self.infection_probability = 0.0
 
-    def new_infection_at_time(self, epidemiology, time):
+    def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
+        """Infects someone by initializing an infection object using the epidemiology model.
+
+        The epidemiology input uses a CollectionPriorModel of PyAutoFit, which has associated with it a Symptoms
+        class and Transmission class. Every parameter in these classes has a distribution, such that when the
+        new infection is created new parameters its new Symptoms and Transmission instances are randomly from a
+        distribution.
+
+        For example the recovery_rate of the SymptomsConstant class have a uniform distribution with lower and upper
+        limits of 0.2 and 0.4. When the infection takes place, a value between 0.2 and 0.4 is randomly drawn and
+        used to set the value for the new instance of the Symptoms class in the new infection.
+
+        Arguments:
+            epidemiology (af.CollectionPriorModel) the epidemiology model used to generate the new infections symptoms
+            and transmission instances.
+            person (Person) has to be an instance of the Person class.
+            time (float) the time of infection.
+        """
 
         instance = epidemiology.random_instance()
 
@@ -31,17 +49,12 @@ class Infection:
 
         instance.symptoms.health_index = self.symptoms.health_index
 
-        return Infection(start_time=time, transmission=instance.transmission, symptoms=instance.symptoms)
+        infection = Infection(
+            start_time=time,
+            transmission=instance.transmission,
+            symptoms=instance.symptoms
+        )
 
-    def infect_person_at_time(self, epidemiology, person, time):
-        """Infects someone by initializing an infeciton object with the same type
-        and parameters as the carrier's infection class.
-
-        Arguments:
-            person (Person) has to be an instance of the Person class.
-        """
-
-        infection = self.new_infection_at_time(epidemiology=epidemiology, time=time)
         person.health_information.set_infection(infection=infection)
 
     def symptom_tag(self, tagno):
