@@ -13,8 +13,8 @@ world = World(box_mode=True, box_n_people=1_000)
 #TODO: why does it need an specific health_index to initialize
 # Should initialize to 0, same with initial time infection or -1
 reference_health_index = HealthIndex().get_index_for_age(40)
-symptoms = SymptomsConstant(health_index=reference_health_index)
-transmission = TransmissionConstant() 
+symptoms = SymptomsConstant(health_index=reference_health_index, recovery_rate=0.05)
+transmission = TransmissionConstant(probability=0.3) 
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction()
 

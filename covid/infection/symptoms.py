@@ -55,7 +55,7 @@ class SymptomsConstant(Symptoms):
 
 class SymptomsGaussian(Symptoms):
     #TODO: Add recovery_theshold for recovery, and check parameters to find days to recover
-    def __init__(self, health_index=0., mean_time=1.0, sigma_time=3.0, recovery_rate=0.2):
+    def __init__(self, health_index=0., mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
         super().__init__(health_index=health_index)
 
         self.mean_time = max(0.0, mean_time)
