@@ -47,7 +47,8 @@ class HealthInformation:
     def update_health_status(self, time, delta_time):
         if self.infected:
             if self.infection.symptoms.is_recovered(delta_time):
-                self.set_recovered(time)
+                self.recovered = True
+                #self.set_recovered(time)
             else:
                 self.infection.update_at_time(time+delta_time)
 
