@@ -1,5 +1,6 @@
 from june.simulator import Simulator
 from pathlib import Path
+from june import world
 
 test_directory = Path(__file__).parent.parent.parent
 
@@ -9,7 +10,9 @@ def test__n_infected(simulator_box):
     assert len(simulator_box.world.people.infected) == n_infections
 
 
-def test__n_infected(world_ne, interaction, infection_constant):
+def test__n_infected(interaction, infection_constant):
+
+    world_ne = world.World(test_directory / "config_ne.yaml")
     simulator = Simulator.from_file(
         world_ne,
         interaction,
