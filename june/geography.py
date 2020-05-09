@@ -5,7 +5,7 @@ import pathlib
 from pathlib import Path
 from random import randint
 from itertools import chain, count
-from typing import List, Dict, Optional
+from typing import List, Dict, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -32,7 +32,7 @@ class Area:
             self,
             name: str,
             super_area: "SuperArea" = None,
-            coordinate: [float, float] = [None, None],
+            coordinate: Tuple[float, float] = Tuple[None, None],
     ):
         self.id = next(self._id)
         self.name = name
@@ -61,7 +61,7 @@ class SuperArea:
             self,
             name: str,
             areas: List[Area] = [None],
-            coordinate: [float, float] = [None, None],
+            coordinate: Tuple[float, float] = Tuple[None, None],
     ):
         self.id = next(self._id)
         self.name = name
@@ -263,7 +263,10 @@ def _filtering(
     """
     Filter DataFrame for given geo-unit and it's listed names
     """
-    return data[ data[list(filter_key.keys())[0]].isin(list(filter_key.values())[0]) ]
+
+    return data[
+        data[list(filter_key.keys())[0]].isin(list(filter_key.values())[0]).values
+    ]
 
 
 def _sorting_and_grouping(
