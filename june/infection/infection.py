@@ -22,14 +22,18 @@ class Infection:
 
         self.infection_probability = 0.0
 
-    def new_infection_at_time(self, time):
+    def new_infection_at_time(self, epidemiology, time):
 
-        # TODO : Currently assume transmission / symptoms parameters do not change between infections, will sort this
-        # TODO : out in next refactor.
+        instance = epidemiology.random_instance()
 
-        return Infection(start_time=time, transmission=self.transmission, symptoms=self.symptoms)
+        # TODO : This is hacky, whats the best way we can feed health inforrmation through to symptoms. Can we move the
+        # TODO : health index to the Infection class?
 
-    def infect_person_at_time(self, person, time):
+        instance.symptoms.health_index = self.symptoms.health_index
+
+        return Infection(start_time=time, transmission=instance.transmission, symptoms=instance.symptoms)
+
+    def infect_person_at_time(self, epidemiology, person, time):
         """Infects someone by initializing an infeciton object with the same type
         and parameters as the carrier's infection class.
 
@@ -37,7 +41,7 @@ class Infection:
             person (Person) has to be an instance of the Person class.
         """
 
-        infection = self.new_infection_at_time(time=time)
+        infection = self.new_infection_at_time(epidemiology=epidemiology, time=time)
         person.health_information.set_infection(infection=infection)
 
     def symptom_tag(self, tagno):
