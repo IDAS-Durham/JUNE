@@ -3,7 +3,6 @@ from pathlib import Path
 from random import randint
 from typing import List, Dict, Optional
 import pandas as pd
-from numba import jit
 from june.geography import Geography
 
 import numpy as np
