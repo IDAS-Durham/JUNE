@@ -8,13 +8,19 @@ from june.groups.school import School
 
 EARTH_RADIUS = 6371  # km
 
+default_decoder = {
+    2314: "secondary",
+    2315: "primary",
+    2316: "special_needs",
+}
+
 
 class SchoolDistributor:
     """
     Distributes students in an area to different schools 
     """
 
-    def __init__(self, schools: "Schools", area: "Area", config: dict):
+    def __init__(self, schools: "Schools", area: "Area"):
         """
         Get closest schools to this output area, per age group
         (different schools admit pupils with different age ranges)
@@ -61,7 +67,11 @@ class SchoolDistributor:
 
     @classmethod
     def from_file(
-            cls, schools: "Schools", area: "Area", config_filename: str
+            cls, 
+            schools: "Schools",
+            area: "Area",
+            config_filename: str,
+            #mandatory_age_range: Tuple[int, int] = (5, 18),#part of config ?
     ) -> "SchoolDistributor":
         """
         Initialize SchoolDistributor from path to its config file 

@@ -1,16 +1,23 @@
+import os
 import logging
 from enum import IntEnum
+from pathlib import Path
 from itertools import count
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 from scipy.stats import rv_discrete
-from typing import List, Tuple
 
 from june.groups.group import Group
 from june.logger_creation import logger
 
-ic_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "data/processed/census_data/company_data/"
+default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
+default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
 
 
 def _compute_size_mean(sizegroup: str) -> int:
@@ -42,16 +49,15 @@ class Company(Group):
     """
 
     _id = count()
-    __slots__ = "id", "msoa", "n_employees_max", "n_woman", "employees", "industry"
+    __slots__ = "id", "msoa", "n_woman", "employees", "industry"
 
     class GroupType(IntEnum):
         worker = 0
 
-    def __init__(self, msoa=None, n_employees_max=np.inf, industry=None):
+    def __init__(self, super_area=None, industry=None):
         super().__init__(name="Company_{company_id}", spec="company")
-        self.msoa = msoa
+        self.super_area = super_area
         # set the max number of employees to be the mean number in a range
-        self.n_employees_max = n_employees_max
         self.n_woman = 0
         self.employees = []
         self.industry = industry
@@ -146,3 +152,10 @@ class Companies:
         return Companies.from_df(
             company_size_per_superarea_df, company_sector_per_superarea_df
         )
+
+if __name__ == '__main__':
+    copmanies = Companies.from_file(
+        companysize_file = default_size_nr_file,
+        company_per_sector_file = default_sector_nr_per_msoa_file,
+    )
+

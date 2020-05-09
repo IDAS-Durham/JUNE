@@ -15,10 +15,10 @@ from enum import IntEnum
 
 logger = logging.getLogger(__name__)
 
-default_config_filename = Path(os.path.abspath(__file__)).parent.parent / \
-    "configs/defaults/hospitals.yaml"
-default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data"
+default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "data/processed/hospital_data/england_hospitals.csv"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "configs/defaults/groups/hospitals.yaml"
 
 
 class Hospital(Group):
@@ -416,8 +416,7 @@ class Hospitals:
 
 
 if __name__ == "__main__":
-
     Hospitals.from_file(
-        "/cosma7/data/dp004/dc-beck3/JUNE/data/processed/hospital_data/england_hospitals.csv",
-        "/cosma7/data/dp004/dc-beck3/JUNE/configs/defaults/hospitals.yaml",
-        )
+        default_data_filename,
+        default_config_filename,
+    )
