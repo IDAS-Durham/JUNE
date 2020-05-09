@@ -48,14 +48,6 @@ class Household(Group):
                     if person.age <= must_supervise_age:
                         person.active_group = "household"
                         # randomly pick a parent to stay with the kid
-                        parents = [
-                            person
-                            for person in self.people
-                            if person
-                            not in list(self.groupings[self.GroupType.kids].people)
-                        ]
-
-                        random_parent = random.choice(parents)
                         random_parent.active_group = "household"
                     else:
                         if random.random() <= must_stay_at_home_complacency:

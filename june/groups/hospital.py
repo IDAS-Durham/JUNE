@@ -260,11 +260,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-<<<<<<< HEAD:covid/groups/hospitals/hospital.py
-            ic_logger.info(f"There are {len(hospital_df)} hospitals in the world.")
-=======
             logger.info("There are {len(hospital_df)} hospitals in the world.")
->>>>>>> master:june/groups/hospital.py
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(
