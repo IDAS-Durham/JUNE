@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 import numpy as np
 
-from june.logger import Logger
+from june.logger_simulation import Logger
 from june.time import Timer
 from june import interaction
 from june.infection import Infection
