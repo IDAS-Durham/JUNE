@@ -82,10 +82,7 @@ class People(AbstractGroup):
         """
         return {
             person for person in self.people
-            if person.health_information.infected and not (
-                    person.health_information.in_hospital
-                    or person.health_information.dead
-            )
+            if person.health_information.infected and not person.health_information.dead
         }
 
     @property
