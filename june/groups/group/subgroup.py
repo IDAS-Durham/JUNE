@@ -49,7 +49,7 @@ class Subgroup(AbstractGroup):
     def people(self):
         return self._people
 
-   def append(self, person: Person):
+    def append(self, person: Person):
         """
         Add a person to this group
         """
