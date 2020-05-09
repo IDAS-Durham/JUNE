@@ -10,6 +10,7 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from june.infection import symptoms as sym, transmission as trans
 from june.geography import Geography
 from june.demography import Demography, People
 from june.logger_creation import logger
@@ -44,15 +45,13 @@ class World:
 
         if epidemiology is None:
 
-            def str_to_class(classname):
-                return getattr(sys.modules[__name__], classname)
+            symptoms_class = sym.Symptoms.object_from_config()
+            transmission_class = trans.Transmission.object_from_config()
 
-            symptoms_class = str_to_class(classname=af.conf.instance.general.get("epidemiology", "symptoms_class", str))
-
-            print(symptoms_class)
-
-            stodgfd
-
+            epidemiology = af.CollectionPriorModel(
+                symptoms=symptoms_class,
+                transmission=transmission_class
+            )
 
         self.epidemiology = epidemiology
 
