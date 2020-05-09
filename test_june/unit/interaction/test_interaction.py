@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from june import world
-from june.groups.people import Person
-from june.groups.test_groups import TestGroup
+from june.demography.person import Person
+from june.groups import TestGroup  # this should not be needed anymore
 from june.interaction import *
 
 test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"

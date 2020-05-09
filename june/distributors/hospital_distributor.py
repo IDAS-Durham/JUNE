@@ -1,15 +1,17 @@
+import os
 import logging
-import warnings
-import numpy as np
+from pathlib import Path
 from random import uniform
+from itertools import count
+from typing import List, Dict, Optional
+
+import numpy as np
 from scipy import stats
-import warnings
 
-ic_logger = logging.getLogger(__name__)
+from june.logger_creation import logger
 
-class HospitalError(BaseException):
-    """ class for throwing hospital related errors """
-    pass
+logger = logging.getLogger(__name__)
+
 
 class HospitalDistributor:
     """
@@ -37,7 +39,7 @@ class HospitalDistributor:
         hospitals_in_msoa = [
             hospital
             for hospital in hospitals.members
-            if hospital.msoa_name is self.msoarea.name
+            if hospital.super_area is self.msoarea.name
         ]
         self.msoarea.hospitals = hospitals_in_msoa
 

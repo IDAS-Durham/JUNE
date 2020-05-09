@@ -1,23 +1,29 @@
-import numpy as np
-import random
+import os
 import yaml
-from scipy import stats
-import warnings
-from june.groups import Household, Households
-from collections import OrderedDict
-from june.groups import Person
-from june.groups import Area
-import pandas as pd
+import random
 from pathlib import Path
+from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+
+from june.groups import Household, Households
+from june.demography import Person
+from june.geography import Area
+from june.logger_creation import logger
 
 default_config_filename = (
-    Path(__file__).parent.parent.parent
+    Path(os.path.abspath(__file__)).parent.parent.parent
     / "configs/defaults/distributors/HouseholdDistributor.yaml"
 )
-
 default_age_difference_files_folder = (
-    Path(__file__).parent.parent.parent / "data/processed/age_difference"
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "data/processed/age_difference"
 )
+default_logging_config_filename = Path(__file__).parent.parent / \
+    "configs/config_world_creation_logger.yaml"
+logger(default_logging_config_filename)
 
 
 """
@@ -75,17 +81,20 @@ class HouseholdDistributor:
         Parameters
         ----------
         first_kid_parent_age_differences:
-            dictionary where keys are the age differences between a mother and her FIRST kid.
-            The values are the probabilities of each age difference.
+            dictionary where keys are the age differences between a mother and
+            her FIRST kid. The values are the probabilities of each age difference.
         second_kid_parent_age_differences:
-            dictionary where keys are the age differences between a mother and her SECOND kid.
-            The values are the probabilities of each age difference.
+            dictionary where keys are the age differences between a mother and
+            her SECOND kid. The values are the probabilities of
+            each age difference.
         couples_age_differences:
-            dictionary where keys are the age differences between a woman and a man at the time of marriage. A value of 20
-            means that the man is 20 years older than the woman.
-            The values are the probabilities of each age difference.
+            dictionary where keys are the age differences between a woman and
+            a man at the time of marriage. A value of 20 means that the man
+            is 20 years older than the woman. The values are the probabilities
+            of each age difference.
         number_of_random_numbers:
-            Number of random numbers required. This should be set to the number of people living in the area, minimum.
+            Number of random numbers required. This should be set to the
+            number of people living in the area, minimum.
         """
         self.kid_max_age = kid_max_age
         self.student_min_age = student_min_age

@@ -1,7 +1,8 @@
-from june.groups import Company, Companies
-from june.groups import Person
 from pathlib import Path
 import pandas as pd
+
+from june.groups import Company, Companies
+from june.demography import Person
 
 data_path = (
     Path(__file__).parent.parent.parent.parent

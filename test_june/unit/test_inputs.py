@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
+
 from june.inputs import Inputs
 from june.groups import Schools
-from june.groups.areas import Areas
-import numpy
+from june.z_backup.areas import Areas
 
 
 def test__frequencies_sum():
