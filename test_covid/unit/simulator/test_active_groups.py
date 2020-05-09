@@ -97,7 +97,7 @@ def test__follow_a_pupil(simulator):
     simulator.timer.reset()
 
 
-def test__sick_gets_to_hospital(simulator):
+def test__sick_gets_to_hospital_recovers_and_leaves(simulator):
     # sick goes to hospital
     dummy_person = simulator.world.people.members[0]
     simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
@@ -108,6 +108,11 @@ def test__sick_gets_to_hospital(simulator):
     simulator.set_active_group_to_people(["schools", "hospitals", "households"])
     assert dummy_person.active_group == "hospital"
     simulator.set_allpeople_free()
+    dummy_person.health_index.recovered = True
+    simulator.update_health_status(simulator.timer.now, 0)
+    assert dummy_person.in_hospital is None
+    simulator.set_active_group_to_people(["schools", "hospitals", "households"])
+    assert dummy_person.active_group != "hospital"
 
 
 """
