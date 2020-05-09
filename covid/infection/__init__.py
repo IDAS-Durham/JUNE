@@ -1,1 +1,0 @@
-from .infection import Infection
