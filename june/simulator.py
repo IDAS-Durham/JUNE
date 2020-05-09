@@ -51,15 +51,15 @@ class Simulator:
             "pubs",
             "churches",
         ]
-        self.check_inputs(config['time'])
-        self.timer = Timer(config['time'])
+        self.check_inputs(config["time"])
+        self.timer = Timer(config["time"])
         self.logger = Logger(
-            self.world, self.timer, config, config["logger"]["save_path"], 
+            self.world, self.timer, config, config["logger"]["save_path"],
         )
 
     @classmethod
     def from_file(
-        cls, world, interaction, infection, config_filename=default_config_filename
+            cls, world: "World", interaction: "Interaction", infection: Infection, config_filename: str=default_config_filename
     ) -> "Simulator":
 
         """
@@ -126,14 +126,11 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
-        print('Active groups are : ', active_groups)
         active_groups = self.apply_group_hierarchy(active_groups)
-        print('Ordered Active groups are : ', active_groups)
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
                 self.world.group_maker.distribute_people(group_name)
-            print('Activating group ', grouptype)
             for group in grouptype.members:
                 group.set_active_members()
 
@@ -152,18 +149,43 @@ class Simulator:
         I'm putting them here for now to maintain the same functionality whilst removing a person's
         reference to the world as that makes it impossible to perform population generation prior
         to world construction.
+
+        Parameters
+        ---------
+        person:
+            person to hospitalise
         """
         if person.in_hospital is None:
             self.world.hospitals.allocate_patient(person)
 
-    def bury_the_dead(self, person):
+    def bury_the_dead(self, person: "Person"):
+        """
+        When someone dies, send them to cemetery. 
+        ZOMBIE ALERT!! Specially important, remove from all groups in which
+        that person was present. 
+
+        Parameters
+        ---------
+        person:
+            person sent to cemetery
+        """
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.household.remove_person(person)
         for group in person.groups:
             group.remove_person(person)
 
-    def update_health_status(self, time, delta_time):
+    def update_health_status(self, time: float, delta_time: float):
+        """
+        Update symptoms and health status of infected people
+
+        Parameters
+        ----------
+        time:
+            time now
+        delta_time:
+            duration of time step
+        """
 
         for person in self.world.people.infected:
             health_information = person.health_information
@@ -195,9 +217,7 @@ class Simulator:
         """
         # TODO: add attribute susceptible to people
         sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(
-            len(group.people), n_infections, replace=False
-        )
+        choices = np.random.choice(len(group.people), n_infections, replace=False)
         infecter_reference = self.infection
         for choice in choices:
             infecter_reference.infect_person_at_time(
@@ -241,8 +261,8 @@ class Simulator:
 
         Parameters
         ----------
-        n_seed:
-            number of initial infections
+        save:
+            whether to save the last state of the world
 
         """
         sim_logger.info(
