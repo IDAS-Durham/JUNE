@@ -127,7 +127,6 @@ class Simulator:
             list of groups that are active at a time step
         """
         active_groups = self.apply_group_hierarchy(active_groups)
-        print('HIERARCHYCAL ACTIVE GROUPS : ', active_groups)
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
@@ -213,7 +212,6 @@ class Simulator:
         if not active_groups or len(active_groups) == 0:
             world_logger.info("==== do_timestep(): no active groups found. ====")
             return
-        print('ACTIVE GROUPS : ', active_groups)
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
@@ -234,11 +232,7 @@ class Simulator:
             for hospital in self.world.hospitals.members:
                 n_hospitals += len(hospital.people)
 
-        print('People in hospitals :  ', n_hospitals)
         # assert conservation of people
-        print('People in sim: ', n_people)
-        print('People in world: ', len(self.world.people.members))
-        print('Dead people: ', n_dead)
         assert n_people == len(self.world.people.members)
 
         self.set_allpeople_free()

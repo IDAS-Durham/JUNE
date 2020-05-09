@@ -1,5 +1,6 @@
 from june.demography.person import Person
 from .abstract import AbstractGroup
+from typing import Set
 
 
 class Subgroup(AbstractGroup):
@@ -16,17 +17,53 @@ class Subgroup(AbstractGroup):
         self._in_hospital = set()
         self._dead = set()
 
+    def _collate(
+            self,
+            attribute: str
+        ) -> Set[Person]:
+        collection = set()
+        for person in self.people:
+            if getattr(person.health_information, attribute):
+                collection.add(
+                    person
+                    )
+        return collection
+
+    def _collate_active(
+            self, 
+            set_of_people,
+            active_group
+            ):
+        collection = set()
+        for person in set_of_people:
+            if person.active_group == active_group:
+                collection.add(
+                    person
+                    )
+        return collection
+
+
     @property
     def susceptible(self):
-        return self._susceptible
+        return self._collate('susceptible')
+
+    def susceptible_active(self, active_group):
+        return self._collate_active(self.susceptible, active_group)
 
     @property
     def infected(self):
-        return self._infected
+        return self._collate('infected')
+
+    def infected_active(self, active_group):
+        return self._collate_active(self.infected, active_group)
 
     @property
     def recovered(self):
-        return self._recovered
+        return self._collate('recovered')
+
+    def infected_recovered(self, active_group):
+        return self._collate_active(self.recovered, active_group)
+
 
     @property
     def in_hospital(self):
