@@ -108,7 +108,11 @@ def test__sick_gets_to_hospital_recovers_and_leaves(simulator):
     simulator.set_active_group_to_people(["schools", "hospitals", "households"])
     assert dummy_person.active_group == "hospital"
     simulator.set_allpeople_free()
-    dummy_person.health_index.recovered = True
+    print('Infected Before')
+    print(simulator.world.people.infected)
+    dummy_person.health_information.recovered = True
+    print('Infected After')
+    print(simulator.world.people.infected)
     simulator.update_health_status(simulator.timer.now, 0)
     assert dummy_person.in_hospital is None
     simulator.set_active_group_to_people(["schools", "hospitals", "households"])
