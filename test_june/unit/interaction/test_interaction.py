@@ -60,5 +60,5 @@ def test__time_it_takes_to_infect(config, infection, group_size=2):
     np.testing.assert_allclose(
         np.mean(n_days),
         1.0 / (infection.transmission.probability / group_size),
-        rtol=0.1,
+        rtol=0.15,
     )
