@@ -205,4 +205,12 @@ class Group(AbstractGroup):
                 self.size_infected > 0 and
                 self.size_susceptible > 0)
 
+    @property
+    def size_active(self):
+        n_active = 0
+        for person in self.people:
+            if person.active_group == self.spec:
+                n_active += 1
+        return n_active
+
 
