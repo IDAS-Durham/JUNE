@@ -3,7 +3,7 @@ import yaml
 import numpy as np
 from scipy import stats
 
-from covid.groups.school import School
+from june.groups.school import School
 
 
 EARTH_RADIUS = 6371  # km

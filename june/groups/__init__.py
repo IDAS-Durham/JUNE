@@ -9,3 +9,5 @@ from .hospital import Hospital, Hospitals
 from .household import Household, Households
 from .pub import Pub, Pubs, PubFiller
 from .school import School, Schools
+
+from .test_group import TestGroup, TestGroups

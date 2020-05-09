@@ -1,5 +1,5 @@
 from june.infection import infection as infect
-from june.groups.people import person as per
+from june.demography import person as per
 
 class TestInfection:
 

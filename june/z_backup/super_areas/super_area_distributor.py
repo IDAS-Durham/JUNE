@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-from june.groups.super_areas import SuperArea
+from june.z_backup.super_areas import SuperArea
 
 
 class SuperAreaDistributor:
@@ -52,3 +52,4 @@ class SuperAreaDistributor:
             for area in oa_in_msoa:
                 area.super_area = msoarea
         self.msoareas.members = msoareas_list
+

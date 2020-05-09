@@ -1,5 +1,5 @@
 import numpy as np
-from june.groups import Group
+from june.groups.group import Group
 
 
 class SuperArea(Group):
@@ -41,3 +41,4 @@ class SuperAreas:
         self.world = world
         self.members = []
         self.names_in_order = None  # for fast search
+

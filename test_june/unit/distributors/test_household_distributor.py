@@ -1,12 +1,14 @@
-import numpy as np
-import os
-from june.groups import Household, Households, Person
-from june.distributors import HouseholdDistributor
-import pytest
-from collections import OrderedDict
-from june.groups import Person
-from pathlib import Path
 
+import os
+from pathlib import Path
+from collections import OrderedDict
+
+import numpy as np
+import pytest
+
+from june.demography.person import Person
+from june.groups import Household, Households
+from june.distributors import HouseholdDistributor
 
 class MockHouseholds:
     def __init__(self):

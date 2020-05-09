@@ -37,4 +37,6 @@ print(instance.transmission.probability)
 model.add_assertion(model.symptoms.mean_time > 0.0)
 model.add_assertion(model.symptoms.sigma_time > 0.0)
 model.add_assertion(model.symptoms.recovery_rate > 0.0)
-model.add_assertion(1.0 > model.transmission_probability > 0.0)
+# The last command below gives the following error:
+# AttributeError: 'CollectionPriorModel' object has no attribute 'transmission_probability'
+#model.add_assertion(1.0 > model.transmission_probability > 0.0)

@@ -4,7 +4,7 @@ import numpy.testing as npt
 from june import geography as g
 
 
-@pytest.fixture(name="geography")
+@pytest.fixture(name="geography", scope="session")
 def create_geography():
     return g.Geography.from_file(
         filter_key={"MSOA": ["E02000140"]}

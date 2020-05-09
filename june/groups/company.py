@@ -8,7 +8,7 @@ from scipy.stats import rv_discrete
 from typing import List, Tuple
 
 from june.groups.group import Group
-from june import get_creation_logger
+from june.logger_creation import logger
 
 ic_logger = logging.getLogger(__name__)
 

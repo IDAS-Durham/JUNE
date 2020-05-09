@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 import numpy as np
 from scipy import stats
 
-from june import get_creation_logger
+from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class HospitalDistributor:
         hospitals_in_msoa = [
             hospital
             for hospital in hospitals.members
-            if hospital.msoa_name is self.msoarea.name
+            if hospital.super_area is self.msoarea.name
         ]
         self.msoarea.hospitals = hospitals_in_msoa
 

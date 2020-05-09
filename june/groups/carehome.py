@@ -1,7 +1,7 @@
 from itertools import count
 
 from june.groups.group import Group
-from june import get_creation_logger
+from june.logger_creation import logger
 from enum import IntEnum
 
 class CareHome(Group):
