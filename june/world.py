@@ -7,18 +7,23 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
-from june.box_generator import BoxGenerator
+from june import interaction
+from june.box import Box, Boxes, BoxGenerator
 from june.commute import CommuteGenerator
-from june.distributors import *
 from june.groups import *
-from june.groups.people import HealthIndex
+from june.demography.health_index import HealthIndex
+from june.demography.person import Person, People
+from june.demography.person_distributor import PersonDistributor
+from june.distributors import *
 from june.infection import Infection
 from june.infection import symptoms
 from june.infection import transmission
 from june.inputs import Inputs
-from june.logger import Logger
+from june.logger_simulation import Logger
 from june.time import Timer
-from june import interaction
+
+from june.z_backup.areas import Area, Areas, AreaDistributor
+from june.z_backup.super_areas import SuperArea, SuperAreas, SuperAreaDistributor
 
 world_logger = logging.getLogger(__name__)
 

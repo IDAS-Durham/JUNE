@@ -1,9 +1,9 @@
-from enum import IntEnum
 from itertools import count
 
 import numpy as np
 
-from june.groups import Group
+from june.groups.group import Group
+from enum import IntEnum
 
 
 class Household(Group):
