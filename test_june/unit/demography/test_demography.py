@@ -1,102 +1,47 @@
 import pytest
+from june.geography import Area
+import numpy as np
 
-from june.demography import demographics as d
+from june import demography as d
 
+#@pytest.fixture(name="demography", scope="session")
+#def make_demography():
+#    demography = d.Demography.for_areas(area_names=["E00088544"])
+#    return demography
 
-@pytest.fixture(
-    name="demography"
-)
-def make_demography(super_area):
-    return d.Demography.for_super_area(
-        super_area
-    )
-
-
-@pytest.fixture(
-    name="super_area"
-)
-def make_super_area():
-    return "NorthEast"
-
-
-@pytest.fixture(
-    name="area"
-)
-def make_area():
-    return "E00062207"
-
-
-@pytest.fixture(
-    name="population"
-)
-def make_population(demography, area):
-    return demography.population_for_area(
-        area
-    )
-
-
-def test_create_demography(demography, super_area, area):
-    assert demography.super_area == super_area
-    assert demography.residents_map[area] == 242
-    assert len(demography.sex_generators) == 8802
-
-
-def test_get_population(population, area):
-    assert population.area == area
-    assert len(population) == 242
-
-
-def test_sex(population):
-    sexes = [
-        person.sex
-        for person
-        in population
-    ]
-    assert "m" in sexes
-    assert "f" in sexes
-
-
-def test_age(population):
+def test__demography_for_areas():
+    demography = d.Demography.for_areas(area_names=["E00088544"])
+    population = demography.population_for_area("E00088544")
+    assert len(population) == 362
+    people_ages_dict = {}
+    people_sex_dict = {}
     for person in population:
-        assert 0 <= person.age <= 100
+        if person.age == 0:
+            assert person.sex == 'f'
+        if person.age > 90:
+            assert person.sex == 'f'
+        if person.age == 21:
+            assert person.sex == 'm'
+        if person.age not in people_ages_dict:
+            people_ages_dict[person.age] = 1
+        else:
+            people_ages_dict[person.age] += 1
+        if person.sex not in people_sex_dict:
+            people_sex_dict[person.sex] = 1
+        else:
+            people_sex_dict[person.sex] += 1
 
+    assert people_ages_dict[0] == 6
+    assert people_ages_dict[1] == 2
+    assert people_ages_dict[45] == 4
+    assert people_ages_dict[22] == 6
+    assert people_ages_dict[71] == 3
+    assert max(people_ages_dict.keys()) == 90
 
-def test_weighted_generator():
-    weighted_generator = d.WeightedGenerator(
-        (0.0, 10),
-        (1.0, 20)
-    )
-    assert weighted_generator() == 20
+def test__demography_for_super_areas():
+    demography = d.Demography.for_super_areas(["E02004935"])
+    assert len(demography.age_sex_generators) == 26
 
-    weighted_generator = d.WeightedGenerator(
-        (1.0, 10),
-        (0.0, 20)
-    )
-    assert weighted_generator() == 10
-
-
-def test_age_generator():
-    age_generator = d.AgeGenerator.from_range_string(
-        "0-10"
-    )
-    assert age_generator.lower == 0
-    assert age_generator.upper == 10
-
-    age_generator = d.AgeGenerator.from_range_string(
-        "90-XXX"
-    )
-    assert age_generator.lower == 90
-    assert age_generator.upper == 100
-
-    assert d.AgeGenerator(
-        10, 10
-    )() == 10
-
-
-def test_health_index(population):
-    health_indices = [
-        person.health_index
-        for person
-        in population
-    ]
-    assert isinstance(health_indices[0][0], float)
+def test__demography_for_regions():
+    demography = d.Demography.for_regions(regions=["North East"])
+    assert len(demography.age_sex_generators) == 8802
