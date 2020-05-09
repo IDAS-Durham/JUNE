@@ -7,7 +7,7 @@ config_file = Path(__file__).parent.parent.parent / "configs/config_boxmode_exam
 def test__box_run():
     world = World(config_file=config_file,
                  box_mode=True,
-                 box_n_people=1000)
+                 box_n_people=1_000)
     world.group_dynamics(n_seed=100)
     world.logger.plot_infection_curves_per_day()
 
