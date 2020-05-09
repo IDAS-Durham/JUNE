@@ -1,14 +1,13 @@
 import yaml
 import logging
+from pathlib import Path
+from typing import List, Dict, Tuple, Optional
 
 from june.time import Timer
 from june.interaction import *
 from june.infection import Infection
 
-default_config_filename = Path(
-    __file__
-).parent.parent / "configs/defaults/world.yaml"
-
+default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
 sim_logger = logging.getLogger(__name__)
 
@@ -59,10 +58,7 @@ class Simulator:
         """
         #TODO: Interaction should have a from config file
         interaction_type = self.config["interaction"]["type"]
-        if "parameters" in self.config["interaction"]:
-            interaction_parameters = self.config["interaction"]["parameters"]
-        else:
-            interaction_parameters = {}
+        interaction_parameters = self.config["interaction"].get("parameters") or dict()
         interaction_class_name = "Interaction" + interaction_type.capitalize()
         interaction = globals()[interaction_class_name](interaction_parameters, self.world)
         return interaction
@@ -97,21 +93,26 @@ class Simulator:
         """
         Initialize infection from config file
         """
-
-        #TODO: Infection should have a from config file
-        if "parameters" in self.config["infection"]:
-            infection_parameters = self.config["infection"]["parameters"]
+        #TODO: Infection should have a from config file to rely on
+        # in case of KeyError by using try-except
+        infection_config = self.config["infection"]
+        transmission_config = infection_config["transmission"]
+        
+        if "parameters" in infection_config:
+            infection_parameters = infection_config["parameters"]
         else:
             infection_parameters = {}
-        if "transmission" in self.config["infection"]:
-            transmission_type = self.config["infection"]["transmission"]["type"]
-            transmission_parameters = self.config["infection"]["transmission"]["parameters"]
+        if "transmission" in infection_config:
+            transmission_type = transmission_config["type"]
+            transmission_parameters = transmission_config["parameters"]
             transmission_class_name = "Transmission" + transmission_type.capitalize()
         else:
             trans_class = "TransmissionConstant"
             transmission_parameters = {}
+
         trans_class = getattr(transmission, transmission_class_name)
         transmission_class = trans_class(**transmission_parameters)
+        
         if "symptoms" in self.config["infection"]:
             symptoms_type = self.config["infection"]["symptoms"]["type"]
             symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
@@ -119,10 +120,19 @@ class Simulator:
         else:
             symptoms_class_name = "SymptomsGaussian"
             symptoms_parameters = {}
+        
         symp_class = getattr(symptoms, symptoms_class_name)
         reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(health_index=reference_health_index, **symptoms_parameters)
-        infection = Infection(self.timer.now, transmission_class, symptoms_class, **infection_parameters)
+        symptoms_class = symp_class(
+            health_index=reference_health_index,
+            **symptoms_parameters
+        )
+        infection = Infection(
+            self.timer.now,
+            transmission_class,
+            symptoms_class,
+            **infection_parameters
+        )
         return infection
 
     def seed_infections_group(self, group: "Group", n_infections: int):
