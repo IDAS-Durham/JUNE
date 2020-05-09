@@ -298,12 +298,12 @@ class Hospitals:
             n_beds = row["beds"]
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
-            msoa_name = row["MSOA"]
+            #msoa_name = row["MSOA"]
             coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
                 hospital_id=index,
-                super_area=msoa_name,
+                #super_area=msoa_name,
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,

@@ -54,6 +54,16 @@ The [IDAS gitlab](https://idas-gitlab.dur.scotgrid.ac.uk) [data repo](https://id
 
 ## Instructions
 
+**Important**: If you only need to get the data, and do not want to add anything new
+
+```
+bash get_data.sh
+```
+
+will get you the data folder.
+
+**Important** This is only for people who want to add new data. The data folder has to be a clone of the git lab repo. Make sure you do not initialize git lfs in this repo, but in the git-lab data one.
+
 Before going any further, make a clean `JUNE/data/` folder to ensure nothing is overwritten.
 
 To make data changes you must be in the `JUNE/data` foler which will have it's own git history separate from this one.
