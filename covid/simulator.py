@@ -55,7 +55,7 @@ class Simulator:
         self.check_inputs(config['time'])
         self.timer = Timer(config['time'])
         self.logger = Logger(
-            self.world, self.timer, config["logger"]["save_path"], 
+            self.world, self.timer, config, config["logger"]["save_path"], 
         )
 
     @classmethod
