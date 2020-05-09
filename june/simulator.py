@@ -1,25 +1,14 @@
 import yaml
 import logging
-<<<<<<< HEAD:covid/simulator.py
 import random
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 import numpy as np
 
-from covid.logger import Logger
-from covid.time import Timer
-from covid import interaction
-from covid.infection import Infection
-
-default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
-=======
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional
-
+from june.logger import Logger
 from june.time import Timer
-from june.interaction import *
+from june import interaction
 from june.infection import Infection
->>>>>>> master:june/simulator.py
 
 default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
@@ -117,7 +106,6 @@ class Simulator:
         -------
         Ordered list of active groups according to hierarchy
         """
-<<<<<<< HEAD:covid/simulator.py
         random.shuffle(self.randomly_order_groups)
         group_hierarchy = [
             group
@@ -127,14 +115,6 @@ class Simulator:
         group_hierarchy += self.randomly_order_groups + ["carehomes", "households"]
         active_groups.sort(key=lambda x: group_hierarchy.index(x))
         return active_groups
-=======
-        #TODO: Interaction should have a from config file
-        interaction_type = self.config["interaction"]["type"]
-        interaction_parameters = self.config["interaction"].get("parameters") or dict()
-        interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters, self.world)
-        return interaction
->>>>>>> master:june/simulator.py
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
@@ -164,7 +144,6 @@ class Simulator:
         for person in self.world.people.members:
             person.active_group = None
 
-<<<<<<< HEAD:covid/simulator.py
     def hospitalise_the_sick(self, person):
         """
         These functions could be more elegantly handled by an implementation inside a group collection.
@@ -201,56 +180,6 @@ class Simulator:
 
     def seed(self, group: "Group", n_infections: int):
         """
-=======
-    def initialize_infection(self):
-        """
-        Initialize infection from config file
-        """
-        #TODO: Infection should have a from config file to rely on
-        # in case of KeyError by using try-except
-        infection_config = self.config["infection"]
-        transmission_config = infection_config["transmission"]
-        
-        if "parameters" in infection_config:
-            infection_parameters = infection_config["parameters"]
-        else:
-            infection_parameters = {}
-        if "transmission" in infection_config:
-            transmission_type = transmission_config["type"]
-            transmission_parameters = transmission_config["parameters"]
-            transmission_class_name = "Transmission" + transmission_type.capitalize()
-        else:
-            trans_class = "TransmissionConstant"
-            transmission_parameters = {}
-
-        trans_class = getattr(transmission, transmission_class_name)
-        transmission_class = trans_class(**transmission_parameters)
-        
-        if "symptoms" in self.config["infection"]:
-            symptoms_type = self.config["infection"]["symptoms"]["type"]
-            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            symptoms_class_name= "Symptoms" + symptoms_type.capitalize()
-        else:
-            symptoms_class_name = "SymptomsGaussian"
-            symptoms_parameters = {}
-        
-        symp_class = getattr(symptoms, symptoms_class_name)
-        reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(
-            health_index=reference_health_index,
-            **symptoms_parameters
-        )
-        infection = Infection(
-            self.timer.now,
-            transmission_class,
-            symptoms_class,
-            **infection_parameters
-        )
-        return infection
-
-    def seed_infections_group(self, group: "Group", n_infections: int):
-        '''
->>>>>>> master:june/simulator.py
         Randomly pick people in group to seed the infection
 
         Parameters
