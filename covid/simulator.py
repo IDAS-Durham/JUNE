@@ -13,9 +13,15 @@ default_config_filename = Path(__file__).parent.parent / "configs/config_example
 
 sim_logger = logging.getLogger(__name__)
 
-#TODO: Split the config into more manageable parts for tests
+# TODO: Split the config into more manageable parts for tests
 class Simulator:
-    def __init__(self, world: "World", interaction: "Interaction", infection: Infection, config: dict):
+    def __init__(
+        self,
+        world: "World",
+        interaction: "Interaction",
+        infection: Infection,
+        config: dict,
+    ):
         """
         Class to run an epidemic spread simulation on the world
 
@@ -32,11 +38,21 @@ class Simulator:
         self.world = world
         self.interaction = interaction
         self.infection = infection
-        self.permanent_group_hierarchy = ['boxes', 'hospitals', 'companies', 'schools', 'carehomes', 'households']
-        self.randomly_order_groups = ['pubs', 'churches',]
+        self.permanent_group_hierarchy = [
+            "boxes",
+            "hospitals",
+            "companies",
+            "schools",
+            "carehomes",
+            "households",
+        ]
+        self.randomly_order_groups = [
+            "pubs",
+            "churches",
+        ]
         self.check_inputs(config)
         self.timer = Timer(config)
-       
+
     @classmethod
     def from_file(
         cls, world, interaction, infection, config_filename=default_config_filename
@@ -67,11 +83,11 @@ class Simulator:
 
         # Check that all groups given in config file are in the valid group hierarchy
         all_groups = self.permanent_group_hierarchy + self.randomly_order_groups
-        for step, active_groups in config['step_active_groups']['weekday'].items():
-            assert all(group in all_groups for group in active_groups) 
+        for step, active_groups in config["step_active_groups"]["weekday"].items():
+            assert all(group in all_groups for group in active_groups)
 
-        for step, active_groups in config['step_active_groups']['weekend'].items():
-            assert all(group in all_groups for group in active_groups) 
+        for step, active_groups in config["step_active_groups"]["weekend"].items():
+            assert all(group in all_groups for group in active_groups)
 
     def apply_group_hierarchy(self, active_groups: List[str]) -> List[str]:
         """
@@ -87,8 +103,12 @@ class Simulator:
         Ordered list of active groups according to hierarchy
         """
         random.shuffle(self.randomly_order_groups)
-        group_hierarchy = [group for group in self.permanent_group_hierarchy if group not in ['carehomes', 'households']]
-        group_hierarchy += self.randomly_order_groups + ['carehomes', 'households']
+        group_hierarchy = [
+            group
+            for group in self.permanent_group_hierarchy
+            if group not in ["carehomes", "households"]
+        ]
+        group_hierarchy += self.randomly_order_groups + ["carehomes", "households"]
         active_groups.sort(key=lambda x: group_hierarchy.index(x))
         return active_groups
 
@@ -162,9 +182,11 @@ class Simulator:
             number of random people to infect in the given group
 
         """
-        #TODO: add attribute susceptible to people
+        # TODO: add attribute susceptible to people
         sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(len(self.world.people.members), n_infections, replace=False)
+        choices = np.random.choice(
+            len(self.world.people.members), n_infections, replace=False
+        )
         infecter_reference = self.infection
         for choice in choices:
             infecter_reference.infect_person_at_time(
@@ -194,7 +216,7 @@ class Simulator:
         for cemetery in self.cemeteries.members:
             n_people += len(cemetery.people)
         # assert conservation of people
-        assert n_people  == len(world.people.members)
+        assert n_people == len(world.people.members)
 
         self.update_health_status(self.timer.now, self.timer.duration)
         self.set_allpeople_free()
