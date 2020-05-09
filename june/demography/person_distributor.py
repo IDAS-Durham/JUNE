@@ -5,7 +5,7 @@ import numpy as np
 from scipy import stats
 
 from june.demography import Person
-from june.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)

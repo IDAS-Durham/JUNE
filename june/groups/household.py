@@ -43,15 +43,12 @@ class Household(Group):
         person.groups.append(self)
 
     def select_random_parent(self):
-        print('Everyone ', self.people)
         parents = [
             person
             for person in self.people
             if person
             not in list(self.subgroups[self.GroupType.kids].people)
         ]
-        print('Possible parents ', parents)
-
         return random.choice(parents)
 
     def set_active_members(self):
