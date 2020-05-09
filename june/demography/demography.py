@@ -30,8 +30,17 @@ class DemographyError(BaseException):
 class AgeSexGenerator:
     def __init__(self, age_counts: list, sex_bins: list, female_fractions: list):
         """
-        Given an array of n elements corresponding to the number of counts
-        generates an object that can generate ages from those age_counts.
+        age_counts is an array where the index in the array indicates the age,
+        and the value indicates the number of counts in that age.
+        sex_bins are the lower edges of each sex bin where we have a fraction of females from
+        census data, and female_fractions are those fractions.
+        Example:
+            age_counts = [1, 2, 3] means 1 person of age 0, 2 people of age 1 and 3 people of age 2.
+            sex_bins = [1, 3] defines two bins: (0,1) and (3, infinity)
+            female_fractions = [0.3, 0.5] means that between the ages 0 and 1 there are 30% females,
+                                          and there are 50% females in the bin 3+ years
+        Given this information we initialize two generators for age and sex, that can be accessed
+        through gen = AgeSexGenerator().age() and AgeSexGenerator().sex().
 
         Parameters
         ----------
@@ -52,13 +61,13 @@ class AgeSexGenerator:
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
 
-    def age(self):
+    def age(self) -> int:
         try:
             return next(self.age_iterator)
         except StopIteration:
             raise DemographyError("No more people living here!")
 
-    def sex(self):
+    def sex(self) -> str:
         try:
             return next(self.sex_iterator)
         except StopIteration:
@@ -137,7 +146,7 @@ class Demography:
         -------
         A population of people
         """
-        # TODO: this can be make faster with map()
+        # TODO: this could be make faster with map()
         people = list()
         age_and_sex_generator = self.age_sex_generators[area]
         for _ in range(age_and_sex_generator.n_residents):
@@ -160,10 +169,8 @@ class Demography:
 
         Parameters
         ----------
-        filter
-            A dictionary containing the area names for all the population we want. 
-        super_area
-            An identifier for a larger geographical area, e.g. NorthEast
+        area_names
+            list of areas for which to create populations
         data_path
             The path to the data directory
         config
@@ -183,42 +190,25 @@ class Demography:
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
 
     @classmethod
-    def for_super_areas(
+    def for_zone(
         cls,
-        super_areas: List[str],
+        filter_key: Dict[str, list],
         data_path: str = default_data_path,
         areas_maps_path: str = default_areas_map_path,
         config: Optional[dict] = None,
     ) -> "Demography":
+        """
+        Initializes a geography for a specific list of zones. The zones are specified by the filter_dict dictionary
+        where the key denotes the kind of zone, and the value is a list with the different zone names. 
+        Example:
+            filter_key = {"region" : "North East"}
+            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
+        """
+        if len(filter_key.keys()) > 1:
+            raise NotImplementedError("Only one type of area filtering is supported.")
         geo_hierarchy = pd.read_csv(areas_maps_path)
-        area_names = geo_hierarchy[geo_hierarchy["msoa"].isin(super_areas)]["oa"]
-        if len(area_names) == 0:
-            raise DemographyError("Region returned empty area list.")
-        return cls.for_areas(area_names, data_path, config)
-
-    @classmethod
-    def for_regions(
-        cls,
-        regions: List[str],
-        data_path: str = default_data_path,
-        areas_maps_path: str = default_areas_map_path,
-        config: Optional[dict] = None,
-    ) -> "Demography":
-        geo_hierarchy = pd.read_csv(areas_maps_path)
-        area_names = geo_hierarchy[geo_hierarchy["region"].isin(regions)]["oa"]
-        if len(area_names) == 0:
-            raise DemographyError("Region returned empty area list.")
-        return cls.for_areas(area_names, data_path, config)
-
-    @classmethod
-    def for_all(
-        cls,
-        data_path: str = default_data_path,
-        areas_maps_path: str = default_areas_map_path,
-        config: Optional[dict] = None,
-    ) -> "Demography":
-        geo_hierarchy = pd.read_csv(areas_maps_path)
-        area_names = geo_hierarchy["oa"].values
+        zone_type, zone_list = filter_key.popitem()
+        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["oa"]
         if len(area_names) == 0:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)
@@ -229,12 +219,19 @@ class Demography:
         geography: Geography,
         data_path: str = default_data_path,
         config: Optional[dict] = None,
-    ):
+    ) -> "Demography":
+        """
+        Initializes demography from an existing geography.
+
+        Parameters
+        ----------
+        geography
+            an instance of the geography class
+        """
         area_names = [area.name for area in geography.areas]
         if len(area_names) == 0:
             raise DemographyError("Empty geography!")
         return cls.for_areas(area_names, data_path, config)
-
 
 
 def _load_age_and_sex_generators(
