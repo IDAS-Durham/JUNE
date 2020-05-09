@@ -11,7 +11,7 @@ from june import interaction
 from june.box import Box, Boxes, BoxGenerator
 from june.commute import CommuteGenerator
 from june.groups import *
-from june.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.demography.person import Person, People
 from june.demography.person_distributor import PersonDistributor
 from june.distributors import *

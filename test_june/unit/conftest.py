@@ -2,7 +2,7 @@ from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
 import june.interaction as inter
-from june.demography.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.simulator import Simulator
 from june import world
 from june.time import Timer 

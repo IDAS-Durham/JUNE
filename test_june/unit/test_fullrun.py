@@ -6,7 +6,7 @@ but at least we can use it in the meantime to make sure the code runs before pus
 import os
 
 from june import World
-from june.demography.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.interaction import DefaultInteraction 
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
