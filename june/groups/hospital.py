@@ -260,7 +260,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-            logger.info("There are {len(hospital_df)} hospitals in the world.")
+            logger.info(f"There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(

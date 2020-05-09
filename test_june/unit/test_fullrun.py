@@ -6,7 +6,7 @@ but at least we can use it in the meantime to make sure the code runs before pus
 import os
 
 from june import World
-from june.groups.people.health_index import HealthIndex
+from june.demography.health_index import HealthIndex
 from june.interaction import DefaultInteraction 
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
@@ -15,8 +15,12 @@ from june.simulator import Simulator
 from june import World
 
 
-def test_full_run(world_ne):
-    world_ne.group_dynamics()
+def test_full_run(simulator):
+    for household in simulator.world.households.members[:20]:
+        simulator.seed(household, n_infections=1)
+    simulator.run()
+    simulator.logger.plot_infection_curves_per_day()
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
@@ -35,8 +39,7 @@ if __name__ == "__main__":
     symptoms = SymptomsConstant(health_index=reference_health_index, recovery_rate=0.05)
     transmission = TransmissionConstant(probability=0.3) 
     infection = Infection(transmission, symptoms)
-    interaction = DefaultInteraction()
-
+    interaction = DefaultInteraction.from_file()
 
     simulator = Simulator.from_file(world, interaction, infection, config_filename = config_path)
     for household in simulator.world.households.members[:20]:

@@ -89,6 +89,7 @@ class School(Group):
                 person,
                 qualifier
             )
+            person.groups.append(self)
 
 
 class Schools:
