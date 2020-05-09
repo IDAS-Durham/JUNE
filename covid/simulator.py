@@ -7,6 +7,7 @@ import numpy as np
 from covid.time import Timer
 from covid import interaction
 from covid.infection import Infection
+import typing
 
 default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
