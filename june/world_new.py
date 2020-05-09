@@ -1,6 +1,8 @@
 import os
 import pickle
 import logging
+import autofit as af
+import sys
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 
@@ -28,6 +30,7 @@ class World:
         #geography: "Geography",
         #demography: "Demography",
         #sociology: "Sociology",
+        epidemiology=None,
         configs_dir: str = os.path.dirname(os.path.realpath(__file__))+"../configs/",
         output_dir: str = "./results/",
     ):
@@ -38,6 +41,21 @@ class World:
         # read configs
         #self.read_config(config_file)
         #self.read_defaults()
+
+        if epidemiology is None:
+
+            def str_to_class(classname):
+                return getattr(sys.modules[__name__], classname)
+
+            symptoms_class = str_to_class(classname=af.conf.instance.general.get("epidemiology", "symptoms_class", str))
+
+            print(symptoms_class)
+
+            stodgfd
+
+
+        self.epidemiology = epidemiology
+
 
 
     def test_output_dir(self, output_dir: str):
