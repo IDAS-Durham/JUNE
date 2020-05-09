@@ -206,3 +206,20 @@ class People:
         ]
 
 
+    @property
+    def susceptible(self):
+        return [
+            person for person in self.members
+            if person.health_information.susceptible 
+            
+        ]
+
+    @property
+    def recovered(self):
+        return [
+            person for person in self.members
+            if person.health_information.recovered
+            
+        ]
+
+

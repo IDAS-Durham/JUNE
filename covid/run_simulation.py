@@ -9,7 +9,7 @@ from covid.infection.transmission import TransmissionConstant
 from covid.simulator import Simulator
 
 config_file = "../configs/config_boxmode_example.yaml"
-world = World(box_mode=True, box_n_people=100) 
+world = World(box_mode=True, box_n_people=1_000) 
 #TODO: why does it need an specific health_index to initialize
 # Should initialize to 0, same with initial time infection or -1
 reference_health_index = HealthIndex().get_index_for_age(40)
@@ -20,7 +20,7 @@ interaction = DefaultInteraction()
 
 simulator = Simulator.from_file(world, interaction, infection, config_filename = config_file)
 
-simulator.seed(world.boxes.members[0], n_infections=10)
+simulator.seed(world.boxes.members[0], n_infections=100)
 simulator.run()
 simulator.logger.plot_infection_curves_per_day()
 
