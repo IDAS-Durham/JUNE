@@ -87,7 +87,7 @@ class DefaultInteraction(Interaction):
         norm   = 1./max(1, group.size)
         for grouping in group.subgroups:
             summed = 0.
-            for person in grouping.infected_active:
+            for person in grouping.infected:
                 individual = (
                     person.health_information.infection.transmission.probability
                 )
