@@ -1,6 +1,8 @@
-test_covid/unit/results/
+.coverage
+coverage.xml
+test_june/unit/results/
 .DS_Store
-test_covid/results/
+test_june/results/
 .idea/
 data
 *__pycache__*

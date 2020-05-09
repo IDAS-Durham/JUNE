@@ -4,8 +4,8 @@ import pickle
 
 import seaborn as sns
 
-from covid.inputs import Inputs 
-from covid.world import World
+from june.inputs import Inputs 
+from june.world import World
 
 sns.set_context('paper')
 

@@ -41,10 +41,11 @@ jobs:
 #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        cd test_covid
+        cd test_june
         pytest
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         env_vars: OS,PYTHON
+        token: 453a1f8a-d0fd-4f4d-b812-5649b3f7ae93
 
