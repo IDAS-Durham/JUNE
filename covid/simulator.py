@@ -4,10 +4,11 @@ import random
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 import numpy as np
+
+from covid.logger import Logger
 from covid.time import Timer
 from covid import interaction
 from covid.infection import Infection
-import typing
 
 default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
@@ -51,8 +52,11 @@ class Simulator:
             "pubs",
             "churches",
         ]
-        self.check_inputs(config)
-        self.timer = Timer(config)
+        self.check_inputs(config['time'])
+        self.timer = Timer(config['time'])
+        self.logger = Logger(
+            self.world, self.timer, config["logger"]["save_path"], 
+        )
 
     @classmethod
     def from_file(
@@ -73,7 +77,7 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Simulator(world, interaction, infection, config["time"])
+        return Simulator(world, interaction, infection, config)
 
     def check_inputs(self, config: dict):
 
@@ -162,13 +166,15 @@ class Simulator:
         for person in self.world.people.infected:
             health_information = person.health_information
             health_information.update_health_status(time, delta_time)
-            if health_information.in_hospital:
-                self.hospitalise_the_sick(person)
             # release patients that recovered
-            elif health_information.recovered:
-                health_information.set_recovered(time)
+            if health_information.recovered:
                 if person.in_hospital is not None:
                     person.in_hospital.release_as_patient(person)
+                health_information.set_recovered(time)
+
+            elif health_information.in_hospital:
+                self.hospitalise_the_sick(person)
+
             elif health_information.dead:
                 self.bury_the_dead(person)
 
@@ -188,12 +194,12 @@ class Simulator:
         # TODO: add attribute susceptible to people
         sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
         choices = np.random.choice(
-            len(self.world.people.members), n_infections, replace=False
+            len(group.people), n_infections, replace=False
         )
         infecter_reference = self.infection
         for choice in choices:
             infecter_reference.infect_person_at_time(
-                list(self.world.people.members)[choice], self.timer.now
+                list(group.people)[choice], self.timer.now
             )
         self.update_health_status(0, 0)
         # in case someone has to go directly to the hospital
@@ -216,15 +222,16 @@ class Simulator:
             for group in group_type.members:
                 self.interaction.time_step(self.timer.now, self.timer.duration, group)
                 n_people += len(group.people)
-        for cemetery in self.cemeteries.members:
-            n_people += len(cemetery.people)
+        if not self.world.box_mode:
+            for cemetery in self.cemeteries.members:
+                n_people += len(cemetery.people)
         # assert conservation of people
-        assert n_people == len(world.people.members)
+        assert n_people == len(self.world.people.members)
 
         self.update_health_status(self.timer.now, self.timer.duration)
         self.set_allpeople_free()
 
-    def run(self, n_days, save=False):
+    def run(self, save=False):
         """
         Run simulation with n_seed initial infections
 
@@ -245,7 +252,7 @@ class Simulator:
             if day > self.timer.total_days:
                 break
             self.logger.log_timestep(day)
-            self.do_timestep(self.timer)
+            self.do_timestep()
         # Save the world
         if save:
             self.world.to_pickle()
