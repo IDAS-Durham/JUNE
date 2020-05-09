@@ -1,8 +1,8 @@
 import pytest
 
+from june.demography.person import Person
+from june.groups.group import group as g
 from june import exc
-from june.groups import group as g, Person
-
 
 class TestGroup:
 

@@ -1,5 +1,6 @@
+from june.groups.group import Group
+from june.logger_creation import logger
 from enum import IntEnum
-from june.groups import Group
 
 
 class Cemetery(Group):

@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 from june.distributors import CareHomeDistributor
 from june.distributors.carehome_distributor import CareHomeError
-from june.groups import Person
+from june.demography.person import Person
 
 @pytest.fixture(name="carehomes_df")
 def load_carehomes_df():
