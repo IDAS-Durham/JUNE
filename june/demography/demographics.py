@@ -9,7 +9,7 @@ from june.geography import Geography
 from june.demography.health_index import HealthIndex
 from june.demography.person import Person
 
-default_data_path = Path(__file__).parent.parent.parent.parent / "data"
+default_data_path = Path(__file__).parent.parent.parent / "data"
 
 MALE_INDEX = 1
 FEMALE_INDEX = 2
@@ -117,7 +117,6 @@ class Demography:
     def __init__(
             self,
             super_area: str,
-            geography: "Geography",
             residents_map: Dict[str, int],
             sex_generators: Dict[str, "WeightedGenerator"],
             age_generators: Dict[str, "WeightedGenerator"],

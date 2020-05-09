@@ -1,6 +1,6 @@
 import random
 import numpy as np
-import interaction
+from june.interaction.interaction import Interaction
 
 # TODO: We have to rework this to acount for the grouping-structure in groups.
 # READ MAX AGE (100) FROM SOMEWHERE

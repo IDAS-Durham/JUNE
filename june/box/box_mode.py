@@ -1,4 +1,4 @@
-from june.groups import Group
+from june.groups.group import Group
 
 
 class Boxes:

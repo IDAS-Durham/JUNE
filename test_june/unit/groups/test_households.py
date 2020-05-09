@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from june.inputs import Inputs
-from june.sociology import Household, Households
+from june.groups import Household, Households
 
 def test__households_adding():
     households1 = Households()

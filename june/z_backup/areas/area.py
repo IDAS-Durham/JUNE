@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-
-from june.groups import Group
-from june.commute import RegionalGenerator
 from enum import IntEnum
+from june.groups.group import Group
+from june.commute import RegionalGenerator
 
 
 class Area(Group):
@@ -144,3 +143,4 @@ class Areas:
         freq = df.div(df.sum(axis=1), axis=0)
         decoder = {i: df.columns[i] for i in range(df.shape[-1])}
         return freq, decoder
+

@@ -1,4 +1,4 @@
-from june.groups import Box, Boxes
+from june.box import Box, Boxes
 
 def test__box_group():
     box = Box()

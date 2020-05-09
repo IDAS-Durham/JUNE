@@ -1,6 +1,6 @@
 import pytest
 
-from covid.demography import demographics as d
+from june.demography import demographics as d
 
 
 @pytest.fixture(
