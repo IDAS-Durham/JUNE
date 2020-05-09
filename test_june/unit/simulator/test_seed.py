@@ -1,5 +1,7 @@
 from june.simulator import Simulator
+from pathlib import Path
 
+test_directory = Path(__file__).parent.parent.parent
 
 def test__n_infected(simulator_box):
     n_infections = 50
