@@ -33,6 +33,10 @@ class Inputs:
             "data/processed/census_data/company_data/" \
         )
         # ----------------------------------
+        #self.area_mapping_file = os.path.join(
+        #    os.path.dirname(os.path.realpath(__file__)),
+        #    "../data/census_data/area_code_translations/areas_mapping.csv",
+        #)
         self.n_residents_file = os.path.join(
             self.OUTPUT_AREA_DIR, "residents.csv"
         )
@@ -204,10 +208,10 @@ class Inputs:
             "data",
             "processed",
             "geographical_data",
-            "oa_coorindates.csv",
+            "oa_coordinates.csv",
         )
         areas_coordinates_df = pd.read_csv(areas_coordinates_df_path)
-        areas_coordinates_df.set_index("OA11CD", inplace=True)
+        areas_coordinates_df.set_index("oa", inplace=True)
         return areas_coordinates_df
 
     def read_hospitals(self, area_mapping, oa_in_world):
@@ -721,4 +725,4 @@ if __name__ == "__main__":
     #print(ip.workflow_df)
     #print("companysize_df\n", ip.companysize_df)
     #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
-
+    print(ip.areas_coordinates_df)
