@@ -200,10 +200,9 @@ class People:
     def infected(self):
         return [
             person for person in self.members
-            if person.health_information.infected and not (
-                    person.health_information.in_hospital
-                    or person.health_information.dead
-            )
+            if person.health_information.infected and not 
+                    person.health_information.dead
+            
         ]
 
 
