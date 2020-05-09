@@ -226,18 +226,10 @@ class Simulator:
                 n_people += group.size_active
 
         self.update_health_status(self.timer.now, self.timer.duration)
-        n_dead = 0
-        n_hospitals = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-                n_dead += len(cemetery.people)
-            for hospital in self.world.hospitals.members:
-                n_hospitals += len(hospital.subgroups[hospital.GroupType.patients].people) + len(hospital.subgroups[hospital.GroupType.icu_patients].people)
 
-        print('Active people ', n_people)
-        print('All people ', len(self.world.people.members))
-        print('Dead ', n_dead)
         # assert conservation of people
         assert n_people == len(self.world.people.members)
 

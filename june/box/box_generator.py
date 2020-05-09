@@ -3,7 +3,7 @@ import pandas as pd
 
 from june.box.box_mode import Box
 from june.demography.person import Person
-from june.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.inputs import Inputs
 
 
