@@ -6,10 +6,7 @@ schools:
   sub_sector:
     teacher_secondary:
       sector_id: 2314    # NOMIS name convention
-      nr_of_clients: 30  # how many this job gives service to
     teacher_primary:
       sector_id: 2315
-      nr_of_clients: 30
     teacher_special:
       sector_id: 2316
-      nr_of_clients: 40
