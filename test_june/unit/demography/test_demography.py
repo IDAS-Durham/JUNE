@@ -60,14 +60,14 @@ def test__demography_for_areas(area):
     assert max(people_ages_dict.keys()) == 90
 
 def test__demography_for_super_areas():
-    demography = d.Demography.for_super_areas(["E02004935"])
+    demography = d.Demography.for_zone(filter_key={"msoa" : ["E02004935"]})
     assert len(demography.age_sex_generators) == 26
 
 def test__demography_for_regions():
-    demography = d.Demography.for_regions(regions=["North East"])
+    demography = d.Demography.for_zone(filter_key={"region" : ["North East"]})
     assert len(demography.age_sex_generators) == 8802
 
 def test__demography_from_geography():
     geography = Geography.from_file(filter_key={"oa" : ["E00120481"]})
-    demography = d.Demography.from_geography(geography)
+    demography = d.Demography.for_geography(geography)
 

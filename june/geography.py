@@ -6,6 +6,7 @@ from pathlib import Path
 from random import randint
 from itertools import chain, count
 from typing import List, Dict, Optional
+from june.demography import Person
 
 import numpy as np
 import pandas as pd
@@ -52,18 +53,25 @@ class Area:
         self.name = name
         self.coordinates = coordinates[[1, 0]]
         self.super_area = super_area
+        self.people = set()
 
+    def add(self, person: Person):
+        self.people.add(person)
+        person.area = self
 
 class Areas:
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
         self.super_area = super_area
+        self.people = set()
 
     def __len__(self):
         return len(self.members)
 
     def __iter__(self):
         return iter(self.members)
+
+
 
 
 class SuperArea:
@@ -123,16 +131,35 @@ class Geography:
         area = Area(name=row.name, coordinates=row.values, super_area=super_area)
         return area
 
-    def _create_areas(self, area_coords, super_area):
-        print(area_coords)
-        print(super_area)
-        areas = area_coords.apply(
-            lambda row: self._create_area(row, super_area), axis=1
-        )
+    def _create_areas(
+        self, area_coords: pd.DataFrame, super_area: pd.DataFrame
+    ) -> List[Area]:
+        """
+        Applies the _create_area function throught the area_coords dataframe.
+        If area_coords is a series object, then it does not use the apply()
+        function as it does not support the axis=1 parameter.
+
+        Parameters
+        ----------
+        area_coords
+            pandas Dataframe with the area name as index and the coordinates
+            X, Y where X is longitude and Y is latitude.
+        """
+        # if a single area is given, then area_coords is a series
+        # and apply doesnt support the axis parameter.
+        try:
+            areas = area_coords.apply(
+                lambda row: self._create_area(row, super_area), axis=1
+            )
+        except TypeError:
+            return [self._create_area(area_coords, super_area)]
         return areas
 
     def create_geographical_units(
-        self, hierarchy, area_coordinates, super_area_coordinates
+        self,
+        hierarchy: pd.DataFrame,
+        area_coordinates: pd.DataFrame,
+        super_area_coordinates: pd.DataFrame,
     ):
         """
         Create geo-graph of the used geographical units.
@@ -214,22 +241,25 @@ def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame
     ]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from time import time
     import resource
+
     def using(point=""):
-        usage=resource.getrusage(resource.RUSAGE_SELF)
-        return '''%s: usertime=%s systime=%s mem=%s mb
-               '''%(point,usage[0],usage[1],
-                    usage[2]/1024.0 )
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        return """%s: usertime=%s systime=%s mem=%s mb
+               """ % (
+            point,
+            usage[0],
+            usage[1],
+            usage[2] / 1024.0,
+        )
+
     t1 = time()
     print(using("before"))
     geography = Geography.from_file(
-#        filter_key={"region": ["North East"]}
+        #        filter_key={"region": ["North East"]}
     )
     t2 = time()
     print(using("after"))
     print(f"Took {t2-t1} seconds to create the UK.")
-
-
-
