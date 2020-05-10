@@ -1,28 +1,27 @@
-
+import os
 from pathlib import Path
 from collections import Counter
 import pickle
 import pytest
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 from june.groups import *
 from june.demography import Person
 
+default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "data/processed/hospital_data/england_hospitals.csv"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "configs/defaults/groups/hospitals.yaml"
+
 @pytest.fixture(name="hospitals", scope="session")
 def create_hospitals():
     data_directory = Path(__file__).parent.parent.parent.parent
-    hospital_path = data_directory / "data/processed/hospital_data/england_hospitals.csv"
-    config_path = data_directory / "configs/defaults/hospitals.yaml"
-    return Hospitals.from_file(hospital_path, config_path)
+    return Hospitals.from_file(default_data_filename, default_config_filename)
 
 @pytest.fixture(name="hospitals_df", scope="session")
 def create_hospitals_df():
-    data_directory = Path(__file__).parent.parent.parent.parent
-    hospital_path = data_directory / "data/processed/hospital_data/england_hospitals.csv"
-    config_path = data_directory / "configs/defaults/hospitals.yaml"
-    return  pd.read_csv(hospital_path)
+    return  pd.read_csv(default_data_filename)
 
 
 def test__total_number_hospitals_is_correct(hospitals, hospitals_df):
