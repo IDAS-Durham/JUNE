@@ -249,7 +249,6 @@ class SchoolDistributor:
 
 if __name__ == "__main__":
     geography = Geography.from_file(filter_key={"msoa" : ["E02004935", "E02005705", "E02005704"]})
-    print(geography.areas.members[0].id)
     schools = Schools.for_geography(geography)
     SchoolDistributor.from_file(
         schools = schools,

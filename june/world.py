@@ -338,7 +338,9 @@ class World:
         """
         print("Initializing Companies...")
         self.companies = Companies.from_file(
-            self.inputs.companysize_file, self.inputs.company_per_sector_per_msoa_file,
+            self.super_areas.members,
+            self.inputs.companysize_file,
+            self.inputs.company_per_sector_per_msoa_file,
         )
         pbar = tqdm(total=len(self.super_areas.members))
         for super_area in self.super_areas.members:
