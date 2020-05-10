@@ -1,3 +1,4 @@
-from .person import Person, People
+from .demographics import Population, Demography
+from .person import Person, People, HealthInformation
 from .person_distributor import PersonDistributor
-from .demography import Demography
+from .health_index import HealthIndex
