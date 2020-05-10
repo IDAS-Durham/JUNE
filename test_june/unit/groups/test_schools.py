@@ -7,7 +7,8 @@ import pytest
 
 from june.geography import Geography
 from june.geography import Area
-from june.groups import *
+from june.demography import Person
+from june.groups import School, Schools
 
 default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "data/processed/school_data/england_schools_data.csv"
@@ -34,6 +35,7 @@ class TestSchool:
     @pytest.fixture(name="school", scope="session")
     def create_school(self):
         return School(
+            school_name=8123,
             coordinates=(1., 1.),
             n_pupils_max=467,
             n_teachers_max=73,

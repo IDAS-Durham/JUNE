@@ -233,7 +233,10 @@ class Hospitals:
 
     @classmethod
     def from_file(
-            cls, filename: str, config_filename: str, box_mode: bool = False
+            cls,
+            filename: str = default_data_filename,
+            config_filename: str = default_config_filename,
+            box_mode: bool = False,
     ) -> "Hospitals":
         """
         Initialize Hospitals from path to data frame, and path to config file.

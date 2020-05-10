@@ -158,8 +158,9 @@ class World:
             if key not in self.config:
                 self.config[key] = default_config[key]
         # active group settings
+        # TODO this will change in the new world
         for relevant_group in self.relevant_groups:
-            group_config_path = os.path.join(basepath, f"{relevant_group}.yaml")
+            group_config_path = os.path.join(basepath, f"groups/{relevant_group}.yaml")
             if os.path.isfile(group_config_path):
                 with open(group_config_path, "r") as f:
                     default_config = yaml.load(f, Loader=yaml.FullLoader)
