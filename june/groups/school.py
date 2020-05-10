@@ -24,6 +24,7 @@ default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent /
 
 logger = logging.getLogger(__name__)
 
+
 class SchoolError(BaseException):
     pass
 
@@ -32,9 +33,10 @@ class School(Group):
     
     _id = count()
     __slots__ = (
-        "id", "coordinates", "msoa", "n_pupils_max",
-        "n_pupils", "age_min", "age_max", "age_structure",
-        "sector", "is_full", "n_teachers_max", "n_teachers"
+        "id", "coordinates", "super_area",
+        "n_pupils_max", "n_pupils", "n_teachers_max", "n_teachers"
+        "age_min", "age_max", "age_structure",
+        "sector", "is_full"
     )
 
     class GroupType(IntEnum):
@@ -77,6 +79,8 @@ class School(Group):
         """
         super().__init__(name="School_%05d" % school_name, spec="school")
         self.id = school_name
+        self.coordinates = coordinates
+        self.super_area = None
         self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.n_pupils = 0
         self.n_teachers = 0
@@ -87,8 +91,6 @@ class School(Group):
         self.age_max = age_max
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
-        self.coordinates = coordinates
-        self.super_area = None
 
     def add(self, person, qualifier=GroupType.students):
         if qualifier == self.GroupType.students:
@@ -184,7 +186,6 @@ class Schools:
             The path to the data directory
         config
         """
-        area_names = area_names
         return cls.from_file(area_names, data_file, config_file)
 
     @classmethod
