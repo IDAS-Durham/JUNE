@@ -6,7 +6,7 @@ import numpy as np
 class Interaction(ABC):
         
     def time_step(self, time, delta_time, group):
-       if group.size != 0:
+       if group.contains_people:
             self.single_time_step_for_group(group, time, delta_time)
                     
     @abstractmethod
