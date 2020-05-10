@@ -54,7 +54,7 @@ class Company(Group):
     class GroupType(IntEnum):
         worker = 0
 
-    def __init__(self, super_area=None, industry=None):
+    def __init__(self, super_area=None, n_employees_max=int, industry=None):
         super().__init__(name="Company_{company_id}", spec="company")
         self.super_area = super_area
         # set the max number of employees to be the mean number in a range
@@ -75,10 +75,10 @@ class Companies:
         Parameters
         ----------
         company_size_per_superarea_df: pd.DataFram
-            Nr. of companies within a size-range per MSOA.
+            Nr. of companies within a size-range per SuperArea.
 
         compsec_per_msoa_df: pd.DataFrame
-            Nr. of companies per industry sector per MSOA.
+            Nr. of companies per industry sector per SuperArea.
         """
         self.members = companies
 
@@ -92,9 +92,9 @@ class Companies:
         Parameters
         ----------
         companysize_file
-            Pandas dataframe with number of companies within a size-range per MSOA.
+            Pandas dataframe with number of companies within a size-range per SuperArea.
         company_per_sector_per_msoa_file
-            Pandas dataframe with number of companies per industry sector per MSOA.
+            Pandas dataframe with number of companies per industry sector per SuperArea.
         """
         companies = []
 
@@ -107,8 +107,8 @@ class Companies:
             (idx + 1): _compute_size_mean(size_label)
             for idx, size_label in enumerate(compsize_labels)
         }
-        msoa_names = company_size_per_superarea_df.index.values
-        # Run through each MSOArea
+        super_area_names = company_size_per_superarea_df.index.values
+        # Run through each SuperArea
         compsec_labels = company_sector_per_superarea_df.columns
         for area_counter, (company_sizes, company_sectors) in enumerate(
             zip(companysize_data_per_area, company_per_sector_data_per_area)
@@ -121,10 +121,10 @@ class Companies:
             # Run through each industry sector
             for i, nr_of_comp in enumerate(company_sectors):
                 label = compsec_labels[i]
-                # Run through all companies within sector within MSOA
+                # Run through all companies within sector within SuperArea
                 for i in range(int(nr_of_comp)):
                     company = Company(
-                        msoa=msoa_names[area_counter],
+                        super_area=super_area_names[area_counter],
                         n_employees_max=size_dict[comp_size_rnd_array[i]],
                         industry=label,
                     )
