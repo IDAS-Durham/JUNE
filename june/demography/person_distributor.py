@@ -4,8 +4,8 @@ from collections import OrderedDict
 import numpy as np
 from scipy import stats
 
-from june.demography.person import Person
-from june.demography.health_index import HealthIndex
+from june.demography import Person
+from june.health_index import HealthIndex
 from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
