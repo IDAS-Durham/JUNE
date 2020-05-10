@@ -26,7 +26,7 @@ class CommuteCityUnitDistributor:
 
                 # assign passengers to commute units
                 assigned = False
-                while assigned == False:
+                while assigned not assigned:
                 
                     unit_choice = np.random.randint(len(possible_units))
                     unit = possible_units[unit_choice]
