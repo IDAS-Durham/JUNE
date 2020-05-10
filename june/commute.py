@@ -242,22 +242,22 @@ class CommuteGenerator:
         """
         self.regional_generators = regional_generators
 
-    def regional_gen_from_msoarea(self, super_area: str) -> RegionalGenerator:
+    def regional_gen_from_msoarea(self, area: str) -> RegionalGenerator:
         """
         Get a regional generator for an Area identified
-        by its output SuperArea, e.g. E00062207
+        by its output area, e.g. E00062207
 
         Parameters
         ----------
         super_area
-            A code for an super_area
+            A code for an output area
 
         Returns
         -------
         An object that weighted-randomly selects modes of transport for the region.
         """
         return self.regional_generators[
-            super_area 
+            area 
         ]
 
     @classmethod

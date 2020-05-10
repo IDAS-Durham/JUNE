@@ -1,0 +1,41 @@
+import numpy as np
+
+class CommuteCityUnitDistributor:
+    """
+    Distirbute people to commutecity units based on the cities they are affiliated to
+
+    Note: This distibutor is dynamic and so should be called at each commutng time step to decide who
+          is assigned to which units to determine mixing
+    """    
+
+    def __init__(self, commutecities):
+        """
+        commutecities: (list) members of CommuteCities
+        """
+        self.commutecities = commutecities
+
+    def distribute_people(self):
+
+        for city in self.commutecities:
+
+            possible_units = city.commutecityunits
+            to_commute = commute_internal.passengers
+
+            # loop over all passengers who need to commute
+            for passenger in to_commute:
+
+                # assign passengers to commute units
+                assigned = False
+                while assigned not assigned:
+                
+                    unit_choice = np.random.randint(len(possible_units))
+                    unit = possible_units[unit_choice]
+                    
+                    if unit.no_passengers < unit.max_passengers:
+                        unit.passengers.append(passenger)
+                        unit.no_passengers += 1
+                        assigned = True
+                        # make this more efficient by stopping looking at things already filled
+                    else:
+                        pass
+        
