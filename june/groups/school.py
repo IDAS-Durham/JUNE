@@ -297,17 +297,14 @@ class Schools:
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
                 ]
-            if len(_school_df_agegroup) == 0:
-                continue
             schools_coords = _school_df_agegroup[["latitude", "longitude"]].values
-            if len(schools_coords) != 0:
+            if len(schools_coords) == 0: 
                 logger.info(f"No school for the age {age} in this world.")
                 continue
             school_trees[age] = Schools._create_school_tree(
                 schools_coords
             )
             school_agegroup_to_global_indices[age] = _school_df_agegroup.index.values
-
         return school_trees, school_agegroup_to_global_indices
 
     @staticmethod
@@ -355,6 +352,7 @@ class Schools:
         """
         school_tree = self.school_trees[age]
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
+        k = min(k, len(list(school_tree.data)))
         distances, neighbours = school_tree.query(
             coordinates_rad, k=k, sort_results=True,
         )

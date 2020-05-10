@@ -124,17 +124,22 @@ class SchoolDistributor:
             is_school_full = {}
             for agegroup in self.schools.school_trees:
                 closest_schools = []
-                print(area.coordinates)
-                print(self.neighbour_schools)
                 closest_schools_idx = self.schools.get_closest_schools(
                     agegroup, area.coordinates, self.neighbour_schools,
                 )
                 for idx in closest_schools_idx:
-                    closest_schools.append(
-                        self.schools.members[
-                            self.schools.school_agegroup_to_global_indices[agegroup][idx]
-                        ]
-                    )
+                    if (
+                        len(self.schools.school_agegroup_to_global_indices[agegroup])
+                        == 0
+                    ):
+                        continue
+                        closest_schools.append(
+                            self.schools.members[
+                                self.schools.school_agegroup_to_global_indices[
+                                    agegroup
+                                ][idx]
+                            ]
+                        )
                 closest_schools_by_age[agegroup] = closest_schools
                 is_school_full[agegroup] = False
             self.distribute_mandatory_kids_to_school(
