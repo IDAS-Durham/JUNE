@@ -6,7 +6,7 @@ from scipy.stats import rv_discrete
 
 from june.groups.group import Group
 from june.demography.person import Person
-from june.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)

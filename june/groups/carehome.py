@@ -23,9 +23,10 @@ class CareHome(Group):
 
     def __init__(self, area, n_residents):
         carehome_id = next(self._id)
-        super().__init__(f"Carehome_{carehome_id}", "household")
+        super().__init__(f"Carehome_{carehome_id}", "carehome")
         self.n_residents = n_residents
         self.area = area
+
 
 class CareHomes:
     def __init__(self):

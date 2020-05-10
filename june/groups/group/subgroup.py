@@ -1,5 +1,6 @@
 from june.demography.person import Person
 from .abstract import AbstractGroup
+from typing import Set
 
 
 class Subgroup(AbstractGroup):
@@ -16,17 +17,53 @@ class Subgroup(AbstractGroup):
         self._in_hospital = set()
         self._dead = set()
 
+    def _collate(
+            self,
+            attribute: str
+        ) -> Set[Person]:
+        collection = set()
+        for person in self.people:
+            if getattr(person.health_information, attribute):
+                collection.add(
+                    person
+                    )
+        return collection
+
+    def _collate_active(
+            self, 
+            set_of_people,
+            active_group
+            ):
+        collection = set()
+        for person in set_of_people:
+            if person.active_group == active_group:
+                collection.add(
+                    person
+                    )
+        return collection
+
+
     @property
     def susceptible(self):
-        return self._susceptible
+        return self._collate('susceptible')
+
+    def susceptible_active(self, active_group):
+        return self._collate_active(self.susceptible, active_group)
 
     @property
     def infected(self):
-        return self._infected
+        return self._collate('infected')
+
+    def infected_active(self, active_group):
+        return self._collate_active(self.infected, active_group)
 
     @property
     def recovered(self):
-        return self._recovered
+        return self._collate('recovered')
+
+    def infected_recovered(self, active_group):
+        return self._collate_active(self.recovered, active_group)
+
 
     @property
     def in_hospital(self):
@@ -48,31 +85,6 @@ class Subgroup(AbstractGroup):
     @property
     def people(self):
         return self._people
-
-    def update_status_lists(self, time: int, delta_time: int):
-        """
-        Assign people in this group to sets based on their health status.
-        """
-        self._susceptible.clear()
-        self._infected.clear()
-        self._recovered.clear()
-        self._in_hospital.clear()
-        self._dead.clear()
-
-        for person in self.people:
-            # TODO: These two lines should be removed once health information update has been added to world
-            health_information = person.health_information
-            health_information.update_health_status(time, delta_time)
-            if health_information.susceptible:
-                self._susceptible.add(person)
-            elif health_information.infected_at_home:
-                self._infected.add(person)
-            elif health_information.in_hospital:
-                self._in_hospital.add(person)
-            elif health_information.recovered:
-                self._recovered.add(person)
-            elif person.health_information.dead:
-                self._dead.add(person)
 
     def append(self, person: Person):
         """
