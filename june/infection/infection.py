@@ -1,5 +1,4 @@
 import autofit as af
-import copy
 
 class Infection:
     """
