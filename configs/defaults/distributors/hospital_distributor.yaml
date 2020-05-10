@@ -10,7 +10,5 @@ hospitals:
   sub_sector:
     nurse:
       sector_id: 2231    # NOMIS name convention
-      nr_of_clients: 10
     doctor:
       sector_id: 2211    # NOMIS name convention
-      nr_of_clients: 10

@@ -8,11 +8,13 @@ import matplotlib.pyplot as plt
 
 
 class Logger:
-    def __init__(self, world, save_path="results", box_mode=False):
+    def __init__(self, world, timer, config, save_path="results"):
         self.world = world
+        self.timer = timer
         self.data_dict = {}
         self.save_path = save_path
-        self.box_mode = box_mode
+        self.box_mode = self.world.box_mode
+        self.config = config
         if not os.path.exists(self.save_path):
             os.mkdir(self.save_path)
         self.init_logger()
@@ -29,27 +31,31 @@ class Logger:
         recovered_world = 0
         if not self.box_mode:
             for area in self.world.areas.members:
-                self.data_dict[area.name][day] = {}
                 susceptible, infected, recovered = self.get_infected_people_area(area)
                 susceptible_world += susceptible
                 infected_world += infected
                 recovered_world += recovered
-                self.data_dict[area.name][day]["susceptible"] = susceptible
-                self.data_dict[area.name][day]["infected"] = infected
-                self.data_dict[area.name][day]["recovered"] = recovered
-            self.data_dict["world"][day] = {}
-            self.data_dict["world"][day]["susceptible"] = susceptible_world
-            self.data_dict["world"][day]["infected"] = infected_world
-            self.data_dict["world"][day]["recovered"] = recovered_world
+                self.data_dict[area.name][day] = {
+                        "susceptible": susceptible,
+                        "infected": infected,
+                        "recovered": recovered,
+                        }
+
+            self.data_dict["world"][day] = {
+                    "susceptible": susceptible_world,
+                    "infected": infected_world,
+                    "recovered": recovered_world,
+                    }
             #self.log_r0() TODO implement
         else:
             box = self.world.boxes.members[0]
-            self.data_dict["world"][day] = {}
-            self.data_dict["world"][day]["susceptible"] = len(box.susceptible)
-            self.data_dict["world"][day]["infected"] = len(box.infected)
-            self.data_dict["world"][day]["recovered"] = len(box.recovered)
+            self.data_dict["world"][day] = {
+                    "susceptible": len(self.world.people.susceptible),
+                    "infected": len(self.world.people.infected),
+                    "recovered": len(self.world.people.recovered)
+                    }
             # self.log_infection_generation(day)
-            self.log_r0()
+            #self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
             json.dump(self.data_dict, f)
@@ -96,7 +102,7 @@ class Logger:
             raise NotImplementedError()
         else:
             box = self.world.boxes.members[0]
-            if self.world.timer.day_int+1 == self.world.timer.total_days: # dirty fix, need to rethink later
+            if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
                 inner_dict = {}
                 r0s_raw = []
                 r0s_recon = []
@@ -241,10 +247,10 @@ class Logger:
             N = len(self.world.boxes.members[0].people)
             I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
-            beta = self.world.config["infection"]["transmission"]["parameters"]["probability"]
-            beta /= self.world.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
-            gamma = self.world.config["infection"]["symptoms"]["parameters"]["recovery_rate"]
-            gamma /= self.world.timer.get_number_shifts(None)
+            beta = self.config["infection"]["transmission"]["parameters"]["probability"]
+            beta /= self.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
+            gamma = self.config["infection"]["symptoms"]["parameters"]["recovery_rate"]
+            gamma /= self.timer.get_number_shifts(None)
             # multiply by 2 to compensate for updating health status twice in each timestep, see interaction/base.py
 
             n_sus, n_inf, n_rec = ratio_SIR_numerical(beta, gamma, N, I_0, day_array)

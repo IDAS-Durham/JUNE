@@ -15,10 +15,10 @@ from enum import IntEnum
 
 logger = logging.getLogger(__name__)
 
-default_config_filename = Path(os.path.abspath(__file__)).parent.parent / \
-    "configs/defaults/hospitals.yaml"
-default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data"
+default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "data/processed/hospital_data/england_hospitals.csv"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "configs/defaults/groups/hospitals.yaml"
 
 
 class Hospital(Group):
@@ -106,6 +106,7 @@ class Hospital(Group):
     def add(self, person, qualifier=GroupType.workers):
         super().add(person, qualifier)
         person.in_hospital = self
+        person.groups.append(self)
 
     def add_as_patient(self, person):
         """
@@ -195,16 +196,18 @@ class Hospital(Group):
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        super().update_status_lists(time, delta_time)
-        self.update_status_lists_for_patients(time, delta_time)
-        self.update_status_lists_for_ICUpatients(time, delta_time)
-        logger.info(
-            f"=== update status list for hospital with {self.size} people ==="
-        )
-        logger.info(
-            f"=== hospital currently has {self[self.GroupType.patients].size} " + \
-            "patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
-        )
+        if self.contains_people:
+            super().update_status_lists(time, delta_time)
+            logger.info(
+                f"=== update status list for hospital with {self.size} people ==="
+            )
+        if self[self.GroupType.patients].contains_people:
+            self.update_status_lists_for_patients(time, delta_time)
+            self.update_status_lists_for_ICUpatients(time, delta_time)
+            logger.info(
+                f"=== hospital currently has {self[self.GroupType.patients].size} "
+                f"patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
+            )
 
 
 class Hospitals:
@@ -233,7 +236,10 @@ class Hospitals:
 
     @classmethod
     def from_file(
-            cls, filename: str, config_filename: str, box_mode: bool = False
+            cls,
+            filename: str = default_data_filename,
+            config_filename: str = default_config_filename,
+            box_mode: bool = False,
     ) -> "Hospitals":
         """
         Initialize Hospitals from path to data frame, and path to config file.
@@ -254,12 +260,11 @@ class Hospitals:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        config = config['hospitals']
         max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
         hospitals = []
         if not box_mode:
-            logger.info("There are {len(hospital_df)} hospitals in the world.")
+            logger.info(f"There are {len(hospital_df)} hospitals in the world.")
             hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
         else:
             hospitals.append(
@@ -416,8 +421,7 @@ class Hospitals:
 
 
 if __name__ == "__main__":
-
     Hospitals.from_file(
-        "/cosma7/data/dp004/dc-beck3/JUNE/data/processed/hospital_data/england_hospitals.csv",
-        "/cosma7/data/dp004/dc-beck3/JUNE/configs/defaults/hospitals.yaml",
-        )
+        default_data_filename,
+        default_config_filename,
+    )
