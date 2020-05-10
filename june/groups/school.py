@@ -6,11 +6,8 @@ import pandas as pd
 import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
-from june.geography import Geography
-from june.demography import Demography
 from june.groups.group import Group
 from june.groups.group import Subgroup
-from june.logger_creation import logger
 
 
 class SchoolError(BaseException):
@@ -31,14 +28,14 @@ class School(Group):
     )
 
     def __init__(
-            self,
-            school_id: int,
-            coordinates: Tuple[float, float],
-            n_pupils: int,
-            n_teachers_max: int,
-            age_min: int,
-            age_max: int,
-            sector: str,
+        self,
+        school_id: int,
+        coordinates: Tuple[float, float],
+        n_pupils: int,
+        n_teachers_max: int,
+        age_min: int,
+        age_max: int,
+        sector: str,
     ):
         """
         Create a School given its description.
@@ -84,21 +81,22 @@ class School(Group):
             self.subgroups[1 + person.age - self.age_min].append(person)
             person.school = self
         else:
-            super().add(
-                person,
-                qualifier
-            )
+            super().add(person, qualifier)
+
 
 
 class Schools:
+    # TODO: Many of these parameters are for the school distributor class, and should be put there
+    # not here.
     def __init__(
-            self,
-            schools: List["School"],
-            age_range: Tuple[int, int],
-            mandatory_age_range: Tuple[int, int],
-            student_nr_per_teacher: int,
-            school_tree: Optional[Dict[int, BallTree]] = None,
-            agegroup_to_global_indices: dict = None,
+        self,
+        schools: List["School"],
+        age_range: Tuple[int, int] = (0, 19),
+        mandatory_age_range: Tuple[int, int] = (5, 18),
+        student_nr_per_teacher: int = 30,
+        school_tree: Optional[Dict[int, BallTree]] = None,
+        agegroup_to_global_indices: dict = None,
+
     ):
         """
         Create a group of Schools, and provide functionality to access closest school
@@ -150,39 +148,42 @@ class Schools:
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        for key, value in config.items():
-            config = value
         school_df = pd.read_csv(filename, index_col=0)
-        school_df.reset_index(drop=True, inplace=True)
+        config = config["schools"]
         stud_nr_per_teacher = config["sub_sector"]["teacher_secondary"]["nr_of_clients"]
-        schools = cls.init_schools(cls, school_df, stud_nr_per_teacher)
-        school_tree, agegroup_to_global_indices = cls.init_trees(
-            cls, school_df, config["age_range"]
+        # TODO: these del calls should be gone when we split the school config file from
+        # the school distributor config file.
+        del config["sub_sector"]
+        del config["neighbour_schools"]
+        del config["sector"]
+        return cls.from_df(
+            school_df,
+            student_nr_per_teacher=stud_nr_per_teacher,
+            **config,
         )
 
-        return Schools(
-            schools,
-            config["age_range"],
-            config["mandatory_age_range"],
-            stud_nr_per_teacher,
-            school_tree,
-            agegroup_to_global_indices,
-        )
-
-    def init_schools(self, school_df: pd.DataFrame, stud_nr_per_teacher: int):
+    @classmethod
+    def from_df(
+        cls,
+        school_df: pd.DataFrame,
+        age_range: Tuple[int, int] = (0, 19),
+        mandatory_age_range: Tuple[int, int] = (5, 18),
+        student_nr_per_teacher: int = 30,
+    ):
         """
-        Create School objects with the right characteristics, 
-        as given by dataframe
+        Crates an instance of Schools from a dataframe. The optional kwargs are passed directly to the init function.
 
         Parameters
         ----------
         school_df:
-            dataframe with school characteristics data
-
+            schools dataframe.
+        Keyword Arguments:
+            same as __init__ arguments.
         """
+        school_df.reset_index(drop=True, inplace=True)
         schools = []
         for i, (index, row) in enumerate(school_df.iterrows()):
-            n_teachers_max = int(row["NOR"] / stud_nr_per_teacher)
+            n_teachers_max = int(row["NOR"] / student_nr_per_teacher)
             school = School(
                 i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
@@ -193,7 +194,18 @@ class Schools:
                 row["sector"],
             )
             schools.append(school)
-        return schools
+        school_tree, agegroup_to_global_indices = cls.init_trees(
+            cls, school_df, age_range 
+        )
+
+        return Schools(
+            schools,
+            age_range=age_range,
+            mandatory_age_range=mandatory_age_range,
+            student_nr_per_teacher=student_nr_per_teacher,
+            school_tree=school_tree,
+            agegroup_to_global_indices=agegroup_to_global_indices,
+        )
 
     def init_trees(self, school_df: pd.DataFrame, age_range: Tuple[int, int]):
         """
@@ -222,7 +234,7 @@ class Schools:
         return school_trees, school_agegroup_to_global_indices
 
     def get_closest_schools(
-            self, age: int, coordinates: Tuple[float, float], k: int
+        self, age: int, coordinates: Tuple[float, float], k: int
     ) -> int:
         """
         Get the k-th closest school to a given coordinate, that accepts pupils
@@ -265,9 +277,9 @@ class Schools:
         -------
         Tree to query nearby schools
 
- 
         """
         school_tree = BallTree(
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
+
