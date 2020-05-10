@@ -143,6 +143,18 @@ class Group(AbstractGroup):
             "people"
         )
 
+    @property
+    def contains_people(self) -> Bool:
+        """
+        Does this group contain at least one person?
+        """
+
+        for grouping in self.subgroups:
+            if grouping.people != set():
+                return True
+
+        return False
+
     def _collate_from_subgroups(
             self,
             attribute: str
