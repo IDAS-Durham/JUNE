@@ -10,12 +10,6 @@ from june.groups.group import Group
 from june.groups.group import Subgroup
 
 
-class SchoolError(BaseException):
-    """Class for throwing school related errors."""
-
-    pass
-
-
 class School(Group):
     class GroupType(IntEnum):
         teachers = 0
@@ -28,13 +22,13 @@ class School(Group):
     )
 
     def __init__(
-        self,
-        coordinates: Tuple[float, float],
-        n_pupils: int,
-        n_teachers_max: int,
-        age_min: int,
-        age_max: int,
-        sector: str,
+            self,
+            coordinates: Tuple[float, float],
+            n_pupils: int,
+            n_teachers_max: int,
+            age_min: int,
+            age_max: int,
+            sector: str,
     ):
         """
         Create a School given its description.
@@ -80,18 +74,17 @@ class School(Group):
             super().add(person, qualifier)
 
 
-
 class Schools:
     # TODO: Many of these parameters are for the school distributor class, and should be put there
     # not here.
     def __init__(
-        self,
-        schools: List["School"],
-        age_range: Tuple[int, int] = (0, 19),
-        mandatory_age_range: Tuple[int, int] = (5, 18),
-        student_nr_per_teacher: int = 30,
-        school_tree: Optional[Dict[int, BallTree]] = None,
-        agegroup_to_global_indices: dict = None,
+            self,
+            schools: List[School],
+            age_range: Tuple[int, int] = (0, 19),
+            mandatory_age_range: Tuple[int, int] = (5, 18),
+            student_nr_per_teacher: int = 30,
+            school_tree: Optional[Dict[int, BallTree]] = None,
+            agegroup_to_global_indices: dict = None,
 
     ):
         """
@@ -160,11 +153,11 @@ class Schools:
 
     @classmethod
     def from_df(
-        cls,
-        school_df: pd.DataFrame,
-        age_range: Tuple[int, int] = (0, 19),
-        mandatory_age_range: Tuple[int, int] = (5, 18),
-        student_nr_per_teacher: int = 30,
+            cls,
+            school_df: pd.DataFrame,
+            age_range: Tuple[int, int] = (0, 19),
+            mandatory_age_range: Tuple[int, int] = (5, 18),
+            student_nr_per_teacher: int = 30,
     ):
         """
         Crates an instance of Schools from a dataframe. The optional kwargs are passed directly to the init function.
@@ -190,7 +183,7 @@ class Schools:
             )
             schools.append(school)
         school_tree, agegroup_to_global_indices = cls.init_trees(
-            cls, school_df, age_range 
+            cls, school_df, age_range
         )
 
         return Schools(
@@ -229,7 +222,7 @@ class Schools:
         return school_trees, school_agegroup_to_global_indices
 
     def get_closest_schools(
-        self, age: int, coordinates: Tuple[float, float], k: int
+            self, age: int, coordinates: Tuple[float, float], k: int
     ) -> int:
         """
         Get the k-th closest school to a given coordinate, that accepts pupils
@@ -277,4 +270,3 @@ class Schools:
             np.deg2rad(school_df[["latitude", "longitude"]].values), metric="haversine"
         )
         return school_tree
-
