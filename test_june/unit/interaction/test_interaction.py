@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 
-from june import world
 from june.demography.person import Person
 from june.groups import TestGroup  # this should not be needed anymore
 from june.interaction import *
@@ -33,20 +32,16 @@ def days_to_infection(interaction, susceptible_person, group):
 
 # @pytest.mark.parametrize(
 #    "group_size", (2, 5)
-# )
-def test__time_it_takes_to_infect(config, group_size=2):
-    interaction = DefaultInteraction.from_file(test_config_file)
 
-    infected_reference = world._initialize_infection(
-        config,
-        1
-    )
+# )
+def test__time_it_takes_to_infect(config, infection, group_size=2):
+    interaction = DefaultInteraction.from_file(test_config_file)
 
     n_days = []
     for n in range(1000):
         group = TestGroup()
         infected_person = Person()
-        infected_reference.infect_person_at_time(infected_person, 1)
+        infection.infect_person_at_time(infected_person, 1)
         group.add(infected_person, qualifier=TestGroup.GroupType.default)
         group[TestGroup.GroupType.default].infected.add(infected_person)
         susceptible_person = Person()
@@ -54,12 +49,15 @@ def test__time_it_takes_to_infect(config, group_size=2):
         for i in range(group_size - 2):
             group.add(Person(), qualifier=TestGroup.GroupType.default)
 
+        # activate everyone in the group
+        for person in group.people:
+            person.active_group = 'TestGroup'
         n_days.append(
             days_to_infection(interaction, susceptible_person, group)
         )
 
     np.testing.assert_allclose(
         np.mean(n_days),
-        1.0 / (infected_reference.transmission.probability / group_size),
-        rtol=0.1,
+        1.0 / (infection.transmission.probability / group_size),
+        rtol=0.15,
     )

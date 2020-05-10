@@ -155,12 +155,11 @@ class Group(AbstractGroup):
             An enumerated so the student can be added to a given group
         """
         self[qualifier].append(person)
+        person.groups.append(self)
 
     def set_active_members(self):
         for person in self.people:
-            if person.active_group is not None:
-                raise ValueError("Trying to set an already active person")
-            else:
+            if person.active_group is None:
                 person.active_group = self.spec
 
     @property
@@ -231,8 +230,12 @@ class Group(AbstractGroup):
                 self.size_infected > 0 and
                 self.size_susceptible > 0)
 
-    def update_status_lists(self, time, delta_time):
-        for grouping in self.subgroups:
-            grouping.update_status_lists(
-                time, delta_time
-            )
+    @property
+    def size_active(self):
+        n_active = 0
+        for person in self.people:
+            if person.active_group == self.spec:
+                n_active += 1
+        return n_active
+
+
