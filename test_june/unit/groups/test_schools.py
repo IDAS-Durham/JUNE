@@ -11,7 +11,7 @@ def test__total_number_schools_is_correct():
     data_directory = Path(__file__).parent.parent.parent.parent
     school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
     config_path = data_directory / "configs/defaults/schools.yaml"
-    school_df = pd.read_csv(school_path)
+    school_df = pd.read_csv(school_path).iloc[:1000]
     schools = Schools.from_file(school_path, config_path)
     assert len(schools.members) == len(school_df)
 
@@ -23,7 +23,7 @@ def test__given_school_coordinate_finds_itself_as_closest(index):
     config_path = data_directory / "configs/defaults/schools.yaml"
     schools = Schools.from_file(school_path, config_path)
 
-    school_df = pd.read_csv(school_path)
+    school_df = pd.read_csv(school_path).iloc[:1000]
     age = int(0.5 * (school_df.iloc[index].age_min + school_df.iloc[index].age_max))
     closest_school = schools.get_closest_schools(
         age, school_df[["latitude", "longitude"]].iloc[index].values, 1,
