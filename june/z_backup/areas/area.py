@@ -1,14 +1,16 @@
+from enum import IntEnum
+
 import numpy as np
 import pandas as pd
-from enum import IntEnum
-from june.groups.group import Group
+
 from june.commute import RegionalGenerator
+from june.groups.group import Group
 
 
 class Area(Group):
     class GroupType(IntEnum):
         default = 0
-        
+
     """
     Stores information about the area, like the total population
     number, universities, etc.
@@ -18,16 +20,17 @@ class Area(Group):
     """
 
     def __init__(
-        self,
-        coordinates: [float, float],
-        name: str,
-        super_area,
-        n_residents: int,
-        n_households: int,
-        census_freq: dict,
-        relevant_groups: list,
+            self,
+            coordinates: [float, float],
+            name: str,
+            super_area,
+            n_residents: int,
+            n_households: int,
+            census_freq: dict,
+            relevant_groups: list,
     ):
-        super().__init__(name, "area")
+        super().__init__()
+        self._name = name
         self.coordinates = np.array(coordinates)  # Lon. & Lat
         self.super_area = super_area
         # distributions for distributing people
@@ -43,11 +46,15 @@ class Area(Group):
             setattr(self, relevant_groups, [])
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def regional_commute_generator(self) -> RegionalGenerator:
         """
         Object that generates modes of transport randomly weighted by census data
         """
-        #TODO update for new code structure
+        # TODO update for new code structure
         return self.world.commute_generator.regional_gen_from_msoarea(
             self.super_area
         )
@@ -64,24 +71,24 @@ class Area(Group):
 
 class Areas:
     def __init__(
-        self,
-        n_residents: pd.DataFrame,
-        age_freq: pd.DataFrame,
-        decoder_age: dict,
-        sex_freq: pd.DataFrame,
-        decoder_sex: dict,
-        household_composition_freq: pd.DataFrame,
-        decoder_household_composition: dict,
-        encoder_household_composition: dict,
+            self,
+            n_residents: pd.DataFrame,
+            age_freq: pd.DataFrame,
+            decoder_age: dict,
+            sex_freq: pd.DataFrame,
+            decoder_sex: dict,
+            household_composition_freq: pd.DataFrame,
+            decoder_household_composition: dict,
+            encoder_household_composition: dict,
     ):
-        self.members   = []
+        self.members = []
         self.area_tree = None
         self.names_in_order = None
         self.n_residents = n_residents
         self.age_freq = age_freq
         self.sex_freq = sex_freq
         self.household_composition_freq = household_composition_freq
-        
+
         self.decoder_age = decoder_age
         self.decoder_sex = decoder_sex
         self.decoder_household_composition = decoder_household_composition
@@ -89,11 +96,11 @@ class Areas:
 
     @classmethod
     def from_file(
-        cls,
-        n_residents_file: str,
-        age_freq_file: str,
-        sex_freq_file: str,
-        household_composition_freq_file: str,
+            cls,
+            n_residents_file: str,
+            age_freq_file: str,
+            sex_freq_file: str,
+            household_composition_freq_file: str,
     ) -> "Areas":
         """
         Parameters
@@ -143,4 +150,3 @@ class Areas:
         freq = df.div(df.sum(axis=1), axis=0)
         decoder = {i: df.columns[i] for i in range(df.shape[-1])}
         return freq, decoder
-
