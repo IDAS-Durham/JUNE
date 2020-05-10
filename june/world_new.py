@@ -6,6 +6,7 @@ from typing import List, Tuple, Dict, Optional
 
 import numpy as np
 import yaml
+import pickle
 from tqdm.auto import tqdm  # for a fancy progress bar
 
 from june.geography import Geography
@@ -25,8 +26,26 @@ class World:
     """
 
     def __init__(
-        self, geography: Geography, demography: Demography, include_households=True
+        self,
+        geography: Geography,
+        demography: Demography,
+        include_households: bool = True,
     ):
+        """
+        Initializes a world given a geography and a demography. For now, households are
+        a special group because they require a mix of both groups (we need to fix
+        this later). 
+
+        Parameters
+        ----------
+        geography
+            an instance of the Geography class specifying the "board"
+        demography
+            an instance of the Demography class with generators to generate people with 
+            certain demographic attributes
+        include_households
+            whether to include households in the world or not (defualt = True)
+        """
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
@@ -34,11 +53,12 @@ class World:
             population = demography.population_for_area(area.name)
             for person in population:
                 area.add(person)
-        print("Creating and populating households...")
-        household_distributor = HouseholdDistributor.from_file()
-        self.households = household_distributor.distribute_people_and_households_to_areas(
-            self.areas
-        )
+        if include_households:
+            print("Creating and populating households...")
+            household_distributor = HouseholdDistributor.from_file()
+            self.households = household_distributor.distribute_people_and_households_to_areas(
+                self.areas
+            )
 
     @classmethod
     def from_geography(cls, geography: Geography):
@@ -49,11 +69,7 @@ class World:
         demography = Demography.for_geography(geography)
         return cls(geography, demography)
 
+    def to_pickle(self, save_path):
+        with open(save_path, "wb") as f:
+            pickle.dump(self, f, 4)
 
-if __name__ == "__main__":
-    import time
-    t1 = time.time()
-    geography = Geography.from_file(filter_key={"region" : ["North East"]})
-    world = World.from_geography(geography)
-    t2 = time.time()
-    print(f"Took {t2-t1} seconds to create the NE with households")

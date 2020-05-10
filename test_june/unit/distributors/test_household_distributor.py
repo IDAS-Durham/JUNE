@@ -210,7 +210,7 @@ class TestIndividualHouseholdCompositions:
         area = create_area(age_min=15, age_max=30, people_per_age=5)  # enough students
         # I put these limits to narrow the age range and make it faster, but
         # they do not reflect the expected age of students
-        household_distributor.fill_all_student_households(
+        area.households = household_distributor.fill_all_student_households(
             area.men_by_age,
             area.women_by_age,
             area,
@@ -229,7 +229,7 @@ class TestIndividualHouseholdCompositions:
                 )
         assert counter == 20
         area.households = []
-        household_distributor.fill_all_student_households(
+        area.households = household_distributor.fill_all_student_households(
             area.men_by_age,
             area.women_by_age,
             area,
@@ -243,7 +243,7 @@ class TestIndividualHouseholdCompositions:
         # I put these limits to narrow the age range and make it faster, but
         # they do not reflect the expected age of old people
         households_with_extrapeople_list = []
-        household_distributor.fill_oldpeople_households(
+        area.households = household_distributor.fill_oldpeople_households(
             area.men_by_age,
             area.women_by_age,
             2,
@@ -258,7 +258,7 @@ class TestIndividualHouseholdCompositions:
             for person in household.people:
                 assert person.age >= household_distributor.old_min_age
         households_with_extrapeople_list = []
-        household_distributor.fill_oldpeople_households(
+        area.households += household_distributor.fill_oldpeople_households(
             area.men_by_age,
             area.women_by_age,
             2,
@@ -267,8 +267,8 @@ class TestIndividualHouseholdCompositions:
             extra_people_lists=(households_with_extrapeople_list,),
             max_household_size=2,
         )
-        assert len(households_with_extrapeople_list) == 0  # no spaces left
         assert len(area.households) == 20
+        assert len(households_with_extrapeople_list) == 0  # no spaces left
         for household in area.households:
             assert len(household.people) == 2
             for person in household.people:
@@ -277,7 +277,7 @@ class TestIndividualHouseholdCompositions:
     def test__fill_families_households(self, household_distributor):
         area = create_area(people_per_age=20, age_max=65)
         households_with_extrapeople_list = []
-        household_distributor.fill_families_households(
+        area.households = household_distributor.fill_families_households(
             area.men_by_age,
             area.women_by_age,
             n_households=10,
@@ -325,7 +325,7 @@ class TestIndividualHouseholdCompositions:
     def test__fill_nokids_households(self, household_distributor):
         area = create_area(age_min=18, people_per_age=10, age_max=60)
         households_with_extrapeople_list = []
-        household_distributor.fill_nokids_households(
+        area.households = household_distributor.fill_nokids_households(
             area.men_by_age,
             area.women_by_age,
             adults_per_household=2,
@@ -358,7 +358,7 @@ class TestIndividualHouseholdCompositions:
     def test__fill_youngadult_households(self, household_distributor):
         area = create_area(age_min=15, age_max=40, people_per_age=5)
         households_with_extrapeople_list = []
-        household_distributor.fill_youngadult_households(
+        area.households = household_distributor.fill_youngadult_households(
             area.men_by_age,
             area.women_by_age,
             3,
@@ -379,7 +379,7 @@ class TestIndividualHouseholdCompositions:
     def test__fill_youngadult_with_parents_households(self, household_distributor):
         area = create_area(age_min=15, age_max=40, people_per_age=5)
         households_with_extrapeople_list = []
-        household_distributor.fill_youngadult_households(
+        area.households = household_distributor.fill_youngadult_households(
             area.men_by_age,
             area.women_by_age,
             3,
@@ -399,7 +399,7 @@ class TestIndividualHouseholdCompositions:
 
     def test__fill_communal_establishments(self, household_distributor):
         area = create_area(people_per_age=5)
-        household_distributor.fill_all_communal_establishments(
+        area.households = household_distributor.fill_all_communal_establishments(
             area.men_by_age,
             area.women_by_age,
             n_establishments=5,
@@ -410,7 +410,7 @@ class TestIndividualHouseholdCompositions:
         for household in area.households:
             assert len(household.people) == 4
         area.households = []
-        household_distributor.fill_all_communal_establishments(
+        area.households = household_distributor.fill_all_communal_establishments(
             area.men_by_age,
             area.women_by_age,
             n_establishments=2,
@@ -442,7 +442,7 @@ class TestMultipleHouseholdCompositions:
             "0 0 0 0 1": 1,
             "0 0 0 0 2": 1,
         }
-        household_distributor.distribute_people_to_households(
+        area.households = household_distributor.distribute_people_to_households(
             area.men_by_age, area.women_by_age, area, composition_numbers, 0, 0
         )
         assert len(area.households) == 6
@@ -498,7 +498,7 @@ class TestMultipleHouseholdCompositions:
             "0 0 0 0 2": 1,
             "0 0 0 0 1": 1,
         }
-        household_distributor.distribute_people_to_households(
+        area.households = household_distributor.distribute_people_to_households(
             area.men_by_age, area.women_by_age, area, composition_numbers, 5, 0,
         )
         assert len(area.households) == 5
@@ -548,7 +548,7 @@ class TestMultipleHouseholdCompositions:
             ">=2 0 >=0 2 0": 1,
             ">=0 >=0 >=0 >=0 >=0": 2,
         }
-        household_distributor.distribute_people_to_households(
+        area.households = household_distributor.distribute_people_to_households(
             area.men_by_age, area.women_by_age, area, composition_numbers, 0, 10
         )
         assert len(area.households) == 4

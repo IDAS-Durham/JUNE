@@ -52,6 +52,7 @@ class Households:
     """
     Contains all households for the given area, and information about them.
     """
+    __slots__ = "members"
 
     def __init__(self, households: List[Household]):
         self.members = households
