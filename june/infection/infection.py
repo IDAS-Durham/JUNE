@@ -49,7 +49,6 @@ class Infection:
         #instance.symptoms.health_index = self.symptoms.health_index
 
         health_index = health_index_generator(person.age, person.sex)
-        print(f'New health index is {health_index}')
         symptoms = self.symptoms.__class__(health_index = health_index)
 
         infection = Infection(
