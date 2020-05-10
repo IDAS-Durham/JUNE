@@ -8,9 +8,6 @@ from enum import IntEnum
 
 
 class TestGroup(Group):
-    def __init__(self, number):
-        super().__init__(f"test_{number}", "TestGroup")
-
     class GroupType(IntEnum):
         default = 0
 

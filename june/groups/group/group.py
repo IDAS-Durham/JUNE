@@ -73,22 +73,30 @@ class Group(AbstractGroup):
     )
 
     @classmethod
-    def _next_id(cls):
+    def _next_id(cls) -> int:
+        """
+        Iterate an id for this class. Each group class has its own id iterator
+        starting at 0
+        """
         return next(
             cls.__id_generators[cls]
         )
 
-    @classmethod
-    def group_name(cls):
-        return re.sub(
-            r'(?<!^)(?=[A-Z])', '_',
-            cls.__name__
-        ).lower()
-
     def __init__(self):
         """
         A group of people such as in a hospital or a school.
+
+        If a spec attribute is not defined in the child class then it is generated
+        by converting the class name into snakecase.
         """
+        if not hasattr(
+                self,
+                "spec"
+        ):
+            self.spec = re.sub(
+                r'(?<!^)(?=[A-Z])', '_',
+                self.__class__.__name__
+            ).lower()
         if self.spec not in self.allowed_groups:
             raise GroupException(f"{self.spec} is not an allowed group type")
 
@@ -103,8 +111,12 @@ class Group(AbstractGroup):
         ]
 
     @property
-    def name(self):
-        return f"{self.group_name()}_{self.id}"
+    def name(self) -> str:
+        """
+        The name is computed on the fly to reduce memory footprint. It combines
+        the name fo the class with the id of the instance.
+        """
+        return f"{self.__class__.__name__}_{self.id:05d}"
 
     def remove_person(self, person: Person):
         """

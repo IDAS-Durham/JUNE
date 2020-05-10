@@ -40,7 +40,6 @@ class Company(Group):
     and therefore we invoke the base class group with the default Ngroups = 1.
     We made this explicit here, although it is not necessary.
     """
-
     _id = count()
     __slots__ = "id", "msoa", "n_employees_max", "n_woman", "employees", "industry"
 
@@ -48,7 +47,7 @@ class Company(Group):
         worker = 0
 
     def __init__(self, msoa=None, n_employees_max=np.inf, industry=None):
-        super().__init__(name="Company_{company_id}", spec="company")
+        super().__init__()
         self.msoa = msoa
         # set the max number of employees to be the mean number in a range
         self.n_employees_max = n_employees_max
