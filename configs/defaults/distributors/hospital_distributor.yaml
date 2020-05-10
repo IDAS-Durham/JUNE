@@ -1,14 +1,7 @@
-hospitals:
-  icu_fraction:  0.042 # 5900./141000. fraction of beds thar are ICU
-              # taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
-              #
-  max_distance: 100.  # maximum distance person - hospital
-
-
-  age_range: [8,13]      # numbers correspond to age groups defined by NOMIS dataset.
-  sector: 'Q'            # NOMIS name convention
-  sub_sector:
-    nurse:
-      sector_id: 2231    # NOMIS name convention
-    doctor:
-      sector_id: 2211    # NOMIS name convention
+age_range: [8,13]      # numbers correspond to age groups defined by NOMIS dataset.
+sector: 'Q'            # NOMIS name convention
+sub_sector:
+  nurse:
+    sector_id: 2231    # NOMIS name convention
+  doctor:
+    sector_id: 2211    # NOMIS name convention
