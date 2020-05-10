@@ -197,7 +197,7 @@ class Schools:
     @classmethod
     def from_file(
             cls,
-            area_names: Optional[List[str]] = [],
+            area_names: Optional[List[str]] = None,
             data_file: str = default_data_filename,
             config_file: str = default_config_filename,
     ) -> "Schools":
@@ -216,11 +216,10 @@ class Schools:
         Schools instance
         """
         school_df = pd.read_csv(data_file, index_col=0)
-        school_df.reset_index(drop=True, inplace=True)
-        if len(area_names) != 0:
+        if area_names is not None:
             # filter out schools that are in the area of interest
             school_df = school_df[school_df["oa"].isin(area_names)]
-
+        school_df.reset_index(drop=True, inplace=True)
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls.build_schools_for_areas(
