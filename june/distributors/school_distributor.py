@@ -1,5 +1,6 @@
 import os
 import yaml
+import logging
 from pathlib import Path
 from typing import List, Tuple, Dict
 
@@ -24,6 +25,7 @@ default_config_filename = (
     / "configs/defaults/distributors/school_distributor.yaml"
 )
 
+logger = logging.getLogger(__name__)
 
 EARTH_RADIUS = 6371  # km
 
@@ -128,18 +130,10 @@ class SchoolDistributor:
                     agegroup, area.coordinates, self.neighbour_schools,
                 )
                 for idx in closest_schools_idx:
-                    if (
-                        len(self.schools.school_agegroup_to_global_indices[agegroup])
-                        == 0
-                    ):
-                        continue
-                        closest_schools.append(
-                            self.schools.members[
-                                self.schools.school_agegroup_to_global_indices[
-                                    agegroup
-                                ][idx]
-                            ]
-                        )
+                    real_idx = self.schools.school_agegroup_to_global_indices[agegroup][
+                        idx
+                    ]
+                    closest_schools.append(self.schools.members[real_idx])
                 closest_schools_by_age[agegroup] = closest_schools
                 is_school_full[agegroup] = False
             self.distribute_mandatory_kids_to_school(
@@ -162,6 +156,8 @@ class SchoolDistributor:
                 person.age <= self.mandatory_school_age_range[1]
                 and person.age >= self.mandatory_school_age_range[0]
             ):
+                if person.age not in is_school_full:
+                    continue
                 if is_school_full[person.age]:
                     random_number = np.random.randint(0, self.neighbour_schools)
                     school = closest_schools_by_age[person.age][random_number]
@@ -201,7 +197,7 @@ class SchoolDistributor:
                 < person.age
                 < self.school_age_range[1]
             ):
-                if is_school_full[person.age]:
+                if person.age not in is_school_full or is_school_full[person.age]:
                     continue
                 else:
                     schools_full = 0

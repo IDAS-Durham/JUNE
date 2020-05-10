@@ -12,7 +12,7 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 from june.geography import Geography
 from june.demography import Demography, People
 from june.logger_creation import logger
-from june.distributors import HouseholdDistributor
+from june.distributors import SchoolDistributor, HospitalDistributor, HouseholdDistributor
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,12 @@ class World:
             self.households = household_distributor.distribute_people_and_households_to_areas(
                 self.areas
             )
+        if hasattr(geography, "schools"):
+            self.schools = geography.schools
+            school_distributor = SchoolDistributor(geography.schools)
+            school_distributor.distribute_kids_to_school(self.areas)
 
+    
     @classmethod
     def from_geography(cls, geography: Geography):
         """
