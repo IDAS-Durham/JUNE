@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import yaml
+from math import exp
 from pathlib import Path
 from june.interaction.interaction import Interaction
 
@@ -48,8 +49,14 @@ class DefaultInteraction(Interaction):
         #if group.must_timestep:
         self.calculate_probabilities(group)
         n_subgroups = len(group.subgroups)
-        for i in range(n_subgroups):
-            for j in range(n_subgroups):
+        self.contact_matrix = np.ones((n_subgroups, n_subgroups))
+        # Only need to iterate over sub-groups that contain people otherwise
+        # we waste costly function calls n^2 times
+        subgroups_containing_people = [
+            x for x in range(n_subgroups) if group.subgroups[x].contains_people
+        ]
+        for i in subgroups_containing_people:
+            for j in subgroups_containing_people:
                 # grouping[i] infected infects grouping[j] susceptible
                 self.contaminate(group, time, delta_time, i,j)
                 if i!=j:
@@ -58,22 +65,25 @@ class DefaultInteraction(Interaction):
 
     def contaminate(self,group, time, delta_time,  infecters,recipients):
         #TODO: subtitute by matrices read from file when ready
-        n_subgroups = len(group.subgroups)
-        contact_matrix = np.ones((n_subgroups, n_subgroups))
+        contact_matrix = self.contact_matrix[infecters][recipients]
+        infecter_probability = self.probabilities[infecters]
         if (
-            contact_matrix[infecters][recipients] <= 0. or
-            self.probabilities[infecters] <= 0.
+            contact_matrix <= 0. or
+            infecter_probability <= 0.
         ):
             return
-        for recipient in group.subgroups[recipients].susceptible_active(group.spec):
-            transmission_probability = 1.0 - np.exp(
-                -delta_time *
-                recipient.health_information.susceptibility *
-                self.intensities.get(group.spec) *
-                contact_matrix[infecters][recipients] *
-                self.probabilities[infecters]
+
+        intensity = (
+            self.intensities.get(group.spec) * contact_matrix *
+            infecter_probability * -delta_time
+        )
+        group_of_recipients = group.subgroups[recipients].people
+        should_be_infected = np.random.random(len(group_of_recipients))
+        for recipient, luck in zip(group_of_recipients, should_be_infected):
+            transmission_probability = 1.0 - exp(
+                recipient.health_information.susceptibility * intensity
             )
-            if random.random() <= transmission_probability:
+            if luck <= transmission_probability:
                 infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
                     person=recipient, time=time
