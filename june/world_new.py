@@ -12,7 +12,12 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 from june.geography import Geography
 from june.demography import Demography, People
 from june.logger_creation import logger
-from june.distributors import SchoolDistributor, HospitalDistributor, HouseholdDistributor
+from june.distributors import (
+    SchoolDistributor,
+    HospitalDistributor,
+    HouseholdDistributor,
+    CareHomeDistributor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +53,14 @@ class World:
         """
         self.areas = geography.areas
         self.super_areas = geography.super_areas
-        print("populating the world's geography with the specified demography...")
         for area in self.areas:
             population = demography.population_for_area(area.name)
             for person in population:
                 area.add(person)
+        if hasattr(geography, "carehomes"):
+            carehome_distributor = CareHomeDistributor.for_geography(geography)
+            carehome_distributor.populate_carehome_in_areas(geography.areas)
         if include_households:
-            print("Creating and populating households...")
             household_distributor = HouseholdDistributor.from_file()
             self.households = household_distributor.distribute_people_and_households_to_areas(
                 self.areas
@@ -64,7 +70,11 @@ class World:
             school_distributor = SchoolDistributor(geography.schools)
             school_distributor.distribute_kids_to_school(self.areas)
 
-    
+        if hasattr(geography, "hospitals"):
+            self.hospitals = geography.hospitals
+            hospital_distributor = HospitalDistributor(geography.hospitals)
+            hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
+
     @classmethod
     def from_geography(cls, geography: Geography):
         """
@@ -77,4 +87,3 @@ class World:
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
             pickle.dump(self, f, 4)
-

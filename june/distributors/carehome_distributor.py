@@ -2,12 +2,20 @@ import logging
 from collections import OrderedDict
 
 import numpy as np
+import pandas as pd
 
 from june.groups import CareHome
-from june.geography import Area
+from june.geography import Area, Areas
 from june.logger_creation import logger
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+default_data_path = (
+    Path(__file__).parent.parent.parent
+    / "data/processed/census_data/output_area/EnglandWales/carehomes.csv"
+)
+
 
 class CareHomeError(BaseException):
     pass
@@ -25,7 +33,42 @@ class CareHomeDistributor:
         """
         self.min_age_in_carehome = min_age_in_carehome
 
-    def create_carehome_in_area(self, area: Area, carehome_residents_number: int):
+    def _create_people_dicts(self, area: Area):
+        """
+        Creates dictionaries with the men and women per age key living in the area.
+        """
+        men_by_age = {}
+        women_by_age = {}
+        for person in area.people:
+            if person.sex == "m":
+                if person.age not in men_by_age:
+                    men_by_age[person.age] = [person]
+                else:
+                    men_by_age[person.age].append(person)
+            else:
+                if person.age not in women_by_age:
+                    women_by_age[person.age] = [person]
+                else:
+                    women_by_age[person.age].append(person)
+        return men_by_age, women_by_age
+
+    def populate_carehome_in_areas(
+        self, areas: Areas, data_filename: str = default_data_path
+    ):
+        """
+        Creates carehomes in areas from dataframe.
+        """
+        households_df = pd.read_csv(data_filename)
+        households_df.set_index("geography")
+        area_names = [area.name for area in areas]
+        households_df = households_df.loc[area_names]
+        for area in areas:
+            carehome_residents_number = households_df.loc[area.name]
+            self.populate_carehome_in_area(area)
+
+    def populate_carehome_in_area(
+        self, area: Area
+    ):
         """
         Crates carehome in area, if there needs to be one, and fills it with the
         oldest people in that area.
@@ -37,12 +80,11 @@ class CareHomeDistributor:
         carehome_residents_number:
             number of people to put in the carehome.
         """
-        if carehome_residents_number == 0:
+        men_by_age, women_by_age = self._create_people_dicts(area)
+        n_residents = area.carehome.n_residents
+        if n_residents == 0:
             raise CareHomeError("No carehome residents in this area.")
-        carehome = CareHome(area, carehome_residents_number)
-        area.carehome = carehome
-        self._put_people_to_carehome(carehome, area.men_by_age, area.women_by_age)
-        return carehome
+        self.populate_carehome(area.carehome, men_by_age, women_by_age)
 
     def _get_person_of_age(self, people_dict: dict, age: int):
         person = people_dict[age].pop()
@@ -50,7 +92,7 @@ class CareHomeDistributor:
             del people_dict[age]
         return person
 
-    def _put_people_to_carehome(
+    def populate_carehome(
         self, carehome: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
     ):
         """

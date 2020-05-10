@@ -36,7 +36,7 @@ class Area:
     """
     Fine geographical resolution.
     """
-    __slots__ = "households", "people", "id", "name", "coordinates", "super_area"
+    __slots__ = "households", "people", "id", "name", "coordinates", "super_area", "carehome"
     _id = count()
 
     def __init__(

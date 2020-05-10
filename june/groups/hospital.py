@@ -224,7 +224,6 @@ class Hospitals:
         """
         self.box_mode = box_mode
         self.max_distance = max_distance
-        self.icu_fraction = icu_fraction
         self.members = hospitals
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
@@ -279,14 +278,18 @@ class Hospitals:
         filename: str = default_data_filename,
         config_filename: str = default_config_filename,
     ):
-        hospital_df = pd.read_csv(filename)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
+        hospital_df = pd.read_csv(filename)
+        print(hospital_df)
+        area_names = [area.name for area in geography.areas]
+        hospital_df = hospital_df.loc[hospital_df["oa"].isin(area_names)]
         max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
+        return cls(hospitals, max_distance, False)
 
     def init_hospitals(
         self, hospital_df: pd.DataFrame, icu_fraction: float
@@ -416,9 +419,3 @@ class Hospitals:
         )
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
-
-
-if __name__ == "__main__":
-    Hospitals.from_file(
-        default_data_filename, default_config_filename,
-    )

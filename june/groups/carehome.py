@@ -1,8 +1,17 @@
 from itertools import count
+import pandas as pd
+from pathlib import Path
 
 from june.groups.group import Group
 from june.logger_creation import logger
 from enum import IntEnum
+from typing import List
+
+default_data_path = (
+    Path(__file__).parent.parent.parent
+    / "data/processed/census_data/output_area/EnglandWales/carehomes.csv"
+)
+
 
 class CareHome(Group):
     """
@@ -27,7 +36,35 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.area = area
 
+    def add(self, person, qualifier=GroupType.residents):
+        super().add(person, qualifier)
+        person.groups.append(self)
+
 
 class CareHomes:
-    def __init__(self):
-        self.members = []
+    __slots__ = "members"
+
+    def __init__(self, carehomes: List[CareHome]):
+        self.members = carehomes
+
+    def __iter__(self):
+        return iter(self.members)
+
+    def __len__(self):
+        return len(self.members)
+
+    @classmethod
+    def from_geography(cls, geography, data_filename: str = default_data_path):
+        """
+        Initializes carehomes from geography.
+        """
+        carehome_df = pd.read_csv(data_filename, index_col=0)
+        area_names = [area.name for area in geography.areas]
+        carehome_df = carehome_df.loc[area_names]
+        carehomes = []
+        for area in geography.areas:
+            n_residents = carehome_df.loc[area.name].values[0]
+            if n_residents != 0:
+                area.carehome = CareHome(area, n_residents)
+                carehomes.append(area.carehome)
+        return cls(carehomes)

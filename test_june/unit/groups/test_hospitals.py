@@ -5,6 +5,7 @@ import pickle
 import pytest
 import numpy as np
 import pandas as pd
+from june.geography import Geography
 
 from june.groups import *
 from june.demography import Person
@@ -99,15 +100,16 @@ def test_try_allocate_patient_to_full_hospital(hospitals, health_info):
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
 
     for hospital in hospitals.members:
-        for i in range(hospital.n_beds):
+        for _ in range(hospital.n_beds):
             hospital.add_as_patient(dummy_person)
-
-    print(np.sum([hospital.full for hospital in hospitals.members]) == len(hospitals.members))
 
     assert hospitals.allocate_patient(dummy_person) == None
 
     for hospital in hospitals.members:
-        for i in range(hospital.n_beds):
+        for _ in range(hospital.n_beds):
             hospital.release_as_patient(dummy_person)
 
-
+def test__initialize_hospitals_from_geography():
+    geography = Geography.from_file({"oa": ["E00165236"]})
+    hospitals = Hospitals.for_geography(geography)
+    assert len(hospitals.members) == 1
