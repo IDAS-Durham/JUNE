@@ -14,20 +14,21 @@ default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.par
 default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "data/processed/geographical_data/oa_msoa_region.csv"
 default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "configs/defaults/groups/schools.yaml"
+    "configs/defaults/distributors/school_distributor.yaml"
 
 default_config = {
     "age_range": (0, 19),
     "employee_per_clients": {"primary": 30, "secondary": 30},
 }
 
+default_mandatory_age_range = (5, 18)
 
 def test__all_kids_mandatory_school(world_ne):
     """
     Check that all kids in mandatory school ages are assigned a school 
     """
-    KIDS_LOW = world_ne.schools.mandatory_age_range[0]
-    KIDS_UP = world_ne.schools.mandatory_age_range[1]
+    KIDS_LOW = default_mandatory_age_range[0]
+    KIDS_UP = default_mandatory_age_range[1]
     lost_kids = 0
     for area in world_ne.areas.members:
         for person in area.subgroups[0]._people:
@@ -68,7 +69,7 @@ def test__age_range_schools(world_ne):
 
 def test__non_mandatory_dont_go_if_school_full(world_ne):
     non_mandatory_added = 0
-    mandatory_age_range = world_ne.schools.mandatory_age_range
+    mandatory_age_range = default_mandatory_age_range
     for school in world_ne.schools.members:
         if school.n_pupils > school.n_pupils_max:
             ages = np.array(
