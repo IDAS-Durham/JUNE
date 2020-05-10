@@ -258,7 +258,6 @@ class Hospitals:
         else:
             hospitals.append(
                 Hospital(
-                    hospital_id=1,
                     coordinates=None,
                     n_beds=10,
                     n_icu_beds=2,
@@ -266,7 +265,6 @@ class Hospitals:
             )
             hospitals.append(
                 Hospital(
-                    hospital_id=2,
                     coordinates=None,
                     n_beds=5000,
                     n_icu_beds=5000,

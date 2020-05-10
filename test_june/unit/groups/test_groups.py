@@ -19,7 +19,7 @@ class TestGroup:
         care_home_2 = CareHome(None, None)
 
         assert household_2.id == household_1.id + 1
-        assert household_1.name == f"household_{household_1.id}"
+        assert household_1.name == f"Household_{household_1.id:05d}"
 
         assert care_home_2.id == care_home_1.id + 1
-        assert care_home_1.name == f"care_home_{care_home_1.id}"
+        assert care_home_1.name == f"CareHome_{care_home_1.id:05d}"
