@@ -28,7 +28,7 @@ default_mandatory_age_range = (5, 18)
 
 @pytest.fixture(name="geography", scope="module")
 def create_geography():
-    geography = Geography.from_file({"msoa" : ["E02004935"]})
+    geography = Geography.from_file({"msoa" : ["E02004935", "E02004935", "E02004935"]})
     return geography
 
 @pytest.fixture(name="schools", scope="module")
@@ -37,8 +37,6 @@ def make_and_populate_schools(geography):
     school_distributor = SchoolDistributor(schools)
     school_distributor.distribute_kids_to_school(geography.areas)
     return schools
-
-
 
 def test__all_kids_mandatory_school(schools, geography):
     """
