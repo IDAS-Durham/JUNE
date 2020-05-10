@@ -183,7 +183,7 @@ class Companies:
         company_per_sector_per_msoa_file
             Pandas dataframe with number of companies per industry sector per SuperArea.
         """
-        if len(area_names) is not 0:
+        if len(area_names) != 0:
             # filter out schools that are in the area of interest
             size_per_superarea_df = size_per_superarea_df[
                 size_per_superarea_df["superarea"].isin(area_names)

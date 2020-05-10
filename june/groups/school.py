@@ -217,7 +217,7 @@ class Schools:
         """
         school_df = pd.read_csv(data_file, index_col=0)
         school_df.reset_index(drop=True, inplace=True)
-        if len(area_names) is not 0:
+        if len(area_names) != 0:
             # filter out schools that are in the area of interest
             school_df = school_df[school_df["oa"].isin(area_names)]
 
@@ -297,8 +297,10 @@ class Schools:
             _school_df_agegroup = school_df[
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
                 ]
+            if len(_school_df_agegroup) == 0:
+                continue
             schools_coords = _school_df_agegroup[["latitude", "longitude"]].values
-            if len(schools_coords) is 0:
+            if len(schools_coords) != 0:
                 logger.info(f"No school for the age {age} in this world.")
                 continue
             school_trees[age] = Schools._create_school_tree(
@@ -351,7 +353,6 @@ class Schools:
         a given age group
 
         """
-
         school_tree = self.school_trees[age]
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
         distances, neighbours = school_tree.query(
@@ -364,13 +365,3 @@ class Schools:
 
     def __iter__(self):
         return iter(self.members)
-
-
-if __name__ == '__main__':
-    geography = Geography.from_file(filter_key={"msoa" : ["E02004935"]})
-    schools = Schools.for_geography(geography)
-    school = schools.members[0]
-    print(int( 0.5 * (school.age_min + school.age_max)))
-    print(school.GroupType.teachers == 0)
-    print(bool(school.subgroups[school.GroupType.teachers].people))
-    #schools = Schools.for_zone({"region": ["North East"]})
