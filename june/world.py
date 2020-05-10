@@ -13,7 +13,7 @@ from june.box import Box, Boxes, BoxGenerator
 from june.commute import CommuteGenerator
 from june.groups import *
 from june.distributors import *
-from june.health_index import HealthIndex
+from june.infection.health_index import HealthIndex
 from june.demography.person import Person, People
 from june.demography.person_distributor import PersonDistributor
 from june.infection import Infection
@@ -81,10 +81,7 @@ class World:
                 self.group_maker = GroupMaker(self)
             else:
                 world_logger.info("pubs not needed, skipping...")
-        self.interaction = self.initialize_interaction()
-        self.logger = Logger(
-            self, self.config["logger"]["save_path"], box_mode=box_mode
-        )
+        #self.interaction = self.initialize_interaction()
         world_logger.info("Done.")
 
     def world_creation_logger(
@@ -250,7 +247,6 @@ class World:
             wf_area_df = self.inputs.workflow_df.loc[(area.super_area.name,)]
             person_distributor = PersonDistributor(
                 self,
-                self.timer,
                 self.people,
                 self.areas,
                 area,
@@ -362,119 +358,6 @@ class World:
         print("Creating Boundary...")
         self.boundary = Boundary(self)
 
-    def initialize_interaction(self):
-        interaction_type = self.config["interaction"]["type"]
-        interaction_class_name = interaction_type.capitalize()+"Interaction" 
-        interaction_instance = getattr(interaction, interaction_class_name).from_file()
-        return interaction_instance
-
-    def set_active_group_to_people(self, active_groups):
-        for group_name in active_groups:
-            grouptype = getattr(self, group_name)
-            if "pubs" in active_groups:
-                self.group_maker.distribute_people(group_name)
-            for group in grouptype.members:
-                group.set_active_members()
-
-    def set_allpeople_free(self):
-        for person in self.people.members:
-            person.active_group = None
-
-    def initialize_infection(self):
-        return _initialize_infection(
-            self.config,
-            self.timer.now
-        )
-
-    def seed_infections_group(self, group, n_infections):
-        choices = np.random.choice(group.size, n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
-        for choice in choices:
-            infecter_reference.infect_person_at_time(
-                list(group.people)[choice], self.timer.now
-            )
-        group.update_status_lists(self.timer.now, delta_time=0)
-        self.hospitalise_the_sick(group)
-        self.bury_the_dead(group)
-
-    def seed_infections_box(self, n_infections):
-        world_logger.info("seed ", n_infections, "infections in box")
-        choices = np.random.choice(list(self.people.members), n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
-        for choice in choices:
-            infecter_reference.infect_person_at_time(choice, self.timer.now)
-        group = self.boxes.members[0]
-        group.update_status_lists(self.timer.now, delta_time=0)
-        self.hospitalise_the_sick(group)
-        self.bury_the_dead(group)
-
-    def hospitalise_the_sick(self, group):
-        """
-        These functions could be more elegantly handled by an implementation inside a group collection.
-        I'm putting them here for now to maintain the same functionality whilst removing a person's
-        reference to the world as that makes it impossible to perform population generation prior
-        to world construction.
-        """
-        for person in group.in_hospital:
-            if person.in_hospital is None:
-                self.hospitals.allocate_patient(person)
-
-    def bury_the_dead(self, group):
-        for person in group.dead:
-            cemetery = self.cemeteries.get_nearest(person)
-            cemetery.add(person)
-            group.remove_person(person)
-
-    def do_timestep(self):
-        active_groups = self.timer.active_groups()
-        print ("=====================================================")
-        print ("=== active groups: ",active_groups,", ",
-               "time = ",self.timer.now,", delta = ",self.timer.duration)
-        if not active_groups or len(active_groups) == 0:
-            world_logger.info("==== do_timestep(): no active groups found. ====")
-            return
-        # update people (where they are according to time)
-        self.set_active_group_to_people(active_groups)
-        # infect people in groups
-        group_instances = [getattr(self, group) for group in active_groups]
-        for group_type in group_instances:
-            for group in group_type.members:
-                self.interaction.time_step(self.timer.now, self.timer.duration, group)
-                self.hospitalise_the_sick(group)
-                self.bury_the_dead(group)
-        # Update people that recovered in hospitals
-        for hospital in self.hospitals.members:
-            hospital.update_status_lists(self.timer.now, delta_time=0)
-            self.hospitalise_the_sick(hospital)
-        self.set_allpeople_free()
-
-    def group_dynamics(self, n_seed=100):
-        print(
-            f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
-        )
-        assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
-        # TODO: move to function that checks the config file (types, values, etc...)
-        # initialize the interaction class with an infection selector
-        if self.box_mode:
-            self.seed_infections_box(n_seed)
-        else:
-            for household in self.households.members:
-                self.seed_infections_group(household, 1)
-        print(
-            "starting the loop ..., at ",
-            self.timer.day,
-            " days, to run for ",
-            self.timer.total_days,
-            " days",
-        )
-
-        for day in self.timer:
-            if day > self.timer.total_days:
-                break
-            self.logger.log_timestep(day)
-            self.do_timestep()
-
-
 def read_config(config_file):
     if config_file is None:
         config_file = os.path.join(
@@ -485,58 +368,3 @@ def read_config(config_file):
         )
     with open(config_file, "r") as f:
         return yaml.load(f, Loader=yaml.FullLoader)
-
-
-def _initialize_infection(config, time):
-    if "parameters" in config["infection"]:
-        infection_parameters = config["infection"]["parameters"]
-    else:
-        infection_parameters = {}
-    if "transmission" in config["infection"]:
-        transmission_type = config["infection"]["transmission"]["type"]
-        try:
-            transmission_parameters = config["infection"]["transmission"][
-                "parameters"
-            ]
-        except KeyError:
-            transmission_parameters = dict()
-        transmission_class_name = "Transmission" + transmission_type.capitalize()
-    else:
-        trans_class = "TransmissionConstant"
-        transmission_parameters = {}
-    trans_class = getattr(transmission, transmission_class_name)
-    transmission_class = trans_class(**transmission_parameters)
-    if "symptoms" in config["infection"]:
-        symptoms_type = config["infection"]["symptoms"]["type"]
-        try:
-            symptoms_parameters = config["infection"]["symptoms"]["parameters"]
-        except KeyError:
-            symptoms_parameters = dict()
-
-        symptoms_class_name = "Symptoms" + symptoms_type.capitalize()
-    else:
-        symptoms_class_name = "SymptomsGaussian"
-        symptoms_parameters = {}
-    symp_class = getattr(symptoms, symptoms_class_name)
-    reference_health_index = HealthIndex().get_index_for_age(40)
-    symptoms_class = symp_class(
-        health_index=reference_health_index, **symptoms_parameters
-    )
-    infection = Infection(
-        time, transmission_class, symptoms_class, **infection_parameters
-    )
-    return infection
-
-
-if __name__ == "__main__":
-    world = World(
-        config_file=os.path.join("../configs", "config_example.yaml"),
-        # box_mode=True,
-        # box_region='test',
-    )
-
-    # world = World(config_file=os.path.join("../configs", "config_boxmode_example.yaml"),
-    #              box_mode=True,box_n_people=100)
-
-    # world = World.from_pickle()
-    world.group_dynamics()
