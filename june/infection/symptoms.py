@@ -3,6 +3,9 @@ import random
 import numpy as np
 from scipy import stats
 
+import autofit as af
+import sys
+
 ALLOWED_SYMPTOM_TAGS = [
     "asymptomatic",
     "influenza-like illness",
@@ -15,7 +18,7 @@ ALLOWED_SYMPTOM_TAGS = [
 
 
 class Symptoms:
-    def __init__(self, health_index):
+    def __init__(self, health_index=0.):
 
         self.severity = 0
         self.health_index = health_index
@@ -33,12 +36,20 @@ class Symptoms:
     def tag(self):
         if self.severity <= 0.0:
             return "healthy"
-        index = np.searchsorted(self.health_index, self.severity)
+        index = np.searchsorted(self.health_index, self.severity)-1
         return self.tags[index]
+
+    @classmethod
+    def object_from_config(cls):
+        """Loads the default Symptoms class from the general.ini config file and returns the class as object (not as
+        an instance). This is used to set up the epidemiology model in world.py via configs if an input is not
+        provided."""
+        classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
+        return getattr(sys.modules[__name__], classname_str)
 
 
 class SymptomsConstant(Symptoms):
-    def __init__(self, health_index, recovery_rate=0.2):
+    def __init__(self, health_index=0., recovery_rate=0.2):
         super().__init__(health_index=health_index)
 
         self.recovery_rate = recovery_rate
@@ -54,7 +65,8 @@ class SymptomsConstant(Symptoms):
 
 
 class SymptomsGaussian(Symptoms):
-    def __init__(self, health_index, mean_time=1.0, sigma_time=3.0, recovery_rate=0.2):
+    #TODO: Add recovery_theshold for recovery, and check parameters to find days to recover
+    def __init__(self, health_index=0., mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
         super().__init__(health_index=health_index)
 
         self.mean_time = max(0.0, mean_time)
@@ -74,7 +86,7 @@ class SymptomsGaussian(Symptoms):
 
 
 class SymptomsStep(Symptoms):
-    def __init__(self, health_index, time_offset=2.0, end_time=5.0):
+    def __init__(self, health_index=0., time_offset=2.0, end_time=5.0):
 
         super().__init__(health_index)
 
@@ -93,7 +105,7 @@ class SymptomsStep(Symptoms):
 
 
 class SymptomsTanh(Symptoms):
-    def __init__(self, health_index, max_time=2.0, onset_time=0.5, end_time=15.0):
+    def __init__(self, health_index=0., max_time=2.0, onset_time=0.5, end_time=15.0):
 
         super().__init__(health_index)
 
