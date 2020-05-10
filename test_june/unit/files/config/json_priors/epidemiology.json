@@ -1,0 +1,122 @@
+{
+    "SymptomsConstant": {
+        "recovery_rate": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "1.0",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 0.2,
+            "sigma": 0.1
+        }
+    },
+    "SymptomsGaussian": {
+        "mean_time": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 0.1,
+            "sigma": 0.1
+        },
+        "sigma_time": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 3.0,
+            "sigma": 0.1
+        },
+        "recovery_rate": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "1.0",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 0.2,
+            "sigma": 0.1
+        }
+    },
+    "SymptomsStep": {
+        "time_offset": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 2.0,
+            "sigma": 0.1
+        },
+        "end_time": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 5.0,
+            "sigma": 0.1
+        }
+    },
+    "SymptomsTanh": {
+        "max_time": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 2.0,
+            "sigma": 0.1
+        },
+        "onset_time": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 0.5,
+            "sigma": 0.1
+        },
+        "end_time": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "inf",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 15.0,
+            "sigma": 0.1
+        }
+    },
+    "Transmission": {
+        "probability": {
+            "type": "Gaussian",
+            "lower_limit": "0.0",
+            "upper_limit": "1.0",
+            "width_modifier": {
+                "type": "Absolute",
+                "value": 0.05
+            },
+            "mean": 0.3,
+            "sigma": 0.1
+        }
+    }
+}
