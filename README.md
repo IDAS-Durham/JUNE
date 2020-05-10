@@ -1,9 +1,9 @@
 ![Python package](https://github.com/IDAS-Durham/JUNE/workflows/Python%20package/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/idas-durham/june/branch/master/graph/badge.svg?token=6TKUHtWxJZ)](https://codecov.io/gh/idas-durham/june)
 
-# COVID Modelling
+# JUNE a COVID-19 modelling code
 
-Repository for data and models built
+Repository for data and models built, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida). June was the female Scottish virologist that first identified the coronavirus group of viruses. 
 
 Given the size of this team we should work in branches and merge regularly and separate folders for projects.
 
