@@ -1,9 +1,21 @@
+import os
 import yaml
+from pathlib import Path
+from typing import List, Tuple, Dict
 
 import numpy as np
 from scipy import stats
 
-from june.groups.school import School
+from june.geography import Geography
+from june.groups.school import School, Schools
+
+
+default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "data/processed/school_data/england_schools_data.csv"
+default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "data/processed/geographical_data/oa_msoa_region.csv"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+    "configs/defaults/distributors/school_distributor.yaml"
 
 
 EARTH_RADIUS = 6371  # km
@@ -20,7 +32,15 @@ class SchoolDistributor:
     Distributes students in an area to different schools 
     """
 
-    def __init__(self, schools: "Schools", area: "Area", config: dict):
+    def __init__(
+            self,
+            schools: "Schools",
+            area: "Area",
+            education_sector_label: List[int] = [2314, 2315, 2316],
+            neighbour_schools: int = 35,
+            age_range: Tuple[int, int] = (0, 19),
+            mandatory_age_range: Tuple[int, int] = (5, 18),
+    ):
         """
         Get closest schools to this output area, per age group
         (different schools admit pupils with different age ranges)
@@ -37,10 +57,10 @@ class SchoolDistributor:
         self.area = area
         self.msoarea = area.super_area
         self.schools = schools
-        self.MAX_SCHOOLS = config["neighbour_schools"]
-        self.SCHOOL_AGE_RANGE = config["age_range"]
-        self.MANDATORY_SCHOOL_AGE_RANGE = config["mandatory_age_range"]
-        self.education_sector_label = self.find_jobs(config)
+        self.MAX_SCHOOLS = neighbour_schools
+        self.SCHOOL_AGE_RANGE = age_range
+        self.MANDATORY_SCHOOL_AGE_RANGE = mandatory_age_range
+        self.education_sector_label = education_sector_label
         self.closest_schools_by_age = {}
         self.is_school_full = {}
         for agegroup, school_tree in self.schools.school_trees.items():
@@ -56,14 +76,6 @@ class SchoolDistributor:
                 )
             self.closest_schools_by_age[agegroup] = closest_schools
             self.is_school_full[agegroup] = False
-
-    def find_jobs(self, config: dict):
-        education_sector_label = []
-        for key1, value1 in config.items():
-            if isinstance(value1, dict):
-                for key2, value2 in value1.items():
-                    education_sector_label.append(value2['sector_id'])
-        return education_sector_label
 
     @classmethod
     def from_file(
@@ -89,12 +101,26 @@ class SchoolDistributor:
         -------
         SchoolDistributor instance
         """
-
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        for key, value in config.items():
-            config = value
-        return SchoolDistributor(schools=schools, area=area, config=config)
+        education_sector_label = SchoolDistributor.find_jobs(config)
+        return SchoolDistributor(
+            schools,
+            area,
+            education_sector_label,
+            config["neighbour_schools"],
+            config["age_range"],
+            config["mandatory_age_range"]
+        )
+    
+    @staticmethod
+    def find_jobs(config: dict):
+        education_sector_label = []
+        for key1, value1 in config.items():
+            if isinstance(value1, dict):
+                for key2, value2 in value1.items():
+                    education_sector_label.append(value2['sector_id'])
+        return education_sector_label
 
     def distribute_kids_to_school(self):
         """
@@ -219,3 +245,14 @@ class SchoolDistributor:
                         # TODO fine better why for filtering
                         school.add(person, School.GroupType.teacher)
                         school.n_teachers += 1
+
+
+if __name__ == "__main__":
+    geography = Geography.from_file(filter_key={"msoa" : ["E02004935", "E02005705", "E02005704"]})
+    print(geography.areas.members[0].id)
+    schools = Schools.for_geography(geography)
+    SchoolDistributor.from_file(
+        schools = schools,
+        area = geography.areas.members[0],
+        config_filename = default_config_filename,
+    )
