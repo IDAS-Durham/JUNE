@@ -1,8 +1,8 @@
+from enum import IntEnum
 from itertools import count
 
 from june.groups.group import Group
-from june.logger_creation import logger
-from enum import IntEnum
+
 
 class CareHome(Group):
     """
@@ -14,6 +14,8 @@ class CareHome(Group):
     2 - visitors 
     """
 
+    spec = "household"
+
     _id = count()
 
     class GroupType(IntEnum):
@@ -22,10 +24,10 @@ class CareHome(Group):
         visitors = 2
 
     def __init__(self, area, n_residents):
-        carehome_id = next(self._id)
-        super().__init__(f"Carehome_{carehome_id}", "household")
+        super().__init__()
         self.n_residents = n_residents
         self.area = area
+
 
 class CareHomes:
     def __init__(self):

@@ -1,9 +1,12 @@
 import logging
+import re
+from collections import defaultdict
 from enum import IntEnum
+from itertools import count
 from typing import Set
 
-from june.exc import GroupException
 from june.demography.person import Person
+from june.exc import GroupException
 from .abstract import AbstractGroup
 from .subgroup import Subgroup
 
@@ -63,24 +66,33 @@ class Group(AbstractGroup):
         """
         default = 0
 
-    __slots__ = "name", "spec", "subgroups"
+    __slots__ = "id", "spec", "subgroups"
 
-    def __init__(self, name: str, spec: str):
+    __id_generators = defaultdict(
+        count
+    )
+
+    @classmethod
+    def _next_id(cls):
+        return next(
+            cls.__id_generators[cls]
+        )
+
+    @classmethod
+    def group_name(cls):
+        return re.sub(
+            r'(?<!^)(?=[A-Z])', '_',
+            cls.__name__
+        ).lower()
+
+    def __init__(self):
         """
         A group of people such as in a hospital or a school.
-
-        Parameters
-        ----------
-        name
-            The name of this particular instance.
-        spec
-            The kind of group this is
         """
-        if spec not in self.allowed_groups:
-            raise GroupException(f"{spec} is not an allowed group type")
+        if self.spec not in self.allowed_groups:
+            raise GroupException(f"{self.spec} is not an allowed group type")
 
-        self.name = name
-        self.spec = spec
+        self.id = self._next_id()
         # noinspection PyTypeChecker
         self.subgroups = [
             Subgroup()
@@ -89,6 +101,10 @@ class Group(AbstractGroup):
                 self.GroupType
             ))
         ]
+
+    @property
+    def name(self):
+        return f"{self.group_name()}_{self.id}"
 
     def remove_person(self, person: Person):
         """

@@ -1,23 +1,25 @@
-import pytest
-
 from june.demography.person import Person
-from june.groups.group import group as g
-from june import exc
+from june.groups.carehome import CareHome
+from june.groups.household import Household
+
 
 class TestGroup:
-
-    def test__sanity_check_of_allowed_group(self):
-        g.Group(name="house1", spec="household")
-
-        with pytest.raises(exc.GroupException):
-            g.Group(name="house1", spec="invalid")
-
     def test_group_types(self):
-        group = g.Group(
-            name="name",
-            spec="household"
-        )
+        group = Household()
         group.add(
-            Person()
+            Person(),
+            Household.GroupType.adults
         )
-        assert group[g.Group.GroupType.default].size == 1
+        assert group[Household.GroupType.adults].size == 1
+
+    def test_ids(self):
+        household_1 = Household()
+        household_2 = Household()
+        care_home_1 = CareHome(None, None)
+        care_home_2 = CareHome(None, None)
+
+        assert household_2.id == household_1.id + 1
+        assert household_1.name == f"household_{household_1.id}"
+
+        assert care_home_2.id == care_home_1.id + 1
+        assert care_home_1.name == f"care_home_{care_home_1.id}"
