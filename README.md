@@ -1,9 +1,9 @@
 ![Python package](https://github.com/IDAS-Durham/JUNE/workflows/Python%20package/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/idas-durham/june/branch/master/graph/badge.svg?token=6TKUHtWxJZ)](https://codecov.io/gh/idas-durham/june)
 
-# COVID Modelling
+# JUNE a COVID-19 modelling code
 
-Repository for data and models built
+Repository for data and models built, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida). June was the female Scottish virologist that first identified the coronavirus group of viruses. 
 
 Given the size of this team we should work in branches and merge regularly and separate folders for projects.
 
@@ -53,6 +53,16 @@ The [IDAS gitlab](https://idas-gitlab.dur.scotgrid.ac.uk) [data repo](https://id
 **Note** Currently all files in the data directory will be tracked (the line `**` in the `.gitattributes` file does this). This means that all new files in the data folder should be tracked recursively, but this needs testing.
 
 ## Instructions
+
+**Important**: If you only need to get the data, and do not want to add anything new
+
+```
+bash get_data.sh
+```
+
+will get you the data folder.
+
+**Important** This is only for people who want to add new data. The data folder has to be a clone of the git lab repo. Make sure you do not initialize git lfs in this repo, but in the git-lab data one.
 
 Before going any further, make a clean `JUNE/data/` folder to ensure nothing is overwritten.
 

@@ -69,7 +69,7 @@ class Inputs:
         )
         self.hospital_data_path = (
             Path(__file__).parent.parent / \
-            "data/processed/hospital_data/england_hospitals.csv"
+            "data/processed/hospital_data/england_hospitals_old.csv"
         )
         self.hospital_config_path = (
             Path(__file__).parent.parent / \
