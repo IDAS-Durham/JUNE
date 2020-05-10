@@ -41,7 +41,7 @@ class CommuteUnits:
       - Adjusting this could be a later improvement of the code
     """
 
-    def __init__(self, commutehubs, init = False):
+    def __init__(self, commutehubs, init=False):
         """
         commutehubs: (list) members of CommuteHubs
         init: (bool) if True, initialise units, if False do this manually
