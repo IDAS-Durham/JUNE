@@ -178,10 +178,9 @@ class Schools:
         """
         school_df.reset_index(drop=True, inplace=True)
         schools = []
-        for i, (index, row) in enumerate(school_df.iterrows()):
+        for index, row in school_df.iterrows():
             n_teachers_max = int(row["NOR"] / student_nr_per_teacher)
             school = School(
-                i,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 row["NOR"],
                 n_teachers_max,
