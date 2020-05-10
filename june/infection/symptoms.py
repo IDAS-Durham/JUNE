@@ -3,6 +3,9 @@ import random
 import numpy as np
 from scipy import stats
 
+import autofit as af
+import sys
+
 ALLOWED_SYMPTOM_TAGS = [
     "asymptomatic",
     "influenza-like illness",
@@ -35,6 +38,14 @@ class Symptoms:
             return "healthy"
         index = np.searchsorted(self.health_index, self.severity)
         return self.tags[index]
+
+    @classmethod
+    def object_from_config(cls):
+        """Loads the default Symptoms class from the general.ini config file and returns the class as object (not as
+        an instance). This is used to set up the epidemiology model in world.py via configs if an input is not
+        provided."""
+        classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
+        return getattr(sys.modules[__name__], classname_str)
 
 
 class SymptomsConstant(Symptoms):
