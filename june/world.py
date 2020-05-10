@@ -7,18 +7,18 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from june.inputs import Inputs
 from june import interaction
 from june.box import Box, Boxes, BoxGenerator
 from june.commute import CommuteGenerator
 from june.groups import *
+from june.distributors import *
 from june.infection.health_index import HealthIndex
 from june.demography.person import Person, People
 from june.demography.person_distributor import PersonDistributor
-from june.distributors import *
 from june.infection import Infection
 from june.infection import symptoms
 from june.infection import transmission
-from june.inputs import Inputs
 from june.logger_simulation import Logger
 from june.time import Timer
 
@@ -155,8 +155,9 @@ class World:
             if key not in self.config:
                 self.config[key] = default_config[key]
         # active group settings
+        # TODO this will change in the new world
         for relevant_group in self.relevant_groups:
-            group_config_path = os.path.join(basepath, f"{relevant_group}.yaml")
+            group_config_path = os.path.join(basepath, f"groups/{relevant_group}.yaml")
             if os.path.isfile(group_config_path):
                 with open(group_config_path, "r") as f:
                     default_config = yaml.load(f, Loader=yaml.FullLoader)
@@ -312,14 +313,15 @@ class World:
         """
         print("Initializing schools...")
         self.schools = Schools.from_file(
-            self.inputs.school_data_path, self.inputs.school_config_path
+            data_file = self.inputs.school_data_path,
+            config_file = self.inputs.school_config_path,
         )
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             self.distributor = SchoolDistributor.from_file(
-                self.schools,
-                area,
-                self.inputs.school_config_path,
+                schools = self.schools,
+                area = area,
+                config_filename = self.inputs.school_distr_config_path,
             )
             self.distributor.distribute_kids_to_school()
             self.distributor.distribute_teachers_to_school()
@@ -332,7 +334,9 @@ class World:
         """
         print("Initializing Companies...")
         self.companies = Companies.from_file(
-            self.inputs.companysize_file, self.inputs.company_per_sector_per_msoa_file,
+            self.super_areas.members,
+            self.inputs.companysize_file,
+            self.inputs.company_per_sector_per_msoa_file,
         )
         pbar = tqdm(total=len(self.super_areas.members))
         for super_area in self.super_areas.members:
