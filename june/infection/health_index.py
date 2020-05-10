@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 
 default_polinom_filename = (
-    Path(__file__).parent.parent.parent.parent / "configs/defaults/health_index_ratios.txt"
+    Path(__file__).parent.parent.parent / "configs/defaults/health_index_ratios.txt"
 )
 
 

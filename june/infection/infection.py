@@ -1,4 +1,5 @@
 import autofit as af
+from june.infection.symptoms import Symptoms
 
 class Infection:
     """
@@ -45,16 +46,16 @@ class Infection:
         #instance = epidemiology.random_instance()
 
         # TODO : This is hacky, whats the best way we can feed health inforrmation through to symptoms. Can we move the
-        # TODO : health index to the Infection class?
-
         #instance.symptoms.health_index = self.symptoms.health_index
+
         health_index = health_index_generator(person.age, person.sex)
-        symptoms = Symptoms(health_index)
+        print(f'New health index is {health_index}')
+        symptoms = self.symptoms.__class__(health_index = health_index)
 
         infection = Infection(
             start_time=time,
             transmission=self.transmission, #instance.transmission,
-            symptoms=symptoms(person), #instance.symptoms
+            symptoms=symptoms, #instance.symptoms
         )
 
         person.health_information.set_infection(infection=infection)
