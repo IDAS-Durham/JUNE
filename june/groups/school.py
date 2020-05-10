@@ -29,7 +29,6 @@ class School(Group):
 
     def __init__(
         self,
-        school_id: int,
         coordinates: Tuple[float, float],
         n_pupils: int,
         n_teachers_max: int,
@@ -42,8 +41,6 @@ class School(Group):
 
         Parameters
         ----------
-        school_id:
-            unique identifier of the school
         coordinates:
             latitude and longitude 
         n_pupils: 
@@ -61,9 +58,8 @@ class School(Group):
         ...
         n - year of highest age (age_max)
         """
-        super().__init__(name="School_%05d" % school_id, spec="school")
+        super().__init__()
         self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
-        self.id = school_id
         self.coordinates = coordinates
         self.msoa = None
         self.n_pupils_max = n_pupils
