@@ -9,6 +9,7 @@ from june.logger_simulation import Logger
 from june.time import Timer
 from june import interaction
 from june.infection import Infection
+from june.infection.health_index import HealthIndexGenerator
 
 default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
@@ -52,6 +53,7 @@ class Simulator:
             "churches",
         ]
         self.check_inputs(config["time"])
+        self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
             self.world, self.timer, config, config["logger"]["save_path"],
@@ -221,7 +223,7 @@ class Simulator:
         infecter_reference = self.infection
         for choice in choices:
             infecter_reference.infect_person_at_time(
-                list(group.people)[choice], self.timer.now
+                list(group.people)[choice], self.health_index_generator, self.timer.now
             )
         self.update_health_status(0, 0)
         # in case someone has to go directly to the hospital
@@ -242,7 +244,7 @@ class Simulator:
         n_people = 0
         for group_type in group_instances:
             for group in group_type.members:
-                self.interaction.time_step(self.timer.now, self.timer.duration, group)
+                self.interaction.time_step(self.timer.now, self.health_index_generator, self.timer.duration, group)
                 n_people += group.size_active
 
         self.update_health_status(self.timer.now, self.timer.duration)
