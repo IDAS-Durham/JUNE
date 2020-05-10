@@ -1,11 +1,16 @@
 import pytest
+from june.infection.health_index import HealthIndexGenerator
 
+@pytest.fixture(name='health_index')
+def create_health_index():
+    def dummy_health_index(age, sex):
+        return [0.1, 0.3, 0.5, 0.7, 0.9]
+    return dummy_health_index 
 
-def test__hospitalise_the_sick(simulator):
+def test__hospitalise_the_sick(simulator, health_index):
     dummy_person = simulator.world.people.members[0]
-    simulator.infection.symptoms.severity = 0.75
-    simulator.infection.symptoms.health_index = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
-    simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
+    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    dummy_person.health_information.infection.symptoms.severity = 0.75
     simulator.hospitalise_the_sick(dummy_person)
     assert dummy_person.in_hospital is not None
 
@@ -111,12 +116,11 @@ def test__follow_a_pupil(simulator):
     simulator.timer.reset()
 
 
-def test__sick_gets_to_hospital_recovers_and_leaves(simulator):
+def test__sick_gets_to_hospital_recovers_and_leaves(simulator, health_index):
     # sick goes to hospital
     dummy_person = simulator.world.people.members[0]
-    simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
-    simulator.infection.symptoms.severity = 0.75
-    simulator.infection.symptoms.health_index = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    dummy_person.health_information.infection.symptoms.severity = 0.75
     simulator.update_health_status(simulator.timer.now, 0)
     assert dummy_person.in_hospital is not None
     simulator.set_active_group_to_people(["schools", "hospitals", "households"])
@@ -131,17 +135,15 @@ def test__sick_gets_to_hospital_recovers_and_leaves(simulator):
 
 
 @pytest.mark.parametrize("severity", [0.2, 0.4])
-def test__must_stay_at_home_kid_drags_parents(simulator, severity):
+def test__must_stay_at_home_kid_drags_parents(simulator, health_index, severity):
     # infect all kids in one school
     for school in simulator.world.schools.members:
         if len(school.people) > 10:
             break
 
-    simulator.infection.symptoms.health_index = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
-    simulator.infection.symptoms.severity = severity
-
     for dummy_person in list(school.people)[:10]:
-        simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
+        simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+        dummy_person.health_information.infection.symptoms.severity = severity
         simulator.set_active_group_to_people(["hospitals", "companies", "households"])
         assert dummy_person.active_group == "household"
         assert dummy_person.health_information.tag in (
@@ -168,15 +170,14 @@ def test__must_stay_at_home_kid_drags_parents(simulator, severity):
     simulator.set_allpeople_free()
 
 
-def test__bury_the_dead(simulator):
+def test__bury_the_dead(simulator, health_index):
     # TODO : bring them back to life if you want to keep using the simulator clean
     # in the (near?) future we will be able to create a test simulator
     # that is quick, and therefore doesn't need to be a fixture
     dummy_person = simulator.world.people.members[0]
-    simulator.infection.symptoms.health_index = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
-    simulator.infection.symptoms.severity = 0.99
 
-    simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
+    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    dummy_person.health_information.infection.symptoms.severity = 0.99 
 
     assert dummy_person.household is not None
     assert dummy_person in dummy_person.household.people
