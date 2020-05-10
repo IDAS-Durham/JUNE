@@ -4,6 +4,7 @@ import random
 from pathlib import Path
 from collections import OrderedDict
 from typing import List
+from itertools import chain
 
 import numpy as np
 import pandas as pd
@@ -130,20 +131,20 @@ class HouseholdDistributor:
         self.allowed_household_compositions = allowed_household_compositions
         if self.allowed_household_compositions is None:
             self.allowed_household_compositions = [
-                "1 0 >=0 1 0",
-                ">=2 0 >=0 1 0",
+                "0 0 0 0 1",
+                "0 0 0 1 0",
+                "0 0 0 0 2",
+                "0 0 0 2 0",
                 "1 0 >=0 2 0",
                 ">=2 0 >=0 2 0",
+                "0 0 >=1 2 0",
+                "1 0 >=0 1 0",
+                ">=2 0 >=0 1 0",
+                "0 0 >=1 1 0",
                 "1 0 >=0 >=1 >=0",
                 ">=2 0 >=0 >=1 >=0",
-                "0 0 0 0 >=2",
                 "0 >=1 0 0 0",
-                "0 0 0 0 1",
-                "0 0 0 0 2",
-                "0 0 0 1 0",
-                "0 0 0 2 0",
-                "0 0 >=1 1 0",
-                "0 0 >=1 2 0",
+                "0 0 0 0 >=2",
                 "0 0 >=0 >=0 >=0",
                 ">=0 >=0 >=0 >=0 >=0",
             ]
@@ -284,6 +285,41 @@ class HouseholdDistributor:
                     women_by_age[person.age].append(person)
         return men_by_age, women_by_age
 
+    def _distribute_people_and_households_to_area_single(
+            self, area: Area, household_numbers_df: pd.DataFrame, n_students_df: pd.DataFrame, n_communal_df: pd.DataFrame
+    ):
+        """
+        Distributes people and household to a single area.
+
+        Parameters
+        ----------
+        area
+            area we want to fill
+        household_numbers_df
+            dataframe containing the number of households per household composition per area
+        n_students_df
+            dataframe containing the number of students per area
+        n_people_in_communal_df
+            dataframe containing the number of people living in communal establishments per area
+        """
+        number_households_dict = household_numbers_df.loc[area.name].to_dict()
+        n_students = n_students_df.loc[area.name].values[0]
+        n_communal = n_communal_df.loc[area.name].values[0]
+        men_by_age, women_by_age = self._create_people_dicts(area)
+        households = self.distribute_people_to_households(
+            men_by_age,
+            women_by_age,
+            area,
+            number_households_dict,
+            n_students,
+            n_communal,
+            # household_numbers_df.loc[area.name].to_dict(),
+            # n_students_df.loc[area.name].values[0],
+            # n_communal_df.loc[area.name].values[0],
+        )
+        area.households = households
+        return households
+
     def distribute_people_and_households_to_areas(
         self,
         areas: List[Area],
@@ -306,7 +342,6 @@ class HouseholdDistributor:
         n_people_in_communal_filename
             path to file containing the number of people living in communal establishments per area
         """
-        households = list()
         area_names = [area.name for area in areas]
         household_numbers_df = pd.read_csv(
             number_households_per_composition_filename, index_col=0
@@ -317,26 +352,22 @@ class HouseholdDistributor:
         ]
         total_people = np.sum([len(area.people) for area in areas])
         self._refresh_random_numbers_list(n=total_people)
-        for area in areas:
-            area.households = list()
-            men_by_age, women_by_age = self._create_people_dicts(area)
-            self.distribute_people_to_households(
-                men_by_age,
-                women_by_age,
-                area,
-                household_numbers_df.loc[area.name].to_dict(),
-                n_students_df.loc[area.name].values[0],
-                n_communal_df.loc[area.name].values[0],
-            )
-            households += area.households
-        return Households(households)
+        households_total = list()
+        households_total = map(
+            lambda area: self._distribute_people_and_households_to_area_single(
+                area, household_numbers_df, n_students_df, n_communal_df
+            ),
+            areas,
+        )
+        households_total = list(chain(*households_total))
+        return Households(households_total)
 
     def distribute_people_to_households(
         self,
         men_by_age,
         women_by_age,
         area: Area,
-        number_households_per_composition: dict,
+        number_households_per_composition: list,
         n_students: int,
         n_people_in_communal: int,
     ) -> Households:
@@ -390,6 +421,7 @@ class HouseholdDistributor:
         households_with_extra_kids = []
         households_with_extra_youngadults = []
         households_with_kids = []
+        all_households = []
         if not men_by_age and not women_by_age:
             raise HouseholdError("No people in Area!")
         total_number_of_households = 0
@@ -403,7 +435,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_all_student_households(
+                all_households += self.fill_all_student_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     area=area,
@@ -416,7 +448,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_oldpeople_households(
+                all_households += self.fill_oldpeople_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     people_per_household=1,
@@ -434,7 +466,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_oldpeople_households(
+                all_households += self.fill_oldpeople_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     people_per_household=2,
@@ -452,7 +484,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_oldpeople_households(
+                all_households += self.fill_oldpeople_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     people_per_household=2,
@@ -468,7 +500,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_families_households(
+                all_households += self.fill_families_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_households=house_number,
@@ -487,7 +519,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_families_households(
+                all_households += self.fill_families_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_households=house_number,
@@ -508,7 +540,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_families_households(
+                all_households += self.fill_families_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_households=house_number,
@@ -526,7 +558,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_families_households(
+                all_households += self.fill_families_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_households=house_number,
@@ -545,7 +577,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_families_households(
+                all_households += self.fill_families_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_households=house_number,
@@ -563,7 +595,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_families_households(
+                all_households += self.fill_families_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_households=house_number,
@@ -582,7 +614,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_nokids_households(
+                all_households += self.fill_nokids_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     adults_per_household=2,
@@ -599,7 +631,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_youngadult_with_parents_households(
+                all_households += self.fill_youngadult_with_parents_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     adults_per_household=1,
@@ -613,7 +645,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_youngadult_with_parents_households(
+                all_households += self.fill_youngadult_with_parents_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     adults_per_household=2,
@@ -627,7 +659,7 @@ class HouseholdDistributor:
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
-                self.fill_nokids_households(
+                all_households += self.fill_nokids_households(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     adults_per_household=1,
@@ -646,6 +678,7 @@ class HouseholdDistributor:
                     households_with_extra_youngadults.append(household)
                     households_with_extra_adults.append(household)
                     households_with_extra_oldpeople.append(household)
+                    all_households.append(household)
 
         # we have so far filled the minimum household configurations.
         # If the area has communal establishments, we fill those next.
@@ -660,7 +693,7 @@ class HouseholdDistributor:
             communal_houses = house_number
             if n_people_in_communal >= 0 and house_number > 0:
                 to_fill_in_communal = min(n_people_in_communal, remaining_people)
-                self.fill_all_communal_establishments(
+                all_households += self.fill_all_communal_establishments(
                     men_by_age=men_by_age,
                     women_by_age=women_by_age,
                     n_establishments=house_number,
@@ -677,23 +710,22 @@ class HouseholdDistributor:
             households_with_extra_youngadults,
             households_with_extra_adults,
             households_with_extra_oldpeople,
-            area=area,
+            all_households,
         )
 
         # make sure we have the correct number of households
         if not (
             total_number_of_households - communal_houses
-            <= len(area.households)
+            <= len(all_households)
             <= total_number_of_households
         ):
             raise HouseholdError("Number of households does not match.")
         # destroy any empty houses
-        area.households = [
-            household for household in area.households if household.size > 0
+        all_households = [
+            household for household in all_households if household.size > 0
         ]
 
-        # create Households super group
-        return area.households
+        return all_households
 
     def _create_household(
         self, area: Area, communal: bool = False, max_household_size: int = np.inf
@@ -711,7 +743,7 @@ class HouseholdDistributor:
 
         """
         household = Household(communal=communal, max_size=max_household_size)
-        area.households.append(household)
+        # area.households.append(household)
         return household
 
     def _add_to_household(
@@ -961,7 +993,7 @@ class HouseholdDistributor:
         area: Area,
         n_students: int,
         student_houses_number: int,
-    ) -> None:
+    ) -> List[Household]:
         """
         Creates and fills all student households with people in the appropriate age bin (18-25 by default).
 
@@ -1010,6 +1042,7 @@ class HouseholdDistributor:
             students_left -= 1
             index += 1
             index = index % len(student_houses)
+        return student_houses
 
     def fill_oldpeople_households(
         self,
@@ -1020,7 +1053,7 @@ class HouseholdDistributor:
         area: Area,
         extra_people_lists=(),
         max_household_size=np.inf,
-    ) -> None:
+    ) -> List[Household]:
         """
         Creates and fills households with old people.
 
@@ -1036,10 +1069,12 @@ class HouseholdDistributor:
         max_household_size:
             The maximum size of the created households.
         """
+        households = []
         for i in range(0, n_households):
             household = self._create_household(
                 area, max_household_size=max_household_size
             )
+            households.append(household)
             person = self._get_random_person_in_age_bracket(
                 men_by_age,
                 women_by_age,
@@ -1054,9 +1089,10 @@ class HouseholdDistributor:
                     household = self._create_household(
                         area, max_household_size=max_household_size
                     )
+                    households.append(household)
                     for array in extra_people_lists:
                         array.append(household)
-                return None
+                return households
             self._add_to_household(household, person, subgroup="old")
             if people_per_household > 1 and person is not None:
                 partner = self._get_matching_partner(
@@ -1069,6 +1105,7 @@ class HouseholdDistributor:
             if household.size < household.max_size:
                 for array in extra_people_lists:
                     array.append(household)
+        return households
 
     def fill_families_households(
         self,
@@ -1081,7 +1118,7 @@ class HouseholdDistributor:
         area: Area,
         max_household_size=np.inf,
         extra_people_lists=(),
-    ) -> None:
+    ) -> List[Household]:
         """
         Creates and fills households with families. The strategy is the following:
             - Put the first kid in the household.
@@ -1105,10 +1142,12 @@ class HouseholdDistributor:
         max_household_size:
             The maximum size of the created households.
         """
+        households = []
         for i in range(0, n_households):
             household = self._create_household(
                 area, max_household_size=max_household_size
             )
+            households.append(household)
             first_kid = self._get_random_person_in_age_bracket(
                 men_by_age, women_by_age, min_age=0, max_age=self.kid_max_age
             )
@@ -1127,9 +1166,10 @@ class HouseholdDistributor:
                         household = self._create_household(
                             area, max_household_size=max_household_size
                         )
+                        households.append(household)
                         for array in extra_people_lists:
                             array.append(household)
-                    return None
+                    return households
             self._add_to_household(household, first_kid, subgroup="kids")
             first_parent = self._get_matching_parent(
                 first_kid, men_by_age, women_by_age
@@ -1174,6 +1214,7 @@ class HouseholdDistributor:
                     )
                 if second_kid is not None:
                     self._add_to_household(household, second_kid, subgroup="kids")
+        return households
 
     def fill_nokids_households(
         self,
@@ -1184,7 +1225,7 @@ class HouseholdDistributor:
         area: Area,
         extra_people_lists=(),
         max_household_size=np.inf,
-    ) -> None:
+    ) -> List[Household]:
         """
         Fils households with one or two adults.
 
@@ -1201,10 +1242,12 @@ class HouseholdDistributor:
         max_household_size:
             maximum size of the created households.
         """
+        households = []
         for _ in range(0, n_households):
             household = self._create_household(
                 area, max_household_size=max_household_size
             )
+            households.append(household)
             if self._check_if_oldpeople_left(men_by_age, women_by_age):
                 # if there are old people left, then put them here together with another adult.
                 first_adult = self._get_random_person_in_age_bracket(
@@ -1239,6 +1282,7 @@ class HouseholdDistributor:
             if household.size < household.max_size:
                 for array in extra_people_lists:
                     array.append(household)
+        return households
 
     def fill_youngadult_households(
         self,
@@ -1248,7 +1292,7 @@ class HouseholdDistributor:
         n_households: int,
         area: Area,
         extra_people_lists=(),
-    ) -> None:
+    ) -> List[Household]:
         """
         Fils households with young adults (18 to 35) years old. 
 
@@ -1263,8 +1307,10 @@ class HouseholdDistributor:
         extra_people_lists:
             whether to include the created households in a list for extra people to be put in.
         """
+        households = []
         for _ in range(0, n_households):
             household = self._create_household(area)
+            households.append(household)
             for _ in range(youngadults_per_household):
                 person = self._get_random_person_in_age_bracket(
                     men_by_age,
@@ -1276,6 +1322,7 @@ class HouseholdDistributor:
                     self._add_to_household(household, person, subgroup="young_adults")
             for array in extra_people_lists:
                 array.append(household)
+        return households
 
     def fill_youngadult_with_parents_households(
         self,
@@ -1285,7 +1332,7 @@ class HouseholdDistributor:
         n_households: int,
         area: Area,
         extra_people_lists=(),
-    ) -> None:
+    ) -> List[Household]:
         """
         Fils households with one young adult (18 to 35) and one or two adults. 
 
@@ -1300,8 +1347,10 @@ class HouseholdDistributor:
         extra_people_lists:
             whether to include the created households in a list for extra people to be put in.
         """
+        households = []
         for _ in range(0, n_households):
             household = self._create_household(area)
+            households.append(household)
             for array in extra_people_lists:
                 array.append(household)
             youngadult = self._get_random_person_in_age_bracket(
@@ -1329,6 +1378,7 @@ class HouseholdDistributor:
                     )
                 if adult is not None:
                     self._add_to_household(household, adult, subgroup="adults")
+        return households
 
     def fill_all_communal_establishments(
         self,
@@ -1337,7 +1387,7 @@ class HouseholdDistributor:
         n_establishments: int,
         n_people_in_communal: int,
         area: Area,
-    ) -> None:
+    ) -> List[Household]:
         """
         Fils all comunnal establishments with the remaining people that have not been allocated somewhere else. 
 
@@ -1378,13 +1428,13 @@ class HouseholdDistributor:
 
         index = 0
         while people_left > 0:
-            person = self._get_random_person_in_age_bracket(
-                men_by_age, women_by_age            )
+            person = self._get_random_person_in_age_bracket(men_by_age, women_by_age)
             household = communal_houses[index]
             self._add_to_household(household, person, subgroup="default")
             people_left -= 1
             index += 1
             index = index % len(communal_houses)
+        return communal_houses
 
     def _remove_household_from_all_lists(self, household, lists: list) -> None:
         """
@@ -1426,7 +1476,7 @@ class HouseholdDistributor:
         households_with_extra_youngadults: list,
         households_with_extra_adults: list,
         households_with_extra_oldpeople: list,
-        area,
+        all_households: list,
     ) -> None:
         """
         The people that have not been associated a household yet are distributed in the following way.
@@ -1460,12 +1510,12 @@ class HouseholdDistributor:
         """
         households_with_space = [
             household
-            for household in area.households
+            for household in all_households
             if household.size < household.max_size
         ]
-        all_households = households_with_space.copy()
+        all_households_no_space_restrictions = households_with_space.copy()
         available_lists = [
-            all_households,
+            all_households_no_space_restrictions,
             households_with_space,
             households_with_extra_kids,
             households_with_kids,
@@ -1495,10 +1545,13 @@ class HouseholdDistributor:
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(
-                            [households_with_space, all_households,]
+                            [
+                                households_with_space,
+                                all_households_no_space_restrictions,
+                            ]
                         )
                     if household is None:
-                        household = np.random.choice(area.households)
+                        household = np.random.choice(all_households)
                     # if household is None:
                     #    household = self._find_household_for_nonkid([area.households])
                     self._add_to_household(household, person, subgroup="old")
@@ -1516,10 +1569,13 @@ class HouseholdDistributor:
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(
-                            [households_with_space, all_households,]
+                            [
+                                households_with_space,
+                                all_households_no_space_restrictions,
+                            ]
                         )
                     if household is None:
-                        household = np.random.choice(area.households)
+                        household = np.random.choice(all_households)
                     # if household is None:
                     #    household = self._find_household_for_nonkid([area.households])
                     self._add_to_household(household, person, subgroup="young_adults")
@@ -1536,10 +1592,13 @@ class HouseholdDistributor:
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(
-                            [households_with_space, all_households,]
+                            [
+                                households_with_space,
+                                all_households_no_space_restrictions,
+                            ]
                         )
                     if household is None:
-                        household = np.random.choice(area.households)
+                        household = np.random.choice(all_households)
                     # if household is None:
                     #    household = self._find_household_for_nonkid([area.households])
                     self._add_to_household(household, person, subgroup="adults")
@@ -1565,10 +1624,13 @@ class HouseholdDistributor:
                         )
                     if household is None:
                         household = self._find_household_for_nonkid(
-                            [households_with_space, all_households]
+                            [
+                                households_with_space,
+                                all_households_no_space_restrictions,
+                            ]
                         )
                     if household is None:
-                        household = np.random.choice(area.households)
+                        household = np.random.choice(all_households)
                     self._add_to_household(household, person, subgroup="kids")
                     if self._check_if_household_is_full(household):
                         self._remove_household_from_all_lists(
