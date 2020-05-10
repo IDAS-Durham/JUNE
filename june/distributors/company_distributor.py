@@ -16,7 +16,7 @@ class CompanyDistributor:
     """
 
     def __init__(self, companies, super_area, config):
-        """Get all companies within MSOArea"""
+        """Get all companies within SuperArea"""
         self.msoarea = super_area
         self.companies = companies
         self.config = config
