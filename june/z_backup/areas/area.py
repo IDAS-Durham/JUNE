@@ -26,7 +26,6 @@ class Area(Group):
         n_households: int,
         census_freq: dict,
         relevant_groups: list,
-        #commute_generator,
     ):
         super().__init__(name, "area")
         self.coordinates = np.array(coordinates)  # Lon. & Lat
@@ -42,15 +41,14 @@ class Area(Group):
         # self.people = []
         for relevant_groups in relevant_groups:
             setattr(self, relevant_groups, [])
-        #self.commute_generator = commute_generator
-            
+
     @property
     def regional_commute_generator(self) -> RegionalGenerator:
         """
         Object that generates modes of transport randomly weighted by census data
         """
         #TODO update for new code structure
-        return self.commute_generator.regional_gen_from_msoarea(
+        return self.world.commute_generator.regional_gen_from_msoarea(
             self.super_area
         )
 
@@ -96,7 +94,6 @@ class Areas:
         age_freq_file: str,
         sex_freq_file: str,
         household_composition_freq_file: str,
-        #commute_generator,
     ) -> "Areas":
         """
         Parameters
