@@ -36,55 +36,107 @@ class Pubs:
     """
     Contains all pubs for the given area, and information about them.
     """
-
-    def __init__(self, world, pub_df=None, box_mode=False):
-        self.world = world
-        self.box_mode = box_mode
-        self.members = []
-        # maximal distance of customer going to a pub, with a minimum
-        # of five choices
+    def __init__(self, geography, pub_df=None, box_mode=False):
+        self.geography = geography
+        self.box_mode  = box_mode
+        self.init_parameters()
+        self.init_members(pub_df)
+        
+    def init_parameters(self):
+        # maximal distance of customer going to a pub, with a minimum of five choices
         self.maxdistance = 5.
-        self.minchoices = 5
-        if not self.box_mode:
-            self.pub_trees = self.create_pub_trees(pub_df)
-        else:
-            self.members.append(Pub("The Blue Horse"))
-            self.members.append(Pub("The Red Donkey"))
-        print("initialized ", len(self.members), " pubs.")
+        self.minchoices  = 5
+        # these parameters steer the sociology of the pub goers
+        self.pub_weekend_ratio      = 0.1
+        self.pub_weekday_ratio      = 0.05
+        self.pub_female_ratio       = 0.5
+        self.pub_over35_ratio       = 0.5
+        self.pub_over55_ratio       = 0.3
+        self.full_household_in_pub  = 0.5
+        self.adults_in_pub          = 0.5
+        self.pub_female_probability = self.pub_female_ratio/(1.+self.pub_female_ratio) 
 
-    def create_pub_trees(self, pub_df):
+    def init_members(self,pub_df):
+        self.members = {}
+        if self.box_mode:
+            self.members["box"] = [Pub("The Blue Horse"),
+                                   Pub("The Red Donkey")]
+        else:
+            pub_tree, pub_list = self.create_pub_tree_and_list(pub_df)
+            self.fill_areas_pub_map(self.geography.super_areas.members, pub_tree, pub_list)
+
+    def create_pub_tree_and_list(self, pub_df):
         # print (pub_df[["Latitude", "Longitude"]].values)
         pub_tree = BallTree(
             np.deg2rad(pub_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
-        counter = 0
+        pub_list = []
         for row in range(pub_df.shape[0]):
             position = [pub_df.iloc[row]["Latitude"], pub_df.iloc[row]["Longitude"]]
-            self.members.append(Pub(counter, position))
-            counter += 1
-        return pub_tree
+            pub_list.append(Pub(len(pub_list), position))
+        return pub_tree, pub_list
 
-    def get_nearest(self, area):
-        if self.box_mode:
-            return self.mambers[random.choice(np.arange(len(self.members) - 1))]
-        else:
-            angles, indices = self.get_closest_pubs(area, 100)
-        index = 0
-        pubs = []
-        for angle in angles[0]:
-            if (angle * 6500. < self.maxdistance or
+    def fill_areas_pub_map(self,areas,pub_tree,pub_list):
+        for area in areas:
+            angles, indices = pub_tree.query(
+                np.deg2rad(area.coordinates.reshape(1, -1)), 20, sort_results=True
+            )
+            pubs = []
+            for angle, index in zip(angles[0],indices[0]):
+                if (angle * 6500. < self.maxdistance or
                     len(pubs) < self.minchoices):
-                pubs.append(self.members[index])
-            index += 1
-        return pubs
+                    pubs.append(pub_list[index])
+            self.members[area] = pubs
 
-    def get_closest_pubs(self, area, k):
-        pub_tree = self.pub_trees
-        return pub_tree.query(
-            np.deg2rad(area.coordinates.reshape(1, -1)), k=k, sort_results=True
-        )
+    def send_people_to_pub(self):
+        for area, pubs in self.members.items():
+            npeople = self.fix_number_of_customers(area)
+            while npeople>0:
+                pub      = np.random.choice(pubs)
+                customer = self.select_customer(area)
+                pub.add(customer, Pub.GroupType.guests)
+                self.add_household_members(pub, customer)
+                npeople -= 1
+            
+    def fix_number_of_customers(self, area):
+        nmean = len(area.people)
+        if self.geography.timer.weekend:
+            nmean *= self.pub_weekend_ratio
+        else:
+            nmean *= self.pub_weekday_ratio
+        return round(np.random.poisson(nmean))
+    
+    def select_customer(self,area):
+        customer = None
+        while customer==None or customer.carehome!=None:
+            if random.random()<self.pub_female_probability:
+                customer = pick_one_female_from_area
+            else:
+                customer = pick_one_male_from_area
+            if random.random()>self.make_weight(customer):
+                customer = None
+        return customer
+
+    def add_household_members(self,pub,customer):
+        if self.world.timer.weekend and random.random() < self.full_household_in_pub:
+            for person in customer.household.people:
+                if person!=customer:
+                    pub.add(person, Pub.GroupType.guests)
+        elif not (self.world.timer.weekend) and random.random() < self.adults_in_pub:
+            for person in customer.household.people:
+                if person!=customer and person.age >= 18:
+                    pub.add(person, Pub.GroupType.guests)
+                
+    def make_weight(self, customer):
+        weight = 1.
+        if customer.age >= 35 and customer.age < 55:
+            weight *= self.pub_over35_ratio
+        elif customer.age >= 55:
+            weight *= self.pub_over55_ratio
+        return weight
 
 
+            
 # about 30% of UK adults (44%M, 20%F) visit a pub weekly according to
 # https://www.statista.com/statistics/388045/weekly-pub-visits-adults-united-kingdom/
 # https://howtorunapub.co.uk/uk-pub-customer-demographics-behaviours/
@@ -95,64 +147,3 @@ class Pubs:
 # gender ratio 66%(M)-34%(F),
 # groups going to the pub: 23% familes, 22% couples (-> will treat both as households)
 # https://www.cga.co.uk/wp-content/uploads/2019/02/CGA_00146-Pub-Report-12page.pdf
-
-
-class PubFiller:
-    def __init__(self, world):
-        self.world = world
-        self.allpubs = self.world.pubs
-        self.pub_weekend_ratio = 0.1
-        self.pub_weekday_ratio = 0.05
-        self.pub_female_ratio = 0.5
-        self.pub_over35_ratio = 0.5
-        self.pub_over55_ratio = 0.3
-        self.full_household_in_pub = 0.5
-        self.adults_in_pub = 0.5
-
-    def fix_number(self, area):
-        nmean = len(area.people)
-        if self.world.timer.weekend:
-            nmean *= self.pub_weekend_ratio
-        else:
-            nmean *= self.pub_weekday_ratio
-        return round(np.random.poisson(nmean))
-
-    def make_weight(self, customer):
-        if customer.age < 18:
-            return 0.
-        weight = 1.
-        if customer.age >= 35 and customer.age < 55:
-            weight *= self.pub_over35_ratio
-        elif customer.age >= 55:
-            weight *= self.pub_over55_ratio
-        if customer.sex == 1:
-            weight *= self.pub_female_ratio
-        return weight
-
-    def place(self, customer):
-        if self.make_weight(customer) < np.random.random():
-            return False
-        pub = np.random.choice(self.pubs)
-        pub.add(customer, Pub.GroupType.guests)
-        if self.world.timer.weekend and random.random() < self.full_household_in_pub:
-            for person in customer.household.people:
-                if person != customer:
-                    pub.add(person, Pub.GroupType.guests)
-        elif not (self.world.timer.weekend) and random.random() < self.adults_in_pub:
-            for person in customer.household.people:
-                if person != customer and person.age >= 18:
-                    pub.add(person, Pub.GroupType.guests)
-        return True
-
-    def fill(self, area):
-        ncustomers = self.fix_number(area)
-        self.pubs = self.allpubs.get_nearest(area)
-        people_in_area = [person for person in area.people if person.carehome is None]
-        while ncustomers > 0:
-            if self.place(np.random.choice(people_in_area)):
-                #TODO think whether people in carehomes go to pubs
-                ncustomers -= 1
-        # for pub in self.pubs:
-        #    print ("pub with",len(pub.people)," customers:")
-        #    for person in pub.people:
-        #        print ("   --> ",person.id,"(",person.age,", ",person.sex,")")

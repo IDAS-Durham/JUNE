@@ -1,19 +1,18 @@
 import sys
-from june.groups.pub import PubFiller
+from june.groups.pub import Pubs
 
 class GroupMaker:
     def __init__(self,world):
         self.world = world
         print ("initialized group maker")
-        self.pubfiller = PubFiller(world)
+        self.pubs = self.world.pubs
         
     def distribute_people(self,grouptype):
         if grouptype=="pubs":
-            #print ("distribute people for ",grouptype,"in",
-            #       len(self.world.areas.members),"areas.")
-            for area in self.world.areas.members:
-                self.pubfiller.fill(area)
-            #self.make_histogram()
+            print ("distribute people for ",grouptype,"in",
+                   len(self.world.areas.members),"areas.")
+            pubs.send_people_to_pub()
+            self.make_histogram()
 
     def make_histogram(self):
         import matplotlib.pyplot as plt

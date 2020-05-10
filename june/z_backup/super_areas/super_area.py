@@ -28,12 +28,22 @@ class SuperArea(Group):
         """
         """
         super().__init__(name, "super_area")
-        self.coordinates = coordinates  # Lon. & Lat
+        self.coordinates = np.array([0.,0.])  # Lon. & Lat
         self.areas = areas              # Output Area
+        self.set_center()
         # collect people
         self.work_people = []
+        self.adult_active_males   = set()
+        self.adult_active_females = set()
         for relevant_group in relevant_groups:
             setattr(self, relevant_group, [])
+
+    def set_center(self):
+        self.coordinates = np.array([0.,0.])
+        for area in self.areas:
+                self.coordinates += area.coordinates
+        self.coordinates /= len(self.areas)
+        #print (self.areas[0].coordinates," --> ",self.coordinates)
 
 
 class SuperAreas:

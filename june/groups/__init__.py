@@ -7,7 +7,7 @@ from .company import Company, Companies
 from .group_maker import GroupMaker
 from .hospital import Hospital, Hospitals
 from .household import Household, Households
-from .pub import Pub, Pubs, PubFiller
+from .pub import Pub, Pubs
 from .school import School, Schools
 
 from .test_group import TestGroup, TestGroups
