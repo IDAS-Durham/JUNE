@@ -29,7 +29,7 @@ class CommuteHubDistributor:
 
         return [lat,lon]
 
-    def distirbute_people(self):
+    def distribute_people(self):
 
         for commutecity in self.commutecities:
             # people commuting into city
@@ -38,12 +38,11 @@ class CommuteHubDistributor:
             # THIS IS GLACIALLY SLOW
             to_commute_in = []
             to_commute_out = []
-            for work_person in work_people
+            for work_person in work_people:
                 msoa = list(self._get_msoa_oa(work_person.area.name))[0]
                 # check if live AND work in metropolitan area
                 if msoa in commutecity.metro_msoas:
                     to_commute_in.append(work_person)
-                    pass
                 # if they live outside and commute in then they need to commute through a hub
                 else:
                     to_commute_out.append(work_person)
@@ -64,6 +63,9 @@ class CommuteHubDistributor:
                 _, hub_index = commutehub_tree.query(live_lat_lon,1)
                 
                 commutehub_in_city[hub_index].passengers.append(work_person)
+
+            for work_person in to_commute_in:
+                commutecity.commute_internal.append(work_person)
                     
                     
                     
