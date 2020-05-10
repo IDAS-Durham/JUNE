@@ -4,26 +4,23 @@ from collections import OrderedDict
 import numpy as np
 from scipy import stats
 
-from june.demography import Person
+from june.demography import Person, Population
 from june.infection.health_index import HealthIndex
 from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
 
 
-class PersonDistributor:
+class WorkerDistributor:
     """
-    Creates the population of the given area with sex and age given
-    by the census statistics
+    This class distributes people to their work. Work is understood as the main
+    activity any individuum pursues during the week, e.g. for pupils it is
+    learning in schools.
     """
 
     def __init__(
         self,
-        world,
-        people,
-        areas,
-        area,
-        msoareas,
+        Population: Population,
         compsec_by_sex_df,
         workflow_df,
         key_compsec_ratio_by_sex_df,
@@ -31,20 +28,6 @@ class PersonDistributor:
     ):
         """
         """
-        self.world = world
-        self.areas = areas
-        self.area = area
-        self.msoareas = msoareas
-        self.people = people
-        self.STUDENT_THRESHOLD = self.world.config["people"]["student_age_group"]
-        self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
-        self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
-        self.area.men_by_age = {}
-        self.area.women_by_age = {}
-        self.relevant_groups = self.world.relevant_groups
-        self._get_key_compsec_id(self.world.config)
-        self.no_kids_area = False
-        self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
         self.health_index = HealthIndex(self.world.config)
@@ -52,16 +35,7 @@ class PersonDistributor:
         self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
 
-    def _get_key_compsec_id(self, config):
-        key_compsec = {
-            key: value for key, value in config.items() if "sub_sector" in value
-        }
-        self.key_compsec_id = []
-        for key1, value1 in key_compsec.items():
-            for key2, value2 in value1.items():
-                if key2 == "sector":
-                    self.key_compsec_id.append(value2)
-
+    
     def _get_age_brackets(self, nomis_age_bin):
         try:
             age_1, age_2 = nomis_age_bin.split("-")
@@ -72,33 +46,10 @@ class PersonDistributor:
             age_2 = age_1
         return int(age_1), int(age_2)
 
+
     def _init_random_variables(self):
         """
-        Reads the frequencies for this area for different attributes based on
-        the census data, and initializes random variables following
-        the discrete distributions.
         """
-        # age data
-        age_freq = self.area.census_freq["age_freq"]
-        age_kids_freq = age_freq.values[: self.ADULT_THRESHOLD]
-        # check if there are no kids in the area, and if so,
-        # declare it a no kids area.
-        if np.sum(age_kids_freq) == 0.0:
-            self.no_kids_area = True
-        else:
-            age_kid_freqs_norm = age_kids_freq / np.sum(age_kids_freq)
-            self.area.kid_age_rv = stats.rv_discrete(
-                values=(np.arange(0, self.ADULT_THRESHOLD), age_kid_freqs_norm)
-            )
-        self.area.nomis_bin_rv = stats.rv_discrete(
-            values=(np.arange(0, len(age_freq)), age_freq.values)
-        )
-        # sex data
-        sex_freq = self.area.census_freq["sex_freq"]
-        self.area.sex_rv = stats.rv_discrete(
-            values=(np.arange(0, len(sex_freq)), sex_freq.values)
-        )
-
         # work msoa area/flow data
         self.work_msoa_woman_rv = stats.rv_discrete(
             values=(
@@ -117,7 +68,7 @@ class PersonDistributor:
         numbers = np.arange(1, 22)
         m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
 
-        distribution_male = self.compsec_by_sex_df.loc[self.area.ame][m_col].values
+        distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
         )
@@ -243,29 +194,7 @@ class PersonDistributor:
 
     def populate_area(self):
         """
-        Creates all people living in this area, with the charactersitics
-        given by the random variables declared in _init_random_variables.
-        The dictionaries with the form self.area._* are meant to be used
-        by the household distributor as the pool of people available to c
-        create households.
         """
-        self.area._kids = {}
-        self.area._men = {}
-        self.area._women = {}
-        self.area._oldmen = {}
-        self.area._oldwomen = {}
-        self.area._student_keys = {}
-        # create age keys for men and women TODO # this would be use to match age of couples
-        # for d in [self._men, self._women, self._oldmen, self._oldwomen]:
-        #    for i in range(self.ADULT_THRESHOLD, self.OLD_THRESHOLD):
-        #        d[i] = {}
-        nomis_bin_random_array = self.area.nomis_bin_rv.rvs(size=self.area.n_residents)
-        age_random_array = []
-        for nomis in nomis_bin_random_array:
-            age_1, age_2 = self._get_age_brackets(self.areas.decoder_age[nomis])
-            age = np.random.randint(age_1, age_2 + 1, 1)[0]
-            age_random_array.append(age)
-        sex_random_array = self.area.sex_rv.rvs(size=self.area.n_residents)
         work_msoa_man_rnd_array = self.work_msoa_man_rv.rvs(size=self.area.n_residents)
         work_msoa_woman_rnd_array = self.work_msoa_woman_rv.rvs(
             size=self.area.n_residents
@@ -278,21 +207,13 @@ class PersonDistributor:
         )
 
         for i in range(self.area.n_residents):
-            sex_random = sex_random_array[i]
-            age_random = age_random_array[i]
-            nomis_bin = nomis_bin_random_array[i]
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
-            health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
                 age=age_random,
                 nomis_bin=nomis_bin,
                 sex=sex_random,
-                health_index=health_index,
-                econ_index=0,
                 mode_of_transport=None,
-                area = self.area
-            )  # self.area.regional_commute_generator.weighted_random_choice())
-            # assign person to an industry TODO: implement unemployment
+            )
             if is_working_age:
                 self._assign_work_msoarea(
                     i, person, work_msoa_man_rnd_array, work_msoa_woman_rnd_array,
@@ -303,28 +224,3 @@ class PersonDistributor:
                     companysector_male_rnd_array,
                     companysector_female_rnd_array,
                 )
-            self.people.members.append(person)
-            self.area.add(person)
-            person.area = self.area
-            # assign person to the right group, this is used in the household distributor.:
-            if sex_random == 0:
-                if age_random not in self.area.men_by_age:
-                    self.area.men_by_age[age_random] = []
-                self.area.men_by_age[age_random].append(person)
-            else:
-                if age_random not in self.area.women_by_age:
-                    self.area.women_by_age[age_random] = []
-                self.area.women_by_age[age_random].append(person)
-
-        self.area.men_by_age = OrderedDict(sorted(self.area.men_by_age.items()))
-        self.area.women_by_age = OrderedDict(sorted(self.area.women_by_age.items()))
-        total_people = 0
-        for people_dict in [self.area.men_by_age, self.area.women_by_age]:
-            for age in people_dict.keys():
-                total_people += len(people_dict[age])
-
-        if total_people != self.area.n_residents:
-            raise BaseException(
-                f"The number of people created {total_people} does not match" / \
-                " the areas' number of residents {self.area.n_residents}"
-            )
