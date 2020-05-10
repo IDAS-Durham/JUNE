@@ -6,7 +6,7 @@ class CommuteUnit:
     These units will be filled dynamically
     """
 
-    def __init__(self, commuteunit_id, city, commutehub_id):
+    def __init__(self, commuteunit_id, city, commutehub_id, is_peak):
         """
         id: (int) id of the commute unit
         station: (string) name of the city the commute unt is associated to
@@ -14,6 +14,7 @@ class CommuteUnit:
         passengers: (list) passengers commuting in the commute unit
         no_passenders: (int) counter of the number of passengers currently in the commute unit
         max_passengers: (int) capacity of the commute unit
+        is_peak: (bool) if True, unit travels at peak time, else it does not
 
         Note: Overcrowding will be accounted for in the interaction model
               i.e. the just because the number of passengers in the unit <= 50 does not mean there
@@ -25,6 +26,7 @@ class CommuteUnit:
         self.passengers = []
         self.no_passengers = 0
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
+        self.is_peak = is_peak
 
 class CommuteUnits:
     """
@@ -59,12 +61,16 @@ class CommuteUnits:
         for hub in self.commutehubs:
             no_passengers = len(hub.passengers)
             no_units = int(float(no_passengers)/50) + 1
-
+            # assign unit to peak/not peak times with prob 0.8/0.2
+            # make this a parameter in the future
+            peak_not_peak = np.random.choice(2,no_units,[0.8,0.2])
+            
             for i in range(no_units):
                 commute_unit = CommuteUnit(
                     commuteunit_id = ids,
                     city = hub.city,
-                    commutehub_id = hub.id
+                    commutehub_id = hub.id,
+                    is_peak = peak_not_peak[i]
                 )
 
                 self.members.append(commute_unit)
