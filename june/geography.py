@@ -36,7 +36,7 @@ class Area:
     """
     Fine geographical resolution.
     """
-
+    __slots__ = "households", "people", "id", "name", "coordinates", "super_area"
     _id = count()
 
     def __init__(
@@ -63,7 +63,6 @@ class Areas:
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
         self.super_area = super_area
-        self.people = set()
 
     def __len__(self):
         return len(self.members)
