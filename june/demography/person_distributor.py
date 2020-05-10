@@ -27,6 +27,7 @@ class PersonDistributor:
         workflow_df,
         key_compsec_ratio_by_sex_df,
         key_compsec_distr_by_sex_df,
+        commute_gen,
     ):
         """
         """
@@ -48,6 +49,7 @@ class PersonDistributor:
         self.workflow_df = workflow_df
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
         self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
+        self.commute_gen = commute_gen
         self._init_random_variables()
 
     def _get_key_compsec_id(self, config):
@@ -285,7 +287,7 @@ class PersonDistributor:
                 nomis_bin=nomis_bin,
                 sex=sex_random,
                 econ_index=0,
-                mode_of_transport=None,
+                mode_of_transport=self.commute_gen.weighted_random_choice(),
                 area = self.area
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment

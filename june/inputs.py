@@ -186,6 +186,13 @@ class Inputs:
                 index_col=0
                 )
 
+        self.read_non_london_stat_pcs()
+        self.read_london_stat_pcs()
+        self.read_uk_pcs_coordinates()
+        self.read_msoa_coordinates()
+        self.read_msoa_oa_coordinates()
+        
+
 
     def read(self, filename):
         df = pd.read_csv(
@@ -587,6 +594,73 @@ class Inputs:
             travel_df["private"] /= travel_df.sum(axis=1)
         return travel_df
 
+    def read_london_stat_pcs(self):
+        london_stat_pcs = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "travel",
+                "London_station_coordinates.csv"
+            )
+        )
+
+        self.london_stat_pcs = london_stat_pcs
+
+    def read_non_london_stat_pcs(self):
+        non_london_stat_pcs = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "travel",
+                "non_London_station_coordinates.csv"
+            )
+        )
+
+        self.non_london_stat_pcs = non_london_stat_pcs
+
+
+    def read_uk_pcs_coordinates(self):
+        uk_pcs_coordinates = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "ukpostcodes_coordinates.csv"
+            )
+        )
+
+        self.uk_pcs_coordinates = uk_pcs_coordinates
+
+
+    def read_msoa_coordinates(self):
+        msoa_coordinates = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "msoa_coordinates_englandwales.csv"
+            )
+        )
+
+        self.msoa_coordinates = msoa_coordinates
+
+    def read_msoa_oa_coordinates(self):
+        msoa_oa_coordinates = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "msoa_oa.csv"
+            )
+        )
+
+        self.msoa_oa_coordinates = msoa_oa_coordinates
+    
     def create_workflow_df(
         self,
         area_mapping,
