@@ -31,10 +31,6 @@ def test__random_box_has_correct_age_distribution(box_random):
     assert np.allclose(counts, mean_age_number, atol=0, rtol=0.1)
 
 
-def test__random_box_has_correct_health_index_distribution(box_random):
-    """Need help testing this"""
-    person = np.random.choice(list(box_random.people))
-    assert hasattr(person, "health_index")
 
 # tests of box based on census data
 @pytest.fixture(name="box_region")
@@ -115,10 +111,5 @@ def test__region_box_has_correct_age_distribution(box_region, inputs):
     ages_histogram, _ = np.histogram(ages_in_simulation, bins = nomis_bin_edges)
     assert(len(ages_histogram) == len(age_counts_total))
     assert(np.allclose(age_counts_total, ages_histogram, atol=0, rtol=1e-2))
-
-def test__region_box_has_correct_health_index(box_region, inputs):
-    """Need help testing this"""
-    person = np.random.choice(list(box_region.people))
-    assert hasattr(person, "health_index")
 
 
