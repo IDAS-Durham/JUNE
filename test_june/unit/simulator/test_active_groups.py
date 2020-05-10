@@ -133,11 +133,9 @@ def test__sick_gets_to_hospital_recovers_and_leaves(simulator):
 @pytest.mark.parametrize("severity", [0.2, 0.4])
 def test__must_stay_at_home_kid_drags_parents(simulator, severity):
     # infect all kids in one school
-    counter = 0
-    school = simulator.world.schools.members[counter]
-    while len(school.people) <= 1:
-        counter += 1
-        school = simulator.world.schools.members[counter]
+    for school in simulator.world.schools.members:
+        if len(school.people) > 10:
+            break
 
     simulator.infection.symptoms.health_index = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
     simulator.infection.symptoms.severity = severity
