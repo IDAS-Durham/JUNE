@@ -26,13 +26,13 @@ default_config = {
 def area_name():
     return "E00088544"
 
-@pytest.fixture(name="geography", scope="session")
+@pytest.fixture(name="geography", scope="module")
 def create_geography():
     return Geography.from_file(filter_key={"msoa" : ["E02004935"]})
 
 
 class TestSchool:
-    @pytest.fixture(name="school", scope="session")
+    @pytest.fixture(name="school", scope="module")
     def create_school(self):
         return School(
             school_name=8123,
@@ -72,14 +72,14 @@ class TestSchools:
     def test__creating_schools_for_zone(self, area):
         schools = Schools.for_zone({"oa": [area]})
 
-    @pytest.fixture(name="schools", scope="session")
+    @pytest.fixture(name="schools", scope="module")
     def test__creating_schools_for_geography(self, geography):
         return Schools.for_geography(geography)
 
     def test__school_nr_for_geography(self, schools):
         assert len(schools) == 4
 
-    def test__school_is_closest_to_itself(index, area, schools):
+    def test__school_is_closest_to_itself(self, schools):
         school = schools.members[0]
         age = int(0.5 * (school.age_min + school.age_max))
         closest_school = schools.get_closest_schools(age, school.coordinates, 1)
