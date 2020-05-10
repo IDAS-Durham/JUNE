@@ -30,7 +30,7 @@ class DefaultInteraction(Interaction):
         # ideally inside from_file
         pass
    
-    def single_time_step_for_group(self, group, time, delta_time):
+    def single_time_step_for_group(self, group, health_index_generator, time, delta_time):
         """
         Runs the interaction model for a time step
         Parameters
@@ -51,12 +51,12 @@ class DefaultInteraction(Interaction):
         for i in range(n_subgroups):
             for j in range(n_subgroups):
                 # grouping[i] infected infects grouping[j] susceptible
-                self.contaminate(group, time, delta_time, i,j)
+                self.contaminate(group, health_index_generator, time, delta_time, i,j)
                 if i!=j:
                     # =grouping[j] infected infects grouping[i] susceptible
-                    self.contaminate(group, time, delta_time, j,i)
+                    self.contaminate(group, health_index_generator, time, delta_time, j,i)
 
-    def contaminate(self,group, time, delta_time,  infecters,recipients):
+    def contaminate(self,group, health_index_generator, time, delta_time,  infecters,recipients):
         #TODO: subtitute by matrices read from file when ready
         n_subgroups = len(group.subgroups)
         contact_matrix = np.ones((n_subgroups, n_subgroups))
@@ -76,7 +76,7 @@ class DefaultInteraction(Interaction):
             if random.random() <= transmission_probability:
                 infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
-                    person=recipient, time=time
+                    person=recipient, health_index_generator=health_index_generator, time=time,
                 )
                 infecter.health_information.increment_infected()
                 recipient.health_information.update_infection_data(
