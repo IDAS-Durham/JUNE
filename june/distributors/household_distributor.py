@@ -39,10 +39,8 @@ default_number_communal_filename = (
     / "data/processed/census_data/output_area/EnglandWales/n_people_in_communal.csv"
 )
 
-default_logging_config_filename = (
-    Path(__file__).parent.parent / "configs/config_world_creation_logger.yaml"
-)
-
+default_logging_config_filename = Path(__file__).parent.parent / \
+    "configs/config_world_creation_logger.yaml"
 
 logger(default_logging_config_filename)
 

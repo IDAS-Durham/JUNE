@@ -48,7 +48,8 @@ class HealthInformation:
     def update_health_status(self, time, delta_time):
         if self.infected:
             if self.infection.symptoms.is_recovered(delta_time):
-                self.set_recovered(time)
+                self.recovered = True
+                #self.set_recovered(time)
             else:
                 self.infection.update_at_time(time+delta_time)
 
@@ -58,6 +59,7 @@ class HealthInformation:
         self.susceptible = False
         self.susceptibility = 0.0
         self.set_length_of_infection(time)
+        self.infection = None
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.tag(symptoms.severity)
@@ -145,6 +147,7 @@ class Person:
         self.carehome = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
+        self.groups = []
         self.industry_specific = None
         self.company_id = None
         self.hospital = None
@@ -196,3 +199,31 @@ class People:
     @property
     def total_people(self):
         return len(self.members)
+
+    @property
+    def infected(self):
+        return [
+            person for person in self.members
+            if person.health_information.infected and not 
+                    person.health_information.dead
+            
+        ]
+
+
+    @property
+    def susceptible(self):
+        return [
+            person for person in self.members
+            if person.health_information.susceptible 
+            
+        ]
+
+    @property
+    def recovered(self):
+        return [
+            person for person in self.members
+            if person.health_information.recovered
+            
+        ]
+
+
