@@ -150,7 +150,7 @@ class Group(AbstractGroup):
         """
 
         for grouping in self.subgroups:
-            if grouping.people != set():
+            if len(grouping.people) != 0:
                 return True
 
         return False
