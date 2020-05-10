@@ -5,7 +5,6 @@ import numpy as np
 from scipy import stats
 
 from june.demography import Person
-from june.infection.health_index import HealthIndex
 from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
@@ -47,7 +46,6 @@ class PersonDistributor:
         self.no_students_area = False
         self.compsec_by_sex_df = compsec_by_sex_df
         self.workflow_df = workflow_df
-        self.health_index = HealthIndex(self.world.config)
         self.compsec_specic_ratio_by_sex_df = key_compsec_ratio_by_sex_df
         self.compsec_specic_distr_by_sex_df = key_compsec_distr_by_sex_df
         self._init_random_variables()
@@ -282,12 +280,10 @@ class PersonDistributor:
             age_random = age_random_array[i]
             nomis_bin = nomis_bin_random_array[i]
             is_working_age = self.ADULT_THRESHOLD <= nomis_bin <= self.OLD_THRESHOLD
-            health_index = self.health_index.get_index_for_age(age_random)
             person = Person(
                 age=age_random,
                 nomis_bin=nomis_bin,
                 sex=sex_random,
-                health_index=health_index,
                 econ_index=0,
                 mode_of_transport=None,
                 area = self.area
