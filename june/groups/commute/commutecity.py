@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class CommuteCity:
     """
-    Defines a city with details about its metropolitan area and who commutes MSOAs within that area
+    Defines a city with details about its metropolitan area and who commutes MSOAs within that area.
     """
 
     def __init__(self, commutecity_id, city, metro_msoas, metro_centroid):
