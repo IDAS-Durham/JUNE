@@ -290,12 +290,12 @@ class World:
 
         self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
         # unit distirbutor is dynamic and should be called at each time step - leave this until later
-        self.commuteunit_distributor.distribute_people()
+        #self.commuteunit_distributor.distribute_people()
 
         #CommuteCityUnit
         self.commutecityunits = CommuteCityUnits(self.commutecities.members, init = True)
         # unit distirbutor is dynamic and should be called at each time step - leave this until later
-        self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
+        #self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
 
     def initialize_households(self):
         """
