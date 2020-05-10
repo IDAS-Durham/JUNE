@@ -7,18 +7,18 @@ import numpy as np
 import yaml
 from tqdm.auto import tqdm  # for a fancy progress bar
 
+from june.inputs import Inputs
 from june import interaction
 from june.box import Box, Boxes, BoxGenerator
 from june.commute import CommuteGenerator
 from june.groups import *
+from june.distributors import *
 from june.health_index import HealthIndex
 from june.demography.person import Person, People
 from june.demography.person_distributor import PersonDistributor
-from june.distributors import *
 from june.infection import Infection
 from june.infection import symptoms
 from june.infection import transmission
-from june.inputs import Inputs
 from june.logger_simulation import Logger
 from june.time import Timer
 
@@ -316,14 +316,15 @@ class World:
         """
         print("Initializing schools...")
         self.schools = Schools.from_file(
-            self.inputs.school_data_path, self.inputs.school_config_path
+            data_file = self.inputs.school_data_path,
+            config_file = self.inputs.school_config_path,
         )
         pbar = tqdm(total=len(self.areas.members))
         for area in self.areas.members:
             self.distributor = SchoolDistributor.from_file(
-                self.schools,
-                area,
-                self.inputs.school_config_path,
+                schools = self.schools,
+                area = area,
+                config_filename = self.inputs.school_distr_config_path,
             )
             self.distributor.distribute_kids_to_school()
             self.distributor.distribute_teachers_to_school()

@@ -20,7 +20,7 @@ class SchoolDistributor:
     Distributes students in an area to different schools 
     """
 
-    def __init__(self, schools: "Schools", area: "Area"):
+    def __init__(self, schools: "Schools", area: "Area", config: dict):
         """
         Get closest schools to this output area, per age group
         (different schools admit pupils with different age ranges)
@@ -94,7 +94,7 @@ class SchoolDistributor:
             config = yaml.load(f, Loader=yaml.FullLoader)
         for key, value in config.items():
             config = value
-        return SchoolDistributor(schools, area, config)
+        return SchoolDistributor(schools=schools, area=area, config=config)
 
     def distribute_kids_to_school(self):
         """
