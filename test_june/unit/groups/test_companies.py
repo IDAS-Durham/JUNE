@@ -1,37 +1,73 @@
+import os
 from pathlib import Path
+
+import pytest
+import numpy as np
 import pandas as pd
 
-from june.groups import Company, Companies
+from june.geography import Geography
+from june.geography import Area
 from june.demography import Person
-
-data_path = (
-    Path(__file__).parent.parent.parent.parent
-    / "data/processed/census_data/company_data"
-)
+from june.groups import Company, Companies
 
 
-def test__add_person_to_company():
-    company = Company()
-    person = Person()
-    company.add(person)
-    person2 = company.people.pop()
-    assert person2 == person
-    assert person2.company == company
+default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "data/processed/census_data/company_data/"
+default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
+default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
 
 
-def test__create_company_from_file():
-    company_size_df = pd.read_csv(data_path / "companysize_msoa11cd_2019.csv")
-    company_size_df.set_index("MSOA", inplace=True)
-    company_sector_df = pd.read_csv(data_path / "companysector_msoa11cd_2011.csv")
-    company_sector_df.set_index("MSOA", inplace=True)
-    company_size_df = company_size_df.div(company_size_df.sum(axis=1), axis=0)
+@pytest.fixture(name="super_area", scope="session")
+def super_area_name():
+    return "E02002559"
 
-    comp_sector_part = company_sector_df.loc[['E02002559']]
-    comp_size_part = company_size_df.loc[['E02002559']]
-    companies = Companies.from_df(comp_size_part, comp_sector_part)
-    assert len(companies.members) == 610
+@pytest.fixture(name="geography", scope="session")
+def create_geography(super_area):
+    return Geography.from_file(filter_key={"msoa" : [super_area]})
 
-    comp_sector_part = company_sector_df.loc[['E02002559', 'E02002560']]
-    comp_size_part = company_size_df.loc[['E02002559', 'E02002560']]
-    companies = Companies.from_df(comp_size_part, comp_sector_part)
-    assert len(companies.members) == 750
+@pytest.fixture(name="person", scope="session")
+def create_person():
+    return Person(sex="m", age=44)
+
+
+class TestCompany:
+    @pytest.fixture(name="company", scope="session")
+    def create_company(self, super_area):
+        return Company(
+            super_area = super_area,
+            n_employees_max = 115,
+            industry = "Q",
+        )
+    
+    def test__company_grouptype(self, company):
+        assert company.GroupType.workers == 0
+
+    def test__empty_company(self, company):
+        assert bool(company.GroupType.workers) is False
+    
+    def test__filling_company(self, person, company):
+        company.add(person, Company.GroupType.workers)
+        assert bool(company.subgroups[0].people) is True
+
+    def test__person_is_employed(self, person, company):
+        company.add(person, Company.GroupType.workers)
+        assert person.company.id == company.id
+
+class TestCompanies:
+    def test__creating_companies_from_file(self, super_area):
+        schools = Companies.from_file(
+            area_names = [super_area],
+            size_nr_file = default_size_nr_file,
+            sector_nr_per_superarea_file = default_sector_nr_per_msoa_file,
+        )
+    
+    def test_creating_schools_for_areas(self, super_area):
+        schools = Companies.for_super_areas([super_area])
+
+    @pytest.fixture(name="companies", scope="session")
+    def test__creating_companies_for_geography(self, geography):
+        return Companies.for_geography(geography)
+
+    def test__companies_nr_for_geography(self, companies):
+        print(len(companies.members))
+        assert len(companies) == 610

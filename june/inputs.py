@@ -65,15 +65,19 @@ class Inputs:
         )
         self.school_config_path = (
             Path(__file__).parent.parent / \
-            "configs/defaults/schools.yaml"
+            "configs/defaults/groups/schools.yaml"
+        )
+        self.school_distr_config_path = (
+            Path(__file__).parent.parent / \
+            "configs/defaults/distributors/school_distributor.yaml"
         )
         self.hospital_data_path = (
             Path(__file__).parent.parent / \
-            "data/processed/hospital_data/england_hospitals_old.csv"
+            "data/processed/hospital_data/england_hospitals.csv"
         )
         self.hospital_config_path = (
             Path(__file__).parent.parent / \
-            "configs/defaults/hospitals.yaml"
+            "configs/defaults/groups/hospitals.yaml"
         )
         # For the old structure (will be removed soon) ------------------------
         self.n_residents = pd.read_csv(

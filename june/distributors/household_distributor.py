@@ -15,15 +15,12 @@ from june.logger_creation import logger
 
 default_config_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/distributors/HouseholdDistributor.yaml"
+    / "configs/defaults/distributors/household_distributor.yaml"
 )
 default_age_difference_files_folder = (
     Path(os.path.abspath(__file__)).parent.parent.parent
     / "data/processed/age_difference"
 )
-default_logging_config_filename = Path(__file__).parent.parent / \
-    "configs/config_world_creation_logger.yaml"
-logger(default_logging_config_filename)
 
 
 """
