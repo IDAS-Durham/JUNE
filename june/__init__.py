@@ -1,6 +1,2 @@
-__name__ = "june"
-from os import path
+from .health_index import HealthIndex
 from .world import World
-from .logger_creation import logging
-from june.geography import Area, Areas, SuperArea, SuperAreas, Geography
-
