@@ -31,7 +31,7 @@ def test__n_infected():
         config_filename=test_directory / "config_ne.yaml",
     )
     n_infections = 2
-    for household in simulator.world.household.members:
+    for household in simulator.world.households.members:
         if household.size > 4:
             break
     simulator.seed(household, n_infections=n_infections)
