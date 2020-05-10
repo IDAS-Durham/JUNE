@@ -259,6 +259,7 @@ class World:
                 wf_area_df,
                 self.inputs.key_compsec_ratio_by_sex_df,
                 self.inputs.key_compsec_distr_by_sex_df,
+                self.commute_generator.regional_gen_from_msoarea(area.name),
             )
             person_distributor.populate_area()
             pbar.update(1)
