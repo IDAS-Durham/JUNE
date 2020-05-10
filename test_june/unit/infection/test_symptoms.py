@@ -1,7 +1,15 @@
+import autofit as af
 from june.infection import symptoms as sym
 
+import os
 import numpy as np
 import pytest
+
+directory = os.path.dirname(os.path.realpath(__file__))
+
+@pytest.fixture(scope="session", autouse=True)
+def do_something():
+    af.conf.instance = af.conf.Config(config_path="{}/files/config/".format(directory))
 
 
 class TestSymptoms:
@@ -27,6 +35,13 @@ class TestSymptoms:
         symptom.severity = 0.18
 
         assert symptom.tag in "influenza-like illness"
+
+    def test__object_from_config(self):
+
+        symptoms = sym.Symptoms.object_from_config()
+
+        assert symptoms == sym.SymptomsConstant
+
 
 
 class TestSymptomsConstant:
