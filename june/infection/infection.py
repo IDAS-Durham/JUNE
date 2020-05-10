@@ -22,7 +22,8 @@ class Infection:
 
         self.infection_probability = 0.0
 
-    def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
+    #def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
+    def infect_person_at_time(self, person, time):
         """Infects someone by initializing an infection object using the epidemiology model.
 
         The epidemiology input uses a CollectionPriorModel of PyAutoFit, which has associated with it a Symptoms
@@ -41,17 +42,17 @@ class Infection:
             time (float) the time of infection.
         """
 
-        instance = epidemiology.random_instance()
+        #instance = epidemiology.random_instance()
 
         # TODO : This is hacky, whats the best way we can feed health inforrmation through to symptoms. Can we move the
         # TODO : health index to the Infection class?
 
-        instance.symptoms.health_index = self.symptoms.health_index
+        #instance.symptoms.health_index = self.symptoms.health_index
 
         infection = Infection(
             start_time=time,
-            transmission=instance.transmission,
-            symptoms=instance.symptoms
+            transmission=self.transmission, #instance.transmission,
+            symptoms=self.symptoms, #instance.symptoms
         )
 
         person.health_information.set_infection(infection=infection)
