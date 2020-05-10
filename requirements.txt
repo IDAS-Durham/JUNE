@@ -48,3 +48,4 @@ PyYAML==5.3.1
 PyQt5==5.14.2
 PyQt5-sip==12.7.2
 seaborn==0.10.0
+autofit==0.58.0
