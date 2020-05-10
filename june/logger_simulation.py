@@ -31,25 +31,29 @@ class Logger:
         recovered_world = 0
         if not self.box_mode:
             for area in self.world.areas.members:
-                self.data_dict[area.name][day] = {}
                 susceptible, infected, recovered = self.get_infected_people_area(area)
                 susceptible_world += susceptible
                 infected_world += infected
                 recovered_world += recovered
-                self.data_dict[area.name][day]["susceptible"] = susceptible
-                self.data_dict[area.name][day]["infected"] = infected
-                self.data_dict[area.name][day]["recovered"] = recovered
-            self.data_dict["world"][day] = {}
-            self.data_dict["world"][day]["susceptible"] = susceptible_world
-            self.data_dict["world"][day]["infected"] = infected_world
-            self.data_dict["world"][day]["recovered"] = recovered_world
+                self.data_dict[area.name][day] = {
+                        "susceptible": susceptible,
+                        "infected": infected,
+                        "recovered": recovered,
+                        }
+
+            self.data_dict["world"][day] = {
+                    "susceptible": susceptible_world,
+                    "infected": infected_world,
+                    "recovered": recovered_world,
+                    }
             #self.log_r0() TODO implement
         else:
             box = self.world.boxes.members[0]
-            self.data_dict["world"][day] = {}
-            self.data_dict["world"][day]["susceptible"] = len(self.world.people.susceptible)
-            self.data_dict["world"][day]["infected"] = len(self.world.people.infected)
-            self.data_dict["world"][day]["recovered"] = len(self.world.people.recovered)
+            self.data_dict["world"][day] = {
+                    "susceptible": len(self.world.people.susceptible),
+                    "infected": len(self.world.people.infected),
+                    "recovered": len(self.world.people.recovered)
+                    }
             # self.log_infection_generation(day)
             #self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
