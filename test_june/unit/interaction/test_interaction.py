@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 from june import world
 from june.demography.person import Person
@@ -32,9 +31,9 @@ def days_to_infection(interaction, susceptible_person, group):
     return days_to_infection
 
 
-#@pytest.mark.parametrize(
+# @pytest.mark.parametrize(
 #    "group_size", (2, 5)
-#)
+# )
 def test__time_it_takes_to_infect(config, group_size=2):
     interaction = DefaultInteraction.from_file(test_config_file)
 
@@ -45,7 +44,7 @@ def test__time_it_takes_to_infect(config, group_size=2):
 
     n_days = []
     for n in range(1000):
-        group = TestGroup(1)
+        group = TestGroup()
         infected_person = Person()
         infected_reference.infect_person_at_time(infected_person, 1)
         group.add(infected_person, qualifier=TestGroup.GroupType.default)

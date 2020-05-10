@@ -50,7 +50,7 @@ class Group(AbstractGroup):
         "leisure_Indoor",
         "pub",
         "random",
-        "TestGroup",
+        "test_group",
         "referenceGroup",
         "shopping",
         "school",
