@@ -144,7 +144,7 @@ class Group(AbstractGroup):
         )
 
     @property
-    def contains_people(self) -> Bool:
+    def contains_people(self) -> bool:
         """
         Does this group contain at least one person?
         """
