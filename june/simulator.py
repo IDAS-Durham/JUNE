@@ -1,39 +1,66 @@
 import yaml
 import logging
+import random
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Tuple, Dict, Optional
+import numpy as np
 
+from june.logger_simulation import Logger
 from june.time import Timer
-from june.interaction import *
+from june import interaction
 from june.infection import Infection
 
 default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 
 sim_logger = logging.getLogger(__name__)
 
+# TODO: Split the config into more manageable parts for tests
 class Simulator:
-    def __init__(self, world: "World", config: dict):
-        '''
+    def __init__(
+        self,
+        world: "World",
+        interaction: "Interaction",
+        infection: Infection,
+        config: dict,
+    ):
+        """
         Class to run an epidemic spread simulation on the world
 
         Parameters
         ----------
         world: 
             instance of World class
+        interaction:
+            instance of Interaction class, determines
              
         config:
             dictionary with configuration to set up the simulation
-        '''
+        """
         self.world = world
-        self.config = config
-        self.timer = Timer(self.config["time"])
+        self.interaction = interaction
+        self.infection = infection
+        self.permanent_group_hierarchy = [
+            "boxes",
+            "hospitals",
+            "companies",
+            "schools",
+            "carehomes",
+            "households",
+        ]
+        self.randomly_order_groups = [
+            "pubs",
+            "churches",
+        ]
+        self.check_inputs(config["time"])
+        self.timer = Timer(config["time"])
+        self.logger = Logger(
+            self.world, self.timer, config, config["logger"]["save_path"],
+        )
 
     @classmethod
-    def load_from_file(
-            cls,
-            world,
-            config_filename = default_config_filename
-            ) -> "Simulator":
+    def from_file(
+            cls, world: "World", interaction: "Interaction", infection: Infection, config_filename: str=default_config_filename
+    ) -> "Simulator":
 
         """
         Load config for simulator from world.yaml
@@ -49,19 +76,45 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        return Simulator(world, interaction, infection, config)
 
-        return Simulator(cls, world, config)
+    def check_inputs(self, config: dict):
 
-    def initialize_interaction(self):
+        # Sadly, days only have 24 hours
+        assert sum(config["step_duration"]["weekday"].values()) == 24
+        # even during the weekend :(
+        assert sum(config["step_duration"]["weekend"].values()) == 24
+
+        # Check that all groups given in config file are in the valid group hierarchy
+        all_groups = self.permanent_group_hierarchy + self.randomly_order_groups
+        for step, active_groups in config["step_active_groups"]["weekday"].items():
+            assert all(group in all_groups for group in active_groups)
+
+        for step, active_groups in config["step_active_groups"]["weekend"].items():
+            assert all(group in all_groups for group in active_groups)
+
+    def apply_group_hierarchy(self, active_groups: List[str]) -> List[str]:
         """
-        Initialize interaction from config file
+        Returns a list of active groups with the right order, obeying the permanent group hierarcy
+        and shuflling the random one. It is very important having carehomes and households at the very end.
+
+        Parameters
+        ----------
+        active_groups:
+            list of groups that are active at a given time step
+        Returns
+        -------
+        Ordered list of active groups according to hierarchy
         """
-        #TODO: Interaction should have a from config file
-        interaction_type = self.config["interaction"]["type"]
-        interaction_parameters = self.config["interaction"].get("parameters") or dict()
-        interaction_class_name = "Interaction" + interaction_type.capitalize()
-        interaction = globals()[interaction_class_name](interaction_parameters, self.world)
-        return interaction
+        random.shuffle(self.randomly_order_groups)
+        group_hierarchy = [
+            group
+            for group in self.permanent_group_hierarchy
+            if group not in ["carehomes", "households"]
+        ]
+        group_hierarchy += self.randomly_order_groups + ["carehomes", "households"]
+        active_groups.sort(key=lambda x: group_hierarchy.index(x))
+        return active_groups
 
     def set_active_group_to_people(self, active_groups: List["Groups"]):
         """
@@ -73,10 +126,11 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
+        active_groups = self.apply_group_hierarchy(active_groups)
         for group_name in active_groups:
-            grouptype = getattr(self, group_name)
-            # TODO: think about how to introduce this
-            #self.group_maker.distribute_people(group_name)
+            grouptype = getattr(self.world, group_name)
+            if "pubs" in active_groups:
+                self.world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
 
@@ -89,54 +143,67 @@ class Simulator:
         for person in self.world.people.members:
             person.active_group = None
 
-    def initialize_infection(self):
+    def hospitalise_the_sick(self, person):
         """
-        Initialize infection from config file
+        These functions could be more elegantly handled by an implementation inside a group collection.
+        I'm putting them here for now to maintain the same functionality whilst removing a person's
+        reference to the world as that makes it impossible to perform population generation prior
+        to world construction.
+
+        Parameters
+        ---------
+        person:
+            person to hospitalise
         """
-        #TODO: Infection should have a from config file to rely on
-        # in case of KeyError by using try-except
-        infection_config = self.config["infection"]
-        transmission_config = infection_config["transmission"]
-        
-        if "parameters" in infection_config:
-            infection_parameters = infection_config["parameters"]
-        else:
-            infection_parameters = {}
-        if "transmission" in infection_config:
-            transmission_type = transmission_config["type"]
-            transmission_parameters = transmission_config["parameters"]
-            transmission_class_name = "Transmission" + transmission_type.capitalize()
-        else:
-            trans_class = "TransmissionConstant"
-            transmission_parameters = {}
+        if person.in_hospital is None:
+            self.world.hospitals.allocate_patient(person)
 
-        trans_class = getattr(transmission, transmission_class_name)
-        transmission_class = trans_class(**transmission_parameters)
-        
-        if "symptoms" in self.config["infection"]:
-            symptoms_type = self.config["infection"]["symptoms"]["type"]
-            symptoms_parameters = self.config["infection"]["symptoms"]["parameters"]
-            symptoms_class_name= "Symptoms" + symptoms_type.capitalize()
-        else:
-            symptoms_class_name = "SymptomsGaussian"
-            symptoms_parameters = {}
-        
-        symp_class = getattr(symptoms, symptoms_class_name)
-        reference_health_index = HealthIndex().get_index_for_age(40)
-        symptoms_class = symp_class(
-            health_index=reference_health_index,
-            **symptoms_parameters
-        )
-        infection = Infection(
-            self.timer.now,
-            transmission_class,
-            symptoms_class,
-            **infection_parameters
-        )
-        return infection
+    def bury_the_dead(self, person: "Person"):
+        """
+        When someone dies, send them to cemetery. 
+        ZOMBIE ALERT!! Specially important, remove from all groups in which
+        that person was present. 
 
-    def seed_infections_group(self, group: "Group", n_infections: int):
-        '''
+        Parameters
+        ---------
+        person:
+            person sent to cemetery
+        """
+        cemetery = self.world.cemeteries.get_nearest(person)
+        cemetery.add(person)
+        person.household.remove_person(person)
+        for group in person.groups:
+            group.remove_person(person)
+
+    def update_health_status(self, time: float, delta_time: float):
+        """
+        Update symptoms and health status of infected people
+
+        Parameters
+        ----------
+        time:
+            time now
+        delta_time:
+            duration of time step
+        """
+
+        for person in self.world.people.infected:
+            health_information = person.health_information
+            health_information.update_health_status(time, delta_time)
+            # release patients that recovered
+            if health_information.recovered:
+                if person.in_hospital is not None:
+                    person.in_hospital.release_as_patient(person)
+                health_information.set_recovered(time)
+
+            elif health_information.in_hospital:
+                self.hospitalise_the_sick(person)
+
+            elif health_information.dead:
+                self.bury_the_dead(person)
+
+    def seed(self, group: "Group", n_infections: int):
+        """
         Randomly pick people in group to seed the infection
 
         Parameters
@@ -147,78 +214,69 @@ class Simulator:
         n_infections:
             number of random people to infect in the given group
 
-        '''
-        choices = np.random.choice(group.size, n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
+        """
+        # TODO: add attribute susceptible to people
+        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
+        choices = np.random.choice(len(group.people), n_infections, replace=False)
+        infecter_reference = self.infection
         for choice in choices:
-            infecter_reference.infect_person_at_time(group.people[choice], self.timer.now)
-        group.update_status_lists(self.timer.now, delta_time=0)
-
-    def seed_infections_box(self, n_infections: int):
-        '''
-        Randomly pick people in box to seed the infection
-
-        Parameters
-        ----------
-        n_infections:
-            number of random people to infect in the box
-
-        '''
-        sim_logger.info("seed ", n_infections, "infections in box")
-        choices = np.random.choice(self.people.members, n_infections, replace=False)
-        infecter_reference = self.initialize_infection()
-        for choice in choices:
-            infecter_reference.infect_person_at_time(choice, self.timer.now)
-        self.boxes.members[0].update_status_lists(self.timer.now, delta_time=0)
+            infecter_reference.infect_person_at_time(
+                list(group.people)[choice], self.timer.now
+            )
+        self.update_health_status(0, 0)
+        # in case someone has to go directly to the hospital
 
     def do_timestep(self):
-        '''
+        """
         Perform a time step in the simulation
 
-        '''
+        """
         active_groups = self.timer.active_groups()
-        if active_groups == None or len(active_groups) == 0:
-            sim_logger.info("==== do_timestep(): no active groups found. ====")
+        if not active_groups or len(active_groups) == 0:
+            world_logger.info("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
-        groups_instances = [getattr(self, group) for group in active_groups]
-        self.interaction.groups = groups_instances
-        self.interaction.time_step()
-        #TODO: update people's status that is currently in interaction
+        group_instances = [getattr(self.world, group) for group in active_groups]
+        n_people = 0
+        for group_type in group_instances:
+            for group in group_type.members:
+                self.interaction.time_step(self.timer.now, self.timer.duration, group)
+                n_people += group.size_active
+
+        self.update_health_status(self.timer.now, self.timer.duration)
+        if not self.world.box_mode:
+            for cemetery in self.world.cemeteries.members:
+                n_people += len(cemetery.people)
+
+        # assert conservation of people
+        assert n_people == len(self.world.people.members)
+
         self.set_allpeople_free()
 
-    def run(self, n_seed=100):
+    def run(self, save=False):
+        """
+        Run simulation with n_seed initial infections
+
+        Parameters
+        ----------
+        save:
+            whether to save the last state of the world
+
+        """
         sim_logger.info(
-            "Starting group_dynamics for ",
-            self.timer.total_days,
-            " days at day",
-            self.timer.day,
+            f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
         )
-        assert sum(self.config["time"]["step_duration"]["weekday"].values()) == 24
-        # TODO: move to function that checks the config file (types, values, etc...)
-        # initialize the interaction class with an infection selector
-        #TODO: should we do that in from_file ?? 
-        if self.box_mode:
-            self.seed_infections_box(n_seed)
-        else:
-            sim_logger.info("Infecting individuals in their household,",
-                  "for in total ", len(self.households.members), " households.")
-            for household in self.households.members:
-                self.seed_infections_group(household, 1)
         sim_logger.info(
-            "starting the loop ..., at ",
-            self.timer.day,
-            " days, to run for ",
-            self.timer.total_days,
-            " days",
+            f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
 
         for day in self.timer:
             if day > self.timer.total_days:
                 break
             self.logger.log_timestep(day)
-            self.do_timestep(self.timer)
-
-
+            self.do_timestep()
+        # Save the world
+        if save:
+            self.world.to_pickle()
