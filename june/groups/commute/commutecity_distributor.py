@@ -22,8 +22,7 @@ class CommuteCityDistributor:
                 if msoa.name in metro_msoas:
                     for person in msoa.work_people:
                         # assign people who commute to the given city
-                        if person.mode_of_transport.is_public:
-                            commutecity.passengers.append(person)
+                        commutecity.passengers.append(person)
             
             
             
