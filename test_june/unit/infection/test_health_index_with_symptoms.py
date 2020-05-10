@@ -19,8 +19,8 @@ def test__right_frequency_in_health_index():
         if symptoms.tag != 'healthy':
             frequencies[ALLOWED_SYMPTOM_TAGS.index(symptoms.tag)] += 1
 
-    np.testing.assert_allclose(frequencies[0]/N_samples, health_index[0], atol=0.02)
-    np.testing.assert_allclose(frequencies[1]/N_samples, health_index[1]-health_index[0], atol=0.02)
-    np.testing.assert_allclose(frequencies[2]/N_samples, health_index[2]-health_index[1], atol=0.02)
-    np.testing.assert_allclose(frequencies[3]/N_samples, health_index[3]-health_index[2], atol=0.02)
-    np.testing.assert_allclose(frequencies[4]/N_samples, health_index[4]-health_index[3], atol=0.02)
+    np.testing.assert_allclose(frequencies[0]/N_samples, health_index[0], atol=0.05)
+    np.testing.assert_allclose(frequencies[1]/N_samples, health_index[1]-health_index[0], atol=0.05)
+    np.testing.assert_allclose(frequencies[2]/N_samples, health_index[2]-health_index[1], atol=0.05)
+    np.testing.assert_allclose(frequencies[3]/N_samples, health_index[3]-health_index[2], atol=0.05)
+    np.testing.assert_allclose(frequencies[4]/N_samples, health_index[4]-health_index[3], atol=0.05)

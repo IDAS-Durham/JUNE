@@ -90,12 +90,12 @@ class SymptomsStep(Symptoms):
 
         self.time_offset = max(0.0, time_offset)
         self.end_time = max(0.0, end_time)
-        self.maxseverity = random.random()
+        self.max_severity = random.random()
 
     def update_severity_from_delta_time(self, delta_time):
 
         if self.time_offset <= delta_time <= self.end_time:
-            severity = self.maxseverity
+            severity = self.max_severity
         else:
             severity = 0.0
 
@@ -129,5 +129,5 @@ class SymptomsTanh(Symptoms):
 
         print(severity)
 
-        severity *= self.maxseverity
+        severity *= self.max_severity
         self.severity = severity
