@@ -25,6 +25,7 @@ class CommuteCity:
         self.city = city
         self.passengers = []
         self.commutehubs = []
+        self.commute_internal = []
 
 class CommuteCities:
     """
