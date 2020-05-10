@@ -4,6 +4,7 @@ import numpy as np
 
 from june.groups.group import Group
 from enum import IntEnum
+from typing import List
 
 
 class Household(Group):
@@ -52,8 +53,14 @@ class Households:
     Contains all households for the given area, and information about them.
     """
 
-    def __init__(self):
-        self.members = []
+    def __init__(self, households: List[Household]):
+        self.members = households
+
+    def __iter__(self):
+        return iter(self.members)
+    
+    def __len__(self):
+        return len(self.members)
 
     def __add__(self, households: "Households"):
         """
