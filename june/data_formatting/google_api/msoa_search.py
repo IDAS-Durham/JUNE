@@ -60,6 +60,7 @@ class MSOASearch():
         for i in range(len(coordinates)):
             out = apicall.nearby_search_loop(location=(coordinates[i][0],coordinates[i][1]),radius=4600,location_type=self.args.location_type)
             outs.append(out)
+            #print (out)
 
         return outs
 
