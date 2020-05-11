@@ -113,4 +113,5 @@ def test__initialize_hospitals_from_geography():
     geography = Geography.from_file({"msoa": ["E02003999", "E02006764"]})
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
-    assert hospitals.members[0].beds == 190
+    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 190
+    assert hospitals.members[0].super_area.name in ["E02003999", "E02006764"]

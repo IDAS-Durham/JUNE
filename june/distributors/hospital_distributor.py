@@ -68,20 +68,16 @@ class HospitalDistributor:
             2232: Midwives
         """
         hospitals_in_msoa = self.hospitals_in_msoa(msoa)
-        print(msoa)
-        print(hospitals_in_msoa)
         if len(hospitals_in_msoa) == 0:
             return None
-
         medics = [
             person
             for idx, person in enumerate(msoa.workers)
             if person.industry == self.healthcare_sector_label
         ]
-
         if len(medics) == 0:
             logger.info(f"\n The MSOArea {msoa.name} has no people that work in it!")
-
+            return None
         else:
             # equal chance to work in any hospital nearest to any area within msoa
             # Note: doing it this way rather then putting them into the area which
@@ -98,8 +94,5 @@ class HospitalDistributor:
             for i, medic in enumerate(medics):
                 if medic.industry_specific is not None:
                     hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
-
                     # if (hospital.n_medics < hospital.n_medics_max):# and \
-                    medic.hospital = hospital.id
-                    medic.company_id = hospital.id
-                    hospital.n_medics += 1
+                    hospital.add(medic, hospital.GroupType.workers)

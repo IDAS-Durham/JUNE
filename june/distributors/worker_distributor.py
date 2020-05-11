@@ -58,6 +58,7 @@ class WorkerDistributor:
     
     def distribute(self, geography: Geography, population: Population):
         self.geography = geography
+        print(geography.super_areas.members[0].name)
         for area in iter(geography.areas):  #TODO a.t.m. only for_geography() supported
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))

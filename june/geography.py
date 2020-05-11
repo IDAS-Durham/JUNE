@@ -62,6 +62,8 @@ class Area:
 
 
 class Areas:
+
+    __slots__ = "members", "super_area"
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
         self.super_area = super_area
@@ -77,7 +79,7 @@ class SuperArea:
     """
     Coarse geographical resolution.
     """
-
+    __slots__ = "id", "name", "coordinates", "workers", "areas"
     _id = count()
 
     def __init__(
@@ -238,7 +240,7 @@ class Geography:
             geo_hierarchy["msoa"]
         ].drop_duplicates()
         geo_hierarchy.set_index("msoa", inplace=True)
-        return Geography(geo_hierarchy, areas_coord, super_areas_coord)
+        return cls(geo_hierarchy, areas_coord, super_areas_coord)
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
@@ -248,27 +250,3 @@ def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame
     return data[
         data[list(filter_key.keys())[0]].isin(list(filter_key.values())[0]).values
     ]
-
-
-if __name__ == "__main__":
-    from time import time
-    import resource
-
-    def using(point=""):
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        return """%s: usertime=%s systime=%s mem=%s mb
-               """ % (
-            point,
-            usage[0],
-            usage[1],
-            usage[2] / 1024.0,
-        )
-
-    t1 = time()
-    print(using("before"))
-    geography = Geography.from_file(
-        #        filter_key={"region": ["North East"]}
-    )
-    t2 = time()
-    print(using("after"))
-    print(f"Took {t2-t1} seconds to create the UK.")
