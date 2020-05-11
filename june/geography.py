@@ -97,6 +97,9 @@ class SuperArea:
         self.workers.add(person)
         person.work_super_area = self
 
+    @property
+    def people(self):
+        return list(chain(*[area.people for area in self.areas.values]))
     #def add(self, person, qualifier=GroupType.workers): <- maybe this is better
     #    super().add(person, qualifier)
     #    person.company = self
@@ -112,6 +115,9 @@ class SuperAreas:
     def __iter__(self):
         return iter(self.members)
 
+    @property
+    def people(self):
+        return list(chain(*[super_area.people for super_area in self.members]))
 
 class Geography:
     def __init__(
