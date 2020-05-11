@@ -1,4 +1,3 @@
-import numpy as np
 from june.groups.group import Group
 
 
@@ -19,21 +18,26 @@ class SuperArea(Group):
     """
 
     def __init__(
-        self,
-        coordinates,
-        areas: list,
-        name: str,
-        relevant_groups: list
+            self,
+            coordinates,
+            areas: list,
+            name: str,
+            relevant_groups: list
     ):
         """
         """
-        super().__init__(name, "super_area")
+        super().__init__()
+        self._name = name
         self.coordinates = coordinates  # Lon. & Lat
-        self.areas = areas              # Output Area
+        self.areas = areas  # Output Area
         # collect people
         self.work_people = []
         for relevant_group in relevant_groups:
             setattr(self, relevant_group, [])
+
+    @property
+    def name(self):
+        return self._name
 
 
 class SuperAreas:
@@ -41,4 +45,3 @@ class SuperAreas:
         self.world = world
         self.members = []
         self.names_in_order = None  # for fast search
-

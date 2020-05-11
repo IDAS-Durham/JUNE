@@ -35,7 +35,7 @@ class TestSchool:
     @pytest.fixture(name="school", scope="session")
     def create_school(self):
         return School(
-            school_name=8123,
+            school_id=8123,
             coordinates=(1., 1.),
             n_pupils_max=467,
             n_teachers_max=73,

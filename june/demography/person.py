@@ -136,7 +136,7 @@ class Person:
         self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
-        self.work_msoarea = None
+        self.work_super_area = None
         self.household = None
         self.area = area
         # primary activity attributes
@@ -158,16 +158,11 @@ class People:
     def __init__(self, world):
         self.members = []
 
-    # @classmethod
-    # def from_file(cls, filename: str,: str) -> "People":
-    #    """
-    #    """
-    #    = pd.read_csv(filename, index_col=0)
-    #    return People(,)
 
     @property
     def total_people(self):
         return len(self.members)
+
 
     @property
     def infected(self):
@@ -186,6 +181,7 @@ class People:
             if person.health_information.susceptible 
             
         ]
+
 
     @property
     def recovered(self):
