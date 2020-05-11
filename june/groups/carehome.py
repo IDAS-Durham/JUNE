@@ -54,7 +54,7 @@ class CareHomes:
         return len(self.members)
 
     @classmethod
-    def from_geography(cls, geography, data_filename: str = default_data_path):
+    def for_geography(cls, geography, data_filename: str = default_data_path):
         """
         Initializes carehomes from geography.
         """
