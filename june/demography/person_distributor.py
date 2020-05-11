@@ -119,7 +119,7 @@ class PersonDistributor:
         numbers = np.arange(1, 22)
         m_col = [col for col in self.compsec_by_sex_df.columns.values if "m " in col]
 
-        distribution_male = self.compsec_by_sex_df.loc[self.area.ame][m_col].values
+        distribution_male = self.compsec_by_sex_df.loc[self.area.name][m_col].values
         self.sector_distribution_male = stats.rv_discrete(
             values=(numbers, distribution_male)
         )

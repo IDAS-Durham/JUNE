@@ -703,14 +703,11 @@ class Inputs:
         msoa = np.unique(area_mapping[
             area_mapping["OA"].isin(list(oa_in_world))
         ]["MSOA"].values)
-        print(len(msoa))
         wf_df = wf_df[wf_df["home_msoa11cd"].isin(list(msoa))]
         # convert into ratios
         wf_df = wf_df.groupby(["home_msoa11cd", "work_msoa11cd"]).agg(
             {"n_man": "sum", "n_woman": "sum"}
         )
-        print(np.sum(
-            wf_df.groupby(level=0)["n_man"].apply(lambda x: x / float(x.sum(axis=0))).values))
         wf_df["n_man"] = (
             wf_df.groupby(level=0)["n_man"]
             .apply(lambda x: x / float(x.sum(axis=0)))
