@@ -8,25 +8,20 @@ from typing import List, Tuple, Dict, Optional
 
 import numpy as np
 import pandas as pd
-from sklearn.neighbors._ball_tree import BallTree
+from sklearn.neighbors import BallTree
 
 from june.geography import Geography
 from june.groups.group import Group
 from june.groups.group import Subgroup
 from june.logger_creation import logger
 
-default_data_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/school_data/england_schools_data.csv"
-)
-default_areas_map_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/geographical_data/oa_msoa_region.csv"
-)
-default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/groups/schools.yaml"
-)
+default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
+default_data_filename = default_base_path / \
+        "data/processed/school_data/england_schools_data.csv"
+default_areas_map_path = default_base_path / \
+        "data/processed/geographical_data/oa_msoa_region.csv"
+default_config_filename = default_base_path / \
+        "configs/defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
 
