@@ -2,7 +2,6 @@ import pytest
 from june.geography import Geography
 from june.demography import Demography
 from june.groups import Hospitals, Companies, Schools, CareHomes, Cemeteries
-from june.world_new import World
 from june.simulator import Simulator
 
 

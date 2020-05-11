@@ -271,7 +271,7 @@ class HouseholdDistributor:
         men_by_age = {}
         women_by_age = {}
         for person in area.people:
-            if hasattr(person, 'carehome') and person.carehome is not None:
+            if person.carehome is not None:
                 continue
             if person.sex == "m":
                 if person.age not in men_by_age:

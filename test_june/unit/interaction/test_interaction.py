@@ -5,8 +5,8 @@ import pytest
 
 from june import world
 from june.demography.person import Person
-from june.groups import TestGroup  # this should not be needed anymore
 from june.interaction import *
+from june.groups import Group
 
 test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
 
@@ -31,7 +31,9 @@ def days_to_infection(interaction, susceptible_person, group):
         days_to_infection += 1
     return days_to_infection
 
-
+class MockGroup(Group):
+    def __init__(self):
+        super().__init__("test", "TestGroup")
 #@pytest.mark.parametrize(
 #    "group_size", (2, 5)
 #)
@@ -40,15 +42,15 @@ def test__time_it_takes_to_infect(infection, group_size=2):
 
     n_days = []
     for n in range(1000):
-        group = TestGroup(1)
+        group = MockGroup()
         infected_person = Person()
         infection.infect_person_at_time(infected_person, 1)
-        group.add(infected_person, qualifier=TestGroup.GroupType.default)
-        group[TestGroup.GroupType.default].infected.add(infected_person)
+        group.add(infected_person, qualifier=MockGroup.GroupType.default)
+        group[MockGroup.GroupType.default].infected.add(infected_person)
         susceptible_person = Person()
-        group.add(susceptible_person, qualifier=TestGroup.GroupType.default)
+        group.add(susceptible_person, qualifier=MockGroup.GroupType.default)
         for i in range(group_size - 2):
-            group.add(Person(), qualifier=TestGroup.GroupType.default)
+            group.add(Person(), qualifier=MockGroup.GroupType.default)
 
         # activate everyone in the group
         for person in group.people:
