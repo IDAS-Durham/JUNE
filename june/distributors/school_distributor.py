@@ -220,8 +220,12 @@ class SchoolDistributor:
                 school.add(person, school.GroupType.students)
                 school.age_structure[person.age] += 1
                 school.n_pupils += 1
+    
+    def distribute_teachers_to_schools_in_geography(self, geography: Geography):
+        for msoarea in geography.super_areas:
+            self.distribute_teachers_to_school(msoarea)
 
-    def distribute_teachers_to_school(self, school: School, msoarea: SuperArea):
+    def distribute_teachers_to_school(self, msoarea: SuperArea):
         """
         Education sector
             2311: Higher education teaching professional
@@ -234,7 +238,7 @@ class SchoolDistributor:
         # TODO add key-company-sector id to config.yaml
         teachers = [
             person
-            for idx, person in enumerate(msoarea.work_people)
+            for idx, person in enumerate(msoarea.workers)
             if person.industry == self.education_sector_label
         ]
 
