@@ -58,8 +58,9 @@ class World:
             for person in population:
                 area.add(person)
         if hasattr(geography, "carehomes"):
-            carehome_distributor = CareHomeDistributor.for_geography(geography)
-            carehome_distributor.populate_carehome_in_areas(geography.areas)
+            carehome_distributor = CareHomeDistributor().populate_carehome_in_areas(
+                geography.areas
+            )
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
             self.households = household_distributor.distribute_people_and_households_to_areas(

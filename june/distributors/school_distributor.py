@@ -204,6 +204,9 @@ class SchoolDistributor:
                     for i in range(
                         0, self.neighbour_schools
                     ):  # look for non full school
+                        if i >= len(closest_schools_by_age[person.age]):
+                            #TEST THIS
+                            break
                         school = closest_schools_by_age[person.age][i]
                         # check number of students in that age group
                         yearindex = person.age - school.age_min + 1
@@ -214,11 +217,6 @@ class SchoolDistributor:
                             schools_full += 1
                         else:
                             break
-                    if schools_full == self.neighbour_schools:  # all schools are full
-                        continue
-
-                    else:  # just keep the school saved in the previous for loop
-                        pass
                 school.add(person, school.GroupType.students)
                 school.age_structure[person.age] += 1
                 school.n_pupils += 1
