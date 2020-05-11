@@ -1,101 +1,89 @@
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from june.groups import *
+from june.geography import Geography
+from june.geography import Area
+from june.demography import Person
+from june.groups import School, Schools
+
+default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "data/processed/school_data/england_schools_data.csv"
+default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "data/processed/geographical_data/oa_msoa_region.csv"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
+    "configs/defaults/groups/schools.yaml"
+
+default_config = {
+    "age_range": (0, 19),
+    "employee_per_clients": {"primary": 30, "secondary": 30},
+}
+
+@pytest.fixture(name="area")
+def area_name():
+    return "E00088544"
+
+@pytest.fixture(name="geography", scope="session")
+def create_geography():
+    return Geography.from_file(filter_key={"msoa" : ["E02004935"]})
 
 
-def test__total_number_schools_is_correct():
-    data_directory = Path(__file__).parent.parent.parent.parent
-    school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
-    config_path = data_directory / "configs/defaults/schools.yaml"
-    school_df = pd.read_csv(school_path)
-    schools = Schools.from_file(school_path, config_path)
-    assert len(schools.members) == len(school_df)
+class TestSchool:
+    @pytest.fixture(name="school", scope="session")
+    def create_school(self):
+        return School(
+            school_name=8123,
+            coordinates=(1., 1.),
+            n_pupils_max=467,
+            n_teachers_max=73,
+            age_min=6,
+            age_max=19,
+            sector="primary_secondary",
+        )
+    
+    def test__school_grouptype(self, school):
+        assert school.GroupType.teachers == 0
+        assert school.GroupType.students == 1
+
+    def test__empty_school(self, school):
+        assert bool(school.subgroups[school.GroupType.teachers].people) is False
+        assert bool(school.subgroups[school.GroupType.students].people) is False
+    
+    def test__filling_school(self, school):
+        person = Person(sex="f", age=7)
+        school.add(person, School.GroupType.students)
+        assert bool(school.subgroups[2].people) is True
 
 
-@pytest.mark.parametrize("index", [5, 500])
-def test__given_school_coordinate_finds_itself_as_closest(index):
-    data_directory = Path(__file__).parent.parent.parent.parent
-    school_path = data_directory / "data/processed/school_data/england_schools_data.csv"
-    config_path = data_directory / "configs/defaults/schools.yaml"
-    schools = Schools.from_file(school_path, config_path)
+class TestSchools:
+    def test__creating_schools_from_file(self, area):
+        schools = Schools.from_file(
+            area_names = [area],
+            data_file = default_data_filename,
+            config_file = default_config_filename,
+        )
+    
+    def test_creating_schools_for_areas(self, area):
+        schools = Schools.for_areas([area])
 
-    school_df = pd.read_csv(school_path)
-    age = int(0.5 * (school_df.iloc[index].age_min + school_df.iloc[index].age_max))
-    closest_school = schools.get_closest_schools(
-        age, school_df[["latitude", "longitude"]].iloc[index].values, 1,
-    )
-    closest_school_idx = schools.school_agegroup_to_global_indices.get(age)[
-        closest_school[0]
-    ]
-    assert schools.members[closest_school_idx].name == schools.members[index].name
+    def test__creating_schools_for_zone(self, area):
+        schools = Schools.for_zone({"oa": [area]})
 
+    @pytest.fixture(name="schools", scope="session")
+    def test__creating_schools_for_geography(self, geography):
+        return Schools.for_geography(geography)
 
-def test__all_kids_mandatory_school(world_ne):
-    """
-    Check that all kids in mandatory school ages are assigned a school 
-    """
-    KIDS_LOW = world_ne.schools.mandatory_age_range[0]
-    KIDS_UP = world_ne.schools.mandatory_age_range[1]
-    lost_kids = 0
-    for area in world_ne.areas.members:
-        for person in area.subgroups[0]._people:
-            if (person.age >= KIDS_LOW) and (
-                    person.age <= KIDS_UP
-            ):
-                if person.school is None:
-                    lost_kids += 1
-    assert lost_kids == 0
+    def test__school_nr_for_geography(self, schools):
+        assert len(schools) == 4
 
-
-def test__only_kids_school(world_ne):
-    ADULTS_LOW = 20
-    schooled_adults = 0
-    for area in world_ne.areas.members:
-        for person in area.subgroups[0]._people:
-            if person.age >= ADULTS_LOW:
-                if person.school is not None:
-                    schooled_adults += 1
-
-    assert schooled_adults == 0
-
-
-def test__n_pupils_counter(world_ne):
-    for school in world_ne.schools.members:
-        n_pupils = np.sum([len(grouping.people) for grouping in school.subgroups])
-        assert n_pupils == school.n_pupils
-
-
-def test__age_range_schools(world_ne):
-    n_outside_range = 0
-    for school in world_ne.schools.members:
-        for person in school.people:
-            if person.age < school.age_min or person.age > school.age_max:
-                n_outside_range += 1
-    assert n_outside_range == 0
-
-
-def test__non_mandatory_dont_go_if_school_full(world_ne):
-    non_mandatory_added = 0
-    mandatory_age_range = world_ne.schools.mandatory_age_range
-    for school in world_ne.schools.members:
-        if school.n_pupils > school.n_pupils_max:
-            ages = np.array(
-                [person.age for person in list(sorted(
-                    school.people,
-                    key=lambda person: person.age
-                ))[int(school.n_pupils_max):]]
-            )
-            older_kids_when_full = np.sum(
-                ages > mandatory_age_range[1]
-            )
-            younger_kids_when_full = np.sum(
-                ages < mandatory_age_range[0]
-            )
-            if older_kids_when_full > 0 or younger_kids_when_full > 0:
-                non_mandatory_added += 1
-
-    assert non_mandatory_added == 0
+    def test__school_is_closest_to_itself(index, area, schools):
+        school = schools.members[0]
+        age = int(0.5 * (school.age_min + school.age_max))
+        closest_school = schools.get_closest_schools(age, school.coordinates, 1)
+        closest_school_id = schools.school_agegroup_to_global_indices.get(age)[
+            closest_school[0]
+        ]
+        assert closest_school_id == school.id
