@@ -9,7 +9,6 @@ from june.infection.symptoms import ALLOWED_SYMPTOM_TAGS
 def test__right_frequency_in_health_index():
     N_samples = 1_000
     health_index = HealthIndexGenerator.from_file()(27, 'm')
-    print(health_index)
 
     frequencies = np.zeros(len(ALLOWED_SYMPTOM_TAGS))
     for i in range(N_samples):
