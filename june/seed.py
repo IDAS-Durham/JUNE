@@ -1,4 +1,8 @@
 import numpy as np
+from pathlib import Path
+
+n_cases_region_filename = Path(__file__).parent / "data/processed/seed/"
+msoa_region_filename = Path(__file__).parent / "data/processed/geographical_data/oa_msoa_region.csv"
 
 class Seed:
     def __init__(self, geography, msoa_region):
@@ -8,7 +12,11 @@ class Seed:
         self.super_area_names = [super_area.name for super_area in geography.super_areas.members]
 
     @classmethod
-    def from_file(self, mosa_region_filename):
+    def from_file(self, 
+            n_cases_region_filename: str = default_n_cases_region_filename
+            msoa_region_filename: str = default_msoa_region
+            ):
+
 
     def _filter_region(self, region='North East'):
         msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
