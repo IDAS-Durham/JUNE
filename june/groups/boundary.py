@@ -6,7 +6,6 @@ from scipy.stats import rv_discrete
 
 from june.demography.person import Person
 from june.groups.group import Group
-from june.infection.health_index import HealthIndex
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,6 @@ class Boundary(Group):
 
         self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
-        health_index = HealthIndex()
         self._init_frequencies()
 
         for company in self.world.companies.members:
@@ -54,7 +52,6 @@ class Boundary(Group):
                     age_rnd_arr[i],
                     nomis_bin_rnd_arr[i],
                     sex_rnd_arr[i],
-                    health_index.get_index_for_age(age_rnd_arr[i]),
                     econ_index=0,
                     mode_of_transport=None,
                 )

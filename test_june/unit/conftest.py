@@ -2,7 +2,7 @@ from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
 import june.interaction as inter
-from june.infection.health_index import HealthIndex
+from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
 from june import world
 from june.time import Timer 
@@ -42,13 +42,12 @@ def create_timer():
 
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
-        return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
+        return sym.SymptomsGaussian(mean_time=1.0, sigma_time=3.0)
 
 
 @pytest.fixture(name="symptoms_constant", scope="session")
 def create_symptoms_constant():
-    reference_health_index = HealthIndex().get_index_for_age(40)
-    return sym.SymptomsConstant(health_index=reference_health_index) 
+    return sym.SymptomsConstant()
 
 @pytest.fixture(name="transmission", scope="session")
 def create_transmission():

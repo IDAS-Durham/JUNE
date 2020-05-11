@@ -3,7 +3,6 @@ import pandas as pd
 
 from june.box.box_mode import Box
 from june.demography.person import Person
-from june.infection.health_index import HealthIndex
 from june.inputs import Inputs
 
 
@@ -42,7 +41,6 @@ class BoxGenerator(Box):
         """
         super().__init__()
         self.world = world
-        self.health_index_gen = HealthIndex()
         if region is not None:
             if n_people is not None:
                 print(
@@ -58,7 +56,7 @@ class BoxGenerator(Box):
     def create_box_from_region(self, region):
         """
         We read from the census data the number of people, and their age and sex distributions. 
-        We sample uniformly inside each age bin, and we assign a health index based on the age.
+        We sample uniformly inside each age bin, 
         """
         inputs = Inputs(zone=region)
         n_residents, age_freq, sex_freq = self.from_file(inputs)
@@ -100,9 +98,8 @@ class BoxGenerator(Box):
         for _ in range(number_of_men):
             sex = 0
             age = ages_expanded[age_counter]
-            health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                age=age, sex=sex, health_index=health_index
+                age=age, sex=sex, 
             )
             age_counter += 1
             self[self.GroupType.default].append(person)
@@ -110,9 +107,8 @@ class BoxGenerator(Box):
         for _ in range(number_of_women):
             sex = 1
             age = ages_expanded[age_counter]
-            health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
-                age=age, sex=sex, health_index=health_index
+                age=age, sex=sex, 
             )
             age_counter += 1
             self[self.GroupType.default].append(person)
@@ -182,10 +178,8 @@ class BoxGenerator(Box):
         for i in range(n_people):
             age = age_shuffle_array[i]
             sex = sex_shuffle_array[i]
-            health_index = self.health_index_gen.get_index_for_age(age)
             person = Person(
                 age=age,
                 sex=sex,
-                health_index=health_index,
             )
             self[self.GroupType.default].append(person)
