@@ -15,12 +15,12 @@ from june.groups.group import Group
 from june.groups.group import Subgroup
 from june.logger_creation import logger
 
-default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent / "data/"
-default_data_filename = default_data_path / \
-        "processed/school_data/england_schools_data.csv"
-default_areas_map_path = default_data_path / \
+default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
+default_data_filename = default_base_path / \
+        "data/processed/school_data/england_schools_data.csv"
+default_areas_map_path = default_base_path / \
         "data/processed/geographical_data/oa_msoa_region.csv"
-default_config_filename = default_data_path / \
+default_config_filename = default_base_path / \
         "configs/defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
