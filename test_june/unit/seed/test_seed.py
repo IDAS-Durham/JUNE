@@ -4,6 +4,7 @@ import numpy as np
 from june.geography import Geography
 from june.demography import Demography
 from june.seed import Seed
+from june.infection.health_index import HealthIndexGenerator
 
 SUPER_AREA_LIST = [
                         'E02004940',
@@ -26,21 +27,20 @@ def get_geography():
     return geography 
 
 @pytest.fixture(name='demography')
-def get_demography():
+def get_demography(geography):
     demography = Demography.for_geography(geography)
     demography.populate(geography.areas)
     return demography
 
-
 @pytest.fixture(name='seed')
-def get_seed(geography):
+def get_seed(geography, infection, demography):
     super_area_to_region = pd.DataFrame(
             {
             'msoa': SUPER_AREA_LIST,
             'region': REGION_LIST
             }
             )
-    return Seed(geography, super_area_to_region)
+    return Seed(geography, infection, HealthIndexGenerator.from_file(), super_area_to_region)
 
 
 def test__filter_region(seed):
@@ -50,16 +50,25 @@ def test__filter_region(seed):
     assert super_areas[0].name == 'E02005815'
 
 
-'''
-def test__n_people_region(geography, seed):
-    print('Super areas')
-    print(geography.super_areas.members[1].areas.values[0].people)
-    super_area = geography.super_areas.members[-1]
-    print('people')
-    print(np.sum([len(area.people) for area in super_area.areas.values]))
-    n_people_region = seed.get_n_people_region([super_area])
-    print(np.sum([len(area.people) for area in super_area.areas.members]))
+def test__n_infected_total(seed):
+    
+    super_areas = seed._filter_region(region='East of England')
+    n_cases = 100
+    seed.infect_region(super_areas, n_cases)
 
-    assert n_people_region == np.sum([len(area.people) for area in super_area.areas.members])
-'''
+    n_infected = 0
+    for super_area in super_areas:
+        for person in super_area.people:
+            if person.health_information.infected: 
+                n_infected += 1
+    np.testing.assert_allclose(n_cases,n_infected, rtol=0.05)
+
+    n_infected = 0
+    for person in super_areas[1].people:
+        if person.health_information.infected:
+            n_infected += 1
+
+    
+    n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
+    np.testing.assert_allclose(n_cases/n_people_region*len(super_areas[1].people),n_infected, rtol=0.05)
 
