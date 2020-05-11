@@ -189,16 +189,18 @@ class Hospital(Group):
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        super().update_status_lists(time, delta_time)
-        self.update_status_lists_for_patients(time, delta_time)
-        self.update_status_lists_for_ICUpatients(time, delta_time)
-        logger.info(
-            f"=== update status list for hospital with {self.size} people ==="
-        )
-        logger.info(
-            f"=== hospital currently has {self[self.GroupType.patients].size} " + \
-            "patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
-        )
+        if self.contains_people:
+            super().update_status_lists(time, delta_time)
+            logger.info(
+                f"=== update status list for hospital with {self.size} people ==="
+            )
+        if self[self.GroupType.patients].contains_people:
+            self.update_status_lists_for_patients(time, delta_time)
+            self.update_status_lists_for_ICUpatients(time, delta_time)
+            logger.info(
+                f"=== hospital currently has {self[self.GroupType.patients].size} "
+                f"patients, and {self[self.GroupType.icu_patients].size}, ICU patients"
+            )
 
 
 class Hospitals:
