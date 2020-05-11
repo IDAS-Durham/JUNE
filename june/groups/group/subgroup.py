@@ -86,6 +86,13 @@ class Subgroup(AbstractGroup):
     def people(self):
         return self._people
 
+    @property
+    def contains_people(self) -> bool:
+        """
+        Whether or not the group contains people.
+        """
+        return len(self._people) > 0
+
     def append(self, person: Person):
         """
         Add a person to this group
