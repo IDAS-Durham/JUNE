@@ -245,6 +245,7 @@ class World:
         for area in self.areas.members:
             # get msoa flow data for this oa area
             wf_area_df = self.inputs.workflow_df.loc[(area.super_area.name,)]
+            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n", wf_area_df)
             person_distributor = PersonDistributor(
                 self,
                 self.people,
@@ -401,3 +402,6 @@ def read_config(config_file):
         )
     with open(config_file, "r") as f:
         return yaml.load(f, Loader=yaml.FullLoader)
+
+if __name__ == "__main__":
+    world = World(config_file=os.path.join("../configs", "config_example.yaml"))
