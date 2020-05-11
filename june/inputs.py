@@ -379,7 +379,6 @@ class Inputs:
         compsec_by_sex_df.loc[:, f_columns] = compsec_by_sex_df.loc[:, f_columns].div(
             compsec_by_sex_df[f_columns].sum(axis=1), axis=0
         )
-        
         return compsec_by_sex_df
 
 
@@ -630,12 +629,14 @@ class Inputs:
         msoa = np.unique(area_mapping[
             area_mapping["OA"].isin(list(oa_in_world))
         ]["MSOA"].values)
+        print(len(msoa))
         wf_df = wf_df[wf_df["home_msoa11cd"].isin(list(msoa))]
         # convert into ratios
         wf_df = wf_df.groupby(["home_msoa11cd", "work_msoa11cd"]).agg(
             {"n_man": "sum", "n_woman": "sum"}
         )
-
+        print(np.sum(
+            wf_df.groupby(level=0)["n_man"].apply(lambda x: x / float(x.sum(axis=0))).values))
         wf_df["n_man"] = (
             wf_df.groupby(level=0)["n_man"]
             .apply(lambda x: x / float(x.sum(axis=0)))
@@ -652,7 +653,7 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    #print(ip.workflow_df)
+    print(ip.workflow_df)
     #print("companysize_df\n", ip.companysize_df)
     #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
-    print(ip.areas_coordinates_df)
+    #print(ip.areas_coordinates_df)

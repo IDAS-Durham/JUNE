@@ -15,12 +15,13 @@ from june.groups.group import Group
 from june.groups.group import Subgroup
 from june.logger_creation import logger
 
-default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "data/processed/school_data/england_schools_data.csv"
-default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "data/processed/geographical_data/oa_msoa_region.csv"
-default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "configs/defaults/groups/schools.yaml"
+default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent / "data/"
+default_data_filename = default_data_path / \
+        "processed/school_data/england_schools_data.csv"
+default_areas_map_path = default_data_path / \
+        "data/processed/geographical_data/oa_msoa_region.csv"
+default_config_filename = default_data_path / \
+        "configs/defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -217,7 +218,7 @@ class Schools:
         """
         school_df = pd.read_csv(data_file, index_col=0)
         school_df.reset_index(drop=True, inplace=True)
-        if len(area_names) is not 0:
+        if len(area_names) != 0:
             # filter out schools that are in the area of interest
             school_df = school_df[school_df["oa"].isin(area_names)]
 
