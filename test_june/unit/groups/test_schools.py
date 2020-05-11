@@ -22,17 +22,12 @@ default_config = {
     "employee_per_clients": {"primary": 30, "secondary": 30},
 }
 
-@pytest.fixture(name="area")
+@pytest.fixture(name="area_schools")
 def area_name():
     return "E00088544"
 
-@pytest.fixture(name="geography", scope="module")
-def create_geography():
-    return Geography.from_file(filter_key={"msoa" : ["E02004935"]})
-
-
 class TestSchool:
-    @pytest.fixture(name="school", scope="module")
+    @pytest.fixture(name="school")
     def create_school(self):
         return School(
             school_name=8123,
@@ -59,21 +54,22 @@ class TestSchool:
 
 
 class TestSchools:
-    def test__creating_schools_from_file(self, area):
+    def test__creating_schools_from_file(self, area_schools):
         schools = Schools.from_file(
-            area_names = [area],
+            area_names = [area_schools],
             data_file = default_data_filename,
             config_file = default_config_filename,
         )
     
-    def test_creating_schools_for_areas(self, area):
-        schools = Schools.for_areas([area])
+    def test_creating_schools_for_areas(self, area_schools):
+        schools = Schools.for_areas([area_schools])
 
-    def test__creating_schools_for_zone(self, area):
-        schools = Schools.for_zone({"oa": [area]})
+    def test__creating_schools_for_zone(self, area_schools):
+        schools = Schools.for_zone({"oa": [area_schools]})
 
     @pytest.fixture(name="schools", scope="module")
-    def test__creating_schools_for_geography(self, geography):
+    def test__creating_schools_for_geography(self):
+        geography = Geography.from_file(filter_key={"msoa" : ["E02004935"]})
         return Schools.for_geography(geography)
 
     def test__school_nr_for_geography(self, schools):

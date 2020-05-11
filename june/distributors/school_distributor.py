@@ -159,13 +159,21 @@ class SchoolDistributor:
                 if person.age not in is_school_full:
                     continue
                 if is_school_full[person.age]:
-                    random_number = np.random.randint(0, self.neighbour_schools)
+                    random_number = np.random.randint(
+                        0,
+                        min(
+                            len(closest_schools_by_age[person.age]),
+                            self.neighbour_schools,
+                        ),
+                    )
                     school = closest_schools_by_age[person.age][random_number]
                 else:
                     schools_full = 0
                     for i in range(
                         0, self.neighbour_schools
                     ):  # look for non full school
+                        if i >= len(closest_schools_by_age[person.age]):
+                            break
                         school = closest_schools_by_age[person.age][i]
                         if school.n_pupils >= school.n_pupils_max:
                             schools_full += 1
@@ -173,7 +181,13 @@ class SchoolDistributor:
                             break
 
                         is_school_full[person.age] = True
-                        random_number = np.random.randint(0, self.neighbour_schools)
+                        random_number = np.random.randint(
+                            0,
+                            min(
+                                len(closest_schools_by_age[person.age]),
+                                self.neighbour_schools,
+                            ),
+                        )
                         school = closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
@@ -205,7 +219,7 @@ class SchoolDistributor:
                         0, self.neighbour_schools
                     ):  # look for non full school
                         if i >= len(closest_schools_by_age[person.age]):
-                            #TEST THIS
+                            # TEST THIS
                             break
                         school = closest_schools_by_age[person.age][i]
                         # check number of students in that age group
@@ -220,7 +234,7 @@ class SchoolDistributor:
                 school.add(person, school.GroupType.students)
                 school.age_structure[person.age] += 1
                 school.n_pupils += 1
-    
+
     def distribute_teachers_to_schools_in_geography(self, geography: Geography):
         for msoarea in geography.super_areas:
             self.distribute_teachers_to_school(msoarea)

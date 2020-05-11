@@ -15,12 +15,12 @@ default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.par
 default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "configs/defaults/groups/hospitals.yaml"
 
-@pytest.fixture(name="hospitals", scope="session")
+@pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
     data_directory = Path(__file__).parent.parent.parent.parent
     return Hospitals.from_file(default_data_filename, default_config_filename)
 
-@pytest.fixture(name="hospitals_df", scope="session")
+@pytest.fixture(name="hospitals_df", scope="module")
 def create_hospitals_df():
     return  pd.read_csv(default_data_filename)
 

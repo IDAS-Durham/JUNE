@@ -1,4 +1,10 @@
 import pytest
+from june.geography import Geography
+from june.demography import Demography
+from june.groups import Hospitals, Companies, Schools, CareHomes, Cemeteries
+from june.world_new import World
+from june.simulator import Simulator
+
 
 
 def test__hospitalise_the_sick(simulator):
@@ -23,21 +29,20 @@ def test__right_group_hierarchy_random_groups(simulator):
     permanent_group_hierarchy = simulator.permanent_group_hierarchy.copy()
     permanent_group_hierarchy.reverse()
     active_groups = permanent_group_hierarchy.copy()
-    active_groups += ["pubs"]
+    #active_groups += ["pubs"]
     ordered_active_groups = simulator.apply_group_hierarchy(active_groups)
     true_ordered_active_groups = [
         group
         for group in simulator.permanent_group_hierarchy
         if group not in ["carehomes", "households"]
     ]
-    true_ordered_active_groups.append("pubs")
+    #true_ordered_active_groups.append("pubs")
     true_ordered_active_groups += ["carehomes", "households"]
     assert ordered_active_groups == true_ordered_active_groups
 
 
 def test__right_group_hierarchy_in_box(simulator_box):
     ordered_active_groups = simulator_box.apply_group_hierarchy(["boxes"])
-
     assert ordered_active_groups == ["boxes"]
 
 
@@ -142,7 +147,7 @@ def test__must_stay_at_home_kid_drags_parents(simulator, severity):
 
     for dummy_person in list(school.people)[:10]:
         simulator.infection.infect_person_at_time(dummy_person, simulator.timer.now)
-        simulator.set_active_group_to_people(["hospitals", "companies", "households"])
+        simulator.set_active_group_to_people(["hospitals", "households"])
         assert dummy_person.active_group == "household"
         assert dummy_person.health_information.tag in (
             "influenza-like illness",
