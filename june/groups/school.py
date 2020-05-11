@@ -1,27 +1,26 @@
-import os
-import yaml
 import logging
+import os
 from enum import IntEnum
-from pathlib import Path
 from itertools import count
+from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 
 import numpy as np
 import pandas as pd
+import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
 from june.geography import Geography
 from june.groups.group import Group
 from june.groups.group import Subgroup
-from june.logger_creation import logger
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
 default_data_filename = default_base_path / \
-        "data/processed/school_data/england_schools_data.csv"
+                        "data/processed/school_data/england_schools_data.csv"
 default_areas_map_path = default_base_path / \
-        "data/processed/geographical_data/oa_msoa_region.csv"
+                         "data/processed/geographical_data/oa_msoa_region.csv"
 default_config_filename = default_base_path / \
-        "configs/defaults/groups/schools.yaml"
+                          "configs/defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +30,10 @@ class SchoolError(BaseException):
 
 
 class School(Group):
-    
     _id = count()
     __slots__ = (
         "id", "coordinates", "super_area",
-        "n_pupils_max", "n_pupils", "n_teachers_max", "n_teachers"
+        "n_pupils_max", "n_pupils", "n_teachers_max", "n_teachers",
         "age_min", "age_max", "age_structure",
         "sector", "is_full"
     )
@@ -45,26 +43,24 @@ class School(Group):
         students = 1
 
     def __init__(
-        self,
-        school_name: int,
-        coordinates: Tuple[float, float],
-        n_pupils_max: int,
-        n_teachers_max: int,
-        age_min: int,
-        age_max: int,
-        sector: str,
+            self,
+            school_id,
+            coordinates: Tuple[float, float],
+            n_pupils_max: int,
+            n_teachers_max: int,
+            age_min: int,
+            age_max: int,
+            sector: str,
     ):
         """
         Create a School given its description.
 
         Parameters
         ----------
-        school_id:
-            unique identifier of the school
         coordinates:
             latitude and longitude 
-        n_pupils: 
-            number of pupils that attend the school
+        n_pupils_max:
+            maximum number of pupils that can attend the school
         age_min:
             minimum age of the pupils
         age_max:
@@ -78,11 +74,11 @@ class School(Group):
         ...
         n - year of highest age (age_max)
         """
-        super().__init__(name="School_%05d" % school_name, spec="school")
-        self.id = school_name
+        super().__init__()
+        self.id = school_id
+        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.coordinates = coordinates
         self.super_area = None
-        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.n_pupils = 0
         self.n_teachers = 0
         self.n_pupils_max = n_pupils_max
@@ -107,14 +103,13 @@ class School(Group):
             super().add(person, qualifier)
 
 
-
 class Schools:
-    
+
     def __init__(
-        self,
-        schools: List["School"],
-        school_trees: Optional[Dict[int, BallTree]] = None,
-        agegroup_to_global_indices: dict = None,
+            self,
+            schools: List["School"],
+            school_trees: Optional[Dict[int, BallTree]] = None,
+            agegroup_to_global_indices: dict = None,
     ):
         """
         Create a group of Schools, and provide functionality to access closest school
@@ -134,7 +129,7 @@ class Schools:
         self.members = schools
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = agegroup_to_global_indices
-    
+
     @classmethod
     def for_geography(
             cls,
@@ -152,7 +147,7 @@ class Schools:
         if len(area_names) == 0:
             raise SchoolError("Empty geography!")
         return cls.for_areas(area_names, data_file, config_file)
-    
+
     @classmethod
     def for_zone(
             cls,
@@ -228,16 +223,13 @@ class Schools:
             school_df,
             **config,
         )
-    
+
     @classmethod
     def build_schools_for_areas(
             cls,
             school_df: pd.DataFrame,
             age_range: Tuple[int, int] = (0, 19),
-            employee_per_clients: Dict[str, int] = {
-                "primary": 30,
-                "secondary": 30,
-            },
+            employee_per_clients: Dict[str, int] = None,
     ) -> "Schools":
         """
         Parameters
@@ -247,16 +239,21 @@ class Schools:
         -------
             An infrastructure of schools
         """
+        employee_per_clients = employee_per_clients or {
+            "primary": 30,
+            "secondary": 30,
+        }
         # build schools
         schools = []
-        for school_name , row in school_df.iterrows():
+
+        for _, row in school_df.iterrows():
             n_pupils_max = row["NOR"]
             school_type = row["sector"]
-            if school_type is  np.nan:  #TODO double check dataframe
+            if school_type is np.nan:  # TODO double check dataframe
                 school_type = list(employee_per_clients.keys())[0]
             n_teachers_max = int(n_pupils_max / employee_per_clients[school_type])
             school = School(
-                school_name,
+                8637,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 n_pupils_max,
                 n_teachers_max,
@@ -265,6 +262,7 @@ class Schools:
                 row["sector"],
             )
             schools.append(school)
+
         # link schools
         school_trees, agegroup_to_global_indices = Schools.init_trees(
             school_df, age_range
@@ -329,9 +327,9 @@ class Schools:
             np.deg2rad(schools_coordinates), metric="haversine"
         )
         return school_tree
-    
+
     def get_closest_schools(
-        self, age: int, coordinates: Tuple[float, float], k: int
+            self, age: int, coordinates: Tuple[float, float], k: int
     ) -> int:
         """
         Get the k-th closest school to a given coordinate, that accepts pupils
@@ -368,10 +366,10 @@ class Schools:
 
 
 if __name__ == '__main__':
-    geography = Geography.from_file(filter_key={"msoa" : ["E02004935"]})
+    geography = Geography.from_file(filter_key={"msoa": ["E02004935"]})
     schools = Schools.for_geography(geography)
     school = schools.members[0]
-    print(int( 0.5 * (school.age_min + school.age_max)))
+    print(int(0.5 * (school.age_min + school.age_max)))
     print(school.GroupType.teachers == 0)
     print(bool(school.subgroups[school.GroupType.teachers].people))
-    #schools = Schools.for_zone({"region": ["North East"]})
+    # schools = Schools.for_zone({"region": ["North East"]})
