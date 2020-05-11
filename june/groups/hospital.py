@@ -1,24 +1,22 @@
-import os
-import yaml
 import logging
+import os
+from enum import IntEnum
 from pathlib import Path
-from itertools import count
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
-from june.logger_creation import logger
-from enum import IntEnum
 
 logger = logging.getLogger(__name__)
 
 default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "data/processed/hospital_data/england_hospitals.csv"
+                        "data/processed/hospital_data/england_hospitals.csv"
 default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "configs/defaults/groups/hospitals.yaml"
+                          "configs/defaults/groups/hospitals.yaml"
 
 
 class Hospital(Group):
@@ -36,7 +34,6 @@ class Hospital(Group):
     1 - patients
     2 - ICU patients
     """
-    _id = count()
 
     class GroupType(IntEnum):
         workers = 0
@@ -47,8 +44,7 @@ class Hospital(Group):
 
     def __init__(
             self,
-            hospital_id: int,
-            coordinates: list, # Optional[Tuple[float, float]] = None,
+            coordinates: list,  # Optional[Tuple[float, float]] = None,
             n_beds: int,
             n_icu_beds: int,
             super_area: str = None,
@@ -58,8 +54,6 @@ class Hospital(Group):
 
         Parameters
         ----------
-        hospital_id:
-            unique identifier of the hospital 
         n_beds:
             total number of regular beds in the hospital
         n_icu_beds:
@@ -69,8 +63,7 @@ class Hospital(Group):
         msoa_name:
             name of the msoa area the hospital belongs to
         """
-        super().__init__(f"Hospital_{hospital_id}", "hospital")
-        self.id = next(self._id)
+        super().__init__()
         self.super_area = super_area
         self.coordinates = coordinates
         self.n_beds = n_beds
@@ -269,7 +262,6 @@ class Hospitals:
         else:
             hospitals.append(
                 Hospital(
-                    hospital_id=1,
                     coordinates=None,
                     n_beds=10,
                     n_icu_beds=2,
@@ -277,7 +269,6 @@ class Hospitals:
             )
             hospitals.append(
                 Hospital(
-                    hospital_id=2,
                     coordinates=None,
                     n_beds=5000,
                     n_icu_beds=5000,
@@ -299,16 +290,15 @@ class Hospitals:
             dataframe with hospital characteristics data
         """
         hospitals = []
-        for (index, row) in hospital_df.iterrows():
+        for index, row in hospital_df.iterrows():
             n_beds = row["beds"]
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
-            #msoa_name = row["MSOA"]
+            # msoa_name = row["MSOA"]
             coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
-                hospital_id=index,
-                #super_area=msoa_name,
+                # super_area=msoa_name,
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,
