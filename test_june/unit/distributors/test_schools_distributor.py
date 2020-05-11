@@ -26,26 +26,26 @@ default_config = {
 
 default_mandatory_age_range = (5, 18)
 
-@pytest.fixture(name="geography", scope="module")
+@pytest.fixture(name="geography_school", scope="module")
 def create_geography():
     geography = Geography.from_file({"msoa" : ["E02004935", "E02004935", "E02004935"]})
     return geography
 
 @pytest.fixture(name="schools", scope="module")
-def make_and_populate_schools(geography):
-    schools = Schools.for_geography(geography)
+def make_and_populate_schools(geography_school):
+    schools = Schools.for_geography(geography_school)
     school_distributor = SchoolDistributor(schools)
-    school_distributor.distribute_kids_to_school(geography.areas)
+    school_distributor.distribute_kids_to_school(geography_school.areas)
     return schools
 
-def test__all_kids_mandatory_school(schools, geography):
+def test__all_kids_mandatory_school(schools, geography_school):
     """
     Check that all kids in mandatory school ages are assigned a school 
     """
     KIDS_LOW = default_mandatory_age_range[0]
     KIDS_UP = default_mandatory_age_range[1]
     lost_kids = 0
-    for area in geography.areas.members:
+    for area in geography_school.areas.members:
         for person in area.people:
             if (person.age >= KIDS_LOW) and (
                     person.age <= KIDS_UP
@@ -55,10 +55,10 @@ def test__all_kids_mandatory_school(schools, geography):
     assert lost_kids == 0
 
 
-def test__only_kids_school(geography, schools):
+def test__only_kids_school(geography_school, schools):
     ADULTS_LOW = 20
     schooled_adults = 0
-    for area in geography.areas:
+    for area in geography_school.areas:
         for person in area.people:
             if person.age >= ADULTS_LOW:
                 if person.school is not None:

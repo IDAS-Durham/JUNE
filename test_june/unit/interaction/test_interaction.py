@@ -35,7 +35,7 @@ def days_to_infection(interaction, susceptible_person, group):
 #@pytest.mark.parametrize(
 #    "group_size", (2, 5)
 #)
-def test__time_it_takes_to_infect(config, infection, group_size=2):
+def test__time_it_takes_to_infect(infection, group_size=2):
     interaction = DefaultInteraction.from_file(test_config_file)
 
     n_days = []

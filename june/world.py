@@ -403,6 +403,3 @@ def read_config(config_file):
         )
     with open(config_file, "r") as f:
         return yaml.load(f, Loader=yaml.FullLoader)
-
-if __name__ == "__main__":
-    world = World(config_file=os.path.join("../configs", "config_example.yaml"))

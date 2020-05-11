@@ -8,9 +8,8 @@ from june import demography as d
 
 @pytest.fixture(name="area")
 def area_name():
-    return "E00088544"
-
-@pytest.fixture(name="geography", scope="module")
+    return 
+@pytest.fixture(name="geography_demography_test", scope="module")
 def create_geography():
     return Geography.from_file(filter_key={"msoa" : ["E02004935"]})
 
@@ -49,9 +48,10 @@ def test__age_sex_generator():
     )
 
 class TestDemography:
-    def test__demography_for_areas(self, area):
-        demography = d.Demography.for_areas(area_names=[area])
-        population = demography.population_for_area(area)
+    def test__demography_for_areas(self):
+        area = Area(name="E00088544")
+        demography = d.Demography.for_areas(area_names=[area.name])
+        population = demography.populate([area])
         assert len(population) == 362
         people_ages_dict = {}
         people_sex_dict = {}
@@ -74,31 +74,21 @@ class TestDemography:
         assert people_ages_dict[71] == 3
         assert max(people_ages_dict.keys()) == 90
 
-def test__demography_for_super_areas():
-    demography = d.Demography.for_zone(filter_key={"msoa" : ["E02004935"]})
-    assert len(demography.age_sex_generators) == 26
-
-def test__demography_for_areas(self, area):
-    demography = d.Demography.for_zone(filter_key={"oa" : [area]})
-    assert len(demography.age_sex_generators) == 1
-
-def test__demography_for_regions():
-    demography = d.Demography.for_zone(filter_key={"region": ["North East"]})
-    assert len(demography.age_sex_generators) == 8802
-
-def test__demography_for_geography(self, geography):
-    demography = d.Demography.for_geography(geography)
-    assert len(demography.age_sex_generators) == 26
+    def test__demography_for_super_areas(self):
+        demography = d.Demography.for_zone(filter_key={"msoa" : ["E02004935"]})
+        assert len(demography.age_sex_generators) == 26
+    
+    def test__demography_for_regions(self):
+        demography = d.Demography.for_zone(filter_key={"region": ["North East"]})
+        assert len(demography.age_sex_generators) == 8802
+    
+    def test__demography_for_geography(self, geography_demography_test):
+        demography = d.Demography.for_geography(geography_demography_test)
+        assert len(demography.age_sex_generators) == 26
 
 class TestPopulation:
-    @pytest.fixture(name="population", scope="module")
-    def test__create_population_from_demography(self, geography):
-        demography = d.Demography.for_geography(geography)
-        population = demography.populate(geography.areas)
-        assert len(population) == 258
-        return population
+    def test__create_population_from_demography(self, geography_demography_test):
+        demography = d.Demography.for_geography(geography_demography_test)
+        population = demography.populate(geography_demography_test.areas)
+        assert len(population) == 7602 
     
-    def test__people_know_their_area(self, geography, population):
-        person = population.people[0]
-        print(person.area.name)
-        assert person.area.name == "E00120500"

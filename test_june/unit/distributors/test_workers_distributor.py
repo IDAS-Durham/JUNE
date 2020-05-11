@@ -27,17 +27,17 @@ working_age_min = 18
 working_age_min = 65
 default_key_compsec_id = ["P", "Q"]
 
-@pytest.fixture(name="geography", scope="session")
+@pytest.fixture(name="geography_workers", scope="module")
 def create_geography():
     return Geography.from_file(filter_key={"msoa" : ["E02002559", "E02002560", "E02002561"]})
 
 
-@pytest.fixture(name="population", scope="session")
-def create_population(geography):
-    demography = Demography.for_geography(geography)
-    return demography.populate(geography.areas)
+@pytest.fixture(name="population_workers", scope="module")
+def create_population(geography_workers):
+    demography = Demography.for_geography(geography_workers)
+    return demography.populate(geography_workers.areas)
 
 
-def test__workers_distribution_for_geography(geography, population):
-    workers_distributor = WorkerDistributor.for_geography(geography)
-    return workers_distributor.distribute(geography, population)
+def test__workers_distribution_for_geography(geography_workers, population_workers):
+    workers_distributor = WorkerDistributor.for_geography(geography_workers)
+    return workers_distributor.distribute(geography_workers, population_workers)
