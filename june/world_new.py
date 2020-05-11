@@ -51,8 +51,8 @@ class World:
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
         population = demography.populate(self.areas)
-        worker_distr = WorkerDistributor.for_geography(geography)
-        worker_distr.distribute(geography, population)
+        #worker_distr = WorkerDistributor.for_geography(geography)  # atm only for_geography()
+        #worker_distr.distribute(geography, population)
         
         if include_households:
             print("Creating and populating households...")
@@ -78,10 +78,4 @@ class World:
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
             pickle.dump(self, f, 4)
-
-if __name__ == "__main__":
-    geography = Geography.from_file(filter_key={"region" : ["North East"]})
-    demography = Demography.for_geography(geography)
-    world = World(geography, demography)
-
 

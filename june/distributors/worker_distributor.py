@@ -29,7 +29,6 @@ default_areas_map_path = default_data_path / \
 working_age_min = 18
 working_age_min = 65
 default_key_compsec_id = ["P", "Q"]
-#[2211, 2217, 2231, 2232, 2311, 2312, 2314, 2315, 2316]
 
 logger = logging.getLogger(__name__)
 
