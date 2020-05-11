@@ -89,8 +89,10 @@ class Pubs:
             self.members[area] = pubs
 
     def send_people_to_pub(self):
+        print (self.members)
         for area, pubs in self.members.items():
             npeople = self.fix_number_of_customers(area)
+            print ("distribute ",npeople," customers over ",len(pubs)," pubs.")
             while npeople>0:
                 pub      = np.random.choice(pubs)
                 customer = self.select_customer(area)
@@ -108,7 +110,9 @@ class Pubs:
     
     def select_customer(self,area):
         customer = None
-        while customer==None or customer.carehome!=None:
+        while (customer==None and
+               customer.carehome!=None and
+               customer.active_group is None):
             if random.random()<self.pub_female_probability:
                 customer = pick_one_female_from_area
             else:

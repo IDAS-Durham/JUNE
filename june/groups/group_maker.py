@@ -11,7 +11,7 @@ class GroupMaker:
         if grouptype=="pubs":
             print ("distribute people for ",grouptype,"in",
                    len(self.world.areas.members),"areas.")
-            pubs.send_people_to_pub()
+            self.pubs.send_people_to_pub()
             self.make_histogram()
 
     def make_histogram(self):
