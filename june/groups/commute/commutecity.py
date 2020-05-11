@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class CommuteCity:
     """
-    Defines a city with details about its metropolitan area and who commutes MSOAs within that area
+    Defines a city with details about its metropolitan area and who commutes MSOAs within that area.
     """
 
     def __init__(self, commutecity_id, city, metro_msoas, metro_centroid):
@@ -25,6 +25,8 @@ class CommuteCity:
         self.city = city
         self.passengers = []
         self.commutehubs = []
+        self.commute_internal = []
+        self.commutecityunits = []
 
 class CommuteCities:
     """
@@ -40,30 +42,22 @@ class CommuteCities:
       and define the London metropolitan area to be over the sum of all MSOAs near each station
     """
 
-    def __init__(self, stat_pcs_df, uk_pcs_coordinates, msoa_coordinates, init = True):
+    def __init__(self, uk_pcs_coordinates, msoa_coordinates):
         """
-        stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
         uk_pcs_coodinates: (pd.Dataframe) Dataframe containing all UK postcodes and their coordinates
         msoa_coordinates: (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
-        init: (bool) if True then initialise all commute cities, if False make this manual
         members: (list) list of all commute cities
 
         Note: The London stat df is separate anc contains postcodes for all major Zone 1 stations in London
         Note: London must be initialised after the other stations
         """
         
-        self.stat_pcs_df = stat_pcs_df
         self.uk_pcs_coordinates = uk_pcs_coordinates
         self.msoa_coordinates = msoa_coordinates
-        self.init = init
         self.members = []
 
         # run to initialise all msoa lat lons from dataframe
         self._get_msoa_lat_lon()
-
-        if self.init:
-            self.init_non_london()
-            self.init_london()
         
     def _get_msoa_lat_lon(self):
         'Return all MSOA lat/lons as a 2D array'
@@ -108,9 +102,14 @@ class CommuteCities:
         
         return city_metro_msoas, city_metro_centroid
         
-    def init_non_london(self):
-        'Initialise non-London commute cities'
+    def init_non_london(self, stat_pcs_df):
+        """
+        Initialise non-London commute cities
+        stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
+        """
 
+        self.stat_pcs_df = stat_pcs_df
+        
         stations = list(self.stat_pcs_df['station'])
         postcodes = list(self.stat_pcs_df['postcode'])
         
@@ -135,9 +134,13 @@ class CommuteCities:
             self.members.append(commute_city)
 
 
-    def init_london(self):
-        'Initialise London'
+    def init_london(self, stat_pcs_df):
+        """
+        Initialise London
+        stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
+        """
 
+        self.stat_pcs_df = stat_pcs_df
         stations = list(self.stat_pcs_df['station'])
         postcodes = list(self.stat_pcs_df['postcode'])
 
