@@ -386,7 +386,6 @@ class Inputs:
         compsec_by_sex_df.loc[:, f_columns] = compsec_by_sex_df.loc[:, f_columns].div(
             compsec_by_sex_df[f_columns].sum(axis=1), axis=0
         )
-        
         return compsec_by_sex_df
 
 
@@ -709,7 +708,6 @@ class Inputs:
         wf_df = wf_df.groupby(["home_msoa11cd", "work_msoa11cd"]).agg(
             {"n_man": "sum", "n_woman": "sum"}
         )
-
         wf_df["n_man"] = (
             wf_df.groupby(level=0)["n_man"]
             .apply(lambda x: x / float(x.sum(axis=0)))
@@ -726,7 +724,7 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    #print(ip.workflow_df)
+    print(ip.workflow_df)
     #print("companysize_df\n", ip.companysize_df)
     #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
-    print(ip.areas_coordinates_df)
+    #print(ip.areas_coordinates_df)
