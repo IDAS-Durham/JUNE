@@ -14,7 +14,7 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    spec = "household"
+    spec = "carehome"
 
     _id = count()
 
