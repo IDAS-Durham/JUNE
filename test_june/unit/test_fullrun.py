@@ -21,31 +21,3 @@ def test_full_run(simulator):
     simulator.run()
     simulator.logger.plot_infection_curves_per_day()
 
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    config_path = os.path.join(
-            os.path.dirname(
-                os.path.realpath(__file__)
-            ),
-            "..",
-            "..",
-            "configs",
-            "config_example.yaml"
-    )
-    world = World(config_path, box_mode=False)
-
-    reference_health_index = HealthIndex().get_index_for_age(40)
-    symptoms = SymptomsConstant(health_index=reference_health_index, recovery_rate=0.05)
-    transmission = TransmissionConstant(probability=0.3) 
-    infection = Infection(transmission, symptoms)
-    interaction = DefaultInteraction.from_file()
-
-    simulator = Simulator.from_file(world, interaction, infection, config_filename = config_path)
-    for household in simulator.world.households.members[:20]:
-        simulator.seed(household, n_infections=1)
-    simulator.run()
-    simulator.logger.plot_infection_curves_per_day()
-    plt.show()
-
-

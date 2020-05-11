@@ -59,7 +59,7 @@ def create_area(age_min=0, age_max=99, people_per_age=5):
     return area
 
 
-@pytest.fixture(name="household_distributor", scope="session")
+@pytest.fixture(name="household_distributor", scope="module")
 def create_household_distributor():
     first_kid_parent_age_differences = {20: 0.5, 21: 0.5}
     second_kid_parent_age_differences = {30: 0.5, 31: 0.5}

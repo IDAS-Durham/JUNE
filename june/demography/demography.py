@@ -93,6 +93,40 @@ class Population:
     def __iter__(self):
         return iter(self.people)
 
+    @property
+    def members(self):
+        return self.people
+
+    @property
+    def total_people(self):
+        return len(self.members)
+
+
+    @property
+    def infected(self):
+        return [
+            person for person in self.people
+            if person.health_information.infected and not 
+                    person.health_information.dead
+            
+        ]
+
+    @property
+    def susceptible(self):
+        return [
+            person for person in self.people
+            if person.health_information.susceptible 
+            
+        ]
+
+    @property
+    def recovered(self):
+        return [
+            person for person in self.people
+            if person.health_information.recovered
+            
+        ]
+
 
 class Demography:
     def __init__(
@@ -147,9 +181,9 @@ class Demography:
         -------
         A population of people
         """
+        people = list()
         for area in areas:
             # TODO: this could be make faster with map()
-            people = list()
             age_and_sex_generator = self.age_sex_generators[area.name]
             for _ in range(age_and_sex_generator.n_residents):
                 person = Person(

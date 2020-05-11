@@ -274,7 +274,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         logger.info(f"There are {len(hospital_df)} hospitals in the world.")
         hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
-        return Hospitals(hospitals, max_distance, False)
+        return Hospitals(hospitals, max_distance)
 
     @classmethod
     def for_geography(
@@ -290,7 +290,7 @@ class Hospitals:
         icu_fraction = config["icu_fraction"]
         hospital_df = pd.read_csv(filename, index_col=0)
         super_area_names = [super_area.name for super_area in geography.super_areas]
-        hospital_df = hospital_df.loc[super_area_names]
+        hospital_df = hospital_df.loc[hospital_df.index.isin(super_area_names)]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
         hospitals = []

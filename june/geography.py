@@ -44,7 +44,7 @@ class Area:
         self,
         name: str,
         super_area: "SuperArea" = None,
-        coordinates: Tuple[float, float] = (None, None),
+        coordinates: Tuple[float, float] = np.array([None, None]),
     ):
         """
         Coordinate is given in the format X, Y where X is longitude and Y is latitude.
