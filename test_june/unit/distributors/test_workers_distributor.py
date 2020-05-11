@@ -41,3 +41,18 @@ def create_population(geography):
 def test__workers_distribution_for_geography(geography, population):
     workers_distributor = WorkerDistributor.for_geography(geography)
     return workers_distributor.distribute(geography, population)
+
+# work in progress:
+#def test__sub_sector_ratio_for_geography(geography, population):
+#    workers_distributor = WorkerDistributor.for_geography(geography)
+#    workers_distributor.distribute(geography, population)
+#    sex, sector, sub_sector = np.array([
+#        [person.sex, person.sector, person.sub_sector]
+#        for person in population.people
+#    ]).T
+#    idx = np.where(sector == "P")[0]
+#    print(idx)
+#    ratio
+
+
+
