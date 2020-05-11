@@ -11,7 +11,6 @@ from scipy import stats
 
 from june.geography import Geography
 from june.demography import Person, Population
-from june.infection.health_index import HealthIndex
 from june.logger_creation import logger
 
 default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent / "data/"

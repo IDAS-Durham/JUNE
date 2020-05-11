@@ -3,7 +3,6 @@ from scipy import stats
 
 from june.groups.group import Group
 from june.demography.person import Person
-from june.infection.health_index import HealthIndex
 from enum import IntEnum
 
 
@@ -20,10 +19,6 @@ class TestGroups:
         self.members = []
         self.total_people = total_people
         self.people_per_group = people_per_group
-        if config is not None:
-            self.health_index_constructor = HealthIndex(config)
-        else:
-            self.health_index_constructor = None
         self.initialize_test_groups()
 
     def initialize_test_groups(self):
@@ -49,11 +44,7 @@ class TestGroups:
         age_random = np.random.randint(0, 80, group_size)
 
         for i in range(0, group_size):
-            if self.health_index_constructor == None:
-                health_index = 0
-            else:
-                health_index = self.health_index_constructor.get_index_for_age(age_random[i])
-            person = Person(i, None, age_random[i], 0, sex_random[i], health_index, 0)
+            person = Person(i, None, age_random[i], 0, sex_random[i],  0)
             group.people.append(person)
 
     def set_active_members(self):
