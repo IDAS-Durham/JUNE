@@ -1,7 +1,5 @@
 import pandas as pd
 import pytest
-
-from june.inputs import Inputs
 from june.groups import Household, Households
 
 def test__households_adding():
