@@ -12,7 +12,8 @@ from tqdm.auto import tqdm  # for a fancy progress bar
 from june.geography import Geography
 from june.demography import Demography, People
 from june.logger_creation import logger
-from june.distributors import SchoolDistributor, HospitalDistributor, HouseholdDistributor
+from june.distributors import SchoolDistributor, HospitalDistributor
+from june.distributors import HouseholdDistributor, WorkerDistributor
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,9 @@ class World:
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
         population = demography.populate(self.areas)
-        WorkerDistributor(population)
+        worker_distr = WorkerDistributor.for_geography(geography)
+        worker_distr.distribute(geography, population)
+        
         if include_households:
             print("Creating and populating households...")
             household_distributor = HouseholdDistributor.from_file()
@@ -77,8 +80,8 @@ class World:
             pickle.dump(self, f, 4)
 
 if __name__ == "__main__":
-    geography = Geography.from_file(filter_key={"oa" : ["E00088544"]})
-    world = World.from_geography(geography)
-
+    geography = Geography.from_file(filter_key={"region" : ["North East"]})
+    demography = Demography.for_geography(geography)
+    world = World(geography, demography)
 
 
