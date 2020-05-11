@@ -14,7 +14,7 @@ class Pub(Group):
 
     There are two sub-groups:
     0 - workers
-    1 - guestss
+    1 - guests
     """
 
     class GroupType(IntEnum):
@@ -59,14 +59,18 @@ class Pubs:
     def init_members(self,pub_df):
         self.members = {}
         if self.box_mode:
-            self.members["box"] = [Pub("The Blue Horse"),
-                                   Pub("The Red Donkey")]
+            if self.geography==None:
+                tag = "box"
+            else:
+                tag = self.geography
+            self.members[tag] = []
+            self.members[tag].append(Pub(1,np.array([0.001,0.])))  # "The Blue Horse"
+            self.members[tag].append(Pub(2,np.array([0.,0.001])))  # "The Red Donkey"
         else:
             pub_tree, pub_list = self.create_pub_tree_and_list(pub_df)
             self.fill_areas_pub_map(self.geography.super_areas.members, pub_tree, pub_list)
 
     def create_pub_tree_and_list(self, pub_df):
-        # print (pub_df[["Latitude", "Longitude"]].values)
         pub_tree = BallTree(
             np.deg2rad(pub_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
@@ -89,10 +93,8 @@ class Pubs:
             self.members[area] = pubs
 
     def send_people_to_pub(self):
-        print (self.members)
         for area, pubs in self.members.items():
             npeople = self.fix_number_of_customers(area)
-            print ("distribute ",npeople," customers over ",len(pubs)," pubs.")
             while npeople>0:
                 pub      = np.random.choice(pubs)
                 customer = self.select_customer(area)
@@ -101,7 +103,7 @@ class Pubs:
                 npeople -= 1
             
     def fix_number_of_customers(self, area):
-        nmean = len(area.people)
+        nmean = len(area.adult_active_females)+len(area.adult_active_males)
         if self.geography.timer.weekend:
             nmean *= self.pub_weekend_ratio
         else:
@@ -110,26 +112,31 @@ class Pubs:
     
     def select_customer(self,area):
         customer = None
-        while (customer==None and
-               customer.carehome!=None and
-               customer.active_group is None):
+        while customer==None:
             if random.random()<self.pub_female_probability:
-                customer = pick_one_female_from_area
+                customer = np.random.choice(area.adult_active_females)
             else:
-                customer = pick_one_male_from_area
-            if random.random()>self.make_weight(customer):
+                customer = np.random.choice(area.adult_active_males)
+            if (customer.carehome!=None or
+                customer.active_group!=None or
+                random.random()>self.make_weight(customer)):
                 customer = None
         return customer
 
     def add_household_members(self,pub,customer):
-        if self.world.timer.weekend and random.random() < self.full_household_in_pub:
+        if (self.geography.timer.weekend and
+            random.random() < self.full_household_in_pub and
+            customer.household!=None):
             for person in customer.household.people:
                 if person!=customer:
                     pub.add(person, Pub.GroupType.guests)
-        elif not (self.world.timer.weekend) and random.random() < self.adults_in_pub:
+        elif (not self.geography.timer.weekend and
+              random.random() < self.adults_in_pub and
+              customer.household!=None):
             for person in customer.household.people:
                 if person!=customer and person.age >= 18:
-                    pub.add(person, Pub.GroupType.guests)
+                    pub.add(person, Pub.GroupType.guests)            
+               
                 
     def make_weight(self, customer):
         weight = 1.
