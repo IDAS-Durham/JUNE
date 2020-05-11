@@ -186,6 +186,13 @@ class Inputs:
                 index_col=0
                 )
 
+        self.read_non_london_stat_pcs()
+        self.read_london_stat_pcs()
+        self.read_uk_pcs_coordinates()
+        self.read_msoa_coordinates()
+        self.read_msoa_oa_coordinates()
+        
+
 
     def read(self, filename):
         df = pd.read_csv(
@@ -379,7 +386,6 @@ class Inputs:
         compsec_by_sex_df.loc[:, f_columns] = compsec_by_sex_df.loc[:, f_columns].div(
             compsec_by_sex_df[f_columns].sum(axis=1), axis=0
         )
-        
         return compsec_by_sex_df
 
 
@@ -587,6 +593,73 @@ class Inputs:
             travel_df["private"] /= travel_df.sum(axis=1)
         return travel_df
 
+    def read_london_stat_pcs(self):
+        london_stat_pcs = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "travel",
+                "London_station_coordinates.csv"
+            )
+        )
+
+        self.london_stat_pcs = london_stat_pcs
+
+    def read_non_london_stat_pcs(self):
+        non_london_stat_pcs = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "travel",
+                "non_London_station_coordinates.csv"
+            )
+        )
+
+        self.non_london_stat_pcs = non_london_stat_pcs
+
+
+    def read_uk_pcs_coordinates(self):
+        uk_pcs_coordinates = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "ukpostcodes_coordinates.csv"
+            )
+        )
+
+        self.uk_pcs_coordinates = uk_pcs_coordinates
+
+
+    def read_msoa_coordinates(self):
+        msoa_coordinates = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "msoa_coordinates_englandwales.csv"
+            )
+        )
+
+        self.msoa_coordinates = msoa_coordinates
+
+    def read_msoa_oa_coordinates(self):
+        msoa_oa_coordinates = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "msoa_oa.csv"
+            )
+        )
+
+        self.msoa_oa_coordinates = msoa_oa_coordinates
+    
     def create_workflow_df(
         self,
         area_mapping,
@@ -635,7 +708,6 @@ class Inputs:
         wf_df = wf_df.groupby(["home_msoa11cd", "work_msoa11cd"]).agg(
             {"n_man": "sum", "n_woman": "sum"}
         )
-
         wf_df["n_man"] = (
             wf_df.groupby(level=0)["n_man"]
             .apply(lambda x: x / float(x.sum(axis=0)))
@@ -652,7 +724,7 @@ class Inputs:
 if __name__ == "__main__":
 
     ip = Inputs()
-    #print(ip.workflow_df)
+    print(ip.workflow_df)
     #print("companysize_df\n", ip.companysize_df)
     #print("compsec_by_sex_df \n", ip.compsec_by_sex_df)
-    print(ip.areas_coordinates_df)
+    #print(ip.areas_coordinates_df)
