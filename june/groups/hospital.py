@@ -111,7 +111,8 @@ class Hospital(Group):
 
     def add(self, person, qualifier=GroupType.workers):
         super().add(person, qualifier)
-        person.in_hospital = self
+        if qualifier in [self.GroupType.patients, self.GroupType.icu_patients]:
+            person.in_hospital = self
         person.groups.append(self)
 
     def add_as_patient(self, person):
@@ -234,6 +235,9 @@ class Hospitals:
         if not box_mode:
             self.init_trees(coordinates)
 
+    def __iter__(self):
+        return iter(self.members)
+
     @classmethod
     def for_box_mode(cls):
         hospitals = []
@@ -288,17 +292,21 @@ class Hospitals:
         super_area_names = [super_area.name for super_area in geography.super_areas]
         hospital_df = hospital_df.loc[super_area_names]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
-        # area_names = [area.name for area in geography.areas]
-        # hospital_df = hospital_df.loc[hospital_df["oa"].isin(area_names)]
+        total_hospitals = len(hospital_df)
         hospitals = []
+        hospital_counter = 0
         for super_area in geography.super_areas:
-            if super_area in hospital_df.index:
-                row = hospital_df.loc[super_area]
+            if super_area.name in hospital_df.index:
+                row = hospital_df.loc[super_area.name]
                 coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
                 n_beds = row["beds"]
-                hospital = cls.create_hospital(super_area, coordinates, n_beds, icu_fraction)
+                hospital = cls.create_hospital(
+                    super_area, coordinates, n_beds, icu_fraction
+                )
                 hospitals.append(hospital)
-                print(hospital.coordinates)
+                hospital_counter += 1
+                if hospital_counter == total_hospitals:
+                    break
         return cls(hospitals, max_distance, False)
 
     @classmethod
