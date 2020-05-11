@@ -1,6 +1,7 @@
 import os
 import csv
 import logging
+from enum import IntEnum
 from pathlib import Path
 from random import randint
 from itertools import chain, count
@@ -59,6 +60,7 @@ class Area:
         self.people.add(person)
         person.area = self
 
+
 class Areas:
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
@@ -70,8 +72,6 @@ class Areas:
 
     def __iter__(self):
         return iter(self.members)
-
-
 
 
 class SuperArea:
@@ -91,6 +91,15 @@ class SuperArea:
         self.name = name
         self.coordinates = coordinates[[1, 0]]
         self.areas = areas
+        self.workers = set()
+    
+    def add_worker(self, person: Person):
+        self.workers.add(person)
+        person.work_super_area = self
+
+    #def add(self, person, qualifier=GroupType.workers): <- maybe this is better
+    #    super().add(person, qualifier)
+    #    person.company = self
 
 
 class SuperAreas:
