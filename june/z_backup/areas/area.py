@@ -28,6 +28,7 @@ class Area(Group):
             n_households: int,
             census_freq: dict,
             relevant_groups: list,
+            # commute_generator,
     ):
         super().__init__()
         self._name = name
@@ -44,6 +45,7 @@ class Area(Group):
         # self.people = []
         for relevant_groups in relevant_groups:
             setattr(self, relevant_groups, [])
+        # self.commute_generator = commute_generator
 
     @property
     def name(self):
@@ -55,7 +57,7 @@ class Area(Group):
         Object that generates modes of transport randomly weighted by census data
         """
         # TODO update for new code structure
-        return self.world.commute_generator.regional_gen_from_msoarea(
+        return self.commute_generator.regional_gen_from_msoarea(
             self.super_area
         )
 
@@ -101,6 +103,7 @@ class Areas:
             age_freq_file: str,
             sex_freq_file: str,
             household_composition_freq_file: str,
+            # commute_generator,
     ) -> "Areas":
         """
         Parameters
