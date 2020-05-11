@@ -1,3 +1,4 @@
+from .worker_distributor import WorkerDistributor
 from .carehome_distributor import CareHomeDistributor
 from .company_distributor import CompanyDistributor
 from .household_distributor import HouseholdDistributor
