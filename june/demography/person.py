@@ -137,7 +137,7 @@ class Person:
         self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
-        self.work_msoarea = None
+        self.work_super_area = None
         self.household = None
         self.area = area
         # primary activity attributes
