@@ -51,7 +51,7 @@ def test__time_it_takes_to_infect(config, infection, group_size=2):
 
         # activate everyone in the group
         for person in group.people:
-            person.active_group = 'TestGroup'
+            person.active_group = 'test_group'
         n_days.append(
             days_to_infection(interaction, susceptible_person, group)
         )
