@@ -1,14 +1,14 @@
 import logging
-from tqdm.auto import tqdm
+
 import numpy as np
 import pandas as pd
 from scipy.stats import rv_discrete
 
-from june.groups.group import Group
 from june.demography.person import Person
-from june.logger_creation import logger
+from june.groups.group import Group
 
 logger = logging.getLogger(__name__)
+
 
 class BoundaryError(BaseException):
     """Class for throwing boundary related errors."""
@@ -17,7 +17,7 @@ class BoundaryError(BaseException):
 
 class Boundary(Group):
     def __init__(self, world):
-        super().__init__(None, "boundary")
+        super().__init__()
         self.world = world
         self.n_residents = 0
         self.missing_workforce_nr()
@@ -28,14 +28,14 @@ class Boundary(Group):
         This will establish the number of workers recruited
         from the boundary.
         """
-        
+
         self.ADULT_THRESHOLD = self.world.config["people"]["adult_threshold"]
         self.OLD_THRESHOLD = self.world.config["people"]["old_threshold"]
         self._init_frequencies()
 
         for company in self.world.companies.members:
             # nr. of missing workforce
-            #TODO companies shouldn always be completely full
+            # TODO companies shouldn always be completely full
             n_residents = (company.n_employees_max - company.n_employees)
 
             (
@@ -56,7 +56,7 @@ class Boundary(Group):
                     mode_of_transport=None,
                 )
                 person.industry = company.industry
-                
+
                 # Inform groups about new person
                 self.people.append(person)
                 self.world.people.members.append(person)
@@ -79,7 +79,7 @@ class Boundary(Group):
             col for col in self.world.inputs.compsec_by_sex_df.columns.values if "f " in col
         ]
         f_nrs_per_compsec = self.world.inputs.compsec_by_sex_df[f_col].sum(axis='rows')
-        
+
         m_col = [
             col for col in self.world.inputs.compsec_by_sex_df.columns.values if "m " in col
         ]
@@ -109,9 +109,9 @@ class Boundary(Group):
         nomis_bin_df = nomis_bin_df[
             (nomis_bin_df["age"] >= self.ADULT_THRESHOLD) & \
             (nomis_bin_df["age"] <= self.OLD_THRESHOLD)
-        ]
+            ]
         self.nomis_bins = nomis_bin_df.div(nomis_bin_df.sum(axis=0), axis=1)
-        
+
         age_df = pd.DataFrame(
             data=np.vstack((age_unique, age_counts)).T,
             columns=["age", "freq"],
@@ -119,9 +119,9 @@ class Boundary(Group):
         age_df = age_df[
             (age_df["age"] >= 20) & \
             (age_df["age"] <= 65)
-        ]
+            ]
         self.ages = age_df.div(age_df.sum(axis=0), axis=1)
-    
+
     def init_random_variables(self, n_residents, compsec):
         """
         Create the random variables following the discrete distributions.
@@ -134,15 +134,15 @@ class Boundary(Group):
             )
         )
         sex_rnd_arr = sex_rv.rvs(size=n_residents)
-        
+
         nomis_bin_rv = rv_discrete(
             values=(np.arange(len(self.nomis_bins.freq.values)), self.nomis_bins.freq.values)
         )
         nomis_bin_rnd_arr = nomis_bin_rv.rvs(size=n_residents)
-        
+
         age_rv = rv_discrete(
             values=(np.arange(len(self.ages.freq.values)), self.ages.freq.values)
         )
         age_rnd_arr = age_rv.rvs(size=n_residents)
-        
+
         return sex_rnd_arr, nomis_bin_rnd_arr, age_rnd_arr

@@ -19,6 +19,9 @@ def get_age_brackets(nomis_age_bin):
 
 
 class BoxGenerator(Box):
+
+    spec = "box"
+
     def __init__(self, world=None, region=None, n_people=None):
         """Generates a simulation box where all people interact with each other.
         If you just want a box with random people with random sex (50/50) and a random
