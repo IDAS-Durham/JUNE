@@ -10,14 +10,13 @@ import yaml
 from sklearn.neighbors._ball_tree import BallTree
 
 from june.groups import Group
-from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
 
-default_config_filename = Path(os.path.abspath(__file__)).parent.parent / \
-                          "configs/defaults/hospitals.yaml"
-default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-                    "data"
+default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+                        "data/processed/hospital_data/england_hospitals.csv"
+default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
+                          "configs/defaults/groups/hospitals.yaml"
 
 
 class Hospital(Group):
@@ -228,7 +227,10 @@ class Hospitals:
 
     @classmethod
     def from_file(
-            cls, filename: str, config_filename: str, box_mode: bool = False
+            cls,
+            filename: str = default_data_filename,
+            config_filename: str = default_config_filename,
+            box_mode: bool = False,
     ) -> "Hospitals":
         """
         Initialize Hospitals from path to data frame, and path to config file.
@@ -249,7 +251,6 @@ class Hospitals:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        config = config['hospitals']
         max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
         hospitals = []
@@ -408,8 +409,7 @@ class Hospitals:
 
 
 if __name__ == "__main__":
-
     Hospitals.from_file(
-        "/cosma7/data/dp004/dc-beck3/JUNE/data/processed/hospital_data/england_hospitals.csv",
-        "/cosma7/data/dp004/dc-beck3/JUNE/configs/defaults/hospitals.yaml",
+        default_data_filename,
+        default_config_filename,
     )

@@ -1,0 +1,11 @@
+age_range: [0,19] # numbers correspond to age groups defined by NOMIS dataset.
+mandatory_age_range: [5,18]
+neighbour_schools: 35 
+sector: 'P'            # NOMIS name convention
+sub_sector:
+  teacher_secondary:
+    sector_id: 2314    # NOMIS name convention
+  teacher_primary:
+    sector_id: 2315
+  teacher_special:
+    sector_id: 2316

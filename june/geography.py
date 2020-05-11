@@ -1,15 +1,15 @@
 import os
 import csv
 import logging
-import pathlib
 from pathlib import Path
 from random import randint
 from itertools import chain, count
-from typing import List, Dict, Optional
-from june.demography import Person
+from typing import List, Dict, Tuple, Optional
 
 import numpy as np
 import pandas as pd
+
+from june.demography import Person
 
 # from june import get_creation_logger
 
@@ -43,7 +43,7 @@ class Area:
         self,
         name: str,
         super_area: "SuperArea" = None,
-        coordinates: [float, float] = [None, None],
+        coordinates: Tuple[float, float] = (None, None),
     ):
         """
         Coordinate is given in the format X, Y where X is longitude and Y is latitude.
@@ -85,7 +85,7 @@ class SuperArea:
         self,
         name: str,
         areas: List[Area] = [None],
-        coordinates: [float, float] = [None, None],
+        coordinates: Tuple[float, float] = Tuple[None, None],
     ):
         self.id = next(self._id)
         self.name = name
@@ -197,7 +197,8 @@ class Geography:
         Load data from files and construct classes capable of generating
         hierarchical structure of geographical areas.
 
-        Example usage:
+        Example usage
+        -------------
             ```
             geography = Geography.from_file(filter_key={"region" : "North East"})
             geography = Geography.from_file(filter_key={"msoa" : ["E02005728"]})
