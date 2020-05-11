@@ -1,9 +1,9 @@
-import pytest
-from june.geography import Area
-import numpy as np
 import collections
-from june.geography import Geography
+import pytest
+import numpy as np
 
+from june.geography import Geography
+from june.geography import Area
 from june import demography as d
 
 @pytest.fixture(name="area")

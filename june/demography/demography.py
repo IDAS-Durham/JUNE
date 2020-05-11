@@ -1,14 +1,14 @@
+import os
 import csv
 from pathlib import Path
 from random import randint
 from typing import List, Dict, Optional
-import pandas as pd
-from june.geography import Geography
 
+import pandas as pd
 import numpy as np
-import os
 
 # from june.demography.health_index import HealthIndex
+from june.geography import Geography
 from june.demography import Person
 
 default_data_path = (
@@ -178,7 +178,7 @@ class Demography:
 
         Returns
         -------
-        A demography representing the super area
+            A demography representing the super area
         """
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
