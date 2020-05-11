@@ -65,6 +65,11 @@ class World:
             self.households = household_distributor.distribute_people_and_households_to_areas(
                 self.areas
             )
+
+        if hasattr(geography, 'companies') or hasattr(geography, 'hospitals') or hasattr('schools'):
+            worker_distr = WorkerDistributor.for_geography(geography)  # atm only for_geography()
+            worker_distr.distribute(geography, population)
+
         if hasattr(geography, "schools"):
             self.schools = geography.schools
             school_distributor = SchoolDistributor(geography.schools)
@@ -75,21 +80,7 @@ class World:
             hospital_distributor = HospitalDistributor(geography.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
 
-        if hasattr(geography, 'companies') or hasattr(geography, 'hospitals') or hasattr('schools'):
-            worker_distr = WorkerDistributor.for_geography(geography)  # atm only for_geography()
-            worker_distr.distribute(geography, population)
         
-        if include_households:
-            print("Creating and populating households...")
-            household_distributor = HouseholdDistributor.from_file()
-            self.households = household_distributor.distribute_people_and_households_to_areas(
-                self.areas
-            )
-        if hasattr(geography, "schools"):
-            self.schools = geography.schools
-            school_distributor = SchoolDistributor(geography.schools)
-            school_distributor.distribute_kids_to_school(self.areas)
-
     @classmethod
     def from_geography(cls, geography: Geography):
         """

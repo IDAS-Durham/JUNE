@@ -13,6 +13,8 @@ from june.groups import Group
 from june.logger_creation import logger
 from enum import IntEnum
 
+from june.geography import SuperArea
+
 logger = logging.getLogger(__name__)
 
 default_data_filename = (
@@ -52,11 +54,10 @@ class Hospital(Group):
 
     def __init__(
         self,
-        hospital_id: int,
         coordinates: list,  # Optional[Tuple[float, float]] = None,
         n_beds: int,
         n_icu_beds: int,
-        super_area: str = None,
+        super_area: SuperArea = None,
     ):
         """
         Create a Hospital given its description.
@@ -74,8 +75,8 @@ class Hospital(Group):
         msoa_name:
             name of the msoa area the hospital belongs to
         """
-        super().__init__(f"Hospital_{hospital_id}", "hospital")
         self.id = next(self._id)
+        super().__init__(f"Hospital_{self.id}", "hospital")
         self.super_area = super_area
         self.coordinates = coordinates
         self.n_beds = n_beds
@@ -236,12 +237,8 @@ class Hospitals:
     @classmethod
     def for_box_mode(cls):
         hospitals = []
-        hospitals.append(
-            Hospital(hospital_id=1, coordinates=None, n_beds=10, n_icu_beds=2,)
-        )
-        hospitals.append(
-            Hospital(hospital_id=2, coordinates=None, n_beds=5000, n_icu_beds=5000,)
-        )
+        hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
+        hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
         return cls(hospitals, box_mode=True)
 
     @classmethod
@@ -285,15 +282,36 @@ class Hospitals:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        hospital_df = pd.read_csv(filename)
-        print(hospital_df)
-        area_names = [area.name for area in geography.areas]
-        hospital_df = hospital_df.loc[hospital_df["oa"].isin(area_names)]
         max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
+        hospital_df = pd.read_csv(filename, index_col=0)
+        super_area_names = [super_area.name for super_area in geography.super_areas]
+        hospital_df = hospital_df.loc[super_area_names]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
-        hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
+        # area_names = [area.name for area in geography.areas]
+        # hospital_df = hospital_df.loc[hospital_df["oa"].isin(area_names)]
+        hospitals = []
+        for super_area in geography.super_areas:
+            if super_area in hospital_df.index:
+                row = hospital_df.loc[super_area]
+                coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
+                n_beds = row["beds"]
+                hospital = cls.create_hospital(super_area, coordinates, n_beds, icu_fraction)
+                hospitals.append(hospital)
+                print(hospital.coordinates)
         return cls(hospitals, max_distance, False)
+
+    @classmethod
+    def create_hospital(cls, super_area, coordinates, n_beds, icu_fraction):
+        n_icu_beds = round(icu_fraction * n_beds)
+        n_beds -= n_icu_beds
+        hospital = Hospital(
+            super_area=super_area,
+            coordinates=coordinates,
+            n_beds=n_beds,
+            n_icu_beds=n_icu_beds,
+        )
+        return hospital
 
     def init_hospitals(
         self, hospital_df: pd.DataFrame, icu_fraction: float
@@ -316,8 +334,7 @@ class Hospitals:
             coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
-                hospital_id=index,
-                # super_area=msoa_name,
+                # super_area=,
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,

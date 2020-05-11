@@ -25,11 +25,13 @@ def test__world_with_schools(geography):
     assert hasattr(world, 'schools')
     assert isinstance(world.schools, Schools)
 
-#def test__world_with_hospitals(geography):
-#    geography.hospitals = Hospitals.for_geography(geography) 
-#    world = World.from_geography(geography)
-#    assert hasattr(world, 'hospitals')
-#    assert isinstance(world.hospitals, Hospitals)
+def test__world_with_hospitals():
+    geography = Geography.from_file({"oa" : ["E00042207"]})
+    geography.hospitals = Hospitals.for_geography(geography) 
+    world = World.from_geography(geography)
+    assert hasattr(world, 'hospitals')
+    assert isinstance(world.hospitals, Hospitals)
+    assert len(world.hospitals.members[0].GroupType.workers) != 0
 #
 #def test__world_with_companies(geography):
 #    geography.companies = Companies.for_geography(geography) 

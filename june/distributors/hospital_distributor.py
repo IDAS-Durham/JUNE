@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 default_config_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent
-    / "config/defaults/distributors/hospital_distributor.yaml"
+    / "configs/defaults/distributors/hospital_distributor.yaml"
 )
 
 
@@ -55,7 +55,7 @@ class HospitalDistributor:
         hospitals_in_msoa = [
             hospital
             for hospital in self.hospitals.members
-            if hospital.super_area is msoa
+            if hospital.super_area == msoa
         ]
         return hospitals_in_msoa
 
@@ -68,10 +68,14 @@ class HospitalDistributor:
             2232: Midwives
         """
         hospitals_in_msoa = self.hospitals_in_msoa(msoa)
+        print(msoa)
+        print(hospitals_in_msoa)
+        if len(hospitals_in_msoa) == 0:
+            return None
 
         medics = [
             person
-            for idx, person in enumerate(msoa.work_people)
+            for idx, person in enumerate(msoa.workers)
             if person.industry == self.healthcare_sector_label
         ]
 
