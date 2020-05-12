@@ -204,17 +204,14 @@ class Simulator:
             elif health_information.dead:
                 self.bury_the_dead(person)
 
-    def seed(self, group: "Group", n_infections: int):
+    def seed(self, n_infections: int):
         """
         Randomly pick people in group to seed the infection
 
         Parameters
         ----------
-        group:
-            group instance in which to seed the infection
-
         n_infections:
-            number of random people to infect in the given group
+            number of random people to infect in the 
 
         """
         # TODO: add attribute susceptible to people
