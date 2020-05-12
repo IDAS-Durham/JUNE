@@ -39,7 +39,7 @@ class World:
         geography: Geography,
         demography: Demography,
         include_households: bool = True,
-        box_mode = False
+        box_mode=False,
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
@@ -91,7 +91,9 @@ class World:
             self.schools = geography.schools
             school_distributor = SchoolDistributor(geography.schools)
             school_distributor.distribute_kids_to_school(self.areas)
-            school_distributor.distribute_teachers_to_schools_in_super_areas(self.super_areas)
+            school_distributor.distribute_teachers_to_schools_in_super_areas(
+                self.super_areas
+            )
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
@@ -100,12 +102,12 @@ class World:
             self.hospitals = geography.hospitals
             hospital_distributor = HospitalDistributor(geography.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
-        
+
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries
 
     @classmethod
-    def from_geography(cls, geography: Geography, box_mode = False):
+    def from_geography(cls, geography: Geography, box_mode=False):
         """
         Initializes the world given a geometry. The demography is calculated
         with the default settings for that geography.

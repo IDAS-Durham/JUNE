@@ -39,8 +39,9 @@ default_number_communal_filename = (
     / "data/processed/census_data/output_area/EnglandWales/n_people_in_communal.csv"
 )
 
-default_logging_config_filename = Path(__file__).parent.parent / \
-    "configs/config_world_creation_logger.yaml"
+default_logging_config_filename = (
+    Path(__file__).parent.parent / "configs/config_world_creation_logger.yaml"
+)
 
 logger(default_logging_config_filename)
 
@@ -286,7 +287,11 @@ class HouseholdDistributor:
         return men_by_age, women_by_age
 
     def _distribute_people_and_households_to_area_single(
-            self, area: Area, household_numbers_df: pd.DataFrame, n_students_df: pd.DataFrame, n_communal_df: pd.DataFrame
+        self,
+        area: Area,
+        household_numbers_df: pd.DataFrame,
+        n_students_df: pd.DataFrame,
+        n_communal_df: pd.DataFrame,
     ):
         """
         Distributes people and household to a single area.

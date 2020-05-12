@@ -1,3 +1,2 @@
-
 class GroupException(Exception):
     pass

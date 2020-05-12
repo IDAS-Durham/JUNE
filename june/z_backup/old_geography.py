@@ -27,7 +27,7 @@
 #####    Fine geographical resolution.
 #####    """
 #####    _id = count()
-#####    
+#####
 #####    def __init__(
 #####            self,
 #####            name: str,
@@ -43,7 +43,7 @@
 #####class Areas:
 #####    def __init__(self, areas: List[Area]):
 #####        self.members = areas
-#####       
+#####
 #####    def __len__(self):
 #####        return len(self.members)
 #####
@@ -56,7 +56,7 @@
 #####    Coarse geographical resolution.
 #####    """
 #####    _id = count()
-#####    
+#####
 #####    def __init__(
 #####            self,
 #####            name: str,
@@ -72,7 +72,7 @@
 #####class SuperAreas:
 #####    def __init__(self, super_areas: List[SuperArea]):
 #####        self.members = super_areas
-#####       
+#####
 #####    def __len__(self):
 #####        return len(self.members)
 #####
@@ -84,7 +84,7 @@
 #####    def __init__(
 #####            self,
 #####            hierarchy: pd.DataFrame,
-#####            units_coordinate: dict, 
+#####            units_coordinate: dict,
 #####    ):
 #####        """
 #####        Generate hierachical devision of geography.
@@ -110,7 +110,7 @@
 #####        Note: This function looks a bit more complicated than need be,
 #####        but it was created with a eye on the future.
 #####        """
-#####        areas_list = [] 
+#####        areas_list = []
 #####        super_areas_list = []
 #####
 #####        # loop through all but the smallest geo-unit
@@ -118,7 +118,7 @@
 #####            geo_units_labels = self.hierarchy.index.get_level_values(
 #####                geo_unit_level
 #####            ).unique()
-#####            
+#####
 #####            # loop through this geo-unit
 #####            for unit_label in geo_units_labels:
 #####                smaller_unit_df = self.hierarchy.loc[unit_label]
@@ -126,7 +126,7 @@
 #####
 #####                # loop over smallest geo-unit
 #####                for smaller_unit_label in smaller_unit_df.values[0].split(' '):
-#####                     
+#####
 #####                    superarea_areas_list.append(
 #####                        Area(
 #####                            name=smaller_unit_label,
@@ -136,7 +136,7 @@
 #####                            ),
 #####                        )
 #####                    )
-#####                
+#####
 #####                areas_list.append(superarea_areas_list)
 #####                super_area = SuperArea(
 #####                    name=unit_label,
@@ -149,12 +149,12 @@
 #####                for area in superarea_areas_list:
 #####                    area.super_area = super_area
 #####                super_areas_list.append(super_area)
-#####       
+#####
 #####        self.areas = Areas(
 #####            list(chain.from_iterable(areas_list))
 #####        )
 #####        self.super_areas = SuperAreas(super_areas_list)
-#####        
+#####
 #####        logger.info(
 #####            f"There are {len(self.areas)} areas and " + \
 #####            f"{len(self.super_areas)} super_areas in the world."
@@ -176,7 +176,7 @@
 #####            self.units_coordinate[unit][name]['Y'],
 #####            self.units_coordinate[unit][name]['X'],
 #####        ]
-#####    
+#####
 #####    @classmethod
 #####    def from_file(
 #####            cls,
@@ -208,18 +208,18 @@
 #####        smallest_unit_coords_file = f"{coords_filename}"
 #####        geo_hierarchy = _load_geo_file(unit_hierarchy_file)
 #####        areas_coord = _load_area_coords(smallest_unit_coords_file)
-#####        
+#####
 #####        if filter_key is not None:
 #####            geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 #####
 #####        # At the moment we only support data at the UK OA & MSOA level.
 #####        geo_hierarchy = geo_hierarchy[["MSOA", "OA"]]
-#####        
+#####
 #####        super_areas_coord = pd.merge(areas_coord, geo_hierarchy, on='OA')
 #####        super_areas_coord = super_areas_coord.groupby(
 #####            'MSOA', as_index=True,
 #####        )[['X','Y']].mean()
-#####        
+#####
 #####        units_coord = {
 #####            "OA": areas_coord.T.to_dict(),
 #####            "MSOA": super_areas_coord.T.to_dict(),
@@ -239,7 +239,7 @@
 #####        names=column_names,
 #####        usecols=usecols,
 #####    )
-#####    
+#####
 #####
 #####def _load_area_coords(
 #####        coords_path: str
@@ -275,7 +275,7 @@
 #####    """
 #####    Find the order for available geographical units from fine (left column)
 #####    to coarse (right column) granular and group them.
-#####    
+#####
 #####    Returns
 #####    -------
 #####    hierarchy

@@ -67,9 +67,7 @@ class CareHomeDistributor:
                 continue
             self.populate_carehome_in_area(area)
 
-    def populate_carehome_in_area(
-        self, area: Area
-    ):
+    def populate_carehome_in_area(self, area: Area):
         """
         Crates carehome in area, if there needs to be one, and fills it with the
         oldest people in that area.

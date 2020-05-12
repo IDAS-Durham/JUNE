@@ -36,26 +36,26 @@ class Logger:
                 infected_world += infected
                 recovered_world += recovered
                 self.data_dict[area.name][day] = {
-                        "susceptible": susceptible,
-                        "infected": infected,
-                        "recovered": recovered,
-                        }
+                    "susceptible": susceptible,
+                    "infected": infected,
+                    "recovered": recovered,
+                }
 
             self.data_dict["world"][day] = {
-                    "susceptible": susceptible_world,
-                    "infected": infected_world,
-                    "recovered": recovered_world,
-                    }
-            #self.log_r0() TODO implement
+                "susceptible": susceptible_world,
+                "infected": infected_world,
+                "recovered": recovered_world,
+            }
+            # self.log_r0() TODO implement
         else:
             box = self.world.boxes.members[0]
             self.data_dict["world"][day] = {
-                    "susceptible": len(self.world.people.susceptible),
-                    "infected": len(self.world.people.infected),
-                    "recovered": len(self.world.people.recovered)
-                    }
+                "susceptible": len(self.world.people.susceptible),
+                "infected": len(self.world.people.infected),
+                "recovered": len(self.world.people.recovered),
+            }
             # self.log_infection_generation(day)
-            #self.log_r0()
+            # self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
             json.dump(self.data_dict, f)
@@ -73,7 +73,6 @@ class Logger:
                 recovered += 1
         return susceptible, infected, recovered
 
-
     def log_infection_generation(self, day):
         infection_generation_global = 0
         global_counter = 0
@@ -81,28 +80,37 @@ class Logger:
             for area in self.world.areas.members:
                 for person in area.people:
                     if person.health_information.infected:
-                        infection_generation_global += person.health_information.infection_generation
-                        global_counter +=1
-                        
+                        infection_generation_global += (
+                            person.health_information.infection_generation
+                        )
+                        global_counter += 1
+
             if infection_generation_global == 0:
                 self.data_dict["world"][day]["infection_generation"] = 0
             else:
-                self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
+                self.data_dict["world"][day]["infection_generation"] = (
+                    infection_generation_global / global_counter
+                )
         else:
             box = self.world.boxes.members[0]
             for person in box.people:
-                infection_generation_global += person.health_information.infection_generation
+                infection_generation_global += (
+                    person.health_information.infection_generation
+                )
                 global_counter += 1
-                
-                self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
 
+                self.data_dict["world"][day]["infection_generation"] = (
+                    infection_generation_global / global_counter
+                )
 
     def log_r0(self):
         if not self.box_mode:
             raise NotImplementedError()
         else:
             box = self.world.boxes.members[0]
-            if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
+            if (
+                self.timer.day_int + 1 == self.timer.total_days
+            ):  # dirty fix, need to rethink later
                 inner_dict = {}
                 r0s_raw = []
                 r0s_recon = []
@@ -110,8 +118,12 @@ class Logger:
                 for person in box.recovered:
                     day_inf = person.health_information.time_of_infection
                     day_infs.append([day_inf, person])
-                    if (day_inf > 1 and day_inf < 5): # need to think about how to define this better
-                        day_recover = day_inf + person.health_information.length_of_infection
+                    if (
+                        day_inf > 1 and day_inf < 5
+                    ):  # need to think about how to define this better
+                        day_recover = (
+                            day_inf + person.health_information.length_of_infection
+                        )
                         s_ti = self.data_dict["world"][day_inf]["susceptible"]
                         s_tr = self.data_dict["world"][day_recover]["susceptible"]
                         s_frac = (s_ti + s_tr) / (2 * len(box.people))
@@ -119,24 +131,28 @@ class Logger:
                         r0s_raw.append(r0)
                         r0s_recon.append(r0 / s_frac)
 
-                        inner_dict[person.id] = {"start" : day_inf,
-                                                "length" : person.health_information.length_of_infection,
-                                                "num_infected" : person.health_information.number_of_infected,
-                                                "R0_raw" : r0,
-                                                "R0_recon" : r0 / s_frac}
-                
+                        inner_dict[person.id] = {
+                            "start": day_inf,
+                            "length": person.health_information.length_of_infection,
+                            "num_infected": person.health_information.number_of_infected,
+                            "R0_raw": r0,
+                            "R0_recon": r0 / s_frac,
+                        }
+
                 self.data_dict["data"] = inner_dict
                 self.data_dict["R0_raw"] = np.mean(r0s_raw)
                 self.data_dict["R0_recon"] = np.mean(r0s_recon)
 
-
     def plot_infection_generation(self):
         import matplotlib.pyplot as plt
+
         days = []
         infection_generations = []
         for day in self.data_dict["world"].keys():
             days.append(day)
-            infection_generations.append(self.data_dict["world"][day]["infection_generation"])
+            infection_generations.append(
+                self.data_dict["world"][day]["infection_generation"]
+            )
         idx_sorted = np.argsort(days)
         days = np.array(days)[idx_sorted]
         infection_generations = np.array(infection_generations)[idx_sorted]
@@ -145,7 +161,6 @@ class Logger:
         ax.set_xlabel("Days")
         ax.set_ylabel("Average infection generation")
         return fig, ax
-    
 
     def log_r_effective(self, day):
         """
@@ -167,15 +182,14 @@ class Logger:
                     self.data_dict[area.name][day]["r0"] = 0
                 else:
                     self.data_dict[area.name][day]["r0"] = r0_area / area_counter
-            if global_counter == 0: 
+            if global_counter == 0:
                 self.data_dict["world"][day]["r0"] = 0
             else:
                 self.data_dict["world"][day]["r0"] = r0_global / global_counter
 
-
-
     def plot_r_eff(self):
         import matplotlib.pyplot as plt
+
         days = []
         r_effs = []
         for day in self.data_dict["world"].keys():
@@ -190,7 +204,6 @@ class Logger:
         ax.set_xlabel("Days")
         ax.set_ylabel("R_eff")
         return fig, ax
-
 
     def plot_infection_curves_per_day(self):
         infected = []
@@ -208,15 +221,16 @@ class Logger:
             susceptible.append(n_susc)
             recovered.append(n_rec)
         fig, ax = plt.subplots()
-        ax.plot(day_array, infected, label="Infected", color='C0')
-        ax.plot(day_array, susceptible, label="Susceptible", color='C1')
-        ax.plot(day_array, recovered, label="Recovered", color='C2')
+        ax.plot(day_array, infected, label="Infected", color="C0")
+        ax.plot(day_array, susceptible, label="Susceptible", color="C1")
+        ax.plot(day_array, recovered, label="Recovered", color="C2")
         ax.set_xlabel("Days")
         ax.set_ylabel("Number of people")
         ax.set_title("Infection curves")
         fig.legend()
 
         if self.box_mode:
+
             def ratio_SIR_numerical(beta, gamma, N, I_0, times):
                 """
                 Numerical simulation of SIR model with simple Euler stepper in 10*times timesteps, 
@@ -242,22 +256,25 @@ class Logger:
                     I_list.append(I)
                     R_list.append(R)
                 return S_list, I_list, R_list
-            
 
             N = len(self.world.boxes.members[0].people)
-            I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
+            I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]][
+                "infected"
+            ]
 
             beta = self.config["infection"]["transmission"]["parameters"]["probability"]
-            beta /= self.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
+            beta /= self.timer.get_number_shifts(
+                None
+            )  # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
             gamma = self.config["infection"]["symptoms"]["parameters"]["recovery_rate"]
             gamma /= self.timer.get_number_shifts(None)
             # multiply by 2 to compensate for updating health status twice in each timestep, see interaction/base.py
 
             n_sus, n_inf, n_rec = ratio_SIR_numerical(beta, gamma, N, I_0, day_array)
 
-            ax.plot(day_array, n_inf, color='C0', linestyle='--')
-            ax.plot(day_array, n_sus, color='C1', linestyle='--')
-            ax.plot(day_array, n_rec, color='C2', linestyle='--')
+            ax.plot(day_array, n_inf, color="C0", linestyle="--")
+            ax.plot(day_array, n_sus, color="C1", linestyle="--")
+            ax.plot(day_array, n_rec, color="C2", linestyle="--")
 
         fig.savefig(os.path.join(self.save_path, "infection_curves.png"), dpi=300)
         return fig, ax
@@ -271,14 +288,7 @@ class Logger:
         for person in self.world.people.members:
             if person.health_information.recovered:
                 lengths.append(person.health_information.length_of_infection)
-                predictions.append(person.health_information.infection.symptoms.predicted_recovery_time)
+                predictions.append(
+                    person.health_information.infection.symptoms.predicted_recovery_time
+                )
         return lengths
-
-
-
-
-
-
-
-
-

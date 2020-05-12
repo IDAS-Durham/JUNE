@@ -65,14 +65,14 @@ class Timer:
             return self.time_config["step_duration"][self.type_day][self.shift + 1]
         else:
             return (
-                    self.time_config["step_duration"][self.type_day][self.shift + 1] / 24.0
+                self.time_config["step_duration"][self.type_day][self.shift + 1] / 24.0
             )
 
     def is_weekend(self):
         self.initial_day_index = list(calendar.day_name).index(self.initial_day)
         calendar_day = calendar.day_name[
             (self.day_int + self.initial_day_index - 1) % 7
-            ]
+        ]
         if (calendar_day == "Saturday") or (calendar_day == "Sunday"):
             return True
         else:

@@ -1,11 +1,11 @@
-#import os
-#from pathlib import Path
+# import os
+# from pathlib import Path
 #
-#import numpy as np
-#import pandas as pd
+# import numpy as np
+# import pandas as pd
 #
 #
-#class Inputs:
+# class Inputs:
 #    """
 #    Reads in data used to populate the simulation
 #    """
@@ -24,7 +24,7 @@
 #        self.zone = zone
 #        self.DATA_DIR = DATA_DIR
 #        self.OUTPUT_AREA_DIR = os.path.join(self.DATA_DIR, "output_area", zone)
-#            
+#
 #        # For the new structure -----------------------------------------------
 #
 #        # set up main directory paths ------
@@ -87,7 +87,7 @@
 #            index_col="output_area",
 #        )
 #        self.area_mapping_df = self.read_area_mapping()
-#       
+#
 #        self.pubs_df = pd.read_csv(
 #            os.path.join(
 #                os.path.dirname(os.path.realpath(__file__)),
@@ -101,8 +101,8 @@
 #        self.pubs_df.columns = ["Latitude","Longitude"]
 #        pub_ids = np.arange(len(self.pubs_df["Latitude"]))
 #        self.pubs_df["Ids"] = pub_ids
-#        
-#        
+#
+#
 #        self.areas_coordinates_df = self.read_coordinates()
 #        self.contact_matrix = np.genfromtxt(
 #            os.path.join(
@@ -129,7 +129,7 @@
 #            self.n_residents.index.values,
 #        )
 #        self.compsec_by_sex_df = self.read_compsec_by_sex(self.n_residents.index.values)
-#            
+#
 #        self.household_composition_df = pd.read_csv(
 #                os.path.join(
 #                    self.OUTPUT_AREA_DIR,
@@ -162,7 +162,7 @@
 #                ),
 #                index_col=0
 #                )
-# 
+#
 #        AGE_DIFF_DIR =  os.path.join(
 #            os.path.dirname(os.path.realpath(__file__)),
 #            "..",
@@ -191,7 +191,7 @@
 #        self.read_uk_pcs_coordinates()
 #        self.read_msoa_coordinates()
 #        self.read_msoa_oa_coordinates()
-#        
+#
 #
 #
 #    def read(self, filename):
@@ -204,7 +204,7 @@
 #
 #    def read_text_coordinates(self,filename):
 #        pass
-#        
+#
 #    def read_coordinates(self):
 #        areas_coordinates_df_path = os.path.join(
 #            os.path.dirname(os.path.realpath(__file__)),
@@ -334,7 +334,7 @@
 #        Gives number dict of discrete probability distributions by sex of the
 #        different industry sectors at the OA level.
 #        The dict is of the format: {[oa]: {[gender('m'/'f')]: [distribution]}}
-#        
+#
 #        TableID: KS605EW to KS607EW
 #        https://www.nomisweb.co.uk/census/2011/ks605ew
 #        """
@@ -378,7 +378,7 @@
 #
 #        # use the counts to get key company sector ratios
 #        self.read_key_compsec_by_sex(compsec_by_sex_df)
-#        
+#
 #        # convert counts to ratios
 #        compsec_by_sex_df.loc[:, m_columns] = compsec_by_sex_df.loc[:, m_columns].div(
 #            compsec_by_sex_df[m_columns].sum(axis=1), axis=0
@@ -419,12 +419,12 @@
 #        healthcare_df = education_healthcare_by_sex_df[
 #            ~education_healthcare_by_sex_df.occupations.isin(education_df.occupations)
 #        ]
-#        
+#
 #        self.get_key_compsec_ratio_by_sex(
 #            education_df, healthcare_df, companysector_by_sex_df
 #        )
 #        self.get_key_compsec_distr_by_sex(education_df, healthcare_df)
-#    
+#
 #    def get_key_compsec_distr_by_sex(self, education_df, healthcare_df):
 #        """
 #        """
@@ -440,7 +440,7 @@
 #        healthcare_distr_df = healthcare_distr_df.groupby(
 #            ['sector', 'healthcare_sector_id']
 #        ).mean()
-#        
+#
 #        education_distr_df = education_df.loc[
 #            :,["male", "female"]
 #        ].div(
@@ -452,7 +452,7 @@
 #        education_distr_df = education_distr_df.groupby(
 #            ['sector', 'education_sector_id']
 #        ).mean()
-#        
+#
 #        compsec_specic_distr_by_sex_df = pd.concat([
 #            healthcare_distr_df, education_distr_df
 #        ])
@@ -469,7 +469,7 @@
 #        ):
 #        """
 #        """
-#        # Get ratio of people work in any compared to the specific key sector 
+#        # Get ratio of people work in any compared to the specific key sector
 #        male_healthcare_ratio = np.sum(healthcare_df["male"]) / \
 #            np.sum(companysector_by_sex_df["m Q"])
 #        male_education_ratio = np.sum(education_df["male"]) / \
@@ -478,7 +478,7 @@
 #            np.sum(companysector_by_sex_df["f Q"])
 #        female_education_ratio = np.sum(education_df["female"]) / \
 #            np.sum(companysector_by_sex_df["f P"])
-# 
+#
 #        compsec_specic_ratio_by_sex_df = pd.DataFrame(
 #            np.array([
 #                [male_education_ratio, female_education_ratio],
@@ -501,10 +501,10 @@
 #        https://www.nomisweb.co.uk/census/2011/qs701ew
 #
 #        Args:
-#        DATA_DIR: path to dataset folder (default should be output_area folder) 
+#        DATA_DIR: path to dataset folder (default should be output_area folder)
 #
 #        Returns:
-#        pandas dataframe with ratio of males and females per output area 
+#        pandas dataframe with ratio of males and females per output area
 #
 #        """
 #        travel_df = pd.read_csv(
@@ -659,7 +659,7 @@
 #        )
 #
 #        self.msoa_oa_coordinates = msoa_oa_coordinates
-#    
+#
 #    def create_workflow_df(
 #        self,
 #        area_mapping,
@@ -683,7 +683,7 @@
 #            DATA_DIR: path to dataset (csv file)
 #
 #        Returns:
-#            dictionary with frequencies of populations 
+#            dictionary with frequencies of populations
 #        """
 #        dirs = os.path.join(
 #            os.path.dirname(os.path.realpath(__file__)),
@@ -721,7 +721,7 @@
 #        return wf_df
 #
 #
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #
 #    ip = Inputs()
 #    print(ip.workflow_df)

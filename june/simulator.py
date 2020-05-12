@@ -253,7 +253,12 @@ class Simulator:
         n_people = 0
         for group_type in group_instances:
             for group in group_type.members:
-                self.interaction.time_step(self.timer.now, self.health_index_generator, self.timer.duration, group)
+                self.interaction.time_step(
+                    self.timer.now,
+                    self.health_index_generator,
+                    self.timer.duration,
+                    group,
+                )
                 n_people += group.size_active
 
         self.update_health_status(self.timer.now, self.timer.duration)

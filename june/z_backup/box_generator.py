@@ -1,13 +1,13 @@
-#import numpy as np
-#import pandas as pd
+# import numpy as np
+# import pandas as pd
 #
-#from june.box.box_mode import Box
-#from june.demography.person import Person
-#from june.infection.health_index import HealthIndex
-#from june.inputs import Inputs
+# from june.box.box_mode import Box
+# from june.demography.person import Person
+# from june.infection.health_index import HealthIndex
+# from june.inputs import Inputs
 #
 #
-#def get_age_brackets(nomis_age_bin):
+# def get_age_brackets(nomis_age_bin):
 #    """Auxiliary function to get the age delimiters of a nomis bin"""
 #    try:
 #        age_1, age_2 = nomis_age_bin.split("-")
@@ -19,17 +19,17 @@
 #    return int(age_1), int(age_2)
 #
 #
-#class BoxGenerator(Box):
+# class BoxGenerator(Box):
 #    def __init__(self, world=None, region=None, n_people=None):
 #        """Generates a simulation box where all people interact with each other.
 #        If you just want a box with random people with random sex (50/50) and a random
 #        age (uniform across 0 to 99) then just leave region as None or set it to "random".
-#        On the other hand, the population can be initialized from census data by 
+#        On the other hand, the population can be initialized from census data by
 #        setting the name of the region in the region parameter.
 #
 #        Parameters
 #        ----------
-#        world : 
+#        world :
 #            An instance of the World class (optional, will be passed to the created people)
 #        region :
 #            A string with the name of the region or "random".
@@ -54,7 +54,7 @@
 #
 #    def create_box_from_region(self, region):
 #        """
-#        We read from the census data the number of people, and their age and sex distributions. 
+#        We read from the census data the number of people, and their age and sex distributions.
 #        We sample uniformly inside each age bin, and we assign a health index based on the age.
 #        """
 #        inputs = Inputs(zone=region)

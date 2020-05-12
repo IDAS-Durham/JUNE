@@ -1,8 +1,8 @@
-#import numpy as np
-#from june.groups.group import Group
+# import numpy as np
+# from june.groups.group import Group
 #
 #
-#class SuperArea(Group):
+# class SuperArea(Group):
 #    """
 #    Stores information about the MSOA, like the total number of companies, etc.
 #    The n_companies_* represent the number of companies in a given msoa
@@ -36,7 +36,7 @@
 #            setattr(self, relevant_group, [])
 #
 #
-#class SuperAreas:
+# class SuperAreas:
 #    def __init__(self, world):
 #        self.world = world
 #        self.members = []

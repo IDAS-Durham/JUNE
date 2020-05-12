@@ -17,7 +17,7 @@ ALLOWED_SYMPTOM_TAGS = [
 
 
 class Symptoms:
-    def __init__(self, health_index=0.):
+    def __init__(self, health_index=0.0):
 
         self.health_index = health_index
         self.max_severity = random.random()
@@ -42,12 +42,14 @@ class Symptoms:
         """Loads the default Symptoms class from the general.ini config file and returns the class as object (not as
         an instance). This is used to set up the epidemiology model in world.py via configs if an input is not
         provided."""
-        classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
+        classname_str = af.conf.instance.general.get(
+            "epidemiology", "symptoms_class", str
+        )
         return getattr(sys.modules[__name__], classname_str)
 
 
 class SymptomsConstant(Symptoms):
-    def __init__(self, health_index=0., recovery_rate=0.2):
+    def __init__(self, health_index=0.0, recovery_rate=0.2):
         super().__init__(health_index=health_index)
 
         self.recovery_rate = recovery_rate
@@ -63,8 +65,10 @@ class SymptomsConstant(Symptoms):
 
 
 class SymptomsGaussian(Symptoms):
-    #TODO: Add recovery_theshold for recovery, and check parameters to find days to recover
-    def __init__(self, health_index=0., mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
+    # TODO: Add recovery_theshold for recovery, and check parameters to find days to recover
+    def __init__(
+        self, health_index=0.0, mean_time=1.0, sigma_time=3.0, recovery_rate=0.05
+    ):
         super().__init__(health_index=health_index)
 
         self.mean_time = max(0.0, mean_time)
@@ -77,14 +81,14 @@ class SymptomsGaussian(Symptoms):
         dt = delta_time - self.mean_time
 
         self.severity = self.max_severity * np.exp(-(dt ** 2) / self.sigma_time ** 2)
-    
+
     def is_recovered(self, delta_time):
         prob_recovery = 1.0 - np.exp(-self.recovery_rate * delta_time)
         return np.random.rand() <= prob_recovery
 
 
 class SymptomsStep(Symptoms):
-    def __init__(self, health_index=0., time_offset=2.0, end_time=5.0):
+    def __init__(self, health_index=0.0, time_offset=2.0, end_time=5.0):
 
         super().__init__(health_index)
 
@@ -103,7 +107,7 @@ class SymptomsStep(Symptoms):
 
 
 class SymptomsTanh(Symptoms):
-    def __init__(self, health_index=0., max_time=2.0, onset_time=0.5, end_time=15.0):
+    def __init__(self, health_index=0.0, max_time=2.0, onset_time=0.5, end_time=15.0):
 
         super().__init__(health_index)
 
@@ -119,8 +123,7 @@ class SymptomsTanh(Symptoms):
 
         if delta_time <= self.max_time:
             severity = (
-                1.0
-                + np.tanh(np.pi * (delta_time - self.onset_time) / self.delta_onset)
+                1.0 + np.tanh(np.pi * (delta_time - self.onset_time) / self.delta_onset)
             ) / 2.0
         else:
             severity = (

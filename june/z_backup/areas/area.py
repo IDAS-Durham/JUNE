@@ -8,7 +8,7 @@
 ##class Area(Group):
 ##    class GroupType(IntEnum):
 ##        default = 0
-##        
+##
 ##    """
 ##    Stores information about the area, like the total population
 ##    number, universities, etc.
@@ -43,7 +43,7 @@
 ##        for relevant_groups in relevant_groups:
 ##            setattr(self, relevant_groups, [])
 ##        #self.commute_generator = commute_generator
-##            
+##
 ##    @property
 ##    def regional_commute_generator(self) -> RegionalGenerator:
 ##        """
@@ -83,7 +83,7 @@
 ##        self.age_freq = age_freq
 ##        self.sex_freq = sex_freq
 ##        self.household_composition_freq = household_composition_freq
-##        
+##
 ##        self.decoder_age = decoder_age
 ##        self.decoder_sex = decoder_sex
 ##        self.decoder_household_composition = decoder_household_composition

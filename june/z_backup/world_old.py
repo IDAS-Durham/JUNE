@@ -1,34 +1,34 @@
-#import logging
-#import logging.config
-#import os
-#import pickle
+# import logging
+# import logging.config
+# import os
+# import pickle
 #
-#import numpy as np
-#import yaml
-#from tqdm.auto import tqdm  # for a fancy progress bar
+# import numpy as np
+# import yaml
+# from tqdm.auto import tqdm  # for a fancy progress bar
 #
-#from june.inputs import Inputs
-#from june import interaction
-#from june.box import Box, Boxes, BoxGenerator
-#from june.commute import CommuteGenerator
-#from june.groups import *
-#from june.distributors import *
-#from june.infection.health_index import HealthIndex
-#from june.demography.person import Person, People
-#from june.demography.person_distributor import PersonDistributor
-#from june.infection import Infection
-#from june.infection import symptoms
-#from june.infection import transmission
-#from june.logger_simulation import Logger
-#from june.time import Timer
+# from june.inputs import Inputs
+# from june import interaction
+# from june.box import Box, Boxes, BoxGenerator
+# from june.commute import CommuteGenerator
+# from june.groups import *
+# from june.distributors import *
+# from june.infection.health_index import HealthIndex
+# from june.demography.person import Person, People
+# from june.demography.person_distributor import PersonDistributor
+# from june.infection import Infection
+# from june.infection import symptoms
+# from june.infection import transmission
+# from june.logger_simulation import Logger
+# from june.time import Timer
 #
-#from june.z_backup.areas import Area, Areas, AreaDistributor
-#from june.z_backup.super_areas import SuperArea, SuperAreas, SuperAreaDistributor
+# from june.z_backup.areas import Area, Areas, AreaDistributor
+# from june.z_backup.super_areas import SuperArea, SuperAreas, SuperAreaDistributor
 #
-#world_logger = logging.getLogger(__name__)
+# world_logger = logging.getLogger(__name__)
 #
 #
-#class World:
+# class World:
 #    """
 #    Stores global information about the simulation
 #    """
@@ -168,7 +168,7 @@
 #
 #    def initialize_box_mode(self, region=None, n_people=None):
 #        """
-#        Sets the simulation to run in a single box, with everyone inside and no 
+#        Sets the simulation to run in a single box, with everyone inside and no
 #        schools, households, etc.
 #        Useful for testing interaction models and comparing to SIR.
 #        """
@@ -393,7 +393,7 @@
 #        print("Creating Boundary...")
 #        self.boundary = Boundary(self)
 #
-#def read_config(config_file):
+# def read_config(config_file):
 #    if config_file is None:
 #        config_file = os.path.join(
 #            os.path.dirname(os.path.realpath(__file__)),

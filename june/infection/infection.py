@@ -1,6 +1,7 @@
 import autofit as af
 from june.infection.symptoms import Symptoms
 
+
 class Infection:
     """
     The description of the infection, with two time dependent characteristics,
@@ -23,7 +24,7 @@ class Infection:
 
         self.infection_probability = 0.0
 
-    #def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
+    # def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
     def infect_person_at_time(self, person, health_index_generator, time):
         """Infects someone by initializing an infection object using the epidemiology model.
 
@@ -43,18 +44,18 @@ class Infection:
             time (float) the time of infection.
         """
 
-        #instance = epidemiology.random_instance()
+        # instance = epidemiology.random_instance()
 
         # TODO : This is hacky, whats the best way we can feed health inforrmation through to symptoms. Can we move the
-        #instance.symptoms.health_index = self.symptoms.health_index
+        # instance.symptoms.health_index = self.symptoms.health_index
 
         health_index = health_index_generator(person.age, person.sex)
-        symptoms = self.symptoms.__class__(health_index = health_index)
+        symptoms = self.symptoms.__class__(health_index=health_index)
 
         infection = Infection(
             start_time=time,
-            transmission=self.transmission, #instance.transmission,
-            symptoms=symptoms, #instance.symptoms
+            transmission=self.transmission,  # instance.transmission,
+            symptoms=symptoms,  # instance.symptoms
         )
 
         person.health_information.set_infection(infection=infection)
@@ -78,13 +79,12 @@ class Infection:
 
         # TODO : These can be determined using the instances of tranmsision, symptoms.
 
-        #transmission_bool = (
+        # transmission_bool = (
         #    self.transmission != None
         #    and self.transmission.probability > self.threshold_transmission
-        #)
-        #symptoms_bool = (
+        # )
+        # symptoms_bool = (
         #    self.symptoms != None and self.symptoms.severity > self.threshold_symptoms
-        #)
-        #is_infected = transmission_bool or symptoms_bool
+        # )
+        # is_infected = transmission_bool or symptoms_bool
         return True
-

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class CommuteUnit:
     """
     Defines commute unites (e.g. train carriages) which people commute in and interact
@@ -25,8 +26,9 @@ class CommuteUnit:
         self.commutehub_id = commutehub_id
         self.passengers = []
         self.no_passengers = 0
-        self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
+        self.max_passengers = 50  # assume all units are of equal size but this could be made more granular later
         self.is_peak = is_peak
+
 
 class CommuteUnits:
     """
@@ -55,27 +57,25 @@ class CommuteUnits:
             self.init_units()
 
     def init_units(self):
-        'Initialise units'
+        "Initialise units"
 
         ids = 0
         for hub in self.commutehubs:
             no_passengers = len(hub.passengers)
-            no_units = int(float(no_passengers)/50) + 1
+            no_units = int(float(no_passengers) / 50) + 1
             # assign unit to peak/not peak times with prob 0.8/0.2
             # make this a parameter in the future
-            peak_not_peak = np.random.choice(2,no_units,[0.8,0.2])
-            
+            peak_not_peak = np.random.choice(2, no_units, [0.8, 0.2])
+
             for i in range(no_units):
                 commute_unit = CommuteUnit(
-                    commuteunit_id = ids,
-                    city = hub.city,
-                    commutehub_id = hub.id,
-                    is_peak = peak_not_peak[i]
+                    commuteunit_id=ids,
+                    city=hub.city,
+                    commutehub_id=hub.id,
+                    is_peak=peak_not_peak[i],
                 )
 
                 self.members.append(commute_unit)
                 hub.commuteunits.append(commute_unit)
-                
+
             ids += 1
-            
-        

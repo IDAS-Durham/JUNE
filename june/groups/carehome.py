@@ -43,6 +43,7 @@ class CareHome(Group):
         super().add(person, qualifier)
         person.groups.append(self)
 
+
 class CareHomes:
     __slots__ = "members"
 

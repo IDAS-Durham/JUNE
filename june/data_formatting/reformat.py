@@ -114,6 +114,7 @@ def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
 def read_minimal_household_composition(OUTPUT_AREA_DIR):
     pass
 
+
 def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
     """
     TableID: QS112EW
@@ -320,32 +321,28 @@ def people_compositions2households(comp_people_df):
 
     return households_df
 
+
 def read_school_census(DATA_DIR):
     """
     Reads school location and sizes, it initializes a KD tree on a sphere,
     to query the closest schools to a given location.
     """
-    school_filename = os.path.join(
-        DATA_DIR, "school_data", "uk_schools_data.csv"
-    )
+    school_filename = os.path.join(DATA_DIR, "school_data", "uk_schools_data.csv")
     school_df = pd.read_csv(school_filename, index_col=0)
     school_df.dropna(inplace=True)
     school_df["age_min"].replace(to_replace=np.arange(0, 4), value=4, inplace=True)
 
-    school_df["age_max"].replace(
-        to_replace=np.arange(20, 50), value=19, inplace=True
-    )
+    school_df["age_max"].replace(to_replace=np.arange(20, 50), value=19, inplace=True)
 
     assert school_df["age_min"].min() <= 4
     assert school_df["age_max"].max() < 20
     return school_df
 
 
-
 def downsample_social_matrix(matrix):
-    #low_res_matrix = pd.DataFrame()
+    # low_res_matrix = pd.DataFrame()
 
-    '''
+    """
     print(matrix)
 
     low_res_matrix["0-4"] = matrix["0-4"]
@@ -387,10 +384,9 @@ def downsample_social_matrix(matrix):
             "70-74",
         ], inplace=True
     )
-    '''
+    """
 
-
-    return matrix 
+    return matrix
 
 
 def reformat_social_matrices(raw_mixing_dir, processed_mixing_dir):
@@ -442,7 +438,9 @@ if __name__ == "__main__":
 
     if not os.path.exists(GEO_DIR):
         os.makedirs(GEO_DIR)
-    copyfile(os.path.join("..", "data", "geographical_data", "oa_coorindates.csv"),
-            os.path.join("..", "data", "processed", "geographical_data", "oa_coorindates.csv"))
-
-    
+    copyfile(
+        os.path.join("..", "data", "geographical_data", "oa_coorindates.csv"),
+        os.path.join(
+            "..", "data", "processed", "geographical_data", "oa_coorindates.csv"
+        ),
+    )

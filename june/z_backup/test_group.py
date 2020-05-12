@@ -1,13 +1,13 @@
-#import numpy as np
-#from scipy import stats
+# import numpy as np
+# from scipy import stats
 #
-#from june.groups.group import Group
-#from june.demography.person import Person
-#from june.infection.health_index import HealthIndex
-#from enum import IntEnum
+# from june.groups.group import Group
+# from june.demography.person import Person
+# from june.infection.health_index import HealthIndex
+# from enum import IntEnum
 #
 #
-#class TestGroup(Group):
+# class TestGroup(Group):
 #    def __init__(self, number):
 #        super().__init__(f"test_{number}", "TestGroup")
 #
@@ -18,7 +18,7 @@
 #        super().add(person, qualifier)
 #
 #
-#class TestGroups:
+# class TestGroups:
 #    def __init__(self, people_per_group=100000, total_people=100000,config=None):
 #        self.members = []
 #        self.total_people = total_people
@@ -37,7 +37,7 @@
 #        else:
 #            no_of_groups = no_people // self.people_per_group + 1
 #            lastgroupsize = no_people % self.people_per_group
-#            
+#
 #        for i in range(0, no_of_groups-1):
 #            group = TestGroup(i)
 #            self.fill_group_with_random_people(group, self.people_per_group)

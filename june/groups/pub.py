@@ -42,7 +42,7 @@ class Pubs:
         self.members = []
         # maximal distance of customer going to a pub, with a minimum
         # of five choices
-        self.maxdistance = 5.
+        self.maxdistance = 5.0
         self.minchoices = 5
         if not self.box_mode:
             self.pub_trees = self.create_pub_trees(pub_df)
@@ -69,8 +69,7 @@ class Pubs:
         index = 0
         pubs = []
         for angle in angles[0]:
-            if (angle * 6500. < self.maxdistance or
-                    len(pubs) < self.minchoices):
+            if angle * 6500.0 < self.maxdistance or len(pubs) < self.minchoices:
                 pubs.append(self.members[index])
             index += 1
         return pubs
@@ -116,8 +115,8 @@ class PubFiller:
 
     def make_weight(self, customer):
         if customer.age < 18:
-            return 0.
-        weight = 1.
+            return 0.0
+        weight = 1.0
         if customer.age >= 35 and customer.age < 55:
             weight *= self.pub_over35_ratio
         elif customer.age >= 55:

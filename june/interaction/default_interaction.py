@@ -10,28 +10,29 @@ default_config_filename = (
     / "configs/defaults/interaction/DefaultInteraction.yaml"
 )
 
-class DefaultInteraction(Interaction):
 
+class DefaultInteraction(Interaction):
     def __init__(self, intensities):
         self.intensities = intensities
 
     @classmethod
     def from_file(
-            cls, config_filename: str  = default_config_filename
+        cls, config_filename: str = default_config_filename
     ) -> "DefaultInteraction":
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        return DefaultInteraction(config['intensities'])
+        return DefaultInteraction(config["intensities"])
 
- 
     def read_contact_matrix(self, group):
-        #TODO use to intialize the different config matrices at the init,
+        # TODO use to intialize the different config matrices at the init,
         # ideally inside from_file
         pass
-   
-    def single_time_step_for_group(self, group, health_index_generator, time, delta_time):
+
+    def single_time_step_for_group(
+        self, group, health_index_generator, time, delta_time
+    ):
         """
         Runs the interaction model for a time step
         Parameters
@@ -46,7 +47,7 @@ class DefaultInteraction(Interaction):
         self.probabilities = []
         self.weights = []
 
-        #if group.must_timestep:
+        # if group.must_timestep:
         self.calculate_probabilities(group)
         n_subgroups = len(group.subgroups)
         self.contact_matrix = np.ones((n_subgroups, n_subgroups))
@@ -58,24 +59,27 @@ class DefaultInteraction(Interaction):
         for i in subgroups_containing_people:
             for j in subgroups_containing_people:
                 # grouping[i] infected infects grouping[j] susceptible
-                self.contaminate(group, health_index_generator, time, delta_time, i,j)
-                if i!=j:
+                self.contaminate(group, health_index_generator, time, delta_time, i, j)
+                if i != j:
                     # =grouping[j] infected infects grouping[i] susceptible
-                    self.contaminate(group, health_index_generator, time, delta_time, j,i)
+                    self.contaminate(
+                        group, health_index_generator, time, delta_time, j, i
+                    )
 
-    def contaminate(self,group, health_index_generator, time, delta_time,  infecters,recipients):
-        #TODO: subtitute by matrices read from file when ready
+    def contaminate(
+        self, group, health_index_generator, time, delta_time, infecters, recipients
+    ):
+        # TODO: subtitute by matrices read from file when ready
         contact_matrix = self.contact_matrix[infecters][recipients]
         infecter_probability = self.probabilities[infecters]
-        if (
-            contact_matrix <= 0. or
-            infecter_probability <= 0.
-        ):
+        if contact_matrix <= 0.0 or infecter_probability <= 0.0:
             return
 
         intensity = (
-            self.intensities.get(group.spec) * contact_matrix *
-            infecter_probability * -delta_time
+            self.intensities.get(group.spec)
+            * contact_matrix
+            * infecter_probability
+            * -delta_time
         )
         group_of_recipients = group.subgroups[recipients].people
         should_be_infected = np.random.random(len(group_of_recipients))
@@ -86,7 +90,9 @@ class DefaultInteraction(Interaction):
             if luck <= transmission_probability:
                 infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
-                    person=recipient, health_index_generator=health_index_generator, time=time,
+                    person=recipient,
+                    health_index_generator=health_index_generator,
+                    time=time,
                 )
                 infecter.health_information.increment_infected()
                 recipient.health_information.update_infection_data(
@@ -94,14 +100,14 @@ class DefaultInteraction(Interaction):
                 )
 
     def calculate_probabilities(self, group):
-        norm   = 1./max(1, group.size_active)
+        norm = 1.0 / max(1, group.size_active)
         for grouping in group.subgroups:
-            summed = 0.
+            summed = 0.0
             for person in grouping.infected_active(group.spec):
                 individual = (
                     person.health_information.infection.transmission.probability
                 )
-                summed += individual*norm
+                summed += individual * norm
                 self.weights.append([person, individual])
             self.probabilities.append(summed)
 
@@ -109,9 +115,9 @@ class DefaultInteraction(Interaction):
         """
         Assign responsiblity to infecter for infecting someone
         """
-        summed_weight = 0.
+        summed_weight = 0.0
         for weight in self.weights:
             summed_weight += weight[1]
-        choice_weights = [w[1]/summed_weight for w in self.weights]
+        choice_weights = [w[1] / summed_weight for w in self.weights]
         idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
         return self.weights[idx][0]

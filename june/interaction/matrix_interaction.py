@@ -29,7 +29,9 @@ class MatrixInteraction(Interaction):
             for infecter in group.get_infected():
                 contact_ages = self.prepare_interaction_ages(infecter, group)
                 for age in contact_ages:
-                    self.make_interactions(time=time, infecter=infecter, group=group, age=age)
+                    self.make_interactions(
+                        time=time, infecter=infecter, group=group, age=age
+                    )
 
         if group.spec == "hospital":
             print("must allow for infection of workers by patients")

@@ -288,7 +288,7 @@ class PersonDistributor:
                 sex=sex_random,
                 econ_index=0,
                 mode_of_transport=self.commute_gen.weighted_random_choice(),
-                area = self.area
+                area=self.area,
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment
             if is_working_age:
@@ -323,6 +323,6 @@ class PersonDistributor:
 
         if total_people != self.area.n_residents:
             raise BaseException(
-                f"The number of people created {total_people} does not match" / \
-                " the areas' number of residents {self.area.n_residents}"
+                f"The number of people created {total_people} does not match"
+                / " the areas' number of residents {self.area.n_residents}"
             )

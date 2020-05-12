@@ -37,7 +37,16 @@ class Area:
     """
     Fine geographical resolution.
     """
-    __slots__ = "households", "people", "id", "name", "coordinates", "super_area", "carehome"
+
+    __slots__ = (
+        "households",
+        "people",
+        "id",
+        "name",
+        "coordinates",
+        "super_area",
+        "carehome",
+    )
     _id = count()
 
     def __init__(
@@ -64,6 +73,7 @@ class Area:
 class Areas:
 
     __slots__ = "members", "super_area"
+
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
         self.super_area = super_area
@@ -79,6 +89,7 @@ class SuperArea:
     """
     Coarse geographical resolution.
     """
+
     __slots__ = "id", "name", "coordinates", "workers", "areas"
     _id = count()
 
@@ -93,12 +104,12 @@ class SuperArea:
         self.coordinates = coordinates[[1, 0]]
         self.areas = areas
         self.workers = set()
-    
+
     def add_worker(self, person: Person):
         self.workers.add(person)
         person.work_super_area = self
 
-    #def add(self, person, qualifier=GroupType.workers): <- maybe this is better
+    # def add(self, person, qualifier=GroupType.workers): <- maybe this is better
     #    super().add(person, qualifier)
     #    person.company = self
 

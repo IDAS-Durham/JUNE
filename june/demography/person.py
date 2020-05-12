@@ -21,7 +21,7 @@ class HealthInformation:
         self.infection = infection
         self.infected = True
         self.susceptible = False
-        self.susceptibility = 0.
+        self.susceptibility = 0.0
 
     @property
     def tag(self):
@@ -49,9 +49,9 @@ class HealthInformation:
         if self.infected:
             if self.infection.symptoms.is_recovered(delta_time):
                 self.recovered = True
-                #self.set_recovered(time)
+                # self.set_recovered(time)
             else:
-                self.infection.update_at_time(time+delta_time)
+                self.infection.update_at_time(time + delta_time)
 
     def set_recovered(self, time):
         self.recovered = True
@@ -77,9 +77,7 @@ class HealthInformation:
     def update_symptoms(self, time):  # , symptoms, time):
         if self.infection.symptoms.severity > self.maximal_symptoms:
             self.maximal_symptoms = self.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.get_symptoms_tag(
-                self.infection.symptoms
-            )
+            self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
     def update_infection_data(self, time, group_type=None):
@@ -116,16 +114,17 @@ class Person:
     according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
+
     _id = count()
 
     def __init__(
-            self,
-            age=-1,
-            nomis_bin=None,
-            sex=None,
-            econ_index=None,
-            mode_of_transport=None,
-            area=None
+        self,
+        age=-1,
+        nomis_bin=None,
+        sex=None,
+        econ_index=None,
+        mode_of_transport=None,
+        area=None,
     ):
         """
         Inputs:
@@ -144,7 +143,9 @@ class Person:
         self.work_msoarea = None
         self.school = None
         self.carehome = None
-        self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
+        self.primary_activity = (
+            None  # school, company, key-industr. (e.g. hospital, schools)
+        )
         self.active_group = None
         self.groups = []
         self.sector = None
@@ -156,41 +157,31 @@ class Person:
         self.econ_index = econ_index
         self.health_information = HealthInformation()
 
+
 class People:
     def __init__(self, world):
         self.members = []
-
 
     @property
     def total_people(self):
         return len(self.members)
 
-
     @property
     def infected(self):
         return [
-            person for person in self.members
-            if person.health_information.infected and not 
-                    person.health_information.dead
-            
+            person
+            for person in self.members
+            if person.health_information.infected and not person.health_information.dead
         ]
-
 
     @property
     def susceptible(self):
         return [
-            person for person in self.members
-            if person.health_information.susceptible 
-            
+            person for person in self.members if person.health_information.susceptible
         ]
-
 
     @property
     def recovered(self):
         return [
-            person for person in self.members
-            if person.health_information.recovered
-            
+            person for person in self.members if person.health_information.recovered
         ]
-
-

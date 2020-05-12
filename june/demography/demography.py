@@ -100,31 +100,23 @@ class Population:
     def total_people(self):
         return len(self.members)
 
-
     @property
     def infected(self):
         return [
-            person for person in self.people
-            if person.health_information.infected and not 
-                    person.health_information.dead
-            
+            person
+            for person in self.people
+            if person.health_information.infected and not person.health_information.dead
         ]
 
     @property
     def susceptible(self):
         return [
-            person for person in self.people
-            if person.health_information.susceptible 
-            
+            person for person in self.people if person.health_information.susceptible
         ]
 
     @property
     def recovered(self):
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-            
-        ]
+        return [person for person in self.people if person.health_information.recovered]
 
 
 class Demography:
@@ -156,11 +148,7 @@ class Demography:
         self.ethnicity_generators = ethnicity_generators
         self.economic_index_generators = economic_index_generators
 
-
-    def populate(
-            self,
-            areas: Optional[List[Area]] = None,
-    ) -> Population:
+    def populate(self, areas: Optional[List[Area]] = None,) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -186,17 +174,16 @@ class Demography:
                     # TODO ethnicity_generators.ethnicity()
                     # TODO socioeconomic_generators.socioeconomic_index()
                 )
-                people.append(person)   # add person to population
-                area.add(person)        # link area <-> person
+                people.append(person)  # add person to population
+                area.add(person)  # link area <-> person
         return Population(people=people)
-
 
     @classmethod
     def for_geography(
-            cls,
-            geography: Geography,
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
+        cls,
+        geography: Geography,
+        data_path: str = default_data_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Initializes demography from an existing geography.
@@ -210,15 +197,14 @@ class Demography:
         if len(area_names) == 0:
             raise DemographyError("Empty geography!")
         return cls.for_areas(area_names, data_path, config)
-    
 
     @classmethod
     def for_zone(
-            cls,
-            filter_key: Dict[str, list],
-            data_path: str = default_data_path,
-            areas_maps_path: str = default_areas_map_path,
-            config: Optional[dict] = None,
+        cls,
+        filter_key: Dict[str, list],
+        data_path: str = default_data_path,
+        areas_maps_path: str = default_areas_map_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Initializes a geography for a specific list of zones. The zones are
@@ -238,14 +224,13 @@ class Demography:
         if len(area_names) == 0:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)
-   
 
     @classmethod
     def for_areas(
-                cls,
-            area_names: List[str],
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
+        cls,
+        area_names: List[str],
+        data_path: str = default_data_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Load data from files and construct classes capable of generating demographic
@@ -310,7 +295,7 @@ if __name__ == "__main__":
 
     t1 = time()
     print(using("before"))
-    geo = Geography.from_file(filter_key={"oa" : ["E00088544"]})
+    geo = Geography.from_file(filter_key={"oa": ["E00088544"]})
     demography = Demography.for_areas(["E00088544"])
     population = demography.populate(geo.areas)
     t2 = time()

@@ -14,12 +14,13 @@ from june.groups.group import Group
 from june.groups.group import Subgroup
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
-default_data_filename = default_base_path / \
-        "data/processed/school_data/england_schools_data.csv"
-default_areas_map_path = default_base_path / \
-        "data/processed/geographical_data/oa_msoa_region.csv"
-default_config_filename = default_base_path / \
-        "configs/defaults/groups/schools.yaml"
+default_data_filename = (
+    default_base_path / "data/processed/school_data/england_schools_data.csv"
+)
+default_areas_map_path = (
+    default_base_path / "data/processed/geographical_data/oa_msoa_region.csv"
+)
+default_config_filename = default_base_path / "configs/defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -225,10 +226,10 @@ class Schools:
 
     @classmethod
     def build_schools_for_areas(
-            cls,
-            school_df: pd.DataFrame,
-            age_range: Tuple[int, int] = (0, 19),
-            employee_per_clients: Dict[str, int] = None,
+        cls,
+        school_df: pd.DataFrame,
+        age_range: Tuple[int, int] = (0, 19),
+        employee_per_clients: Dict[str, int] = None,
     ) -> "Schools":
         """
         Parameters
