@@ -1,4 +1,4 @@
-from .group import AbstractGroup, Group, Subgroup
+from .group import AbstractGroup, Group, Subgroup, Supergroup
 
 from .boundary import Boundary
 from .carehome import CareHome, CareHomes
