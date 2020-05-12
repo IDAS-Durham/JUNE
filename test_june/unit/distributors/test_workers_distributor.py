@@ -58,8 +58,6 @@ def test__workers_stay_in_geography(geography, population, super_areas, config):
         if config["age_range"][0] <= person.age <= config["age_range"][1]
     ])
     work_super_area_name = list(np.unique(work_super_area_name))
-    print(work_super_area_name)
-    print(super_areas)
     case.assertCountEqual(work_super_area_name, super_areas)
 
 # work in progress:
