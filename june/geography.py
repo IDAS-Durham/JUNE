@@ -1,6 +1,7 @@
 import os
 import csv
 import logging
+from enum import IntEnum
 from pathlib import Path
 from random import randint
 from itertools import chain, count
@@ -36,14 +37,14 @@ class Area:
     """
     Fine geographical resolution.
     """
-
+    __slots__ = "households", "people", "id", "name", "coordinates", "super_area", "carehome"
     _id = count()
 
     def __init__(
         self,
         name: str,
         super_area: "SuperArea" = None,
-        coordinates: Tuple[float, float] = (None, None),
+        coordinates: Tuple[float, float] = np.array([None, None]),
     ):
         """
         Coordinate is given in the format X, Y where X is longitude and Y is latitude.
@@ -64,11 +65,13 @@ class Area:
             else:
                 self.super_area.adult_active_females.append(person)
 
+
 class Areas:
+
+    __slots__ = "members", "super_area"
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
         self.super_area = super_area
-        self.people = set()
 
     def __len__(self):
         return len(self.members)
@@ -77,13 +80,11 @@ class Areas:
         return iter(self.members)
 
 
-
-
 class SuperArea:
     """
     Coarse geographical resolution.
     """
-
+    __slots__ = "id", "name", "coordinates", "workers", "areas"
     _id = count()
 
     def __init__(
@@ -98,6 +99,15 @@ class SuperArea:
         self.areas = areas
         self.adult_active_males   = set()
         self.adult_active_females = set()
+        self.workers = set()
+    
+    def add_worker(self, person: Person):
+        self.workers.add(person)
+        person.work_super_area = self
+
+    #def add(self, person, qualifier=GroupType.workers): <- maybe this is better
+    #    super().add(person, qualifier)
+    #    person.company = self
 
     def set_center(self):
         center = [0.,0.]
@@ -245,7 +255,7 @@ class Geography:
             geo_hierarchy["msoa"]
         ].drop_duplicates()
         geo_hierarchy.set_index("msoa", inplace=True)
-        return Geography(geo_hierarchy, areas_coord, super_areas_coord)
+        return cls(geo_hierarchy, areas_coord, super_areas_coord)
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
@@ -255,27 +265,3 @@ def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame
     return data[
         data[list(filter_key.keys())[0]].isin(list(filter_key.values())[0]).values
     ]
-
-
-if __name__ == "__main__":
-    from time import time
-    import resource
-
-    def using(point=""):
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        return """%s: usertime=%s systime=%s mem=%s mb
-               """ % (
-            point,
-            usage[0],
-            usage[1],
-            usage[2] / 1024.0,
-        )
-
-    t1 = time()
-    print(using("before"))
-    geography = Geography.from_file(
-        #        filter_key={"region": ["North East"]}
-    )
-    t2 = time()
-    print(using("after"))
-    print(f"Took {t2-t1} seconds to create the UK.")

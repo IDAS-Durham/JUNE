@@ -21,9 +21,8 @@ class Pub(Group):
         workers = 0
         guests = 1
 
-    def __init__(self, pub_id=1, position=None):
-        super().__init__("Pub_%03d" % pub_id, "pub")
-        self.id = pub_id
+    def __init__(self, position=None):
+        super().__init__()
         self.position = position
 
     def set_active_members(self):
@@ -145,8 +144,6 @@ class Pubs:
         elif customer.age >= 55:
             weight *= self.pub_over55_ratio
         return weight
-
-
             
 # about 30% of UK adults (44%M, 20%F) visit a pub weekly according to
 # https://www.statista.com/statistics/388045/weekly-pub-visits-adults-united-kingdom/
@@ -158,3 +155,4 @@ class Pubs:
 # gender ratio 66%(M)-34%(F),
 # groups going to the pub: 23% familes, 22% couples (-> will treat both as households)
 # https://www.cga.co.uk/wp-content/uploads/2019/02/CGA_00146-Pub-Report-12page.pdf
+

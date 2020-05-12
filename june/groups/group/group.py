@@ -1,9 +1,12 @@
 import logging
+import re
+from collections import defaultdict
 from enum import IntEnum
+from itertools import count
 from typing import Set
 
-from june.exc import GroupException
 from june.demography.person import Person
+from june.exc import GroupException
 from .abstract import AbstractGroup
 from .subgroup import Subgroup
 
@@ -47,7 +50,7 @@ class Group(AbstractGroup):
         "leisure_Indoor",
         "pub",
         "random",
-        "TestGroup",
+        "test_group",
         "referenceGroup",
         "shopping",
         "school",
@@ -63,24 +66,41 @@ class Group(AbstractGroup):
         """
         default = 0
 
-    __slots__ = "name", "spec", "subgroups"
+    __slots__ = "id", "spec", "subgroups"
 
-    def __init__(self, name: str, spec: str):
+    __id_generators = defaultdict(
+        count
+    )
+
+    @classmethod
+    def _next_id(cls) -> int:
+        """
+        Iterate an id for this class. Each group class has its own id iterator
+        starting at 0
+        """
+        return next(
+            cls.__id_generators[cls]
+        )
+
+    def __init__(self):
         """
         A group of people such as in a hospital or a school.
 
-        Parameters
-        ----------
-        name
-            The name of this particular instance.
-        spec
-            The kind of group this is
+        If a spec attribute is not defined in the child class then it is generated
+        by converting the class name into snakecase.
         """
-        if spec not in self.allowed_groups:
-            raise GroupException(f"{spec} is not an allowed group type")
+        if not hasattr(
+                self,
+                "spec"
+        ):
+            self.spec = re.sub(
+                r'(?<!^)(?=[A-Z])', '_',
+                self.__class__.__name__
+            ).lower()
+        if self.spec not in self.allowed_groups:
+            raise GroupException(f"{self.spec} is not an allowed group type")
 
-        self.name = name
-        self.spec = spec
+        self.id = self._next_id()
         # noinspection PyTypeChecker
         self.subgroups = [
             Subgroup()
@@ -89,6 +109,14 @@ class Group(AbstractGroup):
                 self.GroupType
             ))
         ]
+
+    @property
+    def name(self) -> str:
+        """
+        The name is computed on the fly to reduce memory footprint. It combines
+        the name fo the class with the id of the instance.
+        """
+        return f"{self.__class__.__name__}_{self.id:05d}"
 
     def remove_person(self, person: Person):
         """
