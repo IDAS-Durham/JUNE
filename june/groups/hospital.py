@@ -51,10 +51,10 @@ class Hospital(Group):
 
     def __init__(
             self,
-            coordinates: list,  # Optional[Tuple[float, float]] = None,
             n_beds: int,
             n_icu_beds: int,
             super_area: str = None,
+            coordinates: tuple = None,  # Optional[Tuple[float, float]] = None,
     ):
         """
         Create a Hospital given its description.
