@@ -1,5 +1,5 @@
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import numpy as np
 import pandas as pd
@@ -37,19 +37,13 @@ class CareHomeDistributor:
         """
         Creates dictionaries with the men and women per age key living in the area.
         """
-        men_by_age = {}
-        women_by_age = {}
+        men_by_age = defaultdict(list)
+        women_by_age = defaultdict(list)
         for person in area.people:
             if person.sex == "m":
-                if person.age not in men_by_age:
-                    men_by_age[person.age] = [person]
-                else:
-                    men_by_age[person.age].append(person)
+                men_by_age[person.age].append(person)
             else:
-                if person.age not in women_by_age:
-                    women_by_age[person.age] = [person]
-                else:
-                    women_by_age[person.age].append(person)
+                women_by_age[person.age].append(person)
         return men_by_age, women_by_age
 
     def populate_carehome_in_areas(
@@ -63,9 +57,8 @@ class CareHomeDistributor:
         households_df = households_df.loc[area_names]
         for area in areas:
             carehome_residents_number = households_df.loc[area.name].values
-            if carehome_residents_number == 0:
-                continue
-            self.populate_carehome_in_area(area)
+            if carehome_residents_number != 0:
+                self.populate_carehome_in_area(area)
 
     def populate_carehome_in_area(
         self, area: Area
