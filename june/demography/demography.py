@@ -7,7 +7,6 @@ from typing import List, Dict, Optional
 import pandas as pd
 import numpy as np
 
-# from june.demography.health_index import HealthIndex
 from june.geography import Geography, Area
 from june.demography import Person
 
@@ -99,7 +98,6 @@ class Demography:
         self,
         area_names,
         age_sex_generators: Dict[str, AgeSexGenerator],
-        health_index_generator: "HealthIndex" = None,
         ethnicity_generators: Dict[str, "EthnicityGenerator"] = None,
         economic_index_generators: Dict[str, "EconomicIndexGenerator"] = None,
     ):
@@ -111,9 +109,6 @@ class Demography:
         age_sex_generators
             A dictionary mapping area identifiers to functions that generate
             age and sex for individuals.
-        health_index_generator
-            A class used to look up health indices for people based on their
-            age
         ethnicity_generators
             A dictionary mapping area identifiers to functions that allocate
             individuals to ethnic groups.
@@ -123,7 +118,6 @@ class Demography:
         """
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
-        self.health_index_generator = health_index_generator
         # not implemented yet:
         self.ethnicity_generators = ethnicity_generators
         self.economic_index_generators = economic_index_generators

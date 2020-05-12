@@ -11,8 +11,7 @@ import pandas as pd
 from scipy import stats
 
 from june.geography import Geography
-from june.demography import Person, Population, Demography
-from june.infection.health_index import HealthIndex
+from june.demography import Person, Population
 from june.logger_creation import logger
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
@@ -377,11 +376,3 @@ def _load_sex_per_sector(
         sector_by_sex_df[f_columns].sum(axis=1), axis=0
     )
     return sector_by_sex_df
-
-
-if __name__ == '__main__':
-    geography = Geography.from_file(filter_key={"region": ["North East"]})
-    demography = Demography.for_geography(geography)
-    population = demography.populate(geography.areas)
-    worker_distr = WorkerDistributor.for_geography(geography)
-    worker_distr.distribute(geography, population)
