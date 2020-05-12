@@ -11,16 +11,16 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.geography import Geography
-from june.groups.group import Group
-from june.groups.group import Subgroup
+from june.groups.group import Group, Subgroup, Supergroup
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
-default_data_filename = default_base_path / \
-        "data/processed/school_data/england_schools_data.csv"
-default_areas_map_path = default_base_path / \
-        "data/processed/geographical_data/oa_msoa_region.csv"
-default_config_filename = default_base_path / \
-        "configs/defaults/groups/schools.yaml"
+default_data_filename = (
+    default_base_path / "data/processed/school_data/england_schools_data.csv"
+)
+default_areas_map_path = (
+    default_base_path / "data/processed/geographical_data/oa_msoa_region.csv"
+)
+default_config_filename = default_base_path / "configs/defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class School(Group):
             super().add(person, qualifier)
 
 
-class Schools:
+class Schools(Supergroup):
     def __init__(
         self,
         schools: List["School"],
@@ -124,7 +124,7 @@ class Schools:
         agegroup_to_global_indices:
             dictionary to map the
         """
-
+        super().__init__()
         self.members = schools
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = agegroup_to_global_indices
@@ -221,10 +221,10 @@ class Schools:
 
     @classmethod
     def build_schools_for_areas(
-            cls,
-            school_df: pd.DataFrame,
-            age_range: Tuple[int, int] = (0, 19),
-            employee_per_clients: Dict[str, int] = None,
+        cls,
+        school_df: pd.DataFrame,
+        age_range: Tuple[int, int] = (0, 19),
+        employee_per_clients: Dict[str, int] = None,
     ) -> "Schools":
         """
         Parameters
@@ -342,9 +342,3 @@ class Schools:
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
-
-    def __len__(self):
-        return len(self.members)
-
-    def __iter__(self):
-        return iter(self.members)
