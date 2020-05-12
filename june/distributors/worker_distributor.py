@@ -52,14 +52,13 @@ class WorkerDistributor:
             in different sectors per Area (note that it is thus not provided for the
             SuperArea).
         sub_sector_ratio 
-            MultiIndexed DataFrame for each region containing the ratio of man
-            and woman respectively that work in any key sector type.
-            (e.g. for healthcare, how many man work in the key occupations, such
-            as nurses within that sector)
+            For each region containing the ratio of man and woman respectively that
+            work in any key sector type. (e.g. for healthcare, how many man work
+            in the key occupations, such as nurses within that sector)
         sub_sector_distr
-            MultiIndexed DataFrame for each region containing how many of man
-            and woman respectively work in any key sector jobs, such as primary
-            teachers or medical practitioners.
+            For each region containing how many of man and woman respectively
+            work in any key sector jobs, such as primary teachers or medical
+            practitioners.
         """
         self.workflow_df = workflow_df
         self.sex_per_sector_df = sex_per_sector_df
