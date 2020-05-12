@@ -123,7 +123,6 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
-            health_index=None,
             econ_index=None,
             mode_of_transport=None,
             area=None
@@ -154,38 +153,8 @@ class Person:
         self.company_id = None
         self.hospital = None
         self.in_hospital = None
-        self.health_index = health_index
         self.econ_index = econ_index
         self.health_information = HealthInformation()
-
-    def output(self, time=0):
-        print("--------------------------------------------------")
-        if self.health_index != 0:
-            print(
-                "Person [",
-                self.id,
-                "]: age = ",
-                self.age,
-                " sex = ",
-                self.sex,
-                "health: ",
-                self.health_index,
-            )
-        else:
-            print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
-        if self.health_information.susceptible:
-            print("-- person is susceptible.")
-        if self.health_information.infected:
-            print(
-                "-- person is infected: ",
-                self.health_information.get_symptoms_tag(time + 5),
-                "[",
-                self.health_information.infection.symptom_severity(time + 5),
-                "]",
-            )
-        if self.health_information.recovered:
-            print("-- person has recovered.")
-
 
 class People:
     def __init__(self, world):

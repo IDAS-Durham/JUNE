@@ -1,96 +1,198 @@
-import sys
+import pandas as pd
+import numpy as np
+from pathlib import Path
 
-"""
-organise data according to
- * lower age threshold,
- * probabilities for (non-symptomatic, influenza-like symptoms, pneumonia,
-                      hospitalisation, intensive care, fatality)
-The problem is to backwards calculate the rates for each one.  For a first model
-I use the IC data
-(table 1 of
-     https://www.imperial.ac.uk/media/imperial-college/medicine/sph/ide/gida-fellowships/ImperialCollege-COVID19-NPI-modelling-16-03-2020.pdf)
-in the following way: I will assume that a certain value of cases is non-symptomatic
-(IC gives 40-50 %, this is a model parameter), and will assume that the symptomatic
-cases that do not need hospitalisation have either influenza-like or penumonia-like
-symptoms where I distribute them according to the ratios in the RKI publication
-(table 1/column 2 of
-     https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile)
-For this I assume a "pneumonia probability for the asyptomatic, non-hospitalised cases
-given by Pneumonia/(ILI+Peumonia) - probably too crude.
+default_polinom_filename = (
+    Path(__file__).parent.parent.parent / "configs/defaults/health_index_ratios.txt"
+)
 
-I think I do not fully trust the ratio of infected fatality rate and probability to end
-up in an ICU unit - I have added this as comment for each age group, roughly rounded.
-"""
-
-
-ICdata = [
-    [0.,  [  0.1,  0.005,  0.002]], # 40%
-    [10., [  0.3,  0.015,  0.006]], # 40%
-    [20., [  1.2,  0.060,  0.030]], # 50%
-    [30., [  3.2,  0.160,  0.080]], # 50%
-    [40., [  4.9,  0.310,  0.150]], # 50%
-    [50., [ 10.2,  1.240,  0.600]], # 50%
-    [60., [ 16.6,  4.550,  2.200]], # 50%
-    [70., [ 24.3, 10.500,  5.100]], # 50%
-    [80., [ 27.3, 19.400,  9.300]], # 50%
-]
 
 RKIdata = [
-    [0.,   4.0],
-    [5.,   4.0],
-    [15.,  1.5],
-    [35.,  4.0],
-    [60., 14.0],
-    [80., 46.0]
+    [0.0, 4.0 / 100.0],
+    [5.0, 4.0 / 100.0],
+    [15.0, 1.5 / 100.0],
+    [35.0, 4.0 / 100.0],
+    [60.0, 14.0 / 100.0],
+    [80.0, 46.0 / 100.0],
 ]
 
-class HealthIndex:
-    def __init__(self, config=None):
-        if config is None or "health_datafiles" not in config:
-            self.ICdata  = ICdata
-            self.RKIdata = RKIdata
-        if config is not None:
-            self.ratio   = config["infection"]["asymptomatic_ratio"]
-        else:
-            self.ratio = 0.4
-        for row in range(len(self.ICdata)):
-            for j in range(len(self.ICdata[row][1])):
-                if (j<len(self.ICdata[row][1])-1):
-                    self.ICdata[row][1][j] -= self.ICdata[row][1][j+1]
-                self.ICdata[row][1][j] /= 100.
-        for row in range(len(self.RKIdata)):
-            self.RKIdata[row][1] /= 100.
 
-        self.index_dict = {}
-        self.make_dict()
+class HealthIndexGenerator:
 
-    def make_dict(self):
-        lenIC  = len(self.ICdata)
-        lenRKI = len(self.RKIdata)
-        for age in range(120):
-            ageindex  = lenIC - 1
-            threshold = self.ICdata[ageindex][0]
-            while threshold> 1.*age and ageindex>=0:
-                ageindex  -= 1
-                threshold  = self.ICdata[ageindex][0]
+    """
+    Computes  probabilities for (non-symptomatic, influenza-like symptoms, pneumonia, 
+    hospitalisation, intensive care, fatality), using the age and sex of the subject.
 
-            hospindex = self.ICdata[ageindex][1]
-            hospsum   = sum(hospindex)
+    The probablities of hospitalisation,death and ICU are taken taken from fits made by Miguel Icaza to the 
+    Spanish data taken from:
 
-            ageindex  = lenRKI - 1
-            threshold = self.RKIdata[ageindex][0]
-            while threshold> 1.*age and ageindex>=0:
-                ageindex  -= 1
-                threshold  = self.RKIdata[ageindex][0]
+    https://github.com/datadista/datasets/tree/master/COVID%2019
 
-            prate    = self.RKIdata[ageindex][1]
-            nohosp   = 1. - self.ratio - hospsum
-            age_list = [self.ratio, self.ratio + nohosp*(1.-prate), self.ratio + nohosp]
-            hospdiff = 0.
-            for hosp in hospindex:
-                hospdiff += hosp
-                age_list.append(self.ratio + nohosp + hospdiff)
-            self.index_dict[age] = age_list
 
-    def get_index_for_age(self, age):
-        return self.index_dict[round(age)]
+    We will assume that the symptomatic
+    cases that do not need hospitalisation have either influenza-like or penumonia-like
+    symptoms the percentage of those are distrubuted according to the ratios in the RKI publication
+    (table 1/column 2 of
+     https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile)
+
+     For this I assume a "pneumonia probability for the asyptomatic, non-hospitalised cases
+     given by Pneumonia/(ILI+Peumonia) - probably too crude.
+     """
+
+    def __init__(self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict):
+
+        """
+        Parameters:
+        poli_hosp,poli_icu,poli_deaths:
+          Each of this arrays contains 2 list of 4 elements. 
+          The first element of the list correpdons to males and the second to females.
+          The elements are the indexes C,C1,C2,C3
+          of the polinomail fit defined to the probability of being hospitalised, send to a ICU unit or dying 
+          the probaility (P) is computed as 
+          P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
+          The 10 exponent is requiered as the fits where done in logarithmic space.
+        asimpto_ratio:
+           The percentage of the population that will be asymptomatic, we fixed it to 43% and 
+           assume that is age independent this assumptions come from Vo et all 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
+          
+        """
+        self.poli_hosp = poli_hosp
+        self.poli_icu = poli_icu
+        self.poli_deaths = poli_deaths
+        self.asimpto_ratio = 0.43
+        self.make_list()
+
+    @classmethod
+    def from_file(
+        cls, polinome_filename: str = default_polinom_filename,
+    ) -> "HealthIndexGenerator":
+        """
+        Initialize the Health index from path to data frame, and path to config file 
+
+        Parameters:
+        
+          filename:
+            polinome_filename:  path to the file where the coefficients of the fits to the spanish data
+            are stored.
+        
+        Returns:
+          Interaction instance
+        """
+
+        polinoms = np.loadtxt(polinome_filename, skiprows=1)
+        poli_hosp = np.array([polinoms[:, 0], polinoms[:, 1]])
+        poli_icu = np.array([polinoms[:, 2], polinoms[:, 3]])
+        poli_deaths = np.array([polinoms[:, 4], polinoms[:, 5]])
+
+        return cls(poli_hosp, poli_icu, poli_deaths)
+
+    def model(self, age, poli):
+        """
+        Computes the probability of an outcome from the coefficients of the polinomal fit and for 
+        a given array of ages
+
+        Parameters:
+        ----------
+          age:
+              array of ages where the probability should be computed.
+          Poli:
+              The values C,C1,C2,C3
+              of the polinomail fit defined to the probability of being hospitalised, send to a ICU unit or dying 
+              the probaility (P) is computed as 
+              P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
+          Retruns:
+             The probability P for all ages in the array "age".
+        """
+        C, C1, C2, C3 = poli
+        age[age > 85.0] = 85.0
+        return 10 ** (
+            C + C1 * age + C2 * age ** 2 + C3 * age ** 3
+        )  # The coefficients are a fit to the logarithmic model
+
+    def make_list(self):
+        """
+        Computes the probability of having all 6 posible outcomes for all ages between 0 and 120. 
+        And for male and female 
+        
+        Retruns:
+             3D matrix of dimensions 2 X 120 X 6. With all the probabilities of all 6 
+             outcomes for 120 ages and the 2 sex.
+        """
+
+        ages = np.arange(0, 121, 1)  # from 0 to 120
+        self.prob_lists = np.zeros([2, 121, 5])
+
+        self.prob_lists[:, :, 0] = self.asimpto_ratio
+
+        self.prob_lists[0, :, 2] = 1 - self.model(ages, self.poli_hosp[0])
+        self.prob_lists[1, :, 2] = 1 - self.model(ages, self.poli_hosp[1])
+
+        self.prob_lists[0, :, 3] = 1 - self.model(ages, self.poli_icu[0])
+        self.prob_lists[1, :, 3] = 1 - self.model(ages, self.poli_icu[1])
+
+        self.prob_lists[0, :, 4] = 1 - self.model(ages, self.poli_deaths[0])
+        self.prob_lists[1, :, 4] = 1 - self.model(ages, self.poli_deaths[1])
+
+        # This makes sure that the Hospital<ICU<deaths
+        Boolean_hosp_male = [
+            self.prob_lists[0, :, 2] > self.prob_lists[0, :, 3]
+        ]  # If the DEath ratio is larger that the ICU ratio
+        Boolean_hosp_female = [self.prob_lists[1, :, 2] > self.prob_lists[1, :, 3]]
+
+        self.prob_lists[0, :, 2][Boolean_hosp_male] = self.prob_lists[0, :, 3][
+            Boolean_hosp_male
+        ]
+        self.prob_lists[1, :, 2][Boolean_hosp_female] = self.prob_lists[1, :, 3][
+            Boolean_hosp_female
+        ]
+
+        Boolean_icu_male = [
+            self.prob_lists[0, :, 3] > self.prob_lists[0, :, 4]
+        ]  # If the DEath ratio is larger that the ICU ratio
+        Boolean_icu_female = [self.prob_lists[1, :, 3] > self.prob_lists[1, :, 4]]
+
+        self.prob_lists[0, :, 3][Boolean_icu_male] = self.prob_lists[0, :, 4][
+            Boolean_icu_male
+        ]
+        self.prob_lists[1, :, 3][Boolean_icu_female] = self.prob_lists[1, :, 4][
+            Boolean_icu_female
+        ]
+
+        No_hosp_prov = np.array(
+            [
+                self.prob_lists[0, :, 2] - self.asimpto_ratio,
+                self.prob_lists[1, :, 2] - self.asimpto_ratio,
+            ]
+        )
+        Pneumonia = np.ones(121)
+        for pneumonia_index in range(len(RKIdata) - 1):
+            Boolean = (RKIdata[pneumonia_index][0] <= np.arange(0, 121, 1)) & (
+                np.arange(0, 121, 1) < RKIdata[pneumonia_index + 1][0]
+            )
+        Pneumonia[Boolean] = RKIdata[pneumonia_index][1]
+        Pneumonia[Pneumonia == 1] = RKIdata[len(RKIdata) - 1][1]
+
+        self.prob_lists[0, :, 1] = self.asimpto_ratio + No_hosp_prov[0] * (
+            1 - Pneumonia
+        )
+        self.prob_lists[1, :, 1] = self.asimpto_ratio + No_hosp_prov[1] * (
+            1 - Pneumonia
+        )
+
+    def __call__(self, age, sex):
+        """
+        Computes the probability of having all 6 posible outcomes for all ages between 0 and 120. 
+        And for male and female 
+        
+        Retruns:
+             3D matrix of dimensions 2 X 120 X 6. With all the probabilities of all 6 
+             outcomes for 120 ages and the 2 sex.
+        """
+        # TODO: change this when we unify sex to "m" and "f".
+        if sex == "f":
+            sex = 1
+        elif sex == "m":
+            sex = 0
+        roundage = int(round(age))
+        sex = int(sex)
+        return self.prob_lists[sex][roundage]
