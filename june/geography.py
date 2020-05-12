@@ -37,22 +37,30 @@ class Area:
     """
     Fine geographical resolution.
     """
-    __slots__ = "households", "people", "id", "name", "coordinates", "super_area", "carehome"
+
+    __slots__ = (
+        "households",
+        "people",
+        "id",
+        "name",
+        "coordinates",
+        "super_area",
+        "carehome",
+    )
     _id = count()
 
     def __init__(
         self,
         name: str,
-        super_area: "SuperArea" = None,
-        coordinates: Tuple[float, float] = np.array([None, None]),
+        super_area: "SuperArea",
+        coordinates: Tuple[float, float],
     ):
         """
-        Coordinate is given in the format X, Y where X is longitude and Y is latitude.
-        We store them in the reverse order to have latitude and longitude.
+        Coordinate is given in the format Y, X where X is longitude and Y is latitude.
         """
         self.id = next(self._id)
         self.name = name
-        self.coordinates = coordinates[[1, 0]]
+        self.coordinates = coordinates
         self.super_area = super_area
         self.people = set()
 
@@ -64,6 +72,7 @@ class Area:
 class Areas:
 
     __slots__ = "members", "super_area"
+
     def __init__(self, areas: List[Area], super_area=None):
         self.members = areas
         self.super_area = super_area
@@ -79,28 +88,25 @@ class SuperArea:
     """
     Coarse geographical resolution.
     """
+
     __slots__ = "id", "name", "coordinates", "workers", "areas"
     _id = count()
 
     def __init__(
         self,
         name: str,
-        areas: List[Area] = [None],
-        coordinates: Tuple[float, float] = Tuple[None, None],
+        areas: List[Area],
+        coordinates: Tuple[float, float],
     ):
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates[[1, 0]]
         self.areas = areas
         self.workers = set()
-    
+
     def add_worker(self, person: Person):
         self.workers.add(person)
         person.work_super_area = self
-
-    #def add(self, person, qualifier=GroupType.workers): <- maybe this is better
-    #    super().add(person, qualifier)
-    #    person.company = self
 
 
 class SuperAreas:
@@ -159,8 +165,9 @@ class Geography:
         # and apply doesnt support the axis parameter.
         try:
             areas = area_coords.apply(
-                lambda row: self._create_area(row, super_area), axis=1
-            )
+                lambda row: self._create_area(row, super_area), axis=1, result_type='expand'
+            ).values
+            raise ValueError
         except TypeError:
             return [self._create_area(area_coords, super_area)]
         return areas
@@ -180,7 +187,7 @@ class Geography:
         total_areas_list = []
         super_areas_list = []
         for superarea_name, row in super_area_coordinates.iterrows():
-            super_area = SuperArea(name=superarea_name, coordinates=row.values)
+            super_area = SuperArea(areas=None,name=superarea_name, coordinates=row.values)
             areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
             areas_list = self._create_areas(areas_df, super_area)
             super_area.areas = areas_list
@@ -235,10 +242,10 @@ class Geography:
         if filter_key is not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
-        areas_coord = areas_coord.loc[geo_hierarchy["oa"]]
+        areas_coord = areas_coord.loc[geo_hierarchy["oa"]].loc[:, ["Y", "X"]]
         super_areas_coord = super_areas_coord.loc[
             geo_hierarchy["msoa"]
-        ].drop_duplicates()
+            ].loc[:, ["Y", "X"]].drop_duplicates()
         geo_hierarchy.set_index("msoa", inplace=True)
         return cls(geo_hierarchy, areas_coord, super_areas_coord)
 
