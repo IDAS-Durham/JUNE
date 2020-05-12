@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 from june import world
 from june.demography.person import Person
@@ -16,7 +15,7 @@ def test__set_up_collective_from_file():
     assert type(interaction).__name__ == "DefaultInteraction"
 
 
-def days_to_infection(interaction, susceptible_person, group):
+def days_to_infection(interaction, susceptible_person, group, health_index_generator):
     delta_time = 1
     days_to_infection = 0
 
@@ -25,7 +24,7 @@ def days_to_infection(interaction, susceptible_person, group):
             and days_to_infection < 100
     ):
         interaction.single_time_step_for_group(
-            group, 1, delta_time
+            group, health_index_generator, 1, delta_time
         )
 
         days_to_infection += 1
@@ -39,6 +38,7 @@ class MockGroup(Group):
 #)
 def test__time_it_takes_to_infect(infection, group_size=2):
     interaction = DefaultInteraction.from_file(test_config_file)
+    health_index_generator = HealthIndexGenerator.from_file()
 
     n_days = []
     for n in range(1000):

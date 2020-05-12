@@ -4,6 +4,11 @@ from june.demography import Demography
 from june.groups import Hospitals, Companies, Schools, CareHomes, Cemeteries
 from june.simulator import Simulator
 
+@pytest.fixture(name='health_index')
+def create_health_index():
+    def dummy_health_index(age, sex):
+        return [0.1, 0.3, 0.5, 0.7, 0.9]
+    return dummy_health_index 
 
 
 def test__hospitalise_the_sick(simulator):

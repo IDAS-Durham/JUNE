@@ -1,17 +1,16 @@
 import os
 import yaml
 import logging
+import os
+from enum import IntEnum
 from pathlib import Path
-from itertools import count
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.groups import Group
-from june.logger_creation import logger
-from enum import IntEnum
 
 from june.geography import SuperArea
 
@@ -53,19 +52,17 @@ class Hospital(Group):
     __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
 
     def __init__(
-        self,
-        coordinates: list,  # Optional[Tuple[float, float]] = None,
-        n_beds: int,
-        n_icu_beds: int,
-        super_area: SuperArea = None,
+            self,
+            coordinates: list,  # Optional[Tuple[float, float]] = None,
+            n_beds: int,
+            n_icu_beds: int,
+            super_area: str = None,
     ):
         """
         Create a Hospital given its description.
 
         Parameters
         ----------
-        hospital_id:
-            unique identifier of the hospital 
         n_beds:
             total number of regular beds in the hospital
         n_icu_beds:
@@ -342,7 +339,7 @@ class Hospitals:
             dataframe with hospital characteristics data
         """
         hospitals = []
-        for (index, row) in hospital_df.iterrows():
+        for index, row in hospital_df.iterrows():
             n_beds = row["beds"]
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
