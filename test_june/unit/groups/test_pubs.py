@@ -31,6 +31,7 @@ class MockArea:
             age = 18.+70.*random.random()
             sex = random.random()>0.5
             person = Person(age=age,sex=sex)
+            person.active_group = None
             if sex==0:
                 self.adult_active_males.append(person)
             else:
@@ -62,32 +63,52 @@ class TestPubs:
         assert len(pubs.members[area])==2
         return pubs
 
-    def test_sending_people_to_pub(self,area,pubs):
-        N = [0.,0.,0.,0.,0.]
-        Nruns = 100
-        count = 0
+    def init_stats(self):
+        self.N = [0.,0.,0.,0.,0.]
+        return 100
+        
+    def finish_stats(self,Nruns):
+        for i in range(len(self.N)):
+            self.N[i] /= Nruns
+        print ("Overall statistics: ",self.N[0]," people in pub:")
+        print ("   ",float(self.N[1]/self.N[0]*100.)," % male,",
+               float(self.N[3]/self.N[0]*100.)," % over 55, and",
+               float(self.N[4]/self.N[0]*100.)," % under 35.")
+        
+    def update_stats(self,pub):
+        self.N[0] += len(pub.subgroups[pub.GroupType.guests].people)
+        for person in pub.subgroups[pub.GroupType.guests].people:
+            if person.sex==0:
+                self.N[1] += 1
+            else:
+                self.N[2] += 1
+            if person.age>=55:
+                self.N[3] += 1
+            elif person.age<=35:
+                self.N[4] += 1
+
+    def test_sending_people_to_pub(self,area,pubs,make_stats=False):
+        Nruns   = 1
+        count   = 0
+        Nadults = len(area.adult_active_females)+len(area.adult_active_males) 
+        if make_stats:
+            Nruns = self.init_stats()
         while count<Nruns:
             pubs.send_people_to_pub()
             for pub in pubs.members[area]:
-                N[0] += len(pub.subgroups[pub.GroupType.guests].people)
+                pub.set_active_members()
                 for person in pub.subgroups[pub.GroupType.guests].people:
-                    if person.sex==0:
-                        N[1] += 1
-                    else:
-                        N[2] += 1
-                    if person.age>=55:
-                        N[3] += 1
-                    elif person.age<=35:
-                        N[4] += 1
+                    assert bool(person.active_group=="pub") is True
+                if make_stats:
+                    self.update_stats(pub)
+                for person in pub.subgroups[pub.GroupType.guests].people:
+                    person.active_group=None
                 pub.subgroups[pub.GroupType.guests].people.clear()
             count += 1
-            
-        for i in range(len(N)):
-            N[i] /= Nruns
-        #print ("Overall statistics: ",N[0]," people in pub:")
-        #print ("   ",float(N[1]/N[0]*100.)," % male,",
-        #       float(N[3]/N[0]*100.)," % over 55, and",
-        #       float(N[4]/N[0]*100.)," % under 35.")
+        if make_stats:
+            self.finish_stats(Nruns)
+        assert bool(len(area.adult_active_females)+len(area.adult_active_males)==Nadults) is True
+    
         
 if __name__=="__main__":
     area      = MockArea()
@@ -97,4 +118,4 @@ if __name__=="__main__":
     testpub.test__empty_pub(pub)
     testpubs  = TestPubs()
     pubs      = testpubs.test__create_pubs_in_mockarea(area)
-    testpubs.test_sending_people_to_pub(area,pubs)
+    testpubs.test_sending_people_to_pub(area,pubs,True)
