@@ -12,7 +12,10 @@ class GroupMaker:
             print ("distribute people for ",grouptype,"in",
                    len(self.world.areas.members),"areas.")
             self.pubs.send_people_to_pub()
-            self.make_histogram()
+        if grouptype=="groceries":
+            print ("distribute people for ",grouptype,"in",
+                   len(self.world.areas.members),"areas.")
+            self.groceries.send_people_to_pub()
 
     def make_histogram(self):
         import matplotlib.pyplot as plt

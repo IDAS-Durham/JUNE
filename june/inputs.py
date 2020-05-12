@@ -102,6 +102,16 @@ class Inputs:
         pub_ids = np.arange(len(self.pubs_df["Latitude"]))
         self.pubs_df["Ids"] = pub_ids
         
+        self.postcodes_df = pd.read_csv(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..",
+                "data",
+                "geographical_data",
+                "ukpostcodes_coordinates.csv"),
+            sep=" ",
+            header=None
+        )
         
         self.areas_coordinates_df = self.read_coordinates()
         self.contact_matrix = np.genfromtxt(

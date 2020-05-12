@@ -78,9 +78,13 @@ class World:
                 world_logger.info("nothing exists outside the simulated region")
             if "pubs" in self.relevant_groups:
                 self.initialize_pubs()
-                self.group_maker = GroupMaker(self)
             else:
                 world_logger.info("pubs not needed, skipping...")
+            if "groceries" in self.relevant_groups:
+                self.initialize_groceries()
+            else:
+                world_logger.info("groceries not needed, skipping...")
+            self.group_maker = GroupMaker(self)
         #self.interaction = self.initialize_interaction()
         world_logger.info("Done.")
 
@@ -197,6 +201,9 @@ class World:
 
     def initialize_pubs(self):
         self.pubs = Pubs(self, self.inputs.pubs_df, self.box_mode)
+
+    def initialize_groceries(self):
+        self.groceries = Groceries(self)
 
     def initialize_areas(self):
         """
