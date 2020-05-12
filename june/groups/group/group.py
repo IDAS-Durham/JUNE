@@ -44,6 +44,7 @@ class Group(AbstractGroup):
         "commute_Private",
         "cemetery",
         "company",
+        "grocery",
         "household",
         "hospital",
         "leisure_Outdoor",

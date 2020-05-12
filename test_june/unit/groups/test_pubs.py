@@ -7,60 +7,38 @@ import pandas as pd
 import pytest
 
 from june.time       import Timer
-from june.geography  import Geography
-from june.geography  import Area
-from june.demography import Person
-from june.groups     import Pub, Pubs
+from june.geography  import Geography, SuperArea, Area
+from june.demography import Demography, Person
+from june.groups     import Pub, Pubs, PubFiller
 
-@pytest.fixture(name="carehomes_df")
+@pytest.fixture(name="pub_coordinates_df")
 def load_pubs_data():
-    pubs_path = Path(__file__).parent.parent.parent.parent / "data/geographical_data/pubs_uk24727_latlong.txt"
-    return pd.read_csv(pubs_path)
+    path = Path(__file__).parent.parent.parent.parent / "data/geographical_data/pubs_uk24727_latlong.txt"
+    return pd.read_csv(path)
 
-class MockArea:
-    def __init__(self):
-        self.coordinates = np.array([0.,0.])
-        self.adult_active_females = []
-        self.adult_active_males   = []
-        self.fill_lists(1000)
-        self.timer = Timer() 
-        pass
-
-    def fill_lists(self,N):
-        while len(self.adult_active_females)+len(self.adult_active_males)<N:
-            age = 18.+70.*random.random()
-            sex = random.random()>0.5
-            person = Person(age=age,sex=sex)
-            person.active_group = None
-            if sex==0:
-                self.adult_active_males.append(person)
-            else:
-                self.adult_active_females.append(person)
             
 class TestPub:
-    def __init__(self):
-        pass
-    #@pytest.fixture(name="pub", scope="session")
-    def create_pub(self):
-        return Pub(pub_id=1, position=(0., 0.))
-    
-    def test__pub_grouptype(self, pub):
+    def test__create_pub():
+        pub = Pub(pub_id=1, position=(0., 0.))
+        assert bool(len(pub.subgroups[pub.GroupType.workers].people)>0) is False
+        assert bool(len(pub.subgroups[pub.GroupType.guests].people)>0) is False
+        return pub
+        
+    def test__pub_grouptype(pub):
         assert pub.GroupType.workers == 0
         assert pub.GroupType.guests == 1
 
-    def test__empty_pub(self, pub):
+    def test__empty_pub(pub):
         assert bool(pub.subgroups[pub.GroupType.workers].people) is False
         assert bool(pub.subgroups[pub.GroupType.guests].people) is False
 
 class TestPubs:
-    def __init__(self):
-        pass
-
-    def test__create_pubs_in_mockarea(self,area):
-        pubs = Pubs(geography = area,
-                    pub_df    = None,
-                    box_mode  = True)
-        assert len(pubs.members[area])==2
+    def test__create_pubs_in_geography(self,geography,pub_coordinates):
+        pubs = Pubs(geography = geography,
+                    pub_df    = pub_coordinates,
+                    box_mode  = False)
+        super_area = geography.super_areas.members[0]
+        assert len(pubs.members[super_area])==20
         return pubs
 
     def init_stats(self):
@@ -78,7 +56,7 @@ class TestPubs:
     def update_stats(self,pub):
         self.N[0] += len(pub.subgroups[pub.GroupType.guests].people)
         for person in pub.subgroups[pub.GroupType.guests].people:
-            if person.sex==0:
+            if person.sex=="m":
                 self.N[1] += 1
             else:
                 self.N[2] += 1
@@ -87,15 +65,15 @@ class TestPubs:
             elif person.age<=35:
                 self.N[4] += 1
 
-    def test_sending_people_to_pub(self,area,pubs,make_stats=False):
+    def test_sending_people_to_pub(self,super_area,pubfiller,make_stats=False):
         Nruns   = 1
         count   = 0
-        Nadults = len(area.adult_active_females)+len(area.adult_active_males) 
+        Nadults = len(super_area.adult_active_females)+len(super_area.adult_active_males) 
         if make_stats:
             Nruns = self.init_stats()
         while count<Nruns:
-            pubs.send_people_to_pub()
-            for pub in pubs.members[area]:
+            pubfiller.send_people_to_pub()
+            for pub in pubfiller.pubs.members[super_area]:
                 pub.set_active_members()
                 for person in pub.subgroups[pub.GroupType.guests].people:
                     assert bool(person.active_group=="pub") is True
@@ -107,15 +85,28 @@ class TestPubs:
             count += 1
         if make_stats:
             self.finish_stats(Nruns)
-        assert bool(len(area.adult_active_females)+len(area.adult_active_males)==Nadults) is True
+        assert bool(len(super_area.adult_active_females)+
+                    len(super_area.adult_active_males)==Nadults) is True
     
         
 if __name__=="__main__":
-    area      = MockArea()
-    testpub   = TestPub()
-    pub       = testpub.create_pub()
-    testpub.test__pub_grouptype(pub)
-    testpub.test__empty_pub(pub)
-    testpubs  = TestPubs()
-    pubs      = testpubs.test__create_pubs_in_mockarea(area)
-    testpubs.test_sending_people_to_pub(area,pubs,True)
+    pub        = TestPub.test__create_pub()
+    TestPub.test__pub_grouptype(pub)
+    TestPub.test__empty_pub(pub)
+
+    testpubs   = TestPubs()
+    geography  = Geography.from_file({"msoa": ["E02000140"]})
+    print(geography)
+    area_names = [area.name for area in geography.areas]
+    demography = Demography.for_areas(area_names)
+    population = demography.populate(geography.areas)
+    path       = "../../../data/geographical_data/pubs_uk24727_latlong.txt"
+    pub_df     = pd.read_csv(path, sep=" ", header=None)
+    print(len(pub_df.columns))
+    pub_df.columns = ["latitude","longitude"]
+    pubs       = testpubs.test__create_pubs_in_geography(geography=geography,
+                                                         pub_coordinates=pub_df)
+    timer      = Timer() 
+    pubfiller  = PubFiller(pubs,timer)
+    super_area = geography.super_areas.members[0]
+    testpubs.test_sending_people_to_pub(super_area,pubfiller,True)

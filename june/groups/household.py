@@ -35,7 +35,8 @@ class Household(Group):
         self.max_size = max_size
         self.must_supervise_age = 14
         self.stay_at_home_complacency = 0.95
-
+        self.area.households.add(self)
+        
     def add(self, person, qualifier=GroupType.adults):
         super().add(person, qualifier)
         person.household = self

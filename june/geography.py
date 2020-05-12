@@ -53,18 +53,18 @@ class Area:
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates[[1, 0]]
-        self.super_area = super_area
-        self.people = set()
+        self.super_area  = super_area
+        self.people      = set()
+        self.households  = set()
         
     def add(self, person: Person):
         self.people.add(person)
         person.area = self
-        if person.age>=18 and person.carehome==None:
-            if person.sex==0:
-                self.super_area.adult_active_males.append(person)
+        if person.carehome==None and person.age>=18:
+            if person.sex=="m":
+                self.super_area.adult_active_males.add(person)
             else:
-                self.super_area.adult_active_females.append(person)
-
+                self.super_area.adult_active_females.add(person)
 
 class Areas:
 
@@ -84,7 +84,7 @@ class SuperArea:
     """
     Coarse geographical resolution.
     """
-    __slots__ = "id", "name", "coordinates", "workers", "areas"
+    __slots__ = "id", "name", "coordinates", "workers", "areas", "adult_active_males", "adult_active_females"
     _id = count()
 
     def __init__(
@@ -108,14 +108,6 @@ class SuperArea:
     #def add(self, person, qualifier=GroupType.workers): <- maybe this is better
     #    super().add(person, qualifier)
     #    person.company = self
-
-    def set_center(self):
-        center = [0.,0.]
-        for position in self.coordinates:
-            for i in range(2):
-                center[i] += position[i]
-        self.coordinate = center/len(self.coordinates)
-        print (self.coordinates[0]," --> ",self,coordinate)
 
 class SuperAreas:
     def __init__(self, super_areas: List[SuperArea]):
@@ -198,7 +190,6 @@ class Geography:
             areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
             areas_list = self._create_areas(areas_df, super_area)
             super_area.areas = areas_list
-            super_area.set_center()
             total_areas_list += list(areas_list)
             super_areas_list.append(super_area)
 

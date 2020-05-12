@@ -7,6 +7,7 @@ from .company import Company, Companies
 from .group_maker import GroupMaker
 from .hospital import Hospital, Hospitals
 from .household import Household, Households
-from .pub import Pub, Pubs
+from .pub import Pub, Pubs, PubFiller
+from .grocery import Grocery, Groceries, GroceryFiller
 from .school import School, Schools
 from .commute import CommuteCity, CommuteCities, CommuteCityDistributor, CommuteHub, CommuteHubs, CommuteHubDistributor, CommuteUnit, CommuteUnits, CommuteUnitDistributor, CommuteCityUnit, CommuteCityUnits, CommuteCityUnitDistributor

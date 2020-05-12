@@ -742,7 +742,7 @@ class HouseholdDistributor:
             Maximum number of people allowed in the household.
 
         """
-        household = Household(communal=communal, max_size=max_household_size)
+        household = Household(area=area, communal=communal, max_size=max_household_size)
         # area.households.append(household)
         return household
 
