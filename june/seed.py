@@ -3,11 +3,10 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Tuple
 
-n_cases_region_filename = Path(__file__).parent / "data/processed/seed/"
-msoa_region_filename = (
+default_n_cases_region_filename = Path(__file__).parent / "data/processed/seed/"
+default_msoa_region_filename = (
     Path(__file__).parent / "data/processed/geographical_data/oa_msoa_region.csv"
 )
-
 
 class Seed:
     def __init__(
@@ -38,7 +37,6 @@ class Seed:
         self.geography = geography
         self.infection = infection
         self.health_index_generator = health_index_generator
-        self.n_cases_region = n_cases_region
         self.msoa_region = msoa_region
         self.super_area_names = [
             super_area.name for super_area in geography.super_areas.members
@@ -51,7 +49,7 @@ class Seed:
         infection: "Infection",
         health_index_generator: "HealthIndexGenerator",
         n_cases_region_filename: str = default_n_cases_region_filename,
-        msoa_region_filename: str = default_msoa_region,
+        msoa_region_filename: str = default_msoa_region_filename,
     ) -> "Seed":
         """
         Initialize Seed from file containing the number of cases per region, and mapping
