@@ -16,9 +16,9 @@ from june.logger_creation import logger
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
 default_workflow_file = default_base_path / \
-        "data/processed/flow_in_msoa_wu01ew_2011.csv"
+    "data/processed/flow_in_msoa_wu01ew_2011.csv"
 default_sex_per_sector_per_superarea_file = default_base_path / \
-        "data/processed/census_data/company_data/companysector_by_sex_cleaned.csv"
+        "data/processed/census_data/company_data/industry_by_sex_ew.csv"
 default_areas_map_path = default_base_path / \
         "data/processed/geographical_data/oa_msoa_region.csv"
 default_config_file = default_base_path / \
@@ -333,13 +333,6 @@ def _load_sex_per_sector(
             area_names: Optional[List[str]] = [],
     ) -> pd.DataFrame:
     sector_by_sex_df = pd.read_csv(sector_by_sex_file, index_col=0)
-    sector_by_sex_df = sector_by_sex_df.drop(
-        ['date', 'geography', 'rural urban'], axis=1,
-    )
-    sector_by_sex_df = sector_by_sex_df.rename(
-        columns={"oareas": "oa"}
-    )
-
     # define all columns in csv file relateing to males
     m_columns = [col for col in sector_by_sex_df.columns.values if "m " in col]
     m_columns.remove('m all')
@@ -356,16 +349,13 @@ def _load_sex_per_sector(
     if len(area_names) != 0:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
         area_names = geo_hierarchy[geo_hierarchy["msoa"].isin(area_names)]["oa"]
-        sector_by_sex_df = sector_by_sex_df[
-            sector_by_sex_df["oa"].isin(area_names)
-        ]
+        sector_by_sex_df = sector_by_sex_df.loc[area_names]
         if (np.sum(sector_by_sex_df["m Q"]) == 0) and \
             (np.sum(sector_by_sex_df["f Q"]) == 0):
             logger.info(f"There exists no Healthcare sector in this geography.")
         if (np.sum(sector_by_sex_df["m P"]) == 0) and \
             (np.sum(sector_by_sex_df["f P"]) == 0):
             logger.info(f"There exists no Education sector in this geography.")
-    sector_by_sex_df = sector_by_sex_df.set_index('oa')
 
     # convert counts to ratios
     sector_by_sex_df.loc[:, m_columns] = sector_by_sex_df.loc[:, m_columns].div(
