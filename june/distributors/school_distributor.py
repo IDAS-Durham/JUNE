@@ -253,7 +253,7 @@ class SchoolDistributor:
         teachers = [
             person
             for idx, person in enumerate(msoarea.workers)
-            if person.industry == self.education_sector_label
+            if person.sector == self.education_sector_label
         ]
 
         # equal chance to work in any school nearest to any area within msoa
@@ -270,15 +270,15 @@ class SchoolDistributor:
         areas_rnd_arr = areas_rv.rvs(size=len(teachers))
 
         for i, teacher in enumerate(teachers):
-            if teacher.industry_specific != None:
+            if teacher.sub_sector != None:
                 area = areas_in_msoa[areas_rnd_arr[i]]
 
                 for school in area.schools:
-                    if teacher.industry_specific in school.sector:
+                    if teacher.sub_sector in school.sector:
                         # (school.n_teachers < school.n_teachers_max) and \
                         school.add(teacher, school.GroupType.teacher)
                         school.n_teachers += 1
-                    elif teacher.industry_specific == "special_needs":
+                    elif teacher.sub_sector == "special_needs":
                         # everyone has special needs :-)
                         # TODO fine better why for filtering
                         school.add(teacher, school.GroupType.teacher)

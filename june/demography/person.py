@@ -141,7 +141,6 @@ class Person:
         self.area = area
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.work_msoarea = None
         self.school = None
         self.carehome = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
@@ -149,7 +148,6 @@ class Person:
         self.groups = []
         self.sector = None
         self.sub_sector = None
-        self.industry_specific = None
         self.company_id = None
         self.hospital = None
         self.in_hospital = None
