@@ -115,4 +115,4 @@ class World:
 
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
-            dill.dump(self, f, 4)
+            pickle.dump(self, f)
