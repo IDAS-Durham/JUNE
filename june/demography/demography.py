@@ -293,29 +293,3 @@ def _load_age_and_sex_generators(
             age_structre.values, female_ratios.index.values, female_ratios.values
         )
     return ret
-
-
-if __name__ == "__main__":
-    from time import time
-    import resource
-
-    def using(point=""):
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        return """%s: usertime=%s systime=%s mem=%s mb
-               """ % (
-            point,
-            usage[0],
-            usage[1],
-            usage[2] / 1024.0,
-        )
-
-    t1 = time()
-    print(using("before"))
-    geo = Geography.from_file(filter_key={"oa" : ["E00088544"]})
-    demography = Demography.for_areas(["E00088544"])
-    population = demography.populate(geo.areas)
-    t2 = time()
-    print(using("after"))
-    print(f"Took {t2-t1} seconds to populate the UK.")
-
-    print(len(population))
