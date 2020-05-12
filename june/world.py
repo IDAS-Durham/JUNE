@@ -157,6 +157,7 @@ class World:
         # active group settings
         # TODO this will change in the new world
         for relevant_group in self.relevant_groups:
+            print(relevant_group)
             group_config_path = os.path.join(basepath, f"groups/{relevant_group}.yaml")
             if os.path.isfile(group_config_path):
                 with open(group_config_path, "r") as f:
