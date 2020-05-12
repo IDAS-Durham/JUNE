@@ -3,9 +3,9 @@ from pathlib import Path
 import numpy as np
 
 from june.demography.person import Person
-from june.groups import TestGroup  # this should not be needed anymore
+from june.groups import Group 
 from june.infection.health_index import HealthIndexGenerator
-from june.interaction import *
+from june.interaction import DefaultInteraction
 
 test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
 
@@ -30,12 +30,15 @@ def days_to_infection(interaction, susceptible_person, group, health_index_gener
         days_to_infection += 1
     return days_to_infection
 
+class TestGroup(Group):
+    def __init__(self):
+        super().__init__()
 
 # @pytest.mark.parametrize(
 #    "group_size", (2, 5)
 
 # )
-def test__time_it_takes_to_infect(config, infection, group_size=2):
+def test__time_it_takes_to_infect(infection, group_size=2):
     interaction = DefaultInteraction.from_file(test_config_file)
     health_index_generator = HealthIndexGenerator.from_file()
 
@@ -63,3 +66,5 @@ def test__time_it_takes_to_infect(config, infection, group_size=2):
         1.0 / (infection.transmission.probability / group_size),
         rtol=0.15,
     )
+
+

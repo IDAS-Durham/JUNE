@@ -18,7 +18,7 @@ class Cemetery(Group):
 
 
 class Cemeteries:
-    def __init__(self, world):
+    def __init__(self, world=None):
         self.world = world
         self.members = [Cemetery()]
 
