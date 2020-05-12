@@ -1,4 +1,4 @@
-from itertools import count
+from enum import IntEnum
 
 import numpy as np
 import random

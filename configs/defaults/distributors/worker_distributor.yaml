@@ -16,4 +16,3 @@ sub_sector_distr:
     label: ["doctor", "nurse"]
     m: [0.57142857, 0.36190476]
     f: [0.1347032, 0.78538813]
-
