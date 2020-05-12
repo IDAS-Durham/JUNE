@@ -54,7 +54,7 @@ def test__n_infected_total(seed):
     
     super_areas = seed._filter_region(region='East of England')
     n_cases = 100
-    seed.infect_region(super_areas, n_cases)
+    seed.infect_super_areas(super_areas, n_cases)
 
     n_infected = 0
     for super_area in super_areas:
