@@ -1,9 +1,8 @@
-import os
-import yaml
 import logging
+import os
 from enum import IntEnum
-from pathlib import Path
 from itertools import count
+from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 
 import numpy as np
@@ -13,7 +12,6 @@ from sklearn.neighbors import BallTree
 from june.geography import Geography
 from june.groups.group import Group
 from june.groups.group import Subgroup
-from june.logger_creation import logger
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
 default_data_filename = default_base_path / \
@@ -66,12 +64,10 @@ class School(Group):
 
         Parameters
         ----------
-        school_id:
-            unique identifier of the school
         coordinates:
             latitude and longitude 
-        n_pupils: 
-            number of pupils that attend the school
+        n_pupils_max:
+            maximum number of pupils that can attend the school
         age_min:
             minimum age of the pupils
         age_max:
@@ -85,11 +81,11 @@ class School(Group):
         ...
         n - year of highest age (age_max)
         """
-        super().__init__(name="School_%05d" % school_name, spec="school")
-        self.id = school_name
+        super().__init__()
+        self.id = school_id
+        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.coordinates = coordinates
         self.super_area = None
-        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.n_pupils = 0
         self.n_teachers = 0
         self.n_pupils_max = n_pupils_max
@@ -229,10 +225,10 @@ class Schools:
 
     @classmethod
     def build_schools_for_areas(
-        cls,
-        school_df: pd.DataFrame,
-        age_range: Tuple[int, int] = (0, 19),
-        employee_per_clients: Dict[str, int] = {"primary": 30, "secondary": 30,},
+            cls,
+            school_df: pd.DataFrame,
+            age_range: Tuple[int, int] = (0, 19),
+            employee_per_clients: Dict[str, int] = None,
     ) -> "Schools":
         """
         Parameters
@@ -242,6 +238,10 @@ class Schools:
         -------
             An infrastructure of schools
         """
+        employee_per_clients = employee_per_clients or {
+            "primary": 30,
+            "secondary": 30,
+        }
         # build schools
         schools = []
         for school_name, row in school_df.iterrows():
@@ -260,6 +260,7 @@ class Schools:
                 row["sector"],
             )
             schools.append(school)
+
         # link schools
         school_trees, agegroup_to_global_indices = Schools.init_trees(
             school_df, age_range

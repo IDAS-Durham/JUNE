@@ -1,3 +1,4 @@
+from enum import IntEnum
 from itertools import count
 import pandas as pd
 from pathlib import Path
@@ -22,6 +23,8 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
+
+    spec = "carehome"
 
     _id = count()
 
