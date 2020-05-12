@@ -1,6 +1,7 @@
 import os
 import pickle
 import logging
+import dill
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 
@@ -80,6 +81,7 @@ class World:
             or hasattr(geography, "hospitals")
             or hasattr(geography, "schools")
         ):
+            pass
             worker_distr = WorkerDistributor.for_geography(
                 geography
             )  # atm only for_geography()
@@ -89,6 +91,7 @@ class World:
             self.schools = geography.schools
             school_distributor = SchoolDistributor(geography.schools)
             school_distributor.distribute_kids_to_school(self.areas)
+            school_distributor.distribute_teachers_to_schools_in_super_areas(self.super_areas)
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
@@ -112,4 +115,4 @@ class World:
 
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
-            pickle.dump(self, f, 4)
+            dill.dump(self, f, 4)

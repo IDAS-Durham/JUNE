@@ -297,20 +297,28 @@ class Hospitals:
         hospital_counter = 0
         for super_area in geography.super_areas:
             if super_area.name in hospital_df.index:
-                row = hospital_df.loc[super_area.name]
-                coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
-                n_beds = row["beds"]
-                hospital = cls.create_hospital(
-                    super_area, coordinates, n_beds, icu_fraction
-                )
-                hospitals.append(hospital)
-                hospital_counter += 1
-                if hospital_counter == total_hospitals:
-                    break
+                hospitals_in_area = hospital_df.loc[super_area.name]
+                if isinstance(hospitals_in_area, pd.Series):
+                    hospital = cls.create_hospital_from_df_row(
+                        super_area, hospitals_in_area, icu_fraction
+                    )
+                    hospitals.append(hospital)
+                    hospital_counter += 1
+                    if hospital_counter == total_hospitals:
+                        break
+                else:
+                    for _, row in hospitals_in_area.iterrows():
+                        cls.create_hospital_from_df_row(super_area, row, icu_fraction)
+                        hospitals.append(hospital)
+                        hospital_counter += 1
+                        if hospital_counter == total_hospitals:
+                            break
         return cls(hospitals, max_distance, False)
 
     @classmethod
-    def create_hospital(cls, super_area, coordinates, n_beds, icu_fraction):
+    def create_hospital_from_df_row(cls, super_area, row, icu_fraction):
+        coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
+        n_beds = row["beds"]
         n_icu_beds = round(icu_fraction * n_beds)
         n_beds -= n_icu_beds
         hospital = Hospital(
