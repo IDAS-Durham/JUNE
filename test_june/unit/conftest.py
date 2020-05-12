@@ -2,7 +2,7 @@ from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
 import june.interaction as inter
-from june.infection.health_index import HealthIndex
+from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
@@ -20,15 +20,6 @@ import yaml
 test_directory = Path(__file__).parent.parent
 
 
-@pytest.fixture(name="test_timer", scope="session")
-def create_timer():
-    config_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),)
-    with open("config_ne.yaml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-    return Timer(config["time"])
-
-
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
     return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
@@ -36,7 +27,7 @@ def create_symptoms():
 
 @pytest.fixture(name="symptoms_constant", scope="session")
 def create_symptoms_constant():
-    reference_health_index = HealthIndex().get_index_for_age(40)
+    reference_health_index = HealthIndexGenerator.from_file()(40, 'm')
     return sym.SymptomsConstant(health_index=reference_health_index)
 
 
@@ -69,7 +60,6 @@ def make_geography():
 
 @pytest.fixture(name="world", scope="session")
 def create_world(geography):
-    # geography = Geography.from_file({"region" : ["London"]})
     demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
@@ -82,7 +72,7 @@ def create_world(geography):
 
 @pytest.fixture(name="simulator", scope="session")
 def create_simulator(world, interaction, infection_constant):
-    return Simulator.from_file(world, interaction, infection_constant,)
+    return Simulator.from_file(world, interaction, infection_constant)
 
 @pytest.fixture(name="world_box", scope="session")
 def create_box_world():

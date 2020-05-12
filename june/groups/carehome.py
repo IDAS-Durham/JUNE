@@ -1,5 +1,4 @@
 from enum import IntEnum
-from itertools import count
 import pandas as pd
 from pathlib import Path
 
@@ -26,7 +25,6 @@ class CareHome(Group):
 
     spec = "carehome"
 
-    _id = count()
 
     class GroupType(IntEnum):
         workers = 0
@@ -34,8 +32,7 @@ class CareHome(Group):
         visitors = 2
 
     def __init__(self, area, n_residents):
-        carehome_id = next(self._id)
-        super().__init__(f"Carehome_{carehome_id}", "carehome")
+        super().__init__()
         self.n_residents = n_residents
         self.area = area
 
