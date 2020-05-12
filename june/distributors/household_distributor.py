@@ -285,8 +285,6 @@ class HouseholdDistributor:
                     women_by_age[person.age] = [person]
                 else:
                     women_by_age[person.age].append(person)
-        print(men_by_age.keys())
-        print(women_by_age.keys())
         return men_by_age, women_by_age
 
     def _distribute_people_and_households_to_area_single(
@@ -730,10 +728,6 @@ class HouseholdDistributor:
         people_in_households = 0
         for household in all_households:
             people_in_households += len(household.people)
-        print(total_people)
-        print(people_in_households)
-        print(men_by_age.keys())
-        print(women_by_age.keys())
         assert total_people == people_in_households
         return all_households
 
