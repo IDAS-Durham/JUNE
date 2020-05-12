@@ -41,7 +41,6 @@ class Company(Group):
     We made this explicit here, although it is not necessary.
     """
 
-    _id = count()
     __slots__ = (
         "id",
         "super_area",

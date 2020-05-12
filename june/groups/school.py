@@ -1,5 +1,6 @@
 import logging
 import os
+import yaml
 from enum import IntEnum
 from itertools import count
 from pathlib import Path
@@ -31,7 +32,6 @@ class SchoolError(BaseException):
 
 class School(Group):
 
-    _id = count()
     __slots__ = (
         "id",
         "coordinates",
@@ -52,7 +52,6 @@ class School(Group):
 
     def __init__(
         self,
-        school_name: int,
         coordinates: Tuple[float, float],
         n_pupils_max: int,
         n_teachers_max: int,
@@ -83,7 +82,6 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__()
-        self.id = school_id
         self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
         self.coordinates = coordinates
         self.super_area = None
@@ -245,14 +243,13 @@ class Schools:
         }
         # build schools
         schools = []
-        for school_name, row in school_df.iterrows():
+        for _, row in school_df.iterrows():
             n_pupils_max = row["NOR"]
             school_type = row["sector"]
             if school_type is np.nan:  # TODO double check dataframe
                 school_type = list(employee_per_clients.keys())[0]
             n_teachers_max = int(n_pupils_max / employee_per_clients[school_type])
             school = School(
-                school_name,
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 n_pupils_max,
                 n_teachers_max,

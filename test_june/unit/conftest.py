@@ -2,7 +2,7 @@ from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
 import june.interaction as inter
-from june.infection.health_index import HealthIndex
+from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
@@ -36,7 +36,7 @@ def create_symptoms():
 
 @pytest.fixture(name="symptoms_constant", scope="session")
 def create_symptoms_constant():
-    reference_health_index = HealthIndex().get_index_for_age(40)
+    reference_health_index = HealthIndexGenerator.from_file()(40, 'm')
     return sym.SymptomsConstant(health_index=reference_health_index)
 
 
@@ -99,3 +99,4 @@ def create_simulator_box(world_box, interaction, infection):
     return Simulator.from_file(
         world_box, interaction, infection, config_filename=config_file
     )
+
