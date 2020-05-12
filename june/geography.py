@@ -100,7 +100,7 @@ class SuperArea:
     ):
         self.id = next(self._id)
         self.name = name
-        self.coordinates = coordinates[[1, 0]]
+        self.coordinates = coordinates
         self.areas = areas
         self.workers = set()
 
@@ -167,7 +167,6 @@ class Geography:
             areas = area_coords.apply(
                 lambda row: self._create_area(row, super_area), axis=1, result_type='expand'
             ).values
-            raise ValueError
         except TypeError:
             return [self._create_area(area_coords, super_area)]
         return areas
