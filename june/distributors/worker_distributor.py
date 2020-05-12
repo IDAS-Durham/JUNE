@@ -130,7 +130,7 @@ class WorkerDistributor:
         self.sector_distribution_female = stats.rv_discrete(
             values=(numbers, distribution_female)
         )
-        self.industry_dict = {
+        self.sector_dict = {
             (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_col)
         }
         self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
@@ -165,10 +165,10 @@ class WorkerDistributor:
         Employ people in a given SuperArea.
         """
         if person.sex == "f":
-            industry_id = self.sector_female_rnd[i]
+            sector_idx = self.sector_female_rnd[i]
         else:
-            industry_id = self.sector_male_rnd[i]
-        person.industry = self.industry_dict[industry_id]
+            sector_idx = self.sector_male_rnd[i]
+        person.sector = self.sector_dict[sector_idx]
 
         if person.sector in list(self.sub_sector_ratio.keys()):
             self._assign_sub_sector(person)
@@ -179,14 +179,14 @@ class WorkerDistributor:
         Assign sub-sector job as defined in config
         """
         MC_random = np.random.uniform()
-        ratio = self.sub_sector_ratio[person.industry][person.sex]
-        distr = self.sub_sector_distr[person.industry][person.sex]
+        ratio = self.sub_sector_ratio[person.sector][person.sex]
+        distr = self.sub_sector_distr[person.sector][person.sex]
         if MC_random < ratio:
             sub_sector_idx = stats.rv_discrete(
                 values=(np.arange(len(distr)), distr)
             ).rvs(size=1)
             person.sub_sector = (
-                self.sub_sector_distr[person.industry]["label"][sub_sector_idx]
+                self.sub_sector_distr[person.sector]["label"][sub_sector_idx[0]]
             )
 
 
