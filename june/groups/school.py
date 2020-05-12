@@ -96,12 +96,10 @@ class School(Group):
 
     def add(self, person, qualifier=GroupType.students):
         if qualifier == self.GroupType.students:
+            super().add(person, qualifier)
             self.subgroups[1 + person.age - self.age_min].append(person)
             person.school = self
-            person.groups.append(self)
         else:
-            super().add(person, qualifier)
-            person.groups.append(self)
             super().add(person, qualifier)
 
 

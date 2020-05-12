@@ -26,7 +26,7 @@ class DemographyError(BaseException):
 
 
 class AgeSexGenerator:
-    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list):
+    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list, max_age=99):
         """
         age_counts is an array where the index in the array indicates the age,
         and the value indicates the number of counts in that age.
@@ -58,10 +58,11 @@ class AgeSexGenerator:
         sexes = map(lambda x: ["m", "f"][x], sexes)
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
+        self.max_age = max_age
 
     def age(self) -> int:
         try:
-            return next(self.age_iterator)
+            return min(next(self.age_iterator), self.max_age)
         except StopIteration:
             raise DemographyError("No more people living here!")
 

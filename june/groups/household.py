@@ -39,7 +39,6 @@ class Household(Group):
     def add(self, person, qualifier=GroupType.adults):
         super().add(person, qualifier)
         person.household = self
-        person.groups.append(self)
 
     def select_random_parent(self):
         parents = [
