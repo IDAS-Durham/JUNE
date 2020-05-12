@@ -24,16 +24,3 @@ def test__world_has_everything(world):
     assert isinstance(world.households, Households)
     assert isinstance(world.hospitals, Hospitals)
     assert isinstance(world.carehomes, CareHomes)
-    # hospital = world.hospitals.members[0]
-    # print(world.hospitals.members)
-    # assert len(hospital.subgroups[hospital.GroupType.workers].people) != 0
-
-
-#
-# def test__world_with_companies(geography):
-#    geography.companies = Companies.for_geography(geography)
-#    world = World.from_geography(geography)
-#    assert hasattr(world, 'companies')
-#    assert isinstance(world.companies, Companies)
-#
-#

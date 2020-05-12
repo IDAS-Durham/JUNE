@@ -1,7 +1,6 @@
 import logging
 import os
 from enum import IntEnum
-from itertools import count
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -36,7 +35,6 @@ class Company(Group):
     and therefore we invoke the base class group with the default Ngroups = 1.
     We made this explicit here, although it is not necessary.
     """
-    _id = count()
     __slots__ = "id", "super_area", "n_woman", "employees", "industry", "n_employees_max"
 
     class GroupType(IntEnum):

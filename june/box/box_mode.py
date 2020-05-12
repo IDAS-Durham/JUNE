@@ -5,7 +5,7 @@ from june.demography import Population
 
 class Box(Group):
     def __init__(self):
-        super().__init__(None, "box")
+        super().__init__()
     
     def set_population(self, population: Population):
         for person in population.people:

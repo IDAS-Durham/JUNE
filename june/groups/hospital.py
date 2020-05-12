@@ -42,8 +42,6 @@ class Hospital(Group):
     2 - ICU patients
     """
 
-    _id = count()
-
     class GroupType(IntEnum):
         workers = 0
         patients = 1
@@ -72,8 +70,7 @@ class Hospital(Group):
         msoa_name:
             name of the msoa area the hospital belongs to
         """
-        self.id = next(self._id)
-        super().__init__(f"Hospital_{self.id}", "hospital")
+        super().__init__()
         self.super_area = super_area
         self.coordinates = coordinates
         self.n_beds = n_beds
