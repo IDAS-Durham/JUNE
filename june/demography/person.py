@@ -148,6 +148,8 @@ class Person:
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
         self.groups = []
+        self.sector = None
+        self.sub_sector = None
         self.industry_specific = None
         self.company_id = None
         self.hospital = None

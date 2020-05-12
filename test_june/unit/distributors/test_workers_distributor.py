@@ -27,17 +27,33 @@ working_age_min = 18
 working_age_min = 65
 default_key_compsec_id = ["P", "Q"]
 
-@pytest.fixture(name="geography_workers", scope="module")
+@pytest.fixture(name="geography", scope="session")
 def create_geography():
     return Geography.from_file(filter_key={"msoa" : ["E02002559", "E02002560", "E02002561"]})
 
 
-@pytest.fixture(name="population_workers", scope="module")
-def create_population(geography_workers):
-    demography = Demography.for_geography(geography_workers)
-    return demography.populate(geography_workers.areas)
+@pytest.fixture(name="population", scope="session")
+def create_population(geography):
+    demography = Demography.for_geography(geography)
+    return demography.populate(geography.areas)
 
 
-def test__workers_distribution_for_geography(geography_workers, population_workers):
-    workers_distributor = WorkerDistributor.for_geography(geography_workers)
-    return workers_distributor.distribute(geography_workers, population_workers)
+def test__workers_distribution_for_geography(geography, population):
+    workers_distributor = WorkerDistributor.for_geography(geography)
+    return workers_distributor.distribute(geography, population)
+
+# work in progress:
+#def test__sub_sector_ratio_for_geography(geography, population):
+#    workers_distributor = WorkerDistributor.for_geography(geography)
+#    workers_distributor.distribute(geography, population)
+#    sex, sector, sub_sector = np.array([
+#        [person.sex, person.sector, person.sub_sector]
+#        for person in population.people
+#    ]).T
+#    idx = np.where(sector == "P")[0]
+#    print(idx)
+#    ratio
+
+
+
+
