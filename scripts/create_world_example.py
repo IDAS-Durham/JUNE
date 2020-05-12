@@ -23,7 +23,4 @@ world = World(geography, demography, include_households=True)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving pickle...")
-
-with open("test.pkl", "wb") as f:
-    pickle.dump(world, f)
 world.to_pickle("test.pkl")
