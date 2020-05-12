@@ -235,8 +235,8 @@ class SchoolDistributor:
                 school.age_structure[person.age] += 1
                 school.n_pupils += 1
 
-    def distribute_teachers_to_schools_in_geography(self, geography: Geography):
-        for msoarea in geography.super_areas:
+    def distribute_teachers_to_schools_in_super_areas(self, super_areas: List[SuperArea]):
+        for msoarea in super_areas:
             self.distribute_teachers_to_school(msoarea)
 
     def distribute_teachers_to_school(self, msoarea: SuperArea):
