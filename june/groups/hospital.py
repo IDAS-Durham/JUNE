@@ -107,7 +107,6 @@ class Hospital(Group):
         super().add(person, qualifier)
         if qualifier in [self.GroupType.patients, self.GroupType.icu_patients]:
             person.in_hospital = self
-        person.groups.append(self)
 
     def add_as_patient(self, person):
         """

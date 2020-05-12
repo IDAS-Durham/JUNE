@@ -270,9 +270,11 @@ class HouseholdDistributor:
         """
         men_by_age = {}
         women_by_age = {}
+        self.total_people = 0
         for person in area.people:
             if person.carehome is not None:
                 continue
+            self.total_people += 1
             if person.sex == "m":
                 if person.age not in men_by_age:
                     men_by_age[person.age] = [person]
@@ -283,6 +285,8 @@ class HouseholdDistributor:
                     women_by_age[person.age] = [person]
                 else:
                     women_by_age[person.age].append(person)
+        print(men_by_age.keys())
+        print(women_by_age.keys())
         return men_by_age, women_by_age
 
     def _distribute_people_and_households_to_area_single(
@@ -313,9 +317,6 @@ class HouseholdDistributor:
             number_households_dict,
             n_students,
             n_communal,
-            # household_numbers_df.loc[area.name].to_dict(),
-            # n_students_df.loc[area.name].values[0],
-            # n_communal_df.loc[area.name].values[0],
         )
         area.households = households
         return households
@@ -422,6 +423,7 @@ class HouseholdDistributor:
         households_with_extra_youngadults = []
         households_with_kids = []
         all_households = []
+        total_people = count_remaining_people(men_by_age, women_by_age)
         if not men_by_age and not women_by_age:
             raise HouseholdError("No people in Area!")
         total_number_of_households = 0
@@ -713,6 +715,7 @@ class HouseholdDistributor:
             all_households,
         )
 
+
         # make sure we have the correct number of households
         if not (
             total_number_of_households - communal_houses
@@ -724,7 +727,14 @@ class HouseholdDistributor:
         all_households = [
             household for household in all_households if household.size > 0
         ]
-
+        people_in_households = 0
+        for household in all_households:
+            people_in_households += len(household.people)
+        print(total_people)
+        print(people_in_households)
+        print(men_by_age.keys())
+        print(women_by_age.keys())
+        assert total_people == people_in_households
         return all_households
 
     def _create_household(

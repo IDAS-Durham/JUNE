@@ -49,7 +49,8 @@ def test__age_sex_generator():
 
 class TestDemography:
     def test__demography_for_areas(self):
-        area = Area(name="E00088544")
+        geography = Geography.from_file({"oa" : ["E00088544"]})
+        area = list(geography.areas)[0]
         demography = d.Demography.for_areas(area_names=[area.name])
         population = demography.populate([area])
         assert len(population) == 362
