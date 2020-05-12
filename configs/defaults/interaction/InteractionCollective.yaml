@@ -8,3 +8,4 @@ intensities:
   household: 1.
   box: 1.
   cemetery: 1.
+  test_group: 1.

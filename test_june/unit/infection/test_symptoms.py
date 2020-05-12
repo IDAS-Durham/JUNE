@@ -22,7 +22,7 @@ class TestSymptoms:
 
         assert symptom.tag == "healthy"
 
-        symptom = sym.Symptoms(health_index=[0.,0.1, 0.2, 0.3, 0.4, 0.5,1.])
+        symptom = sym.Symptoms(health_index=[0.1, 0.2, 0.3, 0.4, 0.5])
 
         symptom.severity = 0.01
 
@@ -80,7 +80,7 @@ class TestSymptomsGaussian:
         # dt = 1.0
         # np.exp(-(1.0 ** 2) / 3.0 ** 2) = 0.89483
 
-        assert symptom.severity == pytest.approx(symptom.maxseverity * 0.89483, 1.0e-4)
+        assert symptom.severity == pytest.approx(symptom.max_severity * 0.89483, 1.0e-4)
 
         symptom = sym.SymptomsGaussian(
             health_index=None, mean_time=3.0, sigma_time=5.0
@@ -91,7 +91,7 @@ class TestSymptomsGaussian:
         # dt = 2.0 - (1.0 + 3.0)
         # np.exp(-(dt ** 2) / 5.0 ** 2)
 
-        assert symptom.severity == pytest.approx(symptom.maxseverity * 0.85214, 1.0e-4)
+        assert symptom.severity == pytest.approx(symptom.max_severity * 0.85214, 1.0e-4)
 
 
 class TestSymptomsStep:
@@ -112,7 +112,7 @@ class TestSymptomsStep:
 
         symptom.update_severity_from_delta_time(delta_time=1.5)
 
-        assert symptom.severity == symptom.maxseverity
+        assert symptom.severity == symptom.max_severity
 
         symptom.update_severity_from_delta_time(delta_time=0.1)
 
@@ -149,7 +149,7 @@ class TestSymptomsTanh:
 
         symptom.update_severity_from_delta_time(delta_time=1.0)
 
-        assert symptom.severity == pytest.approx(symptom.maxseverity * 0.89035, 1.0e-4)
+        assert symptom.severity == pytest.approx(symptom.max_severity * 0.89035, 1.0e-4)
 
         # Time since start > max time
         # severity = 1.0 + np.tanh(3.14 * (end_time - time_since_start) / self.delta_end)) / 2.0
@@ -157,7 +157,7 @@ class TestSymptomsTanh:
 
         symptom.update_severity_from_delta_time(delta_time=2.5)
 
-        assert symptom.severity == pytest.approx(symptom.maxseverity * 0.99762, 1.0e-4)
+        assert symptom.severity == pytest.approx(symptom.max_severity * 0.99762, 1.0e-4)
 
         # Time > end_time
         # severity = 0.0
