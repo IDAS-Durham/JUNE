@@ -40,7 +40,7 @@ def get_seed(geography, infection, demography):
             'region': REGION_LIST
             }
             )
-    return Seed(geography, infection, HealthIndexGenerator.from_file(), super_area_to_region)
+    return Seed(geography, infection, HealthIndexGenerator.from_file(), None, super_area_to_region)
 
 
 def test__filter_region(seed):
