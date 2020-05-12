@@ -16,13 +16,11 @@ ALLOWED_SYMPTOM_TAGS = [
 ]
 
 
-
 class Symptoms:
     def __init__(self, health_index=0.):
 
-        self.severity = 0
         self.health_index = health_index
-        self.maxseverity = random.random()
+        self.max_severity = random.random()
         self.tags = ALLOWED_SYMPTOM_TAGS
         self.severity = 0.0
 
@@ -36,7 +34,7 @@ class Symptoms:
     def tag(self):
         if self.severity <= 0.0:
             return "healthy"
-        index = np.searchsorted(self.health_index, self.severity)-1
+        index = np.searchsorted(self.health_index, self.severity)
         return self.tags[index]
 
     @classmethod
@@ -71,14 +69,14 @@ class SymptomsGaussian(Symptoms):
 
         self.mean_time = max(0.0, mean_time)
         self.sigma_time = max(0.001, sigma_time)
-        self.maxseverity = random.random()
+        self.max_severity = random.random()
         self.recovery_rate = recovery_rate
 
     def update_severity_from_delta_time(self, delta_time):
 
         dt = delta_time - self.mean_time
 
-        self.severity = self.maxseverity * np.exp(-(dt ** 2) / self.sigma_time ** 2)
+        self.severity = self.max_severity * np.exp(-(dt ** 2) / self.sigma_time ** 2)
     
     def is_recovered(self, delta_time):
         prob_recovery = 1.0 - np.exp(-self.recovery_rate * delta_time)
@@ -92,12 +90,12 @@ class SymptomsStep(Symptoms):
 
         self.time_offset = max(0.0, time_offset)
         self.end_time = max(0.0, end_time)
-        self.maxseverity = random.random()
+        self.max_severity = random.random()
 
     def update_severity_from_delta_time(self, delta_time):
 
-        if self.time_offset < delta_time < self.end_time:
-            severity = self.maxseverity
+        if self.time_offset <= delta_time <= self.end_time:
+            severity = self.max_severity
         else:
             severity = 0.0
 
@@ -131,5 +129,5 @@ class SymptomsTanh(Symptoms):
 
         print(severity)
 
-        severity *= self.maxseverity
+        severity *= self.max_severity
         self.severity = severity

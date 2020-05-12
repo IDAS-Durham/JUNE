@@ -13,7 +13,6 @@ from june.box import Box, Boxes, BoxGenerator
 from june.commute import CommuteGenerator
 from june.groups import *
 from june.distributors import *
-from june.infection.health_index import HealthIndex
 from june.demography.person import Person, People
 from june.demography.person_distributor import PersonDistributor
 from june.infection import Infection

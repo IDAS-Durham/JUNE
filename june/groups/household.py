@@ -1,10 +1,9 @@
-from itertools import count
+from enum import IntEnum
 
 import numpy as np
 import random
 
 from june.groups.group import Group
-from enum import IntEnum
 
 
 class Household(Group):
@@ -19,7 +18,7 @@ class Household(Group):
     """
     __slots__ = "area", "household_composition", "communal", "max_size"
 
-    _id = count()
+    spec = "household"
 
     class GroupType(IntEnum):
         kids = 0
@@ -28,8 +27,7 @@ class Household(Group):
         old_adults = 3
 
     def __init__(self, composition=None, communal=False, area=None, max_size=np.inf):
-        house_id = next(self._id)
-        super().__init__(f"Household_{house_id}", "household")
+        super().__init__()
         self.area = area
         self.household_composition = composition
         self.communal = communal
