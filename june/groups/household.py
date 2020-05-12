@@ -4,6 +4,8 @@ import numpy as np
 import random
 
 from june.groups.group import Group
+from enum import IntEnum
+from typing import List
 
 
 class Household(Group):
@@ -18,7 +20,6 @@ class Household(Group):
     """
     __slots__ = "area", "household_composition", "communal", "max_size"
 
-    spec = "household"
 
     class GroupType(IntEnum):
         kids = 0
@@ -38,7 +39,6 @@ class Household(Group):
     def add(self, person, qualifier=GroupType.adults):
         super().add(person, qualifier)
         person.household = self
-        person.groups.append(self)
 
     def select_random_parent(self):
         parents = [
@@ -68,9 +68,16 @@ class Households:
     """
     Contains all households for the given area, and information about them.
     """
+    __slots__ = "members"
 
-    def __init__(self):
-        self.members = []
+    def __init__(self, households: List[Household]):
+        self.members = households
+
+    def __iter__(self):
+        return iter(self.members)
+    
+    def __len__(self):
+        return len(self.members)
 
     def __add__(self, households: "Households"):
         """

@@ -26,7 +26,7 @@ class DemographyError(BaseException):
 
 
 class AgeSexGenerator:
-    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list):
+    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list, max_age=99):
         """
         age_counts is an array where the index in the array indicates the age,
         and the value indicates the number of counts in that age.
@@ -58,10 +58,11 @@ class AgeSexGenerator:
         sexes = map(lambda x: ["m", "f"][x], sexes)
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
+        self.max_age = max_age
 
     def age(self) -> int:
         try:
-            return next(self.age_iterator)
+            return min(next(self.age_iterator), self.max_age)
         except StopIteration:
             raise DemographyError("No more people living here!")
 
@@ -91,6 +92,40 @@ class Population:
 
     def __iter__(self):
         return iter(self.people)
+
+    @property
+    def members(self):
+        return self.people
+
+    @property
+    def total_people(self):
+        return len(self.members)
+
+
+    @property
+    def infected(self):
+        return [
+            person for person in self.people
+            if person.health_information.infected and not 
+                    person.health_information.dead
+            
+        ]
+
+    @property
+    def susceptible(self):
+        return [
+            person for person in self.people
+            if person.health_information.susceptible 
+            
+        ]
+
+    @property
+    def recovered(self):
+        return [
+            person for person in self.people
+            if person.health_information.recovered
+            
+        ]
 
 
 class Demography:
@@ -141,9 +176,9 @@ class Demography:
         -------
         A population of people
         """
+        people = list()
         for area in areas:
             # TODO: this could be make faster with map()
-            people = list()
             age_and_sex_generator = self.age_sex_generators[area.name]
             for _ in range(age_and_sex_generator.n_residents):
                 person = Person(
@@ -258,29 +293,3 @@ def _load_age_and_sex_generators(
             age_structre.values, female_ratios.index.values, female_ratios.values
         )
     return ret
-
-
-if __name__ == "__main__":
-    from time import time
-    import resource
-
-    def using(point=""):
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        return """%s: usertime=%s systime=%s mem=%s mb
-               """ % (
-            point,
-            usage[0],
-            usage[1],
-            usage[2] / 1024.0,
-        )
-
-    t1 = time()
-    print(using("before"))
-    geo = Geography.from_file(filter_key={"oa" : ["E00088544"]})
-    demography = Demography.for_areas(["E00088544"])
-    population = demography.populate(geo.areas)
-    t2 = time()
-    print(using("after"))
-    print(f"Took {t2-t1} seconds to populate the UK.")
-
-    print(len(population))
