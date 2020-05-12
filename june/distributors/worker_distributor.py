@@ -17,7 +17,7 @@ from june.logger_creation import logger
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
 default_workflow_file = default_base_path / \
-    "data/processed/flow_in_msoa_wu01ew_2011.csv"
+        "data/processed/flow_in_msoa_wu01ew_2011.csv"
 default_sex_per_sector_per_superarea_file = default_base_path / \
         "data/processed/census_data/company_data/companysector_by_sex_cleaned.csv"
 default_areas_map_path = default_base_path / \
@@ -89,7 +89,7 @@ class WorkerDistributor:
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
             for idx, person in enumerate(area.people):
                 if self.age_range[0] <= person.age <= self.age_range[1]:
-                    self._assign_work_location(idx, person)
+                    self._assign_work_location(idx, person, wf_area_df)
                     self._assign_work_sector(idx, person)
         logger.info(f"There are {self.n_boundary_workers} who had to be told to stay real")
 
@@ -139,18 +139,22 @@ class WorkerDistributor:
         self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
 
     
-    def _assign_work_location(self, i: int, person: Person):
+    def _assign_work_location(self, i: int, person: Person, wf_area_df: pd.DataFrame):
         """
         Employ people in any given sector.
         """
         if person.sex == "f":
-            work_location = self.workflow_df.index.values[self.work_msoa_woman_rnd[i]]
+            work_location = wf_area_df.index.values[self.work_msoa_woman_rnd[i]]
         else:
-            work_location = self.workflow_df.index.values[self.work_msoa_man_rnd[i]]
-        super_areas = [super_area.name for super_area in self.geography.super_areas]
-        idx = np.where(super_areas == work_location)[0]
-        if len(idx) != 0:
-            self.geography.super_areas.members[idx].add_worker(person)
+            work_location = wf_area_df.index.values[self.work_msoa_man_rnd[i]]
+        super_area = [
+            super_area
+            for super_area in self.geography.super_areas
+            if super_area.name == work_location
+        ]
+        if len(super_area) != 0:
+            super_area = super_area[0]
+            super_area.add_worker(person)
         else:
             #TODO count people who work outside of the region we currently simulate
             idx = np.random.choice(np.arange(len(self.geography.super_areas)))
@@ -169,10 +173,10 @@ class WorkerDistributor:
         person.industry = self.industry_dict[industry_id]
 
         if person.sector in list(self.sub_sector_ratio.keys()):
-            self._assign_key_industry(person)
+            self._assign_sub_sector(person)
 
 
-    def _assign_key_industry(self, person):
+    def _assign_sub_sector(self, person):
         """
         Assign sub-sector job as defined in config
         """
