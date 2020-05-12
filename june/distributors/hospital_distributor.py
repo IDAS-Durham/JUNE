@@ -69,7 +69,7 @@ class HospitalDistributor:
         """
         hospitals_in_msoa = self.hospitals_in_msoa(msoa)
         if len(hospitals_in_msoa) == 0:
-            return None
+            return
         medics = [
             person
             for idx, person in enumerate(msoa.workers)
@@ -77,7 +77,7 @@ class HospitalDistributor:
         ]
         if len(medics) == 0:
             logger.info(f"\n The MSOArea {msoa.name} has no people that work in it!")
-            return None
+            return
         else:
             # equal chance to work in any hospital nearest to any area within msoa
             # Note: doing it this way rather then putting them into the area which

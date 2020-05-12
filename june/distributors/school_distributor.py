@@ -11,18 +11,16 @@ from june.geography import Geography
 from june.geography import Area, SuperArea
 from june.groups.school import School, Schools
 
+default_data_folder = Path(os.path.abspath(__file__)).parent.parent.parent
 
 default_data_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/school_data/england_schools_data.csv"
+    default_data_folder / "data/processed/school_data/england_schools_data.csv"
 )
 default_areas_map_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/geographical_data/oa_msoa_region.csv"
+    default_data_folder / "data/processed/geographical_data/oa_msoa_region.csv"
 )
 default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/distributors/school_distributor.yaml"
+    default_data_folder / "configs/defaults/distributors/school_distributor.yaml"
 )
 
 logger = logging.getLogger(__name__)
@@ -169,9 +167,7 @@ class SchoolDistributor:
                     school = closest_schools_by_age[person.age][random_number]
                 else:
                     schools_full = 0
-                    for i in range(
-                        0, self.neighbour_schools
-                    ):  # look for non full school
+                    for i in range(self.neighbour_schools):  # look for non full school
                         if i >= len(closest_schools_by_age[person.age]):
                             break
                         school = closest_schools_by_age[person.age][i]
@@ -215,9 +211,7 @@ class SchoolDistributor:
                     continue
                 else:
                     schools_full = 0
-                    for i in range(
-                        0, self.neighbour_schools
-                    ):  # look for non full school
+                    for i in range(self.neighbour_schools):  # look for non full school
                         if i >= len(closest_schools_by_age[person.age]):
                             # TEST THIS
                             break
@@ -235,7 +229,9 @@ class SchoolDistributor:
                 school.age_structure[person.age] += 1
                 school.n_pupils += 1
 
-    def distribute_teachers_to_schools_in_super_areas(self, super_areas: List[SuperArea]):
+    def distribute_teachers_to_schools_in_super_areas(
+        self, super_areas: List[SuperArea]
+    ):
         for msoarea in super_areas:
             self.distribute_teachers_to_school(msoarea)
 

@@ -287,7 +287,6 @@ class Hospitals:
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
         hospitals = []
-        hospital_counter = 0
         for super_area in geography.super_areas:
             if super_area.name in hospital_df.index:
                 hospitals_in_area = hospital_df.loc[super_area.name]
@@ -296,16 +295,12 @@ class Hospitals:
                         super_area, hospitals_in_area, icu_fraction
                     )
                     hospitals.append(hospital)
-                    hospital_counter += 1
-                    if hospital_counter == total_hospitals:
-                        break
                 else:
                     for _, row in hospitals_in_area.iterrows():
                         cls.create_hospital_from_df_row(super_area, row, icu_fraction)
                         hospitals.append(hospital)
-                        hospital_counter += 1
-                        if hospital_counter == total_hospitals:
-                            break
+                if len(hospitals) == total_hospitals:
+                    break
         return cls(hospitals, max_distance, False)
 
     @classmethod

@@ -8,9 +8,7 @@ class Box(Group):
         super().__init__()
     
     def set_population(self, population: Population):
-        for person in population.people:
-            self.people.add(person)
-
+        self.people.update(population)
 
 class Boxes:
     def __init__(self, boxes: List[Box]):

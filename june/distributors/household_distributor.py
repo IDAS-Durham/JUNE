@@ -5,6 +5,7 @@ from pathlib import Path
 from collections import OrderedDict
 from typing import List
 from itertools import chain
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -268,23 +269,15 @@ class HouseholdDistributor:
         """
         Creates dictionaries with the men and women per age key living in the area.
         """
-        men_by_age = {}
-        women_by_age = {}
-        self.total_people = 0
+        men_by_age = defaultdict(list)
+        women_by_age = defaultdict(list)
         for person in area.people:
             if person.carehome is not None:
                 continue
-            self.total_people += 1
             if person.sex == "m":
-                if person.age not in men_by_age:
-                    men_by_age[person.age] = [person]
-                else:
-                    men_by_age[person.age].append(person)
+                men_by_age[person.age].append(person)
             else:
-                if person.age not in women_by_age:
-                    women_by_age[person.age] = [person]
-                else:
-                    women_by_age[person.age].append(person)
+                women_by_age[person.age].append(person)
         return men_by_age, women_by_age
 
     def _distribute_people_and_households_to_area_single(
@@ -823,7 +816,7 @@ class HouseholdDistributor:
             maximum age the person should have.
         """
         if age < min_age or age > max_age:
-            return None
+            return 
 
         compatible_ages = np.array(list(first_dict.keys()))
         compatible_ages = compatible_ages[
@@ -835,7 +828,7 @@ class HouseholdDistributor:
                 (min_age <= compatible_ages) & (compatible_ages <= max_age)
             ]
             if len(compatible_ages) == 0:
-                return None
+                return 
             first_dict = second_dict
         closest_age = get_closest_element_in_array(compatible_ages, age)
         person = first_dict[closest_age].pop()
@@ -1011,7 +1004,7 @@ class HouseholdDistributor:
             Number of student houses in this area.
         """
         if n_students == 0:
-            return None
+            return 
         # students per household
         ratio = max(int(n_students / student_houses_number), 1)
         # get all people in the students age
@@ -1202,7 +1195,6 @@ class HouseholdDistributor:
                     first_parent, men_by_age, women_by_age
                 )
                 if second_parent is not None:
-                    # return None
                     self._add_to_household(household, second_parent, subgroup="adults")
 
             if kids_per_house == 2:
