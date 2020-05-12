@@ -73,7 +73,7 @@ class HospitalDistributor:
         medics = [
             person
             for idx, person in enumerate(msoa.workers)
-            if person.industry == self.healthcare_sector_label
+            if person.sector == self.healthcare_sector_label
         ]
         if len(medics) == 0:
             logger.info(f"\n The MSOArea {msoa.name} has no people that work in it!")
@@ -92,7 +92,7 @@ class HospitalDistributor:
             hospitals_rnd_arr = areas_rv.rvs(size=len(medics))
 
             for i, medic in enumerate(medics):
-                if medic.industry_specific is not None:
+                if medic.sub_sector is not None:
                     hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
                     # if (hospital.n_medics < hospital.n_medics_max):# and \
                     hospital.add(medic, hospital.GroupType.workers)
