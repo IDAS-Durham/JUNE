@@ -1,11 +1,10 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
 
-from june import world
 from june.demography.person import Person
 from june.groups import TestGroup  # this should not be needed anymore
+from june.infection.health_index import HealthIndexGenerator
 from june.interaction import *
 
 test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
@@ -16,7 +15,7 @@ def test__set_up_collective_from_file():
     assert type(interaction).__name__ == "DefaultInteraction"
 
 
-def days_to_infection(interaction, susceptible_person, group):
+def days_to_infection(interaction, susceptible_person, group, health_index_generator):
     delta_time = 1
     days_to_infection = 0
 
@@ -25,36 +24,38 @@ def days_to_infection(interaction, susceptible_person, group):
             and days_to_infection < 100
     ):
         interaction.single_time_step_for_group(
-            group, 1, delta_time
+            group, health_index_generator, 1, delta_time
         )
 
         days_to_infection += 1
     return days_to_infection
 
 
-#@pytest.mark.parametrize(
+# @pytest.mark.parametrize(
 #    "group_size", (2, 5)
-#)
+
+# )
 def test__time_it_takes_to_infect(config, infection, group_size=2):
     interaction = DefaultInteraction.from_file(test_config_file)
+    health_index_generator = HealthIndexGenerator.from_file()
 
     n_days = []
     for n in range(1000):
-        group = TestGroup(1)
-        infected_person = Person()
-        infection.infect_person_at_time(infected_person, 1)
+        group = TestGroup()
+        infected_person = Person(sex='f', age=26)
+        infection.infect_person_at_time(infected_person, health_index_generator, 1)
         group.add(infected_person, qualifier=TestGroup.GroupType.default)
         group[TestGroup.GroupType.default].infected.add(infected_person)
-        susceptible_person = Person()
+        susceptible_person = Person(sex='m', age=55)
         group.add(susceptible_person, qualifier=TestGroup.GroupType.default)
         for i in range(group_size - 2):
             group.add(Person(), qualifier=TestGroup.GroupType.default)
 
         # activate everyone in the group
         for person in group.people:
-            person.active_group = 'TestGroup'
+            person.active_group = 'test_group'
         n_days.append(
-            days_to_infection(interaction, susceptible_person, group)
+            days_to_infection(interaction, susceptible_person, group,health_index_generator)
         )
 
     np.testing.assert_allclose(
