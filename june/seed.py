@@ -139,9 +139,8 @@ class Seed:
                 list(super_area.people)[choice], self.health_index_generator, 0.0
             )
 
-        # CALL UPDATE HEALTH STATUS from simulator
 
-    def release_per_region(self):
+    def unleash_virus_per_region(self):
         """
         Seed the infection per region, using data on number of infected people/region
 
@@ -152,7 +151,7 @@ class Seed:
             super_areas = self._filter_region(region=region)
             self.infect_super_areas(super_areas, n_cases)
 
-    def release(self, n_cases):
+    def unleash_virus(self, n_cases):
         """
         Seed the infection with n_cases random people being infected,
         proportionally place more cases in the more populated super areas.
