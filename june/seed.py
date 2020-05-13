@@ -136,7 +136,6 @@ class Seed:
                 list(super_area.people)[choice], self.health_index_generator, 0.0
             )
 
-
     def unleash_virus_per_region(self):
         """
         Seed the infection per region, using data on number of infected people/region
