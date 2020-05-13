@@ -14,8 +14,8 @@ class Seed:
         self,
         super_areas: "SuperAreas",
         infection: "Infection",
-        n_cases_region: pd.DataFrame,
-        msoa_region: pd.DataFrame,
+        n_cases_region: pd.DataFrame = None,
+        msoa_region: pd.DataFrame = None,
     ):
         """
         Class to initialize the infection 
