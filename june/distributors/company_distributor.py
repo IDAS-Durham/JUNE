@@ -31,8 +31,6 @@ class CompanyDistributor:
         them
         """
         # shuffle companies
-        print("super area name")
-        print(super_area.name)
         for person in super_area.workers:
             compatible_companies = []
             for company in super_area.companies:
