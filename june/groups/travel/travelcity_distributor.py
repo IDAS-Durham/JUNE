@@ -4,26 +4,34 @@ from scipy import spatial
 
 class TravelCityDistributor:
 
-    def __init__(self, travelcities, msoas_coordinates):
+    def __init__(self, travelcities, msoas):
 
         self.travelcities = travelcities
         self.msoa_coordinates = msoa_coordinates
 
         self._get_msoa_lat_lon()
+        self._get_msoa_names()
 
 
     def _get_msoa_lat_lon(self):
         'Return all MSOA lat/lons as a 2D array'
-       
-        self.lat_msoas = np.array(self.msoa_coordinates['Y'])
-        self.lon_msoas = np.array(self.msoa_coordinates['X'])
-        self.msoas = np.array(self.msoa_coordinates['MSOA11CD'])
-        
-        lat_lon_msoas = np.zeros(len(self.lat_msoas)*2).reshape(len(self.lat_msoas),2)
-        lat_lon_msoas[:,0] = self.lat_msoas
-        lat_lon_msoas[:,1] = self.lon_msoas
 
+        lat_lon_msoas = []
+        msoa_names = []
+        for msoa in self.msoas:
+            lat_lon_msoas.append(msoa.coordinates)
+            msoa_names.append(msoa.name)
+        
         self.lat_lon_msoas = lat_lon_msoas
+        self.msoa_names = msoa_names
+
+    def _get_msoa_names(self):
+
+        msoa_names = []
+        for msoa in self.msoas:
+            msoa_names.append(msoa.name)
+
+        self.msoa_names = np.array(msoa_names)
 
     def distribute_msoas(self):
 
@@ -38,8 +46,9 @@ class TravelCityDistributor:
 
         centroids_kd = spatial.KDTree(metro_centroids)
 
-        for msoa in self.msoas:
+        for idx, msoa_coord in enumerate(self.lat_lon_msoas):
 
-            travel_cities[centroids_kd.query(msoa, 1)[1]].msoa = msoa
+            # append msoa class to travel_cities
+            travel_cities[centroids_kd.query(msoa_coord, 1)[1]].msoa = self.msoas[idx]
 
         
