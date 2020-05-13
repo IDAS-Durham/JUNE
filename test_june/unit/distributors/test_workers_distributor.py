@@ -43,12 +43,10 @@ def test__worker_population(worker_geography):
     demography = Demography.for_geography(worker_geography)
     population = list()
     for area in worker_geography.areas:
-        people = demography.populate(area.name)
+        area.populate(demography)
         population.extend(
-            people
+            area.people
         )
-        for person in people:
-            area.add(person)
     distributor = WorkerDistributor.for_geography(worker_geography)
     distributor.distribute(worker_geography, population)
     return population
