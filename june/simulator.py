@@ -48,6 +48,7 @@ class Simulator:
         self.permanent_group_hierarchy = [
             "boxes",
             "hospitals",
+            "commute",
             "companies",
             "schools",
             "carehomes",
