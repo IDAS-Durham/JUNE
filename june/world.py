@@ -59,7 +59,7 @@ class World:
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
             self.people = demography.populate(geography.areas)
-            self.boxes = Boxes([Box()])
+            self.boxes = Boxes([Box(self.people)])
             self.boxes.members[0].set_population(self.people)
             return None
         self.areas = geography.areas

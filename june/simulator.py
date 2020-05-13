@@ -61,7 +61,7 @@ class Simulator:
         self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
-            self.world, self.timer, config, config["logger"]["save_path"],
+            self, self.world, self.timer, config["logger"]["save_path"],
         )
 
     @classmethod
@@ -210,7 +210,7 @@ class Simulator:
             elif health_information.in_hospital:
                 self.hospitalise_the_sick(person)
 
-            elif health_information.dead:
+            elif health_information.dead and not self.world.box_mode:
                 self.bury_the_dead(person)
 
     def do_timestep(self):

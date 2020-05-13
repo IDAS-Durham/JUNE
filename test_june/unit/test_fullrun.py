@@ -13,12 +13,13 @@ from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.simulator import Simulator
 from june import World
+from june.seed import Seed
 
 
 def test_full_run(simulator):
 
     seed = Seed(simulator.world.super_areas, simulator.infection, )
-    seed.unleash_virus(1000)
+    seed.unleash_virus(100)
     simulator.run()
     simulator.logger.plot_infection_curves_per_day()
 
