@@ -33,7 +33,47 @@ default_logging_config_filename = (
 logger = logging.getLogger(__name__)
 
 
-class Area:
+class GeographicalUnit:
+    """
+    Template for a geography group.
+    """
+
+    def __init__(self, references_to_people=None, references_to_smaller_areas=None):
+        self.members = []
+        self.references_to_people = references_to_people
+        self.references_to_smaller_areas = references_to_smaller_areas
+
+    def __iter__(self):
+        return iter(self.members)
+
+    def __len__(self):
+        return len(self.members)
+
+    def __getitem__(self, item):
+        return self.members[item]
+
+    @classmethod
+    def from_file(cls):
+        raise NotImplementedError(
+            "From file initialization not available for this supergroup."
+        )
+
+    def erase_people_from_groups_and_subgroups(self):
+        """
+        Sets all attributes in self.references_to_people to None for all groups.
+        Erases all people from subgroups.
+        """
+        if self.references_to_smaller_areas is not None:
+            for reference in self.references_to_smaller_areas:
+                setattr(self, reference, None)
+
+        for geo_unit in self:
+            if self.references_to_people is not None:
+                for reference in self.references_to_people:
+                    setattr(geo_unit, reference, None)
+
+
+class Area(GeographicalUnit):
     """
     Fine geographical resolution.
     """
@@ -50,14 +90,12 @@ class Area:
     _id = count()
 
     def __init__(
-        self,
-        name: str,
-        super_area: "SuperArea",
-        coordinates: Tuple[float, float],
+        self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
     ):
         """
         Coordinate is given in the format Y, X where X is longitude and Y is latitude.
         """
+        super().__init__()
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
@@ -69,22 +107,17 @@ class Area:
         person.area = self
 
 
-class Areas:
+class Areas(GeographicalUnit):
 
     __slots__ = "members", "super_area"
 
     def __init__(self, areas: List[Area], super_area=None):
+        super().__init__(["people"])
         self.members = areas
         self.super_area = super_area
 
-    def __len__(self):
-        return len(self.members)
 
-    def __iter__(self):
-        return iter(self.members)
-
-
-class SuperArea:
+class SuperArea(GeographicalUnit):
     """
     Coarse geographical resolution.
     """
@@ -93,11 +126,9 @@ class SuperArea:
     _id = count()
 
     def __init__(
-        self,
-        name: str,
-        areas: List[Area],
-        coordinates: Tuple[float, float],
+        self, name: str, areas: List[Area], coordinates: Tuple[float, float],
     ):
+        super().__init__(references_to_smaller_areas=["areas"])
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
@@ -109,15 +140,12 @@ class SuperArea:
         person.work_super_area = self
 
 
-class SuperAreas:
+class SuperAreas(GeographicalUnit):
+    __slots__ = "members"
+
     def __init__(self, super_areas: List[SuperArea]):
+        super().__init__(references_to_people=["workers"])
         self.members = super_areas
-
-    def __len__(self):
-        return len(self.members)
-
-    def __iter__(self):
-        return iter(self.members)
 
 
 class Geography:
@@ -143,8 +171,8 @@ class Geography:
             hierarchy, area_coordinates, super_area_coordinates
         )
 
-    def _create_area(self, row, super_area):
-        area = Area(name=row.name, coordinates=row.values, super_area=super_area)
+    def _create_area(self, name, coordinates, super_area):
+        area = Area(name=name, coordinates=coordinates, super_area=super_area)
         return area
 
     def _create_areas(
@@ -162,13 +190,16 @@ class Geography:
             X, Y where X is longitude and Y is latitude.
         """
         # if a single area is given, then area_coords is a series
-        # and apply doesnt support the axis parameter.
+        # and we cannot do iterrows()
         try:
-            areas = area_coords.apply(
-                lambda row: self._create_area(row, super_area), axis=1, result_type='expand'
-            ).values
-        except TypeError:
-            return [self._create_area(area_coords, super_area)]
+            areas = list(
+                map(
+                    lambda row: self._create_area(row[0], row[1].values, super_area),
+                    area_coords.iterrows(),
+                )
+            )
+        except AttributeError:  # it's a series
+            return [self._create_area(area_coords.name, area_coords.values, super_area)]
         return areas
 
     def create_geographical_units(
@@ -186,7 +217,9 @@ class Geography:
         total_areas_list = []
         super_areas_list = []
         for superarea_name, row in super_area_coordinates.iterrows():
-            super_area = SuperArea(areas=None,name=superarea_name, coordinates=row.values)
+            super_area = SuperArea(
+                areas=None, name=superarea_name, coordinates=row.values
+            )
             areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
             areas_list = self._create_areas(areas_df, super_area)
             super_area.areas = areas_list
@@ -242,9 +275,11 @@ class Geography:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
         areas_coord = areas_coord.loc[geo_hierarchy["oa"]].loc[:, ["Y", "X"]]
-        super_areas_coord = super_areas_coord.loc[
-            geo_hierarchy["msoa"]
-            ].loc[:, ["Y", "X"]].drop_duplicates()
+        super_areas_coord = (
+            super_areas_coord.loc[geo_hierarchy["msoa"]]
+            .loc[:, ["Y", "X"]]
+            .drop_duplicates()
+        )
         geo_hierarchy.set_index("msoa", inplace=True)
         return cls(geo_hierarchy, areas_coord, super_areas_coord)
 
