@@ -1,19 +1,8 @@
-import os
-import pickle
 import logging
-from pathlib import Path
-from typing import List, Tuple, Dict, Optional
-
-import numpy as np
-import yaml
 import pickle
-from tqdm.auto import tqdm  # for a fancy progress bar
 
-from june.groups import Hospitals
 from june.box.box_mode import Boxes, Box
-from june.geography import Geography
-from june.demography import Demography, People
-from june.logger_creation import logger
+from june.demography import Demography
 from june.distributors import (
     SchoolDistributor,
     HospitalDistributor,
@@ -21,6 +10,8 @@ from june.distributors import (
     CareHomeDistributor,
     WorkerDistributor,
 )
+from june.geography import Geography
+from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +25,11 @@ class World:
     """
 
     def __init__(
-        self,
-        geography: Geography,
-        demography: Demography,
-        include_households: bool = True,
-        box_mode = False
+            self,
+            geography: Geography,
+            demography: Demography,
+            include_households: bool = True,
+            box_mode=False
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
@@ -61,7 +52,7 @@ class World:
             self.people = demography.populate(geography.areas)
             self.boxes = Boxes([Box()])
             self.boxes.members[0].set_population(self.people)
-            return None
+            return
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
@@ -76,9 +67,9 @@ class World:
                 self.areas
             )
         if (
-            hasattr(geography, "companies")
-            or hasattr(geography, "hospitals")
-            or hasattr(geography, "schools")
+                hasattr(geography, "companies")
+                or hasattr(geography, "hospitals")
+                or hasattr(geography, "schools")
         ):
             worker_distr = WorkerDistributor.for_geography(
                 geography
@@ -98,12 +89,12 @@ class World:
             self.hospitals = geography.hospitals
             hospital_distributor = HospitalDistributor(geography.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
-        
+
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries
 
     @classmethod
-    def from_geography(cls, geography: Geography, box_mode = False):
+    def from_geography(cls, geography: Geography, box_mode=False):
         """
         Initializes the world given a geometry. The demography is calculated
         with the default settings for that geography.
