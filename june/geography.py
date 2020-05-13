@@ -110,7 +110,7 @@ class SuperArea:
 
     @property
     def people(self):
-        return list(chain(*[area.people for area in self.areas.values]))
+        return list(chain(*[area.people for area in self.areas]))
 
 
 class SuperAreas:
@@ -125,7 +125,7 @@ class SuperAreas:
 
     @property
     def people(self):
-        return list(chain(*[super_area.people for super_area in self.members]))
+        return list(chain(*[super_area.people for super_area in self]))
 
 class Geography:
     def __init__(

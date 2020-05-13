@@ -213,27 +213,6 @@ class Simulator:
             elif health_information.dead:
                 self.bury_the_dead(person)
 
-    def seed(self, n_infections: int):
-        """
-        Randomly pick people in group to seed the infection
-
-        Parameters
-        ----------
-        n_infections:
-            number of random people to infect in the 
-
-        """
-        # TODO: add attribute susceptible to people
-        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(len(group.people), n_infections, replace=False)
-        infecter_reference = self.infection
-        for choice in choices:
-            infecter_reference.infect_person_at_time(
-                list(group.people)[choice], self.health_index_generator, self.timer.now
-            )
-        self.update_health_status(0, 0)
-        # in case someone has to go directly to the hospital
-
     def do_timestep(self):
         """
         Perform a time step in the simulation

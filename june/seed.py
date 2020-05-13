@@ -2,18 +2,18 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import List, Tuple
+from june.infection.health_index import HealthIndexGenerator
 
-default_n_cases_region_filename = Path(__file__).parent / "data/processed/seed/"
+default_n_cases_region_filename = Path(__file__).parent.parent / "data/processed/seed/n_cases_region.csv"
 default_msoa_region_filename = (
-    Path(__file__).parent / "data/processed/geographical_data/oa_msoa_region.csv"
+    Path(__file__).parent.parent / "data/processed/geographical_data/oa_msoa_region.csv"
 )
 
 class Seed:
     def __init__(
         self,
-        geography: "Geography",
+        super_areas: "SuperAreas",
         infection: "Infection",
-        health_index_generator: "HealthIndexGenerator",
         n_cases_region: pd.DataFrame,
         msoa_region: pd.DataFrame,
     ):
@@ -22,32 +22,30 @@ class Seed:
 
         Parameters
         ----------
-        geography:
-            a geography instance containing populated super_areas and areas.
+        super_areas:
+            a SuperAreas instance containing populated super_areas and areas.
         infection:
             an instance of the infection class to infect the selected seed.
-        health_index_generator:
-            an instance of health index generator to assign symptoms to selected seed.
         n_cases_region:
             data frame containing the number of cases per region starting at a given date.
         msoa_region:
             mapping between super areas and regions.
         """
 
-        self.geography = geography
+        self.super_areas = super_areas 
         self.infection = infection
-        self.health_index_generator = health_index_generator
+        self.health_index_generator = HealthIndexGenerator.from_file()
+        self.n_cases_region = n_cases_region
         self.msoa_region = msoa_region
         self.super_area_names = [
-            super_area.name for super_area in geography.super_areas.members
+            super_area.name for super_area in self.super_areas.members
         ]
 
     @classmethod
     def from_file(
         self,
-        geography: "Geography",
+        super_areas: "SuperAreas",
         infection: "Infection",
-        health_index_generator: "HealthIndexGenerator",
         n_cases_region_filename: str = default_n_cases_region_filename,
         msoa_region_filename: str = default_msoa_region_filename,
     ) -> "Seed":
@@ -57,8 +55,8 @@ class Seed:
 
         Parameters
         ----------
-        geography:
-            a geography instance containing populated super_areas and areas.
+        super_areas:
+            a SuperAreas instance containing populated super_areas and areas.
         infection:
             an instance of the infection class to infect the selected seed.
         health_index_generator:
@@ -74,11 +72,10 @@ class Seed:
         """
 
         n_cases_region = pd.read_csv(n_cases_region_filename)
-        msoa_region = pd.read_csv(msoa_region_filename)["msoa", "region"]
+        msoa_region = pd.read_csv(msoa_region_filename)[["msoa", "region"]]
         return Seed(
-            geography,
+            super_areas,
             infection,
-            health_index_generator,
             n_cases_region,
             msoa_region.drop_duplicates(),
         )
@@ -99,7 +96,7 @@ class Seed:
                 self.super_area_names,
             )
         )
-        return np.array(self.geography.super_areas.members)[filter_region]
+        return np.array(self.super_areas.members)[filter_region]
 
     def infect_super_areas(self, super_areas: List["SuperArea"], n_cases: int):
         """
@@ -156,4 +153,4 @@ class Seed:
         Seed the infection with n_cases random people being infected,
         proportionally place more cases in the more populated super areas.
         """
-        self.infect_super_areas(geography.super_areas.members, n_cases)
+        self.infect_super_areas(self.super_areas.members, n_cases)
