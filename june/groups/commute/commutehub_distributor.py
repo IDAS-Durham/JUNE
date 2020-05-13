@@ -1,4 +1,3 @@
-import numpy as np
 from scipy import spatial
 
 
@@ -15,9 +14,9 @@ class CommuteHubDistributor:
         self.msoa_oa_coordinates = msoa_oa_coordinates
         self.commutecities = commutecities
 
-    def _get_msoa_oa(self,oa):
+    def _get_msoa_oa(self, oa):
         'Get MSOA for a give OA'
-        
+
         msoa = self.msoa_oa_coordinates['MSOA11CD'][self.msoa_oa_coordinates['OA11CD'] == oa]
 
         return msoa
@@ -27,7 +26,7 @@ class CommuteHubDistributor:
         lat = float(self.msoa_oa_coordinates['Y'][self.msoa_oa_coordinates['OA11CD'] == oa])
         lon = float(self.msoa_oa_coordinates['X'][self.msoa_oa_coordinates['OA11CD'] == oa])
 
-        return [lat,lon]
+        return [lat, lon]
 
     def distribute_people(self):
 
@@ -60,12 +59,9 @@ class CommuteHubDistributor:
                 live_area = work_person.area.name
                 live_lat_lon = self._get_area_lat_lon(live_area)
                 # find nearest commute hub to the person given where they live
-                _, hub_index = commutehub_tree.query(live_lat_lon,1)
-                
+                _, hub_index = commutehub_tree.query(live_lat_lon, 1)
+
                 commutehub_in_city[hub_index].passengers.append(work_person)
 
             for work_person in to_commute_in:
                 commutecity.commute_internal.append(work_person)
-                    
-                    
-                    
