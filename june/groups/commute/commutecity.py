@@ -1,9 +1,17 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from june.groups.group import Group, Supergroup
 
+class CommuteCityError(BaseException)
 
-class CommuteCity:
+class CommuteCity(Group):
     """
     Defines a city with details about its metropolitan area and who commutes MSOAs within that area.
     """
