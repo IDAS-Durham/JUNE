@@ -15,6 +15,11 @@ default_config_filename = Path(__file__).parent.parent / "configs/config_example
 
 sim_logger = logging.getLogger(__name__)
 
+
+class SimulatorError(BaseException):
+    pass
+
+
 # TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(
@@ -61,7 +66,11 @@ class Simulator:
 
     @classmethod
     def from_file(
-            cls, world: "World", interaction: "Interaction", infection: Infection, config_filename: str=default_config_filename
+        cls,
+        world: "World",
+        interaction: "Interaction",
+        infection: Infection,
+        config_filename: str = default_config_filename,
     ) -> "Simulator":
 
         """
@@ -250,7 +259,11 @@ class Simulator:
                 n_people += len(cemetery.people)
 
         # assert conservation of people
-        assert n_people == len(self.world.people.members)
+        if n_people != len(self.world.people.members):
+            raise SimulatorError(
+                f"Number of people active {n_people} does not match "
+                f"the total people number {len(self.world.people.members)}"
+            )
 
         self.set_allpeople_free()
 

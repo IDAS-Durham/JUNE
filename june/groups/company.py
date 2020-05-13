@@ -1,7 +1,6 @@
 import logging
 import os
 from enum import IntEnum
-from itertools import count
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -10,14 +9,18 @@ import pandas as pd
 from scipy.stats import rv_discrete
 
 from june.geography import Geography
-from june.groups.group import Group
+from june.groups.group import Group, Supergroup
 
-default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
-                    "data/processed/census_data/company_data/"
+default_data_path = (
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "data/processed/census_data/company_data/"
+)
 default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
 default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
-default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
-                         "data/processed/geographical_data/oa_msoa_region.csv"
+default_areas_map_path = (
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "data/processed/geographical_data/oa_msoa_region.csv"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +39,15 @@ class Company(Group):
     and therefore we invoke the base class group with the default Ngroups = 1.
     We made this explicit here, although it is not necessary.
     """
-    _id = count()
-    __slots__ = "id", "super_area", "n_woman", "employees", "industry", "n_employees_max"
+
+    __slots__ = (
+        "id",
+        "super_area",
+        "n_woman",
+        "employees",
+        "industry",
+        "n_employees_max",
+    )
 
     class GroupType(IntEnum):
         workers = 0
@@ -48,7 +58,6 @@ class Company(Group):
 
         # set the max number of employees to be the mean number in a range
         self.n_woman = 0
-        self.employees = []
         self.industry = industry
         self.n_employees_max = n_employees_max
 
@@ -57,7 +66,7 @@ class Company(Group):
         person.company = self
 
 
-class Companies:
+class Companies(Supergroup):
     def __init__(self, companies: List["Companies"]):
         """
         Create companies and provide functionality to allocate workers.
@@ -70,14 +79,15 @@ class Companies:
         compsec_per_msoa_df: pd.DataFrame
             Nr. of companies per industry sector per SuperArea.
         """
+        super().__init__()
         self.members = companies
 
     @classmethod
     def for_geography(
-            cls,
-            geography: Geography,
-            size_nr_file: str = default_size_nr_file,
-            sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
+        cls,
+        geography: Geography,
+        size_nr_file: str = default_size_nr_file,
+        sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
     ) -> "Companies":
         """
         Parameters
@@ -88,19 +98,15 @@ class Companies:
         area_names = [super_area.name for super_area in geography.super_areas]
         if len(area_names) == 0:
             raise CompanyError("Empty geography!")
-        return cls.for_super_areas(
-            area_names,
-            size_nr_file,
-            sector_nr_per_msoa_file
-        )
+        return cls.for_super_areas(area_names, size_nr_file, sector_nr_per_msoa_file)
 
     @classmethod
     def for_zone(
-            cls,
-            filter_key: Dict[str, list],
-            areas_maps_path: str = default_areas_map_path,
-            size_nr_file: str = default_size_nr_file,
-            sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
+        cls,
+        filter_key: Dict[str, list],
+        areas_maps_path: str = default_areas_map_path,
+        size_nr_file: str = default_size_nr_file,
+        sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
     ) -> "Companies":
         """
         
@@ -112,7 +118,9 @@ class Companies:
         if len(filter_key.keys()) > 1:
             raise NotImplementedError("Only one type of area filtering is supported.")
         if "oa" in len(filter_key.keys()):
-            raise NotImplementedError("Company data only for the SuperArea (MSOA) and above.")
+            raise NotImplementedError(
+                "Company data only for the SuperArea (MSOA) and above."
+            )
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
         area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["msoa"]
@@ -122,10 +130,10 @@ class Companies:
 
     @classmethod
     def for_super_areas(
-            cls,
-            area_names: List[str],
-            size_nr_file: str = default_size_nr_file,
-            sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
+        cls,
+        area_names: List[str],
+        size_nr_file: str = default_size_nr_file,
+        sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
     ) -> "Companies":
         """
         Parameters
@@ -135,10 +143,10 @@ class Companies:
 
     @classmethod
     def from_file(
-            cls,
-            area_names: Optional[List[str]] = [],
-            size_nr_file: str = default_size_nr_file,
-            sector_nr_per_superarea_file: str = default_sector_nr_per_msoa_file,
+        cls,
+        area_names: Optional[List[str]] = [],
+        size_nr_file: str = default_size_nr_file,
+        sector_nr_per_superarea_file: str = default_sector_nr_per_msoa_file,
     ) -> "Companies":
         """
         Parameters
@@ -150,8 +158,9 @@ class Companies:
         size_per_superarea_df = size_per_superarea_df.div(
             size_per_superarea_df.sum(axis=1), axis=0
         )
-        size_per_superarea_df = size_per_superarea_df.reset_index(
-        ).rename(columns={"MSOA": "superarea"})
+        size_per_superarea_df = size_per_superarea_df.reset_index().rename(
+            columns={"MSOA": "superarea"}
+        )
         # read nr of companies in each industry sector per super_area
         sector_per_superarea_df = pd.read_csv(
             sector_nr_per_superarea_file  # , index_col=0
@@ -159,18 +168,14 @@ class Companies:
         sector_per_superarea_df = sector_per_superarea_df.rename(
             columns={"MSOA": "superarea"}
         )
-        return cls.from_df(
-            size_per_superarea_df,
-            sector_per_superarea_df,
-            area_names,
-        )
+        return cls.from_df(size_per_superarea_df, sector_per_superarea_df, area_names,)
 
     @classmethod
     def from_df(
-            cls,
-            size_per_superarea_df: pd.DataFrame,
-            sector_per_superarea_df: pd.DataFrame,
-            area_names: Optional[List[str]] = [],
+        cls,
+        size_per_superarea_df: pd.DataFrame,
+        sector_per_superarea_df: pd.DataFrame,
+        area_names: Optional[List[str]] = [],
     ) -> "Companies":
         """
         Initializes Companies class from a list of companies read from a DataFrame.
@@ -182,7 +187,7 @@ class Companies:
         company_per_sector_per_msoa_file
             Pandas dataframe with number of companies per industry sector per SuperArea.
         """
-        if len(area_names) is not 0:
+        if len(area_names) != 0:
             # filter out schools that are in the area of interest
             size_per_superarea_df = size_per_superarea_df[
                 size_per_superarea_df["superarea"].isin(area_names)
@@ -190,18 +195,15 @@ class Companies:
             sector_per_superarea_df = sector_per_superarea_df[
                 sector_per_superarea_df["superarea"].isin(area_names)
             ]
-        size_per_superarea_df = size_per_superarea_df.set_index('superarea')
-        sector_per_superarea_df = sector_per_superarea_df.set_index('superarea')
+        size_per_superarea_df = size_per_superarea_df.set_index("superarea")
+        sector_per_superarea_df = sector_per_superarea_df.set_index("superarea")
         return cls.build_companies_for_super_areas(
-            size_per_superarea_df,
-            sector_per_superarea_df,
+            size_per_superarea_df, sector_per_superarea_df,
         )
 
     @classmethod
     def build_companies_for_super_areas(
-            cls,
-            size_per_superarea_df: pd.DataFrame,
-            sector_per_superarea_df: pd.DataFrame,
+        cls, size_per_superarea_df: pd.DataFrame, sector_per_superarea_df: pd.DataFrame,
     ) -> "Companies":
         compsize_labels = size_per_superarea_df.columns.values
         compsize_labels_encoded = np.arange(1, len(compsize_labels) + 1)
@@ -217,7 +219,7 @@ class Companies:
 
         companies = []
         for area_counter, (company_sizes, company_sectors) in enumerate(
-                zip(companysize_data_per_area, company_per_sector_data_per_area)
+            zip(companysize_data_per_area, company_per_sector_data_per_area)
         ):
             comp_size_rv = rv_discrete(values=(compsize_labels_encoded, company_sizes))
             comp_size_rnd_array = comp_size_rv.rvs(
@@ -236,12 +238,6 @@ class Companies:
                     companies.append(company)
         return Companies(companies)
 
-    def __len__(self):
-        return len(self.members)
-
-    def __iter__(self):
-        return iter(self.members)
-
 
 def _compute_size_mean(sizegroup: str) -> int:
     """
@@ -259,10 +255,3 @@ def _compute_size_mean(sizegroup: str) -> int:
 
     return int(size_mean)
 
-
-if __name__ == '__main__':
-    geography = Geography.from_file(filter_key={"msoa": ["E02002559"]})
-    companies = Companies.for_geography(geography)
-    company = companies.members[0]
-    print(len(companies))
-    print(company.id, company.industry, company.workers)
