@@ -2,7 +2,7 @@ import logging
 import pickle
 
 from june.box.box_mode import Boxes, Box
-from june.demography import Demography
+from june.demography import Demography, Population
 from june.distributors import (
     SchoolDistributor,
     HospitalDistributor,
@@ -14,6 +14,18 @@ from june.geography import Geography
 from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
+
+
+def _populate_areas(geography, demography):
+    people = Population()
+    for area in geography.areas:
+        population = demography.populate(area.name)
+        for person in population:
+            area.add(
+                person
+            )
+        people.extend(population)
+    return people
 
 
 class World:
@@ -49,14 +61,20 @@ class World:
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
-            self.people = demography.populate(geography.areas)
+            self.people = _populate_areas(
+                geography,
+                demography
+            )
             self.boxes = Boxes([Box()])
             self.boxes.members[0].set_population(self.people)
             return
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
-        self.people = demography.populate(self.areas)
+        self.people = _populate_areas(
+            geography,
+            demography
+        )
 
         if hasattr(geography, "carehomes"):
             self.carehomes = geography.carehomes
