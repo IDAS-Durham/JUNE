@@ -107,7 +107,7 @@ class SuperArea:
         self.companies = list()
 
     def add_worker(self, person: Person):
-        self.workers.add(person)
+        self.workers.append(person)
         person.work_super_area = self
 
 

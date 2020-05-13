@@ -9,7 +9,7 @@ from collections import defaultdict
 from june.geography import Geography
 from june.geography import Area
 from june.demography import Person
-from june.groups.company_new import Company, Companies
+from june.groups.company import Company, Companies
 
 
 default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
@@ -51,7 +51,7 @@ class TestCompany:
         company.add(person, Company.GroupType.workers)
         assert person.groups[0] == company
 
-@pytest.fixture(scope="module", name="companies_example")
+@pytest.fixture(name="companies_example")
 def create_companies(super_area_companies):
     companies = Companies.for_super_areas(
         [super_area_companies],
@@ -73,4 +73,8 @@ def test__company_sizes(companies_example):
     assert np.isclose(sizes_dict[2], 40, atol=10)
     assert np.isclose(sizes_dict[3], 10, atol=5)
     assert np.isclose(sizes_dict[4], 10, atol=5)
+
+def test__companies_multiple_areas():
+    g = Geography.from_file(filter_key={"msoa" : ["E02002559", "E02000001"]})
+    companies = Companies.for_geography(g)
 
