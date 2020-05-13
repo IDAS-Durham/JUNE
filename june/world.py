@@ -38,6 +38,7 @@ class World:
         geography: Geography,
         demography: Demography,
         include_households: bool = True,
+            include_commute: bool = True,
         box_mode = False
     ):
         """
@@ -94,6 +95,34 @@ class World:
         if hasattr(geography, "companies"):
             self.companies = geography.companies
 
+        if include_commute:
+            # CommuteCity
+            self.commutecities = CommuteCities(self.inputs.uk_pcs_coordinates,self.inputs.msoa_coordinates) # FILE READIN
+            self.commutecities.init_non_london(self.inputs.non_london_stat_pcs) # FILE READIN
+            # Crucial that London is initialise second, after non-London
+            self.commutecities.init_london(self.inputs.london_stat_pcs) # FILE READIN
+
+            self.commutecity_distributor = CommuteCityDistributor(self.commutecities.members, self.super_areas.members)
+            self.commutecity_distributor.distribute_people()
+
+            # CommuteHub
+            self.commutehubs = CommuteHubs(self.commutecities.members, self.inputs.msoa_coordinates, init=True) # FILE READIN
+
+            self.commutehub_distributor = CommuteHubDistributor(self.inputs.msoa_oa_coordinates, self.commutecities.members) # FILE READIN
+            self.commutehub_distributor.distribute_people()
+
+            # CommuteUnit
+            self.commuteunits = CommuteUnits(self.commutehubs.members, init=True)
+
+            self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
+            # unit distirbutor is dynamic and should be called at each time step - leave this until later
+            #self.commuteunit_distributor.distribute_people()
+
+            #CommuteCityUnit
+            self.commutecityunits = CommuteCityUnits(self.commutecities.members, init = True)
+
+            self.commutecityunit_distributor = CommuteCityDistributor(self.commutecities.members)
+                        
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
             hospital_distributor = HospitalDistributor(geography.hospitals)
