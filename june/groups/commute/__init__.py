@@ -12,7 +12,7 @@ from .commuteunit import CommuteUnit, CommuteUnits
 from .commuteunit_distributor import CommuteUnitDistributor
 
 data_directory = Path(__file__).parent.parent.parent.parent / "data"
-default_geographical_data_directory = data_directory / "processed/geographical_data"
+default_geographical_data_directory = data_directory / "geographical_data"
 default_travel_data_directory = data_directory / "travel"
 
 

@@ -19,7 +19,7 @@ test_data_filename = os.path.join(
 class TestCommute:
     def test_init(self):
         commute = Commute.from_directories(
-            Geography.from_file()
+            Geography.from_file().super_areas
         )
 
 
