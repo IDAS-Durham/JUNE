@@ -16,8 +16,9 @@ from june import World
 
 
 def test_full_run(simulator):
-    for household in simulator.world.households.members[:20]:
-        simulator.seed(household, n_infections=1)
+
+    seed = Seed(simulator.world.super_areas, simulator.infection, )
+    seed.unleash_virus(1000)
     simulator.run()
     simulator.logger.plot_infection_curves_per_day()
 
