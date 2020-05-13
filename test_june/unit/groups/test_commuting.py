@@ -51,10 +51,10 @@ class TestCommuteHub:
         assert len(hub.passengers) == 0
         assert len(hub.commuteunits) == 0
 
-class TestCommuteHubUnit:
+class TestCommuteUnit:
     @pytest.fixture(name="unit")
     def create_hub(self):
-        return CommuteHubUnit(
+        return CommuteUnit(
             commutehubunit_id = 0,
             city = 'Manchester',
             commutehub_id = 0,
