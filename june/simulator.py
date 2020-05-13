@@ -197,10 +197,8 @@ class Simulator:
             duration of time step
         """
 
-        print(f'Infected  {len(self.world.people.infected)}')
         for person in self.world.people.infected:
             health_information = person.health_information
-            print(health_information.tag)
             health_information.update_health_status(time, delta_time)
             # release patients that recovered
             if health_information.recovered:

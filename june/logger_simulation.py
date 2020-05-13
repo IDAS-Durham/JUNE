@@ -259,6 +259,7 @@ class Logger:
             ax.plot(day_array, n_sus, color='C1', linestyle='--')
             ax.plot(day_array, n_rec, color='C2', linestyle='--')
 
+        plt.show()
         fig.savefig(os.path.join(self.save_path, "infection_curves.png"), dpi=300)
         return fig, ax
 
