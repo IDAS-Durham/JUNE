@@ -28,13 +28,14 @@ args = parser.parse_args()
 t1 = time.time()
 geography = Geography.from_file({"msoa" : 
                         [
-                        "E02003999", 
+                        "E00088544", 
                         "E02006764",
                        ]
                         }
                         )
 
 geography.hospitals = Hospitals.for_geography(geography)
+geography.schools = Schools.for_geography(geography)
 geography.cemeteries = Cemeteries()
 demography = Demography.for_geography(geography)
 world = World(geography, demography, include_households=True)
