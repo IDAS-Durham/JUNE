@@ -19,12 +19,8 @@ logger = logging.getLogger(__name__)
 def _populate_areas(geography, demography):
     people = Population()
     for area in geography.areas:
-        population = demography.populate(area.name)
-        for person in population:
-            area.add(
-                person
-            )
-        people.extend(population)
+        area.populate(demography)
+        people.extend(area.people)
     return people
 
 
