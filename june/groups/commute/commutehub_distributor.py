@@ -1,18 +1,32 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+
 import numpy as np
+import pandas as pd
 from scipy import spatial
 
+
+default_data_path = (
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "data/"
+)
+
+default_msoa_oa_coordinates = default_data_path / "geographical_data/msoa_oa.csv"
 
 class CommuteHubDistributor:
     """
     Distribute people to commute hubs based on where they live and where they are commuting to
     """
 
-    def __init__(self, msoa_oa_coordinates, commutecities):
+    def __init__(self, commutecities):
         """
         msoa_oa_coordinates: (pd.Dataframe) Dataframe of all OA postcodes and lat/lon coordinates and their equivalent MSOA
         commutecities: (list) members of CommuteCities
         """
-        self.msoa_oa_coordinates = msoa_oa_coordinates
+        #self.msoa_oa_coordinates = msoa_oa_coordinates
         self.commutecities = commutecities
 
     def _get_msoa_oa(self,oa):
@@ -28,6 +42,10 @@ class CommuteHubDistributor:
         lon = float(self.msoa_oa_coordinates['X'][self.msoa_oa_coordinates['OA11CD'] == oa])
 
         return [lat,lon]
+
+    def from_file(self):
+
+        self.msoa_oa_coordinates = pd.read_csv(default_msoa_oa_coordinates)
 
     def distribute_people(self):
 
