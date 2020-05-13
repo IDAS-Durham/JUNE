@@ -69,16 +69,12 @@ class CommuteHubDistributor:
         return self.coordinates_dict[
             oa
         ]["MSOA11CD"]
-        # return list(self.msoa_oa_coordinates['MSOA11CD'][self.msoa_oa_coordinates['OA11CD'] == oa])[0]
 
     def _get_area_lat_lon(self, oa):
         'Get lat/lon for  a given OA'
         area_dict = self.coordinates_dict[
             oa
         ]
-
-        # lat = float(self.msoa_oa_coordinates['Y'][self.msoa_oa_coordinates['OA11CD'] == oa])
-        # lon = float(self.msoa_oa_coordinates['X'][self.msoa_oa_coordinates['OA11CD'] == oa])
 
         return area_dict["Y"], area_dict["X"]
 
