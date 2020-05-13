@@ -48,6 +48,7 @@ class Group(AbstractGroup):
         "hospital",
         "leisure_Outdoor",
         "leisure_Indoor",
+        "mock_group",
         "pub",
         "random",
         "test_group",
