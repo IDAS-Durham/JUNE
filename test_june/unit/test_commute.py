@@ -3,6 +3,8 @@ import os
 import pytest
 
 from june import commute as c
+from june.geography import Geography
+from june.groups.commute import Commute
 
 test_data_filename = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -12,6 +14,13 @@ test_data_filename = os.path.join(
     "census_data",
     "commute.csv"
 )
+
+
+class TestCommute:
+    def test_init(self):
+        commute = Commute.from_directories(
+            Geography.from_file()
+        )
 
 
 class TestModeOfTransport:
