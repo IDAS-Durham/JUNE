@@ -103,7 +103,7 @@ class SuperArea:
         self.name = name
         self.coordinates = coordinates
         self.areas = areas
-        self.workers = list() 
+        self.workers = list()
         self.companies = list()
 
     def add_worker(self, person: Person):
