@@ -4,7 +4,6 @@ import numpy as np
 from june.geography import Geography
 from june.demography import Demography
 from june.seed import Seed
-from june.infection.health_index import HealthIndexGenerator
 
 SUPER_AREA_LIST = [
                         'E02004940',
@@ -40,7 +39,7 @@ def get_seed(geography, infection, demography):
             'region': REGION_LIST
             }
             )
-    return Seed(geography, infection, HealthIndexGenerator.from_file(), None, super_area_to_region)
+    return Seed(geography.super_areas, infection, None, super_area_to_region)
 
 
 def test__filter_region(seed):

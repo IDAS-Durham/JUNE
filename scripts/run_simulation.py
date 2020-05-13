@@ -49,7 +49,10 @@ transmission = TransmissionConstant(probability=0.3)
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction.from_file()
 seed = Seed.from_file(world.super_areas, infection)
-seed.unleash_virus_per_region()
+# Use if you want to seed the disease per region
+# with real data
+#seed.unleash_virus_per_region()
+seed.unleash_virus(1000)
 
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(
