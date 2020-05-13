@@ -40,6 +40,7 @@ class Group(AbstractGroup):
         "box",
         "boundary",
         "carehome",
+        "cinema",
         "commute_Public",
         "commute_Private",
         "cemetery",
