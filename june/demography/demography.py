@@ -26,7 +26,11 @@ class DemographyError(BaseException):
 
 
 class AgeSexGenerator:
-    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list):
+    def __init__(
+        self, age_counts: list, 
+        sex_bins: list, female_fractions: list,
+        ethnicity_age_bins: list, ethnicity_structure: list,
+    ):
         """
         age_counts is an array where the index in the array indicates the age,
         and the value indicates the number of counts in that age.
@@ -56,8 +60,23 @@ class AgeSexGenerator:
             < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
+    
+        print(ethnicity_structure.index.get_level_values(1))
+
+        ethnicity_age_indexes = np.digitize(ages, bins=list(map(int, ethnicity_age_bins))) - 1
+        ethnicities = [
+            np.random.choice( 
+                np.repeat(
+                    ethnicity_structure.index.get_level_values(1),
+                    ethnicity_structure[ethnicity_age_bins[age_ind]]
+                ), 1 # one pick per person
+            )[0]
+            for age_ind in ethnicity_age_indexes
+        ]
+        print(ethnicities)
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
+        self.ethnicity_iterator = iter(ethnicities)
 
     def age(self) -> int:
         try:
@@ -68,6 +87,12 @@ class AgeSexGenerator:
     def sex(self) -> str:
         try:
             return next(self.sex_iterator)
+        except StopIteration:
+            raise DemographyError("No more people living here!")
+
+    def ethnicity(self) -> str:
+        try:
+            return next(self.ethnicity_iterator)
         except StopIteration:
             raise DemographyError("No more people living here!")
 
@@ -149,7 +174,7 @@ class Demography:
                 person = Person(
                     age=age_and_sex_generator.age(),
                     sex=age_and_sex_generator.sex(),
-                    # TODO ethnicity_generators.ethnicity()
+                    ethnicity=age_and_sex_generator.ethnicity(),
                     # TODO socioeconomic_generators.socioeconomic_index()
                 )
                 people.append(person)   # add person to population
@@ -234,28 +259,54 @@ class Demography:
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
+        ethnicity_structure_path = data_path / "ethnicity_structure.csv"
+        print(ethnicity_structure_path)
+        # TODO socioecon_structure_path = data_path / "socioecon_structure.csv"
         age_sex_generators = _load_age_and_sex_generators(
-            age_structure_path, female_fraction_path, area_names
+            age_structure_path, 
+            female_fraction_path, 
+            ethnicity_structure_path, 
+            # TODO socioecon_structure_path
+            area_names,
         )
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
 
 
 def _load_age_and_sex_generators(
-    age_structure_path: str, female_ratios_path: str, area_names: List[str]
+    age_structure_path: str, 
+    female_ratios_path: str, 
+    ethnicity_structure_path: str, 
+    # TODO socioecon_strucuture_path,
+    area_names: List[str]
 ):
     """
     A dictionary mapping area identifiers to a generator of age and sex.
     """
     age_structure_df = pd.read_csv(age_structure_path, index_col=0)
     age_structure_df = age_structure_df.loc[area_names]
+    #age_strucutre_df.sort_index() # sorting taken care of in area_names indexing???
+
     female_ratios_df = pd.read_csv(female_ratios_path, index_col=0)
     female_ratios_df = female_ratios_df.loc[area_names]
+    #female_ratios_df.sort_index()
+
+    ethnicity_structure_df = pd.read_csv(ethnicity_structure_path,index_col=[0,1]) # pd MultiIndex!!!
+    ethnicity_structure_df = ethnicity_structure_df.loc[area_names]
+    #ethnicity_structure_df.sort_index(level=0)
+
+    # socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=[0,1])
+    # socioecon_structure_df = socioecon_structure_df[area_names]
+    # socioecon_structure_df.sort(level=0)
+
     ret = {}
-    for (_, age_structre), (index, female_ratios) in zip(
-        age_structure_df.iterrows(), female_ratios_df.iterrows()
+    for (_, age_structure), (index, female_ratios), (_,ethnicity_df) in zip(
+        age_structure_df.iterrows(), female_ratios_df.iterrows(), 
+        ethnicity_structure_df.groupby(level=0),
     ):
         ret[index] = AgeSexGenerator(
-            age_structre.values, female_ratios.index.values, female_ratios.values
+            age_structure.values, 
+            female_ratios.index.values, female_ratios.values,
+            ethnicity_df.columns, ethnicity_df,
         )
     return ret
 
