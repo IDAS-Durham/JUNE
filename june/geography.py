@@ -64,6 +64,12 @@ class Area:
         self.people.add(person)
         person.area = self
 
+    def populate(self, demography):
+        for person in demography.populate(
+                self.name
+        ):
+            self.add(person)
+
 
 class Areas:
     __slots__ = "members", "super_area"
