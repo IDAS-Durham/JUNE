@@ -1,16 +1,12 @@
 import os
-import csv
 import logging
-from enum import IntEnum
 from pathlib import Path
-from random import randint
-from itertools import chain, count
+from itertools import count
 from typing import List, Dict, Tuple, Optional
 
-import numpy as np
 import pandas as pd
 
-from june.demography import Person
+from .demography import Person
 
 # from june import get_creation_logger
 
