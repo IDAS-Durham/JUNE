@@ -36,8 +36,8 @@ print(f"Creating the world took {t2 -t1} seconds to run.")
 
 # *********** INITIALIZE SEED ***************** #
 
-symptoms = SymptomsConstant(recovery_rate=0.05)
-transmission = TransmissionConstant(probability=0.3)
+symptoms = SymptomsConstant(recovery_rate=0.)
+transmission = TransmissionConstant(probability=0.5)
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction.from_file()
 seed = Seed(world.boxes, infection, )
@@ -52,7 +52,8 @@ simulator = Simulator.from_file(
 )
 # update health status of seeded people, depending on symptoms
 # class might be unnecessary
-simulator.update_health_status(0,0)
+
+#simulator.update_health_status(0,0)
 simulator.run()
 
 t3 = time.time()
