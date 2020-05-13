@@ -18,7 +18,11 @@ class CommuteCityUnitDistributor:
 
         for city in self.commutecities:
 
-            possible_units = city.commutecityunits
+            # Clear all units of passengers before running
+            possible_units = hub.commuteunits
+            for unit in possible_units:
+                unit.passengers = 0
+            
             to_commute = commute_internal.passengers
 
             # loop over all passengers who need to commute
