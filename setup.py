@@ -24,7 +24,7 @@ setup(
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
         license="MIT license",
-        packages=find_packages(exclude=("test_june", "docs")),
-        install_requires=requirements
+        install_requires=requirements,
+        packages=['june'],
 )
 

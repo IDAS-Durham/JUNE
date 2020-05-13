@@ -1,4 +1,4 @@
-from june.infection import infection as infect
+from june.infection import Infection
 from june.infection import symptoms as sym
 from june.infection import transmission as trans
 import june.interaction as inter
@@ -38,12 +38,12 @@ def create_transmission():
 
 @pytest.fixture(name="infection", scope="session")
 def create_infection(transmission, symptoms):
-    return infect.Infection(transmission, symptoms)
+    return Infection(transmission, symptoms)
 
 
 @pytest.fixture(name="infection_constant", scope="session")
 def create_infection_constant(transmission, symptoms_constant):
-    return infect.Infection(transmission, symptoms_constant)
+    return Infection(transmission, symptoms_constant)
 
 
 @pytest.fixture(name="interaction", scope="session")
