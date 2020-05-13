@@ -40,8 +40,9 @@ default_number_communal_filename = (
     / "data/processed/census_data/output_area/EnglandWales/n_people_in_communal.csv"
 )
 
-default_logging_config_filename = Path(__file__).parent.parent / \
-    "configs/config_world_creation_logger.yaml"
+default_logging_config_filename = (
+    Path(__file__).parent.parent / "configs/config_world_creation_logger.yaml"
+)
 
 logger(default_logging_config_filename)
 
@@ -281,7 +282,11 @@ class HouseholdDistributor:
         return men_by_age, women_by_age
 
     def _distribute_people_and_households_to_area_single(
-            self, area: Area, household_numbers_df: pd.DataFrame, n_students_df: pd.DataFrame, n_communal_df: pd.DataFrame
+        self,
+        area: Area,
+        household_numbers_df: pd.DataFrame,
+        n_students_df: pd.DataFrame,
+        n_communal_df: pd.DataFrame,
     ):
         """
         Distributes people and household to a single area.
@@ -706,7 +711,6 @@ class HouseholdDistributor:
             all_households,
         )
 
-
         # make sure we have the correct number of households
         if not (
             total_number_of_households - communal_houses
@@ -816,7 +820,7 @@ class HouseholdDistributor:
             maximum age the person should have.
         """
         if age < min_age or age > max_age:
-            return 
+            return
 
         compatible_ages = np.array(list(first_dict.keys()))
         compatible_ages = compatible_ages[
@@ -828,7 +832,7 @@ class HouseholdDistributor:
                 (min_age <= compatible_ages) & (compatible_ages <= max_age)
             ]
             if len(compatible_ages) == 0:
-                return 
+                return
             first_dict = second_dict
         closest_age = get_closest_element_in_array(compatible_ages, age)
         person = first_dict[closest_age].pop()
@@ -1004,7 +1008,7 @@ class HouseholdDistributor:
             Number of student houses in this area.
         """
         if n_students == 0:
-            return 
+            return
         # students per household
         ratio = max(int(n_students / student_houses_number), 1)
         # get all people in the students age
@@ -1022,7 +1026,10 @@ class HouseholdDistributor:
                     max_age=self.student_max_age,
                 )
                 if student is None:
-                    raise HouseholdError("Students do not match!")
+                    print(n_students)
+                    print(men_by_age.keys())
+                    print(women_by_age.keys())
+                    raise HouseholdError(f"Students do not match in area {area.name}!")
                 self._add_to_household(household, student, subgroup="young_adults")
                 students_left -= 1
         assert students_left >= 0
