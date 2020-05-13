@@ -151,6 +151,7 @@ class Person:
         self.company_id = None
         self.hospital = None
         self.in_hospital = None
+        self.home_city = None
         self.econ_index = econ_index
         self.health_information = HealthInformation()
 
