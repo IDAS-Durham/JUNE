@@ -1,9 +1,8 @@
-import os
 import logging
+import os
 from enum import IntEnum
 from pathlib import Path
-from itertools import count
-from typing import List, Tuple, Dict, Optional
+from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -11,14 +10,13 @@ from scipy.stats import rv_discrete
 
 from june.geography import Geography
 from june.groups.group import Group
-from june.logger_creation import logger
 
 default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "data/processed/census_data/company_data/"
+                    "data/processed/census_data/company_data/"
 default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
 default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
 default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "data/processed/geographical_data/oa_msoa_region.csv"
+                         "data/processed/geographical_data/oa_msoa_region.csv"
 
 logger = logging.getLogger(__name__)
 
@@ -37,21 +35,20 @@ class Company(Group):
     and therefore we invoke the base class group with the default Ngroups = 1.
     We made this explicit here, although it is not necessary.
     """
-
-    _id = count()
-    __slots__ = "id", "super_area", "n_woman", "employees", "industry"
+    __slots__ = "id", "super_area", "n_woman", "employees", "industry", "n_employees_max"
 
     class GroupType(IntEnum):
         workers = 0
 
-    def __init__(self, super_area=None, n_employees_max=int, industry=None):
-        self.id = next(self._id)
-        super().__init__(name=f"Company_{self.id}", spec="company")
+    def __init__(self, super_area=None, n_employees_max=np.inf, industry=None):
+        super().__init__()
         self.super_area = super_area
+
         # set the max number of employees to be the mean number in a range
         self.n_woman = 0
         self.employees = []
         self.industry = industry
+        self.n_employees_max = n_employees_max
 
     def add(self, person, qualifier=GroupType.workers):
         super().add(person, qualifier)
@@ -133,7 +130,7 @@ class Companies:
         ----------
         """
         return cls.from_file(area_names, size_nr_file, sector_nr_per_msoa_file)
-    
+
     @classmethod
     def from_file(
             cls,
@@ -155,7 +152,7 @@ class Companies:
         ).rename(columns={"MSOA": "superarea"})
         # read nr of companies in each industry sector per super_area
         sector_per_superarea_df = pd.read_csv(
-            sector_nr_per_superarea_file#, index_col=0
+            sector_nr_per_superarea_file  # , index_col=0
         )
         sector_per_superarea_df = sector_per_superarea_df.rename(
             columns={"MSOA": "superarea"}
@@ -183,7 +180,7 @@ class Companies:
         company_per_sector_per_msoa_file
             Pandas dataframe with number of companies per industry sector per SuperArea.
         """
-        if len(area_names) is not 0:
+        if len(area_names) != 0:
             # filter out schools that are in the area of interest
             size_per_superarea_df = size_per_superarea_df[
                 size_per_superarea_df["superarea"].isin(area_names)
@@ -215,10 +212,10 @@ class Companies:
         super_area_names = size_per_superarea_df.index.values
         # Run through each SuperArea
         compsec_labels = sector_per_superarea_df.columns
-        
+
         companies = []
         for area_counter, (company_sizes, company_sectors) in enumerate(
-            zip(companysize_data_per_area, company_per_sector_data_per_area)
+                zip(companysize_data_per_area, company_per_sector_data_per_area)
         ):
             comp_size_rv = rv_discrete(values=(compsize_labels_encoded, company_sizes))
             comp_size_rnd_array = comp_size_rv.rvs(
@@ -262,7 +259,7 @@ def _compute_size_mean(sizegroup: str) -> int:
 
 
 if __name__ == '__main__':
-    geography = Geography.from_file(filter_key={"msoa" : ["E02002559"]})
+    geography = Geography.from_file(filter_key={"msoa": ["E02002559"]})
     companies = Companies.for_geography(geography)
     company = companies.members[0]
     print(len(companies))

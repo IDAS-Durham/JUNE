@@ -1,0 +1,18 @@
+age_range: [18, 64]
+sub_sector_ratio:
+  P:  # education
+    m: 0.02492507  # male
+    f: 0.02726422  # female
+  Q:  # healthcare
+    m: 0.02498335
+    f: 0.02024475
+
+sub_sector_distr:
+  P:
+    label: ["teacher_secondary", "teacher_primary"]
+    m: [0.72526887, 0.27473113]
+    f: [0.40169687, 0.59830313]
+  Q:
+    label: ["doctor", "nurse"]
+    m: [0.65350126, 0.34649874]
+    f: [0.16103136, 0.83896864]
