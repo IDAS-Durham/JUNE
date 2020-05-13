@@ -80,7 +80,6 @@ class World:
             or hasattr(geography, "hospitals")
             or hasattr(geography, "schools")
         ):
-            pass
             worker_distr = WorkerDistributor.for_geography(
                 geography
             )  # atm only for_geography()
