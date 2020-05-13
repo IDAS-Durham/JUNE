@@ -44,7 +44,7 @@ seed = Seed(world.boxes, infection, )
 # Use if you want to seed the disease per region
 # with real data
 #seed.unleash_virus_per_region()
-seed.unleash_virus(100, box_mode=True)
+seed.unleash_virus(500, box_mode=True)
 
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(
