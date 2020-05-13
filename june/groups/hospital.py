@@ -96,6 +96,10 @@ class Hospital(Group):
         """
         # TODO: We need to check what we want to do with this,
         # it will probably be taken care by the supergroup
+        # but probably we want to let workers go home.....
+        for person in self[self.GroupType.workers]:
+            if person.active_group is None:
+                person.active_group = "hospital"
         for person in self[self.GroupType.patients]:
             if person.active_group is None:
                 person.active_group = "hospital"
@@ -401,10 +405,11 @@ class Hospitals(Supergroup):
                 ):
                     break
             if hospital is not None:
-                logger.info(
-                    f"Receiving hospital for patient with "
-                    + f"{person.health_information.tag} at distance = {distance} km"
-                )
+                
+                #logger.info(
+                #    f"Receiving hospital for patient with "
+                #    + f"{person.health_information.tag} at distance = {distance} km"
+                #)
                 hospital.add_as_patient(person)
             else:
                 logger.info(
