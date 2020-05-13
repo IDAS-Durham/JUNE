@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 
 
 class Logger:
-    def __init__(self, world, timer, config, save_path="results"):
+    def __init__(self, simulator, world, timer, save_path="results"):
+        self.simulator = simulator
         self.world = world
         self.timer = timer
         self.data_dict = {}
         self.save_path = save_path
         self.box_mode = self.world.box_mode
-        self.config = config
         if not os.path.exists(self.save_path):
             os.mkdir(self.save_path)
         self.init_logger()
@@ -247,9 +247,9 @@ class Logger:
             N = len(self.world.boxes.members[0].people)
             I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
-            beta = self.config["infection"]["transmission"]["parameters"]["probability"]
+            beta = self.simulator.infection.transmission.probability
             beta /= self.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
-            gamma = self.config["infection"]["symptoms"]["parameters"]["recovery_rate"]
+            gamma = self.simulator.infection.symptoms.recovery_rate
             gamma /= self.timer.get_number_shifts(None)
             # multiply by 2 to compensate for updating health status twice in each timestep, see interaction/base.py
 

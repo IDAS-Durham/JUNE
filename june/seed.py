@@ -129,6 +129,7 @@ class Seed:
             number of cases to seed
         """
         # randomly select people to infect within the super area
+        print(f'peopel in super area {len(super_area.people)}')
         choices = np.random.choice(len(super_area.people), n_cases, replace=False)
 
         for choice in choices:
@@ -147,9 +148,12 @@ class Seed:
             super_areas = self._filter_region(region=region)
             self.infect_super_areas(super_areas, n_cases)
 
-    def unleash_virus(self, n_cases):
+    def unleash_virus(self, n_cases, box_mode=False):
         """
         Seed the infection with n_cases random people being infected,
         proportionally place more cases in the more populated super areas.
         """
-        self.infect_super_areas(self.super_areas.members, n_cases)
+        if box_mode:
+            self.infect_super_area(self.super_areas.members[0], n_cases)
+        else:
+            self.infect_super_areas(self.super_areas.members, n_cases)
