@@ -19,12 +19,8 @@ test_data_filename = os.path.join(
 
 class TestCommute:
     def test_coordinate_lookup(self):
-        msoa_oa_coordinates = pd.read_csv(
-            f"{default_geographical_data_directory}/msoa_oa.csv"
-        )
-        distributor = CommuteHubDistributor(
-            msoa_oa_coordinates=msoa_oa_coordinates,
-            commutecities=[]
+        distributor = CommuteHubDistributor.from_file(
+            commute_cities=[]
         )
         assert distributor._get_msoa_oa(
             "E00000001"
