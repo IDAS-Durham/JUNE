@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple, Optional
 
 import pandas as pd
 
-from .demography import Person
+from june.demography.person import Person
 
 # from june import get_creation_logger
 

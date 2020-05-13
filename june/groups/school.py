@@ -2,7 +2,6 @@ import logging
 import os
 import yaml
 from enum import IntEnum
-from itertools import count
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 
@@ -10,7 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.groups.group import Group, Subgroup, Supergroup
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent

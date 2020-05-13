@@ -4,18 +4,14 @@ from june.infection import transmission as trans
 import june.interaction as inter
 from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
-from june import world
-from june.time import Timer
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june import World
 
-import os
 from pathlib import Path
 
 import pytest
-import yaml
 
 test_directory = Path(__file__).parent.parent
 
