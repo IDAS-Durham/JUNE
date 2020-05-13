@@ -28,14 +28,14 @@ def test__right_group_hierarchy_random_groups(simulator):
     permanent_group_hierarchy = simulator.permanent_group_hierarchy.copy()
     permanent_group_hierarchy.reverse()
     active_groups = permanent_group_hierarchy.copy()
-    active_groups += ["pubs"]
+    #active_groups += ["pubs"]
     ordered_active_groups = simulator.apply_group_hierarchy(active_groups)
     true_ordered_active_groups = [
         group
         for group in simulator.permanent_group_hierarchy
         if group not in ["carehomes", "households"]
     ]
-    true_ordered_active_groups.append("pubs")
+    #true_ordered_active_groups.append("pubs")
     true_ordered_active_groups += ["carehomes", "households"]
     assert ordered_active_groups == true_ordered_active_groups
 
@@ -187,3 +187,4 @@ def test__bury_the_dead(simulator, health_index):
     simulator.set_active_group_to_people(["hospitals", "households"])
     assert dummy_person.active_group is None
     simulator.set_allpeople_free()
+

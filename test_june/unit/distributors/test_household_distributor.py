@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 from collections import OrderedDict
@@ -9,6 +8,7 @@ import pytest
 from june.demography.person import Person
 from june.groups import Household, Households
 from june.distributors import HouseholdDistributor
+
 
 class MockHouseholds:
     def __init__(self):
@@ -59,11 +59,11 @@ def create_area(age_min=0, age_max=99, people_per_age=5):
     return area
 
 
-@pytest.fixture(name="household_distributor", scope="session")
+@pytest.fixture(name="household_distributor", scope="module")
 def create_household_distributor():
-    first_kid_parent_age_differences ={20 : 0.5, 21 : 0.5}
-    second_kid_parent_age_differences = {30 : 0.5, 31 : 0.5}
-    couples_age_differences = {0 : 0.5, 1 : 0.5}
+    first_kid_parent_age_differences = {20: 0.5, 21: 0.5}
+    second_kid_parent_age_differences = {30: 0.5, 31: 0.5}
+    couples_age_differences = {0: 0.5, 1: 0.5}
     hd = HouseholdDistributor(
         first_kid_parent_age_differences,
         second_kid_parent_age_differences,
@@ -115,10 +115,10 @@ class TestAuxiliaryFunctions:
         area = create_area(people_per_age=1)
         # check normal use
         person_1 = household_distributor._get_random_person_in_age_bracket(
-            area, min_age=18, max_age=18
+            area.men_by_age, area.women_by_age, min_age=18, max_age=18
         )
         person_2 = household_distributor._get_random_person_in_age_bracket(
-            area, min_age=18, max_age=18
+            area.men_by_age, area.women_by_age, min_age=18, max_age=18
         )
         assert person_1.age == 18
         assert person_2.age == 18
@@ -127,35 +127,43 @@ class TestAuxiliaryFunctions:
     def test__get_matching_partner_is_correct(self, household_distributor):
         area = create_area(people_per_age=5)
         man = Person(sex=0, age=40)
-        woman = household_distributor._get_matching_partner(man, area)
+        woman = household_distributor._get_matching_partner(
+            man, area.men_by_age, area.women_by_age
+        )
         assert woman.sex == 1
         assert (woman.age == 40) or (woman.age == 41)
         woman = Person(sex=1, age=40)
-        man = household_distributor._get_matching_partner(woman, area)
+        man = household_distributor._get_matching_partner(
+            woman, area.men_by_age, area.women_by_age
+        )
         assert man.sex == 0
         assert (man.age == 40) or (man.age == 41)
         # check option to get under or over 65
         person = Person(sex=1, age=76)
         partner = household_distributor._get_matching_partner(
-            person, area, under_65=True
+            person, area.men_by_age, area.women_by_age, under_65=True
         )
         assert partner.age < 65
         assert partner.sex == 0
         partner2 = household_distributor._get_matching_partner(
-            person, area, over_65=True
+            person, area.men_by_age, area.women_by_age, over_65=True
         )
         assert partner2.age > 65
         assert partner2.sex == 0
         # check we get same sex if not available
         area.men_by_age = {}
-        woman = household_distributor._get_matching_partner(woman, area)
+        woman = household_distributor._get_matching_partner(
+            woman, area.men_by_age, area.women_by_age,
+        )
         assert woman.sex == 1
         assert (woman.age == 40) or (woman.age == 41)
 
     def test__get_matching_parent(self, household_distributor):
         area = create_area()
         kid = Person(age=10)
-        parent = household_distributor._get_matching_parent(kid, area)
+        parent = household_distributor._get_matching_parent(
+            kid, area.men_by_age, area.women_by_age,
+        )
         assert parent.age == 30 or parent.age == 31
         assert parent.sex == 1
 
@@ -164,26 +172,36 @@ class TestAuxiliaryFunctions:
         age_max_parent = household_distributor.max_age_to_be_parent
         for key in range(age_min_parent, age_max_parent + 1):
             del area.women_by_age[key]
-        male_parent = household_distributor._get_matching_parent(kid, area)
+        male_parent = household_distributor._get_matching_parent(
+            kid, area.men_by_age, area.women_by_age,
+        )
         assert male_parent.sex == 0
         assert male_parent.age == 30 or male_parent.age == 31
 
         # check if no adults available it returns None
         for key in range(age_min_parent, age_max_parent + 1):
             del area.men_by_age[key]
-        none_parent = household_distributor._get_matching_parent(kid, area)
+        none_parent = household_distributor._get_matching_parent(
+            kid, area.men_by_age, area.women_by_age,
+        )
         assert none_parent == None
 
     def test__get_matching_second_kid(self, household_distributor):
         area = create_area()
         parent = Person(age=20)
-        kid = household_distributor._get_matching_second_kid(parent, area)
+        kid = household_distributor._get_matching_second_kid(
+            parent, area.men_by_age, area.women_by_age,
+        )
         assert kid.age == 0
         parent = Person(age=35)
-        kid = household_distributor._get_matching_second_kid(parent, area)
+        kid = household_distributor._get_matching_second_kid(
+            parent, area.men_by_age, area.women_by_age,
+        )
         assert kid.age == 5 or kid.age == 4
         parent = Person(age=80)
-        kid = household_distributor._get_matching_second_kid(parent, area)
+        kid = household_distributor._get_matching_second_kid(
+            parent, area.men_by_age, area.women_by_age,
+        )
         assert kid.age == 17
 
 
@@ -192,8 +210,12 @@ class TestIndividualHouseholdCompositions:
         area = create_area(age_min=15, age_max=30, people_per_age=5)  # enough students
         # I put these limits to narrow the age range and make it faster, but
         # they do not reflect the expected age of students
-        household_distributor.fill_all_student_households(
-            area, n_students=20, student_houses_number=5
+        area.households = household_distributor.fill_all_student_households(
+            area.men_by_age,
+            area.women_by_age,
+            area,
+            n_students=20,
+            student_houses_number=5,
         )
         assert len(area.households) == 5
         counter = 0
@@ -207,8 +229,12 @@ class TestIndividualHouseholdCompositions:
                 )
         assert counter == 20
         area.households = []
-        household_distributor.fill_all_student_households(
-            area, n_students=11, student_houses_number=3
+        area.households = household_distributor.fill_all_student_households(
+            area.men_by_age,
+            area.women_by_age,
+            area,
+            n_students=11,
+            student_houses_number=3,
         )
         assert len(area.households) == 3
 
@@ -217,8 +243,13 @@ class TestIndividualHouseholdCompositions:
         # I put these limits to narrow the age range and make it faster, but
         # they do not reflect the expected age of old people
         households_with_extrapeople_list = []
-        household_distributor.fill_oldpeople_households(
-            2, 10, area, extra_people_lists=(households_with_extrapeople_list,)
+        area.households = household_distributor.fill_oldpeople_households(
+            area.men_by_age,
+            area.women_by_age,
+            2,
+            10,
+            area,
+            extra_people_lists=(households_with_extrapeople_list,),
         )
         assert len(households_with_extrapeople_list) == 10
         assert len(area.households) == 10
@@ -227,15 +258,17 @@ class TestIndividualHouseholdCompositions:
             for person in household.people:
                 assert person.age >= household_distributor.old_min_age
         households_with_extrapeople_list = []
-        household_distributor.fill_oldpeople_households(
+        area.households += household_distributor.fill_oldpeople_households(
+            area.men_by_age,
+            area.women_by_age,
             2,
             10,
             area,
             extra_people_lists=(households_with_extrapeople_list,),
             max_household_size=2,
         )
-        assert len(households_with_extrapeople_list) == 0  # no spaces left
         assert len(area.households) == 20
+        assert len(households_with_extrapeople_list) == 0  # no spaces left
         for household in area.households:
             assert len(household.people) == 2
             for person in household.people:
@@ -244,7 +277,9 @@ class TestIndividualHouseholdCompositions:
     def test__fill_families_households(self, household_distributor):
         area = create_area(people_per_age=20, age_max=65)
         households_with_extrapeople_list = []
-        household_distributor.fill_families_households(
+        area.households = household_distributor.fill_families_households(
+            area.men_by_age,
+            area.women_by_age,
             n_households=10,
             kids_per_house=2,
             parents_per_house=2,
@@ -290,7 +325,9 @@ class TestIndividualHouseholdCompositions:
     def test__fill_nokids_households(self, household_distributor):
         area = create_area(age_min=18, people_per_age=10, age_max=60)
         households_with_extrapeople_list = []
-        household_distributor.fill_nokids_households(
+        area.households = household_distributor.fill_nokids_households(
+            area.men_by_age,
+            area.women_by_age,
             adults_per_household=2,
             n_households=10,
             area=area,
@@ -321,8 +358,13 @@ class TestIndividualHouseholdCompositions:
     def test__fill_youngadult_households(self, household_distributor):
         area = create_area(age_min=15, age_max=40, people_per_age=5)
         households_with_extrapeople_list = []
-        household_distributor.fill_youngadult_households(
-            3, 20, area, extra_people_lists=(households_with_extrapeople_list,)
+        area.households = household_distributor.fill_youngadult_households(
+            area.men_by_age,
+            area.women_by_age,
+            3,
+            20,
+            area,
+            extra_people_lists=(households_with_extrapeople_list,),
         )
         assert len(households_with_extrapeople_list) == 20
         assert len(area.households) == 20
@@ -337,8 +379,13 @@ class TestIndividualHouseholdCompositions:
     def test__fill_youngadult_with_parents_households(self, household_distributor):
         area = create_area(age_min=15, age_max=40, people_per_age=5)
         households_with_extrapeople_list = []
-        household_distributor.fill_youngadult_households(
-            3, 20, area, extra_people_lists=(households_with_extrapeople_list,)
+        area.households = household_distributor.fill_youngadult_households(
+            area.men_by_age,
+            area.women_by_age,
+            3,
+            20,
+            area,
+            extra_people_lists=(households_with_extrapeople_list,),
         )
         assert len(households_with_extrapeople_list) == 20
         assert len(area.households) == 20
@@ -352,15 +399,23 @@ class TestIndividualHouseholdCompositions:
 
     def test__fill_communal_establishments(self, household_distributor):
         area = create_area(people_per_age=5)
-        household_distributor.fill_all_communal_establishments(
-            n_establishments=5, n_people_in_communal=20, area=area
+        area.households = household_distributor.fill_all_communal_establishments(
+            area.men_by_age,
+            area.women_by_age,
+            n_establishments=5,
+            n_people_in_communal=20,
+            area=area,
         )
         assert len(area.households) == 5
         for household in area.households:
             assert len(household.people) == 4
         area.households = []
-        household_distributor.fill_all_communal_establishments(
-            n_establishments=2, n_people_in_communal=7, area=area
+        area.households = household_distributor.fill_all_communal_establishments(
+            area.men_by_age,
+            area.women_by_age,
+            n_establishments=2,
+            n_people_in_communal=7,
+            area=area,
         )
         assert len(area.households) == 2
         for household in area.households:
@@ -387,8 +442,8 @@ class TestMultipleHouseholdCompositions:
             "0 0 0 0 1": 1,
             "0 0 0 0 2": 1,
         }
-        household_distributor.distribute_people_to_households(
-            area, composition_numbers, 0, 0
+        area.households = household_distributor.distribute_people_to_households(
+            area.men_by_age, area.women_by_age, area, composition_numbers, 0, 0
         )
         assert len(area.households) == 6
         total_people = 0
@@ -443,8 +498,8 @@ class TestMultipleHouseholdCompositions:
             "0 0 0 0 2": 1,
             "0 0 0 0 1": 1,
         }
-        household_distributor.distribute_people_to_households(
-            area, composition_numbers, 5, 0,
+        area.households = household_distributor.distribute_people_to_households(
+            area.men_by_age, area.women_by_age, area, composition_numbers, 5, 0,
         )
         assert len(area.households) == 5
         total_people = 0
@@ -493,8 +548,8 @@ class TestMultipleHouseholdCompositions:
             ">=2 0 >=0 2 0": 1,
             ">=0 >=0 >=0 >=0 >=0": 2,
         }
-        household_distributor.distribute_people_to_households(
-            area, composition_numbers, 0, 10
+        area.households = household_distributor.distribute_people_to_households(
+            area.men_by_age, area.women_by_age, area, composition_numbers, 0, 10
         )
         assert len(area.households) == 4
         total_people = 0
@@ -517,9 +572,10 @@ class TestMultipleHouseholdCompositions:
 
         assert total_people == 17
 
+
 # TODO. This part of testing is commented out because it needs the new implementation of world to work.
 
-#class TestSpecificArea:
+# class TestSpecificArea:
 #    """
 #    Let's carefully check the first output area of the test set.
 #    This area has no carehomes so we don't have to account for them.
@@ -652,7 +708,7 @@ class TestMultipleHouseholdCompositions:
 #            assert size <= 8
 #
 #
-#class TestSpecificArea2:
+# class TestSpecificArea2:
 #    """
 #    Let's carefully check the first output area of the test set.
 #    This area has no carehomes so we don't have to account for them.
