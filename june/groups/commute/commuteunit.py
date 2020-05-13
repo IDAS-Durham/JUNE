@@ -1,6 +1,13 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+from june.groups.group import Group, Supergroup
+
 import numpy as np
 
-class CommuteUnit:
+class CommuteUnit(Group):
     """
     Defines commute unites (e.g. train carriages) which people commute in and interact
     These units will be filled dynamically
@@ -28,7 +35,7 @@ class CommuteUnit:
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
         self.is_peak = is_peak
 
-class CommuteUnits:
+class CommuteUnits(Supergroup):
     """
     Initialise commute units given the commute hubs they are affilited to
 
