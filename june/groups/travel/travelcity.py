@@ -9,6 +9,7 @@ class TravelCity:
         self.city = city
         self.metro_centroid = metro_centroid
         self.msoa = []
+        self.arrived = []
 
 class TravelCities:
 
