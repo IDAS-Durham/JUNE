@@ -13,7 +13,7 @@ class CommuteCityUnit(Group):
         self.commutecityunit_id = commutecityunit_id,
         self.city = city
         self.is_peak = is_peak
-        self.passengers = []
+        #self.passengers = [] -> people form group inheritence
         self.max_passengers = 50
 
     

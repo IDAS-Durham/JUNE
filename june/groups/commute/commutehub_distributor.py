@@ -51,7 +51,7 @@ class CommuteHubDistributor:
 
         for commutecity in self.commutecities:
             # people commuting into city
-            work_people = commutecity.passengers
+            work_people = commutecity.people
 
             # THIS IS GLACIALLY SLOW
             to_commute_in = []
@@ -80,7 +80,7 @@ class CommuteHubDistributor:
                 # find nearest commute hub to the person given where they live
                 _, hub_index = commutehub_tree.query(live_lat_lon,1)
                 
-                commutehub_in_city[hub_index].passengers.append(work_person)
+                commutehub_in_city[hub_index].people(work_person)
 
             for work_person in to_commute_in:
                 commutecity.commute_internal.append(work_person)
