@@ -11,15 +11,14 @@ class CommuteHubDistributor:
         msoa_oa_coordinates: (pd.Dataframe) Dataframe of all OA postcodes and lat/lon coordinates and their equivalent MSOA
         commutecities: (list) members of CommuteCities
         """
+
         self.msoa_oa_coordinates = msoa_oa_coordinates
         self.commutecities = commutecities
 
     def _get_msoa_oa(self, oa):
         'Get MSOA for a give OA'
 
-        msoa = self.msoa_oa_coordinates['MSOA11CD'][self.msoa_oa_coordinates['OA11CD'] == oa]
-
-        return msoa
+        return list(self.msoa_oa_coordinates['MSOA11CD'][self.msoa_oa_coordinates['OA11CD'] == oa])[0]
 
     def _get_area_lat_lon(self, oa):
         'Get lat/lon for  a given OA'
@@ -38,7 +37,7 @@ class CommuteHubDistributor:
             to_commute_in = []
             to_commute_out = []
             for work_person in work_people:
-                msoa = list(self._get_msoa_oa(work_person.area.name))[0]
+                msoa = self._get_msoa_oa(work_person.area.name)
                 # check if live AND work in metropolitan area
                 if msoa in commutecity.metro_msoas:
                     to_commute_in.append(work_person)
