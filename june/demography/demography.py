@@ -7,8 +7,7 @@ from typing import List, Dict, Optional
 import pandas as pd
 import numpy as np
 
-# from june.demography.health_index import HealthIndex
-from june.geography import Geography
+from june.geography import Geography, Area
 from june.demography import Person
 
 default_data_path = (
@@ -27,7 +26,7 @@ class DemographyError(BaseException):
 
 
 class AgeSexGenerator:
-    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list):
+    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list, max_age=99):
         """
         age_counts is an array where the index in the array indicates the age,
         and the value indicates the number of counts in that age.
@@ -59,10 +58,11 @@ class AgeSexGenerator:
         sexes = map(lambda x: ["m", "f"][x], sexes)
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
+        self.max_age = max_age
 
     def age(self) -> int:
         try:
-            return next(self.age_iterator)
+            return min(next(self.age_iterator), self.max_age)
         except StopIteration:
             raise DemographyError("No more people living here!")
 
@@ -74,7 +74,7 @@ class AgeSexGenerator:
 
 
 class Population:
-    def __init__(self, area: str, people: List[Person]):
+    def __init__(self, people: List[Person]):
         """
         A population of people.
 
@@ -82,12 +82,9 @@ class Population:
 
         Parameters
         ----------
-        area
-            The name of some geographical area
         people
             A list of people generated to match census data for that area
         """
-        self.area = area
         self.people = people
 
     def __len__(self):
@@ -96,13 +93,46 @@ class Population:
     def __iter__(self):
         return iter(self.people)
 
+    @property
+    def members(self):
+        return self.people
+
+    @property
+    def total_people(self):
+        return len(self.members)
+
+
+    @property
+    def infected(self):
+        return [
+            person for person in self.people
+            if person.health_information.infected and not 
+                    person.health_information.dead
+            
+        ]
+
+    @property
+    def susceptible(self):
+        return [
+            person for person in self.people
+            if person.health_information.susceptible 
+            
+        ]
+
+    @property
+    def recovered(self):
+        return [
+            person for person in self.people
+            if person.health_information.recovered
+            
+        ]
+
 
 class Demography:
     def __init__(
         self,
         area_names,
         age_sex_generators: Dict[str, AgeSexGenerator],
-        health_index_generator: "HealthIndex" = None,
         ethnicity_generators: Dict[str, "EthnicityGenerator"] = None,
         economic_index_generators: Dict[str, "EconomicIndexGenerator"] = None,
     ):
@@ -114,9 +144,6 @@ class Demography:
         age_sex_generators
             A dictionary mapping area identifiers to functions that generate
             age and sex for individuals.
-        health_index_generator
-            A class used to look up health indices for people based on their
-            age
         ethnicity_generators
             A dictionary mapping area identifiers to functions that allocate
             individuals to ethnic groups.
@@ -126,41 +153,100 @@ class Demography:
         """
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
-        self.health_index_generator = health_index_generator
         # not implemented yet:
         self.ethnicity_generators = ethnicity_generators
         self.economic_index_generators = economic_index_generators
 
-    def population_for_area(self, area: str) -> Population:
+
+    def populate(
+            self,
+            areas: Optional[List[Area]] = None,
+    ) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
 
         Parameters
         ----------
-        area
-            An area within the super-area represented by this demography
+        areas
+            List of areas for which to create populations.
+            default: all areas for which demographic generator was created
 
         Returns
         -------
         A population of people
         """
-        # TODO: this could be make faster with map()
         people = list()
-        age_and_sex_generator = self.age_sex_generators[area]
-        for _ in range(age_and_sex_generator.n_residents):
-            person = Person(
-                age=age_and_sex_generator.age(), sex=age_and_sex_generator.sex()
-            )
-            people.append(person)
-        return Population(area=area, people=people)
+        for area in areas:
+            # TODO: this could be make faster with map()
+            age_and_sex_generator = self.age_sex_generators[area.name]
+            for _ in range(age_and_sex_generator.n_residents):
+                person = Person(
+                    age=age_and_sex_generator.age(),
+                    sex=age_and_sex_generator.sex(),
+                    # TODO ethnicity_generators.ethnicity()
+                    # TODO socioeconomic_generators.socioeconomic_index()
+                )
+                people.append(person)   # add person to population
+                area.add(person)        # link area <-> person
+        return Population(people=people)
+
+
+    @classmethod
+    def for_geography(
+            cls,
+            geography: Geography,
+            data_path: str = default_data_path,
+            config: Optional[dict] = None,
+    ) -> "Demography":
+        """
+        Initializes demography from an existing geography.
+
+        Parameters
+        ----------
+        geography
+            an instance of the geography class
+        """
+        area_names = [area.name for area in geography.areas]
+        if len(area_names) == 0:
+            raise DemographyError("Empty geography!")
+        return cls.for_areas(area_names, data_path, config)
+    
+
+    @classmethod
+    def for_zone(
+            cls,
+            filter_key: Dict[str, list],
+            data_path: str = default_data_path,
+            areas_maps_path: str = default_areas_map_path,
+            config: Optional[dict] = None,
+    ) -> "Demography":
+        """
+        Initializes a geography for a specific list of zones. The zones are
+        specified by the filter_dict dictionary where the key denotes the
+        kind of zone, and the value is a list with the different zone names. 
+        
+        Example
+        -------
+            filter_key = {"region" : "North East"}
+            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
+        """
+        if len(filter_key.keys()) > 1:
+            raise NotImplementedError("Only one type of area filtering is supported.")
+        geo_hierarchy = pd.read_csv(areas_maps_path)
+        zone_type, zone_list = filter_key.popitem()
+        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["oa"]
+        if len(area_names) == 0:
+            raise DemographyError("Region returned empty area list.")
+        return cls.for_areas(area_names, data_path, config)
+   
 
     @classmethod
     def for_areas(
-        cls,
-        area_names: List[str],
-        data_path: str = default_data_path,
-        config: Optional[dict] = None,
+                cls,
+            area_names: List[str],
+            data_path: str = default_data_path,
+            config: Optional[dict] = None,
     ) -> "Demography":
         """
         Load data from files and construct classes capable of generating demographic
@@ -169,7 +255,7 @@ class Demography:
         Parameters
         ----------
         area_names
-            list of areas for which to create populations
+            List of areas for which to create a demographic generator.
         data_path
             The path to the data directory
         config
@@ -187,50 +273,6 @@ class Demography:
             age_structure_path, female_fraction_path, area_names
         )
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
-
-    @classmethod
-    def for_zone(
-        cls,
-        filter_key: Dict[str, list],
-        data_path: str = default_data_path,
-        areas_maps_path: str = default_areas_map_path,
-        config: Optional[dict] = None,
-    ) -> "Demography":
-        """
-        Initializes a geography for a specific list of zones. The zones are specified by the filter_dict dictionary
-        where the key denotes the kind of zone, and the value is a list with the different zone names. 
-        Example:
-            filter_key = {"region" : "North East"}
-            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
-        """
-        if len(filter_key.keys()) > 1:
-            raise NotImplementedError("Only one type of area filtering is supported.")
-        geo_hierarchy = pd.read_csv(areas_maps_path)
-        zone_type, zone_list = filter_key.popitem()
-        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["oa"]
-        if len(area_names) == 0:
-            raise DemographyError("Region returned empty area list.")
-        return cls.for_areas(area_names, data_path, config)
-
-    @classmethod
-    def for_geography(
-        cls,
-        geography: Geography,
-        data_path: str = default_data_path,
-        config: Optional[dict] = None,
-    ) -> "Demography":
-        """
-        Initializes demography from an existing geography.
-
-        Parameters
-        ----------
-        geography
-            an instance of the geography class
-        """
-        area_names = [area.name for area in geography.areas]
-        if len(area_names) == 0:
-            raise DemographyError("Empty geography!")
-        return cls.for_areas(area_names, data_path, config)
 
 
 def _load_age_and_sex_generators(
@@ -251,27 +293,3 @@ def _load_age_and_sex_generators(
             age_structre.values, female_ratios.index.values, female_ratios.values
         )
     return ret
-
-
-if __name__ == "__main__":
-    from time import time
-    import resource
-
-    def using(point=""):
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        return """%s: usertime=%s systime=%s mem=%s mb
-               """ % (
-            point,
-            usage[0],
-            usage[1],
-            usage[2] / 1024.0,
-        )
-
-    t1 = time()
-    print(using("before"))
-    demography = Demography.for_regions(["North East"])
-    for area in demography.area_names:
-        demography.population_for_area(area)
-    t2 = time()
-    print(using("after"))
-    print(f"Took {t2-t1} seconds to populate the UK.")

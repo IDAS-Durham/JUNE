@@ -123,7 +123,6 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
-            health_index=None,
             econ_index=None,
             mode_of_transport=None,
             area=None
@@ -137,68 +136,33 @@ class Person:
         self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
-        self.work_msoarea = None
+        self.work_super_area = None
         self.household = None
         self.area = area
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.work_msoarea = None
         self.school = None
         self.carehome = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
         self.groups = []
-        self.industry_specific = None
+        self.sector = None
+        self.sub_sector = None
         self.company_id = None
         self.hospital = None
         self.in_hospital = None
-        self.health_index = health_index
         self.econ_index = econ_index
         self.health_information = HealthInformation()
-
-    def output(self, time=0):
-        print("--------------------------------------------------")
-        if self.health_index != 0:
-            print(
-                "Person [",
-                self.id,
-                "]: age = ",
-                self.age,
-                " sex = ",
-                self.sex,
-                "health: ",
-                self.health_index,
-            )
-        else:
-            print("Person [", self.id, "]: age = ", self.age, " sex = ", self.sex)
-        if self.health_information.susceptible:
-            print("-- person is susceptible.")
-        if self.health_information.infected:
-            print(
-                "-- person is infected: ",
-                self.health_information.get_symptoms_tag(time + 5),
-                "[",
-                self.health_information.infection.symptom_severity(time + 5),
-                "]",
-            )
-        if self.health_information.recovered:
-            print("-- person has recovered.")
-
 
 class People:
     def __init__(self, world):
         self.members = []
 
-    # @classmethod
-    # def from_file(cls, filename: str,: str) -> "People":
-    #    """
-    #    """
-    #    = pd.read_csv(filename, index_col=0)
-    #    return People(,)
 
     @property
     def total_people(self):
         return len(self.members)
+
 
     @property
     def infected(self):
@@ -217,6 +181,7 @@ class People:
             if person.health_information.susceptible 
             
         ]
+
 
     @property
     def recovered(self):

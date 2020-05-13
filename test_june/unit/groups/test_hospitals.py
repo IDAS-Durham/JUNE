@@ -5,6 +5,7 @@ import pickle
 import pytest
 import numpy as np
 import pandas as pd
+from june.geography import Geography
 
 from june.groups import *
 from june.demography import Person
@@ -14,12 +15,12 @@ default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.par
 default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "configs/defaults/groups/hospitals.yaml"
 
-@pytest.fixture(name="hospitals", scope="session")
+@pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
     data_directory = Path(__file__).parent.parent.parent.parent
     return Hospitals.from_file(default_data_filename, default_config_filename)
 
-@pytest.fixture(name="hospitals_df", scope="session")
+@pytest.fixture(name="hospitals_df", scope="module")
 def create_hospitals_df():
     return  pd.read_csv(default_data_filename)
 
@@ -99,15 +100,18 @@ def test_try_allocate_patient_to_full_hospital(hospitals, health_info):
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
 
     for hospital in hospitals.members:
-        for i in range(hospital.n_beds):
+        for _ in range(hospital.n_beds):
             hospital.add_as_patient(dummy_person)
-
-    print(np.sum([hospital.full for hospital in hospitals.members]) == len(hospitals.members))
 
     assert hospitals.allocate_patient(dummy_person) == None
 
     for hospital in hospitals.members:
-        for i in range(hospital.n_beds):
+        for _ in range(hospital.n_beds):
             hospital.release_as_patient(dummy_person)
 
-
+def test__initialize_hospitals_from_geography():
+    geography = Geography.from_file({"msoa": ["E02003999", "E02006764"]})
+    hospitals = Hospitals.for_geography(geography)
+    assert len(hospitals.members) == 2
+    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 190
+    assert hospitals.members[0].super_area.name in ["E02003999", "E02006764"]

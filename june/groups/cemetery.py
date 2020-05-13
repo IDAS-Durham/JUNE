@@ -6,9 +6,6 @@ from enum import IntEnum
 class Cemetery(Group):
     class GroupType(IntEnum):
         default = 0
-        
-    def __init__(self):
-        super().__init__("Cemetery", "cemetery")
 
     def must_timestep(self):
         return False
@@ -21,7 +18,7 @@ class Cemetery(Group):
 
 
 class Cemeteries:
-    def __init__(self, world):
+    def __init__(self, world=None):
         self.world = world
         self.members = [Cemetery()]
 

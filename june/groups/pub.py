@@ -21,9 +21,8 @@ class Pub(Group):
         workers = 0
         guests = 1
 
-    def __init__(self, pub_id=1, position=None):
-        super().__init__("Pub_%03d" % pub_id, "pub")
-        self.id = pub_id
+    def __init__(self, position=None):
+        super().__init__()
         self.position = position
 
     def set_active_members(self):
@@ -57,11 +56,9 @@ class Pubs:
         pub_tree = BallTree(
             np.deg2rad(pub_df[["Latitude", "Longitude"]].values), metric="haversine"
         )
-        counter = 0
         for row in range(pub_df.shape[0]):
             position = [pub_df.iloc[row]["Latitude"], pub_df.iloc[row]["Longitude"]]
-            self.members.append(Pub(counter, position))
-            counter += 1
+            self.members.append(Pub(position))
         return pub_tree
 
     def get_nearest(self, area):
@@ -150,7 +147,7 @@ class PubFiller:
         people_in_area = [person for person in area.people if person.carehome is None]
         while ncustomers > 0:
             if self.place(np.random.choice(people_in_area)):
-                #TODO think whether people in carehomes go to pubs
+                # TODO think whether people in carehomes go to pubs
                 ncustomers -= 1
         # for pub in self.pubs:
         #    print ("pub with",len(pub.people)," customers:")
