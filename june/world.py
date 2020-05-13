@@ -24,6 +24,7 @@ from june.distributors import (
 
 logger = logging.getLogger(__name__)
 
+super_groups = ["hospitals", "companies", "cemeteries", "schools", "households"]
 
 class World:
     """
@@ -80,7 +81,6 @@ class World:
             or hasattr(geography, "hospitals")
             or hasattr(geography, "schools")
         ):
-            pass
             worker_distr = WorkerDistributor.for_geography(
                 geography
             )  # atm only for_geography()
@@ -113,5 +113,16 @@ class World:
         return cls(geography, demography, box_mode=box_mode)
 
     def to_pickle(self, save_path):
+        for supergroup_name in super_groups:
+            if hasattr(self, supergroup_name):
+                supergroup = getattr(self, supergroup_name)
+                supergroup.erase_people_from_groups_and_subgroups()
+
+        for geo_superunit in ["super_areas", "areas"]:
+            supergeo = getattr(self, geo_superunit)
+            supergeo.erase_people_from_groups_and_subgroups()
+            for geo in supergeo:
+                geo.erase_people_from_groups_and_subgroups()
+
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
