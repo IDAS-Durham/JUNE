@@ -1,24 +1,29 @@
 import os
 import yaml
 import logging
+import os
+from enum import IntEnum
 from pathlib import Path
-from itertools import count
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.neighbors._ball_tree import BallTree
+from sklearn.neighbors import BallTree
 
 from june.groups import Group
-from june.logger_creation import logger
-from enum import IntEnum
+
+from june.geography import SuperArea
 
 logger = logging.getLogger(__name__)
 
-default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "data/processed/hospital_data/england_hospitals.csv"
-default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent / \
-    "configs/defaults/groups/hospitals.yaml"
+default_data_filename = (
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "data/processed/hospital_data/england_hospitals.csv"
+)
+default_config_filename = (
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "configs/defaults/groups/hospitals.yaml"
+)
 
 
 class Hospital(Group):
@@ -36,7 +41,6 @@ class Hospital(Group):
     1 - patients
     2 - ICU patients
     """
-    _id = count()
 
     class GroupType(IntEnum):
         workers = 0
@@ -47,19 +51,16 @@ class Hospital(Group):
 
     def __init__(
             self,
-            hospital_id: int,
-            coordinates: list, # Optional[Tuple[float, float]] = None,
             n_beds: int,
             n_icu_beds: int,
             super_area: str = None,
+            coordinates: tuple = None,  # Optional[Tuple[float, float]] = None,
     ):
         """
         Create a Hospital given its description.
 
         Parameters
         ----------
-        hospital_id:
-            unique identifier of the hospital 
         n_beds:
             total number of regular beds in the hospital
         n_icu_beds:
@@ -69,8 +70,7 @@ class Hospital(Group):
         msoa_name:
             name of the msoa area the hospital belongs to
         """
-        super().__init__(f"Hospital_{hospital_id}", "hospital")
-        self.id = next(self._id)
+        super().__init__()
         self.super_area = super_area
         self.coordinates = coordinates
         self.n_beds = n_beds
@@ -105,8 +105,8 @@ class Hospital(Group):
 
     def add(self, person, qualifier=GroupType.workers):
         super().add(person, qualifier)
-        person.in_hospital = self
-        person.groups.append(self)
+        if qualifier in [self.GroupType.patients, self.GroupType.icu_patients]:
+            person.in_hospital = self
 
     def add_as_patient(self, person):
         """
@@ -119,15 +119,9 @@ class Hospital(Group):
             person instance to add as patient
         """
         if person.health_information.tag == "intensive care":
-            self.add(
-                person,
-                self.GroupType.icu_patients
-            )
+            self.add(person, self.GroupType.icu_patients)
         elif person.health_information.tag == "hospitalised":
-            self.add(
-                person,
-                self.GroupType.patients
-            )
+            self.add(person, self.GroupType.patients)
         else:
             raise AssertionError(
                 "ERROR: This person shouldn't be trying to get to a hospital"
@@ -142,10 +136,7 @@ class Hospital(Group):
         person: 
             person instance to remove as patient
         """
-        for group_type in (
-                self.GroupType.icu_patients,
-                self.GroupType.patients
-        ):
+        for group_type in (self.GroupType.icu_patients, self.GroupType.patients):
             patient_group = self[group_type]
             if person in patient_group:
                 patient_group.remove(person)
@@ -212,7 +203,10 @@ class Hospital(Group):
 
 class Hospitals:
     def __init__(
-            self, hospitals: List["Hospital"], max_distance: float, box_mode: bool
+        self,
+        hospitals: List["Hospital"],
+        max_distance: float = 100,
+        box_mode: bool = False,
     ):
         """
         Create a group of hospitals, and provide functionality to locate patients
@@ -234,12 +228,21 @@ class Hospitals:
         if not box_mode:
             self.init_trees(coordinates)
 
+    def __iter__(self):
+        return iter(self.members)
+
+    @classmethod
+    def for_box_mode(cls):
+        hospitals = []
+        hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
+        hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
+        return cls(hospitals, box_mode=True)
+
     @classmethod
     def from_file(
-            cls,
-            filename: str = default_data_filename,
-            config_filename: str = default_config_filename,
-            box_mode: bool = False,
+        cls,
+        filename: str = default_data_filename,
+        config_filename: str = default_config_filename,
     ) -> "Hospitals":
         """
         Initialize Hospitals from path to data frame, and path to config file.
@@ -262,32 +265,60 @@ class Hospitals:
 
         max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
-        hospitals = []
-        if not box_mode:
-            logger.info(f"There are {len(hospital_df)} hospitals in the world.")
-            hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
-        else:
-            hospitals.append(
-                Hospital(
-                    hospital_id=1,
-                    coordinates=None,
-                    n_beds=10,
-                    n_icu_beds=2,
-                )
-            )
-            hospitals.append(
-                Hospital(
-                    hospital_id=2,
-                    coordinates=None,
-                    n_beds=5000,
-                    n_icu_beds=5000,
-                )
-            )
+        logger.info(f"There are {len(hospital_df)} hospitals in the world.")
+        hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
+        return Hospitals(hospitals, max_distance)
 
-        return Hospitals(hospitals, max_distance, box_mode)
+    @classmethod
+    def for_geography(
+        cls,
+        geography,
+        filename: str = default_data_filename,
+        config_filename: str = default_config_filename,
+    ):
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        max_distance = config["max_distance"]
+        icu_fraction = config["icu_fraction"]
+        hospital_df = pd.read_csv(filename, index_col=0)
+        super_area_names = [super_area.name for super_area in geography.super_areas]
+        hospital_df = hospital_df.loc[hospital_df.index.isin(super_area_names)]
+        logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
+        total_hospitals = len(hospital_df)
+        hospitals = []
+        for super_area in geography.super_areas:
+            if super_area.name in hospital_df.index:
+                hospitals_in_area = hospital_df.loc[super_area.name]
+                if isinstance(hospitals_in_area, pd.Series):
+                    hospital = cls.create_hospital_from_df_row(
+                        super_area, hospitals_in_area, icu_fraction
+                    )
+                    hospitals.append(hospital)
+                else:
+                    for _, row in hospitals_in_area.iterrows():
+                        cls.create_hospital_from_df_row(super_area, row, icu_fraction)
+                        hospitals.append(hospital)
+                if len(hospitals) == total_hospitals:
+                    break
+        return cls(hospitals, max_distance, False)
+
+    @classmethod
+    def create_hospital_from_df_row(cls, super_area, row, icu_fraction):
+        coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
+        n_beds = row["beds"]
+        n_icu_beds = round(icu_fraction * n_beds)
+        n_beds -= n_icu_beds
+        hospital = Hospital(
+            super_area=super_area,
+            coordinates=coordinates,
+            n_beds=n_beds,
+            n_icu_beds=n_icu_beds,
+        )
+        return hospital
 
     def init_hospitals(
-            self, hospital_df: pd.DataFrame, icu_fraction: float
+        self, hospital_df: pd.DataFrame, icu_fraction: float
     ) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics,
@@ -299,16 +330,15 @@ class Hospitals:
             dataframe with hospital characteristics data
         """
         hospitals = []
-        for (index, row) in hospital_df.iterrows():
+        for index, row in hospital_df.iterrows():
             n_beds = row["beds"]
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
-            #msoa_name = row["MSOA"]
+            # msoa_name = row["MSOA"]
             coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
-                hospital_id=index,
-                #super_area=msoa_name,
+                # super_area=,
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,
@@ -368,29 +398,25 @@ class Hospitals:
                 hospital = self.members[hospital_id]
                 if distance > self.max_distance:
                     break
-                if (
-                        assign_icu
-                        and not hospital.full
-                ) or (
-                        assign_patient
-                        and not hospital.full_ICU
+                if (assign_icu and not hospital.full) or (
+                    assign_patient and not hospital.full_ICU
                 ):
                     break
             if hospital is not None:
                 logger.info(
-                    f"Receiving hospital for patient with " + \
-                    f"{person.health_information.tag} at distance = {distance} km"
+                    f"Receiving hospital for patient with "
+                    + f"{person.health_information.tag} at distance = {distance} km"
                 )
                 hospital.add_as_patient(person)
             else:
                 logger.info(
-                    f"no hospital found for patient with " + \
-                    f"{person.health_information.tag} in distance " + \
-                    f"< {self.max_distance} km."
+                    f"no hospital found for patient with "
+                    + f"{person.health_information.tag} in distance "
+                    + f"< {self.max_distance} km."
                 )
 
     def get_closest_hospitals(
-            self, coordinates: Tuple[float, float], r_max: float
+        self, coordinates: Tuple[float, float], r_max: float
     ) -> Tuple[float, float]:
         """
         Get the closest hospitals to a given coordinate within r_max
@@ -418,10 +444,3 @@ class Hospitals:
         )
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
-
-
-if __name__ == "__main__":
-    Hospitals.from_file(
-        default_data_filename,
-        default_config_filename,
-    )
