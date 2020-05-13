@@ -55,7 +55,7 @@ class TestCommuteUnit:
     @pytest.fixture(name="unit")
     def create_hub(self):
         return CommuteUnit(
-            commutehubunit_id = 0,
+            commuteunit_id = 0,
             city = 'Manchester',
             commutehub_id = 0,
             is_peak = False,
