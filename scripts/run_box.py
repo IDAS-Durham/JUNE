@@ -27,7 +27,7 @@ args = parser.parse_args()
 
 t1 = time.time()
 geography = Geography.from_file(
-    {"msoa": ["E02001697"]}
+    {"msoa": ["E02003999"]}
 )
 world = World.from_geography(geography, box_mode=True)
 t2 = time.time()
@@ -44,7 +44,7 @@ seed = Seed(world.boxes, infection, )
 # Use if you want to seed the disease per region
 # with real data
 #seed.unleash_virus_per_region()
-seed.unleash_virus(500, box_mode=True)
+seed.unleash_virus(100, box_mode=True)
 
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(
