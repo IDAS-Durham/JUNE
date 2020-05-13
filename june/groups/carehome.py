@@ -2,7 +2,7 @@ from enum import IntEnum
 import pandas as pd
 from pathlib import Path
 
-from june.groups.group import Group
+from june.groups.group import Group, Supergroup
 from june.logger_creation import logger
 from enum import IntEnum
 from typing import List
@@ -25,7 +25,6 @@ class CareHome(Group):
 
     spec = "carehome"
 
-
     class GroupType(IntEnum):
         workers = 0
         residents = 1
@@ -39,17 +38,13 @@ class CareHome(Group):
     def add(self, person, qualifier=GroupType.residents):
         super().add(person, qualifier)
 
-class CareHomes:
+
+class CareHomes(Supergroup):
     __slots__ = "members"
 
     def __init__(self, carehomes: List[CareHome]):
+        super().__init__()
         self.members = carehomes
-
-    def __iter__(self):
-        return iter(self.members)
-
-    def __len__(self):
-        return len(self.members)
 
     @classmethod
     def for_geography(cls, geography, data_filename: str = default_data_path):

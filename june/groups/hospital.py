@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.groups import Group
+from june.groups import Group, Supergroup
 
 from june.geography import SuperArea
 
@@ -50,11 +50,11 @@ class Hospital(Group):
     __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
 
     def __init__(
-            self,
-            n_beds: int,
-            n_icu_beds: int,
-            super_area: str = None,
-            coordinates: tuple = None,  # Optional[Tuple[float, float]] = None,
+        self,
+        n_beds: int,
+        n_icu_beds: int,
+        super_area: str = None,
+        coordinates: tuple = None,  # Optional[Tuple[float, float]] = None,
     ):
         """
         Create a Hospital given its description.
@@ -201,7 +201,7 @@ class Hospital(Group):
             )
 
 
-class Hospitals:
+class Hospitals(Supergroup):
     def __init__(
         self,
         hospitals: List["Hospital"],
@@ -221,15 +221,13 @@ class Hospitals:
         box_mode:
             whether to run in single box mode, or full simulation
         """
+        super().__init__()
         self.box_mode = box_mode
         self.max_distance = max_distance
         self.members = hospitals
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
             self.init_trees(coordinates)
-
-    def __iter__(self):
-        return iter(self.members)
 
     @classmethod
     def for_box_mode(cls):

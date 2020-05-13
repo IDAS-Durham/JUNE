@@ -3,7 +3,7 @@ from enum import IntEnum
 import numpy as np
 import random
 
-from june.groups.group import Group
+from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
 
@@ -18,8 +18,8 @@ class Household(Group):
     2 - adults
     3 - old adults
     """
-    __slots__ = "area", "household_composition", "communal", "max_size"
 
+    __slots__ = "area", "household_composition", "communal", "max_size"
 
     class GroupType(IntEnum):
         kids = 0
@@ -44,8 +44,7 @@ class Household(Group):
         parents = [
             person
             for person in self.people
-            if person
-            not in list(self.subgroups[self.GroupType.kids].people)
+            if person not in list(self.subgroups[self.GroupType.kids].people)
         ]
         return random.choice(parents)
 
@@ -54,30 +53,27 @@ class Household(Group):
             if person.active_group is None:
                 if person.health_information.dead:
                     continue
-                person.active_group = 'household'
+                person.active_group = "household"
             elif person.health_information.must_stay_at_home:
                 if person.age <= self.must_supervise_age:
-                    person.active_group = 'household'
+                    person.active_group = "household"
                     random_parent = self.select_random_parent()
-                    random_parent.active_group = 'household'
+                    random_parent.active_group = "household"
                 else:
                     if random.random() <= self.stay_at_home_complacency:
-                        person.active_group = 'household'
+                        person.active_group = "household"
 
-class Households:
+
+class Households(Supergroup):
     """
     Contains all households for the given area, and information about them.
     """
+
     __slots__ = "members"
 
     def __init__(self, households: List[Household]):
+        super().__init__()
         self.members = households
-
-    def __iter__(self):
-        return iter(self.members)
-    
-    def __len__(self):
-        return len(self.members)
 
     def __add__(self, households: "Households"):
         """
