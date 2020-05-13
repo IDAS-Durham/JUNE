@@ -4,11 +4,11 @@ from june.demography import Population
 
 
 class Box(Group):
-    def __init__(self):
+    def __init__(self, people):
         super().__init__()
     
     def set_population(self, population: Population):
-        self.people.update(population)
+        self.subgroups[0]._people.update(population.people)
 
 class Boxes(Supergroup):
     def __init__(self, boxes: List[Box]):
