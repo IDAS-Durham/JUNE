@@ -52,7 +52,7 @@ class TestDemography:
         geography = Geography.from_file({"oa" : ["E00088544"]})
         area = list(geography.areas)[0]
         demography = d.Demography.for_areas(area_names=[area.name])
-        population = demography.populate([area])
+        population = demography.populate(area.name)
         assert len(population) == 362
         people_ages_dict = {}
         people_sex_dict = {}
@@ -90,6 +90,10 @@ class TestDemography:
 class TestPopulation:
     def test__create_population_from_demography(self, geography_demography_test):
         demography = d.Demography.for_geography(geography_demography_test)
-        population = demography.populate(geography_demography_test.areas)
+        population = list()
+        for area in geography_demography_test.areas:
+            population.extend(
+                demography.populate(area.name)
+            )
         assert len(population) == 7602 
     
