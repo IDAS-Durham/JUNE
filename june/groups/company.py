@@ -60,6 +60,7 @@ class Company(Group):
     def n_workers(self):
         return len(self.people)
 
+
 class Companies(Supergroup):
     def __init__(self, companies: List["Companies"]):
         """
@@ -136,25 +137,27 @@ class Companies(Supergroup):
                 company_sectors_per_super_area,
             )
         else:
-            companies = chain(
-                *list(
-                    map(
-                        cls.create_companies_in_super_area,
-                        super_areas,
-                        company_sizes_per_super_area,
-                        company_sectors_per_super_area,
-                    )
+            companies = []
+            for super_area, (_, company_sizes), (_, company_sectors) in zip(
+                super_areas,
+                company_sizes_per_super_area.iterrows(),
+                company_sectors_per_super_area.iterrows(),
+            ):
+                companies += cls.create_companies_in_super_area(
+                    super_area, company_sizes, company_sectors
                 )
-            )
         np.random.shuffle(companies)
         return cls(companies)
 
     @classmethod
     def create_companies_in_super_area(cls, super_area, company_sizes, company_sectors):
+        """
+        Crates companies in super area using the sizes and sectors distributions.
+        """
         sizes = []
         for size_bracket, counts in company_sizes.items():
             size_min, size_max = _get_size_brackets(size_bracket)
-            sizes += list(np.random.randint(max(size_min,1), size_max, int(counts.values[0])))
+            sizes += list(np.random.randint(max(size_min, 1), size_max, int(counts)))
         sectors = []
         for sector, counts in company_sectors.items():
             sectors += [sector] * int(counts)
