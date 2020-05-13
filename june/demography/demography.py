@@ -7,8 +7,8 @@ from typing import List, Dict, Optional
 import pandas as pd
 import numpy as np
 
-from june.geography import Geography, Area
-from june.demography import Person
+from .. import geography #  import Geography, Area
+from .person import Person
 
 default_data_path = (
     Path(os.path.abspath(__file__)).parent.parent.parent
@@ -160,7 +160,7 @@ class Demography:
 
     def populate(
             self,
-            areas: Optional[List[Area]] = None,
+            areas: Optional[List[geography.Area]] = None,
     ) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
@@ -195,7 +195,7 @@ class Demography:
     @classmethod
     def for_geography(
             cls,
-            geography: Geography,
+            geography: geography.Geography,
             data_path: str = default_data_path,
             config: Optional[dict] = None,
     ) -> "Demography":

@@ -30,7 +30,7 @@ jobs:
     - name: Get data
       run: bash get_data.sh
     - name: Install simulation
-      run: pip install -e . 
+      run: python setup.py install
     - name: Test with pytest
       run: |
         cd test_june
