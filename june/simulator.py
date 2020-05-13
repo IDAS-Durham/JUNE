@@ -19,13 +19,6 @@ sim_logger = logging.getLogger(__name__)
 class SimulatorError(BaseException):
     pass
 
-def create_health_index():
-    def dummy_health_index(age, sex):
-        return [0.1, 0.3, 1.0, 0.9, 0.9]
-    return dummy_health_index 
-
-
-
 # TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(
@@ -64,8 +57,7 @@ class Simulator:
             "churches",
         ]
         self.check_inputs(config["time"])
-        self.health_index_generator = create_health_index() 
-        #self.health_index_generator = HealthIndexGenerator.from_file()
+        self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
             self, self.world, self.timer, config["logger"]["save_path"],
@@ -208,6 +200,7 @@ class Simulator:
         print(f'Infected  {len(self.world.people.infected)}')
         for person in self.world.people.infected:
             health_information = person.health_information
+            print(health_information.tag)
             health_information.update_health_status(time, delta_time)
             # release patients that recovered
             if health_information.recovered:
