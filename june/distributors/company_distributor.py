@@ -20,12 +20,19 @@ class CompanyDistributor:
     def __init__(self):
         """Get all companies within SuperArea"""
 
+
+    def distribute_adults_to_companies_in_super_areas(self, super_areas):
+        for super_area in super_areas:
+            self.distribute_adults_to_companies_in_super_area(super_area)
+
     def distribute_adults_to_companies_in_super_area(self, super_area):
         """
         Looks for all workers and companies in the super area and matches
         them
         """
         # shuffle companies
+        print("super area name")
+        print(super_area.name)
         for person in super_area.workers:
             compatible_companies = []
             for company in super_area.companies:
