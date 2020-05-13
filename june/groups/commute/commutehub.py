@@ -1,9 +1,22 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from june.groups.group import Group, Supergroup
 
+default_data_path = (
+    Path(os.path.abspath(__file__)).parent.parent.parent
+    / "data/"
+)
 
-class CommuteHub:
+default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
+
+class CommuteHub(Group):
     """
     Defines hubs around cities through with people commute and assigns people to those commute hubs
     """
@@ -19,10 +32,10 @@ class CommuteHub:
         self.id = commutehub_id
         self.lat_lon = lat_lon
         self.city = city # station the hub is affiliated to
-        self.passengers = [] # passengers flowing through commute hub
+        #self.passengers = [] # passengers flowing through commute hub -> people in form Group inheritence
         self.commuteunits = []
 
-class CommuteHubs:
+class CommuteHubs(Supergroup):
     """
     Initialises commute hubs given the location of the commute cities they are affiliated to
 
@@ -35,7 +48,7 @@ class CommuteHubs:
        the real stations, but we believe this gives a good approximation at the sub-regional level)
     """
 
-    def __init__(self, commutecities, msoa_coordinates, init = False):
+    def __init__(self, commutecities):
         """
         commutecities: (list) members of CommuteCities
         msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
@@ -43,8 +56,8 @@ class CommuteHubs:
         members: (list) list of all commute hubs
         """
         self.commutecities = commutecities
-        self.msoa_coordinates = msoa_coordinates
-        self.init = init
+        #self.msoa_coordinates = msoa_coordinates
+        #self.init = init
         self.members = []
 
         # initialise commute hubs
@@ -58,6 +71,10 @@ class CommuteHubs:
         msoa_lon = float(self.msoa_coordinates['X'][self.msoa_coordinates['MSOA11CD'] == msoa])
 
         return [msoa_lat, msoa_lon]
+
+    def from_file(self):
+
+        self.msoa_coordinates = pd.read_csv(default_msoa_coordinates)
             
     def init_hubs(self):
         'Initialise all hubs'
