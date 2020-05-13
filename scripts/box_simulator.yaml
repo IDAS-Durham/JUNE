@@ -4,7 +4,7 @@ logger:
   save_path: box_results
 
 time:
-  total_days: 25 
+  total_days: 50 
   step_duration: 
       weekday:
           1: 12 
