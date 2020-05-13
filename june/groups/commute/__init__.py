@@ -30,9 +30,8 @@ class Commute:
         msoa_coordinates = pd.read_csv(
             f"{geographical_data_directory}/msoa_coordinates_englandwales.csv"
         )
-        msoa_oa_coordinates = pd.read_csv(
-            f"{geographical_data_directory}/msoa_oa.csv"
-        )
+        msoa_oa_coordinates_filename = f"{geographical_data_directory}/msoa_oa.csv"
+
         london_stat_pcs = pd.read_csv(
             f"{travel_data_directory}/London_station_coordinates.csv"
         )
@@ -43,7 +42,7 @@ class Commute:
             super_areas,
             uk_pcs_coordinates,
             msoa_coordinates,
-            msoa_oa_coordinates,
+            msoa_oa_coordinates_filename,
             london_stat_pcs,
             non_london_stat_pcs
         )
@@ -53,7 +52,7 @@ class Commute:
             super_areas,
             uk_pcs_coordinates,
             msoa_coordinates,
-            msoa_oa_coordinates,
+            msoa_oa_coordinates_filename,
             london_stat_pcs,
             non_london_stat_pcs
     ):
@@ -73,7 +72,10 @@ class Commute:
         # CommuteHub
         commutehubs = CommuteHubs(commutecities.members, msoa_coordinates, init=True)
 
-        commutehub_distributor = CommuteHubDistributor(msoa_oa_coordinates, commutecities.members)
+        commutehub_distributor = CommuteHubDistributor.from_file(
+            msoa_oa_coordinates_filename,
+            commutecities.members
+        )
         commutehub_distributor.distribute_people()
 
         # CommuteUnit
