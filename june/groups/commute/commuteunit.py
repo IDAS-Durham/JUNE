@@ -30,7 +30,7 @@ class CommuteUnit(Group):
         self.id = commuteunit_id
         self.city = city
         self.commutehub_id = commutehub_id
-        self.passengers = []
+        #self.passengers = [] -> people from group inherience
         self.no_passengers = 0
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
         self.is_peak = is_peak
