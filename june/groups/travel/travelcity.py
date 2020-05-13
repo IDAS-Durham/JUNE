@@ -8,7 +8,7 @@ class TravelCity:
         self.id = travelcity_id
         self.city = city
         self.metro_centroid = metro_centroid
-        self.passengers = []
+        self.msoa = []
 
 class TravelCities:
 
