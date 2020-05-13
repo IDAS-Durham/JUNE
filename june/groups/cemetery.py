@@ -1,4 +1,4 @@
-from june.groups.group import Group
+from june.groups.group import Group, Supergroup
 from june.logger_creation import logger
 from enum import IntEnum
 
@@ -17,9 +17,10 @@ class Cemetery(Group):
         pass
 
 
-class Cemeteries:
+class Cemeteries(Supergroup):
     def __init__(self, world=None):
         self.world = world
+        super().__init__(['world'])
         self.members = [Cemetery()]
 
     def get_nearest(self, person):
