@@ -1,6 +1,13 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+from june.groups.group import Group, Supergroup
+
 import numpy as np
 
-class CommuteCityUnit:
+class CommuteCityUnit(Group):
 
     def __init__(self, commutecityunit_id, city, is_peak):
         self.commutecityunit_id = commutecityunit_id,
@@ -10,7 +17,7 @@ class CommuteCityUnit:
         self.max_passengers = 50
 
     
-class CommuteCityUnits:
+class CommuteCityUnits(Supergroup):
 
     def __init__(self, commutecities, init = False):
 
