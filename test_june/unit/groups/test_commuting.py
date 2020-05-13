@@ -8,7 +8,7 @@ import pandas as pd
 from june.geography import Geography
 from june.geography import Area
 from june.demography import Person
-from june.groups import CommuteCity, CommuteCities, CommuteHub, CommuteHubs
+from june.groups import CommuteCity, CommuteCities, CommuteHub, CommuteHubs, CommuteUnit, CommuteUnits, CommuteCityUnit, CommuteCityUnits
 
 @pytest.fixture(name="super_area_commute", scope="module")
 def super_area_name():
@@ -33,10 +33,10 @@ class TestCommuteCity:
         )
 
     def test__city_grouptype(self, city):
-        assert len(city.GroupType.passengers) == 0
-        assert len(city.GroupType.commutehubs) == 0
-        assert len(city.GroupType.commute_internal) == 0
-        assert len(city.GroupType.commutecityunits) == 0
+        assert len(city.passengers) == 0
+        assert len(city.commutehubs) == 0
+        assert len(city.commute_internal) == 0
+        assert len(city.commutecityunits) == 0
 
 class TestCommuteHub:
     @pytest.fixture(name="hub")
@@ -48,8 +48,8 @@ class TestCommuteHub:
         )
 
     def test__hub_grouptype(self, hub):
-        assert len(hub.GroupType.passengers) == 0
-        assert len(hub.GroupType.commuteunits) == 0
+        assert len(hub.passengers) == 0
+        assert len(hub.commuteunits) == 0
 
 class TestCommuteHubUnit:
     @pytest.fixture(name="unit")
@@ -62,8 +62,8 @@ class TestCommuteHubUnit:
         )
 
     def test__unit_grouptype(self, unit):
-        assert len(unit.GroupType.passengers) == 0
-        assert unit.GroupType.max_passengers != 0
+        assert len(unit.passengers) == 0
+        assert unit.max_passengers != 0
 
 class TestCommuteCityUnit:
     @pytest.fixture(name="unit")
@@ -75,5 +75,5 @@ class TestCommuteCityUnit:
         )
 
     def test__unit_grouptype(self, unit):
-        assert len(unit.GroupType.passengers) == 0
-        assert unit.GroupType.max_passengers != 0
+        assert len(unit.passengers) == 0
+        assert unit.max_passengers != 0
