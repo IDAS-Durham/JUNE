@@ -97,26 +97,27 @@ class World:
 
         if include_commute:
             # CommuteCity
-            self.commutecities = CommuteCities(self.inputs.uk_pcs_coordinates,self.inputs.msoa_coordinates) # FILE READIN
-            self.commutecities.init_non_london(self.inputs.non_london_stat_pcs) # FILE READIN
+            self.commutecities = CommuteCities.from_file()
+            self.commutecities.init_non_london()
             # Crucial that London is initialise second, after non-London
-            self.commutecities.init_london(self.inputs.london_stat_pcs) # FILE READIN
+            self.commutecities.init_london()
 
             self.commutecity_distributor = CommuteCityDistributor(self.commutecities.members, self.super_areas.members)
             self.commutecity_distributor.distribute_people()
 
             # CommuteHub
-            self.commutehubs = CommuteHubs(self.commutecities.members, self.inputs.msoa_coordinates, init=True) # FILE READIN
+            self.commutehubs = CommuteHubs(self.commutecities)
+            self.commutehubs.from_file()
+            self.commutehubs.init_hubs()
 
-            self.commutehub_distributor = CommuteHubDistributor(self.inputs.msoa_oa_coordinates, self.commutecities.members) # FILE READIN
+            self.commutehub_distributor = CommuteHubDistributor(self.commutecities.members)
+            self.commutehub_distributor.from_file()
             self.commutehub_distributor.distribute_people()
 
             # CommuteUnit
             self.commuteunits = CommuteUnits(self.commutehubs.members, init=True)
 
             self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
-            # unit distirbutor is dynamic and should be called at each time step - leave this until later
-            #self.commuteunit_distributor.distribute_people()
 
             #CommuteCityUnit
             self.commutecityunits = CommuteCityUnits(self.commutecities.members, init = True)
