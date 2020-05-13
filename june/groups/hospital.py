@@ -295,7 +295,7 @@ class Hospitals(Supergroup):
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
-                        cls.create_hospital_from_df_row(super_area, row, icu_fraction)
+                        hospital = cls.create_hospital_from_df_row(super_area, row, icu_fraction)
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break
