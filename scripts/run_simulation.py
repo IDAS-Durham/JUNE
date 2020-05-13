@@ -45,14 +45,14 @@ print(f"Creating the world took {t2 -t1} seconds to run.")
 # *********** INITIALIZE SEED ***************** #
 
 symptoms = SymptomsConstant(recovery_rate=0.05)
-transmission = TransmissionConstant(probability=0.3)
+transmission = TransmissionConstant(probability=0.7)
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction.from_file()
 seed = Seed(world.super_areas, infection, )
 # Use if you want to seed the disease per region
 # with real data
 #seed.unleash_virus_per_region()
-seed.unleash_virus(1000)
+seed.unleash_virus(2000)
 
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(
