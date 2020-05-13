@@ -39,7 +39,7 @@ class MSOASearch():
             help='directory containing MSOA centroids - assume also where file will be saved to',
             type=str
         )
-
+        
         args = parser.parse_args()
 
         return args
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         api = f.read()
     apikey = api.split('\n')[0]
 
-    regions = ['London', 'Wales', 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
+    regions = ['London', 'Wales', 'EastMidlands', 'WestMidlands']#, 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
     #Yorkshire
 
     for region in regions:
