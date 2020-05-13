@@ -1,5 +1,3 @@
-import numpy as np
-
 class CommuteCityDistributor:
     """
     Distirbute people to cities based on where they work
@@ -24,7 +22,3 @@ class CommuteCityDistributor:
                         # assign people who commute to the given city
                         if person.mode_of_transport.is_public:
                             commutecity.passengers.append(person)
-            
-            
-            
-            

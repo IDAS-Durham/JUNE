@@ -3,28 +3,28 @@ import pandas as pd
 import argparse
 
 def parse():
-        '''
-        Parse input arguments
-        '''
-        parser = argparse.ArgumentParser(description='Clean Google Maps API data pulled using msoa_search.py')
+    '''
+    Parse input arguments
+    '''
+    parser = argparse.ArgumentParser(description='Clean Google Maps API data pulled using msoa_search.py')
 
-        parser.add_argument(
-            '--type',
-            dest='location_type',
-            help='Google maps type being selected (found on Google Cloud documentation)',
-            type=str
-        )
+    parser.add_argument(
+        '--type',
+        dest='location_type',
+        help='Google maps type being selected (found on Google Cloud documentation)',
+        type=str
+    )
 
-        parser.add_argument(
-            '--msoa_coord_dir',
-            dest='msoa_coord',
-            help='directory containing MSOA centroids - assume also where file will be saved to',
-            type=str
-        )
+    parser.add_argument(
+        '--msoa_coord_dir',
+        dest='msoa_coord',
+        help='directory containing MSOA centroids - assume also where file will be saved to',
+        type=str
+    )
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        return args
+    return args
     
 def clean(region_file, msoa_file):
 
