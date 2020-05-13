@@ -51,7 +51,7 @@ class SymptomsConstant(Symptoms):
         super().__init__(health_index=health_index)
 
         self.recovery_rate = recovery_rate
-        #self.severity = self.max_severity
+        self.severity = self.max_severity
 
     def update_severity_from_delta_time(self, delta_time):
 

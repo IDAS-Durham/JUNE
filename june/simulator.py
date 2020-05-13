@@ -200,6 +200,7 @@ class Simulator:
         for person in self.world.people.infected:
             health_information = person.health_information
             health_information.update_health_status(time, delta_time)
+            #print(health_information.tag)
             # release patients that recovered
             if health_information.recovered:
                 if person.in_hospital is not None:
@@ -218,6 +219,7 @@ class Simulator:
 
         """
         active_groups = self.timer.active_groups()
+        print('Active groups = ', active_groups)
         if not active_groups or len(active_groups) == 0:
             world_logger.info("==== do_timestep(): no active groups found. ====")
             return
@@ -226,15 +228,35 @@ class Simulator:
         # infect people in groups
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
-        for group_type in group_instances:
-            for group in group_type.members:
-                self.interaction.time_step(self.timer.now, self.health_index_generator, self.timer.duration, group)
-                n_people += group.size_active
 
-        self.update_health_status(self.timer.now, self.timer.duration)
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
+        print('Number of dead = ', n_people)
+        n_hospital = 0
+        for hospital in self.world.hospitals.members:
+            #n_people += hospital.size_active
+            n_hospital += hospital.size_active
+            print('hospital active = ', hospital.size_active)
+            print('hospital = ', hospital.size)
+            print('hospital workers = ', len(hospital.subgroups[0].people))
+            for person in hospital.people:
+                if person.active_group != 'hospital':
+                    print('out of hospital')
+                    print(person.health_information.tag)
+                    print(person.active_group)
+            #for person in hospital.people:
+            #    print(f'Active group should be hospital = {person.active_group}')
+
+        print('total in hospital that are active = ', n_hospital)
+
+        for group_type in group_instances:
+            n_active_in_group = 0
+            for group in group_type.members:
+                self.interaction.time_step(self.timer.now, self.health_index_generator, self.timer.duration, group)
+                n_people += group.size_active
+                n_active_in_group += group.size_active
+            print(f'Active in {group_type} = ', n_active_in_group)
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
@@ -243,6 +265,7 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
 
+        self.update_health_status(self.timer.now, self.timer.duration)
         self.set_allpeople_free()
 
     def run(self, save=False):
