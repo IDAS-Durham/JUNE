@@ -70,6 +70,7 @@ class World:
         if hasattr(geography, "carehomes"):
             self.carehomes = geography.carehomes
             CareHomeDistributor().populate_carehome_in_areas(self.areas)
+
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
             self.households = household_distributor.distribute_people_and_households_to_areas(
