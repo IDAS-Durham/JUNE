@@ -61,7 +61,7 @@ class Subgroup(AbstractGroup):
     def recovered(self):
         return self._collate('recovered')
 
-    def infected_recovered(self, active_group):
+    def recovered_active(self, active_group):
         return self._collate_active(self.recovered, active_group)
 
 
