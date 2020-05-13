@@ -1,6 +1,5 @@
 import os
 import yaml
-import random
 from pathlib import Path
 from collections import OrderedDict
 from typing import List
@@ -13,7 +12,7 @@ from scipy import stats
 
 from june.groups import Household, Households
 from june.demography import Person
-from june.geography import Area
+from june.demography.geography import Area
 from june.logger_creation import logger
 
 default_config_filename = (

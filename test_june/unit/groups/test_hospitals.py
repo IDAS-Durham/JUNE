@@ -1,11 +1,9 @@
 import os
 from pathlib import Path
-from collections import Counter
-import pickle
 import pytest
 import numpy as np
 import pandas as pd
-from june.geography import Geography
+from june.demography.geography import Geography
 
 from june.groups import *
 from june.demography import Person

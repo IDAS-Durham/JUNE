@@ -2,14 +2,13 @@ import yaml
 import logging
 import random
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
+from typing import List
 import numpy as np
 
-from june.logger_simulation import Logger
-from june.time import Timer
-from june import interaction
-from june.infection import Infection
-from june.infection.health_index import HealthIndexGenerator
+from . import Logger
+from . import Timer
+from .infection import Infection
+from .infection.health_index import HealthIndexGenerator
 
 default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
 

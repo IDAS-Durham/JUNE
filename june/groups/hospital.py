@@ -1,4 +1,3 @@
-import os
 import yaml
 import logging
 import os
@@ -11,8 +10,6 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup
-
-from june.geography import SuperArea
 
 logger = logging.getLogger(__name__)
 

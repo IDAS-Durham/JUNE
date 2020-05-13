@@ -1,5 +1,3 @@
-import autofit as af
-from june.infection.symptoms import Symptoms
 
 class Infection:
     """

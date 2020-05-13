@@ -3,14 +3,11 @@ import yaml
 from pathlib import Path
 
 import numpy as np
-import numpy.testing as npt
-import pandas as pd
 import pytest
 import unittest
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
-from june.demography import Person, Population
 from june.distributors import WorkerDistributor
 
 

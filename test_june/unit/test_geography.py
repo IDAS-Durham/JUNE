@@ -2,7 +2,7 @@ import pytest
 import numpy.testing as npt
 from time import time
 
-from june import geography as g
+from june.demography import geography as g
 
 
 @pytest.fixture()
