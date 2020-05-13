@@ -130,6 +130,7 @@ class Companies(Supergroup):
         super_area_names = [super_area.name for super_area in super_areas]
         company_sizes_per_super_area = size_per_superarea_df.loc[super_area_names]
         company_sectors_per_super_area = sector_per_superarea_df.loc[super_area_names]
+        assert len(company_sectors_per_super_area) == len(company_sizes_per_super_area)
         if len(company_sectors_per_super_area) == 1:
             companies = cls.create_companies_in_super_area(
                 super_areas[0],
@@ -143,10 +144,10 @@ class Companies(Supergroup):
                 company_sizes_per_super_area.iterrows(),
                 company_sectors_per_super_area.iterrows(),
             ):
-                companies += cls.create_companies_in_super_area(
+                super_area.companies = cls.create_companies_in_super_area(
                     super_area, company_sizes, company_sectors
                 )
-        np.random.shuffle(companies)
+                companies += super_area.companies
         return cls(companies)
 
     @classmethod
@@ -171,6 +172,7 @@ class Companies(Supergroup):
                 sectors,
             )
         )
+        np.random.shuffle(companies)
         return companies
 
     @classmethod
