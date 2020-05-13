@@ -48,7 +48,7 @@ symptoms = SymptomsConstant(recovery_rate=0.05)
 transmission = TransmissionConstant(probability=0.3)
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction.from_file()
-seed = Seed.from_file(world.super_areas, infection)
+seed = Seed(world.super_areas, infection, )
 # Use if you want to seed the disease per region
 # with real data
 #seed.unleash_virus_per_region()
