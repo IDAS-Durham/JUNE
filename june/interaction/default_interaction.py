@@ -4,6 +4,8 @@ import yaml
 from math import exp
 from pathlib import Path
 from june.interaction.interaction import Interaction
+from june.groups.group.group import Group
+
 
 default_config_filename = (
     Path(__file__).parent.parent.parent
@@ -12,8 +14,36 @@ default_config_filename = (
 
 class DefaultInteraction(Interaction):
 
-    def __init__(self, intensities):
-        self.intensities = intensities
+    def __init__(self, alpha_physical, contact_matrices):
+        self.contacts = {}
+        self.physical = {}
+        self.beta     = {}
+        self.alpha = alpha_physical
+        self.schoolC  = 2.50
+        self.schoolP  = 0.15
+        self.schoolxi = 0.30
+        for tag in contact_matrices.keys():
+            self.fix_group_matrices(tag,contact_matrices)
+
+    def fix_group_matrices(self,tag,contact_matrices):
+        self.beta[tag]     = 1.
+        self.contacts[tag] = [[1.]]
+        self.physical[tag] = [[0.]]
+        if tag in contact_matrices:
+            if "beta" in contact_matrices[tag]:
+                self.beta[tag]     = contact_matrices[tag]["beta"]
+            if "contacts" in contact_matrices[tag]:
+                self.contacts[tag] = contact_matrices[tag]["contacts"]
+            if "physical" in contact_matrices[tag]:
+                self.physical[tag] = contact_matrices[tag]["physical"]
+        elif tag=="school":
+            if "xi" in contact_matrices[tag]:
+                self.schoolxi = float(contact_matrices[tag]["xi"])
+            if (len(self.contacts["school"])==2 and
+                len(self.physical["school"])==2):
+                self.schoolC = float(self.contacts["school"][1][1])
+                self.schoolP = float(self.physical["school"][1][1])
+
 
     @classmethod
     def from_file(
@@ -23,13 +53,8 @@ class DefaultInteraction(Interaction):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        return DefaultInteraction(config['intensities'])
+        return DefaultInteraction(config['alpha_physical'], config['contact_matrices'])
 
- 
-    def read_contact_matrix(self, group):
-        #TODO use to intialize the different config matrices at the init,
-        # ideally inside from_file
-        pass
    
     def single_time_step_for_group(self, group, health_index_generator, time, delta_time):
         """
@@ -49,7 +74,6 @@ class DefaultInteraction(Interaction):
         #if group.must_timestep:
         self.calculate_probabilities(group)
         n_subgroups = len(group.subgroups)
-        self.contact_matrix = np.ones((n_subgroups, n_subgroups))
         # Only need to iterate over sub-groups that contain people otherwise
         # we waste costly function calls n^2 times
         subgroups_containing_people = [
@@ -65,16 +89,14 @@ class DefaultInteraction(Interaction):
 
     def contaminate(self,group, health_index_generator, time, delta_time,  infecters,recipients):
         #TODO: subtitute by matrices read from file when ready
-        contact_matrix = self.contact_matrix[infecters][recipients]
         infecter_probability = self.probabilities[infecters]
         if (
-            contact_matrix <= 0. or
             infecter_probability <= 0.
         ):
             return
 
         intensity = (
-            self.intensities.get(group.spec) * contact_matrix *
+            self.intensity(group,infecters,recipients) *
             infecter_probability * -delta_time
         )
         group_of_recipients = group.subgroups[recipients].people
@@ -92,6 +114,38 @@ class DefaultInteraction(Interaction):
                 recipient.health_information.update_infection_data(
                     time=time, group_type=group.spec
                 )
+
+    def intensity(self,group,infecter,recipient):
+        tag = group.spec
+        if tag=="school":
+            if infecter>0 and recipient>0:
+                delta = pow(self.schoolxi,abs(recipient-infecter))
+                mixer = self.schoolC * delta
+                phys  = self.schoolP * delta
+            elif infecter==0 and recipient>0:
+                mixer = self.contacts[tag][1][0]
+                phys  = self.physical[tag][1][0]
+            elif infecter>0 and recipient==0:
+                mixer = self.contacts[tag][0][1]
+                phys  = self.physical[tag][0][1]
+            else:
+                mixer = self.contacts[tag][0][0]
+                phys  = self.physical[tag][0][0]
+        else:
+            if (recipient >= len(self.contacts[tag]) or
+                infecter  >= len(self.contacts[tag][recipient])):
+                mixer = 1.
+                phys  = 0.
+            else:
+                mixer = self.contacts[tag][recipient][infecter]
+                phys  = self.physical[tag][recipient][infecter]
+        if tag=="commute_Public":
+            # get the location-dependent group modifiers here,
+            # they will take into account intensity and physicality
+            # of the interaction by modifying mixer and phys.
+            mixer *= 1. 
+            phys  *= 1.
+        return self.beta[tag] * float(mixer) * (1. + (self.alpha-1.)*float(phys))
 
     def calculate_probabilities(self, group):
         norm   = 1./max(1, group.size_active)
