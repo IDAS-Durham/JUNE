@@ -1,13 +1,11 @@
 import os
-import csv
 from pathlib import Path
-from random import randint
 from typing import List, Dict, Optional
 
 import pandas as pd
 import numpy as np
 
-from .. import geography #  import Geography, Area
+from june.demography.geography import Geography, Area
 from .person import Person
 
 default_data_path = (
@@ -160,7 +158,7 @@ class Demography:
 
     def populate(
             self,
-            areas: Optional[List[geography.Area]] = None,
+            areas: Optional[List[Area]] = None,
     ) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
@@ -195,7 +193,7 @@ class Demography:
     @classmethod
     def for_geography(
             cls,
-            geography: geography.Geography,
+            geography: Geography,
             data_path: str = default_data_path,
             config: Optional[dict] = None,
     ) -> "Demography":

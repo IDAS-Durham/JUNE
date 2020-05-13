@@ -1,13 +1,5 @@
-from collections import Counter
-import pickle
-import pytest
-import pandas as pd
-from pathlib import Path
-from june.groups.carehome import CareHome, CareHomes
-from june.distributors import CareHomeDistributor
-from june.distributors.carehome_distributor import CareHomeError
-from june.demography.person import Person
-from june.geography import Geography
+from june.groups.carehome import CareHomes
+from june.demography.geography import Geography
 
 def test__area_with_carehome():
     geography = Geography.from_file({"oa" : ["E00081795"]})

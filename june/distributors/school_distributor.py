@@ -2,14 +2,14 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 import numpy as np
 from scipy import stats
 
-from june.geography import Geography
-from june.geography import Area, SuperArea
-from june.groups.school import School, Schools
+from june.demography.geography import Geography
+from june.demography.geography import Area, SuperArea
+from june.groups.school import Schools
 
 default_data_folder = Path(os.path.abspath(__file__)).parent.parent.parent
 

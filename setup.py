@@ -25,6 +25,14 @@ setup(
         author_email='arnauq@protonmail.com',
         license="MIT license",
         install_requires=requirements,
-        packages=['june'],
+        packages=['june',
+                  'june.infection',
+                  'june.demography',
+                  'june.distributors',
+                  'june.groups',
+                  'june.groups.group',
+                  'june.groups.commute',
+                  'june.interaction',
+                  'june.box'],
 )
 

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import rv_discrete
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.groups.group import Group, Supergroup
 
 default_data_path = (

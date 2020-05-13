@@ -3,14 +3,13 @@ import yaml
 import logging
 from pathlib import Path
 from itertools import count
-from collections import OrderedDict
-from typing import List, Tuple, Dict, Optional
+from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Person, Population
 from june.logger_creation import logger
 

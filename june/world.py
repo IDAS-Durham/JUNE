@@ -1,19 +1,11 @@
-import os
-import pickle
 import logging
-from pathlib import Path
-from typing import List, Tuple, Dict, Optional
 
-import numpy as np
-import yaml
 import pickle
-from tqdm.auto import tqdm  # for a fancy progress bar
 
 from june.groups import Hospitals
 from june.box.box_mode import Boxes, Box
-from june.geography import Geography
-from june.demography import Demography, People
-from june.logger_creation import logger
+from june.demography.geography import Geography
+from june.demography import Demography
 from june.distributors import (
     SchoolDistributor,
     HospitalDistributor,
