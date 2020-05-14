@@ -17,9 +17,12 @@ def test__age_sex_generator():
     age_counts = [0, 2, 0, 2, 4]
     age_bins = [0, 3]
     female_fractions = [0,  1]
+    ethnicity_groups = ['A', 'B', 'C']
+    ethnicity_structure = [[2,0,0],[0,0,6]]
     age_sex_generator = d.demography.AgeSexGenerator(age_counts, age_bins, female_fractions)
     assert list(age_sex_generator.age_iterator) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert list(age_sex_generator.sex_iterator) == ['m', 'm', 'f', 'f', 'f', 'f', 'f', 'f']
+    assert list(age_sex_generator.ethnicity_iterator) == list('AACCCC')
     age_sex_generator = d.demography.AgeSexGenerator(age_counts, age_bins, female_fractions)
     ages = []
     sexes = []
