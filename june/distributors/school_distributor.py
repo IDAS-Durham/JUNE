@@ -1,27 +1,18 @@
 import logging
-import os
-from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
 import yaml
 from scipy import stats
 
+from june import paths
 from june.geography import Area, SuperArea
 from june.geography import Geography
 from june.groups.school import Schools
 
-default_data_folder = Path(os.path.abspath(__file__)).parent.parent.parent
-
-default_data_filename = (
-        default_data_folder / "data/processed/school_data/england_schools_data.csv"
-)
-default_areas_map_path = (
-        default_data_folder / "data/processed/geographical_data/oa_msoa_region.csv"
-)
-default_config_filename = (
-        default_data_folder / "configs/defaults/distributors/school_distributor.yaml"
-)
+default_data_filename = paths.data_path / "processed/school_data/england_schools_data.csv"
+default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+default_config_filename = paths.configs_path / "defaults/distributors/school_distributor.yaml"
 
 logger = logging.getLogger(__name__)
 
