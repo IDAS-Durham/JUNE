@@ -3,10 +3,19 @@ from typing import List, Tuple, Dict
 
 import numpy as np
 import yaml
+import os
+from pathlib import Path
 
 from june import paths
 
+default_data_path = (
+    Path(os.path.abspath(__file__)).parent.parent
+    / "data/"
+)
+
 default_config_filename = paths.configs_path / "defaults/commute.yaml"
+
+default_commute_file = default_data_path / "census_data/commute.csv"
 
 
 class ModeOfTransport:
@@ -262,7 +271,7 @@ class CommuteGenerator:
     @classmethod
     def from_file(
             cls,
-            filename: str,
+            filename: str = default_commute_file,
             config_filename: str = default_config_filename
     ) -> "CommuteGenerator":
         """
