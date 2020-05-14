@@ -106,10 +106,12 @@ class Hospital(Group):
             if person.active_group is None:
                 person.active_group = self[self.GroupType.icu_patients]
 
-    def add(self, person, qualifier=GroupType.workers, subgroup_type_qualifier=GroupType.workers):
-        super().add(person, qualifier, subgroup_type_qualifier)
+    def add(self, person, qualifier=GroupType.workers): 
         if qualifier in [self.GroupType.patients, self.GroupType.icu_patients]:
+            super().add(person, qualifier, person.GroupType.hospital)
             person.in_hospital = self
+        else:
+            super().add(person, qualifier, person.GroupType.primary_activity)
 
     def add_as_patient(self, person):
         """
@@ -122,9 +124,9 @@ class Hospital(Group):
             person instance to add as patient
         """
         if person.health_information.tag == "intensive care":
-            self.add(person, self.GroupType.icu_patients, person.GroupType.hospital)
+            self.add(person, self.GroupType.icu_patients)
         elif person.health_information.tag == "hospitalised":
-            self.add(person, self.GroupType.patients, person.GroupType.hospital)
+            self.add(person, self.GroupType.patients)
         else:
             raise AssertionError(
                 "ERROR: This person shouldn't be trying to get to a hospital"
