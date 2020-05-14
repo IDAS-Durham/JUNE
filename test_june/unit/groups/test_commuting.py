@@ -91,7 +91,7 @@ class TestNewcastle:
         return geography
 
     @pytest.fixture(name="world_nc")
-    def create_world(self, geography_commute_nc):
+    def create_world_nc(self, geography_commute_nc):
         demography = Demography.for_geography(geography)
         world = World(geography, demography, include_households=False, include_commute=False)
         worker_distr = WorkerDistributor.for_geography(geography)
@@ -105,9 +105,23 @@ class TestNewcastle:
 
         return world
 
-    #def test__create_cities(self, world):
-    #    commutecities = CommuteCities()
-    #    commutecities.from_file()
+    @pytest.fixture(name="commutecities_nc")
+    def create_cities(self, world):
+        commutecities = CommuteCities()
+        commutecities.from_file()
+
+        return commutecities
+
+    def init_stations(self, commutecities_nc):
+        commutecities.init_non_london()
+        commutecities.init_london()
+
+    def test__init_stations(self, commutecities_nc):
+        assert len(commutecities_nc.members)
+
+    #def commutecity_distiribute(self, commutecities_nc, world_nc):
+    #    commutecity_distributor = CommuteCityDistributor(commutecities.members, world_nc.super_areas.members)
+        
         
         
     
