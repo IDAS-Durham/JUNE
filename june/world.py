@@ -124,9 +124,9 @@ class World(object):
 
         for geo_superunit in ["super_areas", "areas"]:
             supergeo = getattr(self, geo_superunit)
-            supergeo.erase_people_from_groups_and_subgroups()
+            supergeo.erase_people_from_geographical_unit()
             for geo in supergeo:
-                geo.erase_people_from_groups_and_subgroups()
+                geo.erase_people_from_geographical_unit()
         return self.__dict__
 
     def __setstate__(self, state):
@@ -134,6 +134,8 @@ class World(object):
         for person in self.people:
             for subgroup in person.subgroups:
                 subgroup._people.add(person)
+            if person.area is not None:
+                person.area.add(person)
 
     @classmethod
     def from_pickle(self, pickle_path):

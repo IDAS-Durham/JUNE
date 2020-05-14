@@ -11,6 +11,8 @@ from pytest import fixture
 #    world = World.from_geography(Geography.from_file({"oa": ["E00120481"]}))
 #    return world
 
+def sort_by_list(array, sortidx):
+    return [array[i] for i in np.argsort(sortidx)]
 
 @fixture(name="pickled_world", scope="module")
 def world_from_pickle(world):
@@ -52,10 +54,8 @@ def test__group_reconstruction(world, pickled_world):
         supergroup_pickle = getattr(pickled_world, supergroup_name)
         group_ids = [group.id for group in supergroup]
         group_ids_pickled = [group.id for group in supergroup_pickle]
-        groups = np.array(supergroup.members)[np.argsort(group_ids)]
-        groups_pickled = np.array(supergroup_pickle.members)[
-            np.argsort(group_ids_pickled)
-        ]
+        groups = sort_by_list(supergroup.members, group_ids) 
+        groups_pickled = sort_by_list(supergroup_pickle.members, group_ids_pickled) 
         for group, group_pickled in zip(groups, groups_pickled):
             assert group.id == group_pickled.id
             for subtype in group.GroupType:
@@ -64,12 +64,32 @@ def test__group_reconstruction(world, pickled_world):
                 assert len(subgroup) == len(subgroup_pickle)
                 if len(subgroup) == 0:
                     continue
-                people_list = np.array(list(subgroup._people))
-                people_pickled_list = np.array(list(subgroup_pickle._people))
+                people_list = list(subgroup._people)
+                people_pickled_list = list(subgroup_pickle._people)
                 people_ids = [person.id for person in people_list]
                 pickle_people_ids = [person.id for person in people_pickled_list]
-                people = people_list[np.argsort(people_ids)]
-                people_pickle = people_pickled_list[np.argsort(pickle_people_ids)]
+                people = sort_by_list(people_list, people_ids)
+                people_pickle = sort_by_list(people_pickled_list, pickle_people_ids)
                 for person, person_pickle in zip(people, people_pickle):
                     assert person.id == person_pickle.id
+
+def test__areas_reconstruction(world, pickled_world):
+    """
+    Tests that the reconstructed groups contain the same amount of people
+    """
+    area_ids = [area.id for area in world.areas.members]
+    pickled_area_ids = [area.id for area in pickled_world.areas.members]
+    areas = sort_by_list(world.areas.members, area_ids)
+    pickled_areas = sort_by_list(world.areas.members, pickled_area_ids)
+    assert len(areas) == len(pickled_areas)
+    if len(areas) != 0:
+        for area, area_pickled in zip(areas, pickled_areas):
+            assert area.id == area_pickled.id
+            people_ids = [person.id for person in area.people]
+            pickled_people_ids = [person.id for person in area_pickled.people]
+            people = sort_by_list(area.people, people_ids)
+            people_pickled = sort_by_list(area_pickled.people, pickled_people_ids)
+            for person, person_pickled in zip(people, people_pickled):
+                assert person.id == person_pickled.id
+
 
