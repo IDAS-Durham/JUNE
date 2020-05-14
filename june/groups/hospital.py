@@ -3,7 +3,7 @@ import yaml
 import logging
 import os
 from enum import IntEnum
-from pathlib import Path
+from june import paths
 from typing import List, Tuple
 
 import numpy as np
@@ -17,12 +17,12 @@ from june.geography import SuperArea
 logger = logging.getLogger(__name__)
 
 default_data_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/hospital_data/england_hospitals.csv"
+    paths.data_path
+    / "processed/hospital_data/england_hospitals.csv"
 )
 default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/groups/hospitals.yaml"
+    paths.configs_path
+    / "defaults/groups/hospitals.yaml"
 )
 
 
@@ -187,11 +187,6 @@ class Hospital(Group):
     def update_status_lists(self, time, delta_time):
         # three copies of what happens in group for the three lists of people
         # in the hospital
-        if self.contains_people:
-            super().update_status_lists(time, delta_time)
-            logger.info(
-                f"=== update status list for hospital with {self.size} people ==="
-            )
         if self[self.GroupType.patients].contains_people:
             self.update_status_lists_for_patients(time, delta_time)
             self.update_status_lists_for_ICUpatients(time, delta_time)
@@ -214,10 +209,6 @@ class Hospitals(Supergroup):
 
         Parameters
         ----------
-        hospital_df:
-            data frame with hospital data
-        config:
-            config dictionary
         box_mode:
             whether to run in single box mode, or full simulation
         """
