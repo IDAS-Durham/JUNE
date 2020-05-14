@@ -306,14 +306,17 @@ class HouseholdDistributor:
         n_students = n_students_df.loc[area.name].values[0]
         n_communal = n_communal_df.loc[area.name].values[0]
         men_by_age, women_by_age = self._create_people_dicts(area)
-        households = self.distribute_people_to_households(
-            men_by_age,
-            women_by_age,
-            area,
-            number_households_dict,
-            n_students,
-            n_communal,
-        )
+        try:
+            households = self.distribute_people_to_households(
+                men_by_age,
+                women_by_age,
+                area,
+                number_households_dict,
+                n_students,
+                n_communal,
+            )
+        except:
+            raise HouseholdError(f"Household distribtor failed in ara {area.name}")
         area.households = households
         return households
 
@@ -1026,10 +1029,12 @@ class HouseholdDistributor:
                     max_age=self.student_max_age,
                 )
                 if student is None:
-                    print(n_students)
-                    print(men_by_age.keys())
-                    print(women_by_age.keys())
-                    raise HouseholdError(f"Students do not match in area {area.name}!")
+                    student = self._get_random_person_in_age_bracket(
+                    men_by_age,
+                    women_by_age,
+                    min_age=self.student_min_age,
+                    max_age=self.student_max_age+10,
+                )
                 self._add_to_household(household, student, subgroup="young_adults")
                 students_left -= 1
         assert students_left >= 0
@@ -1042,6 +1047,13 @@ class HouseholdDistributor:
                 min_age=self.student_min_age,
                 max_age=self.student_max_age,
             )
+            if student is None:
+                student = self._get_random_person_in_age_bracket(
+                    men_by_age,
+                    women_by_age,
+                    min_age=self.student_min_age,
+                    max_age=self.student_max_age+10,
+                )
             self._add_to_household(household, student, subgroup="young_adults")
             students_left -= 1
             index += 1
