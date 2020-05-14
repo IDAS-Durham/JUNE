@@ -122,7 +122,8 @@ class World:
             self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
 
             #CommuteCityUnit
-            self.commutecityunits = CommuteCityUnits(self.commutecities.members, init = True)
+            self.commutecityunits = CommuteCityUnits(self.commutecities.members)
+            self.commutecityunits.init_units()
 
             self.commutecityunit_distributor = CommuteCityDistributor(self.commutecities.members)
                         

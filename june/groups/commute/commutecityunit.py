@@ -9,24 +9,25 @@ import numpy as np
 
 class CommuteCityUnit(Group):
 
-    def __init__(self, commutecityunit_id, city, is_peak):
-        self.commutecityunit_id = commutecityunit_id,
+    def __init__(self, city, is_peak):
+        super().__init__()
+        
+        #self.commutecityunit_id = commutecityunit_id, -> not needed due to Group inheritence
         self.city = city
         self.is_peak = is_peak
         #self.passengers = [] -> people form group inheritence
         self.max_passengers = 50
+        self.no_passengers = 0
 
     
 class CommuteCityUnits(Supergroup):
 
-    def __init__(self, commutecities, init = False):
+    def __init__(self, commutecities):
+
+        super().__init__()
 
         self.commutecities = commutecities
-        self.init = init
         self.members = []
-
-        if self.init:
-            self.init_units()
 
     def init_units(self):
 
@@ -39,7 +40,7 @@ class CommuteCityUnits(Supergroup):
             
             for i in range(no_units):
                 commutecity_unit = CommuteCityUnit(
-                    commutecityunit_id = ids,
+                    #commutecityunit_id = ids,
                     city = commutecity.city,
                     is_peak = peak_not_peak[i]
                 )

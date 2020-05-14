@@ -45,7 +45,7 @@ class Group(AbstractGroup):
         "commute_city",
         "commute_hub",
         "commute_unit",
-        "commute_city_hub_unit",
+        "commute_city_unit",
         "cemetery",
         "company",
         "household",
