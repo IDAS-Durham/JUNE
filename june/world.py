@@ -119,13 +119,15 @@ class World:
             self.commuteunits = CommuteUnits(self.commutehubs.members)
             self.commuteunits.init_units()
 
-            self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
+            # put these into the simulator
+            #self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
 
             #CommuteCityUnit
             self.commutecityunits = CommuteCityUnits(self.commutecities.members)
             self.commutecityunits.init_units()
 
-            self.commutecityunit_distributor = CommuteCityDistributor(self.commutecities.members)
+            # put these into the simulator
+            #self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
                         
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
