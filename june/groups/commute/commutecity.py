@@ -10,19 +10,17 @@ from scipy import spatial
 from june.groups.group import Group, Supergroup
 
 default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
+    Path(os.path.abspath(__file__)).parent.parent.parent.parent
     / "data/"
 )
 
-default_uk_pcs_coordinates = default_data_path / "geographcal_data/ukpostcodes_coordinates.csv"
+default_uk_pcs_coordinates = default_data_path / "geographical_data/ukpostcodes_coordinates.csv"
 
 default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
 
 default_non_london_stat_pcs = default_data_path / "travel/non_London_station_coordinates.csv"
 
 default_london_stat_pcs = default_data_path / "travel/london_station_coordinates.csv"
-
-class CommuteCityError(BaseException)
 
 class CommuteCity(Group):
     """
@@ -160,7 +158,7 @@ class CommuteCities(Supergroup):
             self.members.append(commute_city)
 
 
-    def init_london(self, stat_pcs_df):
+    def init_london(self):
         """
         Initialise London
         stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
