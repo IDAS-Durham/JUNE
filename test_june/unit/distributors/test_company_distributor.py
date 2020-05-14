@@ -24,7 +24,3 @@ def test__company_distributor(super_area):
         assert len(company.people) == 1
         assert list(company.people)[0].sector == company.sector
 
-
-
-
-
