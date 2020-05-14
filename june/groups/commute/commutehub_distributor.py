@@ -10,7 +10,7 @@ from scipy import spatial
 
 
 default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
+    Path(os.path.abspath(__file__)).parent.parent.parent.parent
     / "data/"
 )
 
