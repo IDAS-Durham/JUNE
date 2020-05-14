@@ -7,7 +7,14 @@ from typing import List, Dict, Optional
 import csv
 import numpy as np
 import pandas as pd
+
+from june import paths
 from scipy import spatial
+
+default_geographical_data_directory = f"{paths.data_path}/geographical_data"
+default_travel_data_directory = f"{paths.data_path}/travel"
+
+default_file = f"{default_geographical_data_directory}/msoa_oa.csv"
 
 
 default_data_path = (
@@ -23,10 +30,7 @@ class CommuteHubDistributor:
     """
 
     def __init__(self, commutecities):
-        """
-        msoa_oa_coordinates: (pd.Dataframe) Dataframe of all OA postcodes and lat/lon coordinates and their equivalent MSOA
-        commutecities: (list) members of CommuteCities
-        """
+
         #self.msoa_oa_coordinates = msoa_oa_coordinates
         self.commutecities = commutecities
 
@@ -105,12 +109,10 @@ class CommuteHubDistributor:
                 live_area = work_person.area.name
                 live_lat_lon = self._get_area_lat_lon(live_area)
                 # find nearest commute hub to the person given where they live
+
                 _, hub_index = commutehub_tree.query(live_lat_lon,1) 
                 
                 commutehub_in_city[hub_index].add(work_person)
 
             for work_person in to_commute_in:
                 commutecity.commute_internal.append(work_person)
-                    
-                    
-                    
