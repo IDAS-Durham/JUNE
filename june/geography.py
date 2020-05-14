@@ -1,29 +1,27 @@
 import logging
-import os
 from itertools import count
-from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
 import pandas as pd
 
+from june import paths
 from june.demography.person import Person
 
-# from june import get_creation_logger
 
 default_hierarchy_filename = (
-        Path(os.path.abspath(__file__)).parent.parent
-        / "data/processed/geographical_data/oa_msoa_region.csv"
+        paths.data_path
+        / "processed/geographical_data/oa_msoa_region.csv"
 )
 default_area_coord_filename = (
-        Path(os.path.abspath(__file__)).parent.parent
-        / "data/processed/geographical_data/oa_coordinates.csv"
+        paths.data_path
+        / "processed/geographical_data/oa_coordinates.csv"
 )
 default_superarea_coord_filename = (
-        Path(os.path.abspath(__file__)).parent.parent
-        / "data/processed/geographical_data/msoa_coordinates.csv"
+        paths.data_path
+        / "processed/geographical_data/msoa_coordinates.csv"
 )
 default_logging_config_filename = (
-        Path(__file__).parent.parent / "configs/config_world_creation_logger.yaml"
+        paths.configs_path / "config_world_creation_logger.yaml"
 )
 
 logger = logging.getLogger(__name__)
@@ -90,23 +88,24 @@ class SuperArea:
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas"
+    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies"
     _id = count()
 
     def __init__(
             self,
-            name: str,
-            areas: List[Area],
-            coordinates: Tuple[float, float],
+            name: str = None,
+            areas: List[Area] = None,
+            coordinates: Tuple[float, float] = None,
     ):
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
         self.areas = areas
-        self.workers = set()
+        self.workers = list()
+        self.companies = list()
 
     def add_worker(self, person: Person):
-        self.workers.add(person)
+        self.workers.append(person)
         person.work_super_area = self
 
 
@@ -119,6 +118,9 @@ class SuperAreas:
 
     def __iter__(self):
         return iter(self.members)
+
+    def __getitem__(self, item):
+        return self.members[item]
 
 
 class Geography:

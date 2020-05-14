@@ -1,7 +1,5 @@
 import logging
-import os
 from itertools import count
-from pathlib import Path
 from typing import List, Dict, Optional
 
 import numpy as np
@@ -9,19 +7,14 @@ import pandas as pd
 import yaml
 from scipy import stats
 
+from june import paths
 from june.demography import Person, Population
 from june.geography import Geography
-from june.logger_creation import logger
 
-default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
-default_workflow_file = default_base_path / \
-                        "data/processed/flow_in_msoa_wu01ew_2011.csv"
-default_sex_per_sector_per_superarea_file = default_base_path / \
-                                            "data/processed/census_data/company_data/industry_by_sex_ew.csv"
-default_areas_map_path = default_base_path / \
-                         "data/processed/geographical_data/oa_msoa_region.csv"
-default_config_file = default_base_path / \
-                      "configs/defaults/distributors/worker_distributor.yaml"
+default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
+default_sex_per_sector_per_superarea_file = paths.data_path / "processed/census_data/company_data/industry_by_sex_ew.csv"
+default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+default_config_file = paths.configs_path / "defaults/distributors/worker_distributor.yaml"
 logger = logging.getLogger(__name__)
 
 
