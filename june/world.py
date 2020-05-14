@@ -9,9 +9,11 @@ from june.distributors import (
     HouseholdDistributor,
     CareHomeDistributor,
     WorkerDistributor,
+    CompanyDistributor,
 )
 from june.geography import Geography
-from june.groups import Hospitals
+from june.groups import *
+from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +35,12 @@ class World:
     """
 
     def __init__(
-            self,
-            geography: Geography,
-            demography: Demography,
-            include_households: bool = True,
-            box_mode=False
+        self,
+        geography: Geography,
+        demography: Demography,
+        include_households: bool = True,
+        include_commute: bool = False,
+        box_mode = False
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
@@ -57,33 +60,28 @@ class World:
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
-            self.people = _populate_areas(
-                geography,
-                demography
-            )
+            self.people = _populate_areas(geography, demography)
             self.boxes = Boxes([Box()])
             self.boxes.members[0].set_population(self.people)
             return
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
-        self.people = _populate_areas(
-            geography,
-            demography
-        )
+        self.people = _populate_areas(geography, demography)
 
         if hasattr(geography, "carehomes"):
             self.carehomes = geography.carehomes
             CareHomeDistributor().populate_carehome_in_areas(self.areas)
+
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
             self.households = household_distributor.distribute_people_and_households_to_areas(
                 self.areas
             )
         if (
-                hasattr(geography, "companies")
-                or hasattr(geography, "hospitals")
-                or hasattr(geography, "schools")
+            hasattr(geography, "companies")
+            or hasattr(geography, "hospitals")
+            or hasattr(geography, "schools")
         ):
             worker_distr = WorkerDistributor.for_geography(
                 geography
@@ -94,11 +92,59 @@ class World:
             self.schools = geography.schools
             school_distributor = SchoolDistributor(geography.schools)
             school_distributor.distribute_kids_to_school(self.areas)
-            school_distributor.distribute_teachers_to_schools_in_super_areas(self.super_areas)
+            school_distributor.distribute_teachers_to_schools_in_super_areas(
+                self.super_areas
+            )
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
+            company_distributor = CompanyDistributor()
+            company_distributor.distribute_adults_to_companies_in_super_areas(
+                geography.super_areas
+            )
 
+        if include_commute:
+
+            commute_generator = CommuteGenerator.from_file()
+            
+            for area in self.areas:
+                commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
+                for person in area.people:
+                    person.mode_of_transport = commute_gen.weighted_random_choice()
+            
+            # CommuteCity
+            self.commutecities = CommuteCities()
+            self.commutecities.from_file()
+            self.commutecities.init_non_london()
+            # Crucial that London is initialise second, after non-London
+            self.commutecities.init_london()
+
+            self.commutecity_distributor = CommuteCityDistributor(self.commutecities.members, self.super_areas.members)
+            self.commutecity_distributor.distribute_people()
+
+            # CommuteHub
+            self.commutehubs = CommuteHubs(self.commutecities)
+            self.commutehubs.from_file()
+            self.commutehubs.init_hubs()
+
+            self.commutehub_distributor = CommuteHubDistributor(self.commutecities.members)
+            self.commutehub_distributor.from_file()
+            self.commutehub_distributor.distribute_people()
+
+            # CommuteUnit
+            self.commuteunits = CommuteUnits(self.commutehubs.members)
+            self.commuteunits.init_units()
+
+            # put these into the simulator
+            #self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
+
+            #CommuteCityUnit
+            self.commutecityunits = CommuteCityUnits(self.commutecities.members)
+            self.commutecityunits.init_units()
+
+            # put these into the simulator
+            #self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
+                        
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
             hospital_distributor = HospitalDistributor(geography.hospitals)

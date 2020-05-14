@@ -1,17 +1,12 @@
-import pandas as pd
-import numpy as np
 import os
-import matplotlib.pyplot as plt
-from pathlib import Path
 
-raw_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/census_data/output_area/"
-)
-processed_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/census_data/output_area/"
-)
+import numpy as np
+import pandas as pd
+
+from june import paths
+
+raw_path = f"{paths.data_path}/census_data/output_area/"
+processed_path = f"{paths.data_path}/processed/census_data/output_area/"
 
 
 def filter_and_sum(df, in_column):
@@ -28,7 +23,7 @@ df = pd.read_csv(raw_path / "household_houses.csv", index_col=0)
 assert len(df) == 181408
 
 df.set_index("geography", inplace=True)
-df.drop(columns=["date", "geography code",], inplace=True)
+df.drop(columns=["date", "geography code", ], inplace=True)
 
 df = df[
     [col for col in df.columns if "Total" not in col and "All categories" not in col]
@@ -86,7 +81,6 @@ encoding_households["0 0 >=0 >=0 >=0"] = filter_and_sum(
     df, ["Other household types: Other"]
 )
 
-
 encoding_households.index.name = "output_area"
 
 np.testing.assert_array_equal(
@@ -103,10 +97,9 @@ carehome_df = comunal_df[[col for col in comunal_df.columns if "Care home" in co
 carehome_df = carehome_df.sum(axis=1)
 comunal_not_carehome_df = all_comunal_df[all_comunal_df.columns[0]] - carehome_df
 
-
 assert (
-    comunal_not_carehome_df.sum() + carehome_df.sum()
-    == all_comunal_df[all_comunal_df.columns[0]].sum()
+        comunal_not_carehome_df.sum() + carehome_df.sum()
+        == all_comunal_df[all_comunal_df.columns[0]].sum()
 )
 
 encoding_households[">=0 >=0 >=0 >=0 >=0"] = comunal_not_carehome_df
