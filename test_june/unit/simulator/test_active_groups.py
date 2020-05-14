@@ -1,15 +1,20 @@
 import pytest
 from june.infection.health_index import HealthIndexGenerator
 
-@pytest.fixture(name='health_index')
+
+@pytest.fixture(name="health_index")
 def create_health_index():
     def dummy_health_index(age, sex):
         return [0.1, 0.3, 0.5, 0.7, 0.9]
-    return dummy_health_index 
+
+    return dummy_health_index
+
 
 def test__hospitalise_the_sick(simulator, health_index):
     dummy_person = simulator.world.people.members[0]
-    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    simulator.infection.infect_person_at_time(
+        dummy_person, health_index, simulator.timer.now
+    )
     dummy_person.health_information.infection.symptoms.severity = 0.75
     simulator.hospitalise_the_sick(dummy_person)
     assert dummy_person.in_hospital is not None
@@ -28,14 +33,14 @@ def test__right_group_hierarchy_random_groups(simulator):
     permanent_group_hierarchy = simulator.permanent_group_hierarchy.copy()
     permanent_group_hierarchy.reverse()
     active_groups = permanent_group_hierarchy.copy()
-    #active_groups += ["pubs"]
+    # active_groups += ["pubs"]
     ordered_active_groups = simulator.apply_group_hierarchy(active_groups)
     true_ordered_active_groups = [
         group
         for group in simulator.permanent_group_hierarchy
         if group not in ["carehomes", "households"]
     ]
-    #true_ordered_active_groups.append("pubs")
+    # true_ordered_active_groups.append("pubs")
     true_ordered_active_groups += ["carehomes", "households"]
     assert ordered_active_groups == true_ordered_active_groups
 
@@ -119,7 +124,9 @@ def test__follow_a_pupil(simulator):
 def test__sick_gets_to_hospital_recovers_and_leaves(simulator, health_index):
     # sick goes to hospital
     dummy_person = simulator.world.people.members[0]
-    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    simulator.infection.infect_person_at_time(
+        dummy_person, health_index, simulator.timer.now
+    )
     dummy_person.health_information.infection.symptoms.severity = 0.75
     simulator.update_health_status(simulator.timer.now, 0)
     assert dummy_person.in_hospital is not None
@@ -142,7 +149,9 @@ def test__must_stay_at_home_kid_drags_parents(simulator, health_index, severity)
             break
 
     for dummy_person in list(school.people)[:10]:
-        simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+        simulator.infection.infect_person_at_time(
+            dummy_person, health_index, simulator.timer.now
+        )
         dummy_person.health_information.infection.symptoms.severity = severity
         simulator.set_active_group_to_people(["hospitals", "companies", "households"])
         assert dummy_person.active_group == "household"
@@ -150,6 +159,7 @@ def test__must_stay_at_home_kid_drags_parents(simulator, health_index, severity)
             "influenza-like illness",
             "pneumonia",
         )
+        assert dummy_person.health_information.must_stay_at_home
 
         if dummy_person.age <= 14:
             parent_at_home = 0
@@ -176,8 +186,10 @@ def test__bury_the_dead(simulator, health_index):
     # that is quick, and therefore doesn't need to be a fixture
     dummy_person = simulator.world.people.members[0]
 
-    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
-    dummy_person.health_information.infection.symptoms.severity = 0.99 
+    simulator.infection.infect_person_at_time(
+        dummy_person, health_index, simulator.timer.now
+    )
+    dummy_person.health_information.infection.symptoms.severity = 0.99
 
     assert dummy_person.household is not None
     assert dummy_person in dummy_person.household.people
@@ -187,4 +199,3 @@ def test__bury_the_dead(simulator, health_index):
     simulator.set_active_group_to_people(["hospitals", "households"])
     assert dummy_person.active_group is None
     simulator.set_allpeople_free()
-

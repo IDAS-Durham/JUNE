@@ -2,20 +2,20 @@ import os
 from pathlib import Path
 from typing import List, Dict, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from june.demography.geography import Geography, Area
-from .person import Person
+from june.demography import Person
+from june.geography import Geography
 
 default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales"
+        Path(os.path.abspath(__file__)).parent.parent.parent
+        / "data/processed/census_data/output_area/EnglandWales"
 )
 
 default_areas_map_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/geographical_data/oa_msoa_region.csv"
+        Path(os.path.abspath(__file__)).parent.parent.parent
+        / "data/processed/geographical_data/oa_msoa_region.csv"
 )
 
 
@@ -50,8 +50,8 @@ class AgeSexGenerator:
         ages = np.repeat(np.arange(0, len(age_counts)), age_counts)
         female_fraction_bins = np.digitize(ages, bins=list(map(int, sex_bins))) - 1
         sexes = (
-            np.random.uniform(0, 1, size=self.n_residents)
-            < np.array(female_fractions)[female_fraction_bins]
+                np.random.uniform(0, 1, size=self.n_residents)
+                < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
         self.age_iterator = iter(ages)
@@ -72,7 +72,7 @@ class AgeSexGenerator:
 
 
 class Population:
-    def __init__(self, people: List[Person]):
+    def __init__(self, people: Optional[List[Person]] = None):
         """
         A population of people.
 
@@ -83,13 +83,16 @@ class Population:
         people
             A list of people generated to match census data for that area
         """
-        self.people = people
+        self.people = people or list()
 
     def __len__(self):
         return len(self.people)
 
     def __iter__(self):
         return iter(self.people)
+
+    def extend(self, people):
+        self.people.extend(people)
 
     @property
     def members(self):
@@ -99,22 +102,21 @@ class Population:
     def total_people(self):
         return len(self.members)
 
-
     @property
     def infected(self):
         return [
             person for person in self.people
-            if person.health_information.infected and not 
-                    person.health_information.dead
-            
+            if person.health_information.infected and not
+            person.health_information.dead
+
         ]
 
     @property
     def susceptible(self):
         return [
             person for person in self.people
-            if person.health_information.susceptible 
-            
+            if person.health_information.susceptible
+
         ]
 
     @property
@@ -122,17 +124,15 @@ class Population:
         return [
             person for person in self.people
             if person.health_information.recovered
-            
+
         ]
 
 
 class Demography:
     def __init__(
-        self,
-        area_names,
-        age_sex_generators: Dict[str, AgeSexGenerator],
-        ethnicity_generators: Dict[str, "EthnicityGenerator"] = None,
-        economic_index_generators: Dict[str, "EconomicIndexGenerator"] = None,
+            self,
+            area_names,
+            age_sex_generators: Dict[str, AgeSexGenerator]
     ):
         """
         Tool to generate population for a certain geographical regin.
@@ -142,23 +142,13 @@ class Demography:
         age_sex_generators
             A dictionary mapping area identifiers to functions that generate
             age and sex for individuals.
-        ethnicity_generators
-            A dictionary mapping area identifiers to functions that allocate
-            individuals to ethnic groups.
-       economic_index_generators: 
-            A dictionary mapping area identifiers to functions that allocate
-            individuals to socioeconomic classes.
         """
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
-        # not implemented yet:
-        self.ethnicity_generators = ethnicity_generators
-        self.economic_index_generators = economic_index_generators
-
 
     def populate(
             self,
-            areas: Optional[List[Area]] = None,
+            area_name: str,
     ) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
@@ -166,29 +156,26 @@ class Demography:
 
         Parameters
         ----------
-        areas
-            List of areas for which to create populations.
-            default: all areas for which demographic generator was created
+        area_name
+            The name of an area a population should be generated for
 
         Returns
         -------
         A population of people
         """
         people = list()
-        for area in areas:
-            # TODO: this could be make faster with map()
-            age_and_sex_generator = self.age_sex_generators[area.name]
-            for _ in range(age_and_sex_generator.n_residents):
-                person = Person(
-                    age=age_and_sex_generator.age(),
-                    sex=age_and_sex_generator.sex(),
-                    # TODO ethnicity_generators.ethnicity()
-                    # TODO socioeconomic_generators.socioeconomic_index()
-                )
-                people.append(person)   # add person to population
-                area.add(person)        # link area <-> person
-        return Population(people=people)
 
+        # TODO: this could be make faster with map() <- this is not true
+        age_and_sex_generator = self.age_sex_generators[area_name]
+        for _ in range(age_and_sex_generator.n_residents):
+            person = Person(
+                age=age_and_sex_generator.age(),
+                sex=age_and_sex_generator.sex(),
+                # TODO ethnicity_generators.ethnicity()
+                # TODO socioeconomic_generators.socioeconomic_index()
+            )
+            people.append(person)  # add person to population
+        return Population(people=people)
 
     @classmethod
     def for_geography(
@@ -209,7 +196,6 @@ class Demography:
         if len(area_names) == 0:
             raise DemographyError("Empty geography!")
         return cls.for_areas(area_names, data_path, config)
-    
 
     @classmethod
     def for_zone(
@@ -237,11 +223,10 @@ class Demography:
         if len(area_names) == 0:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)
-   
 
     @classmethod
     def for_areas(
-                cls,
+            cls,
             area_names: List[str],
             data_path: str = default_data_path,
             config: Optional[dict] = None,
@@ -274,7 +259,7 @@ class Demography:
 
 
 def _load_age_and_sex_generators(
-    age_structure_path: str, female_ratios_path: str, area_names: List[str]
+        age_structure_path: str, female_ratios_path: str, area_names: List[str]
 ):
     """
     A dictionary mapping area identifiers to a generator of age and sex.
@@ -285,7 +270,7 @@ def _load_age_and_sex_generators(
     female_ratios_df = female_ratios_df.loc[area_names]
     ret = {}
     for (_, age_structre), (index, female_ratios) in zip(
-        age_structure_df.iterrows(), female_ratios_df.iterrows()
+            age_structure_df.iterrows(), female_ratios_df.iterrows()
     ):
         ret[index] = AgeSexGenerator(
             age_structre.values, female_ratios.index.values, female_ratios.values

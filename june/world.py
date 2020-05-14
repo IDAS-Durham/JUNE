@@ -1,20 +1,28 @@
 import logging
-
 import pickle
 
-from june.groups import Hospitals
 from june.box.box_mode import Boxes, Box
-from june.demography.geography import Geography
-from june.demography import Demography
+from june.demography import Demography, Population
 from june.distributors import (
     SchoolDistributor,
     HospitalDistributor,
     HouseholdDistributor,
     CareHomeDistributor,
     WorkerDistributor,
+    CompanyDistributor,
 )
+from june.geography import Geography
+from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
+
+
+def _populate_areas(geography, demography):
+    people = Population()
+    for area in geography.areas:
+        area.populate(demography)
+        people.extend(area.people)
+    return people
 
 
 class World:
@@ -30,7 +38,7 @@ class World:
         geography: Geography,
         demography: Demography,
         include_households: bool = True,
-        box_mode = False
+        box_mode=False,
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
@@ -50,18 +58,19 @@ class World:
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
-            self.people = demography.populate(geography.areas)
+            self.people = _populate_areas(geography, demography)
             self.boxes = Boxes([Box()])
             self.boxes.members[0].set_population(self.people)
-            return None
+            return
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
-        self.people = demography.populate(self.areas)
+        self.people = _populate_areas(geography, demography)
 
         if hasattr(geography, "carehomes"):
             self.carehomes = geography.carehomes
             CareHomeDistributor().populate_carehome_in_areas(self.areas)
+
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
             self.households = household_distributor.distribute_people_and_households_to_areas(
@@ -72,7 +81,6 @@ class World:
             or hasattr(geography, "hospitals")
             or hasattr(geography, "schools")
         ):
-            pass
             worker_distr = WorkerDistributor.for_geography(
                 geography
             )  # atm only for_geography()
@@ -82,21 +90,27 @@ class World:
             self.schools = geography.schools
             school_distributor = SchoolDistributor(geography.schools)
             school_distributor.distribute_kids_to_school(self.areas)
-            school_distributor.distribute_teachers_to_schools_in_super_areas(self.super_areas)
+            school_distributor.distribute_teachers_to_schools_in_super_areas(
+                self.super_areas
+            )
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
+            company_distributor = CompanyDistributor()
+            company_distributor.distribute_adults_to_companies_in_super_areas(
+                geography.super_areas
+            )
 
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
             hospital_distributor = HospitalDistributor(geography.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
-        
+
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries
 
     @classmethod
-    def from_geography(cls, geography: Geography, box_mode = False):
+    def from_geography(cls, geography: Geography, box_mode=False):
         """
         Initializes the world given a geometry. The demography is calculated
         with the default settings for that geography.
