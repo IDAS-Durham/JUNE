@@ -13,7 +13,7 @@ class CommuteUnit(Group):
     These units will be filled dynamically
     """
 
-    def __init__(self, commuteunit_id, city, commutehub_id, is_peak):
+    def __init__(self, city, commutehub_id, is_peak):
         """
         id: (int) id of the commute unit
         station: (string) name of the city the commute unt is associated to
@@ -27,7 +27,9 @@ class CommuteUnit(Group):
               i.e. the just because the number of passengers in the unit <= 50 does not mean there
                    is no overcrowding
         """
-        self.id = commuteunit_id
+        super().__init__()
+        
+        #self.id = commuteunit_id -> not needed becuase of Group integration
         self.city = city
         self.commutehub_id = commutehub_id
         #self.passengers = [] -> people from group inherience
@@ -54,19 +56,19 @@ class CommuteUnits(Supergroup):
         init: (bool) if True, initialise units, if False do this manually
         members: (list) list of all commute units
         """
+        super().__init__()
+
         self.commutehubs = commutehubs
         self.init = init
         self.members = []
 
-        if self.init:
-            self.init_units()
-
+        
     def init_units(self):
         'Initialise units'
 
         ids = 0
         for hub in self.commutehubs:
-            no_passengers = len(hub.passengers)
+            no_passengers = len(hub.people)
             no_units = int(float(no_passengers)/50) + 1
             # assign unit to peak/not peak times with prob 0.8/0.2
             # make this a parameter in the future
@@ -74,7 +76,7 @@ class CommuteUnits(Supergroup):
             
             for i in range(no_units):
                 commute_unit = CommuteUnit(
-                    commuteunit_id = ids,
+                    #commuteunit_id = ids,
                     city = hub.city,
                     commutehub_id = hub.id,
                     is_peak = peak_not_peak[i]
