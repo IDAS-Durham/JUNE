@@ -39,7 +39,7 @@ class World:
         geography: Geography,
         demography: Demography,
         include_households: bool = True,
-        include_commute: bool = True,
+        include_commute: bool = False,
         box_mode = False
     ):
         """
