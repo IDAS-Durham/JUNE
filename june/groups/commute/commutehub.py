@@ -10,7 +10,7 @@ from scipy import spatial
 from june.groups.group import Group, Supergroup
 
 default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
+    Path(os.path.abspath(__file__)).parent.parent.parent.parent
     / "data/"
 )
 
@@ -21,7 +21,7 @@ class CommuteHub(Group):
     Defines hubs around cities through with people commute and assigns people to those commute hubs
     """
 
-    def __init__(self, commutehub_id, lat_lon, city):
+    def __init__(self, lat_lon, city):
         """
         id: (int) id of the commute hub
         lat_lon: (array) lat/lon of the commute hub
@@ -29,7 +29,9 @@ class CommuteHub(Group):
         passengers: (list) passengers commuting through this commute hub
         commuteunits: (list) commute units associated with the commute hub
         """
-        self.id = commutehub_id
+        super().__init__()
+        
+        #self.id = commutehub_id -> don't need this due to Group inheritence
         self.lat_lon = lat_lon
         self.city = city # station the hub is affiliated to
         #self.passengers = [] # passengers flowing through commute hub -> people in form Group inheritence
@@ -55,14 +57,12 @@ class CommuteHubs(Supergroup):
         init: (bool) if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
+        super().__init__()
+        
         self.commutecities = commutecities
         #self.msoa_coordinates = msoa_coordinates
         #self.init = init
         self.members = []
-
-        # initialise commute hubs
-        if self.init:
-            self.init_hubs()
 
     def _get_msoa_lat_lon(self, msoa):
         'Given an MSOA, get the lat/lon'
@@ -125,7 +125,7 @@ class CommuteHubs(Supergroup):
             # loop through all hubs to initialise and append to member and assign to commutecity too
             for hub in hubs:
                 commute_hub = CommuteHub(
-                    commutehub_id = ids,
+                    #commutehub_id = ids,
                     lat_lon = hub,
                     city = commutecity.city
                 )
