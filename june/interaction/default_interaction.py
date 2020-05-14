@@ -77,13 +77,13 @@ class DefaultInteraction(Interaction):
             self.intensities.get(group.spec) * contact_matrix *
             infecter_probability * -delta_time
         )
-        group_of_recipients = group.subgroups[recipients].people
+        group_of_recipients = group.subgroups[recipients].susceptible_active()
         should_be_infected = np.random.random(len(group_of_recipients))
         for recipient, luck in zip(group_of_recipients, should_be_infected):
             transmission_probability = 1.0 - exp(
                 recipient.health_information.susceptibility * intensity
             )
-            if luck <= transmission_probability:
+            if luck < transmission_probability:
                 infecter = self.select_infecter()
                 infecter.health_information.infection.infect_person_at_time(
                     person=recipient, health_index_generator=health_index_generator, time=time,
@@ -97,7 +97,7 @@ class DefaultInteraction(Interaction):
         norm   = 1./max(1, group.size_active)
         for grouping in group.subgroups:
             summed = 0.
-            for person in grouping.infected_active(group.spec):
+            for person in grouping.infected_active():
                 individual = (
                     person.health_information.infection.transmission.probability
                 )

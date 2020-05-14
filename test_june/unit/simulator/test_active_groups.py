@@ -7,13 +7,6 @@ def create_health_index():
         return [0.1, 0.3, 0.5, 0.7, 0.9]
     return dummy_health_index 
 
-def test__hospitalise_the_sick(simulator, health_index):
-    dummy_person = simulator.world.people.members[0]
-    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
-    dummy_person.health_information.infection.symptoms.severity = 0.75
-    simulator.hospitalise_the_sick(dummy_person)
-    assert dummy_person.in_hospital is not None
-
 
 def test__right_group_hierarchy(simulator):
     permanent_group_hierarchy = simulator.permanent_group_hierarchy.copy()
@@ -57,7 +50,7 @@ def test__everyone_is_freed(simulator):
 def test__everyone_is_in_household(simulator):
     simulator.set_active_group_to_people(["carehomes", "households"])
     for person in simulator.world.people.members:
-        assert person.active_group in ["carehome", "household"]
+        assert person.active_group.spec in ["carehome", "household"]
     simulator.set_allpeople_free()
 
 
@@ -79,14 +72,14 @@ def test__everyone_is_in_school_household(simulator):
             should_be_active = "carehome"
         elif person.household is not None:
             should_be_active = "household"
-        assert person.active_group == should_be_active
+        assert person.active_group.spec == should_be_active
     simulator.set_allpeople_free()
 
 
 def test__everyone_is_active_somewhere(simulator):
     simulator.set_active_group_to_people(["schools", "carehomes", "households"])
     for person in simulator.world.people.members:
-        assert person.active_group is not None
+        assert person.active_group.spec is not None
     simulator.set_allpeople_free()
 
 
@@ -107,13 +100,21 @@ def test__follow_a_pupil(simulator):
         active_groups = simulator.timer.active_groups()
         simulator.set_active_group_to_people(active_groups)
         should_be_active = "school" if "schools" in active_groups else "household"
-        assert selected_person.active_group == should_be_active
+        assert selected_person.active_group.spec == should_be_active
         simulator.set_allpeople_free()
         assert selected_person.active_group == None
         if day > 10:
             break
     simulator.set_allpeople_free()
     simulator.timer.reset()
+
+def test__hospitalise_the_sick(simulator, health_index):
+    dummy_person = simulator.world.people.members[0]
+    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    dummy_person.health_information.infection.symptoms.severity = 0.75
+    simulator.hospitalise_the_sick(dummy_person)
+    assert dummy_person.in_hospital is not None
+
 
 
 def test__sick_gets_to_hospital_recovers_and_leaves(simulator, health_index):
@@ -124,13 +125,13 @@ def test__sick_gets_to_hospital_recovers_and_leaves(simulator, health_index):
     simulator.update_health_status(simulator.timer.now, 0)
     assert dummy_person.in_hospital is not None
     simulator.set_active_group_to_people(["schools", "hospitals", "households"])
-    assert dummy_person.active_group == "hospital"
+    assert dummy_person.active_group.spec == "hospital"
     simulator.set_allpeople_free()
     dummy_person.health_information.recovered = True
     simulator.update_health_status(simulator.timer.now, 0)
     assert dummy_person.in_hospital is None
     simulator.set_active_group_to_people(["schools", "hospitals", "households"])
-    assert dummy_person.active_group != "hospital"
+    assert dummy_person.active_group.spec != "hospital"
     simulator.set_allpeople_free()
 
 
@@ -145,7 +146,7 @@ def test__must_stay_at_home_kid_drags_parents(simulator, health_index, severity)
         simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
         dummy_person.health_information.infection.symptoms.severity = severity
         simulator.set_active_group_to_people(["hospitals", "companies", "households"])
-        assert dummy_person.active_group == "household"
+        assert dummy_person.active_group.spec == "household"
         assert dummy_person.health_information.tag in (
             "influenza-like illness",
             "pneumonia",
@@ -164,7 +165,7 @@ def test__must_stay_at_home_kid_drags_parents(simulator, health_index, severity)
                 )
             ]
             for person in parents:
-                if person.active_group == "household":
+                if person.active_group.spec == "household":
                     parent_at_home += 1
             assert parent_at_home > 0
     simulator.set_allpeople_free()
@@ -174,7 +175,7 @@ def test__bury_the_dead(simulator, health_index):
     # TODO : bring them back to life if you want to keep using the simulator clean
     # in the (near?) future we will be able to create a test simulator
     # that is quick, and therefore doesn't need to be a fixture
-    dummy_person = simulator.world.people.members[0]
+    dummy_person = simulator.world.people.members[10]
 
     simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
     dummy_person.health_information.infection.symptoms.severity = 0.99 
