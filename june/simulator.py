@@ -1,6 +1,6 @@
 import logging
 import random
-from pathlib import Path
+from june import paths
 from typing import List
 
 import numpy as np
@@ -15,7 +15,7 @@ from june.logger_simulation import Logger
 from june.time import Timer
 from june.world import World
 
-default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
+default_config_filename = paths.configs_path / "config_example.yaml"
 
 sim_logger = logging.getLogger(__name__)
 
