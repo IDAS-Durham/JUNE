@@ -42,6 +42,7 @@ class Group(AbstractGroup):
         "carehome",
         "commute_Public",
         "commute_Private",
+        "commute_city"
         "cemetery",
         "company",
         "household",
