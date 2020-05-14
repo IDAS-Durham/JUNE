@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 
 import pandas as pd
 import numpy as np
-import time as t
+
 from june.geography import Geography, Area
 from june.demography import Person
 
@@ -29,7 +29,7 @@ class AgeSexGenerator:
     def __init__(
         self, age_counts: list, 
         sex_bins: list, female_fractions: list,
-        ethnicity_age_bins: list, ethnicity_structure: list,
+        ethnicity_age_bins: list, ethnicity_groups: list, ethnicity_structure: list,
     ):
         """
         age_counts is an array where the index in the array indicates the age,
@@ -60,18 +60,19 @@ class AgeSexGenerator:
             < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
-
-        ethnicity_age_indexes = np.digitize(ages, bins=list(map(int, ethnicity_age_bins))) - 1
-        ethnicities = [
-            np.random.choice( 
-                np.repeat(
-                    ethnicity_structure.index.get_level_values(1),
-                    ethnicity_structure[ethnicity_age_bins[age_ind]]
-                ), 1 # one pick per person
-            )[0]
-            for age_ind in ethnicity_age_indexes
-        ]
-
+        print(ethnicity_groups)
+        ethnicity_age_counts,_ = np.histogram(ages, bins=list(map(int, ethnicity_age_bins))+[100])
+        ethnicities = list()
+        for age_ind,age_count in enumerate(ethnicity_age_counts):
+            print(age_count,ethnicity_structure.iloc[:,age_ind].values)
+            ethnicities.extend(
+                np.random.choice( 
+                    np.repeat(
+                        ethnicity_groups,ethnicity_structure.iloc[:,age_ind] #[ethnicity_age_bins[age_ind]]
+                    ), age_count
+                )
+            )
+        print(ethnicities)
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
         self.ethnicity_iterator = iter(ethnicities)
@@ -288,6 +289,8 @@ def _load_age_and_sex_generators(
     ethnicity_structure_df = pd.read_csv(ethnicity_structure_path,index_col=[0,1]) # pd MultiIndex!!!
     ethnicity_structure_df = ethnicity_structure_df.loc[area_names]
 
+    print(ethnicity_structure_df)
+
     # socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=[0,1])
     # socioecon_structure_df = socioecon_structure_df[area_names]
 
@@ -296,10 +299,11 @@ def _load_age_and_sex_generators(
         age_structure_df.iterrows(), female_ratios_df.iterrows(), 
         ethnicity_structure_df.groupby(level=0),
     ):
+        print(index)
         ret[index] = AgeSexGenerator(
             age_structure.values, 
             female_ratios.index.values, female_ratios.values,
-            ethnicity_df.columns, ethnicity_df,
+            ethnicity_df.columns, ethnicity_df.index.get_level_values(1), ethnicity_df,
         )
     return ret
 
@@ -320,8 +324,10 @@ if __name__ == "__main__":
 
     t1 = time()
     print(using("before"))
-    geo = Geography.from_file(filter_key={"oa" : ["E00088544"]})
-    demography = Demography.for_areas(["E00088544"])
+    geo = Geography.from_file(filter_key={"oa" : ["E00088544","E00139999","E00140000"]})
+    demography = Demography.for_areas(["E00088544","E00139999","E00140000"])
+    #geo = Geography.from_file(filter_key = {"region" : ["North East"]})
+    #demography = Demography.for_zone(filter_key = {"region" : ["North East"]})
     population = demography.populate(geo.areas)
     t2 = time()
     print(using("after"))
