@@ -1,7 +1,7 @@
 import logging
 import os
 from enum import IntEnum
-from pathlib import Path
+from june import paths
 from typing import List
 
 import numpy as np
@@ -11,14 +11,14 @@ from june.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
 default_data_path = (
-        Path(os.path.abspath(__file__)).parent.parent.parent
-        / "data/processed/census_data/company_data/"
+        paths.data_path
+        / "processed/census_data/company_data/"
 )
 default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
 default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
 default_areas_map_path = (
-        Path(os.path.abspath(__file__)).parent.parent.parent
-        / "data/processed/geographical_data/oa_msoa_region.csv"
+        paths.data_path
+        / "processed/geographical_data/oa_msoa_region.csv"
 )
 
 logger = logging.getLogger(__name__)

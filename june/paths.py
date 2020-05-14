@@ -37,7 +37,7 @@ def path_for_name(name: str) -> Path:
     except (IndexError, ValueError):
         path = str(directory.parent / name)
         logger.warning(
-            f"No {flag} argument given. Defaulting to {path}"
+            f"No {flag} argument given - defaulting to:\n{path}"
         )
 
     return Path(path)
