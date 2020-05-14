@@ -1,7 +1,9 @@
 from random import uniform
+from collections import defaultdict
 
 import numpy as np
 from scipy import stats
+from june.groups import Companies
 
 """
 This file contains routines to attribute people with different characteristics
@@ -20,33 +22,49 @@ class CompanyDistributor:
     def __init__(self):
         """Get all companies within SuperArea"""
 
-
     def distribute_adults_to_companies_in_super_areas(self, super_areas):
+        import time
+
         for super_area in super_areas:
+            t1 = time.time()
             self.distribute_adults_to_companies_in_super_area(super_area)
+            t2 = time.time()
 
     def distribute_adults_to_companies_in_super_area(self, super_area):
         """
         Looks for all workers and companies in the super area and matches
         them
         """
-        # shuffle companies
-        for person in super_area.workers:
-            compatible_companies = []
-            for company in super_area.companies:
-                if person.sector == company.sector:
-                    compatible_companies.append(company)
-                    if company.n_workers < company.n_workers_max:
-                        company.add(person)
-                        break
-                    
-            # allocate randomly if no place for him/her
-            if len(compatible_companies) == 0:
-                company = np.random.choice(super_area.companies)
+        company_dict = defaultdict(list)
+        full_idx = defaultdict(int)
+        unallocated_workers = []
+        for company in super_area.companies:
+            company_dict[company.sector].append(company)
+            full_idx[company.sector] = 0
+
+        for worker in super_area.workers:
+            if company_dict[worker.sector]:
+                if full_idx[worker.sector] >= len(company_dict[worker.sector]):
+                    company = np.random.choice(company_dict[worker.sector])
+                else:
+                    company = company_dict[worker.sector][0]
+                    if company.n_workers >= company.n_workers_max:
+                        full_idx[company.sector] += 1
+                company.add(worker)
             else:
-                company = np.random.choice(compatible_companies)
+                unallocated_workers.append(worker)
+
+        if unallocated_workers:
+            companies_for_unallocated = np.random.choice(
+                super_area.companies, len(unallocated_workers)
+            )
+            for worker, company in zip(unallocated_workers, companies_for_unallocated):
+                company.add(worker)
 
         # remove companies with no employees
         for company in super_area.companies:
             if company.n_workers == 0:
                 super_area.companies.remove(company)
+
+    def remove_empty_companies(self, companies: Companies):
+        Companies.members = [company for company in companies if company.n_workers > 0]
