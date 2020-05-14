@@ -10,7 +10,7 @@ import yaml
 from scipy import stats
 
 from june.demography import Person, Population
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.logger_creation import logger
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
