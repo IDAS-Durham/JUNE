@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 
 import pandas as pd
 import numpy as np
-
+import time as t
 from june.geography import Geography, Area
 from june.demography import Person
 
@@ -60,8 +60,6 @@ class AgeSexGenerator:
             < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
-    
-        print(ethnicity_structure.index.get_level_values(1))
 
         ethnicity_age_indexes = np.digitize(ages, bins=list(map(int, ethnicity_age_bins))) - 1
         ethnicities = [
@@ -73,7 +71,7 @@ class AgeSexGenerator:
             )[0]
             for age_ind in ethnicity_age_indexes
         ]
-        print(ethnicities)
+
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
         self.ethnicity_iterator = iter(ethnicities)
@@ -260,7 +258,6 @@ class Demography:
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
         ethnicity_structure_path = data_path / "ethnicity_structure.csv"
-        print(ethnicity_structure_path)
         # TODO socioecon_structure_path = data_path / "socioecon_structure.csv"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path, 
@@ -284,19 +281,15 @@ def _load_age_and_sex_generators(
     """
     age_structure_df = pd.read_csv(age_structure_path, index_col=0)
     age_structure_df = age_structure_df.loc[area_names]
-    #age_strucutre_df.sort_index() # sorting taken care of in area_names indexing???
 
     female_ratios_df = pd.read_csv(female_ratios_path, index_col=0)
     female_ratios_df = female_ratios_df.loc[area_names]
-    #female_ratios_df.sort_index()
 
     ethnicity_structure_df = pd.read_csv(ethnicity_structure_path,index_col=[0,1]) # pd MultiIndex!!!
     ethnicity_structure_df = ethnicity_structure_df.loc[area_names]
-    #ethnicity_structure_df.sort_index(level=0)
 
     # socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=[0,1])
     # socioecon_structure_df = socioecon_structure_df[area_names]
-    # socioecon_structure_df.sort(level=0)
 
     ret = {}
     for (_, age_structure), (index, female_ratios), (_,ethnicity_df) in zip(
