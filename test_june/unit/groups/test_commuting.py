@@ -26,7 +26,6 @@ class TestCommuteCity:
     @pytest.fixture(name="city")
     def create_city(self, super_area_commute):
         return CommuteCity(
-            commutecity_id = 0,
             city = 'Manchester',
             metro_msoas = super_area_commute,
             metro_centroid = [-2,52.]
@@ -42,7 +41,6 @@ class TestCommuteHub:
     @pytest.fixture(name="hub")
     def create_hub(self):
         return CommuteHub(
-            commutehub_id = 0,
             city = 'Manchester',
             lat_lon = [-2,52.],
         )
@@ -55,7 +53,6 @@ class TestCommuteUnit:
     @pytest.fixture(name="unit")
     def create_hub(self):
         return CommuteUnit(
-            commuteunit_id = 0,
             city = 'Manchester',
             commutehub_id = 0,
             is_peak = False,
@@ -69,7 +66,6 @@ class TestCommuteCityUnit:
     @pytest.fixture(name="unit")
     def create_hub(self):
         return CommuteCityUnit(
-            commutecityunit_id = 0,
             city = 'Manchester',
             is_peak = False,
         )
