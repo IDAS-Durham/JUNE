@@ -157,6 +157,7 @@ class Group(AbstractGroup):
         """
         self[qualifier].append(person)
         person.groups.append(self)
+        person.subgroups.append(self[qualifier])
 
     def set_active_members(self):
         for person in self.people:
