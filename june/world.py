@@ -13,6 +13,7 @@ from june.distributors import (
 )
 from june.geography import Geography
 from june.groups import *
+from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,11 @@ class World:
             )
 
         if include_commute:
+            for area in world.areas:
+                commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
+                for person in area.people:
+                    person.mode_of_transport = commute_gen.weighted_random_choice()
+            
             # CommuteCity
             self.commutecities = CommuteCities()
             self.commutecities.from_file()
