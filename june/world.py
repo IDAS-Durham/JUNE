@@ -97,7 +97,8 @@ class World:
 
         if include_commute:
             # CommuteCity
-            self.commutecities = CommuteCities.from_file()
+            self.commutecities = CommuteCities()
+            self.commutecities.from_file()
             self.commutecities.init_non_london()
             # Crucial that London is initialise second, after non-London
             self.commutecities.init_london()
