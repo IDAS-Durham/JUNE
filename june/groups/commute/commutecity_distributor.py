@@ -18,12 +18,19 @@ class CommuteCityDistributor:
         for commutecity in self.commutecities:
             metro_msoas = commutecity.metro_msoas
 
+            none_type = 0
             for msoa in self.msoas:
                 if msoa.name in metro_msoas:
-                    for person in msoa.work_people:
+                    for person in msoa.workers:
                         # assign people who commute to the given city
-                        if person.mode_of_transport.is_public:
+                        #try:
+                        if person.mode_of_transport is not None and person.mode_of_transport.is_public:
                             commutecity.add(person)
+
+                        #except:
+                        #    none_type +=1
+
+#            print ('{} people had a None for mode_of_transport in {}'.format(none_type, commutecity.city))
             
             
             
