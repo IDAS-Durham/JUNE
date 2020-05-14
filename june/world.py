@@ -127,7 +127,7 @@ class World(object):
         information store by distributors to area or group objects
         might be deleted (they shouldn't be there anyway..)
         """
-        original_state = self.__dict__.copy()
+        #original_state = self.__dict__.copy()
         for supergroup_name in allowed_super_groups:
             if hasattr(self, supergroup_name):
                 supergroup = getattr(self, supergroup_name)
@@ -138,18 +138,19 @@ class World(object):
             supergeo.erase_people_from_geographical_unit()
             for geo in supergeo:
                 geo.erase_people_from_geographical_unit()
-        state_dict = self.__dict__.copy() # state to pickle
-        self.__dict__ = original_state # restore original state
+        state_dict = self.__dict__.copy()  # state to pickle
         return state_dict
 
+    def restore_world(self):
+        for person in self.people:
+            for subgroup in person.subgroups:
+                subgroup.append(person)
+            if person.area is not None:
+                person.area.add(person)
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for person in self.people:
-            for subgroup in person.subgroups:
-                subgroup._people.add(person)
-            if person.area is not None:
-                person.area.add(person)
+        self.restore_world()
 
     @classmethod
     def from_pickle(self, pickle_path):
@@ -160,3 +161,4 @@ class World(object):
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
+        self.restore_world()
