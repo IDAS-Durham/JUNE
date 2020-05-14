@@ -1,11 +1,9 @@
 import csv
-from pathlib import Path
-
+from june import config
 from scipy import spatial
 
-data_directory = Path(__file__).parent.parent.parent.parent / "data"
-default_geographical_data_directory = data_directory / "geographical_data"
-default_travel_data_directory = data_directory / "travel"
+default_geographical_data_directory = f"{config.data_path}/geographical_data"
+default_travel_data_directory = f"{config.data_path}/travel"
 
 default_file = f"{default_geographical_data_directory}/msoa_oa.csv"
 
