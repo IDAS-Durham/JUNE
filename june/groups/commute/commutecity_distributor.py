@@ -1,5 +1,3 @@
-import numpy as np
-
 class CommuteCityDistributor:
     """
     Distirbute people to cities based on where they work
@@ -23,10 +21,6 @@ class CommuteCityDistributor:
                 if msoa.name in metro_msoas:
                     for person in msoa.workers:
                         # assign people who commute to the given city
+
                         if person.mode_of_transport is not None and person.mode_of_transport.is_public:
                             commutecity.add(person)
-
-            
-            
-            
-            
