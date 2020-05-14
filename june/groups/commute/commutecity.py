@@ -27,7 +27,18 @@ class CommuteCity(Group):
     Defines a city with details about its metropolitan area and who commutes MSOAs within that area.
     """
 
-    def __init__(self, commutecity_id, city, metro_msoas, metro_centroid):
+    __slots__ = (
+        "id",
+        "metro_centroid",
+        "metro_msoas",
+        "city",
+        "commutehubs",
+        "commute_internal",
+        "commutecityunits",
+    )
+
+    
+    def __init__(self, city=None, metro_msoas=None, metro_centroid=None):
         """
         id: (int) id of the city
         metro_centriod: (array) the centriod of the metropolitan area
@@ -37,7 +48,9 @@ class CommuteCity(Group):
                            - this includes those living AND working in the metropolitan area
         commutehubs: (list) commute hubs associated with the city
         """
-        self.id = commutecity_id
+        super().__init__()
+        
+        #self.id = commutecity_id
         self.metro_centroid = metro_centroid
         self.metro_msoas = metro_msoas
         self.city = city
@@ -72,6 +85,8 @@ class CommuteCities(Supergroup):
         
         #self.uk_pcs_coordinates = uk_pcs_coordinates
         #self.msoa_coordinates = msoa_coordinates
+
+        super().__init__()
         self.members = []
         
         
@@ -149,10 +164,10 @@ class CommuteCities(Supergroup):
             city_metro_msoas, city_metro_centroid = self._get_nearest_msoas(lat_lon_stat)
 
             commute_city = CommuteCity(
-                commutecity_id = idx,
+                #commutecity_id = idx,
                 city = stations[idx],
                 metro_msoas = city_metro_msoas,
-                metro_centroid = city_metro_centroid
+                metro_centroid = city_metro_centroid,
             )
 
             self.members.append(commute_city)
@@ -192,10 +207,10 @@ class CommuteCities(Supergroup):
         city_metro_centroid = [np.mean(city_metro_centroid_all[:,0]), np.mean(city_metro_centroid_all[:,1])]
 
         commute_city = CommuteCity(
-            commutecity_id = len(self.members),
+            #commutecity_id = len(self.members),
             city = 'London',
             metro_msoas = city_metro_msoas_all,
-            metro_centroid = city_metro_centroid
+            metro_centroid = city_metro_centroid,
         )
 
         self.members.append(commute_city)
