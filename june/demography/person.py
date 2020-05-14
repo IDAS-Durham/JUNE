@@ -20,7 +20,7 @@ class HealthInformation:
         self.infection = infection
         self.infected = True
         self.susceptible = False
-        self.susceptibility = 0.
+        self.susceptibility = 0.0
 
     @property
     def tag(self):
@@ -76,9 +76,7 @@ class HealthInformation:
     def update_symptoms(self, time):  # , symptoms, time):
         if self.infection.symptoms.severity > self.maximal_symptoms:
             self.maximal_symptoms = self.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.get_symptoms_tag(
-                self.infection.symptoms
-            )
+            self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
     def update_infection_data(self, time, group_type=None):
@@ -115,16 +113,40 @@ class Person:
     according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
+
     _id = count()
+    __slots__ = (
+        "id",
+        "age",
+        "sex",
+        "household",
+        "area",
+        "work_super_area", 
+        "mode_of_transport",
+        "school",
+        "carehome",
+        "primary_activity",
+        "active_group",
+        "groups",
+        "subgroups",
+        "sector",
+        "sub_sector",
+        "hospital",
+        "company",
+        "in_hospital",
+        "home_city",
+        "econ_index",
+        "health_information",
+    )
 
     def __init__(
-            self,
-            age=-1,
-            nomis_bin=None,
-            sex=None,
-            econ_index=None,
-            mode_of_transport=None,
-            area=None
+        self,
+        age=-1,
+        nomis_bin=None,
+        sex=None,
+        econ_index=None,
+        mode_of_transport=None,
+        area=None,
     ):
         """
         Inputs:
@@ -132,7 +154,6 @@ class Person:
         self.id = next(self._id)
         # biological attributes
         self.age = age
-        self.nomis_bin = nomis_bin
         self.sex = sex
         # geo-graphical attributes
         self.work_super_area = None
@@ -142,13 +163,16 @@ class Person:
         self.mode_of_transport = mode_of_transport
         self.school = None
         self.carehome = None
-        self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
+        self.primary_activity = (
+            None  # school, company, key-industr. (e.g. hospital, schools)
+        )
         self.active_group = None
         self.groups = []
+        self.subgroups = []
         self.sector = None
         self.sub_sector = None
-        self.company_id = None
         self.hospital = None
+        self.company = None
         self.in_hospital = None
         self.home_city = None
         self.econ_index = econ_index
@@ -166,24 +190,19 @@ class People:
     @property
     def infected(self):
         return [
-            person for person in self.members
-            if person.health_information.infected and not
-            person.health_information.dead
-
+            person
+            for person in self.members
+            if person.health_information.infected and not person.health_information.dead
         ]
 
     @property
     def susceptible(self):
         return [
-            person for person in self.members
-            if person.health_information.susceptible
-
+            person for person in self.members if person.health_information.susceptible
         ]
 
     @property
     def recovered(self):
         return [
-            person for person in self.members
-            if person.health_information.recovered
-
+            person for person in self.members if person.health_information.recovered
         ]

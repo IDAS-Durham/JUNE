@@ -1,6 +1,6 @@
 import logging
 import pickle
-
+from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
 from june.distributors import (
@@ -15,7 +15,8 @@ from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
 
-super_groups = ["hospitals", "companies", "cemeteries", "schools", "households"]
+allowed_super_groups = ["hospitals", "companies", "cemeteries", "schools", "households"]
+
 
 def _populate_areas(geography, demography):
     people = Population()
@@ -25,7 +26,7 @@ def _populate_areas(geography, demography):
     return people
 
 
-class World:
+class World(object):
     """
     This Class creates the world that will later be simulated.
     The world will be stored in pickle, but a better option needs to be found.
@@ -34,11 +35,11 @@ class World:
     """
 
     def __init__(
-            self,
-            geography: Geography,
-            demography: Demography,
-            include_households: bool = True,
-            box_mode=False
+        self,
+        geography: Geography,
+        demography: Demography,
+        include_households: bool = True,
+        box_mode=False,
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
@@ -58,20 +59,14 @@ class World:
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
-            self.people = _populate_areas(
-                geography,
-                demography
-            )
+            self.people = _populate_areas(geography, demography)
             self.boxes = Boxes([Box()])
             self.boxes.members[0].set_population(self.people)
             return
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
-        self.people = _populate_areas(
-            geography,
-            demography
-        )
+        self.people = _populate_areas(geography, demography)
 
         if hasattr(geography, "carehomes"):
             self.carehomes = geography.carehomes
@@ -82,9 +77,9 @@ class World:
                 self.areas
             )
         if (
-                hasattr(geography, "companies")
-                or hasattr(geography, "hospitals")
-                or hasattr(geography, "schools")
+            hasattr(geography, "companies")
+            or hasattr(geography, "hospitals")
+            or hasattr(geography, "schools")
         ):
             worker_distr = WorkerDistributor.for_geography(
                 geography
@@ -95,7 +90,9 @@ class World:
             self.schools = geography.schools
             school_distributor = SchoolDistributor(geography.schools)
             school_distributor.distribute_kids_to_school(self.areas)
-            school_distributor.distribute_teachers_to_schools_in_super_areas(self.super_areas)
+            school_distributor.distribute_teachers_to_schools_in_super_areas(
+                self.super_areas
+            )
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
@@ -117,8 +114,10 @@ class World:
         demography = Demography.for_geography(geography)
         return cls(geography, demography, box_mode=box_mode)
 
-    def to_pickle(self, save_path):
-        for supergroup_name in super_groups:
+
+    def __getstate__(self):
+        """ I am being pickled! """
+        for supergroup_name in allowed_super_groups:
             if hasattr(self, supergroup_name):
                 supergroup = getattr(self, supergroup_name)
                 supergroup.erase_people_from_groups_and_subgroups()
@@ -128,6 +127,20 @@ class World:
             supergeo.erase_people_from_groups_and_subgroups()
             for geo in supergeo:
                 geo.erase_people_from_groups_and_subgroups()
+        return self.__dict__
 
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        for person in self.people:
+            for subgroup in person.subgroups:
+                subgroup._people.add(person)
+
+    @classmethod
+    def from_pickle(self, pickle_path):
+        with open(pickle_path, "rb") as f:
+            world = pickle.load(f)
+        return world
+
+    def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
