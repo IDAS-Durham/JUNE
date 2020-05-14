@@ -90,7 +90,25 @@ class TestNewcastle:
         )
         return geography
 
-    #def create_demography():
+    @pytest.fixture(name="world_nc")
+    def create_world(self, geography_commute_nc):
+        demography = Demography.for_geography(geography)
+        world = World(geography, demography, include_households=False, include_commute=False)
+        worker_distr = WorkerDistributor.for_geography(geography)
+        worker_distr.distribute(geography, world.people)
+        commute_generator = CommuteGenerator.from_file()
 
+        for area in world.areas:
+            commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
+            for person in area.people:
+                person.mode_of_transport = commute_gen.weighted_random_choice()
+
+        return world
+
+    #def test__create_cities(self, world):
+    #    commutecities = CommuteCities()
+    #    commutecities.from_file()
+        
+        
     
     
