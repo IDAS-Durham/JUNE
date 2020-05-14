@@ -94,21 +94,20 @@ class Hospital(Group):
         """
         Set people in hospital active in hospital only
         """
-        # TODO: We need to check what we want to do with this,
-        # it will probably be taken care by the supergroup
-        # but probably we want to let workers go home.....
         for person in self[self.GroupType.workers]:
             if person.active_group is None:
-                person.active_group = "hospital"
+                person.active_group = self[self.GroupType.workers]
+
+    def set_active_patients(self):
         for person in self[self.GroupType.patients]:
             if person.active_group is None:
-                person.active_group = "hospital"
+                person.active_group = self[self.GroupType.patients]
         for person in self[self.GroupType.icu_patients]:
             if person.active_group is None:
-                person.active_group = "hospital"
+                person.active_group = self[self.GroupType.icu_patients]
 
-    def add(self, person, qualifier=GroupType.workers):
-        super().add(person, qualifier)
+    def add(self, person, qualifier=GroupType.workers, subgroup_type_qualifier=GroupType.workers):
+        super().add(person, qualifier, subgroup_type_qualifier)
         if qualifier in [self.GroupType.patients, self.GroupType.icu_patients]:
             person.in_hospital = self
 
@@ -123,9 +122,9 @@ class Hospital(Group):
             person instance to add as patient
         """
         if person.health_information.tag == "intensive care":
-            self.add(person, self.GroupType.icu_patients)
+            self.add(person, self.GroupType.icu_patients, person.GroupType.hospital)
         elif person.health_information.tag == "hospitalised":
-            self.add(person, self.GroupType.patients)
+            self.add(person, self.GroupType.patients, person.GroupType.hospital)
         else:
             raise AssertionError(
                 "ERROR: This person shouldn't be trying to get to a hospital"
@@ -299,7 +298,7 @@ class Hospitals(Supergroup):
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
-                        cls.create_hospital_from_df_row(super_area, row, icu_fraction)
+                        hospital = cls.create_hospital_from_df_row(super_area, row, icu_fraction)
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break

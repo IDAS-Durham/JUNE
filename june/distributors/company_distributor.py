@@ -43,7 +43,7 @@ class CompanyDistributor:
                 ):
                     company.n_employees += 1
                     company.n_woman     += person.sex  # remember: woman=1;man=0
-                    company.add(person,"worker")
+                    company.add(person,"worker", person.GroupType.primary_activity)
                     break
                 # TODO: Take care if cases where people did not find any
                 # company at all
