@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import yaml
 
-from june.demography import Demography
+from june.demography import Demography, Population
 from june.distributors import WorkerDistributor
 from june.geography import Geography
 
@@ -38,12 +38,16 @@ def create_geography(worker_super_areas):
     return Geography.from_file(filter_key={"msoa": worker_super_areas})
 
 
+@pytest.fixture(name="worker_demography", scope="module")
+def create_demography(worker_geography):
+    return Demography.for_geography(worker_geography)
+
+
 @pytest.fixture(name="worker_population", scope="module")
-def test__worker_population(worker_geography):
-    demography = Demography.for_geography(worker_geography)
+def test__worker_population(worker_geography, worker_demography):
     population = list()
     for area in worker_geography.areas:
-        area.populate(demography)
+        area.populate(worker_demography)
         population.extend(
             area.people
         )
@@ -52,45 +56,71 @@ def test__worker_population(worker_geography):
     return population
 
 
-class TestDistributor:
+class TestInitialization:
+    def test__distributor_from_file(
+            self,
+            worker_super_areas: list,
+            worker_geography: Geography,
+            worker_demography: Demography,
+    ):
+        population = list()
+        for area in worker_geography.areas:
+            area.populate(worker_demography)
+            population.extend(
+                area.people
+            )
+        WorkerDistributor.from_file(area_names = worker_super_areas)
+    
+
+    def test__distributor_from_geography(
+            self,
+            worker_geography: Geography,
+            worker_demography: Demography
+    ):
+        population = list()
+        for area in worker_geography.areas:
+            area.populate(demography)
+            population.extend(
+                area.people
+            )
+        distributor = WorkerDistributor.for_geography(worker_geography)
+        distributor.distribute(worker_geography, population)
+        return population
+
+
+class TestDistribution:
     def test__workers_stay_in_geography(
             self,
-            worker_geography,
-            worker_population,
-            worker_super_areas,
-            worker_config
+            worker_geography: Geography,
+            worker_population: Population
+            worker_config: dict,
     ):
         case = unittest.TestCase()
         work_super_area_name = np.array([
             person.work_super_area.name
-            for person in worker_population
+            for person in population
             if worker_config["age_range"][0] <= person.age <= worker_config["age_range"][1]
         ])
         work_super_area_name = list(np.unique(work_super_area_name))
         case.assertCountEqual(work_super_area_name, worker_super_areas)
 
-    # def test__sex_ratio_in_geography(
-    #        self,
-    #        worker_geography,
-    #        worker_population,
-    #        worker_config
-    # ):
-    #    occupations = np.array([
-    #        [person.sex, person.sector, person.sub_sector]
-    #        for person in worker_population.people
-    #        if person.sector in list(worker_config["sub_sector_ratio"].keys())
-    #    ]).T
-    #    p_sex = occupations[0]
-    #    p_sectors = occupations[1][p_sex == "m"]
-    #    p_sub_sectors = occupations[2][p_sex == "m"]
-    #    for sector in list(worker_config["sub_sector_ratio"].keys()):
-    #        idx = np.where(p_sectors == sector)[0]
-    #        sector_worker_nr = len(idx)
-    #        p_sub_sector = p_sub_sectors[idx]
-    #        sub_sector_worker_nr = len(np.where(p_sub_sector is not None)[0])
-    #        if not sub_sector_worker_nr == 0:
-    #            npt.assert_almost_equal(
-    #                sector_worker_nr / sub_sector_worker_nr, 
-    #                worker_config["sub_sector_ratio"][sector]["m"],
-    #                decimal=3,
-    #            )
+    def test__worker_nr_in_sector_larger_than_its_sub(
+           self,
+           worker_geography: Geography,
+           worker_population: Population,
+           worker_config: dict,
+    ):
+       occupations = np.array([
+           [person.sex, person.sector, person.sub_sector]
+           for person in worker_population.people
+           if person.sector in list(worker_config["sub_sector_ratio"].keys())
+       ]).T
+       p_sex = occupations[0]
+       p_sectors = occupations[1][p_sex == "m"]
+       p_sub_sectors = occupations[2][p_sex == "m"]
+       for sector in list(worker_config["sub_sector_ratio"].keys()):
+           idx = np.where(p_sectors == sector)[0]
+           sector_worker_nr = len(idx)
+           p_sub_sector = p_sub_sectors[idx]
+           sub_sector_worker_nr = len(np.where(p_sub_sector is not None)[0])
+           assert sector_worker_nr > sub_sector_worker_nr

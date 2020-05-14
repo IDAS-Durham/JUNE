@@ -270,7 +270,7 @@ class WorkerDistributor:
         Parameters
         ----------
         area_names
-            List of Area names for which to initiate WorkerDistributor
+            List of SuperArea names for which to initiate WorkerDistributor
         workflow_file
             Filename to data containing information about where man and woman
             go to work with respect to their SuperArea of residence.
