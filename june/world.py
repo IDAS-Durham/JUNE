@@ -9,6 +9,7 @@ from june.distributors import (
     HouseholdDistributor,
     CareHomeDistributor,
     WorkerDistributor,
+    CompanyDistributor,
 )
 from june.geography import Geography
 from june.groups import Hospitals
@@ -71,6 +72,7 @@ class World(object):
         if hasattr(geography, "carehomes"):
             self.carehomes = geography.carehomes
             CareHomeDistributor().populate_carehome_in_areas(self.areas)
+
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
             self.households = household_distributor.distribute_people_and_households_to_areas(
@@ -96,6 +98,10 @@ class World(object):
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
+            company_distributor = CompanyDistributor()
+            company_distributor.distribute_adults_to_companies_in_super_areas(
+                geography.super_areas
+            )
 
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
@@ -114,9 +120,14 @@ class World(object):
         demography = Demography.for_geography(geography)
         return cls(geography, demography, box_mode=box_mode)
 
-
     def __getstate__(self):
-        """ I am being pickled! """
+        """ I am being pickled! Removes links from group to people
+        to avoid circular references and to make the world pickleable.
+        The state of the world is then restored, however, some temporary
+        information store by distributors to area or group objects
+        might be deleted (they shouldn't be there anyway..)
+        """
+        original_state = self.__dict__.copy()
         for supergroup_name in allowed_super_groups:
             if hasattr(self, supergroup_name):
                 supergroup = getattr(self, supergroup_name)
@@ -127,7 +138,10 @@ class World(object):
             supergeo.erase_people_from_geographical_unit()
             for geo in supergeo:
                 geo.erase_people_from_geographical_unit()
-        return self.__dict__
+        state_dict = self.__dict__.copy() # state to pickle
+        self.__dict__ = original_state # restore original state
+        return state_dict
+
 
     def __setstate__(self, state):
         self.__dict__.update(state)
