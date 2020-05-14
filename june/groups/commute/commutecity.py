@@ -20,7 +20,7 @@ default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinat
 
 default_non_london_stat_pcs = default_data_path / "travel/non_London_station_coordinates.csv"
 
-default_london_stat_pcs = default_data_path / "travel/london_station_coordinates.csv"
+default_london_stat_pcs = default_data_path / "travel/London_station_coordinates.csv"
 
 class CommuteCity(Group):
     """
