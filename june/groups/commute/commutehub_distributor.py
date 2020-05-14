@@ -1,9 +1,9 @@
 import csv
-from june import config
+from june import paths
 from scipy import spatial
 
-default_geographical_data_directory = f"{config.data_path}/geographical_data"
-default_travel_data_directory = f"{config.data_path}/travel"
+default_geographical_data_directory = f"{paths.data_path}/geographical_data"
+default_travel_data_directory = f"{paths.data_path}/travel"
 
 default_file = f"{default_geographical_data_directory}/msoa_oa.csv"
 

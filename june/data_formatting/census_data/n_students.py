@@ -1,9 +1,9 @@
 import pandas as pd
 
-from june import config
+from june import paths
 
-raw_path = f"{config.data_path}/census_data/output_area/"
-processed_path = f"{config.data_path}/processed/census_data/output_area/"
+raw_path = f"{paths.data_path}/census_data/output_area/"
+processed_path = f"{paths.data_path}/processed/census_data/output_area/"
 
 household_composition_people = pd.read_csv(
     raw_path / "household_composition_people.csv"

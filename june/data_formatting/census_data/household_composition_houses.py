@@ -3,10 +3,10 @@ import os
 import numpy as np
 import pandas as pd
 
-from june import config
+from june import paths
 
-raw_path = f"{config.data_path}/census_data/output_area/"
-processed_path = f"{config.data_path}/processed/census_data/output_area/"
+raw_path = f"{paths.data_path}/census_data/output_area/"
+processed_path = f"{paths.data_path}/processed/census_data/output_area/"
 
 
 def filter_and_sum(df, in_column):
