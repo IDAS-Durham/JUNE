@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from june.demography import Person
-from june.geography import Geography
+from june.demography.geography import Geography
 
 default_data_path = (
         Path(os.path.abspath(__file__)).parent.parent.parent

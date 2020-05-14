@@ -1,8 +1,6 @@
 from pytest import fixture 
-from june.geography import Geography, SuperArea
-from june.demography import Demography
-from june import World
-from june.groups import Companies, Company
+from june.demography.geography import SuperArea
+from june.groups import Company
 from june.demography import Person
 from june.distributors import CompanyDistributor
 
