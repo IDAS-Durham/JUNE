@@ -67,7 +67,7 @@ class AgeSexGenerator:
             ethnicities.extend(
                 np.random.choice( 
                     np.repeat(
-                        ethnicity_groups,ethnicity_structure.iloc[:,age_ind] #[ethnicity_age_bins[age_ind]]
+                        ethnicity_groups,ethnicity_structure[age_ind]
                     ), age_count
                 )
             )
@@ -178,7 +178,6 @@ class Demography:
                 people.append(person)   # add person to population
                 area.add(person)        # link area <-> person
 
-        print('N',len(people))
         return Population(people=people)
 
 
@@ -259,7 +258,7 @@ class Demography:
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
-        ethnicity_structure_path = data_path / "ethnicity_structure.csv"
+        ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
         # TODO socioecon_structure_path = data_path / "socioecon_structure.csv"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path, 
@@ -290,22 +289,27 @@ def _load_age_and_sex_generators(
     female_ratios_df.sort_index(inplace=True)
 
     ethnicity_structure_df = pd.read_csv(ethnicity_structure_path,index_col=[0,1]) # pd MultiIndex!!!
-    ethnicity_structure_df = ethnicity_structure_df.loc[area_names]
+    ethnicity_structure_df = ethnicity_structure_df.loc[pd.IndexSlice[area_names]]
     ethnicity_structure_df.sort_index(level=0,inplace=True)
+    ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
+    ## it preserves original order, and ignoring "repeat slices".
 
     # socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=[0,1])
     # socioecon_structure_df = socioecon_structure_df[area_names]
 
     ret = {}
-    for (age_index, age_structure), (index, female_ratios), (eth_index,ethnicity_df) in zip(
+    for (_, age_structure), (index, female_ratios), (_,ethnicity_df) in zip(
         age_structure_df.iterrows(), female_ratios_df.iterrows(), 
         ethnicity_structure_df.groupby(level=0),
     ):
-        print(index,len(female_ratios_df))
+        ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(
             age_structure.values, 
-            female_ratios.index.values, female_ratios.values,
-            ethnicity_df.columns, ethnicity_df.index.get_level_values(1), ethnicity_df,
+            female_ratios.index.values, 
+            female_ratios.values,
+            ethnicity_df.columns, 
+            ethnicity_df.index.get_level_values(1), 
+            ethnicity_structure,
         )
         
     return ret
