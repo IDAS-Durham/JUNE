@@ -46,11 +46,10 @@ class GeographicalUnit:
             cls.__id_generators[cls]
         )
 
-    def __init__(self, references_to_people=None, references_to_smaller_areas=None):
+    def __init__(self, references_to_people=None):
         self.id = self._next_id()
         self.members = []
-        self.references_to_people = references_to_people
-        self.references_to_smaller_areas = references_to_smaller_areas
+        self.people = set()
 
     def __iter__(self):
         return iter(self.members)
@@ -67,19 +66,13 @@ class GeographicalUnit:
             "From file initialization not available for this supergroup."
         )
 
-    def erase_people_from_groups_and_subgroups(self):
+    def erase_people_from_geographical_unit(self):
         """
         Sets all attributes in self.references_to_people to None for all groups.
         Erases all people from subgroups.
         """
-        if self.references_to_smaller_areas is not None:
-            for reference in self.references_to_smaller_areas:
-                setattr(self, reference, None)
-
         for geo_unit in self:
-            if self.references_to_people is not None:
-                for reference in self.references_to_people:
-                    setattr(geo_unit, reference, None)
+            geo_unit.people.clear()
 
 
 class Area(GeographicalUnit):
@@ -108,11 +101,9 @@ class Area(GeographicalUnit):
         Coordinate is given in the format Y, X where X is longitude and Y is latitude.
         """
         super().__init__()
-        self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
         self.super_area = super_area
-        self.people = set()
 
     def add(self, person: Person):
         self.people.add(person)
@@ -147,7 +138,7 @@ class SuperArea(GeographicalUnit):
             areas: List[Area],
             coordinates: Tuple[float, float],
     ):
-        super().__init__(references_to_smaller_areas=["areas"])
+        super().__init__()
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
@@ -163,7 +154,7 @@ class SuperAreas(GeographicalUnit):
     __slots__ = "members"
 
     def __init__(self, super_areas: List[SuperArea]):
-        super().__init__(references_to_people=["workers"])
+        super().__init__()
         self.members = super_areas
 
 
