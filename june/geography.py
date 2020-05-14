@@ -3,7 +3,7 @@ import os
 from itertools import count
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
-
+from collections import defaultdict
 import pandas as pd
 
 from june.demography.person import Person
@@ -33,8 +33,21 @@ class GeographicalUnit:
     """
     Template for a geography group.
     """
+    __id_generators = defaultdict(
+        count
+    )
+    @classmethod
+    def _next_id(cls) -> int:
+        """
+        Iterate an id for this class. Each group class has its own id iterator
+        starting at 0
+        """
+        return next(
+            cls.__id_generators[cls]
+        )
 
     def __init__(self, references_to_people=None, references_to_smaller_areas=None):
+        self.id = self._next_id()
         self.members = []
         self.references_to_people = references_to_people
         self.references_to_smaller_areas = references_to_smaller_areas

@@ -107,41 +107,20 @@ class Population:
     @property
     def infected(self):
         return [
-<<<<<<< HEAD
             person
             for person in self.people
             if person.health_information.infected and not person.health_information.dead
-=======
-            person for person in self.people
-            if person.health_information.infected and not
-            person.health_information.dead
-
->>>>>>> master
         ]
 
     @property
     def susceptible(self):
         return [
-<<<<<<< HEAD
             person for person in self.people if person.health_information.susceptible
-=======
-            person for person in self.people
-            if person.health_information.susceptible
-
->>>>>>> master
         ]
 
     @property
     def recovered(self):
-<<<<<<< HEAD
         return [person for person in self.people if person.health_information.recovered]
-=======
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-
-        ]
->>>>>>> master
 
 
 class Demography:
@@ -161,19 +140,11 @@ class Demography:
         """
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
-<<<<<<< HEAD
-        # not implemented yet:
-        self.ethnicity_generators = ethnicity_generators
-        self.economic_index_generators = economic_index_generators
-
-    def populate(self, areas: Optional[List[Area]] = None,) -> Population:
-=======
 
     def populate(
             self,
             area_name: str,
     ) -> Population:
->>>>>>> master
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -188,24 +159,6 @@ class Demography:
         A population of people
         """
         people = list()
-<<<<<<< HEAD
-        for area in areas:
-            # TODO: this could be make faster with map()
-            age_and_sex_generator = self.age_sex_generators[area.name]
-            for _ in range(age_and_sex_generator.n_residents):
-                person = Person(
-                    age=age_and_sex_generator.age(),
-                    sex=age_and_sex_generator.sex(),
-                    # TODO ethnicity_generators.ethnicity()
-                    # TODO socioeconomic_generators.socioeconomic_index()
-                )
-                people.append(person)  # add person to population
-                area.add(person)  # link area <-> person
-        return Population(people=people)
-
-=======
-
-        # TODO: this could be make faster with map() <- this is not true
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
             person = Person(
@@ -217,7 +170,6 @@ class Demography:
             people.append(person)  # add person to population
         return Population(people=people)
 
->>>>>>> master
     @classmethod
     def for_geography(
         cls,
@@ -267,17 +219,10 @@ class Demography:
 
     @classmethod
     def for_areas(
-<<<<<<< HEAD
         cls,
         area_names: List[str],
         data_path: str = default_data_path,
         config: Optional[dict] = None,
-=======
-            cls,
-            area_names: List[str],
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
->>>>>>> master
     ) -> "Demography":
         """
         Load data from files and construct classes capable of generating demographic
