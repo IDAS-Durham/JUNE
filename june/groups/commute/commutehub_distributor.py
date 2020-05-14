@@ -78,7 +78,7 @@ class CommuteHubDistributor:
                 live_area = work_person.area.name
                 live_lat_lon = self._get_area_lat_lon(live_area)
                 # find nearest commute hub to the person given where they live
-                _, hub_index = commutehub_tree.query(live_lat_lon,1)
+                _, hub_index = commutehub_tree.query(live_lat_lon,1) 
                 
                 commutehub_in_city[hub_index].add(work_person)
 
