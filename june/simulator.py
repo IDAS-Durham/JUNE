@@ -185,7 +185,7 @@ class Simulator:
             person sent to cemetery
         """
         cemetery = self.world.cemeteries.get_nearest(person)
-        person.health_information.set_recovered(0)
+        person.health_information.set_dead(0)
         for subgroup in person.subgroups:
             if subgroup is not None:
                 subgroup.remove(person)
@@ -239,7 +239,7 @@ class Simulator:
         print('number of deaths : ', n_people)
 
         for hospital in self.world.hospitals:
-            for person in hospital.subgroups[0]:
+            for person in hospital.subgroups[0].people:
                 print('Active in hospital = ', person.active_group.spec)
 
         for group_type in group_instances:
