@@ -1,51 +1,43 @@
-import os
-import yaml
-import random
-from pathlib import Path
 from collections import OrderedDict
-from typing import List
-from itertools import chain
 from collections import defaultdict
+from itertools import chain
+from typing import List
 
 import numpy as np
 import pandas as pd
+import yaml
 from scipy import stats
 
-from june.groups import Household, Households
+from june import paths
 from june.demography import Person
 from june.geography import Area
+from june.groups import Household, Households
 from june.logger_creation import logger
 
 default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/distributors/household_distributor.yaml"
+    paths.configs_path / "defaults/distributors/household_distributor.yaml"
 )
-default_age_difference_files_folder = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/age_difference"
-)
+default_age_difference_files_folder = paths.data_path / "processed/age_difference"
 
 default_household_composition_filename = (
-    Path(__file__).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales/minimum_household_composition.csv"
+    paths.data_path
+    / "processed/census_data/output_area/EnglandWales/minimum_household_composition.csv"
 )
 
 default_number_students_filename = (
-    Path(__file__).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales/n_students.csv"
+    paths.data_path / "processed/census_data/output_area/EnglandWales/n_students.csv"
 )
 
 default_number_communal_filename = (
-    Path(__file__).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales/n_people_in_communal.csv"
+    paths.data_path
+    / "processed/census_data/output_area/EnglandWales/n_people_in_communal.csv"
 )
 
 default_logging_config_filename = (
-    Path(__file__).parent.parent / "configs/config_world_creation_logger.yaml"
+    paths.configs_path / "config_world_creation_logger.yaml"
 )
 
 logger(default_logging_config_filename)
-
 
 """
 This file contains routines to distribute people to households
@@ -1030,11 +1022,11 @@ class HouseholdDistributor:
                 )
                 if student is None:
                     student = self._get_random_person_in_age_bracket(
-                    men_by_age,
-                    women_by_age,
-                    min_age=self.student_min_age,
-                    max_age=self.student_max_age+10,
-                )
+                        men_by_age,
+                        women_by_age,
+                        min_age=self.student_min_age,
+                        max_age=self.student_max_age + 10,
+                    )
                 self._add_to_household(household, student, subgroup="young_adults")
                 students_left -= 1
         assert students_left >= 0
@@ -1052,7 +1044,7 @@ class HouseholdDistributor:
                     men_by_age,
                     women_by_age,
                     min_age=self.student_min_age,
-                    max_age=self.student_max_age+10,
+                    max_age=self.student_max_age + 10,
                 )
             self._add_to_household(household, student, subgroup="young_adults")
             students_left -= 1
