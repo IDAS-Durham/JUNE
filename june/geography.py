@@ -90,23 +90,24 @@ class SuperArea:
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas"
+    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies"
     _id = count()
 
     def __init__(
             self,
-            name: str,
-            areas: List[Area],
-            coordinates: Tuple[float, float],
+            name: str = None,
+            areas: List[Area] = None,
+            coordinates: Tuple[float, float] = None,
     ):
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
         self.areas = areas
-        self.workers = set()
+        self.workers = list() 
+        self.companies = list()
 
     def add_worker(self, person: Person):
-        self.workers.add(person)
+        self.workers.append(person)
         person.work_super_area = self
 
 
