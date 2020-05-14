@@ -170,8 +170,8 @@ class Companies(Supergroup):
                 sectors,
             )
         )
-        np.random.shuffle(companies)
         super_area.companies = companies
+        np.random.shuffle(companies)
         return companies
 
     @classmethod
