@@ -11,7 +11,7 @@ from june.distributors import (
     WorkerDistributor,
     CompanyDistributor,
 )
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)

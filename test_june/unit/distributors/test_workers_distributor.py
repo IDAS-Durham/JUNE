@@ -8,7 +8,7 @@ import yaml
 
 from june.demography import Demography
 from june.distributors import WorkerDistributor
-from june.geography import Geography
+from june.demography.geography import Geography
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent
 default_workflow_file = default_base_path / \
