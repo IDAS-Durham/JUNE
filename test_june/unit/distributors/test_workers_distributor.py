@@ -44,7 +44,7 @@ def create_demography(worker_geography):
 
 
 @pytest.fixture(name="worker_population", scope="module")
-def test__worker_population(worker_geography, worker_demography):
+def create_population(worker_geography, worker_demography):
     population = list()
     for area in worker_geography.areas:
         area.populate(worker_demography)
@@ -91,14 +91,15 @@ class TestInitialization:
 class TestDistribution:
     def test__workers_stay_in_geography(
             self,
+            worker_config: dict,
+            worker_super_areas: list,
             worker_geography: Geography,
             worker_population: Population
-            worker_config: dict,
     ):
         case = unittest.TestCase()
         work_super_area_name = np.array([
             person.work_super_area.name
-            for person in population
+            for person in worker_population
             if worker_config["age_range"][0] <= person.age <= worker_config["age_range"][1]
         ])
         work_super_area_name = list(np.unique(work_super_area_name))
@@ -106,13 +107,13 @@ class TestDistribution:
 
     def test__worker_nr_in_sector_larger_than_its_sub(
            self,
+           worker_config: dict,
            worker_geography: Geography,
            worker_population: Population,
-           worker_config: dict,
     ):
        occupations = np.array([
            [person.sex, person.sector, person.sub_sector]
-           for person in worker_population.people
+           for person in worker_population
            if person.sector in list(worker_config["sub_sector_ratio"].keys())
        ]).T
        p_sex = occupations[0]
