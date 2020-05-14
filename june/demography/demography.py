@@ -1,22 +1,14 @@
-import os
-from pathlib import Path
 from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
 
+from june import config
 from june.demography import Person
 from june.geography import Geography
 
-default_data_path = (
-        Path(os.path.abspath(__file__)).parent.parent.parent
-        / "data/processed/census_data/output_area/EnglandWales"
-)
-
-default_areas_map_path = (
-        Path(os.path.abspath(__file__)).parent.parent.parent
-        / "data/processed/geographical_data/oa_msoa_region.csv"
-)
+default_data_path = config.data_path / "processed/census_data/output_area/EnglandWales"
+default_areas_map_path = config.data_path / "processed/geographical_data/oa_msoa_region.csv"
 
 
 class DemographyError(BaseException):
