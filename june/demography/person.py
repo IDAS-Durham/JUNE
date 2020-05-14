@@ -142,7 +142,6 @@ class Person:
     def __init__(
         self,
         age=-1,
-        nomis_bin=None,
         sex=None,
         econ_index=None,
         mode_of_transport=None,
