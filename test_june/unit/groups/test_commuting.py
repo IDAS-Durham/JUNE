@@ -106,7 +106,7 @@ class TestNewcastle:
         return world
 
     @pytest.fixture(name="commutecities_nc")
-    def create_cities(self, world):
+    def create_cities(self):
         commutecities = CommuteCities()
         commutecities.from_file()
 
