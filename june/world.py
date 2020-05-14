@@ -12,7 +12,7 @@ from june.distributors import (
     CompanyDistributor,
 )
 from june.geography import Geography
-from june.groups import Hospitals
+from june.groups import *
 
 logger = logging.getLogger(__name__)
 
