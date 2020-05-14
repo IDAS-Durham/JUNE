@@ -104,7 +104,10 @@ class World:
             )
 
         if include_commute:
-            for area in world.areas:
+
+            commute_generator = CommuteGenerator.from_file()
+            
+            for area in self.areas:
                 commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
                 for person in area.people:
                     person.mode_of_transport = commute_gen.weighted_random_choice()
