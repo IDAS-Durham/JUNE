@@ -32,7 +32,7 @@ class TestCommuteCity:
         )
 
     def test__city_grouptype(self, city):
-        assert len(city.passengers) == 0
+        assert len(city.people) == 0
         assert len(city.commutehubs) == 0
         assert len(city.commute_internal) == 0
         assert len(city.commutecityunits) == 0
@@ -46,7 +46,7 @@ class TestCommuteHub:
         )
 
     def test__hub_grouptype(self, hub):
-        assert len(hub.passengers) == 0
+        assert len(hub.people) == 0
         assert len(hub.commuteunits) == 0
 
 class TestCommuteUnit:
@@ -59,7 +59,7 @@ class TestCommuteUnit:
         )
 
     def test__unit_grouptype(self, unit):
-        assert len(unit.passengers) == 0
+        assert len(unit.people) == 0
         assert unit.max_passengers != 0
 
 class TestCommuteCityUnit:
@@ -71,5 +71,5 @@ class TestCommuteCityUnit:
         )
 
     def test__unit_grouptype(self, unit):
-        assert len(unit.passengers) == 0
+        assert len(unit.people) == 0
         assert unit.max_passengers != 0
