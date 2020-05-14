@@ -117,10 +117,33 @@ class TestNewcastle:
         commutecities.init_london()
 
     def test__init_stations(self, commutecities_nc):
-        assert len(commutecities_nc.members)
+        assert len(commutecities_nc.members) == 11
 
-    #def commutecity_distiribute(self, commutecities_nc, world_nc):
-    #    commutecity_distributor = CommuteCityDistributor(commutecities.members, world_nc.super_areas.members)
+    def commutecity_distiribute(self, commutecities_nc, world_nc):
+        commutecity_distributor = CommuteCityDistributor(commutecities.members, world_nc.super_areas.members)
+        commutecity_distributor.distribute_people()
+
+    def test__city_distribution(self, commutecities_nc):
+        assert (len(commutecities.members[7].people)) > 0
+
+    @pytest.fixture(name="commutehubs_nc")
+    def create_commutehubs(self, commutecities_nc):
+        commutehubs = CommuteHubs(commutecities.members)
+        commutehubs.from_file()
+
+        return commutehubs
+
+    def init_commutehubs(self, commutehubs_nc):
+        commutehubs.init_hubs()
+
+    def commutehub_distribute(self, commutecities_nc):
+        commutehub_distributor = CommuteHubDistributor(commutecities.members)
+        commutehub_distributor.from_file()
+        commutehub_distributor.distribute_people()
+
+    #def test__
+    
+    
         
         
         
