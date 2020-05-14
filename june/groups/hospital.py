@@ -3,7 +3,7 @@ import yaml
 import logging
 import os
 from enum import IntEnum
-from pathlib import Path
+from june import paths
 from typing import List, Tuple
 
 import numpy as np
@@ -17,12 +17,12 @@ from june.geography import SuperArea
 logger = logging.getLogger(__name__)
 
 default_data_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/hospital_data/england_hospitals.csv"
+    paths.data_path
+    / "processed/hospital_data/england_hospitals.csv"
 )
 default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/groups/hospitals.yaml"
+    paths.configs_path
+    / "defaults/groups/hospitals.yaml"
 )
 
 

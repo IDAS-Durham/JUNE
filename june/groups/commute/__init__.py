@@ -1,4 +1,4 @@
-from pathlib import Path
+from june import paths
 
 import pandas as pd
 
@@ -11,7 +11,7 @@ from .commutehub_distributor import CommuteHubDistributor
 from .commuteunit import CommuteUnit, CommuteUnits
 from .commuteunit_distributor import CommuteUnitDistributor
 
-data_directory = Path(__file__).parent.parent.parent.parent / "data"
+data_directory = paths.data_path
 default_geographical_data_directory = data_directory / "geographical_data"
 default_travel_data_directory = data_directory / "travel"
 
