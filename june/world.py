@@ -116,7 +116,8 @@ class World:
             self.commutehub_distributor.distribute_people()
 
             # CommuteUnit
-            self.commuteunits = CommuteUnits(self.commutehubs.members, init=True)
+            self.commuteunits = CommuteUnits(self.commutehubs.members)
+            self.commuteunits.init_units()
 
             self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
 
