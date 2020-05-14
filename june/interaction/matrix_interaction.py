@@ -1,6 +1,9 @@
 import random
+
 import numpy as np
+
 from june.interaction.interaction import Interaction
+
 
 # TODO: We have to rework this to acount for the grouping-structure in groups.
 # READ MAX AGE (100) FROM SOMEWHERE
@@ -38,12 +41,12 @@ class MatrixInteraction(Interaction):
         # randomly select someone with that age
         recipient = self.make_single_contact(infecter, group, age)
         if (
-            recipient
-            and not (recipient.is_infected())
-            and recipient.susceptibility > 0.0
+                recipient
+                and not (recipient.is_infected())
+                and recipient.susceptibility > 0.0
         ):
             if random.random() <= 1.0 - np.exp(
-                -self.transmission_probability * recipient.susceptibility()
+                    -self.transmission_probability * recipient.susceptibility()
             ):
                 infecter.infection.infect_person_at_time(person=recipient, time=time)
                 recipient.counter.update_infection_data(
@@ -67,10 +70,10 @@ class MatrixInteraction(Interaction):
                 # randomly select someone with that age
                 recipient = self.make_single_contact(infecter, group, contact_ages[i])
                 if recipient and (
-                    not (recipient.is_infected()) and recipient.susceptibility > 0.0
+                        not (recipient.is_infected()) and recipient.susceptibility > 0.0
                 ):
                     if random.random() <= 1.0 - np.exp(
-                        -self.transmission_probability * recipient.susceptibility()
+                            -self.transmission_probability * recipient.susceptibility()
                     ):
                         infecter.infection.infect_person_at_time(recipient)
                         recipient.counter.update_infection_data(

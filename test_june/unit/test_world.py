@@ -22,3 +22,4 @@ def test__world_has_everything(world):
     assert isinstance(world.households, Households)
     assert isinstance(world.hospitals, Hospitals)
     assert isinstance(world.carehomes, CareHomes)
+    assert isinstance(world.companies, Companies)

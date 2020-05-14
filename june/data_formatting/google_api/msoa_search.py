@@ -39,7 +39,7 @@ class MSOASearch():
             help='directory containing MSOA centroids - assume also where file will be saved to',
             type=str
         )
-
+        
         args = parser.parse_args()
 
         return args
@@ -60,6 +60,7 @@ class MSOASearch():
         for i in range(len(coordinates)):
             out = apicall.nearby_search_loop(location=(coordinates[i][0],coordinates[i][1]),radius=4600,location_type=self.args.location_type)
             outs.append(out)
+            #print (out)
 
         return outs
 
@@ -72,8 +73,7 @@ if __name__ == "__main__":
         api = f.read()
     apikey = api.split('\n')[0]
 
-    regions = ['London', 'Wales', 'EastMidlands', 'WestMidlands', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']
-    #Yorkshire
+    regions = ['SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'East']#, 'Yorkshire','London', 'Wales', 'EastMidlands', 'WestMidlands']
 
     for region in regions:
         print ('Working on region: {}'.format(region))
