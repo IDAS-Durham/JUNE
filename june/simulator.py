@@ -52,6 +52,7 @@ class Simulator:
         self.permanent_group_hierarchy = [
             "boxes",
             "hospitals",
+            "commute",
             "companies",
             "schools",
             "carehomes",
@@ -145,6 +146,8 @@ class Simulator:
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
+                self.world.group_maker.distribute_people(group_name)
+            if "commute" in active_groups:
                 self.world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
