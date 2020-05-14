@@ -1,19 +1,10 @@
 import random
 import numpy as np
 from scipy import stats
-from june.infection.symptoms import Symptoms 
+from june.infection.symptoms import Symptoms, Symptom_Tags
 from enum import IntEnum
 import autofit as af
 import sys
-
-ALLOWED_SYMPTOM_TAGS = [
-    "asymptomatic",
-    "influenza-like illness",
-    "pneumonia",
-    "hospitalised",
-    "intensive care",
-    "dead",
-]
 
 class VariationType(IntEnum):
     constant  = 0,
@@ -53,49 +44,67 @@ class TrajectoryMaker:
         self.init_tables(parameters)
         
     def __getitem__(self,tag):
-        template   = self.trajectories[tag]
+        template   = self.trajectories[tag[0]]
         cumulative = 0.
         trajectory = []
         for stage in template:
             time = self.TimeSetter.make_time(stage)
-            cumulative += time
             trajectory.append([cumulative,stage[1]])
+            cumulative += time
         return trajectory
-        
+
     def init_tables(self,parameters):
         self.incubation_info = self.FillIncubationTime(parameters)
-        for tag in ALLOWED_SYMPTOM_TAGS:
-            if tag=="asymptomatic":
+        self.recovery_info   = self.FillRecoveryInfo()
+        for tag in Symptom_Tags:
+            if tag==Symptom_Tags.asymptomatic:
                 self.trajectories[tag] = self.FillAsymptomaticTrajectory(parameters)
-            elif tag=="influenza-like illness":
+            elif tag==Symptom_Tags.influenza:
                 self.trajectories[tag] = self.FillInfluenzaLikeTrajectory(parameters)
-            elif tag=="hospitalised":
+            elif tag==Symptom_Tags.pneumonia:
+                self.trajectories[tag] = self.FillPneumoniaTrajectory(parameters)
+            elif tag==Symptom_Tags.hospitalised:
                 self.trajectories[tag] = self.FillHospitalisedTrajectory(parameters)
-            elif tag=="intensive care":
+            elif tag==Symptom_Tags.intensive_care:
                 self.trajectories[tag] = self.FillIntensiveCareTrajectory(parameters)
-            elif tag=="dead":
+            elif tag==Symptom_Tags.dead:
                 self.trajectories[tag] = self.FillDeathTrajectory(parameters)
-                
+
     def FillIncubationTime(self,parameters):
         incubation_time = 5.1  #parameters["incubation_time"] etc.
-        return [VariationType.constant,"asymptomatic",incubation_time]
+        return [VariationType.constant,Symptom_Tags.infected,incubation_time]
+
+    def FillRecoveryInfo(self):
+        return [VariationType.constant,Symptom_Tags.recovered,0.0]
+
         
     def FillAsymptomaticTrajectory(self,parameters):
         recovery_time = 14.    #parameters["asymptomatic_recovery_time"] etc.
         return [self.incubation_info,
-                [VariationType.constant,"asymptomatic",recovery_time]]
+                [VariationType.constant,Symptom_Tags.asymptomatic,recovery_time],
+                self.recovery_info]
     
     def FillInfluenzaLikeTrajectory(self,parameters):
         recovery_time = 20.    #parameters["influenza_recovery_time"] etc.
         return [self.incubation_info,
-                [VariationType.constant,"influenza-like illness",recovery_time]]
+                [VariationType.constant,Symptom_Tags.influenza,recovery_time],
+                self.recovery_info]
+    
+    def FillPneumoniaTrajectory(self,parameters):
+        influenza_time = 5.     #parameters["pre_pneumonia_time"] etc.
+        recovery_time  = 20.    #parameters["pneumonia_recovery_time"] etc.
+        return [self.incubation_info,
+                [VariationType.constant,Symptom_Tags.influenza,recovery_time],
+                [VariationType.constant,Symptom_Tags.pneumonia,recovery_time],
+                self.recovery_info]
     
     def FillHospitalisedTrajectory(self,parameters):
         prehospital_time = 2.  #parameters["pre_hospital_time"] etc.
         recovery_time    = 20. #parameters["hospital_recovery_time"] etc.
         return [self.incubation_info,
-                [VariationType.constant,"influenza-like illness",prehospital_time],
-                [VariationType.constant,"hospitalised",recovery_time]]    
+                [VariationType.constant,Symptom_Tags.influenza,prehospital_time],
+                [VariationType.constant,Symptom_Tags.hospitalised,recovery_time],
+                self.recovery_info]    
     
     def FillIntensiveCareTrajectory(self,parameters):
         prehospital_time = 2.  #parameters["pre_hospital_time"] etc.
@@ -103,10 +112,11 @@ class TrajectoryMaker:
         ICU_time         = 20. #parameters["intensive_care_time"] etc.
         recovery_time    = 20. #parameters["ICU_recovery_time"] etc.
         return [self.incubation_info,
-                [VariationType.constant,"influenza-like illness",prehospital_time],
-                [VariationType.constant,"hospitalised",prehospital_time],
-                [VariationType.constant,"intensive care",ICU_time],    
-                [VariationType.constant,"hospitalised",recovery_time]]        
+                [VariationType.constant,Symptom_Tags.influenza,prehospital_time],
+                [VariationType.constant,Symptom_Tags.hospitalised,prehospital_time],
+                [VariationType.constant,Symptom_Tags.intensive_care,ICU_time],    
+                [VariationType.constant,Symptom_Tags.hospitalised,recovery_time],
+                self.recovery_info]        
     
     def FillDeathTrajectory(self,parameters):
         prehospital_time = 2.  #parameters["pre_hospital_time"] etc.
@@ -114,29 +124,37 @@ class TrajectoryMaker:
         ICU_time         = 10. #parameters["intensive_care_time"] etc.
         death_time       = 0.  #parameters["ICU_recovery_time"] etc.
         return [self.incubation_info,
-                [VariationType.constant,"influenza-like illness",prehospital_time],
-                [VariationType.constant,"hospitalised",hospital_time],
-                [VariationType.constant,"intensive care",ICU_time],
-                [VariationType.constant,"death",death_time]]        
+                [VariationType.constant,Symptom_Tags.influenza,prehospital_time],
+                [VariationType.constant,Symptom_Tags.hospitalised,hospital_time],
+                [VariationType.constant,Symptom_Tags.intensive_care,ICU_time],
+                [VariationType.constant,Symptom_Tags.dead,death_time]]        
 
+class MissingTrajectoryMakerError(BaseException):
+    pass
+    
 class SymptomsTrajectory(Symptoms):
-    def __init__(self, health_index=0.):
+    def __init__(self, health_index=0.,trajectory_maker = None, patient = None):
         super().__init__(health_index=health_index)
-        self.trajectory = self.make_trajectory()
-
-    def make_trajectory(self):
-        maxtag   = self.max_tag(self.max_severity)
-        tmaker   = TrajectoryMaker(None)
-        return tmaker[maxtag]
+        if trajectory_maker==None:
+            raise MissingTrajectoryMakerError(
+                f"symptomstrajectory instantiated without trajectory_maker"
+            )
+        self.trajectory = self.make_trajectory(trajectory_maker, patient)
+        
+    def make_trajectory(self,trajectory_maker,patient):
+        maxtag = self.max_tag(self.max_severity)
+        return trajectory_maker[maxtag,patient]
         
     def max_tag(self,severity):
         index = np.searchsorted(self.health_index, self.max_severity)
-        return self.tags[index]
+        return Symptom_Tags(index+2)
         
-    def update_severity_from_delta_time(self, time):
-        pass
-
-    def is_recovered(self):
-        pass
+    def update_severity_from_delta_time(self, delta_time):
+        self.tag = Symptom_Tags.healthy
+        for stage in self.trajectory:
+            if delta_time>stage[0]:
+                self.tag = stage[1]
+            if delta_time<stage[0]:
+                break
 
 

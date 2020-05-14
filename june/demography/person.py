@@ -30,11 +30,11 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag in ("influenza-like illness", "pneumonia")
+        return self.tag in (Symptom_Tags.influenza, Symptom_Tags.pneumonia)
 
     @property
     def in_hospital(self) -> bool:
-        return self.tag in ("hospitalised", "intensive care")
+        return self.tag in (Symptom_Tags.hospitalised, Symptom_Tags.intensive_care)
 
     @property
     def infected_at_home(self) -> bool:
@@ -42,7 +42,7 @@ class HealthInformation:
 
     @property
     def dead(self) -> bool:
-        return self.tag == "dead"
+        return self.tag == Symptom_Tags.dead
 
     def update_health_status(self, time, delta_time):
         if self.infected:
@@ -61,7 +61,7 @@ class HealthInformation:
         self.infection = None
 
     def get_symptoms_tag(self, symptoms):
-        return self.infection.symptoms.tag(symptoms.severity)
+        return self.infection.symptoms.tag
 
     def transmission_probability(self, time):
         if self.infection is not None:

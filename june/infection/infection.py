@@ -1,5 +1,6 @@
 import autofit as af
 from june.infection.symptoms import Symptoms
+from june.infection.symptom_trajectory import TrajectoryMaker, SymptomsTrajectory
 
 class Infection:
     """
@@ -14,13 +15,12 @@ class Infection:
     can be added/modified a posteriori.
     """
 
-    def __init__(self, transmission, symptoms, start_time=-1):
-
+    def __init__(self, transmission, symptoms, trajectory_maker=None, start_time=-1):
         self.start_time = start_time
         self.last_time_updated = start_time
         self.transmission = transmission
         self.symptoms = symptoms
-
+        self.trajectory_maker = trajectory_maker
         self.infection_probability = 0.0
 
     #def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
@@ -49,7 +49,8 @@ class Infection:
         #instance.symptoms.health_index = self.symptoms.health_index
 
         health_index = health_index_generator(person.age, person.sex)
-        symptoms = self.symptoms.__class__(health_index = health_index)
+        symptoms = self.symptoms.__class__(health_index = health_index,
+                                           trajectory_maker = self.trajectory_maker)
 
         infection = Infection(
             start_time=time,
