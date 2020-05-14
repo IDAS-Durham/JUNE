@@ -1,5 +1,6 @@
 from june.infection import infection as infect
 from june.infection import symptoms as sym
+from june.infection import symptom_trajectory as strans
 from june.infection import transmission as trans
 import june.interaction as inter
 from june.infection.health_index import HealthIndexGenerator
@@ -24,12 +25,20 @@ test_directory = Path(__file__).parent.parent
 def create_symptoms():
     return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
 
-
 @pytest.fixture(name="symptoms_constant", scope="session")
 def create_symptoms_constant():
     reference_health_index = HealthIndexGenerator.from_file()(40, 'm')
     return sym.SymptomsConstant(health_index=reference_health_index)
 
+@pytest.fixture(name="trajectories", scope="session")
+def create_trajectories():
+    return strans.TrajectoryMaker(None)
+
+@pytest.fixture(name="symptoms_trajectories", scope="session")
+def create_symptoms_trajectories(trajectories):
+    return strans.SymptomsTrajectory(health_index=[0.1, 0.2, 0.3, 0.4, 0.5],
+                                     trajectory_maker = trajectories,
+                                     patient = None)
 
 @pytest.fixture(name="transmission", scope="session")
 def create_transmission():

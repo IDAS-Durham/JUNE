@@ -10,7 +10,8 @@ class TestInfection:
 
     def test__infect_person__gives_them_symptoms_and_transmission(self, transmission, symptoms_constant):
 
-        infection = infect.Infection(start_time=0.1, transmission=transmission, symptoms=symptoms_constant)
+        infection = infect.Infection(start_time=0.1, transmission=transmission,
+                                     symptoms=symptoms_constant, trajectory_maker=None)
         health_index_generator = HealthIndexGenerator.from_file()
 
         person = per.Person(sex='f', age=26)
