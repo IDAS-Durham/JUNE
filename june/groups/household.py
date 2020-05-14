@@ -50,11 +50,7 @@ class Household(Group):
 
     def set_active_members(self):
         for person in self.people:
-            if person.active_group is None:
-                if person.health_information.dead:
-                    continue
-                person.active_group = "household"
-            elif person.health_information.must_stay_at_home:
+            if person.health_information.must_stay_at_home:
                 if person.age <= self.must_supervise_age:
                     person.active_group = "household"
                     random_parent = self.select_random_parent()
@@ -62,6 +58,10 @@ class Household(Group):
                 else:
                     if random.random() <= self.stay_at_home_complacency:
                         person.active_group = "household"
+            elif person.active_group is None:
+                if person.health_information.dead:
+                    continue
+                person.active_group = "household"
 
 
 class Households(Supergroup):
