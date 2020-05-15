@@ -154,8 +154,11 @@ class Simulator:
             if "commute" in active_groups:
                 self.world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
-                for subgroup in group.subgroups:
-                    subgroup.set_active_members()
+                if group.spec == 'household':
+                    group.set_active_members()
+                else:
+                    for subgroup in group.subgroups:
+                        subgroup.set_active_members()
 
     def set_allpeople_free(self):
         """ 
@@ -231,9 +234,10 @@ class Simulator:
         Perform a time step in the simulation
 
         """
+        sim_logger.info("******* TIME STEP *******")
         active_groups = self.timer.active_groups()
         if not active_groups or len(active_groups) == 0:
-            logging.info("==== do_timestep(): no active groups found. ====")
+            sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
@@ -255,9 +259,14 @@ class Simulator:
                 )
                 n_active_in_group += group.size_active
                 n_people += group.size_active 
-            print(f"Active in {group.spec} = ", n_active_in_group)
+            sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
 
-        
+        for person in self.world.people.members:
+            if not person.health_information.dead and person.active_group is None:
+                print([subgroup.spec for subgroup in person.subgroups if subgroup is not None])
+                print(person.health_information.tag)
+                assert person in person.subgroups[person.GroupType.residence].people 
+
        # assert conservation of people
         if n_people != len(self.world.people.members):
             raise SimulatorError(
