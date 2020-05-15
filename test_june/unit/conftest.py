@@ -10,11 +10,23 @@ from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june import World
 
 from pathlib import Path
+import os
 
 import pytest
 
 test_directory = Path(__file__).parent.parent
 
+def pytest_addoption(parser):
+    parser.addoption("--data", action="store", default=os.path.join(os.getcwd(), "data"))
+    parser.addoption("--configs", action="store", default=os.path.join(os.getcwd(), "configs"))
+
+@ pytest.fixture()
+def data(pytestconfig):
+    return pytestconfig.getoption("data")
+
+@pytest.fixture()
+def configs(pytestconfig):
+    return pytestconfig.getoption("configs")
 
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
@@ -81,8 +93,8 @@ def create_box_world():
 @pytest.fixture(name="simulator_box", scope="session")
 def create_simulator_box(world_box, interaction, infection):
     config_file = (
-        Path(__file__).parent.parent.parent / "configs/config_boxmode_example.yaml"
-    )
+        os.path.join(configs, "config_boxmode_example.yaml"
+    ))
     return Simulator.from_file(
         world_box, interaction, infection, config_filename=config_file
     )
