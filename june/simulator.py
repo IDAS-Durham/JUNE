@@ -3,6 +3,7 @@ import random
 from june import paths
 from typing import List
 
+from itertools import chain
 import numpy as np
 import yaml
 
@@ -53,10 +54,8 @@ class Simulator:
             "boxes",
             "hospitals",
             "commute",
-            "companies",
-            "schools",
-            "carehomes",
-            "households",
+            "primary_activity",
+            "residence"
         ]
         self.randomly_order_groups = [
             "pubs",
@@ -68,6 +67,17 @@ class Simulator:
         self.logger = Logger(
             self, self.world, self.timer, config["logger"]["save_path"],
         )
+        print([active_collection for active_collection in config['time']['step_active_collections']['weekday'].values()] )
+        self.all_active_collections = set(chain(*
+            ([active_collection for active_collection in config['time']['step_active_collections']['weekday'].values()] + \
+                [active_collection for active_collection in config['time']['step_active_collections']['weekend'].values()])))
+        print(self.all_active_collections)
+
+        self.collections_dict = {
+                            'hospitals': ['hospitals'],
+                            'primary_activity': ['schools','companies'],
+                            'residence': ['households','carehomes'],
+                            }
 
     @classmethod
     def from_file(
@@ -103,11 +113,11 @@ class Simulator:
 
         # Check that all groups given in config file are in the valid group hierarchy
         all_groups = self.permanent_group_hierarchy + self.randomly_order_groups
-        for step, active_groups in config["step_active_groups"]["weekday"].items():
-            assert all(group in all_groups for group in active_groups)
+        for step, active_collections in config["step_active_collections"]["weekday"].items():
+            assert all(group in all_groups for group in active_collections)
 
-        for step, active_groups in config["step_active_groups"]["weekend"].items():
-            assert all(group in all_groups for group in active_groups)
+        for step, active_collections in config["step_active_collections"]["weekend"].items():
+            assert all(group in all_groups for group in active_collections)
 
     def apply_group_hierarchy(self, active_groups: List[str]) -> List[str]:
         """
@@ -132,41 +142,41 @@ class Simulator:
         active_groups.sort(key=lambda x: group_hierarchy.index(x))
         return active_groups
 
-    def set_active_group_to_people(self, active_groups: List[str]):
+    def collections_to_groups(self, collections):
+        translate_collection = [self.collections_dict[collection] for collection in collections]
+        return list(chain(*translate_collection)) 
+
+    def clear_all_groups(self):
+        for group_name in self.collections_to_groups(self.all_active_collections):
+            grouptype = getattr(self.world, group_name)
+            for group in grouptype.members:
+                for subgroup in group.subgroups:
+                    subgroup._people.clear()
+
+
+    def get_subgroup_active(self, active_groups, person: "Person"):
+
+        active_groups = self.apply_group_hierarchy(active_groups)
+        for group_name in active_groups:
+            grouptype = getattr(person.GroupType, group_name)
+            subgroup = person.subgroups[getattr(person.GroupType, group_name)]
+            if subgroup is not None:
+                return subgroup
+
+    def move_people_to_active_subgroups(self, active_groups: List[str]):
         """
-        Calls the set_active_members() method of each group, if the group
-        is set as active
+        Sends every person to one subgroup.
 
         Parameters
         ----------
         active_groups:
             list of groups that are active at a time step
         """
-        active_groups = self.apply_group_hierarchy(active_groups)
-        # patients in hospitals are always active
-        for hospital in self.world.hospitals.members:
-            hospital.set_active_patients()
-            
-        for group_name in active_groups:
-            grouptype = getattr(self.world, group_name)
-            if "pubs" in active_groups:
-                self.world.group_maker.distribute_people(group_name)
-            if "commute" in active_groups:
-                self.world.group_maker.distribute_people(group_name)
-            for group in grouptype.members:
-                if group.spec == 'household':
-                    group.set_active_members()
-                else:
-                    for subgroup in group.subgroups:
-                        subgroup.set_active_members()
-
-    def set_allpeople_free(self):
-        """ 
-        Set everyone's active group to None, 
-        ready for next time step
-        """
         for person in self.world.people.members:
-            person.active_group = None
+            if not person.health_information.dead:
+                subgroup = self.get_subgroup_active(active_groups, person)
+                subgroup.append(person)
+            
 
     def hospitalise_the_sick(self, person):
         """
@@ -196,10 +206,6 @@ class Simulator:
         """
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
-        for subgroup in person.subgroups:
-            if subgroup is not None:
-                subgroup.remove(person)
-        person.active_group = None
         person.health_information.set_dead(time)
 
     def update_health_status(self, time: float, delta_time: float):
@@ -235,12 +241,13 @@ class Simulator:
 
         """
         sim_logger.info("******* TIME STEP *******")
-        active_groups = self.timer.active_groups()
-        if not active_groups or len(active_groups) == 0:
+        active_collections = self.timer.active_groups()
+        if not active_collections or len(active_collections) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
-        # update people (where they are according to time)
-        self.set_active_group_to_people(active_groups)
+        self.move_people_to_active_subgroups(active_collections)
+
+        active_groups = self.collections_to_groups(active_collections)
         # infect people in groups
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
@@ -257,15 +264,9 @@ class Simulator:
                     self.timer.duration,
                     group,
                 )
-                n_active_in_group += group.size_active
-                n_people += group.size_active 
+                n_active_in_group += group.size
+                n_people += group.size
             sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
-
-        for person in self.world.people.members:
-            if not person.health_information.dead and person.active_group is None:
-                print([subgroup.spec for subgroup in person.subgroups if subgroup is not None])
-                print(person.health_information.tag)
-                assert person in person.subgroups[person.GroupType.residence].people 
 
        # assert conservation of people
         if n_people != len(self.world.people.members):
@@ -275,7 +276,8 @@ class Simulator:
             )
 
         self.update_health_status(self.timer.now, self.timer.duration)
-        self.set_allpeople_free()
+
+        self.clear_all_groups()
 
     def run(self, save=False):
         """
