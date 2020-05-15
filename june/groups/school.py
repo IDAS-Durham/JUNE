@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.groups.group import Group, Subgroup, Supergroup
 
 

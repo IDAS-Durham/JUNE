@@ -5,7 +5,7 @@ import yaml
 from scipy import stats
 
 from june import paths
-from june.geography import SuperAreas
+from june.demography.geography import SuperAreas
 from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
