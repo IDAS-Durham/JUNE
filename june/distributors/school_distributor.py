@@ -6,8 +6,7 @@ import yaml
 from scipy import stats
 
 from june import paths
-from june.geography import Area, SuperArea
-from june.geography import Geography
+from june.demography.geography import Area, SuperArea, Geography
 from june.groups.school import Schools
 
 default_data_filename = paths.data_path / "processed/school_data/england_schools_data.csv"
