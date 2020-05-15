@@ -111,8 +111,7 @@ class CareHomeDistributor:
             for people_dict in [men_by_age, women_by_age]:
                 if current_age_to_fill in people_dict.keys():
                     person = self._get_person_of_age(people_dict, current_age_to_fill)
-                    person.carehome = carehome
-                    carehome.add(person, carehome.GroupType.residents, person.GroupType.residence)
+                    carehome.add(person, person.GroupType.residence)
                     people_counter += 1
                     if people_counter == carehome.n_residents:
                         break

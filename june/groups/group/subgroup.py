@@ -13,11 +13,12 @@ class Subgroup(AbstractGroup):
         "_dead",
     )
 
-    def __init__(self):
+    def __init__(self, group):
         """
         A group within a group. For example, children in a household.
         """
         self._people = list()
+        self.group = group
 
     def _collate(self, attribute: str) -> List[Person]:
         collection = list()
@@ -52,8 +53,11 @@ class Subgroup(AbstractGroup):
     def __iter__(self):
         return iter(self._people)
 
+    def __len__(self):
+        return len(self._people)
+
     def clear(self):
-        self._people = set()
+        self._people = list()
 
     @property
     def people(self):
