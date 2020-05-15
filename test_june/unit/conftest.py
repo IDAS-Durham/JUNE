@@ -75,8 +75,6 @@ def create_world(geography):
     geography.schools = Schools.for_geography(geography)
     geography.carehomes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
-    geography.companies = Companies.for_geography(geography)
-    geography.companies = Companies.for_geography(geography)
     world = World(geography, demography, include_households=True)
     return world
 
