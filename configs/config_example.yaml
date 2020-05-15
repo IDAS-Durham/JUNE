@@ -11,11 +11,11 @@ time:
           2: 12
       weekend:
           1: 24
-  step_active_groups:
+  step_active_collections:
       weekday:
-          1: ['hospitals', 'schools', 'companies', 'carehomes', 'households'] # active groups during first time step
-          2: ['hospitals', 'carehomes', 'households']
+          1: ['hospitals', 'primary_activity', 'residence'] # active groups during first time step
+          2: ['hospitals', 'residence']
       weekend:
-          1: ['hospitals','carehomes', 'households']
-          2: ['hospitals','carehomes', 'households'] 
+          1: ['hospitals','residence']
+          2: ['hospitals','residence']
 
