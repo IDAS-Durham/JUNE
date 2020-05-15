@@ -66,7 +66,7 @@ class Simulator:
         self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
-            self.world, self.timer, config, config["logger"]["save_path"],
+            self, self.world, self.timer, config["logger"]["save_path"],
         )
 
     @classmethod
@@ -143,6 +143,10 @@ class Simulator:
             list of groups that are active at a time step
         """
         active_groups = self.apply_group_hierarchy(active_groups)
+        # patients in hospitals are always active
+        for hospital in self.world.hospitals.members:
+            hospital.set_active_patients()
+            
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
@@ -150,13 +154,16 @@ class Simulator:
             if "commute" in active_groups:
                 self.world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
-                group.set_active_members()
+                if group.spec == 'household':
+                    group.set_active_members()
+                else:
+                    for subgroup in group.subgroups:
+                        subgroup.set_active_members()
 
     def set_allpeople_free(self):
         """ 
         Set everyone's active group to None, 
         ready for next time step
-
         """
         for person in self.world.people.members:
             person.active_group = None
@@ -176,7 +183,7 @@ class Simulator:
         if person.in_hospital is None:
             self.world.hospitals.allocate_patient(person)
 
-    def bury_the_dead(self, person: Person):
+    def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! Specially important, remove from all groups in which
@@ -189,9 +196,11 @@ class Simulator:
         """
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
-        person.household.remove_person(person)
-        for group in person.groups:
-            group.remove_person(person)
+        for subgroup in person.subgroups:
+            if subgroup is not None:
+                subgroup.remove(person)
+        person.active_group = None
+        person.health_information.set_dead(time)
 
     def update_health_status(self, time: float, delta_time: float):
         """
@@ -217,64 +226,55 @@ class Simulator:
             elif health_information.in_hospital:
                 self.hospitalise_the_sick(person)
 
-            elif health_information.dead:
-                self.bury_the_dead(person)
-
-    def seed(self, group: "Group", n_infections: int):
-        """
-        Randomly pick people in group to seed the infection
-
-        Parameters
-        ----------
-        group:
-            group instance in which to seed the infection
-
-        n_infections:
-            number of random people to infect in the given group
-
-        """
-        # TODO: add attribute susceptible to people
-        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(len(group.people), n_infections, replace=False)
-        infecter_reference = self.infection
-        for choice in choices:
-            infecter_reference.infect_person_at_time(
-                list(group.people)[choice], self.health_index_generator, self.timer.now
-            )
-        self.update_health_status(0, 0)
-        # in case someone has to go directly to the hospital
+            elif health_information.is_dead and not self.world.box_mode:
+                self.bury_the_dead(person, time)
 
     def do_timestep(self):
         """
         Perform a time step in the simulation
 
         """
+        sim_logger.info("******* TIME STEP *******")
         active_groups = self.timer.active_groups()
         if not active_groups or len(active_groups) == 0:
-            logging.info("==== do_timestep(): no active groups found. ====")
+            sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
         # infect people in groups
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
-        for group_type in group_instances:
-            for group in group_type.members:
-                self.interaction.time_step(self.timer.now, self.health_index_generator, self.timer.duration, group)
-                n_people += group.size_active
-
-        self.update_health_status(self.timer.now, self.timer.duration)
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
+        sim_logger.info(f'number of deaths =  {n_people}')
+        for group_type in group_instances:
+            n_active_in_group = 0
+            for group in group_type.members:
+                self.interaction.time_step(
+                    self.timer.now,
+                    self.health_index_generator,
+                    self.timer.duration,
+                    group,
+                )
+                n_active_in_group += group.size_active
+                n_people += group.size_active 
+            sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
 
-        # assert conservation of people
+        for person in self.world.people.members:
+            if not person.health_information.dead and person.active_group is None:
+                print([subgroup.spec for subgroup in person.subgroups if subgroup is not None])
+                print(person.health_information.tag)
+                assert person in person.subgroups[person.GroupType.residence].people 
+
+       # assert conservation of people
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
 
+        self.update_health_status(self.timer.now, self.timer.duration)
         self.set_allpeople_free()
 
     def run(self, save=False):

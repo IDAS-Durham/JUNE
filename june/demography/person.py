@@ -1,5 +1,6 @@
 from itertools import count
-from enum import IntEnum
+==== BASE ====
+==== BASE ====
 
 
 class HealthInformation:
@@ -9,6 +10,7 @@ class HealthInformation:
         self.infected = False
         self.infection = None
         self.recovered = False
+        self.dead = False
         self.number_of_infected = 0
         self.maximal_symptoms = 0
         self.maximal_symptoms_time = -1
@@ -42,7 +44,7 @@ class HealthInformation:
         return self.infected and not (self.dead or self.in_hospital)
 
     @property
-    def dead(self) -> bool:
+    def is_dead(self) -> bool:
         return self.tag == "dead"
 
     def update_health_status(self, time, delta_time):
@@ -60,6 +62,15 @@ class HealthInformation:
         self.susceptibility = 0.0
         self.set_length_of_infection(time)
         self.infection = None
+
+    def set_dead(self, time):
+        self.dead=True
+        self.infected = False
+        self.susceptible = False
+        self.susceptibility = 0.0
+        self.set_length_of_infection(time)
+        self.infection = None
+
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.tag(symptoms.severity)
@@ -157,6 +168,7 @@ class Person:
         # biological attributes
         self.age = age
         self.sex = sex
+        self.ethnicity = ethnicity
         # geo-graphical attributes
         self.work_super_area = None
         self.area = area
