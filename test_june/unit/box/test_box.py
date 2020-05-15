@@ -5,7 +5,7 @@ def test__box_group():
     assert hasattr(box, "people")
 
 def test__boxes_group():
-    boxes = Boxes()
+    boxes = Boxes([])
     assert hasattr(boxes, "members")
 
 

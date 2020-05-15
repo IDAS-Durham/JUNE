@@ -1,13 +1,21 @@
 import csv
-from pathlib import Path
 from typing import List, Tuple, Dict
 
 import numpy as np
 import yaml
+import os
+from pathlib import Path
 
-default_config_filename = Path(
-    __file__
-).parent.parent / "configs/defaults/commute.yaml"
+from june import paths
+
+default_data_path = (
+    Path(os.path.abspath(__file__)).parent.parent
+    / "data/"
+)
+
+default_config_filename = paths.configs_path / "defaults/commute.yaml"
+
+default_commute_file = default_data_path / "census_data/commute.csv"
 
 
 class ModeOfTransport:
@@ -257,13 +265,13 @@ class CommuteGenerator:
         An object that weighted-randomly selects modes of transport for the region.
         """
         return self.regional_generators[
-            area 
+            area
         ]
 
     @classmethod
     def from_file(
             cls,
-            filename: str,
+            filename: str = default_commute_file,
             config_filename: str = default_config_filename
     ) -> "CommuteGenerator":
         """
