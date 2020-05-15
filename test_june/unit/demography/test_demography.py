@@ -17,8 +17,16 @@ def test__age_sex_generator():
     age_counts = [0, 2, 0, 2, 4]
     age_bins = [0, 3]
     female_fractions = [0, 1]
+    ethnicity_age_bins = [0, 2, 4]
+    ethnicity_groups = ['A', 'B', 'C']
+    ethnicity_structure = [[2,0,0],[0,0,2],[0,4,0]]
     age_sex_generator = d.demography.AgeSexGenerator(
-        age_counts, age_bins, female_fractions
+        age_counts, 
+        age_bins, 
+        female_fractions,
+        ethnicity_age_bins, 
+        ethnicity_groups, 
+        ethnicity_structure
     )
     assert list(age_sex_generator.age_iterator) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert list(age_sex_generator.sex_iterator) == [
@@ -31,21 +39,34 @@ def test__age_sex_generator():
         "f",
         "f",
     ]
+    assert list(age_sex_generator.ethnicity_iterator) == list('AACCBBBB')
     age_sex_generator = d.demography.AgeSexGenerator(
-        age_counts, age_bins, female_fractions
+        age_counts, 
+        age_bins, 
+        female_fractions,
+        ethnicity_age_bins, 
+        ethnicity_groups, 
+        ethnicity_structure
     )
     ages = []
     sexes = []
+    ethnicities = []
     for _ in range(0, sum(age_counts)):
         age = age_sex_generator.age()
         sex = age_sex_generator.sex()
+        ethnicity = age_sex_generator.ethnicity()
         ages.append(age)
         sexes.append(sex)
+        ethnicities.append(ethnicity)
 
     assert sorted(ages) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert collections.Counter(sexes) == collections.Counter(
         ["m", "m", "f", "f", "f", "f", "f", "f"]
     )
+    assert collections.Counter(ethnicities) == collections.Counter(
+        ['A', 'A', 'C', 'C', 'B', 'B', 'B', 'B']
+    )
+
 
 class TestDemography:
     def test__demography_for_areas(self):
@@ -64,6 +85,9 @@ class TestDemography:
                 assert person.sex == 'f'
             if person.age == 21:
                 assert person.sex == 'm'
+            if person.age in range(55,69):
+                assert person.ethnicity.startswith('A')            
+            assert person.ethnicity.startswith('D') is False
             if person.age not in people_ages_dict:
                 people_ages_dict[person.age] = 1
             else:
