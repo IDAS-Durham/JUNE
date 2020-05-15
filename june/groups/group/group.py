@@ -162,11 +162,6 @@ class Group(AbstractGroup):
         self[qualifier].append(person)
         person.groups.append(self)
 
-    def set_active_members(self):
-        for person in self.people:
-            if person.active_group is None:
-                person.active_group = self.spec
-
     @property
     def people(self) -> Set[Person]:
         """
