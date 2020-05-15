@@ -1,28 +1,37 @@
-import yaml
 import logging
 import random
-from pathlib import Path
-from typing import List, Tuple, Dict, Optional
-import numpy as np
+from june import paths
+from typing import List
 
-from june.logger_simulation import Logger
-from june.time import Timer
-from june import interaction
+import numpy as np
+import yaml
+
+from june.demography import Person
+from june.groups import Group
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
+from june.interaction import Interaction
+from june.logger_simulation import Logger
+from june.time import Timer
+from june.world import World
 
-default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
+default_config_filename = paths.configs_path / "config_example.yaml"
 
 sim_logger = logging.getLogger(__name__)
+
+
+class SimulatorError(BaseException):
+    pass
+
 
 # TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(
-        self,
-        world: "World",
-        interaction: "Interaction",
-        infection: Infection,
-        config: dict,
+            self,
+            world: World,
+            interaction: Interaction,
+            infection: Infection,
+            config: dict,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -43,6 +52,7 @@ class Simulator:
         self.permanent_group_hierarchy = [
             "boxes",
             "hospitals",
+            "commute",
             "companies",
             "schools",
             "carehomes",
@@ -61,7 +71,11 @@ class Simulator:
 
     @classmethod
     def from_file(
-            cls, world: "World", interaction: "Interaction", infection: Infection, config_filename: str=default_config_filename
+            cls,
+            world: "World",
+            interaction: "Interaction",
+            infection: Infection,
+            config_filename: str = default_config_filename,
     ) -> "Simulator":
 
         """
@@ -118,7 +132,7 @@ class Simulator:
         active_groups.sort(key=lambda x: group_hierarchy.index(x))
         return active_groups
 
-    def set_active_group_to_people(self, active_groups: List["Groups"]):
+    def set_active_group_to_people(self, active_groups: List[str]):
         """
         Calls the set_active_members() method of each group, if the group
         is set as active
@@ -132,6 +146,8 @@ class Simulator:
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
+                self.world.group_maker.distribute_people(group_name)
+            if "commute" in active_groups:
                 self.world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()
@@ -160,7 +176,7 @@ class Simulator:
         if person.in_hospital is None:
             self.world.hospitals.allocate_patient(person)
 
-    def bury_the_dead(self, person: "Person"):
+    def bury_the_dead(self, person: Person):
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! Specially important, remove from all groups in which
@@ -235,7 +251,7 @@ class Simulator:
         """
         active_groups = self.timer.active_groups()
         if not active_groups or len(active_groups) == 0:
-            world_logger.info("==== do_timestep(): no active groups found. ====")
+            logging.info("==== do_timestep(): no active groups found. ====")
             return
         # update people (where they are according to time)
         self.set_active_group_to_people(active_groups)
@@ -253,7 +269,11 @@ class Simulator:
                 n_people += len(cemetery.people)
 
         # assert conservation of people
-        assert n_people == len(self.world.people.members)
+        if n_people != len(self.world.people.members):
+            raise SimulatorError(
+                f"Number of people active {n_people} does not match "
+                f"the total people number {len(self.world.people.members)}"
+            )
 
         self.set_allpeople_free()
 
@@ -281,4 +301,6 @@ class Simulator:
             self.do_timestep()
         # Save the world
         if save:
-            self.world.to_pickle()
+            self.world.to_pickle(
+                "world.pickle"
+            )
