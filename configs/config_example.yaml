@@ -17,5 +17,5 @@ time:
           2: ['hospitals', 'carehomes', 'households']
       weekend:
           1: ['hospitals','carehomes', 'households']
-          2: ['hospitals','households'] 
+          2: ['hospitals','carehomes', 'households'] 
 
