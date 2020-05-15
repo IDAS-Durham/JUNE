@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from juno import paths
+from june import paths
 from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
 
