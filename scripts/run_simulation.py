@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 import time
+import matplotlib.pyplot as plt
 
 from june.geography import Geography
 from june.demography import Demography
@@ -29,6 +30,7 @@ geography.hospitals = Hospitals.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
 geography.cemeteries = Cemeteries()
 geography.companies = Companies.for_geography(geography)
+geography.carehomes = CareHomes.for_geography(geography)
 demography = Demography.for_geography(geography)
 world = World(geography, demography, include_households=True)
 t2 = time.time()
@@ -59,3 +61,4 @@ simulator.run()
 t3 = time.time()
 print(f"Running the simulation took {t3 -t2} seconds to run.")
 simulator.logger.plot_infection_curves_per_day()
+plt.show()

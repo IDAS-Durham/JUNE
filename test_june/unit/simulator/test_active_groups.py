@@ -151,13 +151,14 @@ def test__must_stay_at_home_kid_drags_parents(simulator, health_index, severity)
             dummy_person, health_index, simulator.timer.now
         )
         dummy_person.health_information.infection.symptoms.severity = severity
-        simulator.set_active_group_to_people(["hospitals", "companies", "households"])
-        assert dummy_person.active_group.spec == "household"
         assert dummy_person.health_information.tag in (
             "influenza-like illness",
             "pneumonia",
         )
         assert dummy_person.health_information.must_stay_at_home
+
+        simulator.set_active_group_to_people(["hospitals", "companies", "households"])
+        assert dummy_person.active_group.spec == "household"
 
         if dummy_person.age <= 14:
             parent_at_home = 0
@@ -204,10 +205,8 @@ def test__bury_the_dead_children(simulator, health_index):
         if person.age > 5 and person.age < 10:
             dummy_person = person
             break
-
     simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
     dummy_person.health_information.infection.symptoms.severity = 0.99 
-
     assert dummy_person.household is not None
     assert dummy_person.school is not None
     assert dummy_person in dummy_person.household.people

@@ -34,7 +34,7 @@ class Household(Group):
         self.household_composition = composition
         self.communal = communal
         self.max_size = max_size
-        self.must_supervise_age = 14
+        self.must_supervise_age = 14 
         self.stay_at_home_complacency = 0.95
 
     def add(self, person, qualifier=GroupType.adults, subgroup_type_qualifier=GroupType.adults):
@@ -45,21 +45,26 @@ class Household(Group):
         parents = [
             person
             for person in self.people
-            if person not in list(self.subgroups[self.GroupType.kids].people) #and
-            #not person.health_information.in_hospital
+            if person not in list(self.subgroups[self.GroupType.kids].people) and
+            not person.health_information.in_hospital
         ]
-        return random.choice(parents)
+        #TODO what happens if there are no parents ?? 
+        if parents:
+            return random.choice(parents)
+        else:
+            return None
 
     def set_active_members(self):
         for person in self.people:
-            if person.health_information.must_stay_at_home:
-                if person.age <= self.must_supervise_age:
-                    person.active_group = person.subgroups[person.GroupType.residence] 
-                    random_parent = self.select_random_parent()
+            if person.health_information.must_stay_at_home and person.age <= self.must_supervise_age:
+                person.active_group = person.subgroups[person.GroupType.residence] 
+                random_parent = self.select_random_parent()
+                if random_parent is not None:
+                    print('Home alone :)')
                     random_parent.active_group = random_parent.subgroups[random_parent.GroupType.residence]
-                else:
-                    if random.random() <= self.stay_at_home_complacency:
-                        person.active_group = person.subgroups[person.GroupType.residence]
+            elif person.health_information.must_stay_at_home and person.active_group is not None:
+                if random.random() <= self.stay_at_home_complacency:
+                    person.active_group = person.subgroups[person.GroupType.residence] 
             elif person.active_group is None:
                 if person.health_information.dead:
                     continue
