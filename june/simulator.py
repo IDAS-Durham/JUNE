@@ -141,7 +141,7 @@ class Simulator:
         # patients in hospitals are always active
         for hospital in self.world.hospitals.members:
             hospital.set_active_patients()
-             
+            
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
@@ -173,7 +173,7 @@ class Simulator:
         if person.in_hospital is None:
             self.world.hospitals.allocate_patient(person)
 
-    def bury_the_dead(self, person: "Person"):
+    def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! Specially important, remove from all groups in which
@@ -185,11 +185,12 @@ class Simulator:
             person sent to cemetery
         """
         cemetery = self.world.cemeteries.get_nearest(person)
-        person.health_information.set_dead(0)
+        cemetery.add(person)
         for subgroup in person.subgroups:
             if subgroup is not None:
                 subgroup.remove(person)
-        cemetery.add(person)
+        person.active_group = None
+        person.health_information.set_dead(time)
 
     def update_health_status(self, time: float, delta_time: float):
         """
@@ -215,8 +216,8 @@ class Simulator:
             elif health_information.in_hospital:
                 self.hospitalise_the_sick(person)
 
-            elif health_information.dead and not self.world.box_mode:
-                self.bury_the_dead(person)
+            elif health_information.is_dead and not self.world.box_mode:
+                self.bury_the_dead(person, time)
 
     def do_timestep(self):
         """
@@ -235,13 +236,7 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-
         print('number of deaths : ', n_people)
-
-        for hospital in self.world.hospitals:
-            for person in hospital.subgroups[0].people:
-                print('Active in hospital = ', person.active_group.spec)
-
         for group_type in group_instances:
             n_active_in_group = 0
             for group in group_type.members:
@@ -253,7 +248,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size_active
                 n_people += group.size_active 
-            print(f"Active in {group_type} = ", n_active_in_group)
+            print(f"Active in {group.spec} = ", n_active_in_group)
 
         
        # assert conservation of people

@@ -15,10 +15,7 @@ from june.seed import Seed
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--config",
-    default="simulator.yaml",
-    help="path to config file to run",
-    type=str,
+    "--config", default="simulator.yaml", help="path to config file to run", type=str,
 )
 args = parser.parse_args()
 
@@ -26,24 +23,19 @@ args = parser.parse_args()
 # *********** INITIALIZE WORLD ***************** #
 
 t1 = time.time()
-geography = Geography.from_file({"msoa" : 
-                        [
-                        #"E00088544", 
-                        "E02002559",
-                        "E02006764",
-                       ]
-                        }
-                        )
+geography = Geography.from_file({"msoa": ["E00088544", "E02002559", "E02006764",]})
 
 geography.hospitals = Hospitals.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
 geography.cemeteries = Cemeteries()
-#geography.companies = Companies.for_geography(geography)
+geography.companies = Companies.for_geography(geography)
 demography = Demography.for_geography(geography)
 world = World(geography, demography, include_households=True)
 t2 = time.time()
 print(f"Creating the world took {t2 -t1} seconds to run.")
 
+for company in world.companies.members:
+    print(company.people)
 
 # *********** INITIALIZE SEED ***************** #
 
@@ -51,10 +43,10 @@ symptoms = SymptomsConstant(recovery_rate=0.05)
 transmission = TransmissionConstant(probability=0.7)
 infection = Infection(transmission, symptoms)
 interaction = DefaultInteraction.from_file()
-seed = Seed(world.super_areas, infection, )
+seed = Seed(world.super_areas, infection,)
 # Use if you want to seed the disease per region
 # with real data
-#seed.unleash_virus_per_region()
+# seed.unleash_virus_per_region()
 seed.unleash_virus(2000)
 
 # *********** INITIALIZE SIMULATOR ***************** #
@@ -63,7 +55,7 @@ simulator = Simulator.from_file(
 )
 # update health status of seeded people, depending on symptoms
 # class might be unnecessary
-simulator.update_health_status(0,0)
+simulator.update_health_status(0, 0)
 simulator.run()
 
 t3 = time.time()
