@@ -23,7 +23,7 @@ args = parser.parse_args()
 # *********** INITIALIZE WORLD ***************** #
 
 t1 = time.time()
-geography = Geography.from_file({"msoa": ["E00088544", "E02002559", "E02006764",]})
+geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559", "E02006764",]})
 
 geography.hospitals = Hospitals.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
