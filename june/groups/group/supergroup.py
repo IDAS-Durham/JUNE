@@ -55,7 +55,7 @@ class Supergroup:
         Erases all people from subgroups.
         """
         for group in self:
-            group.subgroups = [subgroup.__class__() for subgroup in group.subgroups] 
+            group.subgroups = [subgroup.__class__(subgroup.spec) for subgroup in group.subgroups] 
             if self.references_to_people is not None:
                 for reference in self.references_to_people:
                     setattr(group, reference, None)
