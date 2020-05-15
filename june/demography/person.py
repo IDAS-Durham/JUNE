@@ -10,6 +10,7 @@ class HealthInformation:
         self.infected = False
         self.infection = None
         self.recovered = False
+        self.dead = False
         self.number_of_infected = 0
         self.maximal_symptoms = 0
         self.maximal_symptoms_time = -1
@@ -43,7 +44,7 @@ class HealthInformation:
         return self.infected and not (self.dead or self.in_hospital)
 
     @property
-    def dead(self) -> bool:
+    def is_dead(self) -> bool:
         return self.tag == "dead"
 
     def update_health_status(self, time, delta_time):
@@ -63,6 +64,7 @@ class HealthInformation:
         self.infection = None
 
     def set_dead(self, time):
+        self.dead=True
         self.infected = False
         self.susceptible = False
         self.susceptibility = 0.0

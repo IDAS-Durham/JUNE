@@ -97,7 +97,7 @@ class World:
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
             hospital_distributor = HospitalDistributor(geography.hospitals)
-            #hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
+            hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
         
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries

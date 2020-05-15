@@ -54,7 +54,7 @@ class Household(Group):
         for person in self.people:
             if person.health_information.must_stay_at_home:
                 if person.age <= self.must_supervise_age:
-                    person.active_group = person.subgroups[person.GroupType.residence] #"household"
+                    person.active_group = person.subgroups[person.GroupType.residence] 
                     random_parent = self.select_random_parent()
                     random_parent.active_group = random_parent.subgroups[random_parent.GroupType.residence]
                 else:
