@@ -34,8 +34,8 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.area = area
 
-    def add(self, person, qualifier=GroupType.residents):
-        super().add(person, qualifier)
+    def add(self, person, qualifier=GroupType.residents, subgroup_type_qualifier=GroupType.residents):
+        super().add(person, qualifier, subgroup_type_qualifier)
 
 
 class CareHomes(Supergroup):
