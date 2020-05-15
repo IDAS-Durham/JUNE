@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 
 from june.groups import CareHome
-from june.demography.geography import Area, Areas
+from june.geography import Area, Areas
+from june.logger_creation import logger
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
