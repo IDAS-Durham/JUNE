@@ -52,6 +52,7 @@ class Household(Group):
         if parents:
             return random.choice(parents)
         else:
+            print('Home alone :)')
             return None
 
     def set_active_members(self):
@@ -60,7 +61,6 @@ class Household(Group):
                 person.active_group = person.subgroups[person.GroupType.residence] 
                 random_parent = self.select_random_parent()
                 if random_parent is not None:
-                    print('Home alone :)')
                     random_parent.active_group = random_parent.subgroups[random_parent.GroupType.residence]
             elif person.health_information.must_stay_at_home and person.active_group is not None:
                 if random.random() <= self.stay_at_home_complacency:

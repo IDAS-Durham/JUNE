@@ -5,14 +5,6 @@ but at least we can use it in the meantime to make sure the code runs before pus
 
 import os
 
-from june import World
-from june.infection.health_index import HealthIndexGenerator
-from june.interaction import DefaultInteraction 
-from june.infection import Infection
-from june.infection.symptoms import SymptomsConstant
-from june.infection.transmission import TransmissionConstant
-from june.simulator import Simulator
-from june import World
 from june.seed import Seed
 
 

@@ -28,7 +28,8 @@ def get_geography():
 @pytest.fixture(name='demography')
 def get_demography(geography):
     demography = Demography.for_geography(geography)
-    demography.populate(geography.areas)
+    for area in geography.areas:
+        area.populate(demography)
     return demography
 
 @pytest.fixture(name='seed')
