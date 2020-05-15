@@ -35,7 +35,7 @@ def test__clear_all_groups(sim):
 
     #TODO: households and carehomes should be residences
     sim.clear_all_groups()
-    for group_name in sim.collections_to_groups(sim.all_active_collections):
+    for group_name in sim.activities_to_groups(sim.all_activities):
         grouptype = getattr(sim.world, group_name)
         for group in grouptype.members:
             for subgroup in group.subgroups:
@@ -50,5 +50,5 @@ def test__move_people_to_active_subgroups(sim):
 
     sim.move_people_to_active_subgroups(['residence'])
     for person in sim.world.people.members:
-        assert person in person.subgroups[person.GroupType.residence].people
+        assert person in person.residence.people
 
