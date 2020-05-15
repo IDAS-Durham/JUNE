@@ -1,11 +1,10 @@
-import pandas as pd
 import numpy as np
-from pathlib import Path
+
+from june import paths
 
 default_polinom_filename = (
-    Path(__file__).parent.parent.parent / "configs/defaults/health_index_ratios.txt"
+        paths.configs_path / "defaults/health_index_ratios.txt"
 )
-
 
 RKIdata = [
     [0.0, 4.0 / 100.0],
@@ -18,7 +17,6 @@ RKIdata = [
 
 
 class HealthIndexGenerator:
-
     """
     Computes  probabilities for (non-symptomatic, influenza-like symptoms, pneumonia, 
     hospitalisation, intensive care, fatality), using the age and sex of the subject.
@@ -64,7 +62,7 @@ class HealthIndexGenerator:
 
     @classmethod
     def from_file(
-        cls, polinome_filename: str = default_polinom_filename,
+            cls, polinome_filename: str = default_polinom_filename,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -106,7 +104,7 @@ class HealthIndexGenerator:
         C, C1, C2, C3 = poli
         age[age > 85.0] = 85.0
         return 10 ** (
-            C + C1 * age + C2 * age ** 2 + C3 * age ** 3
+                C + C1 * age + C2 * age ** 2 + C3 * age ** 3
         )  # The coefficients are a fit to the logarithmic model
 
     def make_list(self):
@@ -167,16 +165,16 @@ class HealthIndexGenerator:
         Pneumonia = np.ones(121)
         for pneumonia_index in range(len(RKIdata) - 1):
             Boolean = (RKIdata[pneumonia_index][0] <= np.arange(0, 121, 1)) & (
-                np.arange(0, 121, 1) < RKIdata[pneumonia_index + 1][0]
+                    np.arange(0, 121, 1) < RKIdata[pneumonia_index + 1][0]
             )
         Pneumonia[Boolean] = RKIdata[pneumonia_index][1]
         Pneumonia[Pneumonia == 1] = RKIdata[len(RKIdata) - 1][1]
 
         self.prob_lists[0, :, 1] = self.asimpto_ratio + No_hosp_prov[0] * (
-            1 - Pneumonia
+                1 - Pneumonia
         )
         self.prob_lists[1, :, 1] = self.asimpto_ratio + No_hosp_prov[1] * (
-            1 - Pneumonia
+                1 - Pneumonia
         )
 
     def __call__(self, age, sex):
