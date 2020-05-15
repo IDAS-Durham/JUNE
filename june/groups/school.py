@@ -44,7 +44,7 @@ class School(Group):
         "sector",
     )
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         teachers = 0
         students = 1
 
@@ -91,15 +91,15 @@ class School(Group):
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         # self.sector = sector
 
-    def add(self, person, subgroup_type=GroupType.students):
-        if subgroup_type == self.GroupType.students:
+    def add(self, person, subgroup_type=SubgroupType.students):
+        if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
-            person.subgroups[person.GroupType.primary_activity] = subgroup
+            person.subgroups[person.ActivityType.primary_activity] = subgroup
         else: # teacher
-            subgroup = self.subgroups[0]
+            subgroup = self.subgroups[self.SubgroupType.teachers]
             subgroup.append(person)
-            person.subgroups[person.GroupType.primary_activity] = subgroup
+            person.subgroups[person.ActivityType.primary_activity] = subgroup
 
     @property
     def is_full(self):
@@ -109,8 +109,15 @@ class School(Group):
 
     @property
     def n_pupils(self):
-        return len(self.subgroups[self.GroupType.students])
+        return len(self.subgroups[self.SubgroupType.students])
 
+    @property
+    def teachers(self):
+        return self.subgroups[self.SubgroupType.teachers]
+
+    @property
+    def students(self):
+        return self.subgroups[self.SubgroupType.students]
 
 class Schools(Supergroup):
     def __init__(
