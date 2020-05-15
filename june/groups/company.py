@@ -10,15 +10,11 @@ import pandas as pd
 from june.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
-default_data_path = (
-        paths.data_path
-        / "processed/census_data/company_data/"
-)
+default_data_path = paths.data_path / "processed/census_data/company_data/"
 default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
 default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
 default_areas_map_path = (
-        paths.data_path
-        / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
 
 logger = logging.getLogger(__name__)
@@ -54,6 +50,13 @@ class Company(Group):
         self.sector = sector
         self.n_workers_max = n_workers_max
 
+    def add(self, person):
+        super().add(
+            person,
+            group_type=person.GroupType.primary_activity,
+            subgroup_type=self.GroupType.workers,
+        )
+
     @property
     def n_workers(self):
         return len(self.people)
@@ -77,10 +80,10 @@ class Companies(Supergroup):
 
     @classmethod
     def for_geography(
-            cls,
-            geography: Geography,
-            size_nr_file: str = default_size_nr_file,
-            sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
+        cls,
+        geography: Geography,
+        size_nr_file: str = default_size_nr_file,
+        sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
     ) -> "Companies":
         """
         Creates companies for the specified geography, and saves them 
@@ -102,10 +105,10 @@ class Companies(Supergroup):
 
     @classmethod
     def for_super_areas(
-            cls,
-            super_areas: List[SuperArea],
-            size_nr_per_super_area_file: str = default_size_nr_file,
-            sector_nr_per_super_area_file: str = default_sector_nr_per_msoa_file,
+        cls,
+        super_areas: List[SuperArea],
+        size_nr_per_super_area_file: str = default_size_nr_file,
+        sector_nr_per_super_area_file: str = default_sector_nr_per_msoa_file,
     ) -> "Companies":
         """Creates companies for the specified super_areas, and saves them 
         to the super_aresa they belong to
@@ -140,9 +143,9 @@ class Companies(Supergroup):
         else:
             companies = []
             for super_area, (_, company_sizes), (_, company_sectors) in zip(
-                    super_areas,
-                    company_sizes_per_super_area.iterrows(),
-                    company_sectors_per_super_area.iterrows(),
+                super_areas,
+                company_sizes_per_super_area.iterrows(),
+                company_sectors_per_super_area.iterrows(),
             ):
                 super_area.companies = cls.create_companies_in_super_area(
                     super_area, company_sizes, company_sectors
