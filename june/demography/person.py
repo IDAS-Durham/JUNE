@@ -51,9 +51,9 @@ class HealthInformation:
         if self.infected:
             if self.infection.symptoms.is_recovered(delta_time):
                 self.recovered = True
-                #self.set_recovered(time)
+                # self.set_recovered(time)
             else:
-                self.infection.update_at_time(time+delta_time)
+                self.infection.update_at_time(time + delta_time)
 
     def set_recovered(self, time):
         self.recovered = True
@@ -176,41 +176,36 @@ class Person:
         self.econ_index = econ_index
         self.health_information = HealthInformation()
 
+
 class People:
     def __init__(self, world):
         self.members = []
-
 
     @property
     def total_people(self):
         return len(self.members)
 
-
     @property
     def infected(self):
         return [
             person for person in self.members
-            if person.health_information.infected and not 
-                    person.health_information.dead
-            
-        ]
+            if person.health_information.infected and not
+            person.health_information.dead
 
+        ]
 
     @property
     def susceptible(self):
         return [
             person for person in self.members
-            if person.health_information.susceptible 
-            
-        ]
+            if person.health_information.susceptible
 
+        ]
 
     @property
     def recovered(self):
         return [
             person for person in self.members
             if person.health_information.recovered
-            
+
         ]
-
-

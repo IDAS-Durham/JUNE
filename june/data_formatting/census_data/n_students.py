@@ -1,16 +1,9 @@
 import pandas as pd
-import numpy as np
-from pathlib import Path
-import os
 
-raw_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/census_data/output_area/"
-)
-processed_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/census_data/output_area/"
-)
+from june import paths
+
+raw_path = f"{paths.data_path}/census_data/output_area/"
+processed_path = f"{paths.data_path}/processed/census_data/output_area/"
 
 household_composition_people = pd.read_csv(
     raw_path / "household_composition_people.csv"
