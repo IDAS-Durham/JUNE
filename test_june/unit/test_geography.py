@@ -46,7 +46,7 @@ def test__create_north_east():
         filter_key={"region": ["North East"]}
     )
     t2 = time()
-    assert t2 - t1 < 5
+    assert t2 - t1 < 20 
     assert len(geography.areas) == 8802 
     assert len(geography.super_areas) == 340
 

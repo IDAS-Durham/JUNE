@@ -1,6 +1,8 @@
 import logging
 from itertools import count
 from typing import List, Dict, Tuple, Optional
+from itertools import chain, count
+
 
 import pandas as pd
 
@@ -108,6 +110,10 @@ class SuperArea:
         self.workers.append(person)
         person.work_super_area = self
 
+    @property
+    def people(self):
+        return list(chain(*[area.people for area in self.areas]))
+
 
 class SuperAreas:
     def __init__(self, super_areas: List[SuperArea]):
@@ -118,6 +124,10 @@ class SuperAreas:
 
     def __iter__(self):
         return iter(self.members)
+
+    @property
+    def people(self):
+        return list(chain(*[super_area.people for super_area in self]))
 
     def __getitem__(self, item):
         return self.members[item]
