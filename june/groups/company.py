@@ -1,13 +1,15 @@
 import logging
 import os
+from itertools import chain
 from enum import IntEnum
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
+from scipy.stats import rv_discrete
 
-from june.demography.geography import Geography, SuperArea
+from june.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
 default_data_path = (
