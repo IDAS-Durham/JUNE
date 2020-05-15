@@ -19,7 +19,13 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = "area", "household_composition", "communal", "max_size"
+    __slots__ = (
+        "area",
+        "communal",
+        "max_size",
+        "must_supervise_age",
+        "stay_at_home_complacency",
+    )
 
     class GroupType(IntEnum):
         kids = 0
@@ -27,18 +33,21 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, composition=None, communal=False, area=None, max_size=np.inf):
+    def __init__(self, communal=False, area=None, max_size=np.inf):
         super().__init__()
         self.area = area
-        self.household_composition = composition
         self.communal = communal
         self.max_size = max_size
         self.must_supervise_age = 14
         self.stay_at_home_complacency = 0.95
 
-    def add(self, person, qualifier=GroupType.adults):
-        super().add(person, qualifier)
-        person.household = self
+    def add(self, person, subgroup_type=GroupType.adults):
+        for mate in self.people:
+            if person != mate:
+                person.housemates.append(mate)
+        super().add(
+            person, group_type=person.GroupType.residence, subgroup_type=subgroup_type
+        )
 
     def select_random_parent(self):
         parents = [
