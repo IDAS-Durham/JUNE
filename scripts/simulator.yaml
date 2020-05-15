@@ -1,0 +1,18 @@
+title: Covid configuration example
+
+logger:
+  save_path: results
+
+time:
+  total_days: 10
+  step_duration: 
+      weekday:
+          1: 24 
+      weekend:
+          1: 24
+  step_active_groups:
+      weekday:
+          1: ['hospitals', 'companies', 'schools', 'carehomes','households'] 
+      weekend:
+          1: ['hospitals', 'carehomes','households']
+

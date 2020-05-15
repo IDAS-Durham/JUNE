@@ -46,7 +46,8 @@ class Infection:
         # instance.symptoms.health_index = self.symptoms.health_index
 
         health_index = health_index_generator(person.age, person.sex)
-        symptoms = self.symptoms.__class__(health_index=health_index)
+        symptoms = self.symptoms.__class__(health_index = health_index,
+                recovery_rate = self.symptoms.recovery_rate)
 
         infection = Infection(
             start_time=time,
