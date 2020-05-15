@@ -60,6 +60,8 @@ def create_interaction():
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
+    print(os.getcwd())
+    print(os.listdir("./"))
     geography = Geography.from_file(
         {"msoa": ["E02002512", "E02001697"]}
     )
