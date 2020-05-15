@@ -73,6 +73,13 @@ class Group(AbstractGroup):
         """
         return f"{self.__class__.__name__}_{self.id:05d}"
 
+    @property
+    def spec(self) -> str:
+        """
+        Returns the speciailization of the group.
+        """
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+
     def remove_person(self, person: Person):
         """
         Remove a person from this group by removing them
@@ -93,7 +100,12 @@ class Group(AbstractGroup):
         """
         return self.subgroups[item]
 
-    def add(self, person: Person, group_type: "Person.GroupType", subgroup_type=GroupType.default):
+    def add(
+        self,
+        person: Person,
+        group_type: "Person.GroupType",
+        subgroup_type=GroupType.default,
+    ):
         """
         Add a person to a given subgroup. For example, in a school
         a student is added to the subgroup matching their age.
@@ -107,7 +119,7 @@ class Group(AbstractGroup):
         """
         self[subgroup_type].append(person)
         person.subgroups[group_type] = self
-        #person.groups.append(self)
+        # person.groups.append(self)
 
     @property
     def people(self) -> Set[Person]:
