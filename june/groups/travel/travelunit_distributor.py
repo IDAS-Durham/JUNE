@@ -18,7 +18,7 @@ class TravelUnitDistributor:
         self.distribution_df = distribution_df
         self.msoas
 
-    def distribute_people_out(self):
+    def distribute_people_out(self):.
         'Distirbute people out in the day to other cities'
 
         # initialise new travelunits

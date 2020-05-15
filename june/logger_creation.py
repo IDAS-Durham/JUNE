@@ -2,11 +2,11 @@ import os
 import yaml
 import logging
 import logging.config
-from pathlib import Path
+from june import paths
 
 default_logging_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent /
-    "configs/config_world_creation_logger.yaml"
+    paths.configs_path /
+    "config_world_creation_logger.yaml"
 )
 
 def logger(config_file: str):

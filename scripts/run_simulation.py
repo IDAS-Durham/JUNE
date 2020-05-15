@@ -34,8 +34,6 @@ world = World(geography, demography, include_households=True)
 t2 = time.time()
 print(f"Creating the world took {t2 -t1} seconds to run.")
 
-for company in world.companies.members:
-    print(company.people)
 
 # *********** INITIALIZE SEED ***************** #
 

@@ -1,8 +1,11 @@
 import os
 
+import pandas as pd
 import pytest
 
 from june import commute as c
+from june.groups import CommuteHubDistributor
+from june.groups.commute import default_geographical_data_directory
 
 test_data_filename = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -12,6 +15,21 @@ test_data_filename = os.path.join(
     "census_data",
     "commute.csv"
 )
+
+
+#class TestCommute:
+    #def test_coordinate_lookup(self):
+    #    distributor = CommuteHubDistributor.from_file(
+    #        commute_cities=[]
+    #    )
+    #    assert distributor._get_msoa_oa(
+    #        "E00000001"
+    #    ) == "E02000001"
+    #    lat, long = distributor._get_area_lat_lon(
+    #        "E00000001"
+    #    )
+    #    assert lat == pytest.approx(51.520271, abs=5)
+    #    assert long == pytest.approx(-0.094911, abs=5)
 
 
 class TestModeOfTransport:

@@ -1,7 +1,7 @@
-intensities:
-  school: 1
-  pub: 1
-  box: 1
-  company: 1
-  test_group: 1
+alpha_physical: 1.
+contact_matrices:
+  test_group: 
+    beta: 1.
+    contacts: [[1]]
+    physical: [[0]]
  
