@@ -20,15 +20,9 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = (
-        "area",
-        "communal",
-        "max_size",
-        "must_supervise_age",
-        "stay_at_home_complacency",
-    )
+    __slots__ = ("area", "communal", "max_size", "n_residents")
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         kids = 0
         young_adults = 1
         adults = 2
@@ -39,14 +33,31 @@ class Household(Group):
         self.area = area
         self.communal = communal
         self.max_size = max_size
+        self.n_residents = 0
 
-    def add(self, person, subgroup_type=GroupType.adults):
+    def add(self, person, subgroup_type=SubgroupType.adults):
         for mate in self.people:
             if person != mate:
                 person.housemates.append(mate)
-        super().add(
-            person, group_type=person.GroupType.residence, subgroup_type=subgroup_type
-        )
+        self[subgroup_type].append(person)
+        person.subgroups[person.ActivityType.residence] = self[subgroup_type]
+
+    @property
+    def kids(self):
+        return self.subgroups[self.SubgroupType.kids]
+
+    @property
+    def young_adults(self):
+        return self.subgroups[self.SubgroupType.young_adults]
+
+    @property
+    def adults(self):
+        return self.subgroups[self.SubgroupType.adults]
+
+    @property
+    def old_adults(self):
+        return self.subgroups[self.SubgroupType.old_adults]
+
 
 class Households(Supergroup):
     """
