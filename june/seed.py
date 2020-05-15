@@ -129,7 +129,6 @@ class Seed:
             number of cases to seed
         """
         # randomly select people to infect within the super area
-        print(f'peopel in super area {len(super_area.people)}')
         choices = np.random.choice(len(super_area.people), n_cases, replace=False)
 
         for choice in choices:
