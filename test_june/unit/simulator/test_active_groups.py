@@ -182,10 +182,31 @@ def test__bury_the_dead(simulator, health_index):
 
     assert dummy_person.household is not None
     assert dummy_person in dummy_person.household.people
-    simulator.bury_the_dead(dummy_person)
+    simulator.bury_the_dead(dummy_person, 0)
     assert dummy_person not in dummy_person.household.people
     simulator.set_allpeople_free()
     simulator.set_active_group_to_people(["hospitals", "households"])
+    assert dummy_person.active_group is None
+    simulator.set_allpeople_free()
+
+def test__bury_the_dead_children(simulator, health_index):
+    # find kid
+    for person in simulator.world.people.members:
+        if person.age > 5 and person.age < 10:
+            dummy_person = person
+            break
+
+    simulator.infection.infect_person_at_time(dummy_person, health_index, simulator.timer.now)
+    dummy_person.health_information.infection.symptoms.severity = 0.99 
+
+    assert dummy_person.household is not None
+    assert dummy_person.school is not None
+    assert dummy_person in dummy_person.household.people
+    assert dummy_person in dummy_person.school.people
+    simulator.bury_the_dead(dummy_person, 0)
+    assert dummy_person not in dummy_person.household.people
+    simulator.set_allpeople_free()
+    simulator.set_active_group_to_people(["hospitals", "schools", "households"])
     assert dummy_person.active_group is None
     simulator.set_allpeople_free()
 
