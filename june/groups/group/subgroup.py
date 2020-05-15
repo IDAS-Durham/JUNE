@@ -108,7 +108,7 @@ class Subgroup(AbstractGroup):
             #TODO: this dead line shouldnt be necessary, if dead the person
             # should have left the group. However, it doesnt seem to happen
             # for children that go to school and die
-            if person.active_group is None and not person.health_information.dead:
+            if person.active_group is None: # and not person.health_information.dead:
                 person.active_group = self
 
     def __getitem__(self, item):
