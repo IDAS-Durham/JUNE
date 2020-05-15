@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
-from pathlib import Path
+from juno import paths
 from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
 
-default_n_cases_region_filename = Path(__file__).parent.parent / "data/processed/seed/n_cases_region.csv"
+default_n_cases_region_filename = paths.data_path / "processed/seed/n_cases_region.csv"
 default_msoa_region_filename = (
-    Path(__file__).parent.parent / "data/processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
 
 class Seed:
