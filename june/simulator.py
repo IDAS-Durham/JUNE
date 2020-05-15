@@ -28,11 +28,11 @@ class SimulatorError(BaseException):
 # TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(
-            self,
-            world: World,
-            interaction: Interaction,
-            infection: Infection,
-            config: dict,
+        self,
+        world: World,
+        interaction: Interaction,
+        infection: Infection,
+        config: dict,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -50,14 +50,14 @@ class Simulator:
         self.world = world
         self.interaction = interaction
         self.infection = infection
-        self.permanent_group_hierarchy = [
+        self.permanent_activity_hierarchy = [
             "boxes",
             "hospitals",
             "commute",
             "primary_activity",
-            "residence"
+            "residence",
         ]
-        self.randomly_order_groups = [
+        self.randomly_order_activities = [
             "pubs",
             "churches",
         ]
@@ -67,25 +67,38 @@ class Simulator:
         self.logger = Logger(
             self, self.world, self.timer, config["logger"]["save_path"],
         )
-        print([active_collection for active_collection in config['time']['step_active_collections']['weekday'].values()] )
-        self.all_active_collections = set(chain(*
-            ([active_collection for active_collection in config['time']['step_active_collections']['weekday'].values()] + \
-                [active_collection for active_collection in config['time']['step_active_collections']['weekend'].values()])))
-        print(self.all_active_collections)
+        self.all_activities = set(
+            chain(
+                *(
+                    [
+                        activity 
+                        for activity in config["time"][
+                            "step_activities"
+                        ]["weekday"].values()
+                    ]
+                    + [
+                        activity 
+                        for activity in config["time"][
+                            "step_activities"
+                        ]["weekend"].values()
+                    ]
+                )
+            )
+        )
 
-        self.collections_dict = {
-                            'hospitals': ['hospitals'],
-                            'primary_activity': ['schools','companies'],
-                            'residence': ['households','carehomes'],
-                            }
+        self.activity_to_group_dict = {
+            "hospitals": ["hospitals"],
+            "primary_activity": ["schools", "companies"],
+            "residence": ["households", "carehomes"],
+        }
 
     @classmethod
     def from_file(
-            cls,
-            world: "World",
-            interaction: "Interaction",
-            infection: Infection,
-            config_filename: str = default_config_filename,
+        cls,
+        world: "World",
+        interaction: "Interaction",
+        infection: Infection,
+        config_filename: str = default_config_filename,
     ) -> "Simulator":
 
         """
@@ -112,16 +125,20 @@ class Simulator:
         assert sum(config["step_duration"]["weekend"].values()) == 24
 
         # Check that all groups given in config file are in the valid group hierarchy
-        all_groups = self.permanent_group_hierarchy + self.randomly_order_groups
-        for step, active_collections in config["step_active_collections"]["weekday"].items():
-            assert all(group in all_groups for group in active_collections)
+        all_groups = self.permanent_activity_hierarchy + self.randomly_order_activities
+        for step, activities in config["step_activities"][
+            "weekday"
+        ].items():
+            assert all(group in all_groups for group in activities)
 
-        for step, active_collections in config["step_active_collections"]["weekend"].items():
-            assert all(group in all_groups for group in active_collections)
+        for step, activities in config["step_activities"][
+            "weekend"
+        ].items():
+            assert all(group in all_groups for group in activities)
 
-    def apply_group_hierarchy(self, active_groups: List[str]) -> List[str]:
+    def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
-        Returns a list of active groups with the right order, obeying the permanent group hierarcy
+        Returns a list of activities with the right order, obeying the permanent activity hierarcy
         and shuflling the random one. It is very important having carehomes and households at the very end.
 
         Parameters
@@ -132,38 +149,39 @@ class Simulator:
         -------
         Ordered list of active groups according to hierarchy
         """
-        random.shuffle(self.randomly_order_groups)
-        group_hierarchy = [
-            group
-            for group in self.permanent_group_hierarchy
-            if group not in ["carehomes", "households"]
+        random.shuffle(self.randomly_order_activities)
+        activity_hierarchy = [
+            group for group in self.permanent_activity_hierarchy if group != "residence"
         ]
-        group_hierarchy += self.randomly_order_groups + ["carehomes", "households"]
-        active_groups.sort(key=lambda x: group_hierarchy.index(x))
-        return active_groups
+        activity_hierarchy += self.randomly_order_activities + ["residence"]
+        activities.sort(key=lambda x: activity_hierarchy.index(x))
+        return activities 
 
-    def collections_to_groups(self, collections):
-        translate_collection = [self.collections_dict[collection] for collection in collections]
-        return list(chain(*translate_collection)) 
+    def activities_to_groups(self, activities):
+        groups = [
+            self.activity_to_group_dict[activity] for activity in activities
+        ]
+        return list(chain(*groups))
 
     def clear_all_groups(self):
-        for group_name in self.collections_to_groups(self.all_active_collections):
+        for group_name in self.activities_to_groups(self.all_activities):
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
                 for subgroup in group.subgroups:
                     subgroup._people.clear()
 
+    def get_subgroup_active(self, activities, person: "Person"):
 
-    def get_subgroup_active(self, active_groups, person: "Person"):
-
-        active_groups = self.apply_group_hierarchy(active_groups)
-        for group_name in active_groups:
-            grouptype = getattr(person.GroupType, group_name)
-            subgroup = person.subgroups[getattr(person.GroupType, group_name)]
+        activities = self.apply_activity_hierarchy(activities)
+        print(activities)
+        for group_name in activities:
+            print("group_name = ", group_name)
+            subgroup = getattr(person, group_name)
+            print("subgroup = ", subgroup)
             if subgroup is not None:
                 return subgroup
 
-    def move_people_to_active_subgroups(self, active_groups: List[str]):
+    def move_people_to_active_subgroups(self, activities: List[str]):
         """
         Sends every person to one subgroup.
 
@@ -174,9 +192,8 @@ class Simulator:
         """
         for person in self.world.people.members:
             if not person.health_information.dead:
-                subgroup = self.get_subgroup_active(active_groups, person)
+                subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
-            
 
     def hospitalise_the_sick(self, person):
         """
@@ -254,7 +271,7 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-        sim_logger.info(f'number of deaths =  {n_people}')
+        sim_logger.info(f"number of deaths =  {n_people}")
         for group_type in group_instances:
             n_active_in_group = 0
             for group in group_type.members:
@@ -268,7 +285,7 @@ class Simulator:
                 n_people += group.size
             sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
 
-       # assert conservation of people
+        # assert conservation of people
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -303,6 +320,4 @@ class Simulator:
             self.do_timestep()
         # Save the world
         if save:
-            self.world.to_pickle(
-                "world.pickle"
-            )
+            self.world.to_pickle("world.pickle")
