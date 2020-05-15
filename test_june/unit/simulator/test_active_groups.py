@@ -4,9 +4,13 @@ from june.demography import Demography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june import World
 from june.simulator import Simulator
+from june.geography import Geography
 
 @pytest.fixture(name="world_bonito", scope='module')
-def create_world(geography):
+def create_world():
+    geography = Geography.from_file(
+        {"msoa": ["E02002512", "E02001697"]}
+    )
     demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
