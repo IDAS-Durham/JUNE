@@ -17,8 +17,8 @@ import pytest
 test_directory = Path(__file__).parent.parent
 
 def pytest_addoption(parser):
-    parser.addoption("--data", action="store", default=os.path.join(os.getcwd(), "data"))
-    parser.addoption("--configs", action="store", default=os.path.join(os.getcwd(), "configs"))
+    parser.addoption("--data", action="store", default=os.path.join(Path(os.getcwd()).parent, "data"))
+    parser.addoption("--configs", action="store", default=os.path.join(Path(os.getcwd()).parent, "configs"))
 
 @ pytest.fixture()
 def data(pytestconfig):
@@ -93,9 +93,10 @@ def create_box_world():
     return World.from_geography(geography, box_mode=True)
 
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(world_box, interaction, infection):
+def create_simulator_box(request, world_box, interaction, infection):
+    path_to_config = request.config.getoption("configs")
     config_file = (
-        os.path.join(configs, "config_boxmode_example.yaml"
+        os.path.join(path_to_config, "config_boxmode_example.yaml"
     ))
     return Simulator.from_file(
         world_box, interaction, infection, config_filename=config_file
