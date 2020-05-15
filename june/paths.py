@@ -8,7 +8,8 @@ logger = logging.getLogger(
 )
 
 directory = Path(
-    os.path.abspath(__file__)
+    # os.path.abspath(__file__)
+    os.getcwd()
 ).parent
 
 
