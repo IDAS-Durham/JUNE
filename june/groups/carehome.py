@@ -1,3 +1,4 @@
+import logging
 from enum import IntEnum
 from typing import List
 
@@ -7,10 +8,10 @@ from june import paths
 from june.groups.group import Group, Supergroup
 
 default_data_path = (
-        paths.data_path
-        / "processed/census_data/output_area/EnglandWales/carehomes.csv"
+    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
 
+logger = logging.getLogger(__name__)
 
 class CareHome(Group):
     """
@@ -22,8 +23,6 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    spec = "carehome"
-
     class GroupType(IntEnum):
         workers = 0
         residents = 1
@@ -34,8 +33,12 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.area = area
 
-    def add(self, person, qualifier=GroupType.residents, subgroup_type_qualifier=GroupType.residents):
-        super().add(person, qualifier, subgroup_type_qualifier)
+    def add(
+        self, person, subgroup_type=GroupType.residents,
+    ):
+        super().add(
+            person, group_type=person.GroupType.residence, subgroup_type=subgroup_type
+        )
 
 
 class CareHomes(Supergroup):
@@ -54,6 +57,7 @@ class CareHomes(Supergroup):
         area_names = [area.name for area in geography.areas]
         carehome_df = carehome_df.loc[area_names]
         carehomes = []
+        logger.info(f"There are {len(carehome_df)} carehomes in this geography.")
         for area in geography.areas:
             n_residents = carehome_df.loc[area.name].values[0]
             if n_residents != 0:
