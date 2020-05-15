@@ -64,7 +64,6 @@ class Household(Group):
                 if person.health_information.dead:
                     continue
                 person.active_group = person.subgroups[person.GroupType.residence]
-
     
 class Households(Supergroup):
     """
