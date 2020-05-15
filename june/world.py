@@ -37,8 +37,8 @@ class World:
         self,
         geography: Geography,
         demography: Demography,
+        box_mode: bool = False,
         include_households: bool = True,
-        box_mode=False,
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
