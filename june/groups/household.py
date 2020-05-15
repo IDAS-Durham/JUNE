@@ -52,7 +52,6 @@ class Household(Group):
         if parents:
             return random.choice(parents)
         else:
-            print('Home alone :)')
             return None
 
     def set_active_members(self):
