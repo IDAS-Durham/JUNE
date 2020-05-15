@@ -2,6 +2,7 @@ from collections import OrderedDict
 from collections import defaultdict
 from itertools import chain
 from typing import List
+import logging
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,8 @@ from june import paths
 from june.demography import Person
 from june.geography import Area
 from june.groups import Household, Households
-from june.logger_creation import logger
+
+logger = logging.getLogger(__name__)
 
 default_config_filename = (
     paths.configs_path / "defaults/distributors/household_distributor.yaml"
@@ -37,7 +39,6 @@ default_logging_config_filename = (
     paths.configs_path / "config_world_creation_logger.yaml"
 )
 
-logger(default_logging_config_filename)
 
 """
 This file contains routines to distribute people to households
@@ -306,6 +307,7 @@ class HouseholdDistributor:
             area_names
         ]
         households_total = list()
+        counter = 0
         for area, (_, number_households), (_, n_students), (_, n_communal) in zip(
             areas,
             household_numbers_df.iterrows(),
@@ -322,6 +324,9 @@ class HouseholdDistributor:
                 n_communal.values[0],
             )
             households_total += households
+            counter += 1
+            if counter % 5000 == 0:
+                logger.info(f"filled {counter} areas of {len(area_names)}")
         return Households(households_total)
 
     def distribute_people_to_households(
@@ -386,8 +391,8 @@ class HouseholdDistributor:
         all_households = []
         total_people = count_remaining_people(men_by_age, women_by_age)
         self._refresh_random_numbers_list(total_people)
-        #import time
-        #time.sleep(0.01)
+        # import time
+        # time.sleep(0.01)
 
         if not men_by_age and not women_by_age:
             raise HouseholdError("No people in Area!")
@@ -693,7 +698,7 @@ class HouseholdDistributor:
         people_in_households = 0
         for household in all_households:
             people_in_households += len(household.people)
-        #assert total_people == people_in_households
+        # assert total_people == people_in_households
         return all_households
 
     def _create_household(
@@ -720,18 +725,16 @@ class HouseholdDistributor:
         """
         Adds person to household and assigns them the correct subgroup.
         """
-        #household.add(person)
         if subgroup == "kids":
-            household.add(person, household.GroupType.kids, person.GroupType.residence)
+            household.add(person, household.GroupType.kids)
         elif subgroup == "young_adults":
-            household.add(person, household.GroupType.young_adults, person.GroupType.residence)
+            household.add(person, household.GroupType.young_adults)
         elif subgroup == "adults":
-            household.add(person, household.GroupType.adults, person.GroupType.residence)
+            household.add(person, household.GroupType.adults)
         elif subgroup == "old":
-            household.add(person, household.GroupType.old_adults,
-                    person.GroupType.residence)
+            household.add(person, household.GroupType.old_adults)
         elif subgroup == "default":
-            household.add(person, household.GroupType.adults, person.GroupType.residence)
+            household.add(person, household.GroupType.adults)
         else:
             raise HouseholdError(f"Subgroup {subgroup} not recognized")
 

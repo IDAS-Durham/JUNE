@@ -1,6 +1,5 @@
 from itertools import count
-==== BASE ====
-==== BASE ====
+from enum import IntEnum
 
 
 class HealthInformation:
@@ -131,6 +130,7 @@ class Person:
         "id",
         "age",
         "sex",
+        "ethnicity",
         "work_super_area",
         "area",
         "housemates",
@@ -138,7 +138,6 @@ class Person:
         "subgroups",
         "sector",
         "sub_sector",
-        "in_hospital",
         "home_city",
         "econ_index",
         "health_information",
@@ -157,6 +156,7 @@ class Person:
         self,
         age=-1,
         sex=None,
+        ethnicity=None,
         econ_index=None,
         mode_of_transport=None,
         area=None,
@@ -178,7 +178,6 @@ class Person:
         self.subgroups = [None] * 5 # number of subgroups
         self.sector = None
         self.sub_sector = None
-        self.in_hospital = None
         self.home_city = None
         self.econ_index = econ_index
         self.health_information = HealthInformation()

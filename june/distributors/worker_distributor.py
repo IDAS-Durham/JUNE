@@ -12,9 +12,15 @@ from june.demography import Person, Population
 from june.geography import Geography
 
 default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
-default_sex_per_sector_per_superarea_file = paths.data_path / "processed/census_data/company_data/industry_by_sex_ew.csv"
-default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
-default_config_file = paths.configs_path / "defaults/distributors/worker_distributor.yaml"
+default_sex_per_sector_per_superarea_file = (
+    paths.data_path / "processed/census_data/company_data/industry_by_sex_ew.csv"
+)
+default_areas_map_path = (
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+)
+default_config_file = (
+    paths.configs_path / "defaults/distributors/worker_distributor.yaml"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -27,12 +33,12 @@ class WorkerDistributor:
     """
 
     def __init__(
-            self,
-            workflow_df: pd.DataFrame,
-            sex_per_sector_df: pd.DataFrame,
-            age_range: List[int],
-            sub_sector_ratio: dict,
-            sub_sector_distr: dict,
+        self,
+        workflow_df: pd.DataFrame,
+        sex_per_sector_df: pd.DataFrame,
+        age_range: List[int],
+        sub_sector_ratio: dict,
+        sub_sector_distr: dict,
     ):
         """
         Parameters
@@ -62,9 +68,7 @@ class WorkerDistributor:
         self.n_boundary_workers = 0
 
     def distribute(
-            self,
-            geography: Geography,
-            population: Population,
+        self, geography: Geography, population: Population,
     ):
         """
         Assign any person within the eligible working age range a location
@@ -75,20 +79,25 @@ class WorkerDistributor:
         ----------
         """
         self.geography = geography
-        for area in iter(geography.areas):  # TODO a.t.m. only for_geography() supported
+        for i, area in enumerate(
+            iter(geography.areas)
+        ):  # TODO a.t.m. only for_geography() supported
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
             for idx, person in enumerate(area.people):
                 if self.age_range[0] <= person.age <= self.age_range[1]:
                     self._assign_work_location(idx, person, wf_area_df)
                     self._assign_work_sector(idx, person)
-        logger.info(f"There are {self.n_boundary_workers} who had to be told to stay real")
+            if i % 5000 == 0 and i != 0:
+                logger.info(
+                    f"Distributed workers in {i} areas of {len(geography.areas)}"
+                )
+        logger.info(
+            f"There are {self.n_boundary_workers} who had to be told to stay real"
+        )
 
     def _work_place_lottery(
-            self,
-            area_name: str,
-            wf_area_df: pd.DataFrame,
-            n_workers: int
+        self, area_name: str, wf_area_df: pd.DataFrame, n_workers: int
     ):
         """
         Create lottery that randomly assigns people a sector and location
@@ -174,17 +183,17 @@ class WorkerDistributor:
             sub_sector_idx = stats.rv_discrete(
                 values=(np.arange(len(distr)), distr)
             ).rvs(size=1)
-            person.sub_sector = (
-                self.sub_sector_distr[person.sector]["label"][sub_sector_idx[0]]
-            )
+            person.sub_sector = self.sub_sector_distr[person.sector]["label"][
+                sub_sector_idx[0]
+            ]
 
     @classmethod
     def for_geography(
-            cls,
-            geography: Geography,
-            workflow_file: str = default_workflow_file,
-            sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
-            config_file: str = default_config_file,
+        cls,
+        geography: Geography,
+        workflow_file: str = default_workflow_file,
+        sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
+        config_file: str = default_config_file,
     ) -> "WorkerDistributor":
         """
         Parameters
@@ -196,20 +205,17 @@ class WorkerDistributor:
         if len(area_names) == 0:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
-            area_names,
-            workflow_file,
-            sex_per_sector_file,
-            config_file,
+            area_names, workflow_file, sex_per_sector_file, config_file,
         )
 
     @classmethod
     def for_zone(
-            cls,
-            filter_key: Dict[str, list],
-            areas_maps_path: str = default_areas_map_path,
-            workflow_file: str = default_workflow_file,
-            sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
-            config_file: str = default_config_file,
+        cls,
+        filter_key: Dict[str, list],
+        areas_maps_path: str = default_areas_map_path,
+        workflow_file: str = default_workflow_file,
+        sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
+        config_file: str = default_config_file,
     ) -> "WorkerDistributor":
         """
         
@@ -221,43 +227,39 @@ class WorkerDistributor:
         if len(filter_key.keys()) > 1:
             raise NotImplementedError("Only one type of area filtering is supported.")
         if "oa" in len(filter_key.keys()):
-            raise NotImplementedError("Company data only for the SuperArea (MSOA) and above.")
+            raise NotImplementedError(
+                "Company data only for the SuperArea (MSOA) and above."
+            )
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
         area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["msoa"]
         if len(area_names) == 0:
             raise CompanyError("Region returned empty area list.")
         return cls.for_super_areas(
-            area_names,
-            workflow_file,
-            sex_per_sector_file,
-            config_file,
+            area_names, workflow_file, sex_per_sector_file, config_file,
         )
 
     @classmethod
     def for_super_areas(
-            cls,
-            area_names: List[str],
-            workflow_file: str = default_workflow_file,
-            sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
-            config_file: str = default_config_file,
+        cls,
+        area_names: List[str],
+        workflow_file: str = default_workflow_file,
+        sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
+        config_file: str = default_config_file,
     ) -> "WorkerDistributor":
         """
         """
         return cls.from_file(
-            area_names,
-            workflow_file,
-            sex_per_sector_file,
-            config_file,
+            area_names, workflow_file, sex_per_sector_file, config_file,
         )
 
     @classmethod
     def from_file(
-            cls,
-            area_names: Optional[List[str]] = [],
-            workflow_file: str = default_workflow_file,
-            sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
-            config_file: str = default_config_file,
+        cls,
+        area_names: Optional[List[str]] = [],
+        workflow_file: str = default_workflow_file,
+        sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
+        config_file: str = default_config_file,
     ) -> "WorkerDistributor":
         """
         Parameters
@@ -275,16 +277,11 @@ class WorkerDistributor:
         sex_per_sector_df = _load_sex_per_sector(sex_per_sector_file, area_names)
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return WorkerDistributor(
-            workflow_df,
-            sex_per_sector_df,
-            **config,
-        )
+        return WorkerDistributor(workflow_df, sex_per_sector_df, **config,)
 
 
 def _load_workflow_df(
-        workflow_file: str,
-        area_names: Optional[List[str]] = []
+    workflow_file: str, area_names: Optional[List[str]] = []
 ) -> pd.DataFrame:
     wf_df = pd.read_csv(
         workflow_file,
@@ -297,49 +294,46 @@ def _load_workflow_df(
     if len(area_names) != 0:
         wf_df = wf_df[wf_df["msoa"].isin(area_names)]
     # convert into ratios
-    wf_df = wf_df.groupby(["msoa", "work_msoa"]).agg(
-        {"n_man": "sum", "n_woman": "sum"}
-    )
+    wf_df = wf_df.groupby(["msoa", "work_msoa"]).agg({"n_man": "sum", "n_woman": "sum"})
     wf_df["n_man"] = (
-        wf_df.groupby(level=0)["n_man"]
-            .apply(lambda x: x / float(x.sum(axis=0)))
-            .values
+        wf_df.groupby(level=0)["n_man"].apply(lambda x: x / float(x.sum(axis=0))).values
     )
     wf_df["n_woman"] = (
         wf_df.groupby(level=0)["n_woman"]
-            .apply(lambda x: x / float(x.sum(axis=0)))
-            .values
+        .apply(lambda x: x / float(x.sum(axis=0)))
+        .values
     )
     return wf_df
 
 
 def _load_sex_per_sector(
-        sector_by_sex_file: str,
-        area_names: Optional[List[str]] = [],
+    sector_by_sex_file: str, area_names: Optional[List[str]] = [],
 ) -> pd.DataFrame:
     sector_by_sex_df = pd.read_csv(sector_by_sex_file, index_col=0)
     # define all columns in csv file relateing to males
     m_columns = [col for col in sector_by_sex_df.columns.values if "m " in col]
-    m_columns.remove('m all')
-    m_columns.remove('m R S T U')
+    m_columns.remove("m all")
+    m_columns.remove("m R S T U")
     f_columns = [col for col in sector_by_sex_df.columns.values if "f " in col]
-    f_columns.remove('f all')
-    f_columns.remove('f R S T U')
+    f_columns.remove("f all")
+    f_columns.remove("f R S T U")
 
     uni_columns = [col for col in sector_by_sex_df.columns.values if "all " in col]
     sector_by_sex_df = sector_by_sex_df.drop(
-        uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
+        uni_columns + ["m all", "m R S T U", "f all", "f R S T U"], axis=1,
     )
 
     if len(area_names) != 0:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
         area_names = geo_hierarchy[geo_hierarchy["msoa"].isin(area_names)]["oa"]
         sector_by_sex_df = sector_by_sex_df.loc[area_names]
-        if (np.sum(sector_by_sex_df["m Q"]) == 0) and \
-                (np.sum(sector_by_sex_df["f Q"]) == 0):
+        if (np.sum(sector_by_sex_df["m Q"]) == 0) and (
+            np.sum(sector_by_sex_df["f Q"]) == 0
+        ):
             logger.info(f"There exists no Healthcare sector in this geography.")
-        if (np.sum(sector_by_sex_df["m P"]) == 0) and \
-                (np.sum(sector_by_sex_df["f P"]) == 0):
+        if (np.sum(sector_by_sex_df["m P"]) == 0) and (
+            np.sum(sector_by_sex_df["f P"]) == 0
+        ):
             logger.info(f"There exists no Education sector in this geography.")
 
     # convert counts to ratios
