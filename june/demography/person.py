@@ -1,5 +1,4 @@
 from itertools import count
-from june.logger_creation import logger
 
 
 class HealthInformation:
@@ -49,9 +48,9 @@ class HealthInformation:
         if self.infected:
             if self.infection.symptoms.is_recovered(delta_time):
                 self.recovered = True
-                #self.set_recovered(time)
+                # self.set_recovered(time)
             else:
-                self.infection.update_at_time(time+delta_time)
+                self.infection.update_at_time(time + delta_time)
 
     def set_recovered(self, time):
         self.recovered = True
@@ -123,7 +122,7 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
-            ethnicity = None,
+            ethnicity=None,
             econ_index=None,
             mode_of_transport=None,
             area=None
@@ -143,54 +142,50 @@ class Person:
         self.area = area
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.work_msoarea = None
         self.school = None
         self.carehome = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
         self.groups = []
-        self.industry_specific = None
+        self.sector = None
+        self.sub_sector = None
         self.company_id = None
         self.hospital = None
         self.in_hospital = None
+        self.home_city = None
         self.econ_index = econ_index
         self.health_information = HealthInformation()
+
 
 class People:
     def __init__(self, world):
         self.members = []
 
-
     @property
     def total_people(self):
         return len(self.members)
-
 
     @property
     def infected(self):
         return [
             person for person in self.members
-            if person.health_information.infected and not 
-                    person.health_information.dead
-            
-        ]
+            if person.health_information.infected and not
+            person.health_information.dead
 
+        ]
 
     @property
     def susceptible(self):
         return [
             person for person in self.members
-            if person.health_information.susceptible 
-            
-        ]
+            if person.health_information.susceptible
 
+        ]
 
     @property
     def recovered(self):
         return [
             person for person in self.members
             if person.health_information.recovered
-            
+
         ]
-
-
