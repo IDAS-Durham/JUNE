@@ -398,10 +398,10 @@ class Hospitals(Supergroup):
                     break
             if hospital is not None:
                 
-                #logger.info(
-                #    f"Receiving hospital for patient with "
-                #    + f"{person.health_information.tag} at distance = {distance} km"
-                #)
+                logger.debug(
+                    f"Receiving hospital for patient with "
+                    + f"{person.health_information.tag} at distance = {distance} km"
+                )
                 hospital.add_as_patient(person)
             else:
                 logger.info(
