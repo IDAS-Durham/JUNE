@@ -247,7 +247,7 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-        print('number of deaths : ', n_people)
+        sim_logger.info(f'number of deaths =  {n_people}')
         for group_type in group_instances:
             n_active_in_group = 0
             for group in group_type.members:

@@ -51,8 +51,7 @@ class Household(Group):
         #TODO what happens if there are no parents ?? 
         if parents:
             return random.choice(parents)
-        else:
-            return None
+        return None
 
     def set_active_members(self):
         for person in self.people:
