@@ -30,7 +30,7 @@ def load_config():
 
 @pytest.fixture(name="worker_super_areas", scope="module")
 def use_super_areas():
-    return ["E02002559", "E02002560", "E02002561"]
+    return ["E02002559", "E02002560", "E02002561"] # E00064524
 
 
 @pytest.fixture(name="worker_geography", scope="module")
@@ -79,7 +79,7 @@ class TestInitialization:
     ):
         population = list()
         for area in worker_geography.areas:
-            area.populate(demography)
+            area.populate(worker_demography)
             population.extend(
                 area.people
             )
