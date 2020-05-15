@@ -108,7 +108,7 @@ class Group(AbstractGroup):
         self.id = self._next_id()
         # noinspection PyTypeChecker
         self.subgroups = [
-            Subgroup()
+            Subgroup(self.spec)
             for _
             in range(len(
                 self.GroupType
@@ -146,7 +146,8 @@ class Group(AbstractGroup):
     def add(
             self,
             person: Person,
-            qualifier=GroupType.default
+            subgroup_qualifier=GroupType.default,
+            subgroup_type_qualifier=GroupType.default
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -159,13 +160,9 @@ class Group(AbstractGroup):
         qualifier
             An enumerated so the student can be added to a given group
         """
-        self[qualifier].append(person)
-        person.groups.append(self)
-
-    def set_active_members(self):
-        for person in self.people:
-            if person.active_group is None:
-                person.active_group = self.spec
+        self[subgroup_qualifier].append(person)
+        #person.groups.append(self)
+        person.subgroups[subgroup_type_qualifier] = self[subgroup_qualifier]
 
     @property
     def people(self) -> Set[Person]:
@@ -250,9 +247,10 @@ class Group(AbstractGroup):
     @property
     def size_active(self):
         n_active = 0
-        for person in self.people:
-            if person.active_group == self.spec:
-                n_active += 1
+        for subgroup in self.subgroups:
+            for person in subgroup.people:
+                if person.active_group == subgroup:
+                    n_active += 1
         return n_active
 
 

@@ -47,16 +47,16 @@ def test__time_it_takes_to_infect(infection, group_size=2):
         group = TestGroup()
         infected_person = Person(sex='f', age=26)
         infection.infect_person_at_time(infected_person, health_index_generator, 1)
-        group.add(infected_person, qualifier=TestGroup.GroupType.default)
+        group.add(infected_person)#, subgroup_qualifier=TestGroup.GroupType.default)
         group[TestGroup.GroupType.default].infected.add(infected_person)
         susceptible_person = Person(sex='m', age=55)
-        group.add(susceptible_person, qualifier=TestGroup.GroupType.default)
+        group.add(susceptible_person)#, qualifier=TestGroup.GroupType.default)
         for i in range(group_size - 2):
-            group.add(Person(), qualifier=TestGroup.GroupType.default)
+            group.add(Person(), )#qualifier=TestGroup.GroupType.default)
 
         # activate everyone in the group
         for person in group.people:
-            person.active_group = 'test_group'
+            person.active_group = person.subgroups[person.GroupType.default] 
         n_days.append(
             days_to_infection(interaction, susceptible_person, group,health_index_generator)
         )
