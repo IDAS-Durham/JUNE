@@ -142,7 +142,7 @@ class Person:
         "econ_index",
         "health_information",
     )
-    class GroupType(IntEnum):
+    class ActivityType(IntEnum):
         """
         Defines the indices of the subgroups a person belongs to
         """
@@ -184,23 +184,23 @@ class Person:
 
     @property
     def residence(self):
-        return self.subgroups[self.GroupType.residence]
+        return self.subgroups[self.ActivityType.residence]
 
     @property
     def primary_activity(self):
-        return self.subgroups[self.GroupType.primary_activity]
+        return self.subgroups[self.ActivityType.primary_activity]
 
     @property
     def hospital(self):
-        return self.subgroups[self.GroupType.hospital]
+        return self.subgroups[self.ActivityType.hospital]
 
     @property
     def commute(self):
-        return self.subgroups[self.GroupType.commute]
+        return self.subgroups[self.ActivityType.commute]
 
     @property
     def dynamic(self):
-        return self.subgroups[self.GroupType.dynamic]
+        return self.subgroups[self.ActivityType.dynamic]
 
     @property
     def in_hospital(self):
