@@ -17,19 +17,19 @@ test_data_filename = os.path.join(
 )
 
 
-class TestCommute:
-    def test_coordinate_lookup(self):
-        distributor = CommuteHubDistributor.from_file(
-            commute_cities=[]
-        )
-        assert distributor._get_msoa_oa(
-            "E00000001"
-        ) == "E02000001"
-        lat, long = distributor._get_area_lat_lon(
-            "E00000001"
-        )
-        assert lat == pytest.approx(51.520271, abs=5)
-        assert long == pytest.approx(-0.094911, abs=5)
+#class TestCommute:
+    #def test_coordinate_lookup(self):
+    #    distributor = CommuteHubDistributor.from_file(
+    #        commute_cities=[]
+    #    )
+    #    assert distributor._get_msoa_oa(
+    #        "E00000001"
+    #    ) == "E02000001"
+    #    lat, long = distributor._get_area_lat_lon(
+    #        "E00000001"
+    #    )
+    #    assert lat == pytest.approx(51.520271, abs=5)
+    #    assert long == pytest.approx(-0.094911, abs=5)
 
 
 class TestModeOfTransport:
