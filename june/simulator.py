@@ -92,6 +92,9 @@ class Simulator:
             "residence": ["households", "carehomes"],
         }
 
+        self.min_age_home_alone = 15
+        self.stay_at_home_complacency = 0.95
+
     @classmethod
     def from_file(
         cls,
@@ -170,9 +173,10 @@ class Simulator:
         for group_name in self.activities_to_groups(self.all_activities):
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
+                for person in group.people:
+                    person.busy = False
                 for subgroup in group.subgroups:
                     subgroup._people.clear()
-
     def get_subgroup_active(self, activities, person: "Person"):
 
         activities = self.apply_activity_hierarchy(activities)
@@ -180,6 +184,13 @@ class Simulator:
             subgroup = getattr(person, group_name)
             if subgroup is not None:
                 return subgroup
+
+    def kid_drags_guardian(self, kid, guardian, activities):
+        if guardian is not None:
+            if guardian.busy:
+                guardian_subgroup = self.get_subgroup_active(activities, guardian)
+                guardian_subgroup.remove(guardian)
+            person.residence.append(guardian)
 
     def move_people_to_active_subgroups(self, activities: List[str]):
         """
@@ -191,7 +202,17 @@ class Simulator:
             list of groups that are active at a time step
         """
         for person in self.world.people.members:
-            if not person.health_information.dead:
+            if person.health_information.dead or person.busy:
+                continue
+            if person.health_information.must_stay_at_home:
+                if person.age < self.min_age_home_alone:
+                    possible_guardians = [housemate for housemate in person.residence.people if housemate.age >= 18]
+                    if len(possible_guardians) == 0:
+                        guardian = person.find_guardian()
+                        self.kid_drags_guardian(person, guardian, activities)
+                elif random.random() <= self.stay_at_home_complacency:
+                    person.residence.append(person)
+            else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
 
