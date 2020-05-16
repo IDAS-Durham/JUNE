@@ -72,12 +72,12 @@ def test__world_reconstruction(world_pickle):
     recovered_areas = save_world_areas(world, "areas")
     recovered_super_areas = save_world_areas(world, "super_areas")
 
-    #assert original_group == broken_group
+    assert original_group == broken_group
     assert original_group == recovered_group
     
-    #assert original_areas == broken_areas
+    assert original_areas == broken_areas
     assert original_areas == recovered_areas 
 
-    #assert original_super_areas == broken_super_areas
+    assert original_super_areas == broken_super_areas
     assert original_super_areas == recovered_super_areas 
 
