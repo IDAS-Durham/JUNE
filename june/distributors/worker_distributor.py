@@ -135,7 +135,7 @@ class WorkerDistributor:
             )
             self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
         except:
-            pass
+            logger.info(f"The Area {area_name} has no woman working in it.")
         try:
             # fails if no male work in this Area
             distribution_male = self.sex_per_sector_df.loc[area_name][m_col].fillna(0).values
@@ -144,7 +144,7 @@ class WorkerDistributor:
             )
             self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
         except:
-            pass
+            logger.info(f"The Area {area_name} has no man working in it.")
 
     def _assign_work_location(self, i: int, person: Person, wf_area_df: pd.DataFrame):
         """
@@ -298,8 +298,8 @@ class WorkerDistributor:
         education_sector_file
         healthcare_sector_file
         """
-        workflow_df = _load_workflow_df(workflow_file, area_names)
-        sex_per_sector_df = _load_sex_per_sector(sex_per_sector_file, area_names)
+        workflow_df = load_workflow_df(workflow_file, area_names)
+        sex_per_sector_df = load_sex_per_sector(sex_per_sector_file, area_names)
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return WorkerDistributor(
@@ -309,7 +309,7 @@ class WorkerDistributor:
         )
 
 
-def _load_workflow_df(
+def load_workflow_df(
         workflow_file: str,
         area_names: Optional[List[str]] = []
 ) -> pd.DataFrame:
@@ -340,7 +340,7 @@ def _load_workflow_df(
     return wf_df
 
 
-def _load_sex_per_sector(
+def load_sex_per_sector(
         sector_by_sex_file: str,
         area_names: Optional[List[str]] = [],
 ) -> pd.DataFrame:
@@ -357,7 +357,7 @@ def _load_sex_per_sector(
     sector_by_sex_df = sector_by_sex_df.drop(
         uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
     )
-
+    
     if len(area_names) != 0:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
         area_names = geo_hierarchy[geo_hierarchy["msoa"].isin(area_names)]["oa"]
