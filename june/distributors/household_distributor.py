@@ -267,7 +267,7 @@ class HouseholdDistributor:
         men_by_age = defaultdict(list)
         women_by_age = defaultdict(list)
         for person in area.people:
-            if person.primary_activity is not None:
+            if person.residence is not None:
                 continue
             if person.sex == "m":
                 men_by_age[person.age].append(person)

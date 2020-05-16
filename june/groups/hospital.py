@@ -130,58 +130,17 @@ class Hospital(Group):
                 "ERROR: This person shouldn't be trying to get to a hospital"
             )
 
+    def release_as_patient(self, person):
+       person.subgroups[person.ActivityType.hospital] = None
 
-    def update_status_lists_for_patients(self, time, delta_time):
-        """
-        Update the health information of patients, and move them around if necessary
-        """
-        dead = []
-        patient_group = self[self.SubgroupType.patients]
-        icu_group = self[self.SubgroupType.icu_patients]
-        for person in patient_group.people:
-            person.health_information.update_health_status(time, delta_time)
-            if person.health_information.infected:
-                if person.health_information.tag == "intensive care":
-                    icu_group.append(person)
-                    patient_group.remove(person)
-            if person.health_information.recovered:
-                self.release_as_patient(person)
-            if person.health_information.dead:
-                dead.append(person)
-        for person in dead:
-            patient_group.remove(person)
-
-    def update_status_lists_for_ICUpatients(self, time, delta_time):
-        """
-        Update the health information of ICU patients, and move them around if necessary
-        """
-        patient_group = self[self.SubgroupType.patients]
-        icu_group = self[self.SubgroupType.icu_patients]
-
-        dead = []
-        for person in icu_group.people:
-            person.health_information.update_health_status(time, delta_time)
-            if person.health_information.infected:
-                if person.health_information.tag == "hospitalised":
-                    patient_group.append(person)
-                    icu_group.remove(person)
-            if person.health_information.recovered:
-                self.release_as_patient(person)
-            if person.health_information.dead:
-                # TODO: check what to do with dead!! bury is not there anymore
-                dead.append(person)
-        for person in dead:
-            icu_group.remove(person)
-
-    def update_status_lists(self, time, delta_time):
-        # three copies of what happens in group for the three lists of people
-        # in the hospital
-        if self[self.SubgroupType.patients].contains_people:
-            self.update_status_lists_for_patients(time, delta_time)
-            self.update_status_lists_for_ICUpatients(time, delta_time)
-            logger.info(
-                f"=== hospital currently has {self[self.SubgroupType.patients].size} "
-                f"patients, and {self[self.SubgroupType.icu_patients].size}, ICU patients"
+    def move_patient_within_hospital(self, person):
+        if person.health_information.tag == "intensive care":
+            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.icu_patients]
+        elif person.health_information.tag == "hospitalised":
+            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.patients]
+        else:
+            raise AssertionError(
+                "ERROR: This person shouldn't be trying to get to a hospital"
             )
 
 

@@ -24,7 +24,7 @@ args = parser.parse_args()
 # *********** INITIALIZE WORLD ***************** #
 
 t1 = time.time()
-geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559", "E02006764",]})
+geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559", "E02003353"]})
 
 geography.hospitals = Hospitals.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
@@ -35,7 +35,6 @@ demography = Demography.for_geography(geography)
 world = World(geography, demography, include_households=True)
 t2 = time.time()
 print(f"Creating the world took {t2 -t1} seconds to run.")
-
 
 # *********** INITIALIZE SEED ***************** #
 
