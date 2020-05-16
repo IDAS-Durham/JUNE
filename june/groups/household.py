@@ -38,6 +38,7 @@ class Household(Group):
     def add(self, person, subgroup_type=SubgroupType.adults):
         for mate in self.people:
             if person != mate:
+                mate.housemates.append(person)
                 person.housemates.append(mate)
         self[subgroup_type].append(person)
         person.subgroups[person.ActivityType.residence] = self[subgroup_type]
