@@ -118,6 +118,15 @@ class Simulator:
         return Simulator(world, interaction, infection, config)
 
     def check_inputs(self, config: dict):
+        """
+        Check that the iput time configuration is correct, i.e., activities are among allowed activities
+        and days have 24 hours.
+
+        Parameters
+        ----------
+        config
+            dictionary with time steps configuration
+        """
 
         # Sadly, days only have 24 hours
         assert sum(config["step_duration"]["weekday"].values()) == 24
@@ -202,7 +211,7 @@ class Simulator:
             self.world.hospitals.allocate_patient(person)
         elif previous_tag != person.health_information.tag:
             person.hospital.group.move_patient_within_hospital(person)
-    
+
     def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
@@ -249,7 +258,6 @@ class Simulator:
         Perform a time step in the simulation
 
         """
-        sim_logger.info("******* TIME STEP *******")
         activities = self.timer.activities()
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
