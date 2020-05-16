@@ -33,6 +33,7 @@ class WorkerDistributor:
             age_range: List[int],
             sub_sector_ratio: dict,
             sub_sector_distr: dict,
+            non_geographical_work_location: dict,
     ):
         """
         Parameters
@@ -52,12 +53,21 @@ class WorkerDistributor:
             For each region containing how many of man and woman respectively
             work in any key sector jobs, such as primary teachers or medical
             practitioners.
+        non_geographical_work_location:
+            Special work place locations in dataset that do not correspond to a
+            SuperArea name but to special cases such as:
+            "home", "oversea", "offshore", ...
+            They are the key of the dictionary. The value carries the action
+            on what should be done with these workers. Currently they are:
+            "home": let them work from home
+            "bind": randomly select a SuperArea to send the worker to work in
         """
         self.workflow_df = workflow_df
         self.sex_per_sector_df = sex_per_sector_df
         self.age_range = age_range
         self.sub_sector_ratio = sub_sector_ratio
         self.sub_sector_distr = sub_sector_distr
+        self.non_geographical_work_location = non_geographical_work_location
         self._boundary_workers_counter = count()
         self.n_boundary_workers = 0
 
@@ -113,20 +123,28 @@ class WorkerDistributor:
         numbers = np.arange(1, 22)
         m_col = [col for col in self.sex_per_sector_df.columns.values if "m " in col]
 
-        distribution_male = self.sex_per_sector_df.loc[area_name][m_col].values
-        self.sector_distribution_male = stats.rv_discrete(
-            values=(numbers, distribution_male)
-        )
         f_col = [col for col in self.sex_per_sector_df.columns.values if "f " in col]
-        distribution_female = self.sex_per_sector_df.loc[area_name][f_col].values
-        self.sector_distribution_female = stats.rv_discrete(
-            values=(numbers, distribution_female)
-        )
         self.sector_dict = {
             (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_col)
         }
-        self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
-        self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
+        try:
+            # fails if no female work in this Area
+            distribution_female = self.sex_per_sector_df.loc[area_name][f_col].fillna(0).values
+            self.sector_distribution_female = stats.rv_discrete(
+                values=(numbers, distribution_female)
+            )
+            self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
+        except:
+            logger.info(f"The Area {area_name} has no woman working in it.")
+        try:
+            # fails if no male work in this Area
+            distribution_male = self.sex_per_sector_df.loc[area_name][m_col].fillna(0).values
+            self.sector_distribution_male = stats.rv_discrete(
+                values=(numbers, distribution_male)
+            )
+            self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
+        except:
+            logger.info(f"The Area {area_name} has no man working in it.")
 
     def _assign_work_location(self, i: int, person: Person, wf_area_df: pd.DataFrame):
         """
@@ -144,11 +162,20 @@ class WorkerDistributor:
         if len(super_area) != 0:
             super_area = super_area[0]
             super_area.add_worker(person)
+        elif work_location in list(self.non_geographical_work_location.keys()):
+            if self.non_geographical_work_location[work_location] == "home":
+                person.work_super_area = "home"
+            elif self.non_geographical_work_location[work_location] == "bind":
+                self._select_rnd_superarea(person)
         else:
-            # TODO count people who work outside of the region we currently simulate
-            idx = np.random.choice(np.arange(len(self.geography.super_areas)))
-            self.geography.super_areas.members[idx].add_worker(person)
-            self.n_boundary_workers = next(self._boundary_workers_counter)
+            self._select_rnd_superarea(person)
+   
+    def _select_rnd_superarea(self, person: Person):
+        """
+        Selects random SuperArea to send a worker to work in
+        """
+        idx = np.random.choice(np.arange(len(self.geography.super_areas)))
+        self.geography.super_areas.members[idx].add_worker(person)
 
     def _assign_work_sector(self, i: int, person: Person):
         """
@@ -263,7 +290,7 @@ class WorkerDistributor:
         Parameters
         ----------
         area_names
-            List of Area names for which to initiate WorkerDistributor
+            List of SuperArea names for which to initiate WorkerDistributor
         workflow_file
             Filename to data containing information about where man and woman
             go to work with respect to their SuperArea of residence.
@@ -271,8 +298,8 @@ class WorkerDistributor:
         education_sector_file
         healthcare_sector_file
         """
-        workflow_df = _load_workflow_df(workflow_file, area_names)
-        sex_per_sector_df = _load_sex_per_sector(sex_per_sector_file, area_names)
+        workflow_df = load_workflow_df(workflow_file, area_names)
+        sex_per_sector_df = load_sex_per_sector(sex_per_sector_file, area_names)
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return WorkerDistributor(
@@ -282,7 +309,7 @@ class WorkerDistributor:
         )
 
 
-def _load_workflow_df(
+def load_workflow_df(
         workflow_file: str,
         area_names: Optional[List[str]] = []
 ) -> pd.DataFrame:
@@ -313,7 +340,7 @@ def _load_workflow_df(
     return wf_df
 
 
-def _load_sex_per_sector(
+def load_sex_per_sector(
         sector_by_sex_file: str,
         area_names: Optional[List[str]] = [],
 ) -> pd.DataFrame:
@@ -330,7 +357,7 @@ def _load_sex_per_sector(
     sector_by_sex_df = sector_by_sex_df.drop(
         uni_columns + ['m all', 'm R S T U', 'f all', 'f R S T U'], axis=1,
     )
-
+    
     if len(area_names) != 0:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
         area_names = geo_hierarchy[geo_hierarchy["msoa"].isin(area_names)]["oa"]
