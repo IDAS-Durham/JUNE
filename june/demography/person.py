@@ -1,4 +1,5 @@
 from itertools import count
+import random
 from enum import IntEnum
 
 
@@ -141,6 +142,7 @@ class Person:
         "home_city",
         "econ_index",
         "health_information",
+        "busy"
     )
     class ActivityType(IntEnum):
         """
@@ -181,6 +183,7 @@ class Person:
         self.home_city = None
         self.econ_index = econ_index
         self.health_information = HealthInformation()
+        self.busy = False
 
     @property
     def residence(self):
@@ -207,3 +210,14 @@ class Person:
         if self.hospital is None:
             return True
         return False
+
+    def find_guardian(self):
+
+        print('housemates = ', self.housemates)
+        guardian = random.choice(self.housemates)
+        if guardian.health_information.should_be_in_hospital or guardian.health_information.dead:
+            return None
+        else:
+            return guardian
+
+
