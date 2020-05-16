@@ -11,6 +11,8 @@ class MockSupergroup(Supergroup):
         super().__init__()
         self.members = groups
 
+
+
 class MockGroup(Group):
     class SubgroupType(IntEnum):
         type1 = 0
@@ -18,8 +20,10 @@ class MockGroup(Group):
 
     def __init__(self):
         super().__init__()
-        self.add(Person(), self.GroupType.type1)
-        self.add(Person(), self.GroupType.type2)
+        person = Person()
+        self.add(Person(), person.ActivityType.box, self.SubgroupType.type1)
+        person = Person()
+        self.add(person, person.ActivityType.box, self.SubgroupType.type2)
 
 @pytest.fixture(name="super_group", scope="module")
 def make_supergroup():
@@ -38,3 +42,4 @@ def test__erase_all_groups_information(super_group):
         for subgroup in group.subgroups:
             for slot in subgroup.__slots__:
                 assert len(getattr(subgroup, slot)) == 0
+
