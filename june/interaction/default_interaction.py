@@ -1,13 +1,14 @@
-import random
+from math import exp
+
 import numpy as np
 import yaml
-from math import exp
-from pathlib import Path
+
+from june import paths
 from june.interaction.interaction import Interaction
 
 default_config_filename = (
-    Path(__file__).parent.parent.parent
-    / "configs/defaults/interaction/DefaultInteraction.yaml"
+        paths.configs_path
+        / "defaults/interaction/DefaultInteraction.yaml"
 )
 
 
@@ -43,7 +44,7 @@ class DefaultInteraction(Interaction):
 
     @classmethod
     def from_file(
-        cls, config_filename: str = default_config_filename
+            cls, config_filename: str = default_config_filename
     ) -> "DefaultInteraction":
 
         with open(config_filename) as f:
@@ -52,7 +53,7 @@ class DefaultInteraction(Interaction):
         return DefaultInteraction(config["alpha_physical"], config["contact_matrices"])
 
     def single_time_step_for_group(
-        self, group, health_index_generator, time, delta_time
+            self, group, health_index_generator, time, delta_time
     ):
         """
         Runs the interaction model for a time step
@@ -87,7 +88,7 @@ class DefaultInteraction(Interaction):
                     )
 
     def contaminate(
-        self, group, health_index_generator, time, delta_time, infecters, recipients
+            self, group, health_index_generator, time, delta_time, infecters, recipients
     ):
         # TODO: subtitute by matrices read from file when ready
         infecter_probability = self.probabilities[infecters]
@@ -95,9 +96,9 @@ class DefaultInteraction(Interaction):
             return
 
         intensity = (
-            self.intensity(group, infecters, recipients)
-            * infecter_probability
-            * -delta_time
+                self.intensity(group, infecters, recipients)
+                * infecter_probability
+                * -delta_time
         )
         group_of_recipients = group.subgroups[recipients].people
         should_be_infected = np.random.random(len(group_of_recipients))
@@ -135,7 +136,7 @@ class DefaultInteraction(Interaction):
                 phys = self.physical[tag][0][0]
         else:
             if recipient >= len(self.contacts[tag]) or infecter >= len(
-                self.contacts[tag][recipient]
+                    self.contacts[tag][recipient]
             ):
                 mixer = 1.0
                 phys = 0.0

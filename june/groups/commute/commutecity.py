@@ -1,14 +1,44 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from june.groups.group import Group, Supergroup
 
+default_data_path = (
+    Path(os.path.abspath(__file__)).parent.parent.parent.parent
+    / "data/"
+)
 
-class CommuteCity:
+default_uk_pcs_coordinates = default_data_path / "geographical_data/ukpostcodes_coordinates.csv"
+
+default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
+
+default_non_london_stat_pcs = default_data_path / "travel/non_London_station_coordinates.csv"
+
+default_london_stat_pcs = default_data_path / "travel/London_station_coordinates.csv"
+
+class CommuteCity(Group):
     """
     Defines a city with details about its metropolitan area and who commutes MSOAs within that area.
     """
 
-    def __init__(self, commutecity_id, city, metro_msoas, metro_centroid):
+    __slots__ = (
+        "id",
+        "metro_centroid",
+        "metro_msoas",
+        "city",
+        "commutehubs",
+        "commute_internal",
+        "commutecityunits",
+    )
+
+    
+    def __init__(self, city=None, metro_msoas=None, metro_centroid=None):
         """
         id: (int) id of the city
         metro_centriod: (array) the centriod of the metropolitan area
@@ -18,16 +48,18 @@ class CommuteCity:
                            - this includes those living AND working in the metropolitan area
         commutehubs: (list) commute hubs associated with the city
         """
-        self.id = commutecity_id
+        super().__init__()
+        
+        #self.id = commutecity_id
         self.metro_centroid = metro_centroid
         self.metro_msoas = metro_msoas
         self.city = city
-        self.passengers = []
+        #self.passengers = [] -> in new structure to people by Group inheritance
         self.commutehubs = []
         self.commute_internal = []
         self.commutecityunits = []
 
-class CommuteCities:
+class CommuteCities(Supergroup):
     """
     Initialises commute cities by using postcode data on the station location
     and constructing metropolitan areas from these by expanding around their centriods
@@ -41,7 +73,7 @@ class CommuteCities:
       and define the London metropolitan area to be over the sum of all MSOAs near each station
     """
 
-    def __init__(self, uk_pcs_coordinates, msoa_coordinates):
+    def __init__(self):
         """
         uk_pcs_coodinates: (pd.Dataframe) Dataframe containing all UK postcodes and their coordinates
         msoa_coordinates: (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
@@ -51,12 +83,12 @@ class CommuteCities:
         Note: London must be initialised after the other stations
         """
         
-        self.uk_pcs_coordinates = uk_pcs_coordinates
-        self.msoa_coordinates = msoa_coordinates
-        self.members = []
+        #self.uk_pcs_coordinates = uk_pcs_coordinates
+        #self.msoa_coordinates = msoa_coordinates
 
-        # run to initialise all msoa lat lons from dataframe
-        self._get_msoa_lat_lon()
+        super().__init__()
+        self.members = []
+        
         
     def _get_msoa_lat_lon(self):
         'Return all MSOA lat/lons as a 2D array'
@@ -100,14 +132,22 @@ class CommuteCities:
         city_metro_centroid = [np.mean(self.lat_msoas[metro_indices]),np.mean(self.lon_msoas[metro_indices])]
         
         return city_metro_msoas, city_metro_centroid
+
+    def from_file(self):
         
-    def init_non_london(self, stat_pcs_df):
+        self.uk_pcs_coordinates = pd.read_csv(default_uk_pcs_coordinates)
+        self.msoa_coordinates = pd.read_csv(default_msoa_coordinates)
+
+        # run to initialise all msoa lat lons from dataframe
+        self._get_msoa_lat_lon()
+        
+    def init_non_london(self):
         """
         Initialise non-London commute cities
         stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
         """
 
-        self.stat_pcs_df = stat_pcs_df
+        self.stat_pcs_df = pd.read_csv(default_non_london_stat_pcs)
         
         stations = list(self.stat_pcs_df['station'])
         postcodes = list(self.stat_pcs_df['postcode'])
@@ -124,22 +164,23 @@ class CommuteCities:
             city_metro_msoas, city_metro_centroid = self._get_nearest_msoas(lat_lon_stat)
 
             commute_city = CommuteCity(
-                commutecity_id = idx,
+                #commutecity_id = idx,
                 city = stations[idx],
                 metro_msoas = city_metro_msoas,
-                metro_centroid = city_metro_centroid
+                metro_centroid = city_metro_centroid,
             )
 
             self.members.append(commute_city)
 
 
-    def init_london(self, stat_pcs_df):
+    def init_london(self):
         """
         Initialise London
         stat_pcs_df: (pd.Dataframe) Dataframe containing the stations and their postcodes
         """
 
-        self.stat_pcs_df = stat_pcs_df
+        self.stat_pcs_df = pd.read_csv(default_london_stat_pcs)
+        
         stations = list(self.stat_pcs_df['station'])
         postcodes = list(self.stat_pcs_df['postcode'])
 
@@ -166,10 +207,10 @@ class CommuteCities:
         city_metro_centroid = [np.mean(city_metro_centroid_all[:,0]), np.mean(city_metro_centroid_all[:,1])]
 
         commute_city = CommuteCity(
-            commutecity_id = len(self.members),
+            #commutecity_id = len(self.members),
             city = 'London',
             metro_msoas = city_metro_msoas_all,
-            metro_centroid = city_metro_centroid
+            metro_centroid = city_metro_centroid,
         )
 
         self.members.append(commute_city)

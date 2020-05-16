@@ -1,15 +1,14 @@
 from enum import IntEnum
-import pandas as pd
-from pathlib import Path
-
-from june.groups.group import Group, Supergroup
-from june.logger_creation import logger
-from enum import IntEnum
 from typing import List
 
+import pandas as pd
+
+from june import paths
+from june.groups.group import Group, Supergroup
+
 default_data_path = (
-    Path(__file__).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales/carehomes.csv"
+        paths.data_path
+        / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
 
 

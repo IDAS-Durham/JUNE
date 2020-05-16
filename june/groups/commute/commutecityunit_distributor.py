@@ -19,11 +19,11 @@ class CommuteCityUnitDistributor:
         for city in self.commutecities:
 
             # Clear all units of passengers before running
-            possible_units = hub.commuteunits
+            possible_units = city.commutecityunits
             for unit in possible_units:
                 unit.passengers = 0
             
-            to_commute = commute_internal.passengers
+            to_commute = city.commute_internal
 
             # loop over all passengers who need to commute
             for passenger in to_commute:
@@ -36,7 +36,7 @@ class CommuteCityUnitDistributor:
                     unit = possible_units[unit_choice]
                     
                     if unit.no_passengers < unit.max_passengers:
-                        unit.passengers.append(passenger)
+                        unit.add(passenger)
                         unit.no_passengers += 1
                         assigned = True
                         # make this more efficient by stopping looking at things already filled
