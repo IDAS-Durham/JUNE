@@ -93,8 +93,8 @@ class Simulator:
             "residence": ["households", "care_homes"],
         }
 
-        self.min_age_home_alone = config['min_age_home_alone']
-        self.stay_at_home_complacency = config['stay_at_home_complacency']
+        self.min_age_home_alone = config["min_age_home_alone"]
+        self.stay_at_home_complacency = config["stay_at_home_complacency"]
 
     @classmethod
     def from_file(
@@ -167,7 +167,7 @@ class Simulator:
         return activities
 
     def activities_to_groups(self, activities: List[str]) -> List[str]:
-        '''
+        """
         Converts activities into Groups, the interaction will run over these Groups.
 
         Parameters
@@ -177,17 +177,17 @@ class Simulator:
         Returns
         -------
         List of groups that are active.
-        '''
+        """
 
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
     def clear_world(self):
-        '''
+        """
         Removes everyone from all possible groups, and sets everyone's busy attribute
         to False.
 
-        '''
+        """
         for group_name in self.activities_to_groups(self.all_activities):
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
@@ -197,8 +197,10 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
 
-    def get_subgroup_active(self, activities: List[str], person: "Person") -> "Subgroup":
-        '''
+    def get_subgroup_active(
+        self, activities: List[str], person: "Person"
+    ) -> "Subgroup":
+        """
         Given the hierarchy of activities and a person, decide what subgroup  
         should they go to
 
@@ -211,15 +213,17 @@ class Simulator:
         Returns
         -------
         Subgroup to which person has to go, given the hierarchy of activities
-        '''
+        """
         activities = self.apply_activity_hierarchy(activities)
         for group_name in activities:
             subgroup = getattr(person, group_name)
             if subgroup is not None:
                 return subgroup
 
-    def kid_drags_guardian(self, kid: "Person", guardian: "Person", activities: List[str]):
-        '''
+    def kid_drags_guardian(
+        self, kid: "Person", guardian: "Person", activities: List[str]
+    ):
+        """
         A kid makes their guardian go home.
 
         Parameters
@@ -230,7 +234,7 @@ class Simulator:
             guardian to be sent home
         activities:
             list of activities that take place at a given time step
-        '''
+        """
 
         if guardian is not None:
             if guardian.busy:
@@ -239,7 +243,7 @@ class Simulator:
             guardian.residence.append(guardian)
 
     def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
-        '''
+        """
         Move  a kid and their guardian to the household, so no kid is left
         home alone.
 
@@ -249,11 +253,9 @@ class Simulator:
             kid to be sent home
         activities:
             list of activities that take place at a given time step
-        '''
+        """
         possible_guardians = [
-            housemate
-            for housemate in kid.residence.group.people
-            if housemate.age >= 18
+            housemate for housemate in kid.residence.group.people if housemate.age >= 18
         ]
         if len(possible_guardians) == 0:
             guardian = kid.find_guardian()
@@ -261,7 +263,7 @@ class Simulator:
         kid.residence.append(kid)
 
     def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
-        '''
+        """
         Move person with a mild illness to their households. For kids that will
         always happen, and if they are left alone at home they will also drag one
         of their guardians home. For adults, they will go home with a probability 
@@ -273,7 +275,7 @@ class Simulator:
             person to be sent home
         activities:
             list of activities that take place at a given time step
-        '''
+        """
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -281,7 +283,6 @@ class Simulator:
         else:
             subgroup = self.get_subgroup_active(activities, person)
             subgroup.append(person)
-
 
     def move_people_to_active_subgroups(self, activities: List[str]):
         """
