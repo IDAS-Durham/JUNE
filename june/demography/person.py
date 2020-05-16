@@ -213,7 +213,6 @@ class Person:
 
     def find_guardian(self):
 
-        print('housemates = ', self.housemates)
         guardian = random.choice(self.housemates)
         if guardian.health_information.should_be_in_hospital or guardian.health_information.dead:
             return None
