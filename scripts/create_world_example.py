@@ -19,7 +19,7 @@ geography.schools = Schools.for_geography(geography)
 geography.carehomes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 
-world = World(geography, demography, include_households=True)
+world = World(geography, demography, include_households=True, include_commute=True)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving pickle...")
