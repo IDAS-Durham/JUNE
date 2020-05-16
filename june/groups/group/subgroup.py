@@ -6,11 +6,6 @@ from typing import Set, List
 class Subgroup(AbstractGroup):
     __slots__ = (
         "_people",
-        "_susceptible",
-        "_infected",
-        "_recovered",
-        "_in_hospital",
-        "_dead",
     )
 
     def __init__(self, group):

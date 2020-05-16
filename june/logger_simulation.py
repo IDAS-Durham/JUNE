@@ -244,7 +244,7 @@ class Logger:
                 return S_list, I_list, R_list
             
 
-            N = len(self.world.boxes.members[0].people)
+            N = len(self.world.people)
             I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
             beta = self.simulator.infection.transmission.probability
