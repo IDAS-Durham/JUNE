@@ -64,13 +64,12 @@ class HealthInformation:
         self.infection = None
 
     def set_dead(self, time):
-        self.dead=True
+        self.dead = True
         self.infected = False
         self.susceptible = False
         self.susceptibility = 0.0
         self.set_length_of_infection(time)
         self.infection = None
-
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.tag(symptoms.severity)
@@ -142,12 +141,14 @@ class Person:
         "home_city",
         "econ_index",
         "health_information",
-        "busy"
+        "busy",
     )
+
     class ActivityType(IntEnum):
         """
         Defines the indices of the subgroups a person belongs to
         """
+
         residence = 0
         primary_activity = 1
         hospital = 2
@@ -177,7 +178,7 @@ class Person:
         self.housemates = list()
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.subgroups = [None] * 5 # number of subgroups
+        self.subgroups = [None] * 5  # number of subgroups
         self.sector = None
         self.sub_sector = None
         self.home_city = None
@@ -213,10 +214,12 @@ class Person:
 
     def find_guardian(self):
 
-        guardian = random.choice(self.housemates)
-        if guardian.health_information.should_be_in_hospital or guardian.health_information.dead:
+        possible_guardians = [person for person in self.housemates if person.age >= 18]
+        guardian = random.choice(possible_guardians)
+        if (
+            guardian.health_information.should_be_in_hospital
+            or guardian.health_information.dead
+        ):
             return None
         else:
             return guardian
-
-

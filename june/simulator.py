@@ -191,7 +191,6 @@ class Simulator:
         if guardian is not None:
             if guardian.busy:
                 guardian_subgroup = self.get_subgroup_active(activities, guardian)
-                print(guardian_subgroup.group.spec)
                 guardian_subgroup.remove(guardian)
             guardian.residence.append(guardian)
             assert guardian in kid.residence.group.people
@@ -218,8 +217,13 @@ class Simulator:
                     if len(possible_guardians) == 0:
                         guardian = person.find_guardian()
                         self.kid_drags_guardian(person, guardian, activities)
+                    person.residence.append(person)
+                        
                 elif random.random() <= self.stay_at_home_complacency:
                     person.residence.append(person)
+                else:
+                    subgroup = self.get_subgroup_active(activities, person)
+                    subgroup.append(person)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
