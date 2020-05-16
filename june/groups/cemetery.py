@@ -17,7 +17,7 @@ class Cemetery(Group):
         pass
 
     def add(self, person):
-        self.subgroups[0]._people.add(person)
+        self.subgroups[0]._people.append(person)
 
 
 class Cemeteries(Supergroup):
