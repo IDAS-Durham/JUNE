@@ -42,8 +42,9 @@ class Simulator:
         world: 
             instance of World class
         interaction:
-            instance of Interaction class, determines
-             
+            instance of Interaction class 
+        infection:
+            instance of Infection class
         config:
             dictionary with configuration to set up the simulation
         """
@@ -92,8 +93,8 @@ class Simulator:
             "residence": ["households", "care_homes"],
         }
 
-        self.min_age_home_alone = 15
-        self.stay_at_home_complacency = 0.95
+        self.min_age_home_alone = config['min_age_home_alone']
+        self.stay_at_home_complacency = config['stay_at_home_complacency']
 
     @classmethod
     def from_file(
@@ -147,15 +148,15 @@ class Simulator:
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
-        and shuflling the random one. It is very important having care homes and households at the very end.
+        and shuflling the random one. 
 
         Parameters
         ----------
-        active_groups:
-            list of groups that are active at a given time step
+        activities:
+            list of activities that take place at a given time step
         Returns
         -------
-        Ordered list of active groups according to hierarchy
+        Ordered list of activities according to hierarchy
         """
         random.shuffle(self.randomly_order_activities)
         activity_hierarchy = [
@@ -165,11 +166,28 @@ class Simulator:
         activities.sort(key=lambda x: activity_hierarchy.index(x))
         return activities
 
-    def activities_to_groups(self, activities):
+    def activities_to_groups(self, activities: List[str]) -> List[str]:
+        '''
+        Converts activities into Groups, the interaction will run over these Groups.
+
+        Parameters
+        ---------
+        activities:
+            list of activities that take place at a given time step
+        Returns
+        -------
+        List of groups that are active.
+        '''
+
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
     def clear_world(self):
+        '''
+        Removes everyone from all possible groups, and sets everyone's busy attribute
+        to False.
+
+        '''
         for group_name in self.activities_to_groups(self.all_activities):
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
@@ -179,25 +197,96 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
 
-    def get_subgroup_active(self, activities, person: "Person"):
+    def get_subgroup_active(self, activities: List[str], person: "Person") -> "Subgroup":
+        '''
+        Given the hierarchy of activities and a person, decide what subgroup  
+        should they go to
 
+        Parameters
+        ----------
+        activities:
+            list of activities that take place at a given time step
+        person:
+            person that is looking for a subgroup to go to
+        Returns
+        -------
+        Subgroup to which person has to go, given the hierarchy of activities
+        '''
         activities = self.apply_activity_hierarchy(activities)
         for group_name in activities:
             subgroup = getattr(person, group_name)
             if subgroup is not None:
                 return subgroup
 
-    def kid_drags_guardian(self, kid, guardian, activities):
+    def kid_drags_guardian(self, kid: "Person", guardian: "Person", activities: List[str]):
+        '''
+        A kid makes their guardian go home.
+
+        Parameters
+        ----------
+        kid:
+            kid that wants to take their guardian home
+        guardian:
+            guardian to be sent home
+        activities:
+            list of activities that take place at a given time step
+        '''
+
         if guardian is not None:
             if guardian.busy:
                 guardian_subgroup = self.get_subgroup_active(activities, guardian)
                 guardian_subgroup.remove(guardian)
             guardian.residence.append(guardian)
-            assert guardian in kid.residence.group.people
+
+    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
+        '''
+        Move  a kid and their guardian to the household, so no kid is left
+        home alone.
+
+        Parameters
+        ----------
+        kid:
+            kid to be sent home
+        activities:
+            list of activities that take place at a given time step
+        '''
+        possible_guardians = [
+            housemate
+            for housemate in kid.residence.group.people
+            if housemate.age >= 18
+        ]
+        if len(possible_guardians) == 0:
+            guardian = kid.find_guardian()
+            self.kid_drags_guardian(kid, guardian, activities)
+        kid.residence.append(kid)
+
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
+        '''
+        Move person with a mild illness to their households. For kids that will
+        always happen, and if they are left alone at home they will also drag one
+        of their guardians home. For adults, they will go home with a probability 
+        given by stay_at_home_complacency
+
+        Parameters
+        ----------
+        person:
+            person to be sent home
+        activities:
+            list of activities that take place at a given time step
+        '''
+        if person.age < self.min_age_home_alone:
+            self.move_mild_kid_guardian_to_household(person, activities)
+        elif random.random() <= self.stay_at_home_complacency:
+            person.residence.append(person)
+        else:
+            subgroup = self.get_subgroup_active(activities, person)
+            subgroup.append(person)
+
 
     def move_people_to_active_subgroups(self, activities: List[str]):
         """
-        Sends every person to one subgroup.
+        Sends every person to one subgroup. If a person has a mild illness,
+        they stay at home with a certain probability given by stay_at_home_complacency
 
         Parameters
         ----------
@@ -208,37 +297,22 @@ class Simulator:
             if person.health_information.dead or person.busy:
                 continue
             if person.health_information.must_stay_at_home:
-                if person.age < self.min_age_home_alone:
-                    possible_guardians = [
-                        housemate
-                        for housemate in person.residence.group.people
-                        if housemate.age >= 18
-                    ]
-                    if len(possible_guardians) == 0:
-                        guardian = person.find_guardian()
-                        self.kid_drags_guardian(person, guardian, activities)
-                    person.residence.append(person)
-                        
-                elif random.random() <= self.stay_at_home_complacency:
-                    person.residence.append(person)
-                else:
-                    subgroup = self.get_subgroup_active(activities, person)
-                    subgroup.append(person)
+                self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
 
-    def hospitalise_the_sick(self, person, previous_tag):
+    def hospitalise_the_sick(self, person: "Person", previous_tag: str):
         """
-        These functions could be more elegantly handled by an implementation inside a group collection.
-        I'm putting them here for now to maintain the same functionality whilst removing a person's
-        reference to the world as that makes it impossible to perform population generation prior
-        to world construction.
+        Hospitalise sick person. Also moves them from a regular bed
+        to an ICU bed if their symptoms tag has changed.
 
         Parameters
-        ---------
+        ----------
         person:
             person to hospitalise
+        previous_tag:
+            previous symptoms tag of a person
         """
         if person.hospital is None:
             self.world.hospitals.allocate_patient(person)
@@ -248,11 +322,9 @@ class Simulator:
     def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
-        ZOMBIE ALERT!! Specially important, remove from all groups in which
-        that person was present. 
-
+        ZOMBIE ALERT!! 
         Parameters
-        ---------
+        ----------
         person:
             person sent to cemetery
         """
@@ -262,7 +334,9 @@ class Simulator:
 
     def update_health_status(self, time: float, delta_time: float):
         """
-        Update symptoms and health status of infected people
+        Update symptoms and health status of infected people.
+        Send them to hospital if necessary, or bury them if they
+        have died.
 
         Parameters
         ----------
