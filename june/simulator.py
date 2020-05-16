@@ -1,6 +1,6 @@
 import logging
 import random
-from pathlib import Path
+from june import paths
 from typing import List
 
 import numpy as np
@@ -15,7 +15,7 @@ from june.logger_simulation import Logger
 from june.time import Timer
 from june.world import World
 
-default_config_filename = Path(__file__).parent.parent / "configs/config_example.yaml"
+default_config_filename = paths.configs_path / "config_example.yaml"
 
 sim_logger = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ class Simulator:
         self.permanent_group_hierarchy = [
             "boxes",
             "hospitals",
+            "commute",
             "companies",
             "schools",
             "carehomes",
@@ -145,6 +146,8 @@ class Simulator:
         for group_name in active_groups:
             grouptype = getattr(self.world, group_name)
             if "pubs" in active_groups:
+                self.world.group_maker.distribute_people(group_name)
+            if "commute" in active_groups:
                 self.world.group_maker.distribute_people(group_name)
             for group in grouptype.members:
                 group.set_active_members()

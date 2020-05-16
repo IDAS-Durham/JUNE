@@ -1,27 +1,18 @@
-import os
-import yaml
 import logging
-from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 import numpy as np
+import yaml
 from scipy import stats
 
-from june.geography import Geography
+from june import paths
 from june.geography import Area, SuperArea
-from june.groups.school import School, Schools
+from june.geography import Geography
+from june.groups.school import Schools
 
-default_data_folder = Path(os.path.abspath(__file__)).parent.parent.parent
-
-default_data_filename = (
-    default_data_folder / "data/processed/school_data/england_schools_data.csv"
-)
-default_areas_map_path = (
-    default_data_folder / "data/processed/geographical_data/oa_msoa_region.csv"
-)
-default_config_filename = (
-    default_data_folder / "configs/defaults/distributors/school_distributor.yaml"
-)
+default_data_filename = paths.data_path / "processed/school_data/england_schools_data.csv"
+default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+default_config_filename = paths.configs_path / "defaults/distributors/school_distributor.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +31,12 @@ class SchoolDistributor:
     """
 
     def __init__(
-        self,
-        schools: Schools,
-        education_sector_label: List[int] = [2314, 2315, 2316],
-        neighbour_schools: int = 35,
-        age_range: Tuple[int, int] = (0, 19),
-        mandatory_age_range: Tuple[int, int] = (5, 18),
+            self,
+            schools: Schools,
+            education_sector_label: List[int] = [2314, 2315, 2316],
+            neighbour_schools: int = 35,
+            age_range: Tuple[int, int] = (0, 19),
+            mandatory_age_range: Tuple[int, int] = (5, 18),
     ):
         """
         Get closest schools to this output area, per age group
@@ -68,10 +59,10 @@ class SchoolDistributor:
 
     @classmethod
     def from_file(
-        cls,
-        schools: "Schools",
-        config_filename: str = default_config_filename,
-        # mandatory_age_range: Tuple[int, int] = (5, 18),#part of config ?
+            cls,
+            schools: "Schools",
+            config_filename: str = default_config_filename,
+            # mandatory_age_range: Tuple[int, int] = (5, 18),#part of config ?
     ) -> "SchoolDistributor":
         """
         Initialize SchoolDistributor from path to its config file 
@@ -102,7 +93,7 @@ class SchoolDistributor:
 
     @classmethod
     def from_geography(
-        cls, geography: Geography, config_filename: str = default_config_filename
+            cls, geography: Geography, config_filename: str = default_config_filename
     ):
         return cls.from_file(geography.schools, config_filename)
 
@@ -142,7 +133,7 @@ class SchoolDistributor:
             )
 
     def distribute_mandatory_kids_to_school(
-        self, area: Area, is_school_full: dict, closest_schools_by_age: dict
+            self, area: Area, is_school_full: dict, closest_schools_by_age: dict
     ):
         """
         Send kids to the nearest school among the self.neighbour_schools,
@@ -151,8 +142,8 @@ class SchoolDistributor:
         """
         for person in area.people:
             if (
-                person.age <= self.mandatory_school_age_range[1]
-                and person.age >= self.mandatory_school_age_range[0]
+                    person.age <= self.mandatory_school_age_range[1]
+                    and person.age >= self.mandatory_school_age_range[0]
             ):
                 if person.age not in is_school_full:
                     continue
@@ -191,7 +182,7 @@ class SchoolDistributor:
                 school.n_pupils += 1
 
     def distribute_non_mandatory_kids_to_school(
-        self, area: Area, is_school_full: dict, closest_schools_by_age: dict
+            self, area: Area, is_school_full: dict, closest_schools_by_age: dict
     ):
         """
         For kids in age ranges that might go to school, but it is not mandatory
@@ -200,12 +191,12 @@ class SchoolDistributor:
         """
         for person in area.people:
             if (
-                self.school_age_range[0]
-                < person.age
-                < self.mandatory_school_age_range[0]
-                or self.mandatory_school_age_range[1]
-                < person.age
-                < self.school_age_range[1]
+                    self.school_age_range[0]
+                    < person.age
+                    < self.mandatory_school_age_range[0]
+                    or self.mandatory_school_age_range[1]
+                    < person.age
+                    < self.school_age_range[1]
             ):
                 if person.age not in is_school_full or is_school_full[person.age]:
                     continue
@@ -220,7 +211,7 @@ class SchoolDistributor:
                         yearindex = person.age - school.age_min + 1
                         n_pupils_age = len(school.subgroups[yearindex].people)
                         if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
-                            school.n_pupils_max / (school.age_max - school.age_min)
+                                school.n_pupils_max / (school.age_max - school.age_min)
                         ):
                             schools_full += 1
                         else:
@@ -230,7 +221,7 @@ class SchoolDistributor:
                 school.n_pupils += 1
 
     def distribute_teachers_to_schools_in_super_areas(
-        self, super_areas: List[SuperArea]
+            self, super_areas: List[SuperArea]
     ):
         for msoarea in super_areas:
             self.distribute_teachers_to_school(msoarea)

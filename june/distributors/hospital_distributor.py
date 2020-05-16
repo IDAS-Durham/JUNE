@@ -1,23 +1,18 @@
-import os
 import logging
-import yaml
-from pathlib import Path
-from random import uniform
-from itertools import count
-from typing import List, Dict, Optional
-from june.groups import Hospitals
-from june.geography import Geography, SuperAreas
 
 import numpy as np
+import yaml
 from scipy import stats
 
-from june.logger_creation import logger
+from june import paths
+from june.geography import SuperAreas
+from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
 
 default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/distributors/hospital_distributor.yaml"
+        paths.configs_path
+        / "defaults/distributors/hospital_distributor.yaml"
 )
 
 
@@ -27,7 +22,7 @@ class HospitalDistributor:
     """
 
     def __init__(
-        self, hospitals: Hospitals, config_filename: str = default_config_filename
+            self, hospitals: Hospitals, config_filename: str = default_config_filename
     ):
         # check if this msoarea has hospitals
         self.hospitals = hospitals

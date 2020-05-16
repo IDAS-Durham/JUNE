@@ -3,7 +3,7 @@ import os
 import yaml
 from enum import IntEnum
 from itertools import count
-from pathlib import Path
+from june import paths
 from typing import List, Tuple, Dict, Optional
 
 import numpy as np
@@ -13,14 +13,14 @@ from sklearn.neighbors import BallTree
 from june.geography import Geography
 from june.groups.group import Group, Subgroup, Supergroup
 
-default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
+
 default_data_filename = (
-    default_base_path / "data/processed/school_data/england_schools_data.csv"
+    paths.data_path / "processed/school_data/england_schools_data.csv"
 )
 default_areas_map_path = (
-    default_base_path / "data/processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
-default_config_filename = default_base_path / "configs/defaults/groups/schools.yaml"
+default_config_filename = paths.configs_path / "defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
 

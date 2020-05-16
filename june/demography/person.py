@@ -122,6 +122,7 @@ class Person:
             age=-1,
             nomis_bin=None,
             sex=None,
+            ethnicity=None,
             econ_index=None,
             mode_of_transport=None,
             area=None
@@ -134,6 +135,7 @@ class Person:
         self.age = age
         self.nomis_bin = nomis_bin
         self.sex = sex
+        self.ethnicity = ethnicity
         # geo-graphical attributes
         self.work_super_area = None
         self.household = None

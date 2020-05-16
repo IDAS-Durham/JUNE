@@ -1,7 +1,5 @@
 import logging
-import os
 from itertools import count
-from pathlib import Path
 from typing import List, Dict, Optional
 
 import numpy as np
@@ -9,19 +7,14 @@ import pandas as pd
 import yaml
 from scipy import stats
 
+from june import paths
 from june.demography import Person, Population
 from june.geography import Geography
-from june.logger_creation import logger
 
-default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
-default_workflow_file = default_base_path / \
-                        "data/processed/flow_in_msoa_wu01ew_2011.csv"
-default_sex_per_sector_per_superarea_file = default_base_path / \
-                                            "data/processed/census_data/company_data/industry_by_sex_ew.csv"
-default_areas_map_path = default_base_path / \
-                         "data/processed/geographical_data/oa_msoa_region.csv"
-default_config_file = default_base_path / \
-                      "configs/defaults/distributors/worker_distributor.yaml"
+default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
+default_sex_per_sector_per_superarea_file = paths.data_path / "processed/census_data/company_data/industry_by_sex_ew.csv"
+default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+default_config_file = paths.configs_path / "defaults/distributors/worker_distributor.yaml"
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +33,7 @@ class WorkerDistributor:
             age_range: List[int],
             sub_sector_ratio: dict,
             sub_sector_distr: dict,
+            non_geographical_work_location: dict,
     ):
         """
         Parameters
@@ -59,12 +53,21 @@ class WorkerDistributor:
             For each region containing how many of man and woman respectively
             work in any key sector jobs, such as primary teachers or medical
             practitioners.
+        non_geographical_work_location:
+            Special work place locations in dataset that do not correspond to a
+            SuperArea name but to special cases such as:
+            "home", "oversea", "offshore", ...
+            They are the key of the dictionary. The value carries the action
+            on what should be done with these workers. Currently they are:
+            "home": let them work from home
+            "bind": randomly select a SuperArea to send the worker to work in
         """
         self.workflow_df = workflow_df
         self.sex_per_sector_df = sex_per_sector_df
         self.age_range = age_range
         self.sub_sector_ratio = sub_sector_ratio
         self.sub_sector_distr = sub_sector_distr
+        self.non_geographical_work_location = non_geographical_work_location
         self._boundary_workers_counter = count()
         self.n_boundary_workers = 0
 
@@ -151,11 +154,24 @@ class WorkerDistributor:
         if len(super_area) != 0:
             super_area = super_area[0]
             super_area.add_worker(person)
+        elif work_location in list(non_geographical_work_location.keys()):
+            if non_geographical_work_location[work_location] == "home":
+                person.work_super_area = "home"
+            elif non_geographical_work_location[work_location] == "bind":
+                _select_rnd_superarea()
         else:
             # TODO count people who work outside of the region we currently simulate
-            idx = np.random.choice(np.arange(len(self.geography.super_areas)))
-            self.geography.super_areas.members[idx].add_worker(person)
+            _select_rnd_superarea()
             self.n_boundary_workers = next(self._boundary_workers_counter)
+   
+
+    def _select_rnd_superarea(self):
+        """
+        Selects random SuperArea to send a worker to work in
+        """
+        idx = np.random.choice(np.arange(len(self.geography.super_areas)))
+        self.geography.super_areas.members[idx].add_worker(person)
+
 
     def _assign_work_sector(self, i: int, person: Person):
         """
