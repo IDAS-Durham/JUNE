@@ -75,6 +75,7 @@ class Subgroup(AbstractGroup):
         Add a person to this group
         """
         self._people.append(person)
+        person.busy = True
 
     def remove(self, person: Person):
         """
