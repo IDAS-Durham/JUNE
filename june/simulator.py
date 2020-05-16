@@ -52,7 +52,7 @@ class Simulator:
         self.interaction = interaction
         self.infection = infection
         self.permanent_activity_hierarchy = [
-            "boxes",
+            "box",
             "hospital",
             "commute",
             "primary_activity",
@@ -88,13 +88,15 @@ class Simulator:
         )
 
         self.activity_to_group_dict = {
+            "box": ["boxes"],
             "hospital": ["hospitals"],
             "primary_activity": ["schools", "companies"],
             "residence": ["households", "care_homes"],
         }
 
-        self.min_age_home_alone = config["min_age_home_alone"]
-        self.stay_at_home_complacency = config["stay_at_home_complacency"]
+        if not self.world.box_mode:
+            self.min_age_home_alone = config["min_age_home_alone"]
+            self.stay_at_home_complacency = config["stay_at_home_complacency"]
 
     @classmethod
     def from_file(

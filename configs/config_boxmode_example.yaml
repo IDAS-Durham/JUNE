@@ -11,12 +11,12 @@ time:
           2: 12
       weekend:
           1: 24
-  step_active_groups:
+  step_activities:
       weekday:
-          1: ['boxes'] # active groups during first time step
-          2: ['boxes'] # active groups during first time step
+          1: ['box'] # active groups during first time step
+          2: ['box'] # active groups during first time step
       weekend:
-          1: ['boxes'] # active groups during first time step
+          1: ['box'] # active groups during first time step
 
 
 

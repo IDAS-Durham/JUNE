@@ -30,7 +30,7 @@ def test_full_run():
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
-    geography.carehomes = CareHomes.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     world = World(geography, demography, include_households=True)
     interaction = inter.DefaultInteraction.from_file()
