@@ -17,7 +17,14 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
-allowed_super_groups = ["hospitals", "companies", "cemeteries", "schools", "households"]
+allowed_super_groups = [
+    "hospitals",
+    "companies",
+    "cemeteries",
+    "schools",
+    "households",
+    "care_homes",
+]
 
 
 def _populate_areas(geography, demography):
@@ -134,7 +141,7 @@ class World(object):
             if person.area is not None:
                 person.area.add(person)
 
-    #def __setstate__(self, state):
+    # def __setstate__(self, state):
     #    self.__dict__.update(state)
     #    self.restore_world()
 
@@ -225,5 +232,3 @@ class World(object):
 
         # put these into the simulator
         # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
-
-

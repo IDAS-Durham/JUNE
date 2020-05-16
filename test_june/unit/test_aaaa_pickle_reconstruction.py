@@ -19,19 +19,19 @@ def make_geography():
 def create_world(geography_pickle):
     geography = geography_pickle
     demography = Demography.for_geography(geography)
-    geography.hospitals = Hospitals.for_geography(geography)
+    #geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
-    #geography.companies = Companies.for_geography(geography)
-    #geography.care_homes = CareHomes.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
     world = World(geography, demography, include_households=True)
     return world
 
 def create_world_groups_dictionary(world_to_copy):
     supergroups_names = [
-        "hospitals",
+        #"hospitals",
         "schools",
-        #"companies",
-        #"care_homes",
+        "companies",
+        "care_homes",
         "households",
     ]
     supergroup_dict = {}
