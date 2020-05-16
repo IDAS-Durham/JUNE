@@ -52,7 +52,7 @@ class Simulator:
         self.infection = infection
         self.permanent_activity_hierarchy = [
             "boxes",
-            "hospitals",
+            "hospital",
             "commute",
             "primary_activity",
             "residence",
@@ -71,23 +71,23 @@ class Simulator:
             chain(
                 *(
                     [
-                        activity 
-                        for activity in config["time"][
-                            "step_activities"
-                        ]["weekday"].values()
+                        activity
+                        for activity in config["time"]["step_activities"][
+                            "weekday"
+                        ].values()
                     ]
                     + [
-                        activity 
-                        for activity in config["time"][
-                            "step_activities"
-                        ]["weekend"].values()
+                        activity
+                        for activity in config["time"]["step_activities"][
+                            "weekend"
+                        ].values()
                     ]
                 )
             )
         )
 
         self.activity_to_group_dict = {
-            "hospitals": ["hospitals"],
+            "hospital": ["hospitals"],
             "primary_activity": ["schools", "companies"],
             "residence": ["households", "carehomes"],
         }
@@ -126,14 +126,10 @@ class Simulator:
 
         # Check that all groups given in config file are in the valid group hierarchy
         all_groups = self.permanent_activity_hierarchy + self.randomly_order_activities
-        for step, activities in config["step_activities"][
-            "weekday"
-        ].items():
+        for step, activities in config["step_activities"]["weekday"].items():
             assert all(group in all_groups for group in activities)
 
-        for step, activities in config["step_activities"][
-            "weekend"
-        ].items():
+        for step, activities in config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
@@ -155,12 +151,10 @@ class Simulator:
         ]
         activity_hierarchy += self.randomly_order_activities + ["residence"]
         activities.sort(key=lambda x: activity_hierarchy.index(x))
-        return activities 
+        return activities
 
     def activities_to_groups(self, activities):
-        groups = [
-            self.activity_to_group_dict[activity] for activity in activities
-        ]
+        groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
     def clear_all_groups(self):
@@ -173,11 +167,8 @@ class Simulator:
     def get_subgroup_active(self, activities, person: "Person"):
 
         activities = self.apply_activity_hierarchy(activities)
-        print(activities)
         for group_name in activities:
-            print("group_name = ", group_name)
             subgroup = getattr(person, group_name)
-            print("subgroup = ", subgroup)
             if subgroup is not None:
                 return subgroup
 
@@ -243,10 +234,12 @@ class Simulator:
             # release patients that recovered
             if health_information.recovered:
                 if person.in_hospital is not None:
-                    person.in_hospital.release_as_patient(person)
+                    person.hospital._people.remove(person)
+                    person.in_hospital = None
                 health_information.set_recovered(time)
 
             elif health_information.in_hospital:
+                print('hospitalising someone')
                 self.hospitalise_the_sick(person)
 
             elif health_information.is_dead and not self.world.box_mode:
@@ -258,14 +251,12 @@ class Simulator:
 
         """
         sim_logger.info("******* TIME STEP *******")
-        active_collections = self.timer.active_groups()
-        if not active_collections or len(active_collections) == 0:
+        activities = self.timer.activities()
+        if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
-        self.move_people_to_active_subgroups(active_collections)
-
-        active_groups = self.collections_to_groups(active_collections)
-        # infect people in groups
+        self.move_people_to_active_subgroups(activities)
+        active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
         if not self.world.box_mode:
@@ -293,7 +284,6 @@ class Simulator:
             )
 
         self.update_health_status(self.timer.now, self.timer.duration)
-
         self.clear_all_groups()
 
     def run(self, save=False):
@@ -312,7 +302,7 @@ class Simulator:
         sim_logger.info(
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
-
+        self.clear_all_groups()
         for day in self.timer:
             if day > self.timer.total_days:
                 break
