@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
-from typing import Set
+from typing import List
 
 from june.demography.person import Person
 from june.exc import GroupException
@@ -121,7 +121,7 @@ class Group(AbstractGroup):
         person.subgroups[activity_type] = self[subgroup_type]
 
     @property
-    def people(self) -> Set[Person]:
+    def people(self) -> List[Person]:
         """
         All the people in this group
         """
@@ -139,7 +139,7 @@ class Group(AbstractGroup):
 
         return False
 
-    def _collate_from_subgroups(self, attribute: str) -> Set[Person]:
+    def _collate_from_subgroups(self, attribute: str) -> List[Person]:
         """
         Return a set of all of the people in the subgroups with a particular health status
 
@@ -152,9 +152,9 @@ class Group(AbstractGroup):
         -------
         The union of all the sets with the given attribute name in all of the sub groups.
         """
-        collection = set()
+        collection = list()
         for grouping in self.subgroups:
-            collection.update(getattr(grouping, attribute))
+            collection.extend(getattr(grouping, attribute))
         return collection
 
     @property
