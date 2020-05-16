@@ -123,20 +123,28 @@ class WorkerDistributor:
         numbers = np.arange(1, 22)
         m_col = [col for col in self.sex_per_sector_df.columns.values if "m " in col]
 
-        distribution_male = self.sex_per_sector_df.loc[area_name][m_col].values
-        self.sector_distribution_male = stats.rv_discrete(
-            values=(numbers, distribution_male)
-        )
         f_col = [col for col in self.sex_per_sector_df.columns.values if "f " in col]
-        distribution_female = self.sex_per_sector_df.loc[area_name][f_col].values
-        self.sector_distribution_female = stats.rv_discrete(
-            values=(numbers, distribution_female)
-        )
         self.sector_dict = {
             (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_col)
         }
-        self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
-        self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
+        try:
+            # fails if no female work in this Area
+            distribution_female = self.sex_per_sector_df.loc[area_name][f_col].fillna(0).values
+            self.sector_distribution_female = stats.rv_discrete(
+                values=(numbers, distribution_female)
+            )
+            self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
+        except:
+            pass
+        try:
+            # fails if no male work in this Area
+            distribution_male = self.sex_per_sector_df.loc[area_name][m_col].fillna(0).values
+            self.sector_distribution_male = stats.rv_discrete(
+                values=(numbers, distribution_male)
+            )
+            self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
+        except:
+            pass
 
     def _assign_work_location(self, i: int, person: Person, wf_area_df: pd.DataFrame):
         """
@@ -154,24 +162,22 @@ class WorkerDistributor:
         if len(super_area) != 0:
             super_area = super_area[0]
             super_area.add_worker(person)
-        elif work_location in list(non_geographical_work_location.keys()):
-            if non_geographical_work_location[work_location] == "home":
+        elif work_location in list(self.non_geographical_work_location.keys()):
+            if self.non_geographical_work_location[work_location] == "home":
                 person.work_super_area = "home"
-            elif non_geographical_work_location[work_location] == "bind":
-                _select_rnd_superarea()
+            elif self.non_geographical_work_location[work_location] == "bind":
+                self._select_rnd_superarea(person)
         else:
             # TODO count people who work outside of the region we currently simulate
-            _select_rnd_superarea()
+            self._select_rnd_superarea(person)
             self.n_boundary_workers = next(self._boundary_workers_counter)
    
-
-    def _select_rnd_superarea(self):
+    def _select_rnd_superarea(self, person: Person):
         """
         Selects random SuperArea to send a worker to work in
         """
         idx = np.random.choice(np.arange(len(self.geography.super_areas)))
         self.geography.super_areas.members[idx].add_worker(person)
-
 
     def _assign_work_sector(self, i: int, person: Person):
         """
