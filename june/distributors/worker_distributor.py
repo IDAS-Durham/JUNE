@@ -168,9 +168,7 @@ class WorkerDistributor:
             elif self.non_geographical_work_location[work_location] == "bind":
                 self._select_rnd_superarea(person)
         else:
-            # TODO count people who work outside of the region we currently simulate
             self._select_rnd_superarea(person)
-            self.n_boundary_workers = next(self._boundary_workers_counter)
    
     def _select_rnd_superarea(self, person: Person):
         """
