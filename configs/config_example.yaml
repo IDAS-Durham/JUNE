@@ -13,8 +13,8 @@ time:
           1: 24
   step_activities:
       weekday:
-          1: ['hospitals', 'primary_activity', 'residence'] # active groups during first time step
-          2: ['hospitals', 'residence']
+          1: ['hospital', 'primary_activity', 'residence'] 
+          2: ['hospital', 'residence']
       weekend:
-          1: ['hospitals','residence']
+          1: ['hospital','residence']
 
