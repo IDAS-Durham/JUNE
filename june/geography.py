@@ -42,16 +42,6 @@ class GeographicalUnit:
 
     def __init__(self):
         self.id = self._next_id()
-        self.members = []
-
-    def __iter__(self):
-        return iter(self.members)
-
-    def __len__(self):
-        return len(self.members)
-
-    def __getitem__(self, item):
-        return self.members[item]
 
     @classmethod
     def from_file(cls):
@@ -116,6 +106,15 @@ class Areas(GeographicalUnit):
         self.members = areas
         self.super_area = super_area
 
+    def __iter__(self):
+        return iter(self.members)
+
+    def __len__(self):
+        return len(self.members)
+
+    def __getitem__(self, index):
+        return self.members[index]
+
 
 class SuperArea(GeographicalUnit):
     """
@@ -154,6 +153,15 @@ class SuperAreas(GeographicalUnit):
     def __init__(self, super_areas: List[SuperArea]):
         super().__init__()
         self.members = super_areas
+    
+    def __iter__(self):
+        return iter(self.members)
+
+    def __len__(self):
+        return len(self.members)
+
+    def __getitem__(self, index):
+        return self.members[index]
 
 
 class Geography:
@@ -216,8 +224,6 @@ class Geography:
         #    )
         #except AttributeError:  # it's a series
         #    return [self._create_area(area_coords.name, area_coords.values, super_area)]
-        print(areas)
-        print(np.array(areas))
         return areas
 
     def create_geographical_units(

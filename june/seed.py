@@ -98,13 +98,7 @@ class Seed:
                 self.super_area_names,
             )
         )
-        print("asda")
-        print(self.super_areas.members)
-        print("asdasda")
-        print(np.array(self.super_areas.members))
-        asd = np.array(self.super_areas.members)[filter_region]
-        print(asd)
-        return asd
+        return np.array(self.super_areas.members)[filter_region]
 
     def infect_super_areas(self, super_areas: List["SuperArea"], n_cases: int):
         """
