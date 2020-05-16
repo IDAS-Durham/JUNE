@@ -186,7 +186,7 @@ class Simulator:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
 
-    def hospitalise_the_sick(self, person):
+    def hospitalise_the_sick(self, person, previous_tag):
         """
         These functions could be more elegantly handled by an implementation inside a group collection.
         I'm putting them here for now to maintain the same functionality whilst removing a person's
@@ -198,9 +198,11 @@ class Simulator:
         person:
             person to hospitalise
         """
-        if person.in_hospital is None:
+        if person.hospital is None:
             self.world.hospitals.allocate_patient(person)
-
+        elif previous_tag != person.health_information.tag:
+            person.hospital.group.move_patient_within_hospital(person)
+    
     def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
@@ -230,18 +232,15 @@ class Simulator:
 
         for person in self.world.people.infected:
             health_information = person.health_information
+            previous_tag = health_information.tag
             health_information.update_health_status(time, delta_time)
             # release patients that recovered
             if health_information.recovered:
-                if person.in_hospital is not None:
-                    person.hospital._people.remove(person)
-                    person.in_hospital = None
+                if person.hospital is not None:
+                    person.hospital.group.release_as_patient(person)
                 health_information.set_recovered(time)
-
-            elif health_information.in_hospital:
-                print('hospitalising someone')
-                self.hospitalise_the_sick(person)
-
+            elif health_information.should_be_in_hospital:
+                self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
 
