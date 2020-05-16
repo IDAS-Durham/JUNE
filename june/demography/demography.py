@@ -17,7 +17,10 @@ class DemographyError(BaseException):
 
 class AgeSexGenerator:
     def __init__(
-        self, age_counts: list, sex_bins: list, female_fractions: list, max_age=99
+        self, age_counts: list, 
+        sex_bins: list, female_fractions: list,
+        ethnicity_age_bins: list, ethnicity_groups: list, ethnicity_structure: list,
+        max_age=99
     ):
         """
         age_counts is an array where the index in the array indicates the age,
@@ -48,8 +51,21 @@ class AgeSexGenerator:
                 < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
+
+        ethnicity_age_counts,_ = np.histogram(ages, bins=list(map(int, ethnicity_age_bins))+[100])
+        ethnicities = list()
+        for age_ind,age_count in enumerate(ethnicity_age_counts):
+            ethnicities.extend(
+                np.random.choice( 
+                    np.repeat(
+                        ethnicity_groups,ethnicity_structure[age_ind]
+                    ), age_count
+                )
+            )
+
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
+        self.ethnicity_iterator = iter(ethnicities)
         self.max_age = max_age
 
     def age(self) -> int:
@@ -61,6 +77,12 @@ class AgeSexGenerator:
     def sex(self) -> str:
         try:
             return next(self.sex_iterator)
+        except StopIteration:
+            raise DemographyError("No more people living here!")
+
+    def ethnicity(self) -> str:
+        try:
+            return next(self.ethnicity_iterator)
         except StopIteration:
             raise DemographyError("No more people living here!")
 
@@ -99,9 +121,8 @@ class Population:
     @property
     def infected(self):
         return [
-            person
-            for person in self.people
-            if person.health_information.infected and not person.health_information.dead
+            person for person in self.people
+            if person.health_information.infected 
         ]
 
     @property
@@ -156,7 +177,7 @@ class Demography:
             person = Person(
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
-                # TODO ethnicity_generators.ethnicity()
+                ethnicity=age_and_sex_generator.ethnicity(),
                 # TODO socioeconomic_generators.socioeconomic_index()
             )
             people.append(person)  # add person to population
@@ -237,27 +258,58 @@ class Demography:
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
+        ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
+        # TODO socioecon_structure_path = data_path / "socioecon_structure.csv"
         age_sex_generators = _load_age_and_sex_generators(
-            age_structure_path, female_fraction_path, area_names
+            age_structure_path, 
+            female_fraction_path, 
+            ethnicity_structure_path, 
+            # TODO socioecon_structure_path
+            area_names,
         )
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
 
 
 def _load_age_and_sex_generators(
-        age_structure_path: str, female_ratios_path: str, area_names: List[str]
+    age_structure_path: str, 
+    female_ratios_path: str, 
+    ethnicity_structure_path: str, 
+    # TODO socioecon_strucuture_path,
+    area_names: List[str]
 ):
     """
     A dictionary mapping area identifiers to a generator of age and sex.
     """
     age_structure_df = pd.read_csv(age_structure_path, index_col=0)
     age_structure_df = age_structure_df.loc[area_names]
+    age_structure_df.sort_index(inplace=True)
+
     female_ratios_df = pd.read_csv(female_ratios_path, index_col=0)
     female_ratios_df = female_ratios_df.loc[area_names]
+    female_ratios_df.sort_index(inplace=True)
+
+    ethnicity_structure_df = pd.read_csv(ethnicity_structure_path,index_col=[0,1]) # pd MultiIndex!!!
+    ethnicity_structure_df = ethnicity_structure_df.loc[pd.IndexSlice[area_names]]
+    ethnicity_structure_df.sort_index(level=0,inplace=True)
+    ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
+    ## it preserves original order, and ignoring "repeat slices".
+
+    # socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=[0,1])
+    # socioecon_structure_df = socioecon_structure_df[area_names]
+
     ret = {}
-    for (_, age_structre), (index, female_ratios) in zip(
-            age_structure_df.iterrows(), female_ratios_df.iterrows()
+    for (_, age_structure), (index, female_ratios), (_,ethnicity_df) in zip(
+        age_structure_df.iterrows(), female_ratios_df.iterrows(), 
+        ethnicity_structure_df.groupby(level=0),
     ):
+        ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(
-            age_structre.values, female_ratios.index.values, female_ratios.values
+            age_structure.values, 
+            female_ratios.index.values, 
+            female_ratios.values,
+            ethnicity_df.columns, 
+            ethnicity_df.index.get_level_values(1), 
+            ethnicity_structure,
         )
+        
     return ret

@@ -1,8 +1,9 @@
 import logging
-from itertools import count
+from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 import pandas as pd
+import numpy as np
 
 from june import paths
 from june.demography.person import Person
@@ -39,10 +40,9 @@ class GeographicalUnit:
         """
         return next(cls.__id_generators[cls])
 
-    def __init__(self, references_to_people=None):
+    def __init__(self):
         self.id = self._next_id()
         self.members = []
-        self.people = set()
 
     def __iter__(self):
         return iter(self.members)
@@ -80,12 +80,15 @@ class Area(GeographicalUnit):
         "name",
         "coordinates",
         "super_area",
-        "carehome",
+        "care_home",
     )
     _id = count()
 
     def __init__(
-        self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
+            self,
+            name: str,
+            super_area: "SuperArea",
+            coordinates: Tuple[float, float],
     ):
         """
         Coordinate is given in the format Y, X where X is longitude and Y is latitude.
@@ -94,9 +97,10 @@ class Area(GeographicalUnit):
         self.name = name
         self.coordinates = coordinates
         self.super_area = super_area
+        self.people = list()
 
     def add(self, person: Person):
-        self.people.add(person)
+        self.people.append(person)
         person.area = self
 
     def populate(self, demography):
@@ -108,7 +112,7 @@ class Areas(GeographicalUnit):
     __slots__ = "members", "super_area"
 
     def __init__(self, areas: List[Area], super_area=None):
-        super().__init__(["people"])
+        super().__init__()
         self.members = areas
         self.super_area = super_area
 
@@ -138,6 +142,10 @@ class SuperArea(GeographicalUnit):
     def add_worker(self, person: Person):
         self.workers.append(person)
         person.work_super_area = self
+
+    @property
+    def people(self):
+        return list(chain(*[area.people for area in self.areas]))
 
 
 class SuperAreas(GeographicalUnit):
@@ -192,15 +200,24 @@ class Geography:
         """
         # if a single area is given, then area_coords is a series
         # and we cannot do iterrows()
-        try:
-            areas = list(
-                map(
-                    lambda row: self._create_area(row[0], row[1].values, super_area),
-                    area_coords.iterrows(),
-                )
-            )
-        except AttributeError:  # it's a series
-            return [self._create_area(area_coords.name, area_coords.values, super_area)]
+        if isinstance(area_coords, pd.Series):
+            areas = [Area(area_coords.name, super_area, area_coords.values)]
+        else:
+            areas = []
+            for name, coordinates in area_coords.iterrows():
+                areas.append(Area(name, super_area, coordinates.values))
+
+        #try:
+        #    areas = list(
+        #        map(
+        #            lambda row: self._create_area(row[0], row[1].values, super_area),
+        #            area_coords.iterrows(),
+        #        )
+        #    )
+        #except AttributeError:  # it's a series
+        #    return [self._create_area(area_coords.name, area_coords.values, super_area)]
+        print(areas)
+        print(np.array(areas))
         return areas
 
     def create_geographical_units(
