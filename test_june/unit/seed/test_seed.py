@@ -47,8 +47,6 @@ def test__filter_region(seed):
     super_areas = seed._filter_region(region='Yorkshire')
 
     assert len(super_areas) == 1
-    print(super_areas)
-    print(super_areas[0])
     assert super_areas[0].name == 'E02005815'
 
 
