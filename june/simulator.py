@@ -89,7 +89,7 @@ class Simulator:
         self.activity_to_group_dict = {
             "hospital": ["hospitals"],
             "primary_activity": ["schools", "companies"],
-            "residence": ["households", "carehomes"],
+            "residence": ["households", "care_homes"],
         }
 
         self.min_age_home_alone = 15
@@ -147,7 +147,7 @@ class Simulator:
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
-        and shuflling the random one. It is very important having carehomes and households at the very end.
+        and shuflling the random one. It is very important having care homes and households at the very end.
 
         Parameters
         ----------
@@ -169,14 +169,16 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
-    def clear_all_groups(self):
+    def clear_world(self):
         for group_name in self.activities_to_groups(self.all_activities):
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
-                for person in group.people:
-                    person.busy = False
                 for subgroup in group.subgroups:
                     subgroup._people.clear()
+
+        for person in self.world.people.members:
+            person.busy = False
+
     def get_subgroup_active(self, activities, person: "Person"):
 
         activities = self.apply_activity_hierarchy(activities)
@@ -189,8 +191,10 @@ class Simulator:
         if guardian is not None:
             if guardian.busy:
                 guardian_subgroup = self.get_subgroup_active(activities, guardian)
+                print(guardian_subgroup.group.spec)
                 guardian_subgroup.remove(guardian)
-            person.residence.append(guardian)
+            guardian.residence.append(guardian)
+            assert guardian in kid.residence.group.people
 
     def move_people_to_active_subgroups(self, activities: List[str]):
         """
@@ -206,7 +210,11 @@ class Simulator:
                 continue
             if person.health_information.must_stay_at_home:
                 if person.age < self.min_age_home_alone:
-                    possible_guardians = [housemate for housemate in person.residence.people if housemate.age >= 18]
+                    possible_guardians = [
+                        housemate
+                        for housemate in person.residence.group.people
+                        if housemate.age >= 18
+                    ]
                     if len(possible_guardians) == 0:
                         guardian = person.find_guardian()
                         self.kid_drags_guardian(person, guardian, activities)
@@ -302,7 +310,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
+            print(f"Active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
@@ -312,7 +320,7 @@ class Simulator:
             )
 
         self.update_health_status(self.timer.now, self.timer.duration)
-        self.clear_all_groups()
+        self.clear_world()
 
     def run(self, save=False):
         """
@@ -330,7 +338,7 @@ class Simulator:
         sim_logger.info(
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
-        self.clear_all_groups()
+        self.clear_world()
         for day in self.timer:
             if day > self.timer.total_days:
                 break

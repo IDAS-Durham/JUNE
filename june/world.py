@@ -69,9 +69,9 @@ class World:
         print("populating the world's geography with the specified demography...")
         self.people = _populate_areas(geography, demography)
 
-        if hasattr(geography, "carehomes"):
-            self.carehomes = geography.carehomes
-            self.distribute_people_to_carehomes()
+        if hasattr(geography, "care_homes"):
+            self.care_homes = geography.care_homes
+            self.distribute_people_to_care_homes()
         if include_households:
             self.distribute_people_to_households()
         if (
@@ -118,8 +118,8 @@ class World:
             self.areas
         )
 
-    def distribute_people_to_carehomes(self):
-        CareHomeDistributor().populate_carehome_in_areas(self.areas)
+    def distribute_people_to_care_homes(self):
+        CareHomeDistributor().populate_care_home_in_areas(self.areas)
 
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(

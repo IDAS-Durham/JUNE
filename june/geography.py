@@ -41,7 +41,7 @@ class Area:
         "name",
         "coordinates",
         "super_area",
-        "carehome",
+        "care_home",
     )
     _id = count()
 
