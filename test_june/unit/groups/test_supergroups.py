@@ -15,7 +15,7 @@ class MockSupergroup(Supergroup):
 
 
 class MockGroup(Group):
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         type1 = 0
         type2 = 0
 
@@ -25,8 +25,10 @@ class MockGroup(Group):
         self.b = np.random.randint(1, 10)
         self.c = np.random.randint(1, 10)
         self.d = np.random.randint(1, 10)
-        self.add(Person(), self.GroupType.type1)
-        self.add(Person(), self.GroupType.type2)
+        person = Person()
+        self.add(Person(), person.ActivityType.box, self.SubgroupType.type1)
+        person = Person()
+        self.add(person, person.ActivityType.box, self.SubgroupType.type2)
 
 @pytest.fixture(name="super_group", scope="module")
 def make_supergroup():

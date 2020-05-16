@@ -10,7 +10,7 @@ def create_carehome_dist():
 
 class MockArea:
     def __init__(self):
-        self.carehome = None
+        self.care_home = None
         self.people = []
         for age in range(50, 101):
             for _ in range(0,2):
@@ -22,16 +22,16 @@ class MockArea:
 
 def test__assertion_no_carehome_residents(carehome_distributor):
     area = MockArea()
-    carehome = CareHome(area, n_residents=0)
-    area.carehome = carehome
+    care_home = CareHome(area, n_residents=0)
+    area.care_home = care_home
     with pytest.raises(CareHomeError) as e:
-        assert carehome_distributor.populate_carehome_in_area(area)
-    assert str(e.value) == "No carehome residents in this area."
+        assert carehome_distributor.populate_care_home_in_area(area)
+    assert str(e.value) == "No care home residents in this area."
 
 def test__carehome_populated_correctly(carehome_distributor):
     area = MockArea()
-    area.carehome = CareHome(area, n_residents = 10)
-    carehome_distributor.populate_carehome_in_area(area)
-    assert area.carehome.n_residents == 10
-    assert len(area.carehome.people) == 10
+    area.care_home = CareHome(area, n_residents = 10)
+    carehome_distributor.populate_care_home_in_area(area)
+    assert area.care_home.n_residents == 10
+    assert len(area.care_home.people) == 10
 

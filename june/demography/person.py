@@ -154,6 +154,7 @@ class Person:
         hospital = 2
         commute = 3
         dynamic = 4
+        box = 5
 
     def __init__(
         self,
@@ -178,7 +179,7 @@ class Person:
         self.housemates = list()
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.subgroups = [None] * 5  # number of subgroups
+        self.subgroups = [None] * len(self.ActivityType)  # number of subgroups
         self.sector = None
         self.sub_sector = None
         self.home_city = None
@@ -206,6 +207,10 @@ class Person:
     def dynamic(self):
         return self.subgroups[self.ActivityType.dynamic]
 
+    @property
+    def box(self):
+        return self.subgroups[self.ActivityType.box]
+ 
     @property
     def in_hospital(self):
         if self.hospital is None:
