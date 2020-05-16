@@ -51,6 +51,7 @@ class TestCompany:
         company.add(person, Company.GroupType.workers, subgroup_type_qualifier = person.GroupType.primary_activity)
         assert person.subgroups[person.GroupType.primary_activity] == company.subgroups[Company.GroupType.workers]
 
+
 @pytest.fixture(name="companies_example")
 def create_companies(super_area_companies):
     companies = Companies.for_super_areas(
