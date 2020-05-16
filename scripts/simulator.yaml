@@ -16,3 +16,6 @@ time:
       weekend:
           1: ['hospital', 'residence']
 
+
+min_age_home_alone: 15
+stay_at_home_complacency: 0.95
