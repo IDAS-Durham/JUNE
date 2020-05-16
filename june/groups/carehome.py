@@ -55,23 +55,23 @@ class CareHome(Group):
 class CareHomes(Supergroup):
     __slots__ = "members"
 
-    def __init__(self, carehomes: List[CareHome]):
+    def __init__(self, care_homes: List[CareHome]):
         super().__init__()
-        self.members = carehomes
+        self.members = care_homes
 
     @classmethod
     def for_geography(cls, geography, data_filename: str = default_data_path):
         """
-        Initializes carehomes from geography.
+        Initializes care homes from geography.
         """
-        carehome_df = pd.read_csv(data_filename, index_col=0)
+        care_home_df = pd.read_csv(data_filename, index_col=0)
         area_names = [area.name for area in geography.areas]
-        carehome_df = carehome_df.loc[area_names]
-        carehomes = []
-        logger.info(f"There are {len(carehome_df)} carehomes in this geography.")
+        care_home_df = care_home_df.loc[area_names]
+        care_homes = []
+        logger.info(f"There are {len(care_home_df)} care_homes in this geography.")
         for area in geography.areas:
-            n_residents = carehome_df.loc[area.name].values[0]
+            n_residents = care_home_df.loc[area.name].values[0]
             if n_residents != 0:
-                area.carehome = CareHome(area, n_residents)
-                carehomes.append(area.carehome)
-        return cls(carehomes)
+                area.care_home = CareHome(area, n_residents)
+                care_homes.append(area.care_home)
+        return cls(care_homes)

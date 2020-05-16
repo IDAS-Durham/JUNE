@@ -59,13 +59,16 @@ def test__activities_to_groups(sim):
     assert groups == ["hospitals", "schools", "companies", "households", "carehomes"]
 
 
-def test__clear_all_groups(sim):
-    sim.clear_all_groups()
+def test__clear_world(sim):
+    sim.clear_world()
     for group_name in sim.activities_to_groups(sim.all_activities):
         grouptype = getattr(sim.world, group_name)
         for group in grouptype.members:
             for subgroup in group.subgroups:
                 assert len(subgroup.people) == 0
+
+    for person in sim.world.people.members:
+        assert person.busy == False
 
 
 def test__get_subgroup_active(sim):
@@ -80,7 +83,7 @@ def test__move_people_to_residence(sim):
     sim.move_people_to_active_subgroups(["residence"])
     for person in sim.world.people.members:
         assert person in person.residence.people
-    sim.clear_all_groups()
+    sim.clear_world()
 
 
 def test__move_people_to_primary_activity(sim):
@@ -89,12 +92,16 @@ def test__move_people_to_primary_activity(sim):
     for person in sim.world.people.members:
         if person.primary_activity is not None:
             assert person in person.primary_activity.people
-    sim.clear_all_groups()
+    sim.clear_world()
 
 
+def test__kid_at_home_is_supervised(sim, health_index):
+
+    for person in sim.world.people.members:
+        if person.age 
+
+        
 """
-def test__kid_at_home_is_supervised(sim):
-
 def test__hospitalise_the_sick(sim):
 
     sim.move_people_to_active_subgroups(['hospitals'])
