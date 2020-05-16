@@ -23,7 +23,7 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         workers = 0
         residents = 1
         visitors = 2
@@ -34,12 +34,23 @@ class CareHome(Group):
         self.area = area
 
     def add(
-        self, person, subgroup_type=GroupType.residents,
+        self, person, subgroup_type=SubgroupType.residents,
     ):
         super().add(
-            person, group_type=person.GroupType.residence, subgroup_type=subgroup_type
+            person, activity_type=person.ActivityType.residence, subgroup_type=subgroup_type
         )
 
+    @property
+    def workers(self):
+        return self.subgroups[self.SubgroupType.workers]
+
+    @property
+    def residents(self):
+        return self.subgroups[self.SubgroupType.residents]
+
+    @property
+    def visitors(self):
+        return self.subgroups[self.SubgroupType.visitors]
 
 class CareHomes(Supergroup):
     __slots__ = "members"
