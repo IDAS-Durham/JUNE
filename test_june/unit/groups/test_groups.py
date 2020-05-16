@@ -8,9 +8,9 @@ class TestGroup:
         group = Household()
         group.add(
             Person(),
-            Household.GroupType.adults
+            Household.SubgroupType.adults
         )
-        assert group[Household.GroupType.adults].size == 1
+        assert group[Household.SubgroupType.adults].size == 1
 
     def test_ids(self):
         household_1 = Household()

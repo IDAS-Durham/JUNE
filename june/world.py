@@ -12,7 +12,8 @@ from june.distributors import (
     CompanyDistributor,
 )
 from june.geography import Geography
-from june.groups import Hospitals
+from june.groups import *
+from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class World(object):
         geography: Geography,
         demography: Demography,
         include_households: bool = True,
+        include_commute: bool = False,
         box_mode=False,
     ):
         """
@@ -69,44 +71,32 @@ class World(object):
         print("populating the world's geography with the specified demography...")
         self.people = _populate_areas(geography, demography)
 
-        if hasattr(geography, "carehomes"):
-            self.carehomes = geography.carehomes
-            CareHomeDistributor().populate_carehome_in_areas(self.areas)
-
+        if hasattr(geography, "care_homes"):
+            self.care_homes = geography.care_homes
+            self.distribute_people_to_care_homes()
         if include_households:
-            household_distributor = HouseholdDistributor.from_file()
-            self.households = household_distributor.distribute_people_and_households_to_areas(
-                self.areas
-            )
+            self.distribute_people_to_households()
         if (
             hasattr(geography, "companies")
             or hasattr(geography, "hospitals")
             or hasattr(geography, "schools")
         ):
-            worker_distr = WorkerDistributor.for_geography(
-                geography
-            )  # atm only for_geography()
-            worker_distr.distribute(geography, self.people)
+            self.distribute_workers_to_super_areas(geography)
 
         if hasattr(geography, "schools"):
             self.schools = geography.schools
-            school_distributor = SchoolDistributor(geography.schools)
-            school_distributor.distribute_kids_to_school(self.areas)
-            school_distributor.distribute_teachers_to_schools_in_super_areas(
-                self.super_areas
-            )
+            self.distribute_kids_and_teachers_to_schools()
 
         if hasattr(geography, "companies"):
             self.companies = geography.companies
-            company_distributor = CompanyDistributor()
-            company_distributor.distribute_adults_to_companies_in_super_areas(
-                geography.super_areas
-            )
+            self.distribute_workers_to_companies()
+
+        if include_commute:
+            self.initialise_commuting()
 
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
-            hospital_distributor = HospitalDistributor(geography.hospitals)
-            hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
+            self.distribute_medics_to_hospitals()
 
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries

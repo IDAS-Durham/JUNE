@@ -1,3 +1,4 @@
+import logging
 from enum import IntEnum
 from typing import List
 
@@ -7,10 +8,10 @@ from june import paths
 from june.groups.group import Group, Supergroup
 
 default_data_path = (
-        paths.data_path
-        / "processed/census_data/output_area/EnglandWales/carehomes.csv"
+    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
 
+logger = logging.getLogger(__name__)
 
 class CareHome(Group):
     """
@@ -22,9 +23,7 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    spec = "carehome"
-
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         workers = 0
         residents = 1
         visitors = 2
@@ -34,29 +33,45 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.area = area
 
-    def add(self, person, qualifier=GroupType.residents):
-        super().add(person, qualifier)
+    def add(
+        self, person, subgroup_type=SubgroupType.residents,
+    ):
+        super().add(
+            person, activity_type=person.ActivityType.residence, subgroup_type=subgroup_type
+        )
 
+    @property
+    def workers(self):
+        return self.subgroups[self.SubgroupType.workers]
+
+    @property
+    def residents(self):
+        return self.subgroups[self.SubgroupType.residents]
+
+    @property
+    def visitors(self):
+        return self.subgroups[self.SubgroupType.visitors]
 
 class CareHomes(Supergroup):
     __slots__ = "members"
 
-    def __init__(self, carehomes: List[CareHome]):
+    def __init__(self, care_homes: List[CareHome]):
         super().__init__()
-        self.members = carehomes
+        self.members = care_homes
 
     @classmethod
     def for_geography(cls, geography, data_filename: str = default_data_path):
         """
-        Initializes carehomes from geography.
+        Initializes care homes from geography.
         """
-        carehome_df = pd.read_csv(data_filename, index_col=0)
+        care_home_df = pd.read_csv(data_filename, index_col=0)
         area_names = [area.name for area in geography.areas]
-        carehome_df = carehome_df.loc[area_names]
-        carehomes = []
+        care_home_df = care_home_df.loc[area_names]
+        care_homes = []
+        logger.info(f"There are {len(care_home_df)} care_homes in this geography.")
         for area in geography.areas:
-            n_residents = carehome_df.loc[area.name].values[0]
+            n_residents = care_home_df.loc[area.name].values[0]
             if n_residents != 0:
-                area.carehome = CareHome(area, n_residents)
-                carehomes.append(area.carehome)
-        return cls(carehomes)
+                area.care_home = CareHome(area, n_residents)
+                care_homes.append(area.care_home)
+        return cls(care_homes)
