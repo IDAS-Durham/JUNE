@@ -13,6 +13,7 @@ default_data_path = (
 
 logger = logging.getLogger(__name__)
 
+
 class CareHome(Group):
     """
     The Carehome class represents a carehome and contains information about 
@@ -37,7 +38,9 @@ class CareHome(Group):
         self, person, subgroup_type=SubgroupType.residents,
     ):
         super().add(
-            person, activity_type=person.ActivityType.residence, subgroup_type=subgroup_type
+            person,
+            activity_type=person.ActivityType.residence,
+            subgroup_type=subgroup_type,
         )
 
     @property
@@ -51,6 +54,7 @@ class CareHome(Group):
     @property
     def visitors(self):
         return self.subgroups[self.SubgroupType.visitors]
+
 
 class CareHomes(Supergroup):
     __slots__ = "members"
