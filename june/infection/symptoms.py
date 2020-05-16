@@ -29,6 +29,9 @@ class Symptoms:
     def update_severity_from_delta_time(self, time):
         raise NotImplementedError()
 
+    def make_trajectory(self,patient):
+        pass
+    
     def is_recovered(self):
         return self.tag==Symptom_Tags.recovered
 
@@ -38,7 +41,6 @@ class Symptoms:
         index = np.searchsorted(self.health_index, self.severity)
         return Symptom_Tags(index+2)
 
-
     @classmethod
     def object_from_config(cls):
         """Loads the default Symptoms class from the general.ini config file and returns the class as object (not as
@@ -46,6 +48,8 @@ class Symptoms:
         provided."""
         classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
         return getattr(sys.modules[__name__], classname_str)
+
+
 
 
 class SymptomsConstant(Symptoms):

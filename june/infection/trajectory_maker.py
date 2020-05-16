@@ -1,10 +1,7 @@
+from june.infection.symptoms import Symptom_Tags
+from enum import IntEnum
 import random
 import numpy as np
-from scipy import stats
-from june.infection.symptoms import Symptoms, Symptom_Tags
-from enum import IntEnum
-import autofit as af
-import sys
 
 class VariationType(IntEnum):
     constant  = 0,
@@ -42,7 +39,11 @@ class TrajectoryMaker:
     def __init__(self, parameters):
         self.trajectories = {}
         self.init_tables(parameters)
-        
+
+    @classmethod
+    def from_file(cls) -> "TrajectoryMaker":
+        return cls(paramters=None)
+
     def __getitem__(self,tag):
         template   = self.trajectories[tag[0]]
         cumulative = 0.
@@ -128,33 +129,4 @@ class TrajectoryMaker:
                 [VariationType.constant,Symptom_Tags.hospitalised,hospital_time],
                 [VariationType.constant,Symptom_Tags.intensive_care,ICU_time],
                 [VariationType.constant,Symptom_Tags.dead,death_time]]        
-
-class MissingTrajectoryMakerError(BaseException):
-    pass
-    
-class SymptomsTrajectory(Symptoms):
-    def __init__(self, health_index=0.,trajectory_maker = None, patient = None):
-        super().__init__(health_index=health_index)
-        if trajectory_maker==None:
-            raise MissingTrajectoryMakerError(
-                f"symptomstrajectory instantiated without trajectory_maker"
-            )
-        self.trajectory = self.make_trajectory(trajectory_maker, patient)
-        
-    def make_trajectory(self,trajectory_maker,patient):
-        maxtag = self.max_tag(self.max_severity)
-        return trajectory_maker[maxtag,patient]
-        
-    def max_tag(self,severity):
-        index = np.searchsorted(self.health_index, self.max_severity)
-        return Symptom_Tags(index+2)
-        
-    def update_severity_from_delta_time(self, delta_time):
-        self.tag = Symptom_Tags.healthy
-        for stage in self.trajectory:
-            if delta_time>stage[0]:
-                self.tag = stage[1]
-            if delta_time<stage[0]:
-                break
-
 

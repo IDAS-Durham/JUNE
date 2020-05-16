@@ -98,13 +98,12 @@ class DefaultInteraction(Interaction):
         intensity = (
                 self.intensity(group, infecters, recipients)
                 * infecter_probability
-                * -delta_time
         )
         group_of_recipients = group.subgroups[recipients].people
         should_be_infected = np.random.random(len(group_of_recipients))
         for recipient, luck in zip(group_of_recipients, should_be_infected):
             transmission_probability = 1.0 - exp(
-                recipient.health_information.susceptibility * intensity
+                - delta_ime * recipient.health_information.susceptibility * intensity
             )
             if luck <= transmission_probability:
                 infecter = self.select_infecter()
@@ -139,7 +138,7 @@ class DefaultInteraction(Interaction):
                     self.contacts[tag][recipient]
             ):
                 mixer = 1.0
-                phys = 0.0
+                phys  = 0.0
             else:
                 mixer = self.contacts[tag][recipient][infecter]
                 phys = self.physical[tag][recipient][infecter]
@@ -148,7 +147,7 @@ class DefaultInteraction(Interaction):
             # they will take into account intensity and physicality
             # of the interaction by modifying mixer and phys.
             mixer *= 1.0
-            phys *= 1.0
+            phys  *= 1.0
         return self.beta[tag] * float(mixer) * (1.0 + (self.alpha - 1.0) * float(phys))
 
     def calculate_probabilities(self, group):
