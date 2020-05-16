@@ -6,10 +6,11 @@ from typing import Set
 class Subgroup(AbstractGroup):
     __slots__ = "_people", "_susceptible", "_infected", "_recovered", "_in_hospital", "_dead"
 
-    def __init__(self):
+    def __init__(self, spec):
         """
         A group within a group. For example, children in a household.
         """
+        self.spec = spec
         self._people = set()
         self._susceptible = set()
         self._infected = set()
@@ -32,38 +33,35 @@ class Subgroup(AbstractGroup):
     def _collate_active(
             self, 
             set_of_people,
-            active_group
             ):
         collection = set()
         for person in set_of_people:
-            if person.active_group == active_group:
+            if person.active_group == self:
                 collection.add(
                     person
                     )
         return collection
 
-
     @property
     def susceptible(self):
         return self._collate('susceptible')
 
-    def susceptible_active(self, active_group):
-        return self._collate_active(self.susceptible, active_group)
+    def susceptible_active(self):
+        return self._collate_active(self.susceptible)
 
     @property
     def infected(self):
         return self._collate('infected')
 
-    def infected_active(self, active_group):
-        return self._collate_active(self.infected, active_group)
+    def infected_active(self):
+        return self._collate_active(self.infected)
 
     @property
     def recovered(self):
         return self._collate('recovered')
 
-    def infected_recovered(self, active_group):
-        return self._collate_active(self.recovered, active_group)
-
+    def recovered_active(self):
+        return self._collate_active(self.recovered)
 
     @property
     def in_hospital(self):
@@ -104,6 +102,14 @@ class Subgroup(AbstractGroup):
         Remove a person from this group
         """
         self._people.remove(person)
+
+    def set_active_members(self):
+        for person in self.people:
+            #TODO: this dead line shouldnt be necessary, if dead the person
+            # should have left the group. However, it doesnt seem to happen
+            # for children that go to school and die
+            if person.active_group is None and not person.health_information.dead:
+                person.active_group = self
 
     def __getitem__(self, item):
         return list(self._people)[item]

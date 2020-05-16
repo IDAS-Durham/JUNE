@@ -1,4 +1,6 @@
 from itertools import count
+from june.logger_creation import logger
+from enum import IntEnum
 
 
 class HealthInformation:
@@ -8,6 +10,7 @@ class HealthInformation:
         self.infected = False
         self.infection = None
         self.recovered = False
+        self.dead = False
         self.number_of_infected = 0
         self.maximal_symptoms = 0
         self.maximal_symptoms_time = -1
@@ -41,7 +44,7 @@ class HealthInformation:
         return self.infected and not (self.dead or self.in_hospital)
 
     @property
-    def dead(self) -> bool:
+    def is_dead(self) -> bool:
         return self.tag == "dead"
 
     def update_health_status(self, time, delta_time):
@@ -59,6 +62,15 @@ class HealthInformation:
         self.susceptibility = 0.0
         self.set_length_of_infection(time)
         self.infection = None
+
+    def set_dead(self, time):
+        self.dead=True
+        self.infected = False
+        self.susceptible = False
+        self.susceptibility = 0.0
+        self.set_length_of_infection(time)
+        self.infection = None
+
 
     def get_symptoms_tag(self, symptoms):
         return self.infection.symptoms.tag(symptoms.severity)
@@ -116,6 +128,16 @@ class Person:
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
     _id = count()
+    class GroupType(IntEnum):
+        """
+        Defines the indices of the subgroups a person belongs to
+        """
+        default = 0
+        residence = 1
+        primary_activity = 2
+        hospital = 3
+        commute = 4
+        dynamic = 5
 
     def __init__(
             self,
@@ -146,7 +168,7 @@ class Person:
         self.carehome = None
         self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
         self.active_group = None
-        self.groups = []
+        self.subgroups = [None] * len(self.GroupType)
         self.sector = None
         self.sub_sector = None
         self.company_id = None

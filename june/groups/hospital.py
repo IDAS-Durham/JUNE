@@ -94,19 +94,24 @@ class Hospital(Group):
         """
         Set people in hospital active in hospital only
         """
-        # TODO: We need to check what we want to do with this,
-        # it will probably be taken care by the supergroup
+        for person in self[self.GroupType.workers]:
+            if person.active_group is None:
+                person.active_group = self[self.GroupType.workers]
+
+    def set_active_patients(self):
         for person in self[self.GroupType.patients]:
             if person.active_group is None:
-                person.active_group = "hospital"
+                person.active_group = self[self.GroupType.patients]
         for person in self[self.GroupType.icu_patients]:
             if person.active_group is None:
-                person.active_group = "hospital"
+                person.active_group = self[self.GroupType.icu_patients]
 
-    def add(self, person, qualifier=GroupType.workers):
-        super().add(person, qualifier)
+    def add(self, person, qualifier=GroupType.workers): 
         if qualifier in [self.GroupType.patients, self.GroupType.icu_patients]:
+            super().add(person, qualifier, person.GroupType.hospital)
             person.in_hospital = self
+        else:
+            super().add(person, qualifier, person.GroupType.primary_activity)
 
     def add_as_patient(self, person):
         """
@@ -392,7 +397,8 @@ class Hospitals(Supergroup):
                 ):
                     break
             if hospital is not None:
-                logger.info(
+                
+                logger.debug(
                     f"Receiving hospital for patient with "
                     + f"{person.health_information.tag} at distance = {distance} km"
                 )

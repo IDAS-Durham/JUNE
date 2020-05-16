@@ -44,12 +44,12 @@ class TestCompany:
         assert len(company.people) == 0
     
     def test__filling_company(self, person, company):
-        company.add(person)
+        company.add(person, subgroup_type_qualifier = person.GroupType.primary_activity)
         assert list(company.people)[0] == person
 
     def test__person_is_employed(self, person, company):
-        company.add(person, Company.GroupType.workers)
-        assert person.groups[0] == company
+        company.add(person, Company.GroupType.workers, subgroup_type_qualifier = person.GroupType.primary_activity)
+        assert person.subgroups[person.GroupType.primary_activity] == company.subgroups[Company.GroupType.workers]
 
 
 @pytest.fixture(name="companies_example")
