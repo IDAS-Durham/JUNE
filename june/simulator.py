@@ -15,6 +15,8 @@ from june.interaction import Interaction
 from june.logger_simulation import Logger
 from june.time import Timer
 from june.world import World
+from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+from june.groups.commute.commutecityunit_distributor import CommuteUnitCityDistributor
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -33,6 +35,7 @@ class Simulator:
         interaction: Interaction,
         infection: Infection,
         config: dict,
+        commute=True,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -97,6 +100,10 @@ class Simulator:
         if not self.world.box_mode:
             self.min_age_home_alone = config["min_age_home_alone"]
             self.stay_at_home_complacency = config["stay_at_home_complacency"]
+            if commute=True:
+                self.commuteunit_distributor = CommuteUnitDistributor(self.world.commutehubs.members)
+                self.commutecityunit_distributor = CommuteCityUnitDistributor(self.world.commutecities.members)
+                self.group_maker = GroupMaker(
 
     @classmethod
     def from_file(
