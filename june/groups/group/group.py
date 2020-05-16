@@ -35,7 +35,7 @@ class Group(AbstractGroup):
     default intensities (maybe mean+width with a pre-described range?).
     """
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         """
         Defines the indices of subgroups within the subgroups array
         """
@@ -63,7 +63,7 @@ class Group(AbstractGroup):
         """
         self.id = self._next_id()
         # noinspection PyTypeChecker
-        self.subgroups = [Subgroup(self) for _ in range(len(self.GroupType))]
+        self.subgroups = [Subgroup(self) for _ in range(len(self.SubgroupType))]
 
     @property
     def name(self) -> str:
@@ -94,7 +94,7 @@ class Group(AbstractGroup):
             if person in grouping:
                 grouping.remove(person)
 
-    def __getitem__(self, item: GroupType) -> "Subgroup":
+    def __getitem__(self, item: SubgroupType) -> "Subgroup":
         """
         A subgroup with a given index
         """
@@ -103,8 +103,8 @@ class Group(AbstractGroup):
     def add(
         self,
         person: Person,
-        group_type: "Person.GroupType",
-        subgroup_type=GroupType.default,
+        activity_type: Person.ActivityType,
+        subgroup_type: SubgroupType,
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -114,12 +114,11 @@ class Group(AbstractGroup):
         ----------
         person
             A person
-        qualifier
-            An enumerated so the student can be added to a given group
+        group_type
+            
         """
         self[subgroup_type].append(person)
-        person.subgroups[group_type] = self
-        # person.groups.append(self)
+        person.subgroups[activity_type] = self[subgroup_type]
 
     @property
     def people(self) -> Set[Person]:

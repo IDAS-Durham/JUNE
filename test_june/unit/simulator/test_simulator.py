@@ -31,8 +31,12 @@ def create_simulator():
     world, interaction, infection, 
 )
 
-def test__clear_all_groups(sim): 
+def test__everyone_has_an_activity(sim):
 
+    for person in sim.world.people.members:
+        assert person.subgroups.count(None) != len(person.subgroups)
+
+def test__clear_all_groups(sim): 
     #TODO: households and carehomes should be residences
     sim.clear_all_groups()
     for group_name in sim.activities_to_groups(sim.all_activities):
@@ -44,7 +48,7 @@ def test__clear_all_groups(sim):
 def test__get_subgroup_active(sim):
 
     active_subgroup = sim.get_subgroup_active(['residence'], sim.world.people.members[0])
-    assert active_subgroup.spec in ('carehome', 'household')
+    assert active_subgroup.group.spec in ('carehome', 'household')
 
 def test__move_people_to_active_subgroups(sim):
 

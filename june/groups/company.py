@@ -41,7 +41,7 @@ class Company(Group):
         "n_employees_max",
     )
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         workers = 0
 
     def __init__(self, super_area=None, n_workers_max=np.inf, sector=None):
@@ -53,13 +53,17 @@ class Company(Group):
     def add(self, person):
         super().add(
             person,
-            group_type=person.GroupType.primary_activity,
-            subgroup_type=self.GroupType.workers,
+            activity_type=person.ActivityType.primary_activity,
+            subgroup_type=self.SubgroupType.workers,
         )
 
     @property
     def n_workers(self):
         return len(self.people)
+
+    @property
+    def workers(self):
+        return self.subgroups[self.SubgroupType.workers]
 
 
 class Companies(Supergroup):
