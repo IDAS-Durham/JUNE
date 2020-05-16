@@ -746,15 +746,16 @@ class HouseholdDistributor:
         Adds person to household and assigns them the correct subgroup.
         """
         if subgroup == "kids":
-            household.add(person, household.GroupType.kids)
+            household.add(person, household.GroupType.kids, person.GroupType.residence)
         elif subgroup == "young_adults":
-            household.add(person, household.GroupType.young_adults)
+            household.add(person, household.GroupType.young_adults, person.GroupType.residence)
         elif subgroup == "adults":
-            household.add(person, household.GroupType.adults)
+            household.add(person, household.GroupType.adults, person.GroupType.residence)
         elif subgroup == "old":
-            household.add(person, household.GroupType.old_adults)
+            household.add(person, household.GroupType.old_adults,
+                    person.GroupType.residence)
         elif subgroup == "default":
-            household.add(person, household.GroupType.adults)
+            household.add(person, household.GroupType.adults, person.GroupType.residence)
         else:
             raise HouseholdError(f"Subgroup {subgroup} not recognized")
 

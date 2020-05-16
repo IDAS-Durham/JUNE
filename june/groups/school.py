@@ -81,7 +81,7 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__()
-        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
+        self.subgroups = [Subgroup(self.spec) for _ in range(age_min, age_max + 2)]
         self.coordinates = coordinates
         self.super_area = None
         self.n_pupils = 0
@@ -96,11 +96,11 @@ class School(Group):
 
     def add(self, person, qualifier=GroupType.students):
         if qualifier == self.GroupType.students:
-            super().add(person, qualifier)
+            super().add(person, qualifier, person.GroupType.primary_activity)
             self.subgroups[1 + person.age - self.age_min].append(person)
             person.school = self
         else:
-            super().add(person, qualifier)
+            super().add(person, qualifier, person.GroupType.primary_activity)
 
 
 class Schools(Supergroup):
