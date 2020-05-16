@@ -14,12 +14,6 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.simulator import Simulator
 from june.seed import Seed
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--config", default="simulator.yaml", help="path to config file to run", type=str,
-)
-args = parser.parse_args()
-
 
 # *********** INITIALIZE WORLD ***************** #
 
@@ -50,7 +44,7 @@ seed.unleash_virus(2000)
 
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(
-    world, interaction, infection, config_filename=args.config
+    world, interaction, infection, 
 )
 # update health status of seeded people, depending on symptoms
 # class might be unnecessary

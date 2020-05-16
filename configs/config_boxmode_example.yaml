@@ -1,13 +1,10 @@
 title: SI model 
 
 logger:
-  save_path: results
-
-world:
-  zone: test # NorthEast # available are all UK regions, and EnglandWales together.
+  save_path: box_results
 
 time:
-  total_days: 25 
+  total_days: 50 
   step_duration: 
       weekday:
           1: 12 
@@ -21,19 +18,6 @@ time:
       weekend:
           1: ['boxes'] # active groups during first time step
 
-interaction:
-  type: default 
 
-infection:
-  type: constant
-  asymptomatic_ratio: 0.4
-  transmission:
-    type: constant
-    parameters:
-      probability: 0.3
-  symptoms:
-    type: constant
-    parameters:
-      recovery_rate: 0.05
 
 
