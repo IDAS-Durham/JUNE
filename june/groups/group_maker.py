@@ -14,6 +14,9 @@ class GroupMaker:
             for area in self.world.areas.members:
                 self.pubfiller.fill(area)
             #self.make_histogram()
+        if grouptype=='commute':
+            self.world.commuteunit_distributor.distribute_people()
+            self.world.commutecityunit_distribute.distribute_people()
 
     def make_histogram(self):
         import matplotlib.pyplot as plt

@@ -45,13 +45,29 @@ class Symptoms:
         classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
         return getattr(sys.modules[__name__], classname_str)
 
+class SymptomsHealthy(Symptoms):
+    def __init__(self, health_index=0., recovery_rate=0.2):
+        super().__init__(health_index=health_index)
+
+        self.recovery_rate = recovery_rate
+        self.severity = 0.
+
+    def update_severity_from_delta_time(self, delta_time):
+
+        pass
+
+    def is_recovered(self, delta_time):
+        prob_recovery = 1.0 - np.exp(-self.recovery_rate * delta_time)
+        return np.random.rand() <= prob_recovery
+
+
 
 class SymptomsConstant(Symptoms):
     def __init__(self, health_index=0., recovery_rate=0.2):
         super().__init__(health_index=health_index)
 
         self.recovery_rate = recovery_rate
-        self.predicted_recovery_time = stats.expon.rvs(scale=1.0 / self.recovery_rate)
+        self.severity = self.max_severity
 
     def update_severity_from_delta_time(self, delta_time):
 

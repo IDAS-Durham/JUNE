@@ -12,7 +12,7 @@ class MockSupergroup(Supergroup):
         self.members = groups
 
 class MockGroup(Group):
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         type1 = 0
         type2 = 0
 

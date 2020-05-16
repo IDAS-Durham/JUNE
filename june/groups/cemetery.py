@@ -16,6 +16,9 @@ class Cemetery(Group):
     def set_active_members(self):
         pass
 
+    def add(self, person):
+        self.subgroups[0]._people.append(person)
+
 
 class Cemeteries(Supergroup):
     def __init__(self):
