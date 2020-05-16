@@ -39,7 +39,8 @@ class World:
         geography: Geography,
         demography: Demography,
         include_households: bool = True,
-        box_mode: bool = False,
+        include_commute: bool = False,
+        box_mode = False
     ):
         """
         Initializes a world given a geography and a demography. For now, households are
@@ -164,3 +165,4 @@ class World:
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
+
