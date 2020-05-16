@@ -4,16 +4,15 @@ from collections import OrderedDict, defaultdict
 import numpy as np
 import pandas as pd
 
-from june.groups import CareHome
+from june import paths
 from june.geography import Area, Areas
-from june.logger_creation import logger
-from pathlib import Path
+from june.groups import CareHome
 
 logger = logging.getLogger(__name__)
 
 default_data_path = (
-    Path(__file__).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales/carehomes.csv"
+        paths.data_path
+        / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
 
 
@@ -47,7 +46,7 @@ class CareHomeDistributor:
         return men_by_age, women_by_age
 
     def populate_carehome_in_areas(
-        self, areas: Areas, data_filename: str = default_data_path
+            self, areas: Areas, data_filename: str = default_data_path
     ):
         """
         Creates carehomes in areas from dataframe.
@@ -61,7 +60,7 @@ class CareHomeDistributor:
                 self.populate_carehome_in_area(area)
 
     def populate_carehome_in_area(
-        self, area: Area
+            self, area: Area
     ):
         """
         Crates carehome in area, if there needs to be one, and fills it with the
@@ -87,7 +86,7 @@ class CareHomeDistributor:
         return person
 
     def populate_carehome(
-        self, carehome: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
+            self, carehome: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
     ):
         """
         Takes the oldest men and women from men_by_age and women_by_age dictionaries,
@@ -120,7 +119,7 @@ class CareHomeDistributor:
                     next_age = next_age and False
                 else:
                     next_age = (
-                        next_age and True
+                            next_age and True
                     )  # only decrease age if there are no man nor women left
 
             if next_age:

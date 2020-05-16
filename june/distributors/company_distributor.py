@@ -1,8 +1,7 @@
-from random import uniform
 from collections import defaultdict
 
 import numpy as np
-from scipy import stats
+
 from june.groups import Companies
 
 """

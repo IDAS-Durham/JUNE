@@ -1,3 +1,4 @@
+import os
 from glob import glob
 from os import remove
 from pathlib import Path
@@ -5,7 +6,7 @@ from pathlib import Path
 import pytest
 
 directory = Path(
-    __file__
+    os.path.abspath(__file__)
 ).parent
 
 
