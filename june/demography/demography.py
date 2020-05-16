@@ -120,11 +120,9 @@ class Population:
 
     @property
     def infected(self):
-        # TODO: dead shouldnt be doing anything ? they dont have infections
         return [
             person for person in self.people
-            if person.health_information.infected and not
-            person.health_information.dead
+            if person.health_information.infected 
         ]
 
     @property

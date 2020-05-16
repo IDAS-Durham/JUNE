@@ -100,7 +100,7 @@ class DefaultInteraction(Interaction):
                 * infecter_probability
                 * -delta_time
         )
-        group_of_recipients = group.subgroups[recipients].susceptible_active()
+        group_of_recipients = group.subgroups[recipients].susceptible
         should_be_infected = np.random.random(len(group_of_recipients))
         for recipient, luck in zip(group_of_recipients, should_be_infected):
             transmission_probability = 1.0 - exp(
@@ -152,10 +152,10 @@ class DefaultInteraction(Interaction):
         return self.beta[tag] * float(mixer) * (1.0 + (self.alpha - 1.0) * float(phys))
 
     def calculate_probabilities(self, group):
-        norm = 1.0 / max(1, group.size_active)
+        norm = 1.0 / max(1, group.size)
         for grouping in group.subgroups:
             summed = 0.
-            for person in grouping.infected_active():
+            for person in grouping.infected:
                 individual = (
                     person.health_information.infection.transmission.probability
                 )

@@ -38,18 +38,18 @@ class TestCompany:
         )
     
     def test__company_grouptype(self, company):
-        assert company.GroupType.workers == 0
+        assert company.SubgroupType.workers == 0
 
     def test__empty_company(self, company):
         assert len(company.people) == 0
     
     def test__filling_company(self, person, company):
-        company.add(person, subgroup_type_qualifier = person.GroupType.primary_activity)
+        company.add(person)
         assert list(company.people)[0] == person
 
     def test__person_is_employed(self, person, company):
-        company.add(person, Company.GroupType.workers, subgroup_type_qualifier = person.GroupType.primary_activity)
-        assert person.subgroups[person.GroupType.primary_activity] == company.subgroups[Company.GroupType.workers]
+        company.add(person)
+        assert person.subgroups[person.ActivityType.primary_activity] == company.subgroups[Company.SubgroupType.workers]
 
 
 @pytest.fixture(name="companies_example")

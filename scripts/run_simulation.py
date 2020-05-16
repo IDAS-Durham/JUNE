@@ -14,28 +14,21 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.simulator import Simulator
 from june.seed import Seed
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--config", default="simulator.yaml", help="path to config file to run", type=str,
-)
-args = parser.parse_args()
-
 
 # *********** INITIALIZE WORLD ***************** #
 
 t1 = time.time()
-geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559", "E02006764",]})
+geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559", "E02003353"]})
 
 geography.hospitals = Hospitals.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
 geography.cemeteries = Cemeteries()
 geography.companies = Companies.for_geography(geography)
-geography.carehomes = CareHomes.for_geography(geography)
+geography.care_homes = CareHomes.for_geography(geography)
 demography = Demography.for_geography(geography)
 world = World(geography, demography, include_households=True)
 t2 = time.time()
 print(f"Creating the world took {t2 -t1} seconds to run.")
-
 
 # *********** INITIALIZE SEED ***************** #
 
@@ -51,7 +44,7 @@ seed.unleash_virus(2000)
 
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(
-    world, interaction, infection, config_filename=args.config
+    world, interaction, infection, 
 )
 # update health status of seeded people, depending on symptoms
 # class might be unnecessary

@@ -13,5 +13,7 @@ def test_box_full_run(simulator_box):
     seed = Seed(simulator_box.world.boxes, simulator_box.infection, )
     seed.unleash_virus(1000, box_mode=True)
     simulator_box.run()
+    print(len(simulator_box.world.people))
+    print(len(simulator_box.world.people.infected))
     simulator_box.logger.plot_infection_curves_per_day()
 
