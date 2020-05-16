@@ -84,8 +84,8 @@ class Timer:
     def get_time_stamp(self):
         return self.day
 
-    def active_groups(self):
-        active = self.time_config["step_active_groups"][self.type_day][self.shift + 1]
+    def activities(self):
+        active = self.time_config["step_activities"][self.type_day][self.shift + 1]
         return active
 
     def reset(self):
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         # print('Previous time : ', day_iter.previous)
         print("Day of the week ", day_iter.day_of_week())
         print("Current time : ", day_iter.now)
-        print("Active groups : ", day_iter.active_groups())
+        print("Active groups : ", day_iter.activities())
 
         print("**********************************")
         next(day_iter)
