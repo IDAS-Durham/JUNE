@@ -10,20 +10,9 @@ from june.distributors import (
     CareHomeDistributor,
     WorkerDistributor,
     CompanyDistributor,
-    CommuteHubDistributor,
-    CommuteCityDistributor,
 )
 from june.geography import Geography
-from june.groups import (
-    Household,
-    Hospitals,
-    CommuteCities,
-    CommuteHubs,
-    CommuteCityUnit,
-    CommuteCityUnits,
-    CommuteUnits,
-)
-from june.commute import CommuteGenerator
+from june.groups import * 
 
 logger = logging.getLogger(__name__)
 
