@@ -1,6 +1,7 @@
 import logging
 import os
 import yaml
+import h5py
 from enum import IntEnum
 from itertools import count
 from june import paths
@@ -23,6 +24,7 @@ default_areas_map_path = (
 default_config_filename = paths.configs_path / "defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
+nan_integer = -999
 
 
 class SchoolError(BaseException):
@@ -82,7 +84,7 @@ class School(Group):
         super().__init__()
         self.subgroups = []
         i = 0
-        for _ in range(age_min, age_max+2):
+        for _ in range(age_min, age_max + 2):
             self.subgroups.append(Subgroup(self, i))
             i += 1
         self.coordinates = coordinates
@@ -100,7 +102,7 @@ class School(Group):
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
             person.subgroups[person.ActivityType.primary_activity] = subgroup
-        else: # teacher
+        else:  # teacher
             subgroup = self.subgroups[self.SubgroupType.teachers]
             subgroup.append(person)
             person.subgroups[person.ActivityType.primary_activity] = subgroup
@@ -122,6 +124,7 @@ class School(Group):
     @property
     def students(self):
         return self.subgroups[self.SubgroupType.students]
+
 
 class Schools(Supergroup):
     def __init__(
@@ -363,3 +366,87 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
+
+    def to_hdf5(self, file_path: str):
+        n_schools = len(self.members)
+        ids = []
+        n_pupils_max = []
+        n_teachers_max = []
+        n_teachers = []
+        age_min = []
+        age_max = []
+        sectors = []
+        super_areas = []
+        coordinates = []
+        for school in self.members:
+            ids.append(school.id)
+            if school.super_area is None:
+                super_areas.append(nan_integer)
+            else:
+                super_areas.append(school.super_area.id)
+            n_pupils_max.append(school.n_pupils_max)
+            n_teachers_max.append(school.n_teachers_max)
+            n_teachers.append(school.n_teachers)
+            age_min.append(school.age_min)
+            age_max.append(school.age_max)
+            sectors.append(school.sector.encode("ascii", "ignore"))
+            coordinates.append(np.array(school.coordinates))
+
+        ids = np.array(ids, dtype=np.int)
+        super_areas = np.array(super_areas, dtype=np.int)
+        n_pupils_max = np.array(n_pupils_max, dtype=np.int)
+        n_teachers_max = np.array(n_teachers_max, dtype=np.int)
+        n_teachers = np.array(n_teachers, dtype=np.int)
+        age_min = np.array(age_min, dtype=np.int)
+        age_max = np.array(age_max, dtype=np.int)
+        sectors = np.array(sectors, dtype="S20")
+        coordinates = np.array(coordinates, dtype=np.float)
+        with h5py.File(file_path, "w") as f:
+            people_dset = f.create_group("schools")
+            people_dset.attrs["n_schools"] = n_schools
+            people_dset.create_dataset("id", data=ids)
+            people_dset.create_dataset("super_area", data=super_areas)
+            people_dset.create_dataset("n_teachers_max", data=n_teachers_max)
+            people_dset.create_dataset("n_pupils_max", data=n_pupils_max)
+            people_dset.create_dataset("n_teachers", data=n_teachers)
+            people_dset.create_dataset("age_min", data=age_min)
+            people_dset.create_dataset("age_max", data=age_max)
+            people_dset.create_dataset("sector", data=sectors)
+            people_dset.create_dataset("coordinates", data=coordinates)
+
+    @classmethod
+    def from_hdf5(cls, file_path: str):
+        with h5py.File(file_path, "r") as f:
+            schools = f["schools"]
+            schools_list = list()
+            chunk_size = 50000
+            n_schools = schools.attrs["n_schools"]
+            n_chunks = int(np.ceil(n_schools / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_schools)
+                ids = schools["id"]
+                super_areas = schools["super_area"][idx1:idx2]
+                n_teachers_max = schools["n_teachers_max"][idx1:idx2]
+                n_teachers = schools["n_teachers"][idx1:idx2]
+                n_pupils_max = schools["n_pupils_max"][idx1:idx2]
+                age_min = schools["age_min"][idx1:idx2]
+                age_max = schools["age_max"][idx1:idx2]
+                coordinates = schools["coordinates"][idx1:idx2]
+                sectors = schools["sector"]
+                for k in range(idx2 - idx1):
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        super_area = None
+                    school = School(
+                        coordinates[k],
+                        n_pupils_max[k],
+                        n_teachers_max[k],
+                        age_min[k],
+                        age_max[k],
+                        sectors[k].decode(),
+                    )
+                    school.id = ids[k]
+                    school.n_teachers = n_teachers[k]
+                    schools_list.append(school)
+        return cls(schools_list)
