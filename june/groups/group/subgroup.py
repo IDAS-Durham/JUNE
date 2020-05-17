@@ -8,12 +8,13 @@ class Subgroup(AbstractGroup):
         "_people",
     )
 
-    def __init__(self, group):
+    def __init__(self, group, subgroup_type:int):
         """
         A group within a group. For example, children in a household.
         """
         self._people = list()
         self.group = group
+        self.subgroup_type = subgroup_type
 
     def _collate(self, attribute: str) -> List[Person]:
         collection = list()

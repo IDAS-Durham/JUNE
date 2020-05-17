@@ -63,7 +63,7 @@ class Group(AbstractGroup):
         """
         self.id = self._next_id()
         # noinspection PyTypeChecker
-        self.subgroups = [Subgroup(self) for _ in range(len(self.SubgroupType))]
+        self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
 
     @property
     def name(self) -> str:
