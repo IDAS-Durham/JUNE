@@ -152,6 +152,7 @@ class Population:
         ethns = []
         areas = []
         group_ids = []
+        group_specs = []
         subgroup_types = []
         housemates = []
         for person in self.people:
@@ -165,13 +166,17 @@ class Population:
                 areas.append(nan_integer)
             gids = []
             stypes = []
+            specs = []
             for subgroup in person.subgroups:
                 if subgroup is None:
                     gids.append(nan_integer)
                     stypes.append(nan_integer)
+                    specs.append(" ".encode("ascii", "ignore"))
                 else:
                     gids.append(subgroup.group.id)
                     stypes.append(subgroup.subgroup_type)
+                    specs.append(subgroup.group.spec.encode("ascii", "ignore"))
+            group_specs.append(np.array(specs, dtype="S10"))
             group_ids.append(np.array(gids, dtype=np.int))
             subgroup_types.append(np.array(stypes, dtype=np.int))
             hmates = [mate.id for mate in person.housemates]
@@ -187,6 +192,7 @@ class Population:
         areas = np.array(areas, dtype=np.int)
         group_ids = np.array(group_ids, dtype=np.int)
         subgroup_types = np.array(subgroup_types, dtype=np.int)
+        group_specs = np.array(group_specs, dtype="S10")
 
         with h5py.File(file_path, "w", libver="latest") as f:
             people_dset = f.create_group("population")
@@ -196,6 +202,7 @@ class Population:
             people_dset.create_dataset("sex", data=sexes)
             people_dset.create_dataset("ethnicity", data=ethns)
             people_dset.create_dataset("group_ids", data=group_ids)
+            people_dset.create_dataset("group_specs", data=group_specs)
             people_dset.create_dataset("subgroup_types", data=subgroup_types)
             people_dset.create_dataset("area", data=areas)
             people_dset.create_dataset("housemates", data=housemates, dtype=dt)
@@ -211,27 +218,33 @@ class Population:
             n_chunks = int(np.ceil(n_people / chunk_size))
             for chunk in range(n_chunks):
                 idx1 = chunk * chunk_size
-                idx2 = min((chunk + 1) * chunk_size, n_people) 
+                idx2 = min((chunk + 1) * chunk_size, n_people)
                 ids = population["id"][idx1:idx2]
                 ages = population["age"][idx1:idx2]
                 sexes = population["sex"][idx1:idx2]
                 ethns = population["ethnicity"][idx1:idx2]
                 group_ids = population["group_ids"][idx1:idx2]
+                group_specs = population["group_specs"][idx1:idx2]
                 subgroup_types = population["subgroup_types"][idx1:idx2]
                 areas = population["area"][idx1:idx2]
                 housemates = population["housemates"][idx1:idx2]
-                for k in range(idx2-idx1):
+                for k in range(idx2 - idx1):
                     person = Person()
                     person.id = ids[k]
                     person.age = ages[k]
                     person.sex = sexes[k].decode()
                     person.ethnicity = ethns[k].decode()
                     subgroups = []
-                    for group_id, subgroup_type in zip(group_ids[k], subgroup_types[k]):
+                    for group_id, subgroup_type, group_spec in zip(
+                        group_ids[k], subgroup_types[k], group_specs[k]
+                    ):
                         if group_id == nan_integer:
                             group_id = None
                             subgroup_type = None
-                        subgroups.append([group_id, subgroup_type])
+                            group_spec = None
+                        else:
+                            group_spec = group_spec.decode()
+                        subgroups.append([group_spec, group_id, subgroup_type])
                     person.subgroups = subgroups
                     person.area = areas[k]
                     person.housemates = housemates[k]
