@@ -17,43 +17,42 @@ class CommuteCityUnitDistributor:
         """
         self.commutecities = commutecities
 
-    def chose_unit(self, possible_units):
-        unit_choice = np.random.randint(len(possible_units))
-        return possible_units[unit_choice]
 
     def distribute_people(self):
 
         for city in self.commutecities:
-            # Clear all units of passengers before running
-            possible_units = city.commutecityunits
-            commuting_people = city.commute_internal
-            indices = list(range((len(commuting_people))))
-            random.shuffle(indices)
-            people_per_unit = len(commuting_people)//len(possible_units)
-            for unit in possible_units:
-                unit.no_passengers = 0
-                unit.subgroups[0]._people.clear()
-            
-            for unit in possible_units:
-                while unit.no_passengers < people_per_unit:
+            if len(city.commute_internal) > 0:
+                # Clear all units of passengers before running
+                possible_units = city.commutecityunits
+                #TODO: ASK WHETHER IS PEOPLE
+                commuting_people = city.people #city.commute_internal
+                indices = list(range((len(commuting_people))))
+                random.shuffle(indices)
+                people_per_unit = len(commuting_people)//len(possible_units)
+                for unit in possible_units:
+                    unit.no_passengers = 0
+                    unit.subgroups[0]._people.clear()
+                
+                for unit in possible_units:
+                    while unit.no_passengers < people_per_unit:
+                        passenger_id = indices.pop()
+                        passenger = commuting_people[passenger_id]
+                        unit.add(passenger,
+                            activity_type = None,
+                            subgroup_type=unit.SubgroupType.default
+                            )
+                        unit.no_passengers += 1
+
+                while indices:
                     passenger_id = indices.pop()
                     passenger = commuting_people[passenger_id]
                     unit.add(passenger,
-                        activity_type=passenger.ActivityType.commute,
-                        subgroup_type=unit.SubgroupType.default
-                        )
+                            activity_type = None,
+                            subgroup_type=unit.SubgroupType.default
+                            )
                     unit.no_passengers += 1
 
-            while indices:
-                passenger_id = indices.pop()
-                passenger = commuting_people[passenger_id]
-                unit.add(passenger,
-                        activity_type=passenger.ActivityType.commute,
-                        subgroup_type=unit.SubgroupType.default
-                        )
-                unit.no_passengers += 1
 
 
 
-
-   
+       

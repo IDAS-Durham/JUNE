@@ -15,10 +15,6 @@ class CommuteUnitDistributor:
         """
         self.commutehubs = commutehubs
 
-    def chose_unit(self, possible_units):
-        unit_choice = np.random.randint(len(possible_units))
-        return possible_units[unit_choice]
-
     def distribute_people(self):
 
         for hub in self.commutehubs:
@@ -38,7 +34,7 @@ class CommuteUnitDistributor:
                         passenger_id = indices.pop()
                         passenger = commuting_people[passenger_id]
                         unit.add(passenger,
-                            activity_type=passenger.ActivityType.commute,
+                            activity_type=None,
                             subgroup_type=unit.SubgroupType.default
                             )
                         unit.no_passengers += 1
@@ -47,7 +43,7 @@ class CommuteUnitDistributor:
                     passenger_id = indices.pop()
                     passenger = commuting_people[passenger_id]
                     unit.add(passenger,
-                            activity_type=passenger.ActivityType.commute,
+                            activity_type=None,
                             subgroup_type=unit.SubgroupType.default
                             )
                     unit.no_passengers += 1

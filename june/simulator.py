@@ -95,6 +95,7 @@ class Simulator:
             "hospital": ["hospitals"],
             "primary_activity": ["schools", "companies"],
             "residence": ["households", "care_homes"],
+            "commute": ["commuteunits", "commutecityunits"]
         }
 
         if not self.world.box_mode:
@@ -104,9 +105,6 @@ class Simulator:
                 self.commuteunit_distributor = CommuteUnitDistributor(self.world.commutehubs.members)
                 self.commutecityunit_distributor = CommuteCityUnitDistributor(self.world.commutecities.members)
                 self.group_maker = GroupMaker(self)
-                # TODO: isntances of commute
-                #self.world.commmutecityunit.members
-                #self.world.commmuteunit.members
 
     @classmethod
     def from_file(
@@ -201,6 +199,10 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
+            if group_name == 'commutecityunits':
+                group_name = 'commutecities'
+            elif group_name == 'commuteunits':
+                group_name = 'commutehubs'
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
                 for subgroup in group.subgroups:
@@ -306,14 +308,6 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
-        if 'commute' in activities:
-            print('Before')
-            print(len(self.world.commmutecityunit.members[0].people))
-            print(len(self.world.commmutecityunit.members[1].people))
-            self.group_maker.distribute_people('commute')
-            print('After')
-            print(len(self.world.commmutecityunit.members[0].people))
-            print(len(self.world.commmutecityunit.members[1].people))
 
         for person in self.world.people.members:
             if person.health_information.dead or person.busy:
@@ -388,10 +382,14 @@ class Simulator:
 
         """
         activities = self.timer.activities()
+        
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
         self.move_people_to_active_subgroups(activities)
+        if 'commute' in activities:
+            self.group_maker.distribute_people('commute')
+
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
@@ -410,7 +408,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
+            print(f"Active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
