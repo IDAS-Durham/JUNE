@@ -128,18 +128,12 @@ class Population:
     @property
     def susceptible(self):
         return [
-            person for person in self.people
-            if person.health_information.susceptible
-
+            person for person in self.people if person.health_information.susceptible
         ]
 
     @property
     def recovered(self):
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-
-        ]
+        return [person for person in self.people if person.health_information.recovered]
 
 
 class Demography:
@@ -178,8 +172,6 @@ class Demography:
         A population of people
         """
         people = list()
-
-        # TODO: this could be make faster with map() <- this is not true
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
             person = Person(
@@ -193,10 +185,10 @@ class Demography:
 
     @classmethod
     def for_geography(
-            cls,
-            geography: Geography,
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
+        cls,
+        geography: Geography,
+        data_path: str = default_data_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Initializes demography from an existing geography.
@@ -206,18 +198,18 @@ class Demography:
         geography
             an instance of the geography class
         """
-        area_names = [area.name for area in geography.areas]
-        if len(area_names) == 0:
+        if len(geography.areas) == 0:
             raise DemographyError("Empty geography!")
+        area_names = [area.name for area in geography.areas]
         return cls.for_areas(area_names, data_path, config)
 
     @classmethod
     def for_zone(
-            cls,
-            filter_key: Dict[str, list],
-            data_path: str = default_data_path,
-            areas_maps_path: str = default_areas_map_path,
-            config: Optional[dict] = None,
+        cls,
+        filter_key: Dict[str, list],
+        data_path: str = default_data_path,
+        areas_maps_path: str = default_areas_map_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Initializes a geography for a specific list of zones. The zones are
@@ -240,10 +232,10 @@ class Demography:
 
     @classmethod
     def for_areas(
-            cls,
-            area_names: List[str],
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
+        cls,
+        area_names: List[str],
+        data_path: str = default_data_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Load data from files and construct classes capable of generating demographic

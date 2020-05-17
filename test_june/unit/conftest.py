@@ -53,8 +53,6 @@ def create_infection_constant(transmission, symptoms_constant):
 def create_infection_healthy(transmission, symptoms_healthy):
     return infect.Infection(transmission, symptoms_healthy)
 
-
-
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
     return inter.DefaultInteraction.from_file()
@@ -75,6 +73,7 @@ def create_world(geography):
     geography.schools = Schools.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
+    geography.companies = Companies.for_geography(geography)
     world = World(geography, demography, include_households=True)
     return world
 
