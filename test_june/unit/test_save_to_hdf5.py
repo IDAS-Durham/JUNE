@@ -42,6 +42,13 @@ class TestSavePeople:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
+            
+            group_specs = np.array(
+                [
+                    subgroup.group.spec if subgroup is not None else None
+                    for subgroup in person.subgroups
+                ]
+            )
             group_ids = np.array(
                 [
                     subgroup.group.id if subgroup is not None else None
@@ -54,11 +61,13 @@ class TestSavePeople:
                     for subgroup in person.subgroups
                 ]
             )
-            for group_id, subgroup_type, group_array in zip(
-                group_ids, subgroup_types, person2.subgroups
+            for group_spec, group_id, subgroup_type, group_array in zip(
+                group_specs, group_ids, subgroup_types, person2.subgroups
             ):
-                assert group_id == group_array[0]
-                assert subgroup_type == group_array[1]
+                print(person2.subgroups)
+                assert group_spec == group_array[0]
+                assert group_id == group_array[1]
+                assert subgroup_type == group_array[2]
             housemates = [mate.id for mate in person.housemates]
             assert housemates == list(person2.housemates)
             if person.area is not None:
@@ -119,8 +128,8 @@ class TestSaveHospitals:
         for hospital, hospital2 in zip(hospitals, hospitals_recovered):
             for attribute_name in [
                 "id",
-                "n_workers_max",
-                "sector"
+                "n_beds",
+                "n_icu_beds",
             ]:
                 attribute = getattr(hospital, attribute_name)
                 attribute2 = getattr(hospital2, attribute_name)
@@ -132,3 +141,5 @@ class TestSaveHospitals:
                 assert hospital.super_area.id == hospital2.super_area.id
             else:
                 assert hospital2.super_area is None
+            assert hospital.coordinates[0] == hospital2.coordinates[0]
+            assert hospital.coordinates[1] == hospital2.coordinates[1]
