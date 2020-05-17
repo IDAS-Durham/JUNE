@@ -235,7 +235,7 @@ class Companies(Supergroup):
                     super_area = super_areas[k]
                     if super_area == nan_integer:
                         super_area = None
-                    company = Company(super_area, n_workers_maxs[k], sectors[k])
+                    company = Company(super_area, n_workers_maxs[k], sectors[k].decode())
                     company.id = ids[k]
                     companies_list.append(company)
         return cls(companies_list)
