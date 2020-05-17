@@ -3,6 +3,7 @@ import os
 from enum import IntEnum
 from june import paths
 from typing import List
+import h5py
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,7 @@ default_areas_map_path = (
 )
 
 logger = logging.getLogger(__name__)
+nan_integer = -999
 
 
 class CompanyError(BaseException):
@@ -37,8 +39,8 @@ class Company(Group):
 
     __slots__ = (
         "super_area",
-        "industry",
-        "n_employees_max",
+        "sector",
+        "n_workers_max",
     )
 
     class SubgroupType(IntEnum):
@@ -77,7 +79,7 @@ class Companies(Supergroup):
             Nr. of companies within a size-range per SuperArea.
 
         compsec_per_msoa_df: pd.DataFrame
-            Nr. of companies per industry sector per SuperArea.
+            Nr. of companies per sector sector per SuperArea.
         """
         super().__init__()
         self.members = companies
@@ -99,7 +101,7 @@ class Companies(Supergroup):
         company_size_per_superarea_filename: 
             Nr. of companies within a size-range per SuperArea.
         compsec_per_msoa_filename: 
-            Nr. of companies per industry sector per SuperArea.
+            Nr. of companies per sector sector per SuperArea.
         """
         if len(geography.super_areas) == 0:
             raise CompanyError("Empty geography!")
@@ -187,6 +189,56 @@ class Companies(Supergroup):
         company = Company(super_area, company_size, company_sector)
         return company
 
+    def to_hdf5(self, file_path: str): 
+        n_companies = len(self.members)
+        ids = []
+        super_areas = []
+        sectors = []
+        n_workers_max = []
+        for company in self.members:
+            ids.append(company.id)
+            if company.super_area is None:
+                super_areas.append(nan_integer)
+            else:
+                super_areas.append(company.super_area.id)
+            sectors.append(company.sector.encode("ascii", "ignore"))
+            n_workers_max.append(company.n_workers_max)
+
+        ids = np.array(ids, dtype=np.int)
+        super_areas = np.array(super_areas, dtype=np.int)
+        sectors = np.array(sectors, dtype="S10")
+        n_workers_max = np.array(n_workers_max, dtype=np.float)
+        with h5py.File(file_path, "w") as f:
+            people_dset = f.create_group("companies")
+            people_dset.attrs["n_companies"] = n_companies
+            people_dset.create_dataset("id", data=ids)
+            people_dset.create_dataset("super_area", data=super_areas)
+            people_dset.create_dataset("sector", data=sectors)
+            people_dset.create_dataset("n_workers_max", data=n_workers_max)
+
+    @classmethod
+    def from_hdf5(cls, file_path: str):
+        with h5py.File(file_path, "r") as f:
+            companies = f["companies"]
+            companies_list = list()
+            chunk_size = 50000
+            n_companies = companies.attrs["n_companies"]
+            n_chunks = int(np.ceil(n_companies / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_companies)
+                ids = companies["id"]
+                super_areas = companies["super_area"][idx1:idx2]
+                sectors = companies["sector"][idx1:idx2]
+                n_workers_maxs = companies["n_workers_max"][idx1:idx2]
+                for k in range(idx2 - idx1):
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        super_area = None
+                    company = Company(super_area, n_workers_maxs[k], sectors[k])
+                    company.id = ids[k]
+                    companies_list.append(company)
+        return cls(companies_list)
 
 def _get_size_brackets(sizegroup: str):
     """

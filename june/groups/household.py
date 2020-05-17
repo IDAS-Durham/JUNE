@@ -130,17 +130,18 @@ class Households(Supergroup):
     @classmethod
     def from_hdf5(cls, file_path: str):
         with h5py.File(file_path, "r") as f:
-            population = f["households"]
-            households = list()
+            households = f["households"]
+            households_list = list()
             chunk_size = 50000
-            n_households = population.attrs["n_households"]
+            n_households = households.attrs["n_households"]
             n_chunks = int(np.ceil(n_households / chunk_size))
             for chunk in range(n_chunks):
                 idx1 = chunk * chunk_size
                 idx2 = min((chunk + 1) * chunk_size, n_households)
-                communals = population["communal"][idx1:idx2]
-                areas = population["area"][idx1:idx2]
-                max_sizes = population["max_size"][idx1:idx2]
+                ids = households["id"][idx1:idx2]
+                communals = households["communal"][idx1:idx2]
+                areas = households["area"][idx1:idx2]
+                max_sizes = households["max_size"][idx1:idx2]
                 for k in range(idx2 - idx1):
                     area = areas[k]
                     if area == nan_integer:
@@ -148,6 +149,6 @@ class Households(Supergroup):
                     household = Household(
                         communal=communals[k], area=area, max_size=max_sizes[k]
                     )
-                    household.id = population["id"][k]
-                    households.append(household)
-        return cls(households)
+                    household.id = ids[k]
+                    households_list.append(household)
+        return cls(households_list)
