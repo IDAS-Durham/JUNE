@@ -2,13 +2,18 @@ from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
+import h5py
 
 from june import paths
 from june.demography import Person
 from june.geography import Geography
 
 default_data_path = paths.data_path / "processed/census_data/output_area/EnglandWales"
-default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+default_areas_map_path = (
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+)
+
+nan_integer = -999
 
 
 class DemographyError(BaseException):
@@ -17,10 +22,14 @@ class DemographyError(BaseException):
 
 class AgeSexGenerator:
     def __init__(
-        self, age_counts: list, 
-        sex_bins: list, female_fractions: list,
-        ethnicity_age_bins: list, ethnicity_groups: list, ethnicity_structure: list,
-        max_age=99
+        self,
+        age_counts: list,
+        sex_bins: list,
+        female_fractions: list,
+        ethnicity_age_bins: list,
+        ethnicity_groups: list,
+        ethnicity_structure: list,
+        max_age=99,
     ):
         """
         age_counts is an array where the index in the array indicates the age,
@@ -47,19 +56,19 @@ class AgeSexGenerator:
         ages = np.repeat(np.arange(0, len(age_counts)), age_counts)
         female_fraction_bins = np.digitize(ages, bins=list(map(int, sex_bins))) - 1
         sexes = (
-                np.random.uniform(0, 1, size=self.n_residents)
-                < np.array(female_fractions)[female_fraction_bins]
+            np.random.uniform(0, 1, size=self.n_residents)
+            < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
 
-        ethnicity_age_counts,_ = np.histogram(ages, bins=list(map(int, ethnicity_age_bins))+[100])
+        ethnicity_age_counts, _ = np.histogram(
+            ages, bins=list(map(int, ethnicity_age_bins)) + [100]
+        )
         ethnicities = list()
-        for age_ind,age_count in enumerate(ethnicity_age_counts):
+        for age_ind, age_count in enumerate(ethnicity_age_counts):
             ethnicities.extend(
-                np.random.choice( 
-                    np.repeat(
-                        ethnicity_groups,ethnicity_structure[age_ind]
-                    ), age_count
+                np.random.choice(
+                    np.repeat(ethnicity_groups, ethnicity_structure[age_ind]), age_count
                 )
             )
 
@@ -120,10 +129,7 @@ class Population:
 
     @property
     def infected(self):
-        return [
-            person for person in self.people
-            if person.health_information.infected 
-        ]
+        return [person for person in self.people if person.health_information.infected]
 
     @property
     def susceptible(self):
@@ -135,13 +141,105 @@ class Population:
     def recovered(self):
         return [person for person in self.people if person.health_information.recovered]
 
+    def to_hdf5(self, file_path: str):
+        subgroups_length = len(list(Person.ActivityType))
+        n_people = len(self.people)
+        dt = h5py.vlen_dtype(np.dtype("int32"))
+
+        with h5py.File(file_path, "w") as f:
+            people_dset = f.create_group("population")
+            people_dset.attrs["n_people"] = n_people
+            data_set_shape = (n_people,)
+            people_dset.create_dataset("id", dtype=np.int, shape=data_set_shape)
+            people_dset.create_dataset("age", dtype=np.int, shape=data_set_shape)
+            people_dset.create_dataset("sex", dtype="S10", shape=data_set_shape)
+            people_dset.create_dataset("ethnicity", dtype="S10", shape=data_set_shape)
+            people_dset.create_dataset(
+                "group_ids", dtype=np.int, shape=(n_people, subgroups_length)
+            )
+            people_dset.create_dataset(
+                "subgroup_types", dtype=np.int, shape=(n_people, subgroups_length)
+            )
+            people_dset.create_dataset("area", dtype=np.int, shape=data_set_shape)
+            people_dset.create_dataset("housemates", dtype=dt, shape=data_set_shape)
+
+            for i, person in enumerate(self.people):
+                # scalar int atributes
+                for attribute_name in [
+                    "id",
+                    "age",
+                ]:
+                    attribute = getattr(person, attribute_name)
+                    if attribute is None:
+                        people_dset[attribute_name][i] = nan_integer
+                    else:
+                        people_dset[attribute_name][i] = attribute
+                # scalar str attributes
+                for attribute_name in [
+                    "sex",
+                    "ethnicity",
+                ]:
+                    attribute = getattr(person, attribute_name)
+                    if attribute is None:
+                        people_dset[attribute_name][i] = " ".encode("ascii", "ignore")
+                    else:
+                        people_dset[attribute_name][i] = attribute.encode(
+                            "ascii", "ignore"
+                        )
+                # subgroups
+                subgroups_group_ids = [
+                    subgroup.group.id if subgroup is not None else nan_integer
+                    for subgroup in person.subgroups
+                ]
+                subgroups_subgroup_types = [
+                    subgroup.subgroup_type if subgroup is not None else nan_integer
+                    for subgroup in person.subgroups
+                ]
+                people_dset["group_ids"][i] = np.array(
+                    subgroups_group_ids, dtype=np.int
+                )
+                people_dset["subgroup_types"][i] = np.array(
+                    subgroups_subgroup_types, dtype=np.int
+                )
+                # area
+                if person.area is None:
+                    people_dset["area"][i] = nan_integer
+                else:
+                    people_dset["area"][i] = person.area.id
+                # housemates
+                housemates = [mate.id for mate in person.housemates]
+                people_dset["housemates"][i] = np.array(housemates, dtype=np.int)
+
+    @classmethod
+    def from_hdf5(cls, file_path: str):
+        with h5py.File(file_path, "r") as f:
+            population = f["population"]
+            people = list()
+            for i in range(0, population.attrs["n_people"]):
+                person = Person()
+                person.id = population["id"][i]
+                person.age = population["age"][i]
+                person.sex = population["sex"][i].decode()
+                person.ethnicity = population["ethnicity"][i].decode()
+                if population["area"][i] == nan_integer:
+                    person.area = None
+                else:
+                    person.area = population["area"][i]
+                subgroups = []
+                for group_id, subgroup_type in zip(
+                    population["group_ids"][i], population["subgroup_types"][i]
+                ):
+                    if group_id == nan_integer:
+                        group_id = None
+                        subgroup_type = None
+                    subgroups.append([group_id, subgroup_type])
+                person.subgroups = subgroups
+                people.append(person)
+        return cls(people)
+
 
 class Demography:
-    def __init__(
-            self,
-            area_names,
-            age_sex_generators: Dict[str, AgeSexGenerator]
-    ):
+    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator]):
         """
         Tool to generate population for a certain geographical regin.
 
@@ -154,10 +252,7 @@ class Demography:
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
 
-    def populate(
-            self,
-            area_name: str,
-    ) -> Population:
+    def populate(self, area_name: str,) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -261,9 +356,9 @@ class Demography:
         ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
         # TODO socioecon_structure_path = data_path / "socioecon_structure.csv"
         age_sex_generators = _load_age_and_sex_generators(
-            age_structure_path, 
-            female_fraction_path, 
-            ethnicity_structure_path, 
+            age_structure_path,
+            female_fraction_path,
+            ethnicity_structure_path,
             # TODO socioecon_structure_path
             area_names,
         )
@@ -271,11 +366,11 @@ class Demography:
 
 
 def _load_age_and_sex_generators(
-    age_structure_path: str, 
-    female_ratios_path: str, 
-    ethnicity_structure_path: str, 
+    age_structure_path: str,
+    female_ratios_path: str,
+    ethnicity_structure_path: str,
     # TODO socioecon_strucuture_path,
-    area_names: List[str]
+    area_names: List[str],
 ):
     """
     A dictionary mapping area identifiers to a generator of age and sex.
@@ -288,9 +383,11 @@ def _load_age_and_sex_generators(
     female_ratios_df = female_ratios_df.loc[area_names]
     female_ratios_df.sort_index(inplace=True)
 
-    ethnicity_structure_df = pd.read_csv(ethnicity_structure_path,index_col=[0,1]) # pd MultiIndex!!!
+    ethnicity_structure_df = pd.read_csv(
+        ethnicity_structure_path, index_col=[0, 1]
+    )  # pd MultiIndex!!!
     ethnicity_structure_df = ethnicity_structure_df.loc[pd.IndexSlice[area_names]]
-    ethnicity_structure_df.sort_index(level=0,inplace=True)
+    ethnicity_structure_df.sort_index(level=0, inplace=True)
     ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
     ## it preserves original order, and ignoring "repeat slices".
 
@@ -298,18 +395,19 @@ def _load_age_and_sex_generators(
     # socioecon_structure_df = socioecon_structure_df[area_names]
 
     ret = {}
-    for (_, age_structure), (index, female_ratios), (_,ethnicity_df) in zip(
-        age_structure_df.iterrows(), female_ratios_df.iterrows(), 
+    for (_, age_structure), (index, female_ratios), (_, ethnicity_df) in zip(
+        age_structure_df.iterrows(),
+        female_ratios_df.iterrows(),
         ethnicity_structure_df.groupby(level=0),
     ):
         ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(
-            age_structure.values, 
-            female_ratios.index.values, 
+            age_structure.values,
+            female_ratios.index.values,
             female_ratios.values,
-            ethnicity_df.columns, 
-            ethnicity_df.index.get_level_values(1), 
+            ethnicity_df.columns,
+            ethnicity_df.index.get_level_values(1),
             ethnicity_structure,
         )
-        
+
     return ret

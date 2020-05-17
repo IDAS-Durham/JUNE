@@ -80,7 +80,11 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__()
-        self.subgroups = [Subgroup(self) for _ in range(age_min, age_max + 2)]
+        self.subgroups = []
+        i = 0
+        for _ in range(age_min, age_max+2):
+            self.subgroups.append(Subgroup(self, i))
+            i += 1
         self.coordinates = coordinates
         self.super_area = None
         self.n_teachers = 0
