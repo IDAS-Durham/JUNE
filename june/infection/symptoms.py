@@ -20,7 +20,7 @@ class Symptom_Tags(IntEnum):
 
 
 class Symptoms:
-    def __init__(self, health_index=0.):
+    def __init__(self, health_index=[]):
         self.health_index = health_index
         self.tag          = Symptom_Tags.infected
         self.max_severity = random.random()
@@ -29,31 +29,33 @@ class Symptoms:
     def update_severity_from_delta_time(self, time):
         raise NotImplementedError()
 
-    def make_trajectory(self,patient):
+    def make_trajectory(self,trajectory_maker,patient):
         pass
     
     def is_recovered(self):
         return self.tag==Symptom_Tags.recovered
 
     def make_tag(self):
-        if self.severity <= 0.0 or self.health_index==None:
+        if self.severity <= 0.0 or self.health_index==[]:
             return Symptom_Tags.recovered
         index = np.searchsorted(self.health_index, self.severity)
         return Symptom_Tags(index+2)
 
+    
     @classmethod
     def object_from_config(cls):
-        """Loads the default Symptoms class from the general.ini config file and returns the class as object (not as
-        an instance). This is used to set up the epidemiology model in world.py via configs if an input is not
-        provided."""
+        """
+        Loads the default Symptoms class from the general.ini config file and returns the class 
+        as object (not as an instance). This is used to set up the epidemiology model in world.py 
+        via configs if an input is not provided.
+        """
         classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
         return getattr(sys.modules[__name__], classname_str)
 
 
 
-
 class SymptomsConstant(Symptoms):
-    def __init__(self, health_index=0., recovery_rate=0.2):
+    def __init__(self, health_index=[], recovery_rate=0.2):
         super().__init__(health_index=health_index)
         self.recovery_rate           = recovery_rate
         self.predicted_recovery_time = stats.expon.rvs(scale=1.0 / self.recovery_rate)
@@ -65,7 +67,7 @@ class SymptomsConstant(Symptoms):
 
 class SymptomsGaussian(Symptoms):
     #TODO: Add recovery_theshold for recovery, and check parameters to find days to recover
-    def __init__(self, health_index=0., mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
+    def __init__(self, health_index=[], mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
         super().__init__(health_index=health_index)
         self.mean_time     = max(0.0, mean_time)
         self.sigma_time    = max(0.001, sigma_time)
@@ -81,7 +83,7 @@ class SymptomsGaussian(Symptoms):
             self.tag = self.make_tag()
 
 class SymptomsStep(Symptoms):
-    def __init__(self, health_index=0., time_offset=2.0, end_time=5.0):
+    def __init__(self, health_index=[], time_offset=2.0, end_time=5.0):
 
         super().__init__(health_index)
         self.time_offset = max(0.0, time_offset)
