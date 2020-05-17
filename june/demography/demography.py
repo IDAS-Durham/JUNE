@@ -3,10 +3,12 @@ from typing import List, Dict, Optional
 import numpy as np
 import pandas as pd
 import h5py
+import time
 
 from june import paths
 from june.demography import Person
 from june.geography import Geography
+from tqdm import tqdm
 
 default_data_path = paths.data_path / "processed/census_data/output_area/EnglandWales"
 default_areas_map_path = (
@@ -142,99 +144,100 @@ class Population:
         return [person for person in self.people if person.health_information.recovered]
 
     def to_hdf5(self, file_path: str):
-        subgroups_length = len(list(Person.ActivityType))
         n_people = len(self.people)
         dt = h5py.vlen_dtype(np.dtype("int32"))
+        ids = []
+        ages = []
+        sexes = []
+        ethns = []
+        areas = []
+        group_ids = []
+        subgroup_types = []
+        housemates = []
+        for person in self.people:
+            ids.append(person.id)
+            ages.append(person.age)
+            sexes.append(person.sex.encode("ascii", "ignore"))
+            ethns.append(person.ethnicity.encode("ascii", "ignore"))
+            if person.area is not None:
+                areas.append(person.area.id)
+            else:
+                areas.append(nan_integer)
+            gids = []
+            stypes = []
+            for subgroup in person.subgroups:
+                if subgroup is None:
+                    gids.append(nan_integer)
+                    stypes.append(nan_integer)
+                else:
+                    gids.append(subgroup.group.id)
+                    stypes.append(subgroup.subgroup_type)
+            group_ids.append(np.array(gids, dtype=np.int))
+            subgroup_types.append(np.array(stypes, dtype=np.int))
+            hmates = [mate.id for mate in person.housemates]
+            if len(hmates) == 0:
+                housemates.append(np.array([nan_integer], dtype=np.int))
+            else:
+                housemates.append(np.array(hmates, dtype=np.int))
 
-        with h5py.File(file_path, "w") as f:
+        ids = np.array(ids, dtype=np.int)
+        ages = np.array(ages, dtype=np.int)
+        sexes = np.array(sexes, dtype="S10")
+        ethns = np.array(ethns, dtype="S10")
+        areas = np.array(areas, dtype=np.int)
+        group_ids = np.array(group_ids, dtype=np.int)
+        subgroup_types = np.array(subgroup_types, dtype=np.int)
+
+        with h5py.File(file_path, "w", libver="latest") as f:
             people_dset = f.create_group("population")
             people_dset.attrs["n_people"] = n_people
-            data_set_shape = (n_people,)
-            people_dset.create_dataset("id", dtype=np.int, shape=data_set_shape)
-            people_dset.create_dataset("age", dtype=np.int, shape=data_set_shape)
-            people_dset.create_dataset("sex", dtype="S10", shape=data_set_shape)
-            people_dset.create_dataset("ethnicity", dtype="S10", shape=data_set_shape)
-            people_dset.create_dataset(
-                "group_ids", dtype=np.int, shape=(n_people, subgroups_length)
-            )
-            people_dset.create_dataset(
-                "subgroup_types", dtype=np.int, shape=(n_people, subgroups_length)
-            )
-            people_dset.create_dataset("area", dtype=np.int, shape=data_set_shape)
-            people_dset.create_dataset("housemates", dtype=dt, shape=data_set_shape)
-
-            for i, person in enumerate(self.people):
-                # scalar int atributes
-                for attribute_name in [
-                    "id",
-                    "age",
-                ]:
-                    attribute = getattr(person, attribute_name)
-                    if attribute is None:
-                        people_dset[attribute_name][i] = nan_integer
-                    else:
-                        people_dset[attribute_name][i] = attribute
-                # scalar str attributes
-                for attribute_name in [
-                    "sex",
-                    "ethnicity",
-                ]:
-                    attribute = getattr(person, attribute_name)
-                    if attribute is None:
-                        people_dset[attribute_name][i] = " ".encode("ascii", "ignore")
-                    else:
-                        people_dset[attribute_name][i] = attribute.encode(
-                            "ascii", "ignore"
-                        )
-                # subgroups
-                subgroups_group_ids = [
-                    subgroup.group.id if subgroup is not None else nan_integer
-                    for subgroup in person.subgroups
-                ]
-                subgroups_subgroup_types = [
-                    subgroup.subgroup_type if subgroup is not None else nan_integer
-                    for subgroup in person.subgroups
-                ]
-                people_dset["group_ids"][i] = np.array(
-                    subgroups_group_ids, dtype=np.int
-                )
-                people_dset["subgroup_types"][i] = np.array(
-                    subgroups_subgroup_types, dtype=np.int
-                )
-                # area
-                if person.area is None:
-                    people_dset["area"][i] = nan_integer
-                else:
-                    people_dset["area"][i] = person.area.id
-                # housemates
-                housemates = [mate.id for mate in person.housemates]
-                people_dset["housemates"][i] = np.array(housemates, dtype=np.int)
+            people_dset.create_dataset("id", data=ids)
+            people_dset.create_dataset("age", data=ages)
+            people_dset.create_dataset("sex", data=sexes)
+            people_dset.create_dataset("ethnicity", data=ethns)
+            people_dset.create_dataset("group_ids", data=group_ids)
+            people_dset.create_dataset("subgroup_types", data=subgroup_types)
+            people_dset.create_dataset("area", data=areas)
+            people_dset.create_dataset("housemates", data=housemates, dtype=dt)
 
     @classmethod
     def from_hdf5(cls, file_path: str):
         with h5py.File(file_path, "r") as f:
-            population = f["population"]
             people = list()
-            for i in range(0, population.attrs["n_people"]):
-                person = Person()
-                person.id = population["id"][i]
-                person.age = population["age"][i]
-                person.sex = population["sex"][i].decode()
-                person.ethnicity = population["ethnicity"][i].decode()
-                if population["area"][i] == nan_integer:
-                    person.area = None
-                else:
-                    person.area = population["area"][i]
-                subgroups = []
-                for group_id, subgroup_type in zip(
-                    population["group_ids"][i], population["subgroup_types"][i]
-                ):
-                    if group_id == nan_integer:
-                        group_id = None
-                        subgroup_type = None
-                    subgroups.append([group_id, subgroup_type])
-                person.subgroups = subgroups
-                people.append(person)
+            population = f["population"]
+            # read in chunks of 100,000 people
+            chunk_size = 50000
+            n_people = population.attrs["n_people"]
+            n_chunks = int(np.ceil(n_people / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_people) 
+                ids = population["id"][idx1:idx2]
+                ages = population["age"][idx1:idx2]
+                sexes = population["sex"][idx1:idx2]
+                ethns = population["ethnicity"][idx1:idx2]
+                group_ids = population["group_ids"][idx1:idx2]
+                subgroup_types = population["subgroup_types"][idx1:idx2]
+                areas = population["area"][idx1:idx2]
+                housemates = population["housemates"][idx1:idx2]
+                for k in range(idx2-idx1):
+                    person = Person()
+                    person.id = ids[k]
+                    person.age = ages[k]
+                    person.sex = sexes[k].decode()
+                    person.ethnicity = ethns[k].decode()
+                    subgroups = []
+                    for group_id, subgroup_type in zip(group_ids[k], subgroup_types[k]):
+                        if group_id == nan_integer:
+                            group_id = None
+                            subgroup_type = None
+                        subgroups.append([group_id, subgroup_type])
+                    person.subgroups = subgroups
+                    person.area = areas[k]
+                    person.housemates = housemates[k]
+                    if person.housemates[0] == nan_integer:
+                        person.housemates = []
+                    people.append(person)
         return cls(people)
 
 

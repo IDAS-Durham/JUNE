@@ -3,10 +3,14 @@ from enum import IntEnum
 
 import numpy as np
 import random
+import h5py
+import time
 
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
+
+nan_integer = -999
 
 
 class Household(Group):
@@ -97,3 +101,53 @@ class Households(Supergroup):
                 subgroup._people.clear()
                 subgroup.group = None
 
+    def to_hdf5(self, file_path: str):
+        n_households = len(self.members)
+        ids = []
+        areas = []
+        communals = []
+        max_sizes = []
+        for household in self.members:
+            ids.append(household.id)
+            if household.area is None:
+                areas.append(nan_integer)
+            else:
+                areas.append(household.area.id)
+            communals.append(household.communal)
+            max_sizes.append(household.max_size)
+        ids = np.array(ids, dtype=np.int)
+        areas = np.array(areas, dtype=np.int)
+        communals = np.array(communals, dtype=np.bool)
+        max_sizes = np.array(max_sizes, dtype=np.float)
+        with h5py.File(file_path, "w") as f:
+            people_dset = f.create_group("households")
+            people_dset.attrs["n_households"] = n_households
+            people_dset.create_dataset("id", data=ids)
+            people_dset.create_dataset("area", data=areas)
+            people_dset.create_dataset("communal", data=communals)
+            people_dset.create_dataset("max_size", data=max_sizes)
+
+    @classmethod
+    def from_hdf5(cls, file_path: str):
+        with h5py.File(file_path, "r") as f:
+            population = f["households"]
+            households = list()
+            chunk_size = 50000
+            n_households = population.attrs["n_households"]
+            n_chunks = int(np.ceil(n_households / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_households)
+                communals = population["communal"][idx1:idx2]
+                areas = population["area"][idx1:idx2]
+                max_sizes = population["max_size"][idx1:idx2]
+                for k in range(idx2 - idx1):
+                    area = areas[k]
+                    if area == nan_integer:
+                        area = None
+                    household = Household(
+                        communal=communals[k], area=area, max_size=max_sizes[k]
+                    )
+                    household.id = population["id"][k]
+                    households.append(household)
+        return cls(households)
