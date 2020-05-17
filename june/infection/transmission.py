@@ -1,13 +1,13 @@
 import autofit as af
+import numpy as np
 import sys
 
 
 class Transmission:
-
     def __init__(self):
         self.probability = 0.0
-
-    def update_probability_from_delta_time(self, time):
+        
+    def update_probability_from_delta_time(self, delta_time):
         raise NotImplementedError()
 
     @classmethod
@@ -19,9 +19,8 @@ class Transmission:
         """
         classname_str = af.conf.instance.general.get("epidemiology", "transmission_class", str)
         return getattr(sys.modules[__name__], classname_str)
-
+    
 class TransmissionConstant(Transmission):
-
     def __init__(self, probability=0.3):
         super().__init__()
         self.probability = probability

@@ -14,9 +14,7 @@ def do_something():
 
 
 class TestSymptoms:
-
     def test__tag__reads_from_symptoms_tag_using_severity(self):
-
         symptom = sym.Symptoms(health_index=None)
         symptom.severity = -0.1
         symptom.tag = symptom.make_tag()
@@ -49,21 +47,21 @@ class TestSymptomsConstant:
 
         np.random.seed(1)
 
-        symptom = sym.SymptomsConstant(health_index=None, recovery_rate=0.00001)
+        symptom = sym.SymptomsConstant(health_index=[], recovery_rate=0.00001)
 
         symptom.update_severity_from_delta_time(delta_time=1.0)
         assert symptom.is_recovered() == False
         symptom.update_severity_from_delta_time(delta_time=10.0)
         assert symptom.is_recovered() == False
 
-        symptom = sym.SymptomsConstant(health_index=None, recovery_rate=1000000.0)
+        symptom = sym.SymptomsConstant(health_index=[], recovery_rate=1000000.0)
 
         symptom.update_severity_from_delta_time(delta_time=0.0001)
         assert symptom.is_recovered() == True
         symptom.update_severity_from_delta_time(delta_time=1.0)
         assert symptom.is_recovered() == True
 
-        symptom = sym.SymptomsConstant(health_index=None, recovery_rate=0.9)
+        symptom = sym.SymptomsConstant(health_index=[], recovery_rate=0.9)
 
         symptom.update_severity_from_delta_time(delta_time=0.0)
         assert symptom.is_recovered() == False
@@ -77,7 +75,7 @@ class TestSymptomsGaussian:
         np.random.seed(1)
 
         symptom = sym.SymptomsGaussian(
-            health_index=None, mean_time=1.0, sigma_time=3.0
+            health_index=[], mean_time=1.0, sigma_time=3.0
         )
 
         symptom.update_severity_from_delta_time(delta_time=0.0)
@@ -88,7 +86,7 @@ class TestSymptomsGaussian:
         assert symptom.severity == pytest.approx(symptom.max_severity * 0.89483, 1.0e-4)
 
         symptom = sym.SymptomsGaussian(
-            health_index=None, mean_time=3.0, sigma_time=5.0
+            health_index=[], mean_time=3.0, sigma_time=5.0
         )
 
         symptom.update_severity_from_delta_time(delta_time=1.0)
@@ -103,7 +101,7 @@ class TestSymptomsStep:
     def test__constructor__negatve_values_rounded_to_zero(self):
 
         symptom = sym.SymptomsStep(
-            health_index=None, time_offset=-1.0, end_time=-2.0
+            health_index=[], time_offset=-1.0, end_time=-2.0
         )
 
         assert symptom.time_offset == 0.0
@@ -112,7 +110,7 @@ class TestSymptomsStep:
     def test__update_severity__correct_dependence_on_parameters(self):
 
         symptom = sym.SymptomsStep(
-            health_index=None, time_offset=1.0, end_time=2.0
+            health_index=[], time_offset=1.0, end_time=2.0
         )
 
         symptom.update_severity_from_delta_time(delta_time=1.5)
@@ -133,7 +131,7 @@ class TestSymptomsTanh:
     def test__constructor__negative_values_rounded_to_zero(self):
 
         symptom = sym.SymptomsTanh(
-            health_index=None, max_time=-1.0, onset_time=-1.0, end_time=-2.0
+            health_index=[], max_time=-1.0, onset_time=-1.0, end_time=-2.0
         )
 
         assert symptom.max_time == 0.0
@@ -145,7 +143,7 @@ class TestSymptomsTanh:
     def test__update_severity__correct_dependence_on_parameters(self):
 
         symptom = sym.SymptomsTanh(
-            health_index=None, max_time=2.0, onset_time=0.5, end_time=15.0
+            health_index=[], max_time=2.0, onset_time=0.5, end_time=15.0
         )
 
         # Time since start < max time

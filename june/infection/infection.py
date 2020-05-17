@@ -1,6 +1,89 @@
+import numpy as np
+from enum import IntEnum
+import random
+import sys
 import autofit as af
-from june.infection.symptoms import Symptoms
-from june.infection.infection_selecotr import InfectionSelector
+from june.infection.symptoms            import SymptomsConstant
+from june.infection.transmission        import TransmissionConstant
+from june.infection.symptoms_trajectory import SymptomsTrajectory
+from june.infection.transmission_xnexp  import TransmissionXNExp
+from june.infection.trajectory_maker    import TrajectoryMaker 
+from june.infection.health_index        import HealthIndexGenerator
+
+class SymptomsType(IntEnum):
+    constant     = 0,
+    gaussian     = 1,
+    step         = 2,
+    trajectories = 3
+
+class TransmissionType(IntEnum):
+    constant = 0,
+    xnexp    = 1
+
+class InfectionSelector:
+    def __init__(self,
+                 transmission_type = "XNExp",
+                 symptoms_type     = "Trajectories",
+                 config = None
+    ):
+        self.health_index_generator = HealthIndexGenerator.from_file()
+        self.init_parameters(transmission_type,symptoms_type)
+        
+    @classmethod
+    def from_file(cls) -> "InfectionSelector":
+        return cls(transmission_type = transmission_type,
+                   symptoms_type     = symptoms_type,
+                   config            = None)
+
+        
+    def init_parameters(self,transmission_type,symptoms_type):
+        if symptoms_type=="Trajectories":
+            self.trajectory_maker = TrajectoryMaker.from_file()
+            self.stype            = SymptomsType.trajectories
+        else:
+            self.recovery_rate    = 0.2
+            self.stype            = SymptomsType.constant
+        if transmission_type=="XNExp":
+            self.ttype                  = TransmissionType.xnexp
+            self.incubation_time        = 2.6
+            self.transmission_median    = 1.
+            self.transmission_mu        = np.log(self.transmission_median)
+            self.transmission_sigma     = 0.5
+            self.transmission_norm_time = 1.
+            self.transmission_N         = 1.
+            self.transmission_alpha     = 5.
+        else:
+            self.ttype                    = TransmissionType.constant
+            self.transmission_probability = 0.3
+        
+    def make_infection(self, person, time):
+        return Infection(transmission = self.select_transmission(person),
+                         symptoms     = self.select_symptoms(person),
+                         start_time   = time)
+
+    def select_transmission(self, person):
+        if self.ttype==TransmissionType.xnexp:
+            maxprob = np.random.lognormal(self.transmission_mu,
+                                          self.transmission_sigma)
+            return TransmissionXNExp(max_probability = maxprob,
+                                     incubation_time = self.incubation_time,
+                                     norm_time  = self.transmission_norm_time,
+                                     N          = self.transmission_N,
+                                     alpha      = self.transmission_alpha)
+        else:
+            return TransmissionConstant(probability=self.transmission_probability)
+
+    def select_symptoms(self, person):
+        health_index = self.health_index_generator(person)
+        if self.stype==SymptomsType.trajectories:
+            symptoms = SymptomsTrajectory(health_index = health_index)
+            symptoms.make_trajectory(trajectory_maker = self.trajectory_maker,
+                                     patient          = person)
+        elif self.stype==SymptomsType.constant:
+            symptoms = SymptomsConstant(health_index  = health_index,
+                                        recovery_rate = self.recovery_rate)
+        return symptoms
+
 
 class Infection:
     """
@@ -23,8 +106,9 @@ class Infection:
         self.infection_probability = 0.0
 
     # def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
-    def infect_person_at_time(self, person, health_index_generator, time):
-        """Infects someone by initializing an infection object using the epidemiology model.
+    def infect_person_at_time(self, selector, person, time):
+        """
+        Infects someone by initializing an infection object using the epidemiology model.
 
         The epidemiology input uses a CollectionPriorModel of PyAutoFit, which has 
         associated with it a Symptoms class and Transmission class. Every parameter in 
@@ -49,16 +133,15 @@ class Infection:
         # TODO : This is hacky, whats the best way we can feed health information through
         # to symptoms. Can we move the
         # instance.symptoms.health_index = self.symptoms.health_index
-
-        infection = Infection(
-            start_time=time,
-            transmission=self.transmission,  # instance.transmission,
-            symptoms=symptoms,               # instance.symptoms
-        )
+        #infection = Infection(
+        #    start_time=time,
+        #    transmission=transmission,  # instance.transmission,
+        #    symptoms=symptoms,          # instance.symptoms
+        #)
+        infection = selector.make_infection(person,time)
         person.health_information.set_infection(infection=infection)
 
     def update_at_time(self, time):
-
         if self.last_time_updated <= time:
             delta_time = time - self.start_time
             self.last_time_updated = time
@@ -68,5 +151,6 @@ class Infection:
 
     @property
     def still_infected(self):
-        return (self.symptoms.tag!=SymptomTags:recovered and
-                self.symptoms.tag!=SymptomTags:dead) 
+        return True
+    #self.symptoms.tag!=SymptomTags:recovered and
+    #self.symptoms.tag!=SymptomTags:dead
