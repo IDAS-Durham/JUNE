@@ -2,6 +2,7 @@ import os
 import yaml
 import logging
 import os
+import h5py
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple
@@ -132,13 +133,17 @@ class Hospital(Group):
             )
 
     def release_as_patient(self, person):
-       person.subgroups[person.ActivityType.hospital] = None
+        person.subgroups[person.ActivityType.hospital] = None
 
     def move_patient_within_hospital(self, person):
         if person.health_information.tag == "intensive care":
-            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.icu_patients]
+            person.subgroups[person.ActivityType.hospital] = person.hospital.group[
+                self.SubgroupType.icu_patients
+            ]
         elif person.health_information.tag == "hospitalised":
-            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.patients]
+            person.subgroups[person.ActivityType.hospital] = person.hospital.group[
+                self.SubgroupType.patients
+            ]
         else:
             raise AssertionError(
                 "ERROR: This person shouldn't be trying to get to a hospital"
@@ -386,7 +391,7 @@ class Hospitals(Supergroup):
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
 
-    def to_hdf5(self, file_path: str): 
+    def to_hdf5(self, file_path: str):
         n_hospitals = len(self.members)
         ids = []
         n_beds = []
@@ -399,41 +404,47 @@ class Hospitals(Supergroup):
                 super_areas.append(nan_integer)
             else:
                 super_areas.append(hospital.super_area.id)
-            sectors.append(hospital.sector.encode("ascii", "ignore"))
-            n_workers_max.append(hospital.n_workers_max)
+            n_beds.append(hospital.n_beds)
+            n_icu_beds.append(hospital.n_icu_beds)
+            coordinates.append(np.array(hospital.coordinates))
 
         ids = np.array(ids, dtype=np.int)
         super_areas = np.array(super_areas, dtype=np.int)
-        sectors = np.array(sectors, dtype="S10")
-        n_workers_max = np.array(n_workers_max, dtype=np.float)
+        n_beds = np.array(n_beds, dtype=np.int)
+        n_icu_beds = np.array(n_icu_beds, dtype=np.int)
+        coordinates = np.array(coordinates, dtype=np.float)
         with h5py.File(file_path, "w") as f:
-            people_dset = f.create_group("companies")
-            people_dset.attrs["n_companies"] = n_companies
+            people_dset = f.create_group("hospitals")
+            people_dset.attrs["n_hospitals"] = n_hospitals
             people_dset.create_dataset("id", data=ids)
             people_dset.create_dataset("super_area", data=super_areas)
-            people_dset.create_dataset("sector", data=sectors)
-            people_dset.create_dataset("n_workers_max", data=n_workers_max)
+            people_dset.create_dataset("n_beds", data=n_beds)
+            people_dset.create_dataset("n_icu_beds", data=n_icu_beds)
+            people_dset.create_dataset("coordinates", data=coordinates)
 
     @classmethod
     def from_hdf5(cls, file_path: str):
         with h5py.File(file_path, "r") as f:
-            companies = f["companies"]
-            companies_list = list()
+            hospitals = f["hospitals"]
+            hospitals_list = list()
             chunk_size = 50000
-            n_companies = companies.attrs["n_companies"]
-            n_chunks = int(np.ceil(n_companies / chunk_size))
+            n_hospitals = hospitals.attrs["n_hospitals"]
+            n_chunks = int(np.ceil(n_hospitals / chunk_size))
             for chunk in range(n_chunks):
                 idx1 = chunk * chunk_size
-                idx2 = min((chunk + 1) * chunk_size, n_companies)
-                ids = companies["id"]
-                super_areas = companies["super_area"][idx1:idx2]
-                sectors = companies["sector"][idx1:idx2]
-                n_workers_maxs = companies["n_workers_max"][idx1:idx2]
+                idx2 = min((chunk + 1) * chunk_size, n_hospitals)
+                ids = hospitals["id"]
+                super_areas = hospitals["super_area"][idx1:idx2]
+                n_beds_list = hospitals["n_beds"][idx1:idx2]
+                n_icu_beds_list = hospitals["n_icu_beds"][idx1:idx2]
+                coordinates = hospitals["coordinates"][idx1:idx2]
                 for k in range(idx2 - idx1):
                     super_area = super_areas[k]
                     if super_area == nan_integer:
                         super_area = None
-                    hospital = Company(super_area, n_workers_maxs[k], sectors[k])
+                    hospital = Hospital(
+                        n_beds_list[k], n_icu_beds_list[k], super_area, coordinates[k]
+                    )
                     hospital.id = ids[k]
-                    companies_list.append(hospital)
-        return cls(companies_list)
+                    hospitals_list.append(hospital)
+        return cls(hospitals_list)
