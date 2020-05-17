@@ -64,7 +64,6 @@ class TestSavePeople:
             for group_spec, group_id, subgroup_type, group_array in zip(
                 group_specs, group_ids, subgroup_types, person2.subgroups
             ):
-                print(person2.subgroups)
                 assert group_spec == group_array[0]
                 assert group_id == group_array[1]
                 assert subgroup_type == group_array[2]
@@ -96,7 +95,7 @@ class TestSaveHouses:
             if household.area is not None:
                 assert household.area.id == household2.super_area.id
             else:
-                assert household2.super_area is None
+                assert household2.area is None
 
 class TestSaveCompanies:
     def test__save_companies(self, world_h5):
@@ -116,7 +115,7 @@ class TestSaveCompanies:
                 else:
                     assert attribute == attribute2
             if company.super_area is not None:
-                assert company.super_area.id == company2.super_area.id
+                assert company.super_area.id == company2.super_area
             else:
                 assert company2.super_area is None
 
@@ -138,8 +137,36 @@ class TestSaveHospitals:
                 else:
                     assert attribute == attribute2
             if hospital.super_area is not None:
-                assert hospital.super_area.id == hospital2.super_area.id
+                assert hospital.super_area.id == hospital2.super_area
             else:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
+
+class TestSaveSchools:
+    def test__save_schools(self, world_h5):
+        schools = world_h5.schools
+        schools.to_hdf5("test.hdf5")
+        schools_recovered = schools.from_hdf5("test.hdf5")
+        for school, school2 in zip(schools, schools_recovered):
+            for attribute_name in [
+                "id",
+                "n_pupils_max",
+                "n_teachers",
+                "n_teachers_max",
+                "age_min",
+                "age_max",
+                "sector",
+            ]:
+                attribute = getattr(school, attribute_name)
+                attribute2 = getattr(school2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            if school.super_area is not None:
+                assert school.super_area.id == school2.super_area
+            else:
+                assert school2.super_area is None
+            assert school.coordinates[0] == school2.coordinates[0]
+            assert school.coordinates[1] == school2.coordinates[1]
