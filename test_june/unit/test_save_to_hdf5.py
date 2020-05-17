@@ -72,16 +72,63 @@ class TestSaveHouses:
         households = world_h5.households
         households.to_hdf5("test.hdf5")
         households_recovered = Households.from_hdf5("test.hdf5")
-        for person, person2 in zip(households, households_recovered):
+        for household, household2 in zip(households, households_recovered):
             for attribute_name in [
                 "id",
-                "area",
                 "max_size",
                 "communal"
             ]:
-                attribute = getattr(person, attribute_name)
-                attribute2 = getattr(person2, attribute_name)
+                attribute = getattr(household, attribute_name)
+                attribute2 = getattr(household2, attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
+            if household.area is not None:
+                assert household.area.id == household2.super_area.id
+            else:
+                assert household2.super_area is None
+
+class TestSaveCompanies:
+    def test__save_companies(self, world_h5):
+        companies = world_h5.companies
+        companies.to_hdf5("test.hdf5")
+        companies_recovered = Companies.from_hdf5("test.hdf5")
+        for company, company2 in zip(companies, companies_recovered):
+            for attribute_name in [
+                "id",
+                "n_workers_max",
+                "sector"
+            ]:
+                attribute = getattr(company, attribute_name)
+                attribute2 = getattr(company2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            if company.super_area is not None:
+                assert company.super_area.id == company2.super_area.id
+            else:
+                assert company2.super_area is None
+
+class TestSaveHospitals:
+    def test__save_hospitals(self, world_h5):
+        hospitals = world_h5.hospitals
+        hospitals.to_hdf5("test.hdf5")
+        hospitals_recovered = Hospitals.from_hdf5("test.hdf5")
+        for hospital, hospital2 in zip(hospitals, hospitals_recovered):
+            for attribute_name in [
+                "id",
+                "n_workers_max",
+                "sector"
+            ]:
+                attribute = getattr(hospital, attribute_name)
+                attribute2 = getattr(hospital2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            if hospital.super_area is not None:
+                assert hospital.super_area.id == hospital2.super_area.id
+            else:
+                assert hospital2.super_area is None

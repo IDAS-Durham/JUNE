@@ -15,6 +15,7 @@ from june.groups import Group, Supergroup
 from june.geography import SuperArea
 
 logger = logging.getLogger(__name__)
+nan_integer = -999
 
 default_data_filename = (
     paths.data_path / "processed/hospital_data/england_hospitals.csv"
@@ -43,7 +44,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area"
 
     def __init__(
         self,
@@ -384,3 +385,55 @@ class Hospitals(Supergroup):
         )
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
+
+    def to_hdf5(self, file_path: str): 
+        n_hospitals = len(self.members)
+        ids = []
+        n_beds = []
+        n_icu_beds = []
+        super_areas = []
+        coordinates = []
+        for hospital in self.members:
+            ids.append(hospital.id)
+            if hospital.super_area is None:
+                super_areas.append(nan_integer)
+            else:
+                super_areas.append(hospital.super_area.id)
+            sectors.append(hospital.sector.encode("ascii", "ignore"))
+            n_workers_max.append(hospital.n_workers_max)
+
+        ids = np.array(ids, dtype=np.int)
+        super_areas = np.array(super_areas, dtype=np.int)
+        sectors = np.array(sectors, dtype="S10")
+        n_workers_max = np.array(n_workers_max, dtype=np.float)
+        with h5py.File(file_path, "w") as f:
+            people_dset = f.create_group("companies")
+            people_dset.attrs["n_companies"] = n_companies
+            people_dset.create_dataset("id", data=ids)
+            people_dset.create_dataset("super_area", data=super_areas)
+            people_dset.create_dataset("sector", data=sectors)
+            people_dset.create_dataset("n_workers_max", data=n_workers_max)
+
+    @classmethod
+    def from_hdf5(cls, file_path: str):
+        with h5py.File(file_path, "r") as f:
+            companies = f["companies"]
+            companies_list = list()
+            chunk_size = 50000
+            n_companies = companies.attrs["n_companies"]
+            n_chunks = int(np.ceil(n_companies / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_companies)
+                ids = companies["id"]
+                super_areas = companies["super_area"][idx1:idx2]
+                sectors = companies["sector"][idx1:idx2]
+                n_workers_maxs = companies["n_workers_max"][idx1:idx2]
+                for k in range(idx2 - idx1):
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        super_area = None
+                    hospital = Company(super_area, n_workers_maxs[k], sectors[k])
+                    hospital.id = ids[k]
+                    companies_list.append(hospital)
+        return cls(companies_list)
