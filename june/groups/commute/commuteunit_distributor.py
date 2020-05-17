@@ -24,19 +24,33 @@ class CommuteUnitDistributor:
         for hub in self.commutehubs:
             if len(hub.people) > 0:
                 possible_units = hub.commuteunits
-                to_commute = hub.people
-                indices = np.arange(len(to_commute))
+                commuting_people = hub.people
+                indices = list(range(len(commuting_people)))
                 random.shuffle(indices)
+                people_per_unit = len(commuting_people)//len(possible_units)
+                # clear units
                 for unit in possible_units:
-                    if len(to_commute) == 0:
-                        break
-                    while unit.no_passengers < unit.max_passengers and len(to_commute) > 0:
+                    unit.no_passengers = 0
+                    #TODO: should be done by simulator clear, but maybe more safe?
+                    unit.subgroups[0]._people.clear()
+                for unit in possible_units:
+                    while unit.no_passengers < people_per_unit:
                         passenger_id = indices.pop()
-                        passenger = to_commute[passenger_id]
+                        passenger = commuting_people[passenger_id]
                         unit.add(passenger,
                             activity_type=passenger.ActivityType.commute,
                             subgroup_type=unit.SubgroupType.default
                             )
+                        unit.no_passengers += 1
+
+                while indices:
+                    passenger_id = indices.pop()
+                    passenger = commuting_people[passenger_id]
+                    unit.add(passenger,
+                            activity_type=passenger.ActivityType.commute,
+                            subgroup_type=unit.SubgroupType.default
+                            )
                     unit.no_passengers += 1
+
 
 
