@@ -100,7 +100,6 @@ class SuperArea:
         areas: List[Area] = None,
         coordinates: Tuple[float, float] = None,
     ):
-        super().__init__()
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
