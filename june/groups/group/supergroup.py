@@ -56,4 +56,5 @@ class Supergroup:
         for group in self:
             for subgroup in group.subgroups:
                 subgroup._people.clear()
+                subgroup.group = None
 

@@ -170,8 +170,9 @@ class SuperAreas(GeographicalUnit):
         """
         for geo_unit in self:
             geo_unit.people.clear()
-            geo_unit.companies.clear()
             geo_unit.workers.clear()
+            geo_unit.areas.clear()
+            #geo_unit.companies.clear()
 
 
 class Geography:
@@ -224,16 +225,6 @@ class Geography:
             areas = []
             for name, coordinates in area_coords.iterrows():
                 areas.append(Area(name, super_area, coordinates.values))
-
-        #try:
-        #    areas = list(
-        #        map(
-        #            lambda row: self._create_area(row[0], row[1].values, super_area),
-        #            area_coords.iterrows(),
-        #        )
-        #    )
-        #except AttributeError:  # it's a series
-        #    return [self._create_area(area_coords.name, area_coords.values, super_area)]
         return areas
 
     def create_geographical_units(

@@ -26,14 +26,12 @@ allowed_super_groups = [
     "care_homes",
 ]
 
-
 def _populate_areas(geography, demography):
     people = Population()
     for area in geography.areas:
         area.populate(demography)
         people.extend(area.people)
     return people
-
 
 class World(object):
     """
@@ -135,54 +133,81 @@ class World(object):
             supergeo.erase_people_from_geographical_unit()
 
     def _restore_world(self):
+        # restore subgroup -> group link
+        for supergroup_name in allowed_super_groups:
+            if hasattr(self, supergroup_name):
+                supergroup = getattr(self, supergroup_name)
+                for group in supergroup:
+                    for subgroup in group.subgroups:
+                        subgroup.group = group
         for person in self.people:
             for subgroup in person.subgroups:
-                if subgroup is not None:
-                    subgroup.append(person)
+                if subgroup is None:
+                    continue
+                subgroup.append(person)
+                if isinstance(subgroup.group, Household):
+                    # restore housemates
+                    for mate in subgroup.group.people:
+                        if mate != person:
+                            person.housemates.append(mate)
+                # restore subgroups.people
+            #restore area.people
             if person.area is not None:
                 person.area.add(person)
+        # restore super_areas.areas
+        for area in self.areas:
+            area.super_area.areas.append(area)
+#
+    def __setstate__(self, state):
+       self.__dict__.update(state)
+       self._restore_world()
 
-    # def __setstate__(self, state):
-    #    self.__dict__.update(state)
-    #    self.restore_world()
+    def __getstate__(self):
+        """
+        The world is being pickled. If the user calls pickle directly,
+        without using the to_pickle method, then the connections from
+        the groups to people will be destroyed, and the user has to call
+        self._restore_world() manually. It is advised then to only use the
+        to_pickle() method.
+        """
+        self._destroy_world()
+        return self.__dict__
 
     @classmethod
     def from_pickle(self, pickle_path):
         with open(pickle_path, "rb") as f:
             world = pickle.load(f)
-        world._restore_world()
         return world
 
     def to_pickle(self, save_path):
-        self._destroy_world()
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
         self._restore_world()
 
-    @profile
+    #@profile
     def distribute_people_to_households(self):
         household_distributor = HouseholdDistributor.from_file()
         self.households = household_distributor.distribute_people_and_households_to_areas(
             self.areas
         )
 
-    @profile
+    #@profile
     def distribute_people_to_care_homes(self):
         CareHomeDistributor().populate_care_home_in_areas(self.areas)
 
-    @profile
+    #@profile
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
             geography
         )  # atm only for_geography()
         worker_distr.distribute(geography, self.people)
 
-    @profile
+    #@profile
     def distribute_medics_to_hospitals(self):
         hospital_distributor = HospitalDistributor(self.hospitals)
         hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
 
-    @profile
+    #@profile
     def distribute_kids_and_teachers_to_schools(self):
         school_distributor = SchoolDistributor(self.schools)
         school_distributor.distribute_kids_to_school(self.areas)
@@ -190,14 +215,14 @@ class World(object):
             self.super_areas
         )
 
-    @profile
+    #@profile
     def distribute_workers_to_companies(self):
         company_distributor = CompanyDistributor()
         company_distributor.distribute_adults_to_companies_in_super_areas(
             self.super_areas
         )
 
-    @profile
+    #@profile
     def initialise_commuting(self):
         commute_generator = CommuteGenerator.from_file()
 

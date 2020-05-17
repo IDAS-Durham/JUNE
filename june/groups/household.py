@@ -83,3 +83,16 @@ class Households(Supergroup):
         """
         self.members += households.members
         return self
+
+    def erase_people_from_groups_and_subgroups(self):
+        """
+        Sets all attributes in self.references_to_people to None for all groups.
+        Erases all people from subgroups.
+        """
+        for group in self:
+            for person in group.people:
+                person.housemates.clear()
+            for subgroup in group.subgroups:
+                subgroup._people.clear()
+                subgroup.group = None
+
