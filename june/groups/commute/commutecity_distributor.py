@@ -24,5 +24,5 @@ class CommuteCityDistributor:
 
                         if person.mode_of_transport is not None and person.mode_of_transport.is_public:
                             commutecity.add(person,
-                                    activity_type = person.ActivityType.commute,
+                                    activity_type = None,
                                     subgroup_type = commutecity.SubgroupType.default)

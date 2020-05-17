@@ -6,7 +6,7 @@ class GroupMaker:
         self.simulator = simulator
         #self.world = world
         print ("initialized group maker")
-        self.pubfiller = PubFiller(world)
+        #self.pubfiller = PubFiller(world)
         
     def distribute_people(self,grouptype):
         if grouptype=="pubs":
@@ -16,8 +16,10 @@ class GroupMaker:
                 self.pubfiller.fill(area)
             #self.make_histogram()
         if grouptype=='commute':
+            print('Distributing people coming from outside the city')
             self.simulator.commuteunit_distributor.distribute_people()
-            self.simulator.commutecityunit_distribute.distribute_people()
+            print('Distributing people within the city')
+            self.simulator.commutecityunit_distributor.distribute_people()
 
     def make_histogram(self):
         import matplotlib.pyplot as plt

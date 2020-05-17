@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class CommuteUnitDistributor:
     """
@@ -14,28 +15,28 @@ class CommuteUnitDistributor:
         """
         self.commutehubs = commutehubs
 
+    def chose_unit(self, possible_units):
+        unit_choice = np.random.randint(len(possible_units))
+        return possible_units[unit_choice]
+
     def distribute_people(self):
 
         for hub in self.commutehubs:
+            if len(hub.people) > 0:
+                possible_units = hub.commuteunits
+                to_commute = hub.people
+                indices = np.arange(len(to_commute))
+                random.shuffle(indices)
+                for unit in possible_units:
+                    if len(to_commute) == 0:
+                        break
+                    while unit.no_passengers < unit.max_passengers and len(to_commute) > 0:
+                        passenger_id = indices.pop()
+                        passenger = to_commute[passenger_id]
+                        unit.add(passenger,
+                            activity_type=passenger.ActivityType.commute,
+                            subgroup_type=unit.SubgroupType.default
+                            )
+                    unit.no_passengers += 1
 
-            possible_units = hub.commuteunits
-            to_commute = hub.people
 
-            # loop over all passengers who need to commute
-            for passenger in to_commute:
-
-                # assign passengers to commute units
-                assigned = False
-                while assigned == False:
-                
-                    unit_choice = np.random.randint(len(possible_units))
-                    unit = possible_units[unit_choice]
-                    
-                    if unit.no_passengers < unit.max_passengers:
-                        unit.passengers.add(passenger)
-                        unit.no_passengers += 1
-                        assigned = True
-                        # make this more efficient by stopping looking at things already filled
-                    else:
-                        pass
-        
