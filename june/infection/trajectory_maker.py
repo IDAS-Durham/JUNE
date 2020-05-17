@@ -42,7 +42,7 @@ class TrajectoryMaker:
 
     @classmethod
     def from_file(cls) -> "TrajectoryMaker":
-        return cls(paramters=None)
+        return cls(parameters=None)
 
     def __getitem__(self,tag):
         template   = self.trajectories[tag[0]]
