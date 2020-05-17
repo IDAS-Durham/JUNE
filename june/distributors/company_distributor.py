@@ -22,12 +22,8 @@ class CompanyDistributor:
         """Get all companies within SuperArea"""
 
     def distribute_adults_to_companies_in_super_areas(self, super_areas):
-        import time
-
         for super_area in super_areas:
-            t1 = time.time()
             self.distribute_adults_to_companies_in_super_area(super_area)
-            t2 = time.time()
 
     def distribute_adults_to_companies_in_super_area(self, super_area):
         """
