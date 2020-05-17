@@ -113,8 +113,9 @@ class CommuteHubDistributor:
                 _, hub_index = commutehub_tree.query(live_lat_lon,1) 
                 
                 commutehub_in_city[hub_index].add(work_person,
-                        activity_type=work_person.ActivityType.commute,
-                        subgroup_type=commutehub_in_city[hub_index])
+                        activity_type=None,
+                        subgroup_type=commutehub_in_city[hub_index].SubgroupType.default
+                        )
 
             for work_person in to_commute_in:
                 commutecity.commute_internal.append(work_person)

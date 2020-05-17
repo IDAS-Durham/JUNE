@@ -8,7 +8,7 @@ import numpy as np
 import yaml
 
 from june.demography import Person
-from june.groups import Group
+from june.groups import Group, GroupMaker
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
@@ -16,7 +16,7 @@ from june.logger_simulation import Logger
 from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
-from june.groups.commute.commutecityunit_distributor import CommuteUnitCityDistributor
+from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor 
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -100,10 +100,13 @@ class Simulator:
         if not self.world.box_mode:
             self.min_age_home_alone = config["min_age_home_alone"]
             self.stay_at_home_complacency = config["stay_at_home_complacency"]
-            if commute=True:
+            if commute:
                 self.commuteunit_distributor = CommuteUnitDistributor(self.world.commutehubs.members)
                 self.commutecityunit_distributor = CommuteCityUnitDistributor(self.world.commutecities.members)
-                self.group_maker = GroupMaker(
+                self.group_maker = GroupMaker(self)
+                # TODO: isntances of commute
+                #self.world.commmutecityunit.members
+                #self.world.commmuteunit.members
 
     @classmethod
     def from_file(
@@ -303,6 +306,15 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
+        if 'commute' in activities:
+            print('Before')
+            print(len(self.world.commmutecityunit.members[0].people))
+            print(len(self.world.commmutecityunit.members[1].people))
+            self.group_maker.distribute_people('commute')
+            print('After')
+            print(len(self.world.commmutecityunit.members[0].people))
+            print(len(self.world.commmutecityunit.members[1].people))
+
         for person in self.world.people.members:
             if person.health_information.dead or person.busy:
                 continue
