@@ -285,6 +285,7 @@ class HouseholdDistributor:
     ):
         """
         Distributes households and people into households for the given areas list.
+        The households are stored in area.households.
 
         Parameters
         ----------
@@ -697,7 +698,7 @@ class HouseholdDistributor:
         people_in_households = 0
         for household in all_households:
             people_in_households += len(household.people)
-        # assert total_people == people_in_households
+        assert total_people == people_in_households
         return all_households
 
     def _create_household(
