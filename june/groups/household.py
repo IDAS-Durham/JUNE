@@ -86,8 +86,9 @@ class Households(Supergroup):
 
     def erase_people_from_groups_and_subgroups(self):
         """
-        Sets all attributes in self.references_to_people to None for all groups.
         Erases all people from subgroups.
+        Erases all subgroup references to group.
+        Empties housemates list.
         """
         for group in self:
             for person in group.people:

@@ -10,9 +10,19 @@ from june.distributors import (
     CareHomeDistributor,
     WorkerDistributor,
     CompanyDistributor,
+    CommuteHubDistributor,
+    CommuteCityDistributor,
 )
 from june.geography import Geography
-from june.groups import *
+from june.groups import (
+    Household,
+    Hospitals,
+    CommuteCities,
+    CommuteHubs,
+    CommuteCityUnit,
+    CommuteCityUnits,
+    CommuteUnits,
+)
 from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
@@ -26,12 +36,14 @@ allowed_super_groups = [
     "care_homes",
 ]
 
+
 def _populate_areas(geography, demography):
     people = Population()
     for area in geography.areas:
         area.populate(demography)
         people.extend(area.people)
     return people
+
 
 class World(object):
     """
@@ -151,16 +163,17 @@ class World(object):
                         if mate != person:
                             person.housemates.append(mate)
                 # restore subgroups.people
-            #restore area.people
+            # restore area.people
             if person.area is not None:
                 person.area.add(person)
         # restore super_areas.areas
         for area in self.areas:
             area.super_area.areas.append(area)
-#
+
+    #
     def __setstate__(self, state):
-       self.__dict__.update(state)
-       self._restore_world()
+        self.__dict__.update(state)
+        self._restore_world()
 
     def __getstate__(self):
         """
@@ -184,30 +197,30 @@ class World(object):
             pickle.dump(self, f)
         self._restore_world()
 
-    #@profile
+    # @profile
     def distribute_people_to_households(self):
         household_distributor = HouseholdDistributor.from_file()
         self.households = household_distributor.distribute_people_and_households_to_areas(
             self.areas
         )
 
-    #@profile
+    # @profile
     def distribute_people_to_care_homes(self):
         CareHomeDistributor().populate_care_home_in_areas(self.areas)
 
-    #@profile
+    # @profile
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
             geography
         )  # atm only for_geography()
         worker_distr.distribute(geography, self.people)
 
-    #@profile
+    # @profile
     def distribute_medics_to_hospitals(self):
         hospital_distributor = HospitalDistributor(self.hospitals)
         hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
 
-    #@profile
+    # @profile
     def distribute_kids_and_teachers_to_schools(self):
         school_distributor = SchoolDistributor(self.schools)
         school_distributor.distribute_kids_to_school(self.areas)
@@ -215,14 +228,14 @@ class World(object):
             self.super_areas
         )
 
-    #@profile
+    # @profile
     def distribute_workers_to_companies(self):
         company_distributor = CompanyDistributor()
         company_distributor.distribute_adults_to_companies_in_super_areas(
             self.super_areas
         )
 
-    #@profile
+    # @profile
     def initialise_commuting(self):
         commute_generator = CommuteGenerator.from_file()
 

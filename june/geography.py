@@ -25,33 +25,7 @@ default_logging_config_filename = (
 logger = logging.getLogger(__name__)
 
 
-class GeographicalUnit:
-    """
-    Template for a geography group.
-    """
-
-    __id_generators = defaultdict(count)
-
-    @classmethod
-    def _next_id(cls) -> int:
-        """
-        Iterate an id for this class. Each group class has its own id iterator
-        starting at 0
-        """
-        return next(cls.__id_generators[cls])
-
-    def __init__(self):
-        self.id = self._next_id()
-
-    @classmethod
-    def from_file(cls):
-        raise NotImplementedError(
-            "From file initialization not available for this supergroup."
-        )
-
-    
-
-class Area(GeographicalUnit):
+class Area:
     """
     Fine geographical resolution.
     """
@@ -67,15 +41,12 @@ class Area(GeographicalUnit):
     _id = count()
 
     def __init__(
-            self,
-            name: str,
-            super_area: "SuperArea",
-            coordinates: Tuple[float, float],
+        self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
     ):
         """
         Coordinate is given in the format Y, X where X is longitude and Y is latitude.
         """
-        super().__init__()
+        self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
         self.super_area = super_area
@@ -90,11 +61,10 @@ class Area(GeographicalUnit):
             self.add(person)
 
 
-class Areas(GeographicalUnit):
+class Areas:
     __slots__ = "members", "super_area"
 
     def __init__(self, areas: List[Area], super_area=None):
-        super().__init__()
         self.members = areas
         self.super_area = super_area
 
@@ -116,7 +86,7 @@ class Areas(GeographicalUnit):
             geo_unit.people.clear()
 
 
-class SuperArea(GeographicalUnit):
+class SuperArea:
     """
     Coarse geographical resolution.
     """
@@ -147,13 +117,12 @@ class SuperArea(GeographicalUnit):
         return list(chain(*[area.people for area in self.areas]))
 
 
-class SuperAreas(GeographicalUnit):
+class SuperAreas:
     __slots__ = "members"
 
     def __init__(self, super_areas: List[SuperArea]):
-        super().__init__()
         self.members = super_areas
-    
+
     def __iter__(self):
         return iter(self.members)
 
@@ -172,7 +141,7 @@ class SuperAreas(GeographicalUnit):
             geo_unit.people.clear()
             geo_unit.workers.clear()
             geo_unit.areas.clear()
-            #geo_unit.companies.clear()
+            # geo_unit.companies.clear()
 
 
 class Geography:
