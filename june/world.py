@@ -94,10 +94,6 @@ class World(object):
             self.schools = geography.schools
             self.distribute_kids_and_teachers_to_schools()
 
-        if hasattr(geography, "companies"):
-            self.companies = geography.companies
-            self.distribute_workers_to_companies()
-
         if include_commute:
             self.initialise_commuting()
 
@@ -107,6 +103,11 @@ class World(object):
 
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries
+
+        # Companies last because need hospital and school workers first
+        if hasattr(geography, "companies"):
+            self.companies = geography.companies
+            self.distribute_workers_to_companies()
 
     @classmethod
     def from_geography(cls, geography: Geography, box_mode=False):
