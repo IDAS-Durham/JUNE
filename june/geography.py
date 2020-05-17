@@ -166,11 +166,6 @@ class Geography:
             hierarchy, area_coordinates, super_area_coordinates
         )
 
-    @staticmethod
-    def _create_area(name, coordinates, super_area):
-        area = Area(name=name, coordinates=coordinates, super_area=super_area)
-        return area
-
     def _create_areas(
         self, area_coords: pd.DataFrame, super_area: pd.DataFrame
     ) -> List[Area]:
