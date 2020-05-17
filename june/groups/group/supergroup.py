@@ -50,8 +50,8 @@ class Supergroup:
 
     def erase_people_from_groups_and_subgroups(self):
         """
-        Sets all attributes in self.references_to_people to None for all groups.
         Erases all people from subgroups.
+        Erases all subgroup references to group.
         """
         for group in self:
             for subgroup in group.subgroups:
