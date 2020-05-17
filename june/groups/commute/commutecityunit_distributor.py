@@ -1,4 +1,7 @@
 import numpy as np
+import random
+
+#TODO: CommuteUnitDistributor and this distributor seem to be doing the same thing, unify
 
 class CommuteCityUnitDistributor:
     """
@@ -14,34 +17,43 @@ class CommuteCityUnitDistributor:
         """
         self.commutecities = commutecities
 
+    def chose_unit(self, possible_units):
+        unit_choice = np.random.randint(len(possible_units))
+        return possible_units[unit_choice]
+
     def distribute_people(self):
 
         for city in self.commutecities:
-
             # Clear all units of passengers before running
             possible_units = city.commutecityunits
+            commuting_people = city.commute_internal
+            indices = list(range((len(commuting_people))))
+            random.shuffle(indices)
+            people_per_unit = len(commuting_people)//len(possible_units)
             for unit in possible_units:
-                unit.passengers = 0
+                unit.no_passengers = 0
+                unit.subgroups[0]._people.clear()
             
-            to_commute = city.commute_internal
+            for unit in possible_units:
+                while unit.no_passengers < people_per_unit:
+                    passenger_id = indices.pop()
+                    passenger = commuting_people[passenger_id]
+                    unit.add(passenger,
+                        activity_type=passenger.ActivityType.commute,
+                        subgroup_type=unit.SubgroupType.default
+                        )
+                    unit.no_passengers += 1
 
-            # loop over all passengers who need to commute
-            for passenger in to_commute:
+            while indices:
+                passenger_id = indices.pop()
+                passenger = commuting_people[passenger_id]
+                unit.add(passenger,
+                        activity_type=passenger.ActivityType.commute,
+                        subgroup_type=unit.SubgroupType.default
+                        )
+                unit.no_passengers += 1
 
-                # assign passengers to commute units
-                assigned = False
-                while not assigned:
-                
-                    unit_choice = np.random.randint(len(possible_units))
-                    unit = possible_units[unit_choice]
-                    
-                    if unit.no_passengers < unit.max_passengers:
-                        unit.add(passenger,
-                                activity_type=passenger.ActivityType.commute,
-                                subgroup_type=unit.SubgroupType.default)
-                        unit.no_passengers += 1
-                        assigned = True
-                        # make this more efficient by stopping looking at things already filled
-                    else:
-                        pass
-        
+
+
+
+   
