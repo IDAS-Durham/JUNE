@@ -285,7 +285,6 @@ class HouseholdDistributor:
     ):
         """
         Distributes households and people into households for the given areas list.
-        The households are stored in area.households.
 
         Parameters
         ----------
