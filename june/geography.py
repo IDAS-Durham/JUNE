@@ -49,14 +49,7 @@ class GeographicalUnit:
             "From file initialization not available for this supergroup."
         )
 
-    def erase_people_from_geographical_unit(self):
-        """
-        Sets all attributes in self.references_to_people to None for all groups.
-        Erases all people from subgroups.
-        """
-        for geo_unit in self:
-            geo_unit.people.clear()
-
+    
 
 class Area(GeographicalUnit):
     """
@@ -64,7 +57,6 @@ class Area(GeographicalUnit):
     """
 
     __slots__ = (
-        "households",
         "people",
         "id",
         "name",
@@ -115,6 +107,14 @@ class Areas(GeographicalUnit):
     def __getitem__(self, index):
         return self.members[index]
 
+    def erase_people_from_geographical_unit(self):
+        """
+        Sets all attributes in self.references_to_people to None for all groups.
+        Erases all people from subgroups.
+        """
+        for geo_unit in self:
+            geo_unit.people.clear()
+
 
 class SuperArea(GeographicalUnit):
     """
@@ -162,6 +162,16 @@ class SuperAreas(GeographicalUnit):
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def erase_people_from_geographical_unit(self):
+        """
+        Sets all attributes in self.references_to_people to None for all groups.
+        Erases all people from subgroups.
+        """
+        for geo_unit in self:
+            geo_unit.people.clear()
+            geo_unit.companies.clear()
+            geo_unit.workers.clear()
 
 
 class Geography:

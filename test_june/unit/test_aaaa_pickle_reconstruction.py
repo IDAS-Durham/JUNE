@@ -59,7 +59,6 @@ def save_world_areas(world_to_copy, geo = "areas"):
 
 def test__world_reconstruction(world_pickle):
     world = world_pickle
-    # check we saved everything correctly
     original_group = create_world_groups_dictionary(world)
     original_areas = save_world_areas(world, "areas")
     original_super_areas = save_world_areas(world, "super_areas")
