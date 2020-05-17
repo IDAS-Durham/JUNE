@@ -36,7 +36,9 @@ class CommuteCityUnitDistributor:
                     unit = possible_units[unit_choice]
                     
                     if unit.no_passengers < unit.max_passengers:
-                        unit.add(passenger)
+                        unit.add(passenger,
+                                activity_type=passenger.ActivityType.commute,
+                                subgroup_type=unit.SubgroupType.default)
                         unit.no_passengers += 1
                         assigned = True
                         # make this more efficient by stopping looking at things already filled

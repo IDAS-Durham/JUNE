@@ -118,7 +118,8 @@ class Group(AbstractGroup):
             
         """
         self[subgroup_type].append(person)
-        person.subgroups[activity_type] = self[subgroup_type]
+        if activity_type is not None:
+            person.subgroups[activity_type] = self[subgroup_type]
 
     @property
     def people(self) -> List[Person]:
