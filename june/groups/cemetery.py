@@ -21,9 +21,8 @@ class Cemetery(Group):
 
 
 class Cemeteries(Supergroup):
-    def __init__(self, world=None):
-        self.world = world
-        super().__init__(['world'])
+    def __init__(self):
+        super().__init__()
         self.members = [Cemetery()]
 
     def get_nearest(self, person):
