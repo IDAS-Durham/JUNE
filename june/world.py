@@ -1,6 +1,7 @@
 import logging
 import pickle
 import h5py
+from typing import Optional
 from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
@@ -47,7 +48,7 @@ class World(object):
     def __init__(
         self,
         geography: Geography,
-        demography: Demography = None,
+        demography: Optional[Demography] = None,
         include_households: bool = True,
         include_commute: bool = False,
         box_mode=False,
