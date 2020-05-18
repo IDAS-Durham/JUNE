@@ -6,6 +6,10 @@ from june.demography.person import Person
 from june.groups import Group 
 from june.interaction import DefaultInteraction
 from june.infection.infection import InfectionSelector
+from pathlib import Path
+path_pwd = Path(__file__)
+dir_pwd  = path_pwd.parent
+constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 
 test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
 
@@ -21,9 +25,9 @@ def days_to_infection(interaction, susceptible_person, group):
     while (
         not susceptible_person.health_information.infected and days_to_infection < 100
     ):
-        interaction.single_time_step_for_group(group, 1, delta_time)
+        interaction.single_time_step_for_group(group, days_to_infection, delta_time)
 
-    days_to_infection += 1
+        days_to_infection += 1
     return days_to_infection
 
 class TestGroup(Group):
@@ -34,13 +38,12 @@ class TestGroup(Group):
 #    "group_size", (2, 5)
 
 # )
-"""        
+'''
 def test__time_it_takes_to_infect(group_size=2):
     interaction    = DefaultInteraction.from_file(test_config_file)
-    interaction.selector = InfectionSelector(transmission_type="Constant",
-                                             symptoms_type="Constant")
+    interaction.selector = InfectionSelector.from_file(constant_config)
     n_days = []
-    for n in range(1000):
+    for n in range(100):
         group = TestGroup()
         infected_person = Person(sex='f', age=26)
         interaction.selector.make_infection(person=infected_person,time=1)
@@ -71,8 +74,7 @@ def test__time_it_takes_to_infect(group_size=2):
 
     np.testing.assert_allclose(
         np.mean(n_days),
-        1.0 / (interaction.selector.probability / group_size),
+        1.0 / (interaction.selector.transmission_probability / group_size),
         rtol=0.15,
     )
-
-"""
+'''
