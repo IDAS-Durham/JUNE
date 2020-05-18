@@ -107,7 +107,6 @@ class TestSaveCompanies:
         companies_recovered = Companies.from_hdf5("test.hdf5")
         for company, company2 in zip(companies, companies_recovered):
             for attribute_name in ["id", "n_workers_max", "sector"]:
-                print(attribute_name)
                 attribute = getattr(company, attribute_name)
                 attribute2 = getattr(company2, attribute_name)
                 if attribute is None:
