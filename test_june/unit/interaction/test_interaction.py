@@ -26,8 +26,8 @@ def days_to_infection(interaction, susceptible_person, group):
         not susceptible_person.health_information.infected and days_to_infection < 100
     ):
         interaction.single_time_step_for_group(group, days_to_infection, delta_time)
-
         days_to_infection += 1
+
     return days_to_infection
 
 class TestGroup(Group):
@@ -38,16 +38,14 @@ class TestGroup(Group):
 #    "group_size", (2, 5)
 
 # )
-'''
 def test__time_it_takes_to_infect(group_size=2):
-    interaction    = DefaultInteraction.from_file(test_config_file)
-    interaction.selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file(constant_config)
+    interaction    = DefaultInteraction.from_file(test_config_file, selector)
     n_days = []
     for n in range(100):
         group = TestGroup()
-        infected_person = Person(sex='f', age=26)
-        interaction.selector.make_infection(person=infected_person,time=1)
-        infection = infected_person.health_information.infection
+        infected_person = Person(sex='m', age=75)
+        selector.infect_person_at_time(infected_person,time=0)
         group.add(
             infected_person,
             activity_type=infected_person.ActivityType.box,
@@ -77,4 +75,3 @@ def test__time_it_takes_to_infect(group_size=2):
         1.0 / (interaction.selector.transmission_probability / group_size),
         rtol=0.15,
     )
-'''
