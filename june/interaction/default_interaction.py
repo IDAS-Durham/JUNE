@@ -90,7 +90,6 @@ class DefaultInteraction(Interaction):
     def contaminate(
             self, group, time, delta_time, infecters, recipients
     ):
-        # TODO: subtitute by matrices read from file when ready
         infecter_probability = self.probabilities[infecters]
         if infecter_probability <= 0.0:
             return
