@@ -6,6 +6,25 @@ from june.groups import Households, Companies, Hospitals, Schools, CareHomes
 from june.distributors import HouseholdDistributor
 from june import World
 from june.world import generate_world_from_hdf5
+from june.hdf5_savers import (
+    save_population_to_hdf5,
+    save_geography_to_hdf5,
+    save_schools_to_hdf5,
+    save_hospitals_to_hdf5,
+    save_care_homes_to_hdf5,
+    save_households_to_hdf5,
+    save_companies_to_hdf5,
+    )
+from june.hdf5_savers import (
+    load_geography_from_hdf5,
+    load_population_from_hdf5,
+    load_care_homes_from_hdf5,
+    load_companies_from_hdf5,
+    load_households_from_hdf5,
+    load_population_from_hdf5,
+    load_schools_from_hdf5,
+    load_hospitals_from_hdf5
+)
 
 from pytest import fixture
 
@@ -19,7 +38,7 @@ def make_geography():
 @fixture(name="world_h5", scope="module")
 def create_world(geography_h5):
     with h5py.File("test.hdf5", "w"):
-        pass # reset file
+        pass  # reset file
     geography = geography_h5
     demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
@@ -33,8 +52,8 @@ def create_world(geography_h5):
 class TestSavePeople:
     def test__save_population(self, world_h5):
         population = world_h5.people
-        population.to_hdf5("test.hdf5")
-        pop_recovered = Population.from_hdf5("test.hdf5")
+        save_population_to_hdf5(population, "test.hdf5")
+        pop_recovered = load_population_from_hdf5("test.hdf5")
         for person, person2 in zip(population, pop_recovered):
             for attribute_name in [
                 "id",
@@ -84,8 +103,8 @@ class TestSavePeople:
 class TestSaveHouses:
     def test__save_households(self, world_h5):
         households = world_h5.households
-        households.to_hdf5("test.hdf5")
-        households_recovered = Households.from_hdf5("test.hdf5")
+        save_households_to_hdf5(households, "test.hdf5")
+        households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
             for attribute_name in ["id", "max_size", "communal"]:
                 attribute = getattr(household, attribute_name)
@@ -103,8 +122,8 @@ class TestSaveHouses:
 class TestSaveCompanies:
     def test__save_companies(self, world_h5):
         companies = world_h5.companies
-        companies.to_hdf5("test.hdf5")
-        companies_recovered = Companies.from_hdf5("test.hdf5")
+        save_companies_to_hdf5(companies, "test.hdf5")
+        companies_recovered = load_companies_from_hdf5("test.hdf5")
         for company, company2 in zip(companies, companies_recovered):
             for attribute_name in ["id", "n_workers_max", "sector"]:
                 attribute = getattr(company, attribute_name)
@@ -122,8 +141,8 @@ class TestSaveCompanies:
 class TestSaveHospitals:
     def test__save_hospitals(self, world_h5):
         hospitals = world_h5.hospitals
-        hospitals.to_hdf5("test.hdf5")
-        hospitals_recovered = Hospitals.from_hdf5("test.hdf5")
+        save_hospitals_to_hdf5(hospitals, "test.hdf5")
+        hospitals_recovered = load_hospitals_from_hdf5("test.hdf5")
         for hospital, hospital2 in zip(hospitals, hospitals_recovered):
             for attribute_name in [
                 "id",
@@ -147,8 +166,8 @@ class TestSaveHospitals:
 class TestSaveSchools:
     def test__save_schools(self, world_h5):
         schools = world_h5.schools
-        schools.to_hdf5("test.hdf5")
-        schools_recovered = schools.from_hdf5("test.hdf5")
+        save_schools_to_hdf5(schools, "test.hdf5")
+        schools_recovered = load_schools_from_hdf5("test.hdf5")
         for school, school2 in zip(schools, schools_recovered):
             for attribute_name in [
                 "id",
@@ -176,8 +195,8 @@ class TestSaveSchools:
 class TestSaveCarehomes:
     def test__save_carehomes(self, world_h5):
         carehomes = world_h5.care_homes
-        carehomes.to_hdf5("test.hdf5")
-        carehomes_recovered = carehomes.from_hdf5("test.hdf5")
+        save_care_homes_to_hdf5(carehomes, "test.hdf5")
+        carehomes_recovered = load_care_homes_from_hdf5("test.hdf5")
         for carehome, carehome2 in zip(carehomes, carehomes_recovered):
             for attribute_name in ["id", "n_residents"]:
                 attribute = getattr(carehome, attribute_name)
@@ -197,8 +216,8 @@ class TestSaveGeography:
         areas = world_h5.areas
         super_areas = world_h5.super_areas
         geography = Geography(areas, super_areas)
-        geography.to_hdf5("test.hdf5")
-        geography_recovered = Geography.from_hdf5("test.hdf5")
+        save_geography_to_hdf5(geography, "test.hdf5")
+        geography_recovered = load_geography_from_hdf5("test.hdf5")
         for area, area2 in zip(areas, geography_recovered.areas):
             for attribute_name in ["id", "name"]:
                 attribute = getattr(area, attribute_name)
