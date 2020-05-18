@@ -104,7 +104,7 @@ class SuperArea:
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
-        self.areas = areas
+        self.areas = areas or list()
         self.workers = list()
         self.companies = list()
 
