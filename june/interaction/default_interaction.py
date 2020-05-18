@@ -103,11 +103,11 @@ class DefaultInteraction(Interaction):
         should_be_infected = np.random.random(len(group_of_recipients))
         for recipient, luck in zip(group_of_recipients, should_be_infected):
             transmission_probability = 1.0 - exp(
-                - delta_ime * recipient.health_information.susceptibility * intensity
+                - delta_time * recipient.health_information.susceptibility * intensity
             )
             if luck < transmission_probability:
                 infecter = self.select_infecter()
-                selector.infect_person_at_time(person = recipient, time = time)
+                self.selector.infect_person_at_time(person = recipient, time = time)
                 infecter.health_information.increment_infected()
                 recipient.health_information.update_infection_data(
                     time=time, group_type=group.spec
