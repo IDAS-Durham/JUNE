@@ -7,7 +7,7 @@ from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 import june.interaction as inter
 from june.infection import infection as infect

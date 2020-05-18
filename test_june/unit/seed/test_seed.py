@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 import numpy as np
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 from june.seed import Seed
 

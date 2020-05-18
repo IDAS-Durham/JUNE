@@ -1,7 +1,7 @@
 import pytest
 import random
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 from june.world import World
 from june.interaction import DefaultInteraction
