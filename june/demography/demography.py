@@ -20,7 +20,7 @@ class AgeSexGenerator:
         self, age_counts: list, 
         sex_bins: list, female_fractions: list,
         ethnicity_age_bins: list, ethnicity_groups: list, ethnicity_structure: list,
-        socioecon_index: int,
+        socioecon_index_value: int,
         max_age=99
     ):
         """
@@ -78,7 +78,7 @@ class AgeSexGenerator:
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
         self.ethnicity_iterator = iter(ethnicities)
-        self.socioecon_index = socioecon_index
+        self.socioecon_index_value = socioecon_index_value
         self.max_age = max_age
 
     def age(self) -> int:
@@ -98,6 +98,9 @@ class AgeSexGenerator:
             return next(self.ethnicity_iterator)
         except StopIteration:
             raise DemographyError("No more people living here!")
+
+    def socioecon_index(self) -> int:
+        return self.socioecon_index_value
 
 
 class Population:
@@ -191,7 +194,7 @@ class Demography:
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
                 ethnicity=age_and_sex_generator.ethnicity(),
-                socioecon_index=age_and_sex_generator.socioecon_index
+                socioecon_index=age_and_sex_generator.socioecon_index()
                 # TODO socioeconomic_generators.socioeconomic_index()
             )
             people.append(person)  # add person to population
