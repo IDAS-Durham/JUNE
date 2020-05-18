@@ -1,5 +1,6 @@
 import pytest
 import random
+from pathlib import Path
 
 from june.geography import Geography
 from june.demography import Demography
@@ -16,6 +17,7 @@ from pathlib import Path
 path_pwd = Path(__file__)
 dir_pwd  = path_pwd.parent
 constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+test_config = Path(__file__).parent.parent.parent / "test_simulator.yaml"
 
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
@@ -26,14 +28,14 @@ def create_simulator():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True)
+    world = World(geography, demography, include_households=True, include_commute=True)
     selector                          = InfectionSelector.from_file(constant_config)
     selector.recovery_rate            = 0.05
     selector.transmission_probability = 0.7
     interaction            = DefaultInteraction.from_file()
     interaction.selector   = selector
-    return Simulator.from_file(world, interaction, selector,)
-
+    return Simulator.from_file(world, interaction, selector,
+            config_filename = test_config)
 
 @pytest.fixture(name="health_index")
 def create_health_index():
