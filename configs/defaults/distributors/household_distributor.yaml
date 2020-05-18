@@ -1,6 +1,6 @@
 kid_max_age : 17
 student_min_age : 18
-student_max_age : 30 
+student_max_age : 25
 old_min_age : 65
 old_max_age : 99
 adult_min_age : 18

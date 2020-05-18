@@ -698,7 +698,7 @@ class HouseholdDistributor:
         people_in_households = 0
         for household in all_households:
             people_in_households += len(household.people)
-        # assert total_people == people_in_households
+        assert total_people == people_in_households
         return all_households
 
     def _create_household(
@@ -981,7 +981,7 @@ class HouseholdDistributor:
         """
         if n_students == 0:
             return
-            # students per household
+        # students per household
         ratio = max(int(n_students / student_houses_number), 1)
         # get all people in the students age
         # fill students to households
@@ -998,7 +998,12 @@ class HouseholdDistributor:
                     max_age=self.student_max_age,
                 )
                 if student is None:
-                    raise HouseholdError("Students do not match!")
+                    student = self._get_random_person_in_age_bracket(
+                        men_by_age,
+                        women_by_age,
+                        min_age=self.student_min_age,
+                        max_age=self.student_max_age + 10,
+                    )
                 self._add_to_household(household, student, subgroup="young_adults")
                 students_left -= 1
         assert students_left >= 0
@@ -1011,6 +1016,13 @@ class HouseholdDistributor:
                 min_age=self.student_min_age,
                 max_age=self.student_max_age,
             )
+            if student is None:
+                student = self._get_random_person_in_age_bracket(
+                    men_by_age,
+                    women_by_age,
+                    min_age=self.student_min_age,
+                    max_age=self.student_max_age + 10,
+                )
             self._add_to_household(household, student, subgroup="young_adults")
             students_left -= 1
             index += 1
