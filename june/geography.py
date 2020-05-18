@@ -304,7 +304,7 @@ class Geography:
         super_area_names = np.array(super_area_names, dtype="S10")
         super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
 
-        with h5py.File(file_path, "w") as f:
+        with h5py.File(file_path, "a") as f:
             people_dset = f.create_group("geography")
             people_dset.attrs["n_areas"] = n_areas
             people_dset.attrs["n_super_areas"] = n_super_areas
@@ -349,9 +349,6 @@ class Geography:
                 names = geography["super_area_name"][idx1:idx2]
                 super_area_coordinates = geography["super_area_coordinates"][idx1:idx2]
                 for k in range(idx2 - idx1):
-                    print(k)
-                    print(names)
-                    print(super_area_coordinates)
                     super_area = SuperArea(names[k].decode(), None, super_area_coordinates[k])
                     super_area.id = ids[k]
                     super_area_list.append(super_area)

@@ -59,9 +59,9 @@ class CompanyDistributor:
                 company.add(worker)
 
         # remove companies with no employees
-        for company in super_area.companies:
-            if company.n_workers == 0:
-                super_area.companies.remove(company)
+        #for company in super_area.companies:
+        #    if company.n_workers == 0:
+        #        super_area.companies.remove(company)
 
     def remove_empty_companies(self, companies: Companies):
         Companies.members = [company for company in companies if company.n_workers > 0]
