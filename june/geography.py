@@ -78,15 +78,6 @@ class Areas:
     def __getitem__(self, index):
         return self.members[index]
 
-    def erase_people_from_geographical_unit(self):
-        """
-        Sets all attributes in self.references_to_people to None for all groups.
-        Erases all people from subgroups.
-        """
-        for geo_unit in self:
-            geo_unit.people.clear()
-
-
 class SuperArea:
     """
     Coarse geographical resolution.
@@ -131,17 +122,6 @@ class SuperAreas:
 
     def __getitem__(self, index):
         return self.members[index]
-
-    def erase_people_from_geographical_unit(self):
-        """
-        Sets all attributes in self.references_to_people to None for all groups.
-        Erases all people from subgroups.
-        """
-        for geo_unit in self:
-            geo_unit.people.clear()
-            geo_unit.workers.clear()
-            geo_unit.areas.clear()
-            # geo_unit.companies.clear()
 
 
 class Geography:
