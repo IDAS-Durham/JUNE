@@ -1,6 +1,6 @@
 import logging
 import pickle
-
+from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
 from june.distributors import (
@@ -12,10 +12,18 @@ from june.distributors import (
     CompanyDistributor,
 )
 from june.geography import Geography
-from june.groups import *
-from june.commute import CommuteGenerator
+from june.groups import * 
 
 logger = logging.getLogger(__name__)
+
+allowed_super_groups = [
+    "hospitals",
+    "companies",
+    "cemeteries",
+    "schools",
+    "households",
+    "care_homes",
+]
 
 
 def _populate_areas(geography, demography):
@@ -26,7 +34,7 @@ def _populate_areas(geography, demography):
     return people
 
 
-class World:
+class World(object):
     """
     This Class creates the world that will later be simulated.
     The world will be stored in pickle, but a better option needs to be found.
@@ -85,10 +93,6 @@ class World:
             self.schools = geography.schools
             self.distribute_kids_and_teachers_to_schools()
 
-        if hasattr(geography, "companies"):
-            self.companies = geography.companies
-            self.distribute_workers_to_companies()
-
         if include_commute:
             self.initialise_commuting()
 
@@ -99,6 +103,11 @@ class World:
         if hasattr(geography, "cemeteries"):
             self.cemeteries = geography.cemeteries
 
+        # Companies last because need hospital and school workers first
+        if hasattr(geography, "companies"):
+            self.companies = geography.companies
+            self.distribute_workers_to_companies()
+
     @classmethod
     def from_geography(cls, geography: Geography, box_mode=False):
         """
@@ -108,29 +117,99 @@ class World:
         demography = Demography.for_geography(geography)
         return cls(geography, demography, box_mode=box_mode)
 
+    def _destroy_world(self):
+        """ I am being pickled! Removes links from group to people
+        to avoid circular references and to make the world pickleable.
+        The state of the world is then restored, however, some temporary
+        information store by distributors to area or group objects
+        might be deleted (they shouldn't be there anyway..)
+        """
+        for supergroup_name in allowed_super_groups:
+            if hasattr(self, supergroup_name):
+                supergroup = getattr(self, supergroup_name)
+                supergroup.erase_people_from_groups_and_subgroups()
+
+        for geo_superunit in ["super_areas", "areas"]:
+            supergeo = getattr(self, geo_superunit)
+            supergeo.erase_people_from_geographical_unit()
+
+    def _restore_world(self):
+        # restore subgroup -> group link
+        for supergroup_name in allowed_super_groups:
+            if hasattr(self, supergroup_name):
+                supergroup = getattr(self, supergroup_name)
+                for group in supergroup:
+                    for subgroup in group.subgroups:
+                        subgroup.group = group
+        for person in self.people:
+            for subgroup in person.subgroups:
+                if subgroup is None:
+                    continue
+                subgroup.append(person)
+                if isinstance(subgroup.group, Household):
+                    # restore housemates
+                    for mate in subgroup.group.people:
+                        if mate != person:
+                            person.housemates.append(mate)
+                # restore subgroups.people
+            # restore area.people
+            if person.area is not None:
+                person.area.add(person)
+        # restore super_areas.areas
+        for area in self.areas:
+            area.super_area.areas.append(area)
+
+    #
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._restore_world()
+
+    def __getstate__(self):
+        """
+        The world is being pickled. If the user calls pickle directly,
+        without using the to_pickle method, then the connections from
+        the groups to people will be destroyed, and the user has to call
+        self._restore_world() manually. It is advised then to only use the
+        to_pickle() method.
+        """
+        self._destroy_world()
+        return self.__dict__
+
+    @classmethod
+    def from_pickle(self, pickle_path):
+        with open(pickle_path, "rb") as f:
+            world = pickle.load(f)
+        return world
+
     def to_pickle(self, save_path):
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
+        self._restore_world()
 
+    # @profile
     def distribute_people_to_households(self):
         household_distributor = HouseholdDistributor.from_file()
         self.households = household_distributor.distribute_people_and_households_to_areas(
             self.areas
         )
 
+    # @profile
     def distribute_people_to_care_homes(self):
         CareHomeDistributor().populate_care_home_in_areas(self.areas)
 
+    # @profile
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
             geography
         )  # atm only for_geography()
         worker_distr.distribute(geography, self.people)
 
+    # @profile
     def distribute_medics_to_hospitals(self):
         hospital_distributor = HospitalDistributor(self.hospitals)
         hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
 
+    # @profile
     def distribute_kids_and_teachers_to_schools(self):
         school_distributor = SchoolDistributor(self.schools)
         school_distributor.distribute_kids_to_school(self.areas)
@@ -138,12 +217,14 @@ class World:
             self.super_areas
         )
 
+    # @profile
     def distribute_workers_to_companies(self):
         company_distributor = CompanyDistributor()
         company_distributor.distribute_adults_to_companies_in_super_areas(
             self.super_areas
         )
 
+    # @profile
     def initialise_commuting(self):
         commute_generator = CommuteGenerator.from_file()
 
@@ -186,4 +267,3 @@ class World:
 
         # put these into the simulator
         # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
-
