@@ -1,6 +1,7 @@
 import logging
 import pickle
 import h5py
+import numpy as np
 from typing import Optional
 from june.groups import Group
 from june.box.box_mode import Boxes, Box
@@ -37,7 +38,7 @@ def _populate_areas(geography, demography):
     return people
 
 
-class World(object):
+class World:
     """
     This Class creates the world that will later be simulated.
     The world will be stored in pickle, but a better option needs to be found.
@@ -318,6 +319,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
     """
     geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World(geography, include_households=False)
+    super_areas_first_id = world.super_areas[0].id # in case some super areas were created before
     with h5py.File(file_path, "r") as f:
         f_keys = list(f.keys()).copy()
     if "population" in f_keys:
@@ -328,9 +330,10 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
         world.schools = load_schools_from_hdf5(file_path, chunk_size)
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(file_path, chunk_size)
+        #first_idx = super_area_ids.index(world.companies[0].super_area, 0)
         for company in world.companies:
-            sa_id = company.super_area
-            company.super_area = world.super_areas[sa_id]
+            #idx = np.searchsorted(super_area_ids, company.super_area)
+            company.super_area = world.super_areas[company.super_area - super_areas_first_id]
     if "care_homes" in f_keys:
         world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
     if "households" in f_keys:
@@ -346,10 +349,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
     # restore areas -> super_areas
     for area in world.areas:
         super_area_id = area.super_area
-        area.super_area = world.super_areas[super_area_id]
+        area.super_area = world.super_areas[super_area_id - super_areas_first_id]
         area.super_area.areas.append(area)
 
     # restore person -> subgroups
+    first_people_id = world.people[0].id
     for person in world.people:
         subgroups_instances = [None] * len(person.subgroups)
         for i, subgroup_info in enumerate(person.subgroups):
@@ -357,7 +361,8 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
             if spec is None:
                 continue
             supergroup = getattr(world, spec_mapper[spec])
-            group = supergroup.members[group_id]
+            first_group_id = supergroup.members[0].id
+            group = supergroup.members[group_id - first_group_id]
             assert group_id == group.id
             subgroup = group[subgroup_type]
             subgroups_instances[i] = subgroup
@@ -366,7 +371,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
         housemate_ids = person.housemates
         housemates = []
         for mateid in housemate_ids:
-            housemates.append(world.people[mateid])
+            housemates.append(world.people[mateid - first_people_id])
         person.housemates = housemates
     return world
 

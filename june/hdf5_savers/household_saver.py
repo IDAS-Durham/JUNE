@@ -53,9 +53,14 @@ def save_households_to_hdf5(
                 households_dset.create_dataset("communal", data=communals)
                 households_dset.create_dataset("max_size", data=max_sizes)
             else:
+                newshape = (households_dset["id"].shape[0] + ids.shape[0],)
+                households_dset["id"].resize(newshape)
                 households_dset["id"][idx1:idx2] = ids
+                households_dset["area"].resize(newshape)
                 households_dset["area"][idx1:idx2] = areas 
+                households_dset["communal"].resize(newshape)
                 households_dset["communal"][idx1:idx2] = communals
+                households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
 
 def load_households_from_hdf5(file_path: str, chunk_size=50000):

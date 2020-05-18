@@ -12,7 +12,6 @@ from june.groups.group import Group, Supergroup
 default_data_path = (
     paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
-nan_integer = -999
 
 logger = logging.getLogger(__name__)
 

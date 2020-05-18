@@ -16,7 +16,6 @@ from june.groups import Group, Supergroup
 from june.geography import SuperArea
 
 logger = logging.getLogger(__name__)
-nan_integer = -999
 
 default_data_filename = (
     paths.data_path / "processed/hospital_data/england_hospitals.csv"

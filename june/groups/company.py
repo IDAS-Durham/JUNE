@@ -19,7 +19,6 @@ default_areas_map_path = (
 )
 
 logger = logging.getLogger(__name__)
-nan_integer = -999
 
 
 class CompanyError(BaseException):
