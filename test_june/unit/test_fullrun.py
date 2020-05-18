@@ -3,6 +3,7 @@ This is a quick test that makes sure the box model can be run. It does not check
 but at least we can use it in the meantime to make sure the code runs before pusing it to master.
 """
 
+from pathlib import Path
 from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
 from june import world
@@ -15,9 +16,9 @@ from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june.infection import transmission as trans
 from june.infection import symptoms as sym
 from june import World
-
 from june.seed import Seed
 
+test_config = Path(__file__).parent.parent / "test_simulator.yaml"
 
 def test_full_run():
     transmission = trans.TransmissionConstant(probability=0.3)
@@ -34,7 +35,8 @@ def test_full_run():
     geography.cemeteries = Cemeteries()
     world = World(geography, demography, include_households=True, include_commute=True)
     interaction = inter.DefaultInteraction.from_file()
-    simulator = Simulator.from_file(world, interaction, infection)
+    simulator = Simulator.from_file(world, interaction, infection,
+            config_filename = test_config)
 
     seed = Seed(simulator.world.super_areas, simulator.infection, )
     seed.unleash_virus(100)
