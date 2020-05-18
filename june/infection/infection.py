@@ -29,8 +29,8 @@ class TransmissionType(IntEnum):
 
 class InfectionSelector:
     def __init__(self,config = None):
-        transmission_type = "XNExp",
-        symptoms_type     = "Trajectories",
+        transmission_type = "XNExp"
+        symptoms_type     = "Trajectories"
         if config is not None:
             if "transmission" in config and "type" in config["transmission"]:
                 transmission_type = config["transmission"]["type"]
@@ -86,10 +86,8 @@ class InfectionSelector:
             cls,
             config_filename: str = default_config_filename
     ) -> "InfectionSelector":
-
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
         return InfectionSelector(config)
         
     def infect_person_at_time(self, person, time):
@@ -158,3 +156,12 @@ class Infection:
         return True
     #self.symptoms.tag!=SymptomTags:recovered and
     #self.symptoms.tag!=SymptomTags:dead
+
+
+
+if __name__=="__main__":
+    from june.demography.person import Person
+    selector  = InfectionSelector()
+    dummy     = Person(sex='m', age=65)
+    infection = selector.make_infection(person=dummy,time=0.1)
+

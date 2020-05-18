@@ -9,7 +9,7 @@ import yaml
 
 from june.demography import Person
 from june.groups import Group
-from june.infection import Infection, InfectionSelector
+from june.infection.infection    import InfectionSelector
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
 from june.logger_simulation import Logger
@@ -104,7 +104,7 @@ class Simulator:
         cls,
         world: "World",
         interaction: "Interaction",
-        infection: Infection,
+        selector: "InfectionSelector",
         config_filename: str = default_config_filename,
     ) -> "Simulator":
 
@@ -122,7 +122,7 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Simulator(world, interaction, infection, config)
+        return Simulator(world, interaction, selector, config)
 
     def check_inputs(self, config: dict):
         """
