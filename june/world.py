@@ -16,7 +16,8 @@ from june.distributors import (
     CompanyDistributor,
 )
 from june.geography import Geography
-from june.groups import *
+from june.groups import * 
+from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -176,15 +177,10 @@ class World:
         self.commuteunits = CommuteUnits(self.commutehubs.members)
         self.commuteunits.init_units()
 
-        # put these into the simulator
-        # self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
 
         # CommuteCityUnit
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
-
-        # put these into the simulator
-        # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
 
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
@@ -288,4 +284,3 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
             housemates.append(world.people[mateid - first_people_id])
         person.housemates = housemates
     return world
-

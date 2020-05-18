@@ -1,5 +1,6 @@
 import pytest
 import random
+from pathlib import Path
 
 from june.geography import Geography
 from june.demography import Demography
@@ -12,6 +13,8 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.simulator import Simulator
 
 
+test_config = Path(__file__).parent.parent.parent / "test_simulator.yaml"
+
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
 
@@ -22,13 +25,14 @@ def create_simulator():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True)
+    world = World(geography, demography, include_households=True, include_commute=True)
 
     symptoms = SymptomsConstant(recovery_rate=0.05)
     transmission = TransmissionConstant(probability=0.7)
     infection = Infection(transmission, symptoms)
     interaction = DefaultInteraction.from_file()
-    return Simulator.from_file(world, interaction, infection,)
+    return Simulator.from_file(world, interaction, infection,
+            config_filename = test_config)
 
 
 @pytest.fixture(name="health_index")
