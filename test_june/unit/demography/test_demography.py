@@ -23,6 +23,7 @@ def test__age_sex_generator():
     ethnicity_age_bins = [0, 2, 4]
     ethnicity_groups = ["A", "B", "C"]
     ethnicity_structure = [[2, 0, 0], [0, 0, 2], [0, 4, 0]]
+    socioecon_index_value = 4
     age_sex_generator = d.demography.AgeSexGenerator(
         age_counts,
         age_bins,
@@ -30,6 +31,7 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
+        socioecon_index_value
     )
     assert list(age_sex_generator.age_iterator) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert list(age_sex_generator.sex_iterator) == [
@@ -50,17 +52,22 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
+        socioecon_index_value
     )
+    assert age_sex_generator.socioecon_index() == socioecon_index_value
     ages = []
     sexes = []
     ethnicities = []
+    socioecon_indices = []
     for _ in range(0, sum(age_counts)):
         age = age_sex_generator.age()
         sex = age_sex_generator.sex()
         ethnicity = age_sex_generator.ethnicity()
+        socioecon_index = age_sex_generator.socioecon_index()
         ages.append(age)
         sexes.append(sex)
         ethnicities.append(ethnicity)
+        socioecon_indices.append(socioecon_index)
 
     assert sorted(ages) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert collections.Counter(sexes) == collections.Counter(
@@ -69,6 +76,8 @@ def test__age_sex_generator():
     assert collections.Counter(ethnicities) == collections.Counter(
         ["A", "A", "C", "C", "B", "B", "B", "B"]
     )
+    assert collections.Counter(socioecon_indices) == collections.Counter(
+            [4, 4, 4, 4, 4, 4, 4, 4])
 
 
 class TestDemography:
@@ -91,6 +100,7 @@ class TestDemography:
             if person.age in range(55, 69):
                 assert person.ethnicity.startswith("A")
             assert person.ethnicity.startswith("D") is False
+            assert person.socioecon_index == 6
             if person.age not in people_ages_dict:
                 people_ages_dict[person.age] = 1
             else:

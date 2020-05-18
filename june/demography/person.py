@@ -139,7 +139,7 @@ class Person:
         "sector",
         "sub_sector",
         "home_city",
-        "econ_index",
+        "socioecon_index",
         "health_information",
         "busy",
     )
@@ -161,7 +161,7 @@ class Person:
         age=-1,
         sex=None,
         ethnicity=None,
-        econ_index=None,
+        socioecon_index=None,
         mode_of_transport=None,
         area=None,
     ):
@@ -183,7 +183,7 @@ class Person:
         self.sector = None
         self.sub_sector = None
         self.home_city = None
-        self.econ_index = econ_index
+        self.socioecon_index = socioecon_index
         self.health_information = HealthInformation()
         self.busy = False
 
