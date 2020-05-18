@@ -46,9 +46,6 @@ seed.unleash_virus(2000)
 simulator = Simulator.from_file(
     world, interaction, infection, 
 )
-# update health status of seeded people, depending on symptoms
-# class might be unnecessary
-simulator.update_health_status(0, 0)
 simulator.run()
 
 t3 = time.time()
