@@ -46,13 +46,14 @@ class DefaultInteraction(Interaction):
     @classmethod
     def from_file(
             cls,
-            config_filename: str = default_config_filename
+            config_filename: str = default_config_filename,
+            selector = None,
     ) -> "DefaultInteraction":
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        return DefaultInteraction(config["alpha_physical"], config["contact_matrices"])
+        return DefaultInteraction(config["alpha_physical"], config["contact_matrices"], selector)
 
     def single_time_step_for_group(
             self, group, time, delta_time
