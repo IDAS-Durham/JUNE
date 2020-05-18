@@ -42,7 +42,7 @@ def test__time_it_takes_to_infect(group_size=2):
     selector = InfectionSelector.from_file(constant_config)
     interaction    = DefaultInteraction.from_file(test_config_file, selector)
     n_days = []
-    for n in range(100):
+    for n in range(1_000):
         group = TestGroup()
         infected_person = Person(sex='m', age=75)
         selector.infect_person_at_time(infected_person,time=0)
