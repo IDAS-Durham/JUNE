@@ -90,4 +90,4 @@ class HospitalDistributor:
                 if medic.sub_sector is not None:
                     hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
                     # if (hospital.n_medics < hospital.n_medics_max):# and \
-                    hospital.add(medic, hospital.GroupType.workers)
+                    hospital.add(medic, hospital.SubgroupType.workers)

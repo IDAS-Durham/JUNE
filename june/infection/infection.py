@@ -2,13 +2,20 @@ import numpy as np
 from enum import IntEnum
 import random
 import sys
+import yaml
 import autofit as af
+from june import paths
 from june.infection.symptoms            import SymptomsConstant
 from june.infection.transmission        import TransmissionConstant
 from june.infection.symptoms_trajectory import SymptomsTrajectory
 from june.infection.transmission_xnexp  import TransmissionXNExp
 from june.infection.trajectory_maker    import TrajectoryMaker 
 from june.infection.health_index        import HealthIndexGenerator
+
+default_config_filename = (
+    paths.configs_path
+    / "defaults/infection/InfectionTrajectoriesXNExp.yaml"
+)
 
 class SymptomsType(IntEnum):
     constant     = 0,
@@ -21,40 +28,73 @@ class TransmissionType(IntEnum):
     xnexp    = 1
 
 class InfectionSelector:
-    def __init__(self,
-                 transmission_type = "XNExp",
-                 symptoms_type     = "Trajectories",
-                 config = None
-    ):
+    def __init__(self,config = None):
+        transmission_type = "XNExp",
+        symptoms_type     = "Trajectories",
+        if config is not None:
+            if "transmission" in config and "type" in config["transmission"]:
+                transmission_type = config["transmission"]["type"]
+            if "symptoms" in config and "type" in config["symptoms"]:
+                symptoms_type     = config["symptoms"]["type"]
+        self.init_symptoms_parameters(symptoms_type,config)
+        self.init_transmission_parameters(transmission_type,config)
         self.health_index_generator = HealthIndexGenerator.from_file()
-        self.init_parameters(transmission_type,symptoms_type)
         
-    @classmethod
-    def from_file(cls) -> "InfectionSelector":
-        return cls(transmission_type = transmission_type,
-                   symptoms_type     = symptoms_type,
-                   config            = None)
-
-        
-    def init_parameters(self,transmission_type,symptoms_type):
+    def init_symptoms_parameters(self,symptoms_type,config):
         if symptoms_type=="Trajectories":
-            self.trajectory_maker = TrajectoryMaker.from_file()
-            self.stype            = SymptomsType.trajectories
+            self.stype             = SymptomsType.trajectories
+            self.trajectory_maker  = TrajectoryMaker.from_file()
         else:
-            self.recovery_rate    = 0.2
-            self.stype            = SymptomsType.constant
+            self.stype             = SymptomsType.constant
+            self.recovery_rate     = 0.2
+            if (config is not None and
+                "symptoms" in config and "recovery_rate" in config["symptoms"]):
+                self.recovery_rate = config["symptoms"]["recovery_rate"]
+
+    def init_transmission_parameters(self,transmission_type,config):
         if transmission_type=="XNExp":
             self.ttype                  = TransmissionType.xnexp
             self.incubation_time        = 2.6
             self.transmission_median    = 1.
-            self.transmission_mu        = np.log(self.transmission_median)
             self.transmission_sigma     = 0.5
             self.transmission_norm_time = 1.
             self.transmission_N         = 1.
             self.transmission_alpha     = 5.
+            if config is not None and "transmission" in config:
+                if "incubation_time" in config["transmission"]:
+                    self.incubation_time        = config["transmission"]["incubation_time"]
+                if "median" in config["transmission"]:
+                    self.transmission_median    = config["transmission"]["median"]
+                if "sigma" in config["transmission"]:
+                    self.transmission_sigma     = config["transmission"]["sigma"]
+                if "norm_time" in config["transmission"]:
+                    self.transmission_norm_time = config["transmission"]["norm_time"]
+                if "N" in config["transmission"]:
+                    self.transmission_N         = config["transmission"]["N"]
+                if "alpha" in config["transmission"]:
+                    self.transmission_alpha     = config["transmission"]["alpha"]
+            self.transmission_mu        = np.log(self.transmission_median)
         else:
-            self.ttype                    = TransmissionType.constant
-            self.transmission_probability = 0.3
+            self.ttype                      = TransmissionType.constant
+            self.transmission_probability   = 0.2
+            if (config is not None and
+                "transmission" in config and "probability" in config["transmission"]):
+                self.transmission_probability = config["transmission"]["probability"]
+
+    @classmethod
+    def from_file(
+            cls,
+            config_filename: str = default_config_filename
+    ) -> "InfectionSelector":
+
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        return InfectionSelector(config)
+        
+    def infect_person_at_time(self, person, time):
+        infection = self.make_infection(person,time)
+        person.health_information.set_infection(infection=infection)
         
     def make_infection(self, person, time):
         return Infection(transmission = self.select_transmission(person),
@@ -104,42 +144,6 @@ class Infection:
         self.transmission          = transmission
         self.symptoms              = symptoms
         self.infection_probability = 0.0
-
-    # def infect_person_at_time(self, epidemiology : af.CollectionPriorModel, person, time):
-    def infect_person_at_time(self, selector, person, time):
-        """
-        Infects someone by initializing an infection object using the epidemiology model.
-
-        The epidemiology input uses a CollectionPriorModel of PyAutoFit, which has 
-        associated with it a Symptoms class and Transmission class. Every parameter in 
-        these classes has a distribution, such that when the new infection is created 
-        new parameters its new Symptoms and Transmission instances are randomly from a
-        distribution.
-
-        For example the recovery_rate of the SymptomsConstant class have a uniform 
-        distribution with lower and upper limits of 0.2 and 0.4. When the infection 
-        takes place, a value between 0.2 and 0.4 is randomly drawn and used to set the 
-        value for the new instance of the Symptoms class in the new infection.
-
-        Arguments:
-        - epidemiology (af.CollectionPriorModel) the epidemiology model used to generate 
-          the new infections symptoms and transmission instances.
-        - person (Person) has to be an instance of the Person class.
-        - time (float) the time of infection.
-        """
-
-        # instance = epidemiology.random_instance()
-
-        # TODO : This is hacky, whats the best way we can feed health information through
-        # to symptoms. Can we move the
-        # instance.symptoms.health_index = self.symptoms.health_index
-        #infection = Infection(
-        #    start_time=time,
-        #    transmission=transmission,  # instance.transmission,
-        #    symptoms=symptoms,          # instance.symptoms
-        #)
-        infection = selector.make_infection(person,time)
-        person.health_information.set_infection(infection=infection)
 
     def update_at_time(self, time):
         if self.last_time_updated <= time:
