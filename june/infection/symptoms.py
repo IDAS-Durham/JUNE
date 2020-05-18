@@ -36,7 +36,7 @@ class Symptoms:
         return self.tag==Symptom_Tags.recovered
 
     def make_tag(self):
-        if self.severity <= 0.0 or self.health_index==[]:
+        if self.severity <= 0.0 or len(self.health_index) == 0:
             return Symptom_Tags.recovered
         index = np.searchsorted(self.health_index, self.severity)
         return Symptom_Tags(index+2)
