@@ -1,4 +1,6 @@
 from itertools import count
+import random
+from enum import IntEnum
 
 
 class HealthInformation:
@@ -8,6 +10,7 @@ class HealthInformation:
         self.infected = False
         self.infection = None
         self.recovered = False
+        self.dead = False
         self.number_of_infected = 0
         self.maximal_symptoms = 0
         self.maximal_symptoms_time = -1
@@ -20,7 +23,7 @@ class HealthInformation:
         self.infection = infection
         self.infected = True
         self.susceptible = False
-        self.susceptibility = 0.
+        self.susceptibility = 0.0
 
     @property
     def tag(self):
@@ -33,15 +36,15 @@ class HealthInformation:
         return self.tag in ("influenza-like illness", "pneumonia")
 
     @property
-    def in_hospital(self) -> bool:
+    def should_be_in_hospital(self) -> bool:
         return self.tag in ("hospitalised", "intensive care")
 
     @property
     def infected_at_home(self) -> bool:
-        return self.infected and not (self.dead or self.in_hospital)
+        return self.infected and not (self.dead or self.should_be_in_hospital)
 
     @property
-    def dead(self) -> bool:
+    def is_dead(self) -> bool:
         return self.tag == "dead"
 
     def update_health_status(self, time, delta_time):
@@ -54,6 +57,14 @@ class HealthInformation:
 
     def set_recovered(self, time):
         self.recovered = True
+        self.infected = False
+        self.susceptible = False
+        self.susceptibility = 0.0
+        self.set_length_of_infection(time)
+        self.infection = None
+
+    def set_dead(self, time):
+        self.dead = True
         self.infected = False
         self.susceptible = False
         self.susceptibility = 0.0
@@ -76,9 +87,7 @@ class HealthInformation:
     def update_symptoms(self, time):  # , symptoms, time):
         if self.infection.symptoms.severity > self.maximal_symptoms:
             self.maximal_symptoms = self.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.get_symptoms_tag(
-                self.infection.symptoms
-            )
+            self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
     def update_infection_data(self, time, group_type=None):
@@ -115,16 +124,46 @@ class Person:
     according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
     smearing of 2 sigma around a mean with left-/right-widths is implemented.    
     """
+
     _id = count()
+    __slots__ = (
+        "id",
+        "age",
+        "sex",
+        "ethnicity",
+        "work_super_area",
+        "area",
+        "housemates",
+        "mode_of_transport",
+        "subgroups",
+        "sector",
+        "sub_sector",
+        "home_city",
+        "econ_index",
+        "health_information",
+        "busy",
+    )
+
+    class ActivityType(IntEnum):
+        """
+        Defines the indices of the subgroups a person belongs to
+        """
+
+        residence = 0
+        primary_activity = 1
+        hospital = 2
+        commute = 3
+        dynamic = 4
+        box = 5
 
     def __init__(
-            self,
-            age=-1,
-            nomis_bin=None,
-            sex=None,
-            econ_index=None,
-            mode_of_transport=None,
-            area=None
+        self,
+        age=-1,
+        sex=None,
+        ethnicity=None,
+        econ_index=None,
+        mode_of_transport=None,
+        area=None,
     ):
         """
         Inputs:
@@ -132,58 +171,60 @@ class Person:
         self.id = next(self._id)
         # biological attributes
         self.age = age
-        self.nomis_bin = nomis_bin
         self.sex = sex
+        self.ethnicity = ethnicity
         # geo-graphical attributes
         self.work_super_area = None
-        self.household = None
         self.area = area
+        self.housemates = list()
         # primary activity attributes
         self.mode_of_transport = mode_of_transport
-        self.school = None
-        self.carehome = None
-        self.primary_activity = None  # school, company, key-industr. (e.g. hospital, schools)
-        self.active_group = None
-        self.groups = []
+        self.subgroups = [None] * len(self.ActivityType)  # number of subgroups
         self.sector = None
         self.sub_sector = None
-        self.company_id = None
-        self.hospital = None
-        self.in_hospital = None
         self.home_city = None
         self.econ_index = econ_index
         self.health_information = HealthInformation()
-
-
-class People:
-    def __init__(self, world):
-        self.members = []
+        self.busy = False
 
     @property
-    def total_people(self):
-        return len(self.members)
+    def residence(self):
+        return self.subgroups[self.ActivityType.residence]
 
     @property
-    def infected(self):
-        return [
-            person for person in self.members
-            if person.health_information.infected and not
-            person.health_information.dead
-
-        ]
+    def primary_activity(self):
+        return self.subgroups[self.ActivityType.primary_activity]
 
     @property
-    def susceptible(self):
-        return [
-            person for person in self.members
-            if person.health_information.susceptible
-
-        ]
+    def hospital(self):
+        return self.subgroups[self.ActivityType.hospital]
 
     @property
-    def recovered(self):
-        return [
-            person for person in self.members
-            if person.health_information.recovered
+    def commute(self):
+        return self.subgroups[self.ActivityType.commute]
 
-        ]
+    @property
+    def dynamic(self):
+        return self.subgroups[self.ActivityType.dynamic]
+
+    @property
+    def box(self):
+        return self.subgroups[self.ActivityType.box]
+ 
+    @property
+    def in_hospital(self):
+        if self.hospital is None:
+            return True
+        return False
+
+    def find_guardian(self):
+
+        possible_guardians = [person for person in self.housemates if person.age >= 18]
+        guardian = random.choice(possible_guardians)
+        if (
+            guardian.health_information.should_be_in_hospital
+            or guardian.health_information.dead
+        ):
+            return None
+        else:
+            return guardian

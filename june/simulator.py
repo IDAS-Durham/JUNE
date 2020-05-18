@@ -3,6 +3,7 @@ import random
 from june import paths
 from typing import List
 
+from itertools import chain
 import numpy as np
 import yaml
 
@@ -27,11 +28,11 @@ class SimulatorError(BaseException):
 # TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(
-            self,
-            world: World,
-            interaction: Interaction,
-            infection: Infection,
-            config: dict,
+        self,
+        world: World,
+        interaction: Interaction,
+        infection: Infection,
+        config: dict,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -41,24 +42,23 @@ class Simulator:
         world: 
             instance of World class
         interaction:
-            instance of Interaction class, determines
-             
+            instance of Interaction class 
+        infection:
+            instance of Infection class
         config:
             dictionary with configuration to set up the simulation
         """
         self.world = world
         self.interaction = interaction
         self.infection = infection
-        self.permanent_group_hierarchy = [
-            "boxes",
-            "hospitals",
+        self.permanent_activity_hierarchy = [
+            "box",
+            "hospital",
             "commute",
-            "companies",
-            "schools",
-            "carehomes",
-            "households",
+            "primary_activity",
+            "residence",
         ]
-        self.randomly_order_groups = [
+        self.randomly_order_activities = [
             "pubs",
             "churches",
         ]
@@ -66,16 +66,45 @@ class Simulator:
         self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
-            self.world, self.timer, config, config["logger"]["save_path"],
+            self, self.world, self.timer, config["logger"]["save_path"],
         )
+        self.all_activities = set(
+            chain(
+                *(
+                    [
+                        activity
+                        for activity in config["time"]["step_activities"][
+                            "weekday"
+                        ].values()
+                    ]
+                    + [
+                        activity
+                        for activity in config["time"]["step_activities"][
+                            "weekend"
+                        ].values()
+                    ]
+                )
+            )
+        )
+
+        self.activity_to_group_dict = {
+            "box": ["boxes"],
+            "hospital": ["hospitals"],
+            "primary_activity": ["schools", "companies"],
+            "residence": ["households", "care_homes"],
+        }
+
+        if not self.world.box_mode:
+            self.min_age_home_alone = config["min_age_home_alone"]
+            self.stay_at_home_complacency = config["stay_at_home_complacency"]
 
     @classmethod
     def from_file(
-            cls,
-            world: "World",
-            interaction: "Interaction",
-            infection: Infection,
-            config_filename: str = default_config_filename,
+        cls,
+        world: "World",
+        interaction: "Interaction",
+        infection: Infection,
+        config_filename: str = default_config_filename,
     ) -> "Simulator":
 
         """
@@ -95,6 +124,15 @@ class Simulator:
         return Simulator(world, interaction, infection, config)
 
     def check_inputs(self, config: dict):
+        """
+        Check that the iput time configuration is correct, i.e., activities are among allowed activities
+        and days have 24 hours.
+
+        Parameters
+        ----------
+        config
+            dictionary with time steps configuration
+        """
 
         # Sadly, days only have 24 hours
         assert sum(config["step_duration"]["weekday"].values()) == 24
@@ -102,100 +140,206 @@ class Simulator:
         assert sum(config["step_duration"]["weekend"].values()) == 24
 
         # Check that all groups given in config file are in the valid group hierarchy
-        all_groups = self.permanent_group_hierarchy + self.randomly_order_groups
-        for step, active_groups in config["step_active_groups"]["weekday"].items():
-            assert all(group in all_groups for group in active_groups)
+        all_groups = self.permanent_activity_hierarchy + self.randomly_order_activities
+        for step, activities in config["step_activities"]["weekday"].items():
+            assert all(group in all_groups for group in activities)
 
-        for step, active_groups in config["step_active_groups"]["weekend"].items():
-            assert all(group in all_groups for group in active_groups)
+        for step, activities in config["step_activities"]["weekend"].items():
+            assert all(group in all_groups for group in activities)
 
-    def apply_group_hierarchy(self, active_groups: List[str]) -> List[str]:
+    def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
-        Returns a list of active groups with the right order, obeying the permanent group hierarcy
-        and shuflling the random one. It is very important having carehomes and households at the very end.
+        Returns a list of activities with the right order, obeying the permanent activity hierarcy
+        and shuflling the random one. 
 
         Parameters
         ----------
-        active_groups:
-            list of groups that are active at a given time step
+        activities:
+            list of activities that take place at a given time step
         Returns
         -------
-        Ordered list of active groups according to hierarchy
+        Ordered list of activities according to hierarchy
         """
-        random.shuffle(self.randomly_order_groups)
-        group_hierarchy = [
-            group
-            for group in self.permanent_group_hierarchy
-            if group not in ["carehomes", "households"]
+        random.shuffle(self.randomly_order_activities)
+        activity_hierarchy = [
+            group for group in self.permanent_activity_hierarchy if group != "residence"
         ]
-        group_hierarchy += self.randomly_order_groups + ["carehomes", "households"]
-        active_groups.sort(key=lambda x: group_hierarchy.index(x))
-        return active_groups
+        activity_hierarchy += self.randomly_order_activities + ["residence"]
+        activities.sort(key=lambda x: activity_hierarchy.index(x))
+        return activities
 
-    def set_active_group_to_people(self, active_groups: List[str]):
+    def activities_to_groups(self, activities: List[str]) -> List[str]:
         """
-        Calls the set_active_members() method of each group, if the group
-        is set as active
+        Converts activities into Groups, the interaction will run over these Groups.
+
+        Parameters
+        ---------
+        activities:
+            list of activities that take place at a given time step
+        Returns
+        -------
+        List of groups that are active.
+        """
+
+        groups = [self.activity_to_group_dict[activity] for activity in activities]
+        return list(chain(*groups))
+
+    def clear_world(self):
+        """
+        Removes everyone from all possible groups, and sets everyone's busy attribute
+        to False.
+
+        """
+        for group_name in self.activities_to_groups(self.all_activities):
+            grouptype = getattr(self.world, group_name)
+            for group in grouptype.members:
+                for subgroup in group.subgroups:
+                    subgroup._people.clear()
+
+        for person in self.world.people.members:
+            person.busy = False
+
+    def get_subgroup_active(
+        self, activities: List[str], person: "Person"
+    ) -> "Subgroup":
+        """
+        Given the hierarchy of activities and a person, decide what subgroup  
+        should they go to
+
+        Parameters
+        ----------
+        activities:
+            list of activities that take place at a given time step
+        person:
+            person that is looking for a subgroup to go to
+        Returns
+        -------
+        Subgroup to which person has to go, given the hierarchy of activities
+        """
+        activities = self.apply_activity_hierarchy(activities)
+        for group_name in activities:
+            subgroup = getattr(person, group_name)
+            if subgroup is not None:
+                return subgroup
+
+    def kid_drags_guardian(
+        self, kid: "Person", guardian: "Person", activities: List[str]
+    ):
+        """
+        A kid makes their guardian go home.
+
+        Parameters
+        ----------
+        kid:
+            kid that wants to take their guardian home
+        guardian:
+            guardian to be sent home
+        activities:
+            list of activities that take place at a given time step
+        """
+
+        if guardian is not None:
+            if guardian.busy:
+                guardian_subgroup = self.get_subgroup_active(activities, guardian)
+                guardian_subgroup.remove(guardian)
+            guardian.residence.append(guardian)
+
+    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
+        """
+        Move  a kid and their guardian to the household, so no kid is left
+        home alone.
+
+        Parameters
+        ----------
+        kid:
+            kid to be sent home
+        activities:
+            list of activities that take place at a given time step
+        """
+        possible_guardians = [
+            housemate for housemate in kid.residence.group.people if housemate.age >= 18
+        ]
+        if len(possible_guardians) == 0:
+            guardian = kid.find_guardian()
+            self.kid_drags_guardian(kid, guardian, activities)
+        kid.residence.append(kid)
+
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
+        """
+        Move person with a mild illness to their households. For kids that will
+        always happen, and if they are left alone at home they will also drag one
+        of their guardians home. For adults, they will go home with a probability 
+        given by stay_at_home_complacency
+
+        Parameters
+        ----------
+        person:
+            person to be sent home
+        activities:
+            list of activities that take place at a given time step
+        """
+        if person.age < self.min_age_home_alone:
+            self.move_mild_kid_guardian_to_household(person, activities)
+        elif random.random() <= self.stay_at_home_complacency:
+            person.residence.append(person)
+        else:
+            subgroup = self.get_subgroup_active(activities, person)
+            subgroup.append(person)
+
+    def move_people_to_active_subgroups(self, activities: List[str]):
+        """
+        Sends every person to one subgroup. If a person has a mild illness,
+        they stay at home with a certain probability given by stay_at_home_complacency
 
         Parameters
         ----------
         active_groups:
             list of groups that are active at a time step
         """
-        active_groups = self.apply_group_hierarchy(active_groups)
-        for group_name in active_groups:
-            grouptype = getattr(self.world, group_name)
-            if "pubs" in active_groups:
-                self.world.group_maker.distribute_people(group_name)
-            if "commute" in active_groups:
-                self.world.group_maker.distribute_people(group_name)
-            for group in grouptype.members:
-                group.set_active_members()
-
-    def set_allpeople_free(self):
-        """ 
-        Set everyone's active group to None, 
-        ready for next time step
-
-        """
         for person in self.world.people.members:
-            person.active_group = None
+            if person.health_information.dead or person.busy:
+                continue
+            if person.health_information.must_stay_at_home:
+                self.move_mild_ill_to_household(person, activities)
+            else:
+                subgroup = self.get_subgroup_active(activities, person)
+                subgroup.append(person)
 
-    def hospitalise_the_sick(self, person):
+    def hospitalise_the_sick(self, person: "Person", previous_tag: str):
         """
-        These functions could be more elegantly handled by an implementation inside a group collection.
-        I'm putting them here for now to maintain the same functionality whilst removing a person's
-        reference to the world as that makes it impossible to perform population generation prior
-        to world construction.
+        Hospitalise sick person. Also moves them from a regular bed
+        to an ICU bed if their symptoms tag has changed.
 
         Parameters
-        ---------
+        ----------
         person:
             person to hospitalise
+        previous_tag:
+            previous symptoms tag of a person
         """
-        if person.in_hospital is None:
+        if person.hospital is None:
             self.world.hospitals.allocate_patient(person)
+        elif previous_tag != person.health_information.tag:
+            person.hospital.group.move_patient_within_hospital(person)
 
-    def bury_the_dead(self, person: Person):
+    def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
-        ZOMBIE ALERT!! Specially important, remove from all groups in which
-        that person was present. 
-
+        ZOMBIE ALERT!! 
         Parameters
-        ---------
+        ----------
         person:
             person sent to cemetery
         """
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
-        person.household.remove_person(person)
-        for group in person.groups:
-            group.remove_person(person)
+        person.health_information.set_dead(time)
 
     def update_health_status(self, time: float, delta_time: float):
         """
-        Update symptoms and health status of infected people
+        Update symptoms and health status of infected people.
+        Send them to hospital if necessary, or bury them if they
+        have died.
 
         Parameters
         ----------
@@ -207,66 +351,47 @@ class Simulator:
 
         for person in self.world.people.infected:
             health_information = person.health_information
+            previous_tag = health_information.tag
             health_information.update_health_status(time, delta_time)
             # release patients that recovered
             if health_information.recovered:
-                if person.in_hospital is not None:
-                    person.in_hospital.release_as_patient(person)
+                if person.hospital is not None:
+                    person.hospital.group.release_as_patient(person)
                 health_information.set_recovered(time)
-
-            elif health_information.in_hospital:
-                self.hospitalise_the_sick(person)
-
-            elif health_information.dead:
-                self.bury_the_dead(person)
-
-    def seed(self, group: "Group", n_infections: int):
-        """
-        Randomly pick people in group to seed the infection
-
-        Parameters
-        ----------
-        group:
-            group instance in which to seed the infection
-
-        n_infections:
-            number of random people to infect in the given group
-
-        """
-        # TODO: add attribute susceptible to people
-        sim_logger.info(f"Seeding {n_infections} infections in group {group.spec}")
-        choices = np.random.choice(len(group.people), n_infections, replace=False)
-        infecter_reference = self.infection
-        for choice in choices:
-            infecter_reference.infect_person_at_time(
-                list(group.people)[choice], self.health_index_generator, self.timer.now
-            )
-        self.update_health_status(0, 0)
-        # in case someone has to go directly to the hospital
+            elif health_information.should_be_in_hospital:
+                self.hospitalise_the_sick(person, previous_tag)
+            elif health_information.is_dead and not self.world.box_mode:
+                self.bury_the_dead(person, time)
 
     def do_timestep(self):
         """
         Perform a time step in the simulation
 
         """
-        active_groups = self.timer.active_groups()
-        if not active_groups or len(active_groups) == 0:
-            logging.info("==== do_timestep(): no active groups found. ====")
+        activities = self.timer.activities()
+        if not activities or len(activities) == 0:
+            sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
-        # update people (where they are according to time)
-        self.set_active_group_to_people(active_groups)
-        # infect people in groups
+        self.move_people_to_active_subgroups(activities)
+        active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
-        for group_type in group_instances:
-            for group in group_type.members:
-                self.interaction.time_step(self.timer.now, self.health_index_generator, self.timer.duration, group)
-                n_people += group.size_active
-
-        self.update_health_status(self.timer.now, self.timer.duration)
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
+        sim_logger.info(f"number of deaths =  {n_people}")
+        for group_type in group_instances:
+            n_active_in_group = 0
+            for group in group_type.members:
+                self.interaction.time_step(
+                    self.timer.now,
+                    self.health_index_generator,
+                    self.timer.duration,
+                    group,
+                )
+                n_active_in_group += group.size
+                n_people += group.size
+            sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
@@ -275,7 +400,8 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
 
-        self.set_allpeople_free()
+        self.update_health_status(self.timer.now, self.timer.duration)
+        self.clear_world()
 
     def run(self, save=False):
         """
@@ -293,7 +419,7 @@ class Simulator:
         sim_logger.info(
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
-
+        self.clear_world()
         for day in self.timer:
             if day > self.timer.total_days:
                 break
@@ -301,6 +427,4 @@ class Simulator:
             self.do_timestep()
         # Save the world
         if save:
-            self.world.to_pickle(
-                "world.pickle"
-            )
+            self.world.to_pickle("world.pickle")

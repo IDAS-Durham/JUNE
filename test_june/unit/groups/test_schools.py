@@ -44,16 +44,16 @@ class TestSchool:
         )
 
     def test__school_grouptype(self, school):
-        assert school.GroupType.teachers == 0
-        assert school.GroupType.students == 1
+        assert school.SubgroupType.teachers == 0
+        assert school.SubgroupType.students == 1
 
     def test__empty_school(self, school):
-        assert bool(school.subgroups[school.GroupType.teachers].people) is False
-        assert bool(school.subgroups[school.GroupType.students].people) is False
+        assert bool(school.subgroups[school.SubgroupType.teachers].people) is False
+        assert bool(school.subgroups[school.SubgroupType.students].people) is False
 
     def test__filling_school(self, school):
         person = Person(sex="f", age=7)
-        school.add(person, School.GroupType.students)
+        school.add(person, School.SubgroupType.students)
         assert bool(school.subgroups[2].people) is True
 
 
