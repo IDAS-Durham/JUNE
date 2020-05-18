@@ -1,9 +1,7 @@
 import numpy as np
-
 from june.demography.person import Person
 from june.infection.symptoms import SymptomsStep
 from june.infection.health_index import HealthIndexGenerator
-
 from june.infection.symptoms import Symptom_Tags
 
 def test__right_frequency_in_health_index():
