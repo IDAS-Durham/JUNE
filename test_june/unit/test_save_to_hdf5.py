@@ -93,7 +93,7 @@ class TestSaveHouses:
                 else:
                     assert attribute == attribute2
             if household.area is not None:
-                assert household.area.id == household2.super_area.id
+                assert household.area.id == household2.area
             else:
                 assert household2.area is None
 
@@ -170,3 +170,62 @@ class TestSaveSchools:
                 assert school2.super_area is None
             assert school.coordinates[0] == school2.coordinates[0]
             assert school.coordinates[1] == school2.coordinates[1]
+
+class TestSaveCarehomes:
+    def test__save_carehomes(self, world_h5):
+        carehomes = world_h5.care_homes
+        carehomes.to_hdf5("test.hdf5")
+        carehomes_recovered = carehomes.from_hdf5("test.hdf5")
+        for carehome, carehome2 in zip(carehomes, carehomes_recovered):
+            for attribute_name in [
+                "id",
+                "n_residents"
+            ]:
+                attribute = getattr(carehome, attribute_name)
+                attribute2 = getattr(carehome2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            if carehome.area is not None:
+                assert carehome.area.id == carehome2.area
+            else:
+                assert carehome2.area is None
+class TestSaveGeography:
+    def test__save_geography(self, world_h5):
+        areas = world_h5.areas
+        super_areas = world_h5.super_areas
+        geography = Geography(areas, super_areas)
+        geography.to_hdf5("test.hdf5")
+        geography_recovered = Geography.from_hdf5("test.hdf5")
+        for area, area2 in zip(areas, geography_recovered.areas):
+            for attribute_name in [
+                "id",
+                "name"
+            ]:
+                attribute = getattr(area, attribute_name)
+                attribute2 = getattr(area2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            if area.super_area is not None:
+                assert area.super_area.id == area2.super_area
+            else:
+                assert area2.super_area is None
+            assert area.coordinates[0] == area2.coordinates[0]
+            assert area.coordinates[1] == area2.coordinates[1]
+
+        for super_area, super_area2 in zip(super_areas, geography_recovered.super_areas):
+            for attribute_name in [
+                "id",
+                "name"
+            ]:
+                attribute = getattr(super_area, attribute_name)
+                attribute2 = getattr(super_area2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            assert super_area.coordinates[0] == super_area2.coordinates[0]
+            assert super_area.coordinates[1] == super_area2.coordinates[1]
