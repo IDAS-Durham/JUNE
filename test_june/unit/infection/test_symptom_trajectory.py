@@ -92,10 +92,4 @@ class Test_SymptomsTrajectory:
         assert bool(infection.symptoms.tag==sym.Symptom_Tags.hospitalised) is True
         infection.update_at_time(float(30.))
         assert bool(infection.symptoms.tag==sym.Symptom_Tags.recovered) is True
-    
-if __name__=="__main__":
-    transmission = trans.TransmissionConstant(probability=0.3)
-    test__make__trajectories(trajectories)
-    test__right_frequency_in_health_index()
-    test__construct__trajectory__from__maxseverity(trajectories,symptoms)
-    test__infected_person_infects(transmission, trajectories)
+

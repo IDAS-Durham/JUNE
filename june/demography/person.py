@@ -1,6 +1,8 @@
 from itertools import count
 import random
 from enum import IntEnum
+from june.infection import Symptom_Tags
+
 
 
 class HealthInformation:
@@ -49,9 +51,8 @@ class HealthInformation:
 
     def update_health_status(self, time, delta_time):
         if self.infected:
-            if self.infection.symptoms.is_recovered(delta_time):
+            if self.infection.symptoms.is_recovered():
                 self.recovered = True
-                # self.set_recovered(time)
             else:
                 self.infection.update_at_time(time + delta_time)
 

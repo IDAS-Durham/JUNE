@@ -107,8 +107,8 @@ def test__kid_at_home_is_supervised(sim, health_index):
             kids_at_school.append(person)
 
     for kid in kids_at_school:
-        sim.selector.infect_person_at_time(kid, health_index, 0.0)
-        kid.health_information.infection.symptoms.severity = 0.4
+        sim.selector.infect_person_at_time(kid, 0.0)
+        kid.health_information.infection.symptoms.tag = Symptom_Tags.influenza
         assert kid.health_information.must_stay_at_home
 
     sim.move_people_to_active_subgroups(["primary_activity", "residence"])
@@ -123,11 +123,10 @@ def test__kid_at_home_is_supervised(sim, health_index):
     sim.clear_world()
 
 
-def test__hospitalise_the_sick(sim, health_index):
-    hospital_severity = 0.6
+def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]
-    sim.selector.infect_person_at_time(dummy_person, health_index, 0.0)
-    dummy_person.health_information.infection.symptoms.severity = hospital_severity 
+    sim.selector.infect_person_at_time(dummy_person, 0.0)
+    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
     assert dummy_person.health_information.should_be_in_hospital
     sim.update_health_status(0., 0.)
     assert dummy_person.hospital is not None
@@ -137,10 +136,8 @@ def test__hospitalise_the_sick(sim, health_index):
 
 
 def test__move_people_from_hospital_to_icu(sim):
-    icu_severity = 0.8
     dummy_person = sim.world.people.members[0]
-    dummy_person.health_information.infection.symptoms.severity = icu_severity 
-    assert dummy_person.health_information.tag == 'intensive care'
+    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.intensive_care
     sim.hospitalise_the_sick(dummy_person, 'hospitalised')
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
@@ -148,10 +145,8 @@ def test__move_people_from_hospital_to_icu(sim):
     sim.clear_world()
 
 def test__move_people_from_icu_to_hospital(sim):
-    hospital_severity = 0.6
     dummy_person = sim.world.people.members[0]
-    dummy_person.health_information.infection.symptoms.severity = hospital_severity 
-    assert dummy_person.health_information.tag == 'hospitalised'
+    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
     sim.hospitalise_the_sick(dummy_person, 'intensive care')
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
