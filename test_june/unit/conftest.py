@@ -4,6 +4,7 @@ from june.infection import symptoms_trajectory as strans
 from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
 from june.infection import infection as infect
+from june.infection import InfectionSelector
 import june.interaction as inter
 from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
