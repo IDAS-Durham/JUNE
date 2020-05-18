@@ -177,8 +177,7 @@ class SchoolDistributor:
                         school = closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
-                school.add(person, school.GroupType.students)
-                school.n_pupils += 1
+                school.add(person, school.SubgroupType.students)
 
     def distribute_non_mandatory_kids_to_school(
             self, area: Area, is_school_full: dict, closest_schools_by_age: dict
@@ -215,9 +214,8 @@ class SchoolDistributor:
                             schools_full += 1
                         else:
                             break
-                school.add(person, school.GroupType.students)
+                school.add(person, school.SubgroupType.students)
                 school.age_structure[person.age] += 1
-                school.n_pupils += 1
 
     def distribute_teachers_to_schools_in_super_areas(
             self, super_areas: List[SuperArea]
@@ -262,10 +260,10 @@ class SchoolDistributor:
                 for school in area.schools:
                     if teacher.sub_sector in school.sector:
                         # (school.n_teachers < school.n_teachers_max) and \
-                        school.add(teacher, school.GroupType.teacher)
+                        school.add(teacher, school.SubgroupType.teacher)
                         school.n_teachers += 1
                     elif teacher.sub_sector == "special_needs":
                         # everyone has special needs :-)
                         # TODO fine better why for filtering
-                        school.add(teacher, school.GroupType.teacher)
+                        school.add(teacher, school.SubgroupType.teacher)
                         school.n_teachers += 1

@@ -16,3 +16,10 @@ sub_sector_distr:
     label: ["doctor", "nurse"]
     m: [0.65350126, 0.34649874]
     f: [0.16103136, 0.83896864]
+
+# home = work from home
+# bind = send to random SuperArea within simulated geography
+non_geographical_work_location:
+  OD0000001: "home"
+  OD0000003: "bind"
+  OD0000004: "bind"

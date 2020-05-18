@@ -36,16 +36,15 @@ class School(Group):
         "coordinates",
         "super_area",
         "n_pupils_max",
-        "n_pupils",
         "n_teachers_max",
-        "n_teachers" "age_min",
+        "n_teachers",
+        "age_min",
         "age_max",
         "age_structure",
         "sector",
-        "is_full",
     )
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         teachers = 0
         students = 1
 
@@ -81,27 +80,44 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__()
-        self.subgroups = [Subgroup() for _ in range(age_min, age_max + 2)]
+        self.subgroups = [Subgroup(self) for _ in range(age_min, age_max + 2)]
         self.coordinates = coordinates
         self.super_area = None
-        self.n_pupils = 0
         self.n_teachers = 0
         self.n_pupils_max = n_pupils_max
         self.n_teachers_max = n_teachers_max
-        self.is_full = False
         self.age_min = age_min
         self.age_max = age_max
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
 
-    def add(self, person, qualifier=GroupType.students):
-        if qualifier == self.GroupType.students:
-            super().add(person, qualifier)
-            self.subgroups[1 + person.age - self.age_min].append(person)
-            person.school = self
-        else:
-            super().add(person, qualifier)
+    def add(self, person, subgroup_type=SubgroupType.students):
+        if subgroup_type == self.SubgroupType.students:
+            subgroup = self.subgroups[1 + person.age - self.age_min]
+            subgroup.append(person)
+            person.subgroups[person.ActivityType.primary_activity] = subgroup
+        else: # teacher
+            subgroup = self.subgroups[self.SubgroupType.teachers]
+            subgroup.append(person)
+            person.subgroups[person.ActivityType.primary_activity] = subgroup
 
+    @property
+    def is_full(self):
+        if self.n_pupils >= self.n_pupils_max:
+            return True
+        return False
+
+    @property
+    def n_pupils(self):
+        return len(self.subgroups[self.SubgroupType.students])
+
+    @property
+    def teachers(self):
+        return self.subgroups[self.SubgroupType.teachers]
+
+    @property
+    def students(self):
+        return self.subgroups[self.SubgroupType.students]
 
 class Schools(Supergroup):
     def __init__(
@@ -215,6 +231,7 @@ class Schools(Supergroup):
             # filter out schools that are in the area of interest
             school_df = school_df[school_df["oa"].isin(area_names)]
         school_df.reset_index(drop=True, inplace=True)
+        logger.info(f"There are {len(school_df)} schools in this geography.")
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls.build_schools_for_areas(school_df, **config,)
