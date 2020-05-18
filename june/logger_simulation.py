@@ -5,7 +5,9 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
 
+# TODO: Change the logger to only use hours and not fractions of days
 
 class Logger:
     def __init__(self, simulator, world, timer, save_path="results"):
@@ -15,38 +17,77 @@ class Logger:
         self.data_dict = {}
         self.save_path = save_path
         self.box_mode = self.world.box_mode
+        self.age_ranges = [[0, 4], [5, 18], [19, 29], [30, 64], [65, 99]]
+        self.total_people_per_area = self.total_people_per_area_by_age_range()
         if not os.path.exists(self.save_path):
             os.mkdir(self.save_path)
         self.init_logger()
 
+
     def init_logger(self):
+        keys = ["susceptible", "infected", "recovered", "cumulative_infected"]
         if not self.box_mode:
             for area in self.world.areas.members:
                 self.data_dict[area.name] = {}
         self.data_dict["world"] = {}
+        self.data_dict["ByAge"] = {'{}-{}'.format(ages[0], ages[1]): {key: {} for key in keys} for ages in self.age_ranges}
+
+
+    def group_by_age(self, day, area, ages, susceptible, infected, recovered):
+        label = "{}-{}".format(ages[0], ages[1])
+        susceptible_per_area = sum([susceptible[k] for k in susceptible.keys() if (k >= ages[0] and k <= ages[1])])
+        infected_per_area = sum([infected[k] for k in infected.keys() if (k >= ages[0] and k <= ages[1])])
+        recovered_per_area = sum([recovered[k] for k in recovered.keys() if (k >= ages[0] and k <= ages[1])])
+
+        if day in self.data_dict["ByAge"][label]["susceptible"]:
+            self.data_dict["ByAge"][label]["susceptible"][day] += susceptible_per_area
+        else:
+            self.data_dict["ByAge"][label]["susceptible"][day] = susceptible_per_area
+        
+        if day in self.data_dict["ByAge"][label]["infected"]:
+            self.data_dict["ByAge"][label]["infected"][day] += infected_per_area
+        else:
+            self.data_dict["ByAge"][label]["infected"][day] = infected_per_area
+
+        if day in self.data_dict["ByAge"][label]["recovered"]:
+            self.data_dict["ByAge"][label]["recovered"][day] += recovered_per_area
+        else:
+            self.data_dict["ByAge"][label]["recovered"][day] = recovered_per_area
+
+        if day in self.data_dict["ByAge"][label]["cumulative_infected"]:
+            self.data_dict["ByAge"][label]["cumulative_infected"][day] += (self.total_people_per_area[area.name][label] - susceptible_per_area)
+            # print(self.data_dict["ByAge"][label]["cumulative_infected"][day])
+        else:
+            self.data_dict["ByAge"][label]["cumulative_infected"][day] = (self.total_people_per_area[area.name][label] - susceptible_per_area)
+
 
     def log_timestep(self, day):
         susceptible_world = 0
         infected_world = 0
         recovered_world = 0
+        total_people = self.world.people.total_people
         if not self.box_mode:
             for area in self.world.areas.members:
                 susceptible, infected, recovered = self.get_infected_people_area(area)
-                susceptible_world += susceptible
-                infected_world += infected
-                recovered_world += recovered
+                susceptible_world += sum(susceptible.values())
+                infected_world += sum(infected.values())
+                recovered_world += sum(recovered.values())
                 self.data_dict[area.name][day] = {
-                        "susceptible": susceptible,
-                        "infected": infected,
-                        "recovered": recovered,
+                        "susceptible": sum(susceptible.values()),
+                        "infected": sum(infected.values()),
+                        "recovered": sum(recovered.values()),
                         }
+                
+                for ages in self.age_ranges:
+                    self.group_by_age(day, area, ages, susceptible, infected, recovered)
 
             self.data_dict["world"][day] = {
                     "susceptible": susceptible_world,
                     "infected": infected_world,
                     "recovered": recovered_world,
+                    "cumulative_infected": total_people - susceptible_world
                     }
-            #self.log_r0() TODO implement
+            self.log_r0()
         else:
             box = self.world.boxes.members[0]
             self.data_dict["world"][day] = {
@@ -55,152 +96,229 @@ class Logger:
                     "recovered": len(self.world.people.recovered)
                     }
             # self.log_infection_generation(day)
-            #self.log_r0()
+            # self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
             json.dump(self.data_dict, f)
+       
+
+    def total_people_by_age_range(self, people):
+        """
+        Return dictionary of people in specified age range.
+
+        age_ranges should be given as a list of lists, e.g. [[0, 18], [18-65], [65-99]] where the ages are inclusive.
+        """
+        total_people_in_age_range = {}
+        all_ages = [person.age for person in people]
+        for ages in self.age_ranges:
+            label = "{}-{}".format(ages[0], ages[1])
+            total_people_in_age_range[label] = sum([all_ages.count(i) for i in range(ages[0], ages[1]+1)])
+        return total_people_in_age_range
+
+
+    def total_people_per_area_by_age_range(self):
+        total_people_per_area_by_age = {area.name: {} for area in self.world.areas.members}
+
+        for area in self.world.areas.members:
+            total_people_per_area_by_age[area.name] = self.total_people_by_age_range(area.people)
+        
+        return total_people_per_area_by_age
+                
 
     def get_infected_people_area(self, area):
-        infected = 0
-        susceptible = 0
-        recovered = 0
+        infected = {}
+        susceptible = {}
+        recovered = {}
+        total_people_by_area_by_age = {}
         for person in area.people:
             if person.health_information.susceptible:
-                susceptible += 1
+                if person.age in susceptible:
+                    susceptible[person.age] += 1
+                else:
+                    susceptible[person.age] = 1
+
             if person.health_information.infected:
-                infected += 1
+                if person.age in infected:
+                    infected[person.age] += 1
+                else:
+                    infected[person.age] = 1
+
             if person.health_information.recovered:
-                recovered += 1
+                if person.age in recovered:
+                    recovered[person.age] += 1
+                else:
+                    recovered[person.age] = 1
         return susceptible, infected, recovered
 
 
-    def log_infection_generation(self, day):
-        infection_generation_global = 0
-        global_counter = 0
-        if not self.box_mode:
-            for area in self.world.areas.members:
-                for person in area.people:
-                    if person.health_information.infected:
-                        infection_generation_global += person.health_information.infection_generation
-                        global_counter +=1
+    # def log_infection_generation(self, day):
+    #     infection_generation_global = 0
+    #     global_counter = 0
+    #     if not self.box_mode:
+    #         for area in self.world.areas.members:
+    #             for person in area.people:
+    #                 if person.health_information.infected:
+    #                     infection_generation_global += person.health_information.infection_generation
+    #                     global_counter +=1
                         
-            if infection_generation_global == 0:
-                self.data_dict["world"][day]["infection_generation"] = 0
-            else:
-                self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
-        else:
-            box = self.world.boxes.members[0]
-            for person in box.people:
-                infection_generation_global += person.health_information.infection_generation
-                global_counter += 1
+    #         if infection_generation_global == 0:
+    #             self.data_dict["world"][day]["infection_generation"] = 0
+    #         else:
+    #             self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
+    #     else:
+    #         box = self.world.boxes.members[0]
+    #         for person in box.people:
+    #             infection_generation_global += person.health_information.infection_generation
+    #             global_counter += 1
                 
-                self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
+    #             self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
 
 
     def log_r0(self):
-        if not self.box_mode:
-            raise NotImplementedError()
-        else:
-            box = self.world.boxes.members[0]
-            if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
-                inner_dict = {}
-                r0s_raw = []
-                r0s_recon = []
-                day_infs = []
-                for person in box.recovered:
-                    day_inf = person.health_information.time_of_infection
-                    day_infs.append([day_inf, person])
-                    if (day_inf > 1 and day_inf < 5): # need to think about how to define this better
-                        day_recover = day_inf + person.health_information.length_of_infection
-                        s_ti = self.data_dict["world"][day_inf]["susceptible"]
-                        s_tr = self.data_dict["world"][day_recover]["susceptible"]
-                        s_frac = (s_ti + s_tr) / (2 * len(box.people))
-                        r0 = person.health_information.number_of_infected
-                        r0s_raw.append(r0)
-                        r0s_recon.append(r0 / s_frac)
+        if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
+            inner_dict = {}
+            r0s_raw = []
+            r0s_recon = []
+            for person in self.world.people.recovered:
+                day_inf = person.health_information.time_of_infection
+                if (day_inf > 1 and day_inf < 5): # need to think about how to define this better
+                    day_recover = day_inf + person.health_information.length_of_infection
+                    s_ti = self.data_dict["world"][day_inf]["susceptible"]
+                    s_tr = self.data_dict["world"][day_recover]["susceptible"]
+                    s_frac = (s_ti + s_tr) / (2 * self.world.people.total_people)
+                    r0 = person.health_information.number_of_infected
+                    r0s_raw.append(r0)
+                    r0s_recon.append(r0 / s_frac)
 
-                        inner_dict[person.id] = {"start" : day_inf,
-                                                "length" : person.health_information.length_of_infection,
-                                                "num_infected" : person.health_information.number_of_infected,
-                                                "R0_raw" : r0,
-                                                "R0_recon" : r0 / s_frac}
-                
-                self.data_dict["data"] = inner_dict
-                self.data_dict["R0_raw"] = np.mean(r0s_raw)
-                self.data_dict["R0_recon"] = np.mean(r0s_recon)
+                    inner_dict[person.id] = {"start" : day_inf,
+                                            "length" : person.health_information.length_of_infection,
+                                            "num_infected" : person.health_information.number_of_infected,
+                                            "R0_raw" : r0,
+                                            "R0_recon" : r0 / s_frac}
+            
+            self.data_dict["data"] = inner_dict
+            self.data_dict["R0_raw"] = np.mean(r0s_raw)
+            self.data_dict["R0_recon"] = np.mean(r0s_recon)
 
 
-    def plot_infection_generation(self):
-        import matplotlib.pyplot as plt
-        days = []
-        infection_generations = []
+    def log_R(self):
+        R_counter = {k: 0 for k in self.data_dict["world"].keys()}
+        R_denom   = {k: 0 for k in self.data_dict["world"].keys()}
+        R = {}
+        for person in self.world.people.recovered:
+            day_inf = person.health_information.time_of_infection
+            infecter = person.health_information.infecter
+            if infecter is not None:
+                day_infecter_inf = infecter.health_information.time_of_infection
+            
+            # R denom counts the number of everyone infected on a given day
+            R_denom[day_inf] += 1
+            # R counter counts the number of people infected on a day that go on to infect other people
+            # infectors are not unique, so it counts the number of people they infect
+            R_counter[day_infecter_inf] += 1
         for day in self.data_dict["world"].keys():
-            days.append(day)
-            infection_generations.append(self.data_dict["world"][day]["infection_generation"])
-        idx_sorted = np.argsort(days)
-        days = np.array(days)[idx_sorted]
-        infection_generations = np.array(infection_generations)[idx_sorted]
-        fig, ax = plt.subplots()
-        ax.plot(days, infection_generations)
-        ax.set_xlabel("Days")
-        ax.set_ylabel("Average infection generation")
-        return fig, ax
-    
+            if R_denom[day] == 0 or R_counter[day] == 0:
+                R[day] = 1E-10
+                continue
+            R[day] = R_counter[day] / R_denom[day]
+        return R_counter, R_denom, R
 
-    def log_r_effective(self, day):
-        """
-        Computes effective R per day from individual data.
-        """
-        r0_global = 0
-        global_counter = 0
-        if not self.box_mode:
-            for area in self.world.areas.members:
-                r0_area = 0
-                area_counter = 0
-                for person in area.people:
-                    if person.health_information.infected == True:
-                        r0_area += person.health_information.number_of_infected
-                        r0_global += person.health_information.number_of_infected
-                        area_counter += 1
-                        global_counter += 1
-                if area_counter == 0:
-                    self.data_dict[area.name][day]["r0"] = 0
-                else:
-                    self.data_dict[area.name][day]["r0"] = r0_area / area_counter
-            if global_counter == 0: 
-                self.data_dict["world"][day]["r0"] = 0
+
+    def plot_R(self):
+        _, _, R = self.log_R()
+        times = list(self.data_dict["world"].keys())
+        plt.figure()
+        plt.plot(times, [R[time] for time in times])
+        plt.xlabel('Days')
+        plt.ylabel('R(t)')
+        plt.show()
+
+
+    def plot_infections_per_day(self):
+        days = list(self.data_dict["world"].keys())
+        
+        plt.figure()
+        for ages in self.age_ranges:
+            label = "{}-{}".format(ages[0], ages[1])
+            plt.plot(days, list(self.data_dict["ByAge"][label]["infected"].values()), label=label)
+        plt.xlabel("Days")
+        plt.ylabel("Infections per day")
+        plt.legend()
+        plt.show()
+
+
+    def plot_infection_location(self, return_data=False):
+        locations = {}
+        for person in self.world.people.recovered:
+            if person.health_information.group_type_of_infection in locations:
+                locations[person.health_information.group_type_of_infection] += 1
             else:
-                self.data_dict["world"][day]["r0"] = r0_global / global_counter
+                locations[person.health_information.group_type_of_infection] = 1
+
+        for person in self.world.people.infected:
+            if person.health_information.group_type_of_infection in locations:
+                locations[person.health_information.group_type_of_infection] += 1
+            else:
+                locations[person.health_information.group_type_of_infection] = 1
+
+        fig = plt.figure()
+        plt.bar(locations.keys(), locations.values())
+        plt.title('Locations of where infections took place')
+        plt.ylabel('Number of people')
+        plt.show()
+
+        if return_data == False:
+            return fig
+        else:
+            return fig, locations
 
 
+    def plot_cumulative_fraction(self, by_age=True):
+        cumulative_inf = []
+        days = list(self.data_dict["world"].keys())
+        total_people = self.world.people.total_people
+        for day in days:
+            cumulative_inf.append(self.data_dict["world"][day]["cumulative_infected"])
+        
+        fig = plt.figure()
+        if by_age == False:
+            plt.plot(days, np.array(cumulative_inf) / total_people, label='total')
+        else:
+            total_people_by_age = self.total_people_by_age_range(self.world.people.members)
+            print(total_people_by_age)
+            for ages in self.age_ranges:
+                label = "{}-{}".format(ages[0], ages[1])
+                plt.plot(days, np.array(list(self.data_dict["ByAge"][label]["cumulative_infected"].values())) / total_people_by_age[label], label=label)
+        plt.xlabel("Days")
+        plt.ylabel("Cumulative fraction of population infected")
+        plt.legend()
+        plt.show()
+        return fig
 
-    def plot_r_eff(self):
-        import matplotlib.pyplot as plt
-        days = []
-        r_effs = []
-        for day in self.data_dict["world"].keys():
-            if np.isclose(day, int(day)):
-                days.append(day)
-                r_effs.append(self.data_dict["world"][day]["R_eff"])
-        idx_sorted = np.argsort(days)
-        days = np.array(days)[idx_sorted]
-        r_effs = np.array(r_effs)[idx_sorted]
-        fig, ax = plt.subplots()
-        ax.plot(days, r_effs)
-        ax.set_xlabel("Days")
-        ax.set_ylabel("R_eff")
-        return fig, ax
+    # def plot_infection_generation(self):
+    #     import matplotlib.pyplot as plt
+    #     days = []
+    #     infection_generations = []
+    #     for day in self.data_dict["world"].keys():
+    #         days.append(day)
+    #         infection_generations.append(self.data_dict["world"][day]["infection_generation"])
+    #     idx_sorted = np.argsort(days)
+    #     days = np.array(days)[idx_sorted]
+    #     infection_generations = np.array(infection_generations)[idx_sorted]
+    #     fig, ax = plt.subplots()
+    #     ax.plot(days, infection_generations)
+    #     ax.set_xlabel("Days")
+    #     ax.set_ylabel("Average infection generation")
+    #     return fig, ax
 
 
     def plot_infection_curves_per_day(self):
         infected = []
         susceptible = []
         recovered = []
-        day_array = []
-        first_area = list(self.data_dict.keys())[0]
-        days = self.data_dict["world"].keys()
+        # first_area = list(self.data_dict.keys())[0]
+        days = list(self.data_dict["world"].keys())
         for day in days:
-            day_array.append(day)
             n_inf = self.data_dict["world"][day]["infected"]
             n_susc = self.data_dict["world"][day]["susceptible"]
             n_rec = self.data_dict["world"][day]["recovered"]
@@ -208,9 +326,9 @@ class Logger:
             susceptible.append(n_susc)
             recovered.append(n_rec)
         fig, ax = plt.subplots()
-        ax.plot(day_array, infected, label="Infected", color='C0')
-        ax.plot(day_array, susceptible, label="Susceptible", color='C1')
-        ax.plot(day_array, recovered, label="Recovered", color='C2')
+        ax.plot(days, infected, label="Infected", color='C0')
+        ax.plot(days, susceptible, label="Susceptible", color='C1')
+        ax.plot(days, recovered, label="Recovered", color='C2')
         ax.set_xlabel("Days")
         ax.set_ylabel("Number of people")
         ax.set_title("Infection curves")
