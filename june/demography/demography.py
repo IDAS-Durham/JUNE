@@ -20,6 +20,7 @@ class AgeSexGenerator:
         self, age_counts: list, 
         sex_bins: list, female_fractions: list,
         ethnicity_age_bins: list, ethnicity_groups: list, ethnicity_structure: list,
+        socioecon_index: int,
         max_age=99
     ):
         """
@@ -27,11 +28,22 @@ class AgeSexGenerator:
         and the value indicates the number of counts in that age.
         sex_bins are the lower edges of each sex bin where we have a fraction of females from
         census data, and female_fractions are those fractions.
+        ethnicity_age_bins are the lower edges of the age bins that ethnicity data is in
+        ethnicity_groups are the labels of the ethnicities which we have data for.
+        ethnicity_structure are (integer) ratios of the ethnicities, for each age bin. the sum
+        of this strucutre need NOT be the total number of people returned by the generator.
         Example:
             age_counts = [1, 2, 3] means 1 person of age 0, 2 people of age 1 and 3 people of age 2.
             sex_bins = [1, 3] defines two bins: (0,1) and (3, infinity)
             female_fractions = [0.3, 0.5] means that between the ages 0 and 1 there are 30% females,
                                           and there are 50% females in the bin 3+ years
+            ethnicity_age_bins - see sex_bins
+            ethnicity_groups = ['A','B','C'] - there are three types of ethnicities that we are
+                                          assigning here.
+            ethnicity_structure = [[0,5,3],[2,3,0],...] in the first age bin, we assign people
+                                          ethnicities A:B:C with probability 0:5:3, and so on.
+            socioecon_index = 6 means this area belongs to the 6th decile in the index
+                                of multiple deprivation.
         Given this information we initialize two generators for age and sex, that can be accessed
         through gen = AgeSexGenerator().age() and AgeSexGenerator().sex().
 
@@ -66,6 +78,7 @@ class AgeSexGenerator:
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
         self.ethnicity_iterator = iter(ethnicities)
+        self.socioecon_index = socioecon_index
         self.max_age = max_age
 
     def age(self) -> int:
@@ -178,6 +191,7 @@ class Demography:
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
                 ethnicity=age_and_sex_generator.ethnicity(),
+                econ_index=age_and_sex_generator.socioecon_index
                 # TODO socioeconomic_generators.socioeconomic_index()
             )
             people.append(person)  # add person to population
@@ -259,12 +273,12 @@ class Demography:
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
         ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
-        # TODO socioecon_structure_path = data_path / "socioecon_structure.csv"
+        socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path, 
             female_fraction_path, 
             ethnicity_structure_path, 
-            # TODO socioecon_structure_path
+            socioecon_structure_path,
             area_names,
         )
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
@@ -274,7 +288,7 @@ def _load_age_and_sex_generators(
     age_structure_path: str, 
     female_ratios_path: str, 
     ethnicity_structure_path: str, 
-    # TODO socioecon_strucuture_path,
+    socioecon_structure_path: str,
     area_names: List[str]
 ):
     """
@@ -294,13 +308,14 @@ def _load_age_and_sex_generators(
     ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
     ## it preserves original order, and ignoring "repeat slices".
 
-    # socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=[0,1])
-    # socioecon_structure_df = socioecon_structure_df[area_names]
+    socioecon_structure_df = pd.read_csv(socioecon_structure_path,index_col=0)
+    socioecon_structure_df = socioecon_structure_df.loc[area_names]
+    socioecon_structure_df.sort_index(inplace=True)
 
     ret = {}
-    for (_, age_structure), (index, female_ratios), (_,ethnicity_df) in zip(
+    for (_, age_structure), (index, female_ratios), (_,ethnicity_df), socioecon_index in zip(
         age_structure_df.iterrows(), female_ratios_df.iterrows(), 
-        ethnicity_structure_df.groupby(level=0),
+        ethnicity_structure_df.groupby(level=0),socioecon_structure_df['iomd_decile']
     ):
         ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(
@@ -310,6 +325,7 @@ def _load_age_and_sex_generators(
             ethnicity_df.columns, 
             ethnicity_df.index.get_level_values(1), 
             ethnicity_structure,
+            socioecon_index,
         )
         
     return ret

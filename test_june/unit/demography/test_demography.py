@@ -23,6 +23,7 @@ def test__age_sex_generator():
     ethnicity_age_bins = [0, 2, 4]
     ethnicity_groups = ["A", "B", "C"]
     ethnicity_structure = [[2, 0, 0], [0, 0, 2], [0, 4, 0]]
+    socioecon_index = 4
     age_sex_generator = d.demography.AgeSexGenerator(
         age_counts,
         age_bins,
@@ -30,6 +31,7 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
+        socioecon_index
     )
     assert list(age_sex_generator.age_iterator) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert list(age_sex_generator.sex_iterator) == [
@@ -50,7 +52,9 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
+        socioecon_index
     )
+    assert age_sex_generator.socioecon_index == socioecon_index
     ages = []
     sexes = []
     ethnicities = []
@@ -91,6 +95,7 @@ class TestDemography:
             if person.age in range(55, 69):
                 assert person.ethnicity.startswith("A")
             assert person.ethnicity.startswith("D") is False
+            assert person.econ_index == 6
             if person.age not in people_ages_dict:
                 people_ages_dict[person.age] = 1
             else:
