@@ -194,7 +194,7 @@ class Population:
         subgroup_types = np.array(subgroup_types, dtype=np.int)
         group_specs = np.array(group_specs, dtype="S10")
 
-        with h5py.File(file_path, "w", libver="latest") as f:
+        with h5py.File(file_path, "a", libver="latest") as f:
             people_dset = f.create_group("population")
             people_dset.attrs["n_people"] = n_people
             people_dset.create_dataset("id", data=ids)

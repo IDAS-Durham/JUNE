@@ -195,7 +195,10 @@ class Companies(Supergroup):
         super_areas = []
         sectors = []
         n_workers_max = []
-        for company in self.members:
+        company_idx = [company.id for company in self.members]
+        # sort
+        companies = [self.members[i] for i in np.argsort(company_idx)]
+        for company in companies:
             ids.append(company.id)
             if company.super_area is None:
                 super_areas.append(nan_integer)
@@ -208,7 +211,7 @@ class Companies(Supergroup):
         super_areas = np.array(super_areas, dtype=np.int)
         sectors = np.array(sectors, dtype="S10")
         n_workers_max = np.array(n_workers_max, dtype=np.float)
-        with h5py.File(file_path, "w") as f:
+        with h5py.File(file_path, "a") as f:
             people_dset = f.create_group("companies")
             people_dset.attrs["n_companies"] = n_companies
             people_dset.create_dataset("id", data=ids)

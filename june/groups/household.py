@@ -119,7 +119,7 @@ class Households(Supergroup):
         areas = np.array(areas, dtype=np.int)
         communals = np.array(communals, dtype=np.bool)
         max_sizes = np.array(max_sizes, dtype=np.float)
-        with h5py.File(file_path, "w") as f:
+        with h5py.File(file_path, "a") as f:
             people_dset = f.create_group("households")
             people_dset.attrs["n_households"] = n_households
             people_dset.create_dataset("id", data=ids)
