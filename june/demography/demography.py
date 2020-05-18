@@ -149,14 +149,13 @@ class Population:
     def to_hdf5(self, file_path: str):
         n_people = len(self.people)
         dt = h5py.vlen_dtype(np.dtype("int32"))
-        chunk_size = 1000000  # 1M people at a time to avoid memory overload
+        chunk_size = 100000  # 100k people at a time to avoid memory overload
         n_chunks = int(np.ceil(n_people / chunk_size))
         with h5py.File(file_path, "a", libver="latest") as f:
             people_dset = f.create_group("population")
             for chunk in range(n_chunks):
                 idx1 = chunk * chunk_size
                 idx2 = min((chunk + 1) * chunk_size, n_people)
-                print(idx1, idx2)
                 ids = []
                 ages = []
                 sexes = []
@@ -166,11 +165,25 @@ class Population:
                 group_specs = []
                 subgroup_types = []
                 housemates = []
+                mode_of_transport = []
+                home_city = []
+
                 for person in self.people[idx1:idx2]:
                     ids.append(person.id)
                     ages.append(person.age)
                     sexes.append(person.sex.encode("ascii", "ignore"))
                     ethns.append(person.ethnicity.encode("ascii", "ignore"))
+                    if person.home_city is None:
+                        home_city.append(" ".encode("ascii", "ignore"))
+                    else:
+                        home_city.append(person.home_city.encode("ascii", "ignore"))
+                    if person.mode_of_transport is None:
+                        mode_of_transport.append(" ".encode("ascii", "ignore"))
+                    else:
+                        mode_of_transport.append(
+                            person.mode_of_transport.encode("ascii", "ignore")
+                        )
+
                     if person.area is not None:
                         areas.append(person.area.id)
                     else:
@@ -200,16 +213,27 @@ class Population:
                 ages = np.array(ages, dtype=np.int)
                 sexes = np.array(sexes, dtype="S10")
                 ethns = np.array(ethns, dtype="S10")
+                home_city = np.array(home_city, dtype="S15")
+                mode_of_transport = np.array(mode_of_transport, dtype="S15")
                 areas = np.array(areas, dtype=np.int)
                 group_ids = np.array(group_ids, dtype=np.int)
                 subgroup_types = np.array(subgroup_types, dtype=np.int)
                 group_specs = np.array(group_specs, dtype="S10")
+                housemates = np.array(housemates, dtype=object)
 
                 if chunk == 0:
                     people_dset.attrs["n_people"] = n_people
                     people_dset.create_dataset("id", data=ids, maxshape=(n_people,))
                     people_dset.create_dataset("age", data=ages, maxshape=(n_people,))
                     people_dset.create_dataset("sex", data=sexes, maxshape=(n_people,))
+                    people_dset.create_dataset(
+                        "home_city", data=home_city, maxshape=(n_people,)
+                    )
+                    people_dset.create_dataset(
+                        "mode_of_transport",
+                        data=mode_of_transport,
+                        maxshape=(n_people,),
+                    )
                     people_dset.create_dataset(
                         "ethnicity", data=ethns, maxshape=(n_people,)
                     )
@@ -230,13 +254,10 @@ class Population:
                     )
                     people_dset.create_dataset("area", data=areas, maxshape=(n_people,))
                     people_dset.create_dataset(
-                        "housemates",
-                        data=housemates,
-                        dtype=dt,
-                        maxshape=(n_people,),
+                        "housemates", data=housemates, dtype=dt, maxshape=(n_people,),
                     )
                 else:
-                    newshape = (people_dset["id"].shape[0] + ids.shape[0], )
+                    newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                     people_dset["id"].resize(newshape)
                     people_dset["id"][idx1:idx2] = ids
                     people_dset["age"].resize(newshape)
@@ -245,6 +266,10 @@ class Population:
                     people_dset["sex"][idx1:idx2] = sexes
                     people_dset["ethnicity"].resize(newshape)
                     people_dset["ethnicity"][idx1:idx2] = ethns
+                    people_dset["home_city"].resize(newshape)
+                    people_dset["home_city"][idx1:idx2] = home_city 
+                    people_dset["mode_of_transport"].resize(newshape)
+                    people_dset["mode_of_transport"][idx1:idx2] = mode_of_transport 
                     people_dset["area"].resize(newshape)
                     people_dset["area"][idx1:idx2] = areas
                     people_dset["group_ids"].resize(newshape[0], axis=0)
@@ -253,7 +278,7 @@ class Population:
                     people_dset["group_specs"][idx1:idx2] = group_specs
                     people_dset["subgroup_types"].resize(newshape[0], axis=0)
                     people_dset["subgroup_types"][idx1:idx2] = subgroup_types
-                    people_dset["housemates"].resize(newshape[0], axis=0)
+                    people_dset["housemates"].resize(newshape)
                     people_dset["housemates"][idx1:idx2] = housemates
 
     @classmethod
@@ -261,8 +286,8 @@ class Population:
         with h5py.File(file_path, "r") as f:
             people = list()
             population = f["population"]
-            # read in chunks of 1M people
-            chunk_size = 1000000
+            # read in chunks of 100k people
+            chunk_size = 100000
             n_people = population.attrs["n_people"]
             n_chunks = int(np.ceil(n_people / chunk_size))
             for chunk in range(n_chunks):
@@ -272,6 +297,8 @@ class Population:
                 ages = population["age"][idx1:idx2]
                 sexes = population["sex"][idx1:idx2]
                 ethns = population["ethnicity"][idx1:idx2]
+                mode_of_transport = population["mode_of_transport"][idx1:idx2]
+                home_city = population["home_city"][idx1:idx2]
                 group_ids = population["group_ids"][idx1:idx2]
                 group_specs = population["group_specs"][idx1:idx2]
                 subgroup_types = population["subgroup_types"][idx1:idx2]
@@ -283,6 +310,16 @@ class Population:
                     person.age = ages[k]
                     person.sex = sexes[k].decode()
                     person.ethnicity = ethns[k].decode()
+                    hc = home_city[k].decode()
+                    if hc == " ":
+                        person.home_city = None
+                    else:
+                        person.home_city = hc
+                    mt = mode_of_transport[k].decode()
+                    if mt == " ":
+                        person.mode_of_transport = None
+                    else:
+                        person.mode_of_transport = mt
                     subgroups = []
                     for group_id, subgroup_type, group_spec in zip(
                         group_ids[k], subgroup_types[k], group_specs[k]
