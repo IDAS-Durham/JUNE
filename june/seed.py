@@ -135,7 +135,7 @@ class Seed:
 
         for choice in choices:
             self.infection.infect_person_at_time(
-                list(super_area.people)[choice], self.health_index_generator, 0.0
+                list(super_area.people)[choice], self.health_index_generator, 1.0
             )
 
     def unleash_virus_per_region(self):

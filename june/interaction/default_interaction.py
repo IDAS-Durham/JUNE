@@ -115,7 +115,7 @@ class DefaultInteraction(Interaction):
                 )
                 infecter.health_information.increment_infected()
                 recipient.health_information.update_infection_data(
-                    time=time, group_type=group.spec
+                    time=time, group_type=group.spec, infecter=infecter
                 )
 
     def intensity(self, group, infecter, recipient):
@@ -171,5 +171,5 @@ class DefaultInteraction(Interaction):
         for weight in self.weights:
             summed_weight += weight[1]
         choice_weights = [w[1] / summed_weight for w in self.weights]
-        idx = np.random.choice(range(len(self.weights)), 1, p=choice_weights)[0]
+        idx = np.random.choice(len(self.weights), 1, p=choice_weights)[0]
         return self.weights[idx][0]
