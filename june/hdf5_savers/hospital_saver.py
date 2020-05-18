@@ -57,10 +57,16 @@ def save_hospitals_to_hdf5(
                 hospitals_dset.create_dataset("n_icu_beds", data=n_icu_beds)
                 hospitals_dset.create_dataset("coordinates", data=coordinates)
             else:
+                newshape = (hospitals_dset["id"].shape[0] + ids.shape[0],)
+                hospitals_dset["id"].resize(newshape)
                 hospitals_dset["id"][idx1:idx2] = ids
+                hospitals_dset["super_area"].resize(newshape)
                 hospitals_dset["super_area"][idx1:idx2] = super_areas
+                hospitals_dset["n_beds"].resize(newshape)
                 hospitals_dset["n_beds"][idx1:idx2] = n_beds
+                hospitals_dset["n_icu_beds"].resize(newshape)
                 hospitals_dset["n_icu_beds"][idx1:idx2] = n_icu_beds
+                hospitals_dset["coordinates"].resize(newshape[0], axis=0)
                 hospitals_dset["coordinates"][idx1:idx2] = coordinates
 
 def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):

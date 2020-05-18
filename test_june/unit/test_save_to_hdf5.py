@@ -1,8 +1,10 @@
 import numpy as np
 import h5py
+from collections import defaultdict
+from itertools import count
 from june.demography import Demography, Person, Population
-from june.geography import Geography
-from june.groups import Households, Companies, Hospitals, Schools, CareHomes
+from june.geography import Geography, Area, SuperArea
+from june.groups import Households, Companies, Hospitals, Schools, CareHomes, Group
 from june.distributors import HouseholdDistributor
 from june import World
 from june.world import generate_world_from_hdf5
@@ -26,12 +28,18 @@ from june.hdf5_savers import (
     load_hospitals_from_hdf5
 )
 
+def clear_counters():
+    SuperArea._id = count()
+    Area._id = count()
+    Group.__id_generators = defaultdict(count)
+
 from pytest import fixture
 
 
 @fixture(name="geography_h5", scope="module")
 def make_geography():
-    geography = Geography.from_file({"msoa": ["E02006764"]})
+    #clear_counters()
+    geography = Geography.from_file({"msoa": ["E02006764", "E02003999", "E02002559"]})
     return geography
 
 
@@ -255,12 +263,14 @@ class TestSaveWorld:
         return world2
 
     def test__save_geography(self, world_h5, world_h5_loaded):
+        assert len(world_h5.areas) == len(world_h5_loaded.areas)
         for area1, area2 in zip(world_h5.areas, world_h5_loaded.areas):
             assert area1.id == area2.id
             assert area1.super_area.id == area2.super_area.id
             assert area1.super_area.name == area2.super_area.name
             assert area1.name == area2.name
 
+        assert len(world_h5.super_areas) == len(world_h5_loaded.super_areas)
         for super_area1, super_area2 in zip(
             world_h5.super_areas, world_h5_loaded.super_areas
         ):

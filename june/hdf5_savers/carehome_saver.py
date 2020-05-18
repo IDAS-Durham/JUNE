@@ -50,8 +50,12 @@ def save_care_homes_to_hdf5(
                 care_homes_dset.create_dataset("area", data=areas)
                 care_homes_dset.create_dataset("n_residents", data=n_residents)
             else:
+                newshape = (care_homes_dset["id"].shape[0] + ids.shape[0],)
+                care_homes_dset["id"].resize(newshape)
                 care_homes_dset["id"][idx1:idx2] = ids
+                care_homes_dset["area"].resize(newshape)
                 care_homes_dset["area"][idx1:idx2] = areas
+                care_homes_dset["n_residents"].resize(newshape)
                 care_homes_dset["n_residents"][idx1:idx2] = n_residents
 
 def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
