@@ -220,6 +220,8 @@ class Person:
     def find_guardian(self):
 
         possible_guardians = [person for person in self.housemates if person.age >= 18]
+        if len(possible_guardians) == 0:
+            return None
         guardian = random.choice(possible_guardians)
         if (
             guardian.health_information.should_be_in_hospital
