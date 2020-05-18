@@ -27,15 +27,15 @@ class CommuteUnitDistributor:
                 # clear units
                 for unit in possible_units:
                     unit.no_passengers = 0
-                    #TODO: should be done by simulator clear, but maybe more safe?
-                    unit.subgroups[0]._people.clear()
+
                 for unit in possible_units:
                     while unit.no_passengers < people_per_unit:
                         passenger_id = indices.pop()
                         passenger = commuting_people[passenger_id]
                         unit.add(passenger,
-                            activity_type=None,
-                            subgroup_type=unit.SubgroupType.default
+                            activity_type=passenger.ActivityType.commute,
+                            subgroup_type=unit.SubgroupType.default,
+                            dynamic=True
                             )
                         unit.no_passengers += 1
 
@@ -43,8 +43,9 @@ class CommuteUnitDistributor:
                     passenger_id = indices.pop()
                     passenger = commuting_people[passenger_id]
                     unit.add(passenger,
-                            activity_type=None,
-                            subgroup_type=unit.SubgroupType.default
+                            activity_type = passenger.ActivityType.commute,
+                            subgroup_type=unit.SubgroupType.default,
+                            dynamic=True
                             )
                     unit.no_passengers += 1
 

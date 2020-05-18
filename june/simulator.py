@@ -199,10 +199,6 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
-            if group_name == 'commutecityunits':
-                group_name = 'commutecities'
-            elif group_name == 'commuteunits':
-                group_name = 'commutehubs'
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
                 for subgroup in group.subgroups:
@@ -317,6 +313,7 @@ class Simulator:
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
+ 
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
         """
@@ -387,6 +384,7 @@ class Simulator:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
         self.move_people_to_active_subgroups(activities)
+
         if 'commute' in activities:
             self.group_maker.distribute_people('commute')
 
@@ -408,7 +406,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            print(f"Active in {group.spec} = {n_active_in_group}")
+            sim_logger.info(f"Number of people active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
