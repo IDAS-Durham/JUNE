@@ -4,6 +4,12 @@ import numpy as np
 from june.geography import Geography
 from june.demography import Demography
 from june.seed import Seed
+from june.infection import InfectionSelector 
+from pathlib import Path
+path_pwd = Path(__file__)
+dir_pwd  = path_pwd.parent
+constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+
 
 SUPER_AREA_LIST = [
                         'E02004940',
@@ -32,6 +38,15 @@ def get_demography(geography):
         area.populate(demography)
     return demography
 
+@pytest.fixture(name='selector', scope='module')
+def create_selector():
+    selector = InfectionSelector.from_file(constant_config)
+    selector.recovery_rate            = 0.05
+    selector.transmission_probability = 0.7
+    return selector
+
+
+
 @pytest.fixture(name='seed')
 def get_seed(geography, selector, demography):
     super_area_to_region = pd.DataFrame(
@@ -40,7 +55,7 @@ def get_seed(geography, selector, demography):
             'region': REGION_LIST
             }
             )
-    return Seed(geography.super_areas, infection, None, super_area_to_region)
+    return Seed(geography.super_areas, selector, None, super_area_to_region)
 
 
 def test__filter_region(seed):
