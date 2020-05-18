@@ -139,7 +139,7 @@ class Person:
         "sector",
         "sub_sector",
         "home_city",
-        "econ_index",
+        "socioecon_index",
         "health_information",
         "busy",
     )

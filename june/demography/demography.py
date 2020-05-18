@@ -191,7 +191,7 @@ class Demography:
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
                 ethnicity=age_and_sex_generator.ethnicity(),
-                econ_index=age_and_sex_generator.socioecon_index
+                socioecon_index=age_and_sex_generator.socioecon_index
                 # TODO socioeconomic_generators.socioeconomic_index()
             )
             people.append(person)  # add person to population
