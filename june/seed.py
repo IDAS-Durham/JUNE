@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from june.geography import SuperAreas
+from june.infection import Infection
 from june import paths
 from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
@@ -12,8 +14,8 @@ default_msoa_region_filename = (
 class Seed:
     def __init__(
         self,
-        super_areas: "SuperAreas",
-        infection: "Infection",
+        super_areas: SuperAreas,
+        infection: Infection,
         n_cases_region: pd.DataFrame = None,
         msoa_region: pd.DataFrame = None,
     ):
