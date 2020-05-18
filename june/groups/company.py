@@ -181,7 +181,11 @@ class Companies(Supergroup):
                 sectors,
             )
         )
+        # shuffle and reorder companies
+        min_idx = companies[0].id
         np.random.shuffle(companies)
+        for i, company in enumerate(companies):
+            company.id = min_idx + i
         return companies
 
     @classmethod
