@@ -68,7 +68,6 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
     with h5py.File(file_path, "r") as f:
         carehomes = f["care_homes"]
         carehomes_list = list()
-        chunk_size = 50000
         n_carehomes = carehomes.attrs["n_care_homes"]
         n_chunks = int(np.ceil(n_carehomes / chunk_size))
         for chunk in range(n_chunks):
