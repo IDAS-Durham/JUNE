@@ -125,3 +125,38 @@ class CareHomeDistributor:
                 current_age_to_fill -= 1
                 if current_age_to_fill < self.min_age_in_care_home:
                     break
+
+    def distribute_workers(self, area):
+        """
+        Healthcares sector
+            Q: Carers
+        """
+        hospitals_in_msoa = self.hospitals_in_msoa(area)
+        if len(hospitals_in_msoa) == 0:
+            return
+        medics = [
+            person
+            for idx, person in enumerate(msoa.workers)
+            if person.sector == self.healthcare_sector_label
+        ]
+        if len(medics) == 0:
+            logger.info(f"\n The MSOArea {msoa.name} has no people that work in it!")
+            return
+        else:
+            # equal chance to work in any hospital nearest to any area within msoa
+            # Note: doing it this way rather then putting them into the area which
+            # is currently chose in the for-loop in the world.py file ensure that
+            # medics are equally distr., no over-crowding
+            areas_rv = stats.rv_discrete(
+                values=(
+                    np.arange(len(hospitals_in_msoa)),
+                    np.array([1 / len(hospitals_in_msoa)] * len(hospitals_in_msoa)),
+                )
+            )
+            hospitals_rnd_arr = areas_rv.rvs(size=len(medics))
+
+            for i, medic in enumerate(medics):
+                if medic.sub_sector is not None:
+                    hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
+                    # if (hospital.n_medics < hospital.n_medics_max):# and \
+                    hospital.add(medic, hospital.SubgroupType.workers)
