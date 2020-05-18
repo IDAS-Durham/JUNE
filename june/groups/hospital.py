@@ -122,7 +122,8 @@ class Hospital(Group):
         person:
             person instance to add as patient
         """
-        if person.health_information.tag == "intensive care":
+        
+        if person.health_information.tag == Symptom_Tags.intensive_care:
             self.add(person, self.SubgroupType.icu_patients)
         elif person.health_information.tag == Symptom_Tags.hospitalised:
             self.add(person, self.SubgroupType.patients)
