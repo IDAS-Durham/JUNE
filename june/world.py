@@ -294,8 +294,6 @@ def generate_world_from_hdf5(file_path: str) -> World:
     world = World(geography, include_households=False)
     with h5py.File(file_path) as f:
         f_keys = list(f.keys()).copy()
-    print("f keys")
-    print(f_keys)
     if "population" in f_keys:
         world.people = Population.from_hdf5(file_path)
     if "hospitals" in f_keys:
@@ -304,6 +302,9 @@ def generate_world_from_hdf5(file_path: str) -> World:
         world.schools = Schools.from_hdf5(file_path)
     if "companies" in f_keys:
         world.companies = Companies.from_hdf5(file_path)
+        for company in world.companies:
+            sa_id = company.super_area
+            company.super_area = world.super_areas[sa_id]
     if "care_homes" in f_keys:
         world.care_homes = CareHomes.from_hdf5(file_path)
     if "households" in f_keys:
@@ -316,6 +317,12 @@ def generate_world_from_hdf5(file_path: str) -> World:
         "household": "households",
         "care_home": "care_homes",
     }
+    # restore areas -> super_areas
+    for area in world.areas:
+        super_area_id = area.super_area
+        area.super_area = world.super_areas[super_area_id]
+        area.super_area.areas.append(area)
+
     # restore person -> subgroups
     for person in world.people:
         subgroups_instances = [None] * len(person.subgroups)
@@ -329,4 +336,11 @@ def generate_world_from_hdf5(file_path: str) -> World:
             subgroup = group[subgroup_type]
             subgroups_instances[i] = subgroup
         person.subgroups = subgroups_instances
+        # restore housemates
+        housemate_ids = person.housemates
+        housemates = []
+        for mateid in housemate_ids:
+            housemates.append(world.people[mateid])
+        person.housemates = housemates
     return world
+

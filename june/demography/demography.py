@@ -118,6 +118,9 @@ class Population:
     def __iter__(self):
         return iter(self.people)
 
+    def __getitem__(self, index):
+        return self.people[index]
+
     def extend(self, people):
         self.people.extend(people)
 
