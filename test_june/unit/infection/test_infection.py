@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import statistics
 
+from june import paths
 from june.infection.health_index import HealthIndexGenerator
 from june.infection import infection as infect
 from june.infection import symptoms as sym, transmission as trans
@@ -10,9 +11,12 @@ from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission_xnexp as transxnexp
 from june.demography import person
 
+
+test_constant_config_filename = Path(__file__).parent.parent.parent / "InfectionConstant.yaml"
+
 class Test_Infection:
     def test__infect_person__gives_them_symptoms_and_transmission(self):
-        selector  = infect.InfectionSelector()
+        selector  = infect.InfectionSelector.from_file()
         dummy     = person.Person(sex='f', age=26)
         infection = selector.make_infection(time=0.1,person=dummy)
         victim    = person.Person(sex='f', age=26)
@@ -27,9 +31,12 @@ class Test_Infection:
         
         # fixed value hard-wired in infection_selector
         assert victim.health_information.infection.transmission.incubation_time == 2.6
-        assert victim.health_information.infection.transmission.norm_time       == 5.
-        assert victim.health_information.infection.transmission.N               == 2.
-        assert victim.health_information.infection.transmission.alpha           == 10.
+        assert (victim.health_information.infection.transmission.norm_time ==
+                selector.transmission_norm_time)
+        assert (victim.health_information.infection.transmission.N ==
+                selector.transmission_N)
+        assert (victim.health_information.infection.transmission.alpha ==
+                selector.transmission_alpha)
         
     def test__update_to_time__calls_transmission_symptoms_methods(self,transmission,
                                                                   symptoms):
@@ -44,6 +51,22 @@ class Test_Infection:
         assert infection.infection_probability == transmission.probability
 
 class Test_InfectionSelector:
+    def test__defaults_when_no_filename_is_given(self):
+        selector  = infect.InfectionSelector.from_file()
+        assert selector.stype == infect.SymptomsType.trajectories
+        assert selector.ttype == infect.TransmissionType.xnexp
+        assert selector.incubation_time     == 2.6
+        assert selector.transmission_N      == 1.
+        assert selector.transmission_alpha  == 5.
+        assert selector.transmission_median == 1.
+        
+    def test__constant_filename(self):
+        selector  = infect.InfectionSelector.from_file(test_constant_config_filename)
+        assert selector.stype == infect.SymptomsType.constant
+        assert selector.ttype == infect.TransmissionType.constant
+        assert selector.recovery_rate            == 0.2
+        assert selector.transmission_probability == 0.3
+        
     def test__lognormal_in_maxprob(self):
         selector  = infect.InfectionSelector()
         dummy     = person.Person(sex='f', age=26)
@@ -75,10 +98,13 @@ class Test_InfectionSelector:
             probs.append(ratio*infection.transmission.probability)
         return ts, probs
         """
-"""        
+"""
 if __name__=="__main__":
     import matplotlib.pyplot as plt
     tester   = Test_InfectionSelector()
+    tester.test__defaults_when_no_filename_is_given()
+    tester.test__constant_filename()
+   
     ts,probs = tester.test__xnexp_in_transmission()
     plt.plot(ts,probs)
     plt.grid()
