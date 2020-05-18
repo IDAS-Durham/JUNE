@@ -32,7 +32,7 @@ def test_full_run():
     geography.schools = Schools.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
-    world = World(geography, demography, include_households=True)
+    world = World(geography, demography, include_households=True, include_commute=True)
     interaction = inter.DefaultInteraction.from_file()
     simulator = Simulator.from_file(world, interaction, infection)
 
