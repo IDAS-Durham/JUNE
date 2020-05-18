@@ -374,9 +374,7 @@ class Simulator:
             return
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
-        # print('active groups = ', active_groups)
         group_instances = [getattr(self.world, group) for group in active_groups]
-        # print('group instances = ', group_instances)
         n_people = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
