@@ -1,7 +1,10 @@
 import pytest
+from june import paths
 from june.distributors.carehome_distributor import CareHomeDistributor, CareHomeError
 from june.demography import Person
 from june.groups.carehome import CareHome
+
+default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 
 @pytest.fixture(name="carehome_distributor")
 def create_carehome_dist():
