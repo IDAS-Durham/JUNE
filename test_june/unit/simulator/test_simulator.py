@@ -1,5 +1,6 @@
 import pytest
 import random
+from pathlib import Path
 
 from june.geography import Geography
 from june.demography import Demography
@@ -11,6 +12,8 @@ from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.simulator import Simulator
 
+
+test_config = Path(__file__).parent.parent.parent / "test_simulator.yaml"
 
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
@@ -28,7 +31,8 @@ def create_simulator():
     transmission = TransmissionConstant(probability=0.7)
     infection = Infection(transmission, symptoms)
     interaction = DefaultInteraction.from_file()
-    return Simulator.from_file(world, interaction, infection,)
+    return Simulator.from_file(world, interaction, infection,
+            config_filename = test_config)
 
 
 @pytest.fixture(name="health_index")
