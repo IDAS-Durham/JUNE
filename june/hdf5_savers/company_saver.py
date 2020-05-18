@@ -62,9 +62,14 @@ def save_companies_to_hdf5(
                     "n_workers_max", data=n_workers_max, maxshape=(n_companies,)
                 )
             else:
+                newshape = (companies_dset["id"].shape[0] + ids.shape[0],)
+                companies_dset["id"].resize(newshape)
                 companies_dset["id"][idx1:idx2] = ids
+                companies_dset["super_area"].resize(newshape)
                 companies_dset["super_area"][idx1:idx2] = super_areas
+                companies_dset["sector"].resize(newshape)
                 companies_dset["sector"][idx1:idx2] = sectors
+                companies_dset["n_workers_max"].resize(newshape)
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 

@@ -10,8 +10,6 @@ from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
 
-nan_integer = -999
-
 
 class Household(Group):
     """
@@ -100,4 +98,3 @@ class Households(Supergroup):
             for subgroup in group.subgroups:
                 subgroup._people.clear()
                 subgroup.group = None
-
