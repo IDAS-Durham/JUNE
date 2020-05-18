@@ -1,5 +1,6 @@
 import logging
 import pickle
+import h5py
 from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
@@ -267,3 +268,4 @@ class World(object):
 
         # put these into the simulator
         # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
+

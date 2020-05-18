@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 import pandas as pd
 import numpy as np
+import h5py
 
 from june import paths
 from june.demography.person import Person
@@ -145,10 +146,7 @@ class SuperAreas:
 
 class Geography:
     def __init__(
-        self,
-        hierarchy: pd.DataFrame,
-        area_coordinates: pd.DataFrame,
-        super_area_coordinates: pd.DataFrame,
+        self, areas: List[Area], super_areas: List[SuperArea],
     ):
         """
         Generate hierachical devision of geography.
@@ -162,12 +160,12 @@ class Geography:
 
         Note: It would be nice to find a better way to handle coordinates.
         """
-        self.create_geographical_units(
-            hierarchy, area_coordinates, super_area_coordinates
-        )
+        self.areas = areas
+        self.super_areas = super_areas
 
+    @classmethod
     def _create_areas(
-        self, area_coords: pd.DataFrame, super_area: pd.DataFrame
+        cls, area_coords: pd.DataFrame, super_area: pd.DataFrame
     ) -> List[Area]:
         """
         Applies the _create_area function throught the area_coords dataframe.
@@ -190,8 +188,9 @@ class Geography:
                 areas.append(Area(name, super_area, coordinates.values))
         return areas
 
+    @classmethod
     def create_geographical_units(
-        self,
+        cls,
         hierarchy: pd.DataFrame,
         area_coordinates: pd.DataFrame,
         super_area_coordinates: pd.DataFrame,
@@ -209,17 +208,18 @@ class Geography:
                 areas=None, name=superarea_name, coordinates=row.values
             )
             areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
-            areas_list = self._create_areas(areas_df, super_area)
+            areas_list = cls._create_areas(areas_df, super_area)
             super_area.areas = areas_list
             total_areas_list += list(areas_list)
             super_areas_list.append(super_area)
 
-        self.areas = Areas(total_areas_list)
-        self.super_areas = SuperAreas(super_areas_list)
+        areas = Areas(total_areas_list)
+        super_areas = SuperAreas(super_areas_list)
         logger.info(
-            f"There are {len(self.areas)} areas and "
-            + f"{len(self.super_areas)} super_areas in the world."
+            f"There are {len(areas)} areas and "
+            + f"{len(super_areas)} super_areas in the world."
         )
+        return areas, super_areas
 
     @classmethod
     def from_file(
@@ -269,7 +269,94 @@ class Geography:
             .drop_duplicates()
         )
         geo_hierarchy.set_index("msoa", inplace=True)
-        return cls(geo_hierarchy, areas_coord, super_areas_coord)
+        areas, super_areas = cls.create_geographical_units(
+            geo_hierarchy, areas_coord, super_areas_coord
+        )
+        return cls(areas, super_areas)
+
+    def to_hdf5(self, file_path: str):
+        n_areas = len(self.areas)
+        area_ids = []
+        area_names = []
+        area_super_areas = []
+        area_coordinates = []
+        n_super_areas = len(self.super_areas)
+        super_area_ids = []
+        super_area_names = []
+        super_area_coordinates = []
+
+        for area in self.areas:
+            area_ids.append(area.id)
+            area_super_areas.append(area.super_area.id)
+            area_names.append(area.name.encode("ascii", "ignore"))
+            area_coordinates.append(np.array(area.coordinates, dtype=np.float))
+
+        for super_area in self.super_areas:
+            super_area_ids.append(super_area.id)
+            super_area_names.append(super_area.name.encode("ascii", "ignore"))
+            super_area_coordinates.append(np.array(super_area.coordinates))
+
+        area_ids = np.array(area_ids, dtype=np.int)
+        area_names = np.array(area_names, dtype="S10")
+        area_super_areas = np.array(area_super_areas, dtype=np.int)
+        area_coordinates = np.array(area_coordinates, dtype=np.float)
+        super_area_ids = np.array(super_area_ids, dtype=np.int)
+        super_area_names = np.array(super_area_names, dtype="S10")
+        super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
+
+        with h5py.File(file_path, "w") as f:
+            people_dset = f.create_group("geography")
+            people_dset.attrs["n_areas"] = n_areas
+            people_dset.attrs["n_super_areas"] = n_super_areas
+            people_dset.create_dataset("area_id", data=area_ids)
+            people_dset.create_dataset("area_name", data=area_names)
+            people_dset.create_dataset("area_super_area", data=area_super_areas)
+            people_dset.create_dataset("area_coordinates", data=area_coordinates)
+            people_dset.create_dataset("super_area_id", data=super_area_ids)
+            people_dset.create_dataset("super_area_name", data=super_area_names)
+            people_dset.create_dataset(
+                "super_area_coordinates", data=super_area_coordinates
+            )
+
+    @classmethod
+    def from_hdf5(cls, file_path: str):
+        with h5py.File(file_path, "r") as f:
+            geography = f["geography"]
+            chunk_size = 50000
+            n_areas = geography.attrs["n_areas"]
+            area_list = list()
+            n_super_areas = geography.attrs["n_super_areas"]
+            # areas
+            n_chunks = int(np.ceil(n_areas / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_areas)
+                ids = geography["area_id"][idx1:idx2]
+                names = geography["area_name"][idx1:idx2]
+                super_areas = geography["area_super_area"][idx1:idx2]
+                area_coordinates = geography["area_coordinates"][idx1:idx2]
+                for k in range(idx2 - idx1):
+                    area = Area(names[k].decode(), super_areas[k], area_coordinates[k])
+                    area.id = ids[k]
+                    area_list.append(area)
+            # super areas
+            super_area_list = list()
+            n_chunks = int(np.ceil(n_super_areas / chunk_size))
+            for chunk in range(n_chunks):
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, n_super_areas)
+                ids = geography["super_area_id"][idx1:idx2]
+                names = geography["super_area_name"][idx1:idx2]
+                super_area_coordinates = geography["super_area_coordinates"][idx1:idx2]
+                for k in range(idx2 - idx1):
+                    print(k)
+                    print(names)
+                    print(super_area_coordinates)
+                    super_area = SuperArea(names[k].decode(), None, super_area_coordinates[k])
+                    super_area.id = ids[k]
+                    super_area_list.append(super_area)
+
+        return cls(area_list, super_area_list)
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
