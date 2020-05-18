@@ -95,7 +95,7 @@ class TestDemography:
             if person.age in range(55, 69):
                 assert person.ethnicity.startswith("A")
             assert person.ethnicity.startswith("D") is False
-            assert person.econ_index == 6
+            assert person.socioecon_index == 6
             if person.age not in people_ages_dict:
                 people_ages_dict[person.age] = 1
             else:
