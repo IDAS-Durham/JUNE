@@ -13,6 +13,7 @@ from june.distributors import (
 )
 from june.geography import Geography
 from june.groups import * 
+from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
