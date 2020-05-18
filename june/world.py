@@ -4,6 +4,7 @@ import h5py
 from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
+from june.hdf5_savers import *
 from june.distributors import (
     SchoolDistributor,
     HospitalDistributor,
@@ -269,46 +270,70 @@ class World(object):
         # put these into the simulator
         # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
 
-    def to_hdf5(self, file_path: str):
+    def to_hdf5(self, file_path: str, chunk_size=100000):
+        """
+        Saves the world to an hdf5 file. All supergroups and geography
+        are stored as groups. Class instances are substituted by ids of the 
+        instances. To load the world back, one needs to call the
+        generate_world_from_hdf5 function.
+
+        Parameters
+        ----------
+        file_path
+            path of the hdf5 file
+        chunk_size
+            how many units of supergroups to process at a time.
+            It is advise to keep it around 1e5
+        """
         # empty file
         with h5py.File(file_path, "w"):
             pass
-        supergroups_to_save = [
-            "hospitals",
-            "companies",
-            "schools",
-            "households",
-            "care_homes",
-        ]
-        for supergroup_name in supergroups_to_save:
-            if hasattr(self, supergroup_name):
-                supergroup = getattr(self, supergroup_name)
-                supergroup.to_hdf5(file_path)
         geo = Geography(self.areas, self.super_areas)
-        self.people.to_hdf5(file_path)
-        geo.to_hdf5(file_path)
+        save_geography_to_hdf5(geo, file_path)
+        save_population_to_hdf5(self.people, file_path, chunk_size)
+        if hasattr(self, "hospitals"):
+            save_hospitals_to_hdf5(self.hospitals, file_path, chunk_size)
+        if hasattr(self, "schools"):
+            save_schools_to_hdf5(self.schools, file_path, chunk_size)
+        if hasattr(self, "hospitals"):
+            save_companies_to_hdf5(self.companies, file_path, chunk_size)
+        if hasattr(self, "hospitals"):
+            save_households_to_hdf5(self.households, file_path, chunk_size)
+        if hasattr(self, "hospitals"):
+            save_care_homes_to_hdf5(self.care_homes, file_path, chunk_size)
 
 
-def generate_world_from_hdf5(file_path: str) -> World:
-    geography = Geography.from_hdf5(file_path)
+def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
+    """
+    Loads the world from an hdf5 file. All id references are substituted
+    by actual references to the relevant instances.
+    Parameters
+    ----------
+    file_path
+        path of the hdf5 file
+    chunk_size
+        how many units of supergroups to process at a time.
+        It is advise to keep it around 1e5
+    """
+    geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World(geography, include_households=False)
-    with h5py.File(file_path) as f:
+    with h5py.File(file_path, "r") as f:
         f_keys = list(f.keys()).copy()
     if "population" in f_keys:
-        world.people = Population.from_hdf5(file_path)
+        world.people = load_population_from_hdf5(file_path, chunk_size)
     if "hospitals" in f_keys:
-        world.hospitals = Hospitals.from_hdf5(file_path)
+        world.hospitals = load_hospitals_from_hdf5(file_path, chunk_size)
     if "schools" in f_keys:
-        world.schools = Schools.from_hdf5(file_path)
+        world.schools = load_schools_from_hdf5(file_path, chunk_size)
     if "companies" in f_keys:
-        world.companies = Companies.from_hdf5(file_path)
+        world.companies = load_companies_from_hdf5(file_path, chunk_size)
         for company in world.companies:
             sa_id = company.super_area
             company.super_area = world.super_areas[sa_id]
     if "care_homes" in f_keys:
-        world.care_homes = CareHomes.from_hdf5(file_path)
+        world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
     if "households" in f_keys:
-        world.households = Households.from_hdf5(file_path)
+        world.households = load_households_from_hdf5(file_path, chunk_size)
 
     spec_mapper = {
         "hospital": "hospitals",
