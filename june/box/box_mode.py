@@ -8,7 +8,9 @@ class Box(Group):
         super().__init__()
     
     def set_population(self, population: Population):
-        self.people.update(population)
+        self[super().SubgroupType.default]._people += population
+        for person in population:
+            person.subgroups[person.ActivityType.box] = self[super().SubgroupType.default]
 
 class Boxes(Supergroup):
     def __init__(self, boxes: List[Box]):
