@@ -22,7 +22,7 @@ def create_simulator():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True)
+    world = World(geography, demography, include_households=True, include_commute=True)
 
     symptoms = SymptomsConstant(recovery_rate=0.05)
     transmission = TransmissionConstant(probability=0.7)
