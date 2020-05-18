@@ -9,8 +9,7 @@ from june.seed import Seed
 
 
 def test_box_full_run(simulator_box):
-
-    seed = Seed(simulator_box.world.boxes, simulator_box.infection, )
+    seed = Seed(simulator_box.world.boxes, simulator_box.selector, )
     seed.unleash_virus(1000, box_mode=True)
     simulator_box.run()
     simulator_box.logger.plot_infection_curves_per_day()

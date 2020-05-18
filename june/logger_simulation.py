@@ -325,9 +325,9 @@ class Logger:
             N = len(self.world.people)
             I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
-            beta = self.simulator.infection.transmission.probability
+            beta = self.simulator.selector.transmission_probability
             beta /= self.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
-            gamma = self.simulator.infection.symptoms.recovery_rate
+            gamma = self.simulator.selector.recovery_rate
             gamma /= self.timer.get_number_shifts(None)
             # multiply by 2 to compensate for updating health status twice in each timestep, see interaction/base.py
 
