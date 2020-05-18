@@ -374,7 +374,9 @@ class Simulator:
             return
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
+        # print('active groups = ', active_groups)
         group_instances = [getattr(self.world, group) for group in active_groups]
+        # print('group instances = ', group_instances)
         n_people = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
@@ -420,6 +422,7 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
+        self.logger.log_timestep(1.0)
         for day in self.timer:
             if day > self.timer.total_days:
                 break
