@@ -159,9 +159,4 @@ class Infection:
 
 
 
-if __name__=="__main__":
-    from june.demography.person import Person
-    selector  = InfectionSelector()
-    dummy     = Person(sex='m', age=65)
-    infection = selector.make_infection(person=dummy,time=0.1)
 
