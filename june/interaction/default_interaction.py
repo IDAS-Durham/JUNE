@@ -13,14 +13,15 @@ default_config_filename = (
 
 
 class DefaultInteraction(Interaction):
-    def __init__(self, alpha_physical, contact_matrices):
+    def __init__(self, alpha_physical, contact_matrices, selector=None):
         self.contacts = {}
         self.physical = {}
-        self.beta = {}
-        self.alpha = alpha_physical
-        self.schoolC = 2.50
-        self.schoolP = 0.15
+        self.beta     = {}
+        self.alpha    = alpha_physical
+        self.schoolC  = 2.50
+        self.schoolP  = 0.15
         self.schoolxi = 0.30
+        self.selector = selector
         for tag in contact_matrices.keys():
             self.fix_group_matrices(tag, contact_matrices)
 
@@ -44,16 +45,18 @@ class DefaultInteraction(Interaction):
 
     @classmethod
     def from_file(
-            cls, config_filename: str = default_config_filename
+            cls,
+            config_filename: str = default_config_filename,
+            selector = None,
     ) -> "DefaultInteraction":
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        return DefaultInteraction(config["alpha_physical"], config["contact_matrices"])
+        return DefaultInteraction(config["alpha_physical"], config["contact_matrices"], selector)
 
     def single_time_step_for_group(
-            self, group, health_index_generator, time, delta_time
+            self, group, time, delta_time
     ):
         """
         Runs the interaction model for a time step
@@ -80,39 +83,31 @@ class DefaultInteraction(Interaction):
         for i in subgroups_containing_people:
             for j in subgroups_containing_people:
                 # grouping[i] infected infects grouping[j] susceptible
-                self.contaminate(group, health_index_generator, time, delta_time, i, j)
+                self.contaminate(group, time, delta_time, i, j)
                 if i != j:
-                    # =grouping[j] infected infects grouping[i] susceptible
-                    self.contaminate(
-                        group, health_index_generator, time, delta_time, j, i
-                    )
+                    # grouping[j] infected infects grouping[i] susceptible
+                    self.contaminate(group, time, delta_time, j, i)
 
     def contaminate(
-            self, group, health_index_generator, time, delta_time, infecters, recipients
+            self, group, time, delta_time, infecters, recipients
     ):
-        # TODO: subtitute by matrices read from file when ready
         infecter_probability = self.probabilities[infecters]
         if infecter_probability <= 0.0:
             return
 
         intensity = (
-                self.intensity(group, infecters, recipients)
-                * infecter_probability
-                * -delta_time
+            self.intensity(group, infecters, recipients) *
+            infecter_probability
         )
         group_of_recipients = group.subgroups[recipients].susceptible
         should_be_infected = np.random.random(len(group_of_recipients))
         for recipient, luck in zip(group_of_recipients, should_be_infected):
             transmission_probability = 1.0 - exp(
-                recipient.health_information.susceptibility * intensity
+                - delta_time * recipient.health_information.susceptibility * intensity
             )
             if luck < transmission_probability:
                 infecter = self.select_infecter()
-                infecter.health_information.infection.infect_person_at_time(
-                    person=recipient,
-                    health_index_generator=health_index_generator,
-                    time=time,
-                )
+                self.selector.infect_person_at_time(person = recipient, time = time)
                 infecter.health_information.increment_infected()
                 recipient.health_information.update_infection_data(
                     time=time, group_type=group.spec
@@ -124,22 +119,22 @@ class DefaultInteraction(Interaction):
             if infecter > 0 and recipient > 0:
                 delta = pow(self.schoolxi, abs(recipient - infecter))
                 mixer = self.schoolC * delta
-                phys = self.schoolP * delta
+                phys  = self.schoolP * delta
             elif infecter == 0 and recipient > 0:
                 mixer = self.contacts[tag][1][0]
-                phys = self.physical[tag][1][0]
+                phys  = self.physical[tag][1][0]
             elif infecter > 0 and recipient == 0:
                 mixer = self.contacts[tag][0][1]
-                phys = self.physical[tag][0][1]
+                phys  = self.physical[tag][0][1]
             else:
                 mixer = self.contacts[tag][0][0]
-                phys = self.physical[tag][0][0]
+                phys  = self.physical[tag][0][0]
         else:
             if recipient >= len(self.contacts[tag]) or infecter >= len(
                     self.contacts[tag][recipient]
             ):
                 mixer = 1.0
-                phys = 0.0
+                phys  = 0.0
             else:
                 mixer = self.contacts[tag][recipient][infecter]
                 phys = self.physical[tag][recipient][infecter]
@@ -148,7 +143,7 @@ class DefaultInteraction(Interaction):
             # they will take into account intensity and physicality
             # of the interaction by modifying mixer and phys.
             mixer *= 1.0
-            phys *= 1.0
+            phys  *= 1.0
         return self.beta[tag] * float(mixer) * (1.0 + (self.alpha - 1.0) * float(phys))
 
     def calculate_probabilities(self, group):

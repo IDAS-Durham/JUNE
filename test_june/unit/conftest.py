@@ -1,6 +1,10 @@
 from june.infection import infection as infect
 from june.infection import symptoms as sym
+from june.infection import symptoms_trajectory as strans
+from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
+from june.infection import infection as infect
+from june.infection import InfectionSelector
 import june.interaction as inter
 from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
@@ -18,12 +22,12 @@ import pytest
 import yaml
 
 test_directory = Path(__file__).parent.parent
+constant_config = test_directory.parent / "configs/defaults/infection/InfectionConstant.yaml"
 
 
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
-    return sym.SymptomsGaussian(health_index=None, mean_time=1.0, sigma_time=3.0)
-
+    return sym.SymptomsGaussian(health_index=[], mean_time=1.0, sigma_time=3.0)
 
 @pytest.fixture(name="symptoms_constant", scope="session")
 def create_symptoms_constant():
@@ -33,17 +37,21 @@ def create_symptoms_constant():
 def create_symptoms_healthy():
     return sym.SymptomsHealthy()
 
+@pytest.fixture(name="trajectories", scope="session")
+def create_trajectories():
+    return tmaker.TrajectoryMaker(None)
 
+@pytest.fixture(name="symptoms_trajectories", scope="session")
+def create_symptoms_trajectories(trajectories):
+    return strans.SymptomsTrajectory(health_index=[0.1, 0.2, 0.3, 0.4, 0.5])
 
 @pytest.fixture(name="transmission", scope="session")
 def create_transmission():
     return trans.TransmissionConstant(probability=0.3)
 
-
 @pytest.fixture(name="infection", scope="session")
 def create_infection(transmission, symptoms):
     return infect.Infection(transmission, symptoms)
-
 
 @pytest.fixture(name="infection_constant", scope="session")
 def create_infection_constant(transmission, symptoms_constant):
@@ -55,7 +63,9 @@ def create_infection_healthy(transmission, symptoms_healthy):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    return inter.DefaultInteraction.from_file()
+    interaction          = inter.DefaultInteraction.from_file()
+    interaction.selector = infect.InfectionSelector.from_file(constant_config)
+    return interaction
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
@@ -63,7 +73,6 @@ def make_geography():
         {"msoa": ["E02002512", "E02001697"]}
     )
     return geography
-
 
 @pytest.fixture(name="world", scope="session")
 def create_world(geography):
@@ -90,9 +99,13 @@ def create_box_world():
 
 @pytest.fixture(name="simulator_box", scope="session")
 def create_simulator_box(world_box, interaction, infection_healthy):
+    selector_file = (
+        Path(__file__).parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+    )
     config_file = (
         Path(__file__).parent.parent.parent / "configs/config_boxmode_example.yaml"
     )
+    selector = InfectionSelector.from_file(selector_file)
     return Simulator.from_file(
-        world_box, interaction, infection_healthy, config_filename=config_file
+        world_box, interaction, selector, config_filename=config_file
     )
