@@ -21,25 +21,24 @@ class CommuteCityUnitDistributor:
     def distribute_people(self):
 
         for city in self.commutecities:
-            if len(city.commute_internal) > 0:
+            if len(city.people) > 0:
                 # Clear all units of passengers before running
                 possible_units = city.commutecityunits
-                #TODO: ASK WHETHER IS PEOPLE
-                commuting_people = city.people #city.commute_internal
+                commuting_people = city.commute_internal
                 indices = list(range((len(commuting_people))))
                 random.shuffle(indices)
                 people_per_unit = len(commuting_people)//len(possible_units)
                 for unit in possible_units:
                     unit.no_passengers = 0
-                    unit.subgroups[0]._people.clear()
                 
                 for unit in possible_units:
                     while unit.no_passengers < people_per_unit:
                         passenger_id = indices.pop()
                         passenger = commuting_people[passenger_id]
                         unit.add(passenger,
-                            activity_type = None,
-                            subgroup_type=unit.SubgroupType.default
+                            activity_type = passenger.ActivityType.commute,
+                            subgroup_type=unit.SubgroupType.default,
+                            dynamic = True
                             )
                         unit.no_passengers += 1
 
@@ -47,8 +46,9 @@ class CommuteCityUnitDistributor:
                     passenger_id = indices.pop()
                     passenger = commuting_people[passenger_id]
                     unit.add(passenger,
-                            activity_type = None,
-                            subgroup_type=unit.SubgroupType.default
+                            activity_type = passenger.ActivityType.commute,
+                            subgroup_type=unit.SubgroupType.default,
+                            dynamic = True
                             )
                     unit.no_passengers += 1
 
