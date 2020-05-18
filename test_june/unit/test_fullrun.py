@@ -37,7 +37,7 @@ def test_full_run():
     interaction.selector = selector
     simulator   = Simulator.from_file(world, interaction, selector)
 
-    seed = Seed(simulator.world.super_areas, simulator.selector, )
+    seed = Seed(simulator.world.super_areas, selector, )
     seed.unleash_virus(100)
     simulator.run()
     simulator.logger.plot_infection_curves_per_day()

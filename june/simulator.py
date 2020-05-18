@@ -50,7 +50,7 @@ class Simulator:
         """
         self.world       = world
         self.interaction = interaction
-        self.selector    = selector,
+        self.selector    = selector
         self.permanent_activity_hierarchy = [
             "box",
             "hospital",
@@ -386,7 +386,6 @@ class Simulator:
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now,
-                    self.health_index_generator,
                     self.timer.duration,
                     group,
                 )
