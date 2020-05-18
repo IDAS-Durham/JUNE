@@ -33,7 +33,7 @@ def get_demography(geography):
     return demography
 
 @pytest.fixture(name='seed')
-def get_seed(geography, infection, demography):
+def get_seed(geography, selector, demography):
     super_area_to_region = pd.DataFrame(
             {
             'msoa': SUPER_AREA_LIST,

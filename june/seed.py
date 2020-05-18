@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from june.geography import SuperAreas
-from june.infection import Infection, InfectionSelector
+from june.infection.infection import InfectionSelector
 from june import paths
 from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
@@ -133,9 +133,8 @@ class Seed:
         choices = np.random.choice(len(super_area.people), n_cases, replace=False)
 
         for choice in choices:
-            self.selector.infect_person_at_time(
-                person = list(super_area.people)[choice], time = 0.0
-            )
+            person = list(super_area.people)[choice]
+            self.selector.infect_person_at_time(person = person, time = 0.0)
 
     def unleash_virus_per_region(self):
         """
