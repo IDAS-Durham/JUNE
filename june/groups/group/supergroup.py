@@ -12,7 +12,7 @@ class Supergroup:
     groups.
     """
 
-    def __init__(self, references_to_people=None):
+    def __init__(self):
         """
         Parameters
         ----------
@@ -21,7 +21,6 @@ class Supergroup:
             used to erase circular information before using pickle.
         """
         self.members = []
-        self.references_to_people = references_to_people
         self.group_type = self.__class__.__name__
 
     def __iter__(self):
@@ -51,12 +50,11 @@ class Supergroup:
 
     def erase_people_from_groups_and_subgroups(self):
         """
-        Sets all attributes in self.references_to_people to None for all groups.
         Erases all people from subgroups.
+        Erases all subgroup references to group.
         """
         for group in self:
-            group.subgroups = [subgroup.__class__() for subgroup in group.subgroups] 
-            if self.references_to_people is not None:
-                for reference in self.references_to_people:
-                    setattr(group, reference, None)
+            for subgroup in group.subgroups:
+                subgroup._people.clear()
+                subgroup.group = None
 

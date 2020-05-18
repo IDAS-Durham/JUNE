@@ -28,8 +28,12 @@ def create_symptoms():
 
 @pytest.fixture(name="symptoms_constant", scope="session")
 def create_symptoms_constant():
-    reference_health_index = HealthIndexGenerator.from_file()(40, 'm')
-    return sym.SymptomsConstant(health_index=reference_health_index)
+    return sym.SymptomsConstant()
+
+@pytest.fixture(name="symptoms_healthy", scope="session")
+def create_symptoms_healthy():
+    return sym.SymptomsHealthy()
+
 
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
@@ -60,6 +64,10 @@ def create_infection(transmission, symptoms):
 def create_infection_constant(transmission, symptoms_constant):
     return infect.Infection(transmission, symptoms_constant)
 
+@pytest.fixture(name="infection_healthy", scope="session")
+def create_infection_healthy(transmission, symptoms_healthy):
+    return infect.Infection(transmission, symptoms_healthy)
+
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
     interaction          = inter.DefaultInteraction.from_file()
@@ -79,9 +87,8 @@ def create_world(geography):
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
-    geography.carehomes = CareHomes.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
-    geography.companies = Companies.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     world = World(geography, demography, include_households=True)
     return world
@@ -98,10 +105,10 @@ def create_box_world():
     return World.from_geography(geography, box_mode=True)
 
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(world_box, interaction, infection):
+def create_simulator_box(world_box, interaction, infection_healthy):
     config_file = (
         Path(__file__).parent.parent.parent / "configs/config_boxmode_example.yaml"
     )
     return Simulator.from_file(
-        world_box, interaction, infection, config_filename=config_file
+        world_box, interaction, infection_healthy, config_filename=config_file
     )

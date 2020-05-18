@@ -132,10 +132,10 @@ class HealthIndexGenerator:
         self.prob_lists[1, :, 4] = 1 - self.model(ages, self.poli_deaths[1])
 
         # This makes sure that the Hospital<ICU<deaths
-        Boolean_hosp_male = [
+        Boolean_hosp_male = (
             self.prob_lists[0, :, 2] > self.prob_lists[0, :, 3]
-        ]  # If the DEath ratio is larger that the ICU ratio
-        Boolean_hosp_female = [self.prob_lists[1, :, 2] > self.prob_lists[1, :, 3]]
+        )  # If the DEath ratio is larger that the ICU ratio
+        Boolean_hosp_female = (self.prob_lists[1, :, 2] > self.prob_lists[1, :, 3])
 
         self.prob_lists[0, :, 2][Boolean_hosp_male] = self.prob_lists[0, :, 3][
             Boolean_hosp_male
@@ -144,10 +144,10 @@ class HealthIndexGenerator:
             Boolean_hosp_female
         ]
 
-        Boolean_icu_male = [
+        Boolean_icu_male = (
             self.prob_lists[0, :, 3] > self.prob_lists[0, :, 4]
-        ]  # If the DEath ratio is larger that the ICU ratio
-        Boolean_icu_female = [self.prob_lists[1, :, 3] > self.prob_lists[1, :, 4]]
+        )  # If the DEath ratio is larger that the ICU ratio
+        Boolean_icu_female = (self.prob_lists[1, :, 3] > self.prob_lists[1, :, 4])
 
         self.prob_lists[0, :, 3][Boolean_icu_male] = self.prob_lists[0, :, 4][
             Boolean_icu_male
