@@ -5,7 +5,6 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm.auto import tqdm
 
 # TODO: Change the logger to only use hours and not fractions of days
 
@@ -151,29 +150,6 @@ class Logger:
         return susceptible, infected, recovered
 
 
-    # def log_infection_generation(self, day):
-    #     infection_generation_global = 0
-    #     global_counter = 0
-    #     if not self.box_mode:
-    #         for area in self.world.areas.members:
-    #             for person in area.people:
-    #                 if person.health_information.infected:
-    #                     infection_generation_global += person.health_information.infection_generation
-    #                     global_counter +=1
-                        
-    #         if infection_generation_global == 0:
-    #             self.data_dict["world"][day]["infection_generation"] = 0
-    #         else:
-    #             self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
-    #     else:
-    #         box = self.world.boxes.members[0]
-    #         for person in box.people:
-    #             infection_generation_global += person.health_information.infection_generation
-    #             global_counter += 1
-                
-    #             self.data_dict["world"][day]["infection_generation"] = infection_generation_global / global_counter
-
-
     def log_r0(self):
         if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
             inner_dict = {}
@@ -295,22 +271,6 @@ class Logger:
         plt.show()
         return fig
 
-    # def plot_infection_generation(self):
-    #     import matplotlib.pyplot as plt
-    #     days = []
-    #     infection_generations = []
-    #     for day in self.data_dict["world"].keys():
-    #         days.append(day)
-    #         infection_generations.append(self.data_dict["world"][day]["infection_generation"])
-    #     idx_sorted = np.argsort(days)
-    #     days = np.array(days)[idx_sorted]
-    #     infection_generations = np.array(infection_generations)[idx_sorted]
-    #     fig, ax = plt.subplots()
-    #     ax.plot(days, infection_generations)
-    #     ax.set_xlabel("Days")
-    #     ax.set_ylabel("Average infection generation")
-    #     return fig, ax
-
 
     def plot_infection_curves_per_day(self):
         infected = []
@@ -391,12 +351,3 @@ class Logger:
                 lengths.append(person.health_information.length_of_infection)
                 predictions.append(person.health_information.infection.symptoms.predicted_recovery_time)
         return lengths
-
-
-
-
-
-
-
-
-
