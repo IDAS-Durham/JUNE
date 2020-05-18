@@ -13,7 +13,7 @@ from june.distributors import (
     CompanyDistributor,
 )
 from june.geography import Geography
-from june.groups import * 
+from june.groups import *
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class World(object):
     def __init__(
         self,
         geography: Geography,
-        demography: Demography,
+        demography: Demography = None,
         include_households: bool = True,
         include_commute: bool = False,
         box_mode=False,
@@ -76,8 +76,8 @@ class World(object):
         self.areas = geography.areas
         self.super_areas = geography.super_areas
         print("populating the world's geography with the specified demography...")
-        self.people = _populate_areas(geography, demography)
-
+        if demography is not None:
+            self.people = _populate_areas(geography, demography)
         if hasattr(geography, "care_homes"):
             self.care_homes = geography.care_homes
             self.distribute_people_to_care_homes()
@@ -269,3 +269,64 @@ class World(object):
         # put these into the simulator
         # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
 
+    def to_hdf5(self, file_path: str):
+        # empty file
+        with h5py.File(file_path, "w"):
+            pass
+        supergroups_to_save = [
+            "hospitals",
+            "companies",
+            "schools",
+            "households",
+            "care_homes",
+        ]
+        for supergroup_name in supergroups_to_save:
+            if hasattr(self, supergroup_name):
+                supergroup = getattr(self, supergroup_name)
+                supergroup.to_hdf5(file_path)
+        geo = Geography(self.areas, self.super_areas)
+        self.people.to_hdf5(file_path)
+        geo.to_hdf5(file_path)
+
+
+def generate_world_from_hdf5(file_path: str) -> World:
+    geography = Geography.from_hdf5(file_path)
+    world = World(geography, include_households=False)
+    with h5py.File(file_path) as f:
+        f_keys = list(f.keys()).copy()
+    print("f keys")
+    print(f_keys)
+    if "population" in f_keys:
+        world.people = Population.from_hdf5(file_path)
+    if "hospitals" in f_keys:
+        world.hospitals = Hospitals.from_hdf5(file_path)
+    if "schools" in f_keys:
+        world.schools = Schools.from_hdf5(file_path)
+    if "companies" in f_keys:
+        world.companies = Companies.from_hdf5(file_path)
+    if "care_homes" in f_keys:
+        world.care_homes = CareHomes.from_hdf5(file_path)
+    if "households" in f_keys:
+        world.households = Households.from_hdf5(file_path)
+
+    spec_mapper = {
+        "hospital": "hospitals",
+        "company": "companies",
+        "school": "schools",
+        "household": "households",
+        "care_home": "care_homes",
+    }
+    # restore person -> subgroups
+    for person in world.people:
+        subgroups_instances = [None] * len(person.subgroups)
+        for i, subgroup_info in enumerate(person.subgroups):
+            spec, group_id, subgroup_type = subgroup_info
+            if spec is None:
+                continue
+            supergroup = getattr(world, spec_mapper[spec])
+            group = supergroup.members[group_id]
+            assert group_id == group.id
+            subgroup = group[subgroup_type]
+            subgroups_instances[i] = subgroup
+        person.subgroups = subgroups_instances
+    return world

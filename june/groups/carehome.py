@@ -100,7 +100,7 @@ class CareHomes(Supergroup):
         ids = np.array(ids, dtype=np.int)
         areas = np.array(areas, dtype=np.int)
         n_residents = np.array(n_residents, dtype=np.float)
-        with h5py.File(file_path, "w") as f:
+        with h5py.File(file_path, "a") as f:
             people_dset = f.create_group("care_homes")
             people_dset.attrs["n_care_homes"] = n_carehomes
             people_dset.create_dataset("id", data=ids)

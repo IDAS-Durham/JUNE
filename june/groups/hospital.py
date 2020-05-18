@@ -413,7 +413,7 @@ class Hospitals(Supergroup):
         n_beds = np.array(n_beds, dtype=np.int)
         n_icu_beds = np.array(n_icu_beds, dtype=np.int)
         coordinates = np.array(coordinates, dtype=np.float)
-        with h5py.File(file_path, "w") as f:
+        with h5py.File(file_path, "a") as f:
             people_dset = f.create_group("hospitals")
             people_dset.attrs["n_hospitals"] = n_hospitals
             people_dset.create_dataset("id", data=ids)

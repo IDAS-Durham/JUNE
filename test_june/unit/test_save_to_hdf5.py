@@ -4,6 +4,7 @@ from june.geography import Geography
 from june.groups import Households, Companies, Hospitals, Schools, CareHomes
 from june.distributors import HouseholdDistributor
 from june import World
+from june.world import generate_world_from_hdf5
 
 from pytest import fixture
 
@@ -229,3 +230,18 @@ class TestSaveGeography:
                     assert attribute == attribute2
             assert super_area.coordinates[0] == super_area2.coordinates[0]
             assert super_area.coordinates[1] == super_area2.coordinates[1]
+
+class TestSaveWorld:
+    def test__save_world(self, world_h5):
+        world_h5.to_hdf5("test.hdf5")
+        world2 = generate_world_from_hdf5("test.hdf5")
+        for person1, person2 in zip(world_h5.people, world2.people):
+            for subgroup1, subgroup2 in zip(person1.subgroups, person2.subgroups):
+                if subgroup1 is None:
+                    assert subgroup2 is None
+                    continue
+                assert subgroup1.group.spec == subgroup2.group.spec
+                assert subgroup1.group.id == subgroup2.group.id
+                assert subgroup1.subgroup_type == subgroup2.subgroup_type
+
+
