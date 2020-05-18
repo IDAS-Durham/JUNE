@@ -1,0 +1,22 @@
+title: Covid configuration example
+
+logger:
+  save_path: results
+
+time:
+  total_days: 10
+  step_duration: 
+      weekday:
+          1: 12 
+          2: 12 
+      weekend:
+          1: 24
+  step_activities:
+      weekday:
+          1: ['hospital', 'commute', 'residence'] 
+          2: ['hospital', 'primary_activity', 'residence']
+      weekend:
+          1: ['hospital','residence']
+
+min_age_home_alone: 15
+stay_at_home_complacency: 0.95
