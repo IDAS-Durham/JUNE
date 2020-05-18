@@ -1,6 +1,6 @@
 import numpy as np
 from collections import defaultdict, OrderedDict
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 from june import World
 from june.groups import Group, Companies, Schools, CareHomes, Hospitals, Cemeteries

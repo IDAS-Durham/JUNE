@@ -60,7 +60,7 @@ def create_infection_constant(transmission, symptoms_constant):
 
 @pytest.fixture(name="infection_healthy", scope="session")
 def create_infection_healthy(transmission, symptoms_healthy):
-    return infect.Infection(transmission, symptoms_healthy)
+    return Infection(transmission, symptoms_healthy)
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
