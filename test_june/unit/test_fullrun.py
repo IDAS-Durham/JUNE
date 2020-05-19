@@ -16,12 +16,12 @@ from june.infection import transmission as trans
 from june.infection import symptoms as sym
 from june import World
 from june.seed import Seed
+from june import paths
 
 from pathlib import Path
-path_pwd = Path(__file__)
-dir_pwd  = path_pwd.parent
-selector_config = dir_pwd.parent.parent/"configs/defaults/infection/InfectionConstant.yaml"
-test_config = Path(__file__).parent.parent / "test_simulator.yaml"
+
+selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 def test_full_run():
     geography = Geography.from_file(
