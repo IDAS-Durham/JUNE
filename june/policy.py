@@ -64,38 +64,44 @@ class Policy:
         TODO:
         - Case of someone in household becoming symptomatic while they are under household quarantine
         - Finish this
+        - Think about adherence
         '''
 
+        # Make it so that there is a dict of households that are symptomatic and have a timer that sets and end date for knocking them out of the dict
+        
+        pass
+
         ## THIS IS NOT FINISHED AND NEEDS SOME REWORKING ##
-        
-        # set number of quarantine days from policy
-        if self.config_file is not None:
-            symptomatic_quarantine = self.config_file['symptomatic quarantine']
-            household_quarantine = self.config_file['household quarantine']
-        else:
-            symptomatic_quarantine = 7
-            household_quarantine = 14
-        
-        
-        # possible COVID-19 symptoms to trigger quarantine
-        possible_symptoms = [...]
-        
-        # check if person is already quarantining
-        if 'quarantine_symptomatic' in person.policy_subgroups:
-            if person.quarantine_days == symptomatic_quarantine:
-                person.policy_subgroups.pop('quarantine_symptomatic')
 
-                if 'quarantine_household' in person.household.member[0].policy_subgroups:
-                    for member in person.household.members:
-                        member.policy_subgroups.pop('quarantine_household')
+        ##  imo
+        
+        # # set number of quarantine days from policy
+        # if self.config_file is not None:
+        #     symptomatic_quarantine = self.config_file['symptomatic quarantine']
+        #     household_quarantine = self.config_file['household quarantine']
+        # else:
+        #     symptomatic_quarantine = 7
+        #     household_quarantine = 14
+        
+        
+        # # possible COVID-19 symptoms to trigger quarantine
+        # possible_symptoms = [...]
+        
+        # # check if person is already quarantining
+        # if 'quarantine_symptomatic' in person.policy_subgroups:
+        #     if person.quarantine_days == symptomatic_quarantine:
+        #         person.policy_subgroups.pop('quarantine_symptomatic')
+
+        #         if 'quarantine_household' in person.household.member[0].policy_subgroups:
+        #             for member in person.household.members:
+        #                 member.policy_subgroups.pop('quarantine_household')
                         
-            else:
-                person.quarantine_days += 1
+        #     else:
+        #         person.quarantine_days += 1
 
-                if 'quarantine_household' in person.household.member[0].policy_subgroups:
-                    for member in person.household.members:
-                        if 
-                        member.quarantine_days += 1
+        #         if 'quarantine_household' in person.household.member[0].policy_subgroups:
+        #             for member in person.household.members:
+        #                 pass
         
 
     #def categorise_key_workers(self, person):
@@ -154,6 +160,7 @@ class Policy:
 
         TODO:
         - Handle hospital workers in full_closure
+        - Handle hospitals
         '''
 
         if len(sectors) == 0 and full_closure = False:
@@ -225,6 +232,7 @@ class Policy:
             alpha /= self.config_file['social distancing']['alpha factor']
 
         for group in betas:
+            # check households
             
             if not self.config_file:
                 betas[group] /= 2
