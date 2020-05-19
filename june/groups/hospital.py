@@ -2,7 +2,6 @@ import os
 import yaml
 import logging
 import os
-import h5py
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple
@@ -45,7 +44,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
 
     def __init__(
         self,
@@ -134,18 +133,13 @@ class Hospital(Group):
             )
 
     def release_as_patient(self, person):
-        person.subgroups[person.ActivityType.hospital] = None
+       person.subgroups[person.ActivityType.hospital] = None
 
     def move_patient_within_hospital(self, person):
-        if person.health_information.tag == "intensive care":
-            person.subgroups[person.ActivityType.hospital] = person.hospital.group[
-                self.SubgroupType.icu_patients
-            ]
-        elif person.health_information.tag == "hospitalised":
-            person.subgroups[person.ActivityType.hospital] = person.hospital.group[
-                self.SubgroupType.patients
-            ]
-
+        if person.health_information.tag == Symptom_Tags.intensive_care:
+            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.icu_patients]
+        elif person.health_information.tag == Symptom_Tags.hospitalised:
+            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.patients]
         else:
             raise AssertionError(
                 "ERROR: This person shouldn't be trying to get to a hospital"
