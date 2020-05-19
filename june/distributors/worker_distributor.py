@@ -9,7 +9,7 @@ from scipy import stats
 
 from june import paths
 from june.demography import Person, Population
-from june.geography import Geography
+from june.demography.geography import Geography
 
 default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
 default_sex_per_sector_per_superarea_file = (

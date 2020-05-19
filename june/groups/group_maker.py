@@ -2,10 +2,11 @@ import sys
 #from june.groups.pub import PubFiller
 
 class GroupMaker:
-    def __init__(self,world):
-        self.world = world
+    def __init__(self, simulator):
+        self.simulator = simulator
+        #self.world = world
         print ("initialized group maker")
-        self.pubfiller = PubFiller(world)
+        #self.pubfiller = PubFiller(world)
         
     def distribute_people(self,grouptype):
         if grouptype=="pubs":
@@ -15,8 +16,8 @@ class GroupMaker:
                 self.pubfiller.fill(area)
             #self.make_histogram()
         if grouptype=='commute':
-            self.world.commuteunit_distributor.distribute_people()
-            self.world.commutecityunit_distribute.distribute_people()
+            self.simulator.commuteunit_distributor.distribute_people()
+            self.simulator.commutecityunit_distributor.distribute_people()
 
     def make_histogram(self):
         import matplotlib.pyplot as plt
