@@ -1,6 +1,5 @@
 import pytest
 import random
-from pathlib import Path
 
 from june.demography.geography import Geography
 from june.demography import Demography
@@ -14,9 +13,6 @@ from june.simulator import Simulator
 from june import paths
 
 
-from pathlib import Path
-path_pwd = Path(__file__)
-dir_pwd  = path_pwd.parent
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 

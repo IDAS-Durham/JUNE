@@ -8,11 +8,9 @@ import numpy as np
 import pandas as pd
 from scipy import spatial
 from june.groups.group import Group, Supergroup
+from june import paths
 
-default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/"
-)
+default_data_path = paths.data_path
 
 default_uk_pcs_coordinates = default_data_path / "geographical_data/ukpostcodes_coordinates.csv"
 
