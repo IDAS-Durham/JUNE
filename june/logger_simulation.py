@@ -54,10 +54,15 @@ class Logger:
             self.data_dict["ByAge"][label]["recovered"][day] = recovered_per_area
 
         if day in self.data_dict["ByAge"][label]["cumulative_infected"]:
-            self.data_dict["ByAge"][label]["cumulative_infected"][day] += (self.total_people_per_area[area.name][label] - susceptible_per_area)
-            # print(self.data_dict["ByAge"][label]["cumulative_infected"][day])
+            if not self.box_mode:
+                self.data_dict["ByAge"][label]["cumulative_infected"][day] += (self.total_people_per_area[area.name][label] - susceptible_per_area)
+            else:
+                self.data_dict["ByAge"][label]["cumulative_infected"][day] += (self.total_people_per_area[label] - susceptible_per_area)
         else:
-            self.data_dict["ByAge"][label]["cumulative_infected"][day] = (self.total_people_per_area[area.name][label] - susceptible_per_area)
+            if not self.box_mode:
+                self.data_dict["ByAge"][label]["cumulative_infected"][day] = (self.total_people_per_area[area.name][label] - susceptible_per_area)
+            else:
+                self.data_dict["ByAge"][label]["cumulative_infected"][day] = (self.total_people_per_area[label] - susceptible_per_area)
 
 
     def log_timestep(self, day):
@@ -68,13 +73,18 @@ class Logger:
         if not self.box_mode:
             for area in self.world.areas.members:
                 susceptible, infected, recovered = self.get_infected_people_area(area)
-                susceptible_world += sum(susceptible.values())
-                infected_world += sum(infected.values())
-                recovered_world += sum(recovered.values())
+                summed_susceptible = sum(susceptible.values())
+                summed_infected = sum(infected.values())
+                summed_recovered = sum(recovered.values())
+
+                susceptible_world += summed_susceptible
+                infected_world += summed_infected
+                recovered_world += summed_recovered
+                
                 self.data_dict[area.name][day] = {
-                        "susceptible": sum(susceptible.values()),
-                        "infected": sum(infected.values()),
-                        "recovered": sum(recovered.values()),
+                        "susceptible": summed_susceptible,
+                        "infected": summed_infected,
+                        "recovered": summed_recovered,
                         }
                 
                 for ages in self.age_ranges:
@@ -86,16 +96,27 @@ class Logger:
                     "recovered": recovered_world,
                     "cumulative_infected": total_people - susceptible_world
                     }
+
             self.log_r0()
         else:
             box = self.world.boxes.members[0]
+            susceptible, infected, recovered = self.get_infected_people_box(box)
+
+            susceptible_world = len(self.world.people.susceptible)
+            infected_world = len(self.world.people.infected)
+            recovered_world = len(self.world.people.recovered)
+
             self.data_dict["world"][day] = {
-                    "susceptible": len(self.world.people.susceptible),
-                    "infected": len(self.world.people.infected),
-                    "recovered": len(self.world.people.recovered)
+                    "susceptible": susceptible_world,
+                    "infected": infected_world,
+                    "recovered": recovered_world,
+                    "cumulative_infected": total_people - susceptible_world
                     }
-            # self.log_infection_generation(day)
-            # self.log_r0()
+
+            for ages in self.age_ranges:
+                self.group_by_age(day, None, ages, susceptible, infected, recovered)
+
+            self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
         with open(json_path, "w") as f:
             json.dump(self.data_dict, f)
@@ -116,43 +137,53 @@ class Logger:
 
 
     def total_people_per_area_by_age_range(self):
-        total_people_per_area_by_age = {area.name: {} for area in self.world.areas.members}
+        if not self.box_mode:
+            total_people_per_area_by_age = {area.name: {} for area in self.world.areas.members}
 
-        for area in self.world.areas.members:
-            total_people_per_area_by_age[area.name] = self.total_people_by_age_range(area.people)
-        
-        return total_people_per_area_by_age
+            for area in self.world.areas.members:
+                total_people_per_area_by_age[area.name] = self.total_people_by_age_range(area.people)
+            
+            return total_people_per_area_by_age
+        else:
+            total_people_per_area_by_age = self.total_people_by_age_range(self.world.people.members)
+            return total_people_per_area_by_age
                 
 
+    def get_infected_people_box(self, box):
+        empty_dict = {age: 0 for age in range(100)} # max age is 99
+        infected = empty_dict
+        susceptible = empty_dict
+        recovered = empty_dict
+        for person in self.world.people.infected:
+            infected[person.age] += 1
+        for person in self.world.people.susceptible:
+            susceptible[person.age] += 1
+        for person in self.world.people.recovered:
+            recovered[person.age] += 1
+        return susceptible, infected, recovered
+        
+
     def get_infected_people_area(self, area):
-        infected = {}
-        susceptible = {}
-        recovered = {}
-        total_people_by_area_by_age = {}
+        empty_dict = {age: 0 for age in range(100)}
+        infected = empty_dict
+        susceptible = empty_dict
+        recovered = empty_dict
+        
         for person in area.people:
             if person.health_information.susceptible:
-                if person.age in susceptible:
-                    susceptible[person.age] += 1
-                else:
-                    susceptible[person.age] = 1
+                susceptible[person.age] += 1
 
             if person.health_information.infected:
-                if person.age in infected:
-                    infected[person.age] += 1
-                else:
-                    infected[person.age] = 1
+                infected[person.age] += 1
 
             if person.health_information.recovered:
-                if person.age in recovered:
-                    recovered[person.age] += 1
-                else:
-                    recovered[person.age] = 1
+                recovered[person.age] += 1
+
         return susceptible, infected, recovered
 
 
     def log_r0(self):
         if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
-            inner_dict = {}
             r0s_raw = []
             r0s_recon = []
             for person in self.world.people.recovered:
@@ -165,14 +196,7 @@ class Logger:
                     r0 = person.health_information.number_of_infected
                     r0s_raw.append(r0)
                     r0s_recon.append(r0 / s_frac)
-
-                    inner_dict[person.id] = {"start" : day_inf,
-                                            "length" : person.health_information.length_of_infection,
-                                            "num_infected" : person.health_information.number_of_infected,
-                                            "R0_raw" : r0,
-                                            "R0_recon" : r0 / s_frac}
             
-            self.data_dict["data"] = inner_dict
             self.data_dict["R0_raw"] = np.mean(r0s_raw)
             self.data_dict["R0_recon"] = np.mean(r0s_recon)
 
@@ -203,24 +227,25 @@ class Logger:
     def plot_R(self):
         _, _, R = self.log_R()
         times = list(self.data_dict["world"].keys())
-        plt.figure()
+        fig = plt.figure()
         plt.plot(times, [R[time] for time in times])
         plt.xlabel('Days')
         plt.ylabel('R(t)')
-        plt.show()
+        return fig
 
 
     def plot_infections_per_day(self):
         days = list(self.data_dict["world"].keys())
         
-        plt.figure()
+        fig = plt.figure()
         for ages in self.age_ranges:
             label = "{}-{}".format(ages[0], ages[1])
             plt.plot(days, list(self.data_dict["ByAge"][label]["infected"].values()), label=label)
         plt.xlabel("Days")
         plt.ylabel("Infections per day")
         plt.legend()
-        plt.show()
+        plt.tight_layout()
+        return fig
 
 
     def plot_infection_location(self, return_data=False):
@@ -241,7 +266,6 @@ class Logger:
         plt.bar(locations.keys(), locations.values())
         plt.title('Locations of where infections took place')
         plt.ylabel('Number of people')
-        plt.show()
 
         if return_data == False:
             return fig
@@ -261,14 +285,12 @@ class Logger:
             plt.plot(days, np.array(cumulative_inf) / total_people, label='total')
         else:
             total_people_by_age = self.total_people_by_age_range(self.world.people.members)
-            print(total_people_by_age)
             for ages in self.age_ranges:
                 label = "{}-{}".format(ages[0], ages[1])
                 plt.plot(days, np.array(list(self.data_dict["ByAge"][label]["cumulative_infected"].values())) / total_people_by_age[label], label=label)
         plt.xlabel("Days")
         plt.ylabel("Cumulative fraction of population infected")
         plt.legend()
-        plt.show()
         return fig
 
 
@@ -322,7 +344,7 @@ class Logger:
                 return S_list, I_list, R_list
             
 
-            N = len(self.world.people)
+            N = self.world.people.total_people
             I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
             beta = self.simulator.selector.transmission_probability
@@ -331,11 +353,11 @@ class Logger:
             gamma /= self.timer.get_number_shifts(None)
             # multiply by 2 to compensate for updating health status twice in each timestep, see interaction/base.py
 
-            n_sus, n_inf, n_rec = ratio_SIR_numerical(beta, gamma, N, I_0, day_array)
+            n_sus, n_inf, n_rec = ratio_SIR_numerical(beta, gamma, N, I_0, days)
 
-            ax.plot(day_array, n_inf, color='C0', linestyle='--')
-            ax.plot(day_array, n_sus, color='C1', linestyle='--')
-            ax.plot(day_array, n_rec, color='C2', linestyle='--')
+            ax.plot(days, n_inf, color='C0', linestyle='--')
+            ax.plot(days, n_sus, color='C1', linestyle='--')
+            ax.plot(days, n_rec, color='C2', linestyle='--')
 
         fig.savefig(os.path.join(self.save_path, "infection_curves.png"), dpi=300)
         return fig, ax
