@@ -11,9 +11,9 @@ class Policy:
     ## can read in the beta and alpha physical
     ## could put an additional override group in heirarchy
 
+    # either from config file or from Keras style
     
-    
-    def __init__(self, config_file, adherence):
+    def __init__(self, config_file = None, adherence = 1.):
 
         self.config_file = config_file
         self.adherence = adherence
@@ -54,11 +54,35 @@ class Policy:
         # uses adherence?
         # closes leisure by venue type e.g. pub, cinema etc.
     
-    def social_distancing(self):
-
-        # this could be a contact matrix reduction in certain circumstances e.g. not schoools
+    def social_distancing(self, alpha, betas):
+        '''
+        Implement social distancing policy
         
-        pass
+        ----------------
+        Parameters:
+        alphas: e.g. (float) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).alpha
+        betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
+
+        Assumptions:
+        - Currently we assume that social distancing is implemented first and this affects all
+          interactions and intensities globally
+        '''
+        
+        # for now, assume that social distancing just makes a difference to the alpha and beta values
+
+        # reduce no. contacts by a factor
+        
+        if not self.config_file:
+            alpha /= 2
+        else:
+            alpha /= self.config_file['social distancing']['alpha factor']
+
+        for group in betas:
+            
+            if not self.config_file:
+                betas[group] /= 2
+            else:
+                betas[group] /= self.config_file['social distancing']['beta factor']
 
     def lockdown(self):
 
