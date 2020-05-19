@@ -25,8 +25,10 @@ default_logging_config_filename = (
 
 logger = logging.getLogger(__name__)
 
+
 class GeographyError(BaseException):
     pass
+
 
 class Area:
     """
@@ -149,7 +151,9 @@ class SuperAreas:
         return self.members[index]
 
     def construct_ball_tree(self):
-        coordinates = np.array([np.deg2rad(super_area.coordinates) for super_area in self])
+        coordinates = np.array(
+            [np.deg2rad(super_area.coordinates) for super_area in self]
+        )
         ball_tree = BallTree(coordinates)
         return ball_tree
 
@@ -157,10 +161,10 @@ class SuperAreas:
         coordinates = np.array(coordinates)
         if self.ball_tree is None:
             raise GeographyError("SuperAreas initialized without a BallTree")
-        idx = self.ball_tree.query(np.deg2rad(coordinates).reshape(1,-1), return_distance=False)[0][0]
+        idx = self.ball_tree.query(
+            np.deg2rad(coordinates).reshape(1, -1), return_distance=False
+        )[0][0]
         return self[idx]
-
-
 
     def erase_people_from_geographical_unit(self):
         """

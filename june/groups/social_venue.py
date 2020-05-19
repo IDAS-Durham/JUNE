@@ -17,10 +17,12 @@ class SocialVenue(Group):
     def __init__(self):
         super().__init__()
 
+earth_radius = 6371 # km
 
 class SocialVenues(Supergroup):
     def __init__(self, social_venues: List[SocialVenue]):
         super().__init__()
+        self.ball_tree = None
         self.members = social_venues
 
     @classmethod
@@ -46,7 +48,7 @@ class SocialVenues(Supergroup):
         """
         social_venues = []
         for area in areas:
-            for _ in range(0, venues_per_area):
+            for _ in range(venues_per_area):
                 sv = SocialVenue()
                 sv.area = area
                 social_venues.append(sv)
@@ -66,7 +68,7 @@ class SocialVenues(Supergroup):
         """
         social_venues = []
         for super_area in super_areas:
-            for _ in range(0, venues_per_super_area):
+            for _ in range(venues_per_super_area):
                 sv = SocialVenue()
                 sv.super_area = super_area
                 social_venues.append(sv)
@@ -85,3 +87,38 @@ class SocialVenues(Supergroup):
                     "Can't add to super area if venues don't have coordiantes."
                 )
             venue.super_area = super_areas.get_super_area(venue.coordinates)
+
+    def get_closest_venues(self, coordinates, k=1):
+        """
+        Queries the ball tree for the closests venues.
+
+        Parameters
+        ----------
+        coordinates
+            coordinates in the format [Latitude, Longitude]
+        k
+            number of neighbours desired
+        """
+        if self.ball_tree is None:
+            raise SocialVenueError("Initialise ball tree first with self.make_tree()")
+        venue_idxs = self.ball_tree.query(
+            np.deg2rad(coordinates).reshape(1, -1), return_distance=False, k=k
+        ).flatten()
+        return [self[idx] for idx in venue_idxs]
+
+    def get_venues_in_radius(self, coordinates, radius = 5):
+        """
+        Queries the ball tree for the closests venues.
+
+        Parameters
+        ----------
+        coordinates
+            coordinates in the format [Latitude, Longitude]
+        radius
+            radius in km to query
+        """
+        if self.ball_tree is None:
+            raise SocialVenueError("Initialise ball tree first with self.make_tree()")
+        radius = radius / earth_radius
+        venue_idxs = self.ball_tree.query_radius(coordinates, r=radius)
+        return [self[idx] for idx in venue_idxs]
