@@ -10,7 +10,7 @@ def roll_poisson_dice(poisson_parameter, delta_time):
 
 
 class Leisure:
-    def __init__(self, leisure_distributors: List["Dynamic Distributors"]):
+    def __init__(self, leisure_distributors: "Dynamic Distributors"):
         self.leisure_distributors = leisure_distributors
 
     def get_leisure_distributor_for_person(
