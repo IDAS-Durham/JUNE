@@ -1,7 +1,7 @@
 import pytest
 
-from june.distributors import HospitalDistributor, WorkerDistributor
-from june.geography import Geography
+from june.distributors import HospitalDistributor
+from june.demography.geography import Geography
 from june.groups import Hospital, Hospitals
 from june.demography.person import Person
 
