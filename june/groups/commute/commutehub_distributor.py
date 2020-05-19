@@ -17,10 +17,7 @@ default_travel_data_directory = f"{paths.data_path}/travel"
 default_file = f"{default_geographical_data_directory}/msoa_oa.csv"
 
 
-default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/"
-)
+default_data_path = paths.data_path
 
 default_msoa_oa_coordinates = default_data_path / "geographical_data/msoa_oa.csv"
 

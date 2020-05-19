@@ -7,8 +7,7 @@ import time
 
 from june import paths
 from june.demography import Person
-from june.geography import Geography
-from tqdm import tqdm
+from june.demography.geography import Geography
 
 default_data_path = paths.data_path / "processed/census_data/output_area/EnglandWales"
 default_areas_map_path = (
