@@ -9,6 +9,7 @@ import yaml
 
 from june.demography import Person
 from june.groups import Group, GroupMaker
+from june.infection.infection    import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
@@ -33,7 +34,7 @@ class Simulator:
         self,
         world: World,
         interaction: Interaction,
-        infection: Infection,
+        selector: InfectionSelector,
         config: dict,
         commute=True,
     ):
@@ -51,9 +52,9 @@ class Simulator:
         config:
             dictionary with configuration to set up the simulation
         """
-        self.world = world
+        self.world       = world
         self.interaction = interaction
-        self.infection = infection
+        self.selector    = selector
         self.permanent_activity_hierarchy = [
             "box",
             "hospital",
@@ -63,10 +64,11 @@ class Simulator:
         ]
         self.randomly_order_activities = [
             "pubs",
+            "cinemas",
+            "groceries",
             "churches",
         ]
         self.check_inputs(config["time"])
-        self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
             self, self.world, self.timer, config["logger"]["save_path"],
@@ -111,7 +113,7 @@ class Simulator:
         cls,
         world: "World",
         interaction: "Interaction",
-        infection: Infection,
+        selector: "InfectionSelector",
         config_filename: str = default_config_filename,
     ) -> "Simulator":
 
@@ -129,7 +131,7 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Simulator(world, interaction, infection, config)
+        return Simulator(world, interaction, selector, config)
 
     def check_inputs(self, config: dict):
         """
@@ -400,7 +402,6 @@ class Simulator:
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now,
-                    self.health_index_generator,
                     self.timer.duration,
                     group,
                 )
