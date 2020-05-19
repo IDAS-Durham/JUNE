@@ -3,7 +3,7 @@ import h5py
 from collections import defaultdict
 from itertools import count
 from june.demography import Demography, Person, Population
-from june.geography import Geography, Area, SuperArea
+from june.demography.geography import Geography, Area, SuperArea
 from june.groups import Households, Companies, Hospitals, Schools, CareHomes, Group
 from june.distributors import HouseholdDistributor
 from june import World
