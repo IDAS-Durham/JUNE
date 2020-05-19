@@ -1,12 +1,6 @@
-import os
-from pathlib import Path
-
 import pytest
-import numpy as np
-import pandas as pd
 
-from june.geography import Geography
-from june.geography import Area
+from june.demography.geography import Geography, Area
 from june.demography import Person
 from june.groups import CommuteCity, CommuteCities, CommuteHub, CommuteHubs, CommuteUnit, CommuteUnits, CommuteCityUnit, CommuteCityUnits
 

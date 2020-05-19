@@ -24,7 +24,15 @@ setup(
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
         license="MIT license",
-        packages=find_packages(exclude=("test_june", "docs")),
-        install_requires=requirements
+        install_requires=requirements,
+        packages=['june',
+                  'june.infection',
+                  'june.demography',
+                  'june.distributors',
+                  'june.groups',
+                  'june.groups.group',
+                  'june.groups.commute',
+                  'june.interaction',
+                  'june.box'],
 )
 
