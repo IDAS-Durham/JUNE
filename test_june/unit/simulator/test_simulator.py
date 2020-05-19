@@ -6,18 +6,21 @@ from june.geography import Geography
 from june.demography import Demography
 from june.world import World
 from june.interaction import DefaultInteraction
-from june.infection import Infection
-from june.infection.symptoms import SymptomsConstant
+from june.infection import InfectionSelector, Infection
+from june.infection import Symptom_Tags, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.simulator import Simulator
 
 
+from pathlib import Path
+path_pwd = Path(__file__)
+dir_pwd  = path_pwd.parent
+constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 test_config = Path(__file__).parent.parent.parent / "test_simulator.yaml"
 
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
-
     geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559"]})
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
@@ -26,14 +29,13 @@ def create_simulator():
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=True, include_commute=True)
-
-    symptoms = SymptomsConstant(recovery_rate=0.05)
-    transmission = TransmissionConstant(probability=0.7)
-    infection = Infection(transmission, symptoms)
-    interaction = DefaultInteraction.from_file()
-    return Simulator.from_file(world, interaction, infection,
+    selector                          = InfectionSelector.from_file(constant_config)
+    selector.recovery_rate            = 0.05
+    selector.transmission_probability = 0.7
+    interaction            = DefaultInteraction.from_file()
+    interaction.selector   = selector
+    return Simulator.from_file(world, interaction, selector,
             config_filename = test_config)
-
 
 @pytest.fixture(name="health_index")
 def create_health_index():
@@ -107,8 +109,8 @@ def test__kid_at_home_is_supervised(sim, health_index):
             kids_at_school.append(person)
 
     for kid in kids_at_school:
-        sim.infection.infect_person_at_time(kid, health_index, 0.0)
-        kid.health_information.infection.symptoms.severity = 0.4
+        sim.selector.infect_person_at_time(kid, 0.0)
+        kid.health_information.infection.symptoms.tag = Symptom_Tags.influenza
         assert kid.health_information.must_stay_at_home
 
     sim.move_people_to_active_subgroups(["primary_activity", "residence"])
@@ -123,11 +125,10 @@ def test__kid_at_home_is_supervised(sim, health_index):
     sim.clear_world()
 
 
-def test__hospitalise_the_sick(sim, health_index):
-    hospital_severity = 0.6
+def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]
-    sim.infection.infect_person_at_time(dummy_person, health_index, 0.0)
-    dummy_person.health_information.infection.symptoms.severity = hospital_severity 
+    sim.selector.infect_person_at_time(dummy_person, 0.0)
+    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
     assert dummy_person.health_information.should_be_in_hospital
     sim.update_health_status(0., 0.)
     assert dummy_person.hospital is not None
@@ -137,10 +138,8 @@ def test__hospitalise_the_sick(sim, health_index):
 
 
 def test__move_people_from_hospital_to_icu(sim):
-    icu_severity = 0.8
     dummy_person = sim.world.people.members[0]
-    dummy_person.health_information.infection.symptoms.severity = icu_severity 
-    assert dummy_person.health_information.tag == 'intensive care'
+    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.intensive_care
     sim.hospitalise_the_sick(dummy_person, 'hospitalised')
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
@@ -148,10 +147,8 @@ def test__move_people_from_hospital_to_icu(sim):
     sim.clear_world()
 
 def test__move_people_from_icu_to_hospital(sim):
-    hospital_severity = 0.6
     dummy_person = sim.world.people.members[0]
-    dummy_person.health_information.infection.symptoms.severity = hospital_severity 
-    assert dummy_person.health_information.tag == 'hospitalised'
+    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
     sim.hospitalise_the_sick(dummy_person, 'intensive care')
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
