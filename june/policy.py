@@ -53,7 +53,6 @@ class Policy:
 
         person.policy_subgroup = person.subgroups
         
-
     def quarantine(self):
 
         # if symptoms: quarantine for x days
@@ -114,7 +113,7 @@ class Policy:
         Parameters:
         person: member of the Persons class
         sectors: (list) sectors to be closed
-        full_closure: (bool) if True then all sectorsclosed, otherwise only close certain sectors
+        full_closure: (bool) if True then all sectors closed, otherwise only close certain sectors
 
         TODO:
         - Handly hospital workers in full_closure
@@ -133,10 +132,33 @@ class Policy:
             if person.sector in sectors:
                 person.policy_subgroups.pop('company')
         
-    def leisure_closure(self, venues, full_closure):
+    def leisure_closure(self, person, venues = [], full_closure):
+        '''
+        Close leisure activities by venue type
 
-        # uses adherence?
-        # closes leisure by venue type e.g. pub, cinema etc.
+        -----------
+        Parameters:
+        person: member of the Persons class
+        venues: (list) venue types to close
+        full_closure: (bool) if True then all venues closed, otherwise only close certain venues
+        '''
+
+        possible_venues = ['pubs', 'cinemas', 'supermarkets', 'shopping_malls']
+
+        for venue in venues:
+            if venue not in possible_venues:
+                raise ValueError('Venue {} not known'.format(venue))
+        
+        if len(venues) == 0 and full_closure = False:
+            print ('WARNING: Policy applied and no venues are being closed')
+
+        if full_closure:
+            for venue in venues:
+                person.policy_subgroups.pop(venue)
+        else:
+            for venue in venues:   
+                if venue in person.policy_subgroups:
+                    person.policy_subgroups.pop(venue)
     
     def social_distancing(self, alpha, betas):
         '''
