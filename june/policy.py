@@ -69,10 +69,9 @@ class Policy:
     #
     #    if self.config_file is not None:
     #        if person.company is not None:
-                
-            
+        
 
-    def school_closure(self, person, years, full_closure = False):
+    def school_closure(self, person, years = [], full_closure = False):
         '''
         Implement school closure by year group
         
@@ -82,6 +81,9 @@ class Policy:
         years: (list) year groups to close schools with
         full_closure: (bool) if True then all years closed, otherwise only close certain years
         '''
+
+        if len(years) == 0 and full_closure = False:
+            print ('WARNING: Policy applied and no schools are being closed')
 
         if person.age not in ['SCHOOL AGE BRACKET']:
             raise ValueError('Person passed must be of school age')
@@ -104,7 +106,7 @@ class Policy:
                     person.policy_subgroups.pop('school')
                                    
     
-    def company_closure(self, person, sectors, full_closure = False):
+    def company_closure(self, person, sectors = [], full_closure = False):
         '''
         Close companies by sector
         
@@ -113,12 +115,23 @@ class Policy:
         person: member of the Persons class
         sectors: (list) sectors to be closed
         full_closure: (bool) if True then all sectorsclosed, otherwise only close certain sectors
+
+        TODO:
+        - Handly hospital workers in full_closure
         '''
+
+        if len(sectors) == 0 and full_closure = False:
+            print ('WARNING: Policy applied and no companies are being closed')
         
         if person.age not in ['WORK AGE BRACKET']:
             raise ValueError('Person passed must be of working age')
 
-        if full_closue
+        #  we still need to handle hospital workers separately
+        if full_closue:
+            person.policy_subgroups.pop('company')
+        else:
+            if person.sector in sectors:
+                person.policy_subgroups.pop('company')
         
     def leisure_closure(self, venues, full_closure):
 
