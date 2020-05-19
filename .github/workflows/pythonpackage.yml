@@ -30,16 +30,10 @@ jobs:
         pip install -r requirements.txt
 
     - name: Get data
-      run: |
-        pwd
-        ls
-        bash get_data.sh
+      run: bash get_data.sh
 
     - name: Install simulation
-      run: |
-        pwd
-        ls
-        python setup.py install
+      run: python setup.py install
 
     - name: Test with pytest
       run: |
