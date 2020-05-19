@@ -8,9 +8,7 @@ from june.groups import CommuteHubDistributor
 from june.groups.commute import default_geographical_data_directory
 
 test_data_filename = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "..",
-    "..",
+    os.path.dirname(os.getcwd()),
     "data",
     "census_data",
     "commute.csv"

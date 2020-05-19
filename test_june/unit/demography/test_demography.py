@@ -1,8 +1,7 @@
 import collections
 import pytest
-import numpy as np
 
-from june.geography import Geography, Area
+from june.demography.geography import Geography
 from june import demography as d
 
 

@@ -1,4 +1,3 @@
-import os
 import yaml
 import logging
 import os
@@ -11,8 +10,9 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup
-from june.geography import SuperArea
-from june.infection import Symptom_Tags
+
+from june.demography.geography import SuperArea
+from june.infection.symptoms import Symptom_Tags
 
 
 logger = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ class Hospital(Group):
         person:
             person instance to add as patient
         """
-        
+
         if person.health_information.tag == Symptom_Tags.intensive_care:
             self.add(person, self.SubgroupType.icu_patients)
         elif person.health_information.tag == Symptom_Tags.hospitalised:

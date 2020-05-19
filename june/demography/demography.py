@@ -5,7 +5,7 @@ import pandas as pd
 
 from june import paths
 from june.demography import Person
-from june.geography import Geography
+from june.demography.geography import Geography
 
 default_data_path = paths.data_path / "processed/census_data/output_area/EnglandWales"
 default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
