@@ -1,6 +1,8 @@
 from itertools import count
 import random
 from enum import IntEnum
+from june.infection import Symptom_Tags
+
 
 
 class HealthInformation:
@@ -33,11 +35,11 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag in ("influenza-like illness", "pneumonia")
+        return self.tag in (Symptom_Tags.influenza, Symptom_Tags.pneumonia)
 
     @property
     def should_be_in_hospital(self) -> bool:
-        return self.tag in ("hospitalised", "intensive care")
+        return self.tag in (Symptom_Tags.hospitalised, Symptom_Tags.intensive_care)
 
     @property
     def infected_at_home(self) -> bool:
@@ -45,13 +47,12 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == "dead"
+        return self.tag == Symptom_Tags.dead
 
     def update_health_status(self, time, delta_time):
         if self.infected:
-            if self.infection.symptoms.is_recovered(delta_time):
+            if self.infection.symptoms.is_recovered():
                 self.recovered = True
-                # self.set_recovered(time)
             else:
                 self.infection.update_at_time(time + delta_time)
 
@@ -72,7 +73,7 @@ class HealthInformation:
         self.infection = None
 
     def get_symptoms_tag(self, symptoms):
-        return self.infection.symptoms.tag(symptoms.severity)
+        return self.infection.symptoms.tag
 
     def transmission_probability(self, time):
         if self.infection is not None:
@@ -139,7 +140,7 @@ class Person:
         "sector",
         "sub_sector",
         "home_city",
-        "econ_index",
+        "socioecon_index",
         "health_information",
         "busy",
     )
@@ -161,7 +162,7 @@ class Person:
         age=-1,
         sex=None,
         ethnicity=None,
-        econ_index=None,
+        socioecon_index=None,
         mode_of_transport=None,
         area=None,
     ):
@@ -183,7 +184,7 @@ class Person:
         self.sector = None
         self.sub_sector = None
         self.home_city = None
-        self.econ_index = econ_index
+        self.socioecon_index = socioecon_index
         self.health_information = HealthInformation()
         self.busy = False
 
@@ -220,6 +221,8 @@ class Person:
     def find_guardian(self):
 
         possible_guardians = [person for person in self.housemates if person.age >= 18]
+        if len(possible_guardians) == 0:
+            return None
         guardian = random.choice(possible_guardians)
         if (
             guardian.health_information.should_be_in_hospital
