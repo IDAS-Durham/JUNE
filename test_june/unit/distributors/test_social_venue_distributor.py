@@ -33,6 +33,11 @@ def make_distributor(social_venues):
         maximum_distance=30,
     )
 
+def test__age_dict_parsing(social_venue_distributor):
+    age_dict = {"40-60" : 0.4, "10-20" : 0.2}
+    bins, probs = social_venue_distributor._parse_age_probabilites(age_dict)
+    assert bins == [10, 20, 40, 60]
+    assert probs == [0, 0.2, 0.4, 0]
 
 def get_days_until_pub(person, delta_time, is_weekend, distrib):
     days = []
