@@ -1,4 +1,4 @@
-from june.infection import infection as infect
+from june.infection import Infection
 from june.infection import symptoms as sym
 from june.infection import symptoms_trajectory as strans
 from june.infection import trajectory_maker as tmaker
@@ -8,9 +8,7 @@ from june.infection import InfectionSelector
 import june.interaction as inter
 from june.infection.health_index import HealthIndexGenerator
 from june.simulator import Simulator
-from june import world
-from june.time import Timer
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june import World
@@ -24,6 +22,17 @@ import yaml
 test_directory = Path(__file__).parent.parent
 constant_config = test_directory.parent / "configs/defaults/infection/InfectionConstant.yaml"
 
+def pytest_addoption(parser):
+    parser.addoption("--data", action="store", default=os.path.join(Path(os.getcwd()).parent, "data"))
+    parser.addoption("--configs", action="store", default=os.path.join(Path(os.getcwd()).parent, "configs"))
+
+@ pytest.fixture()
+def data(pytestconfig):
+    return pytestconfig.getoption("data")
+
+@pytest.fixture()
+def configs(pytestconfig):
+    return pytestconfig.getoption("configs")
 
 @pytest.fixture(name="symptoms", scope="session")
 def create_symptoms():
@@ -51,15 +60,15 @@ def create_transmission():
 
 @pytest.fixture(name="infection", scope="session")
 def create_infection(transmission, symptoms):
-    return infect.Infection(transmission, symptoms)
+    return Infection(transmission, symptoms)
 
 @pytest.fixture(name="infection_constant", scope="session")
 def create_infection_constant(transmission, symptoms_constant):
-    return infect.Infection(transmission, symptoms_constant)
+    return Infection(transmission, symptoms_constant)
 
 @pytest.fixture(name="infection_healthy", scope="session")
 def create_infection_healthy(transmission, symptoms_healthy):
-    return infect.Infection(transmission, symptoms_healthy)
+    return Infection(transmission, symptoms_healthy)
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
@@ -98,13 +107,14 @@ def create_box_world():
     return World.from_geography(geography, box_mode=True)
 
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(world_box, interaction, infection_healthy):
+def create_simulator_box(request, world_box, interaction, infection_healthy):
+    path_to_config = request.config.getoption("configs")
     selector_file = (
         Path(__file__).parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
     )
     config_file = (
-        Path(__file__).parent.parent.parent / "configs/config_boxmode_example.yaml"
-    )
+        os.path.join(path_to_config, "config_boxmode_example.yaml"
+    ))
     selector = InfectionSelector.from_file(selector_file)
     return Simulator.from_file(
         world_box, interaction, selector, config_filename=config_file
