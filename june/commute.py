@@ -3,8 +3,6 @@ from typing import List, Tuple, Dict
 
 import numpy as np
 import yaml
-import os
-from pathlib import Path
 
 from june import paths
 

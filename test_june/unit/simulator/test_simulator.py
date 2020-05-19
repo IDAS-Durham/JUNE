@@ -11,13 +11,14 @@ from june.infection import Symptom_Tags, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.simulator import Simulator
+from june import paths
 
 
 from pathlib import Path
 path_pwd = Path(__file__)
 dir_pwd  = path_pwd.parent
-constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
-test_config = Path(__file__).parent.parent.parent / "test_simulator.yaml"
+constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
