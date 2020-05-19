@@ -11,7 +11,7 @@ from scipy import stats
 
 from june import paths
 from june.demography import Person
-from june.geography import Area
+from june.demography.geography import Area
 from june.groups import Household, Households
 
 logger = logging.getLogger(__name__)
