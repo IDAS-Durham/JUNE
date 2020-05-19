@@ -16,8 +16,9 @@ class SocialVenue(Group):
     class SubgroupType(IntEnum):
         default = 0
 
-    def __init__(self):
+    def __init__(self, max_size=np.inf):
         super().__init__()
+        self.max_size = max_size
 
     def add(self, person):
         super().add(
@@ -56,7 +57,12 @@ class SocialVenues(Supergroup):
         return cls(social_venues, **kwargs)
 
     @classmethod
-    def for_areas(cls, areas: List[Area], venues_per_area=1):
+    def for_areas(
+        cls,
+        areas: List[Area],
+        venues_per_capita: float = None,
+        venues_per_area: int = None,
+    ):
         """
         Generates social venues in the given areas.
 
@@ -64,15 +70,33 @@ class SocialVenues(Supergroup):
         ----------
         areas
             list of areas to generate the venues in
+        venues_per_capita
+            number of venues per person in each area. 
         venues_per_area
-            how many venus per area to generate
+            number of venues in each area. 
         """
+        if venues_per_area is not None and venues_per_capita is not None:
+            raise SocialVenueError(
+                "Please specify only one of venues_per_capita or venues_per_area."
+            )
         social_venues = []
-        for area in areas:
-            for _ in range(venues_per_area):
-                sv = SocialVenue()
-                sv.area = area
-                social_venues.append(sv)
+        if venues_per_area is not None:
+            for area in areas:
+                for _ in range(venues_per_area):
+                    sv = SocialVenue()
+                    sv.area = area
+                    social_venues.append(sv)
+        elif venues_per_capita is not None:
+            for area in areas:
+                area_population = len(area.people)
+                for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
+                    sv = SocialVenue()
+                    sv.area = area
+                    social_venues.append(sv)
+        else:
+            raise SocialVenueError(
+                "Specify one of venues_per_capita or venues_per_area"
+            )
         return cls(social_venues)
 
     @classmethod
