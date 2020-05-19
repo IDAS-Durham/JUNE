@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 import pandas as pd
 import numpy as np
+from sklearn.neighbors import BallTree
 
 from june import paths
 from june.demography.person import Person
@@ -24,6 +25,8 @@ default_logging_config_filename = (
 
 logger = logging.getLogger(__name__)
 
+class GeographyError(BaseException):
+    pass
 
 class Area:
     """
@@ -117,10 +120,24 @@ class SuperArea:
 
 
 class SuperAreas:
-    __slots__ = "members"
+    __slots__ = "members", "ball_tree"
 
-    def __init__(self, super_areas: List[SuperArea]):
+    def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
+        """
+        Group to aggregate SuperArea objects.
+
+        Parameters
+        ----------
+        super_areas
+            list of super areas
+        ball_tree
+            whether to construct a NN tree for the super areas
+        """
         self.members = super_areas
+        if ball_tree:
+            self.ball_tree = self.construct_ball_tree()
+        else:
+            self.ball_tree = None
 
     def __iter__(self):
         return iter(self.members)
@@ -130,6 +147,20 @@ class SuperAreas:
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def construct_ball_tree(self):
+        coordinates = np.array([np.deg2rad(super_area.coordinates) for super_area in self])
+        ball_tree = BallTree(coordinates)
+        return ball_tree
+
+    def get_super_area(self, coordinates):
+        coordinates = np.array(coordinates)
+        if self.ball_tree is None:
+            raise GeographyError("SuperAreas initialized without a BallTree")
+        idx = self.ball_tree.query(np.deg2rad(coordinates).reshape(1,-1), return_distance=False)[0][0]
+        return self[idx]
+
+
 
     def erase_people_from_geographical_unit(self):
         """
