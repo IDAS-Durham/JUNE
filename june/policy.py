@@ -21,8 +21,14 @@ class Policy:
     def do_nothing(self):
         pass
 
-    def open_all(self):
-        pass
+    def open_all(self, person):
+        '''
+        Set people back to moving as before
+        This is done by resetting all their subgroups to what they had before
+        '''
+
+        person.policy_subgroup = person.subgroups
+        
 
     def quarantine(self):
 
@@ -32,7 +38,7 @@ class Policy:
         
         pass
 
-    def school_closure(self, years, full_closure):
+    def school_closure(self, person, years, full_closure):
 
         # uses adherence
         
@@ -40,7 +46,11 @@ class Policy:
         # need to decide if this is just people not going to school or schools not pulling people in
         # think about key workers
 
-        # Need to change: weight the intensities, 
+        # Need to change: weight the intensities,
+
+        # This will currently not work and is more like pseudocode
+        if person.age is in years:
+            person.policy_subgroup.pop('school')
         
         pass
     
@@ -66,11 +76,12 @@ class Policy:
         Assumptions:
         - Currently we assume that social distancing is implemented first and this affects all
           interactions and intensities globally
-        '''
-        
-        # for now, assume that social distancing just makes a difference to the alpha and beta values
+        - Currently we assume that the changes are not group dependent
 
-        # reduce no. contacts by a factor
+
+        TODO:
+        - Implement structure for people to adhere to social distancing
+        '''
         
         if not self.config_file:
             alpha /= 2
@@ -88,8 +99,4 @@ class Policy:
 
         # this could be a combination of all
 
-        pass
-
-    def weekly_briefing_confusion(self):
-        
         pass
