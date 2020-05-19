@@ -1,4 +1,3 @@
-import os
 import yaml
 import logging
 import os
@@ -12,7 +11,9 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup
 
-from june.geography import SuperArea
+from june.demography.geography import SuperArea
+from june.infection.symptoms import Symptom_Tags
+
 
 logger = logging.getLogger(__name__)
 
@@ -121,9 +122,10 @@ class Hospital(Group):
         person:
             person instance to add as patient
         """
-        if person.health_information.tag == "intensive care":
+
+        if person.health_information.tag == Symptom_Tags.intensive_care:
             self.add(person, self.SubgroupType.icu_patients)
-        elif person.health_information.tag == "hospitalised":
+        elif person.health_information.tag == Symptom_Tags.hospitalised:
             self.add(person, self.SubgroupType.patients)
         else:
             raise AssertionError(
@@ -134,9 +136,9 @@ class Hospital(Group):
        person.subgroups[person.ActivityType.hospital] = None
 
     def move_patient_within_hospital(self, person):
-        if person.health_information.tag == "intensive care":
+        if person.health_information.tag == Symptom_Tags.intensive_care:
             person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.icu_patients]
-        elif person.health_information.tag == "hospitalised":
+        elif person.health_information.tag == Symptom_Tags.hospitalised:
             person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.patients]
         else:
             raise AssertionError(
@@ -318,8 +320,8 @@ class Hospitals(Supergroup):
         hospital with availability
 
         """
-        assign_icu = person.health_information.tag == "intensive care"
-        assign_patient = person.health_information.tag == "hospitalised"
+        assign_icu = person.health_information.tag == Symptom_Tags.intensive_care
+        assign_patient = person.health_information.tag == Symptom_Tags.hospitalised
 
         if self.box_mode:
             for hospital in self.members:

@@ -8,13 +8,16 @@ import numpy as np
 import yaml
 
 from june.demography import Person
-from june.groups import Group
+from june.groups import Group, GroupMaker
+from june.infection.infection    import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
 from june.logger_simulation import Logger
 from june.time import Timer
 from june.world import World
+from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor 
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -31,8 +34,9 @@ class Simulator:
         self,
         world: World,
         interaction: Interaction,
-        infection: Infection,
+        selector: InfectionSelector,
         config: dict,
+        commute=True,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -48,9 +52,9 @@ class Simulator:
         config:
             dictionary with configuration to set up the simulation
         """
-        self.world = world
+        self.world       = world
         self.interaction = interaction
-        self.infection = infection
+        self.selector    = selector
         self.permanent_activity_hierarchy = [
             "box",
             "hospital",
@@ -60,10 +64,11 @@ class Simulator:
         ]
         self.randomly_order_activities = [
             "pubs",
+            "cinemas",
+            "groceries",
             "churches",
         ]
         self.check_inputs(config["time"])
-        self.health_index_generator = HealthIndexGenerator.from_file()
         self.timer = Timer(config["time"])
         self.logger = Logger(
             self, self.world, self.timer, config["logger"]["save_path"],
@@ -92,18 +97,23 @@ class Simulator:
             "hospital": ["hospitals"],
             "primary_activity": ["schools", "companies"],
             "residence": ["households", "care_homes"],
+            "commute": ["commuteunits", "commutecityunits"]
         }
 
         if not self.world.box_mode:
             self.min_age_home_alone = config["min_age_home_alone"]
             self.stay_at_home_complacency = config["stay_at_home_complacency"]
+            if commute:
+                self.commuteunit_distributor = CommuteUnitDistributor(self.world.commutehubs.members)
+                self.commutecityunit_distributor = CommuteCityUnitDistributor(self.world.commutecities.members)
+                self.group_maker = GroupMaker(self)
 
     @classmethod
     def from_file(
         cls,
         world: "World",
         interaction: "Interaction",
-        infection: Infection,
+        selector: "InfectionSelector",
         config_filename: str = default_config_filename,
     ) -> "Simulator":
 
@@ -121,7 +131,7 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Simulator(world, interaction, infection, config)
+        return Simulator(world, interaction, selector, config)
 
     def check_inputs(self, config: dict):
         """
@@ -296,6 +306,7 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
+
         for person in self.world.people.members:
             if person.health_information.dead or person.busy:
                 continue
@@ -304,6 +315,7 @@ class Simulator:
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
+ 
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
         """
@@ -369,10 +381,15 @@ class Simulator:
 
         """
         activities = self.timer.activities()
+        
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
         self.move_people_to_active_subgroups(activities)
+
+        if 'commute' in activities:
+            self.group_maker.distribute_people('commute')
+
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
@@ -385,13 +402,12 @@ class Simulator:
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now,
-                    self.health_index_generator,
                     self.timer.duration,
                     group,
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(f"Active in {group.spec} = {n_active_in_group}")
+            sim_logger.info(f"Number of people active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):

@@ -11,8 +11,9 @@ from june.distributors import (
     WorkerDistributor,
     CompanyDistributor,
 )
-from june.geography import Geography
-from june.groups import * 
+from june.demography.geography import Geography
+from june.groups import *
+from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -258,12 +259,8 @@ class World(object):
         self.commuteunits = CommuteUnits(self.commutehubs.members)
         self.commuteunits.init_units()
 
-        # put these into the simulator
-        # self.commuteunit_distributor = CommuteUnitDistributor(self.commutehubs.members)
 
         # CommuteCityUnit
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
 
-        # put these into the simulator
-        # self.commutecityunit_distributor = CommuteCityUnitDistributor(self.commutecities.members)
