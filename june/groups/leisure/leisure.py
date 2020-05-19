@@ -2,6 +2,7 @@ import numpy as np
 from numba import jit
 from typing import List
 from june.demography import Person
+from june.groups.leisure import SocialVenueDistributor
 
 
 @jit(nopython=True)
@@ -10,7 +11,16 @@ def roll_poisson_dice(poisson_parameter, delta_time):
 
 
 class Leisure:
-    def __init__(self, leisure_distributors: "Dynamic Distributors"):
+    """
+    Class to manage all possible activites that happen during leisure time.
+    """
+    def __init__(self, leisure_distributors: List[SocialVenueDistributor]):
+        """
+        Parameters
+        ----------
+        leisure_distributors
+            List of social venue distributors.
+        """
         self.leisure_distributors = leisure_distributors
 
     def get_leisure_distributor_for_person(
@@ -51,6 +61,22 @@ class Leisure:
         )
         return self.leisure_distributors[which_activity]
 
-    def assign_leisure_group_to_person(self, person, leisure_distributor):
-        leisure_distributor.add_person_to_social_venue(person)
+    def assign_social_venue_to_person(self, person, leisure_distributor):
+        social_venue = leisure_distributor.get_social_venue_for_person(person)
+        social_venue.add(person)
+        return social_venue
+
+    def send_household_with_person_if_necessary(self, person, leisure_distributor, social_venue):
+        """
+        When we know that the person does an activity in the social venue X,
+        then we ask X whether the person needs to drag the household with 
+        him or her.
+        """
+        person_residence = person.subgroups[person.ActivityType.residence].group
+        if person_residence.spec == "care_home" or person_residence.communal:
+            return
+        if leisure_distributor.person_drags_household(person):
+            for mate in person.housemates:
+                social_venue.add(mate) # ignores size checking
+
 
