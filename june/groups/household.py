@@ -3,6 +3,8 @@ from enum import IntEnum
 
 import numpy as np
 import random
+import h5py
+import time
 
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
@@ -96,4 +98,3 @@ class Households(Supergroup):
             for subgroup in group.subgroups:
                 subgroup._people.clear()
                 subgroup.group = None
-
