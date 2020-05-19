@@ -3,6 +3,7 @@ import os
 from enum import IntEnum
 from june import paths
 from typing import List
+import h5py
 
 import numpy as np
 import pandas as pd
@@ -37,8 +38,8 @@ class Company(Group):
 
     __slots__ = (
         "super_area",
-        "industry",
-        "n_employees_max",
+        "sector",
+        "n_workers_max",
     )
 
     class SubgroupType(IntEnum):
@@ -77,7 +78,7 @@ class Companies(Supergroup):
             Nr. of companies within a size-range per SuperArea.
 
         compsec_per_msoa_df: pd.DataFrame
-            Nr. of companies per industry sector per SuperArea.
+            Nr. of companies per sector sector per SuperArea.
         """
         super().__init__()
         self.members = companies
@@ -99,7 +100,7 @@ class Companies(Supergroup):
         company_size_per_superarea_filename: 
             Nr. of companies within a size-range per SuperArea.
         compsec_per_msoa_filename: 
-            Nr. of companies per industry sector per SuperArea.
+            Nr. of companies per sector sector per SuperArea.
         """
         if len(geography.super_areas) == 0:
             raise CompanyError("Empty geography!")
@@ -179,7 +180,11 @@ class Companies(Supergroup):
                 sectors,
             )
         )
+        # shuffle and reorder companies
+        min_idx = companies[0].id
         np.random.shuffle(companies)
+        for i, company in enumerate(companies):
+            company.id = min_idx + i
         return companies
 
     @classmethod
