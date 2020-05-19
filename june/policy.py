@@ -20,6 +20,7 @@ class Policy:
            open_all()
            school_closure(person, years = [...], full_closure = False)
 
+    - Many things rely on the the knowledge of key workers - let this be decided by whether or not their companies are closed
     '''
 
     # want to make this modular so that you could apply policies in combinations - Keras stype
@@ -61,6 +62,16 @@ class Policy:
         
         pass
 
+    #def categorise_key_workers(self, person):
+    #
+    #    if person.age not in ['WORK AGE BRACKET']:
+    #        raise ValueError('Person passed must be of working age')
+    #
+    #    if self.config_file is not None:
+    #        if person.company is not None:
+                
+            
+
     def school_closure(self, person, years, full_closure = False):
         '''
         Implement school closure by year group
@@ -69,10 +80,7 @@ class Policy:
         Parametes:
         person: member of the Persons class and is a child
         years: (list) year groups to close schools with
-        full_closure: (bool) if True then all years closed, otherwise only close certin years
-
-        TODO:
-        - If not full_closure, check if both parents are key workers -> then send to school
+        full_closure: (bool) if True then all years closed, otherwise only close certain years
         '''
 
         if person.age not in ['SCHOOL AGE BRACKET']:
@@ -83,22 +91,35 @@ class Policy:
             person.policy_subgroup.pop('school')
         else:
             if person.age is in years:
-                key_workers = True:
+
+                # check if BOTH parents are in work or not
+                working = True:
                 for parent in person.parents:
-                    if not parent.is_key_worker:
-                        key_workers = False
+                    if 'company' not in parent.policy_subgroups:
+                        working = False
+                        break
 
-                # if BOTH parents are not key workers then do not send child to school
-                if not key_workers:
+                # if BOTH parents are not working then do not send child to school
+                if not working:
                     person.policy_subgroups.pop('school')
-                    
-                    
+                                   
     
-    def company_closure(self, sectors, full_closure):
+    def company_closure(self, person, sectors, full_closure = False):
+        '''
+        Close companies by sector
+        
+        -----------
+        Parameters:
+        person: member of the Persons class
+        sectors: (list) sectors to be closed
+        full_closure: (bool) if True then all sectorsclosed, otherwise only close certain sectors
+        '''
+        
+        if person.age not in ['WORK AGE BRACKET']:
+            raise ValueError('Person passed must be of working age')
 
-        # uses adherence
-        # close companies by sector
-
+        if full_closue
+        
     def leisure_closure(self, venues, full_closure):
 
         # uses adherence?
@@ -123,7 +144,7 @@ class Policy:
         - Implement structure for people to adhere to social distancing
         '''
         
-        if not self.config_file:
+        if self.config_file is not None:
             alpha /= 2
         else:
             alpha /= self.config_file['social distancing']['alpha factor']
