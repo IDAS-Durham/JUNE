@@ -8,12 +8,12 @@ import re
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 
 
-#@jit(nopython=True)
-#def poisson_probability(probability, delta_time):
+# @jit(nopython=True)
+# def poisson_probability(probability, delta_time):
 #    return 1 - np.exp(-probability * delta_time)
 #
-#@jit(nopython=True, cache=True)
-#def probability_to_go_to_social_venue(
+# @jit(nopython=True, cache=True)
+# def probability_to_go_to_social_venue(
 #    age,
 #    sex,
 #    delta_time,
@@ -23,7 +23,7 @@ from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 #    female_probabilities,
 #    is_weekend,
 #    weekend_boost,
-#):
+# ):
 #    if sex == "m":
 #        if age < male_bins[0] or age > male_bins[-1]:
 #            return 0
@@ -51,6 +51,7 @@ class SocialVenueDistributor:
         social_venues: SocialVenues,
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
+        drags_household_probability=0.5,
         neighbours_to_consider=5,
         maximum_distance=5,
         weekend_boost: float = 1.0,
@@ -76,18 +77,17 @@ class SocialVenueDistributor:
             boosting factor for the weekend probability
         """
         self.social_venues = social_venues
-        self.male_age_probabilities = male_age_probabilities
-        self.female_age_probabilities = female_age_probabilities
-        self.weekend_boost = weekend_boost
         self.male_bins, self.male_probabilities = self._parse_age_probabilites(
             male_age_probabilities
         )
         self.female_bins, self.female_probabilities = self._parse_age_probabilites(
             female_age_probabilities
         )
+        self.weekend_boost = weekend_boost
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
-        self.spec = re.findall('[A-Z][^A-Z]*', self.__class__.__name__)[:-1]
+        self.drags_household_probability = drags_household_probability
+        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
 
     def _parse_age_probabilites(self, age_dict):
@@ -166,9 +166,9 @@ class SocialVenueDistributor:
         """
         poisson_parameter = self.get_poisson_parameter(person, is_weekend)
         return 1 - np.exp(-poisson_parameter * delta_time)
-        #return poisson_probability(poisson_parameter, delta_time)
+        # return poisson_probability(poisson_parameter, delta_time)
 
-    def add_person_to_social_venue(self, person):
+    def get_social_venue_for_person(self, person):
         """
         Adds a person to one of the social venues in the distributor. To decide, we select randomly
         from a certain number of neighbours, or the closest venue if the distance is greater than
@@ -185,10 +185,24 @@ class SocialVenueDistributor:
         )
         if potential_venues is None:
             venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
+            return venue
         else:
-            venue = np.random.choice(
+            venue_candidates = np.random.choice(
                 potential_venues[
                     : min(len(potential_venues), self.neighbours_to_consider)
-                ]
+                ],
+                size=self.neighbours_to_consider,
             )
-        venue.add(person)
+            for venue in venue_candidates:
+                if venue.size < venue.max_size:
+                    return venue
+            return venue_candidates[0]
+
+    def person_drags_household(self):
+        """
+        Check whether person drags household or not.
+        """
+        if self.drags_household_probability == 0.0:
+            return False
+        else:
+            return np.random.rand() < self.drags_household_probability
