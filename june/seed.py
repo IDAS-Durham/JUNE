@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from june.demography.geography import SuperAreas
-from june.infection import Infection
+from june.infection.infection import InfectionSelector
 from june import paths
 from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
@@ -15,7 +15,7 @@ class Seed:
     def __init__(
         self,
         super_areas: SuperAreas,
-        infection: Infection,
+        selector: InfectionSelector,
         n_cases_region: pd.DataFrame = None,
         msoa_region: pd.DataFrame = None,
     ):
@@ -35,8 +35,7 @@ class Seed:
         """
 
         self.super_areas = super_areas 
-        self.infection = infection
-        self.health_index_generator = HealthIndexGenerator.from_file()
+        self.selector    = selector
         self.n_cases_region = n_cases_region
         self.msoa_region = msoa_region
         self.super_area_names = [
@@ -47,7 +46,7 @@ class Seed:
     def from_file(
         self,
         super_areas: "SuperAreas",
-        infection: "Infection",
+        selector: "InfectionSelector",
         n_cases_region_filename: str = default_n_cases_region_filename,
         msoa_region_filename: str = default_msoa_region_filename,
     ) -> "Seed":
@@ -77,7 +76,7 @@ class Seed:
         msoa_region = pd.read_csv(msoa_region_filename)[["msoa", "region"]]
         return Seed(
             super_areas,
-            infection,
+            selector,
             n_cases_region,
             msoa_region.drop_duplicates(),
         )
@@ -134,9 +133,8 @@ class Seed:
         choices = np.random.choice(len(super_area.people), n_cases, replace=False)
 
         for choice in choices:
-            self.infection.infect_person_at_time(
-                list(super_area.people)[choice], self.health_index_generator, 0.0
-            )
+            person = list(super_area.people)[choice]
+            self.selector.infect_person_at_time(person = person, time = 0.0)
 
     def unleash_virus_per_region(self):
         """
