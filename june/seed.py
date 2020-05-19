@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from june.geography import SuperAreas
+from june.demography.geography import SuperAreas
 from june.infection.infection import InfectionSelector
 from june import paths
 from typing import List, Tuple

@@ -1,10 +1,8 @@
 
 from june import World
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
-import dill
-import pickle
+from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 import sys
 import time
 sys.setrecursionlimit(100000)
