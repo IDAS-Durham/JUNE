@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from june.geography import Geography, SuperArea
+from june.demography.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
 default_data_path = paths.data_path / "processed/census_data/company_data/"
