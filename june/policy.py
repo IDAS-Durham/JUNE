@@ -61,26 +61,38 @@ class Policy:
         
         pass
 
-    def school_closure(self, person, years, full_closure):
+    def school_closure(self, person, years, full_closure = False):
         '''
         Implement school closure by year group
         
         ----------
         Parametes:
+        person: member of the Persons class and is a child
+        years: (list) year groups to close schools with
+        full_closure: (bool) if True then all years closed, otherwise only close certin years
 
+        TODO:
+        - If not full_closure, check if both parents are key workers -> then send to school
         '''
 
-        # uses adherence
+        if person.age not in ['SCHOOL AGE BRACKET']:
+            raise ValueError('Person passed must be of school age')
         
-        # close all schools by years (age brackets)
-        # need to decide if this is just people not going to school or schools not pulling people in
-        # think about key workers
-
-        # Need to change: weight the intensities,
-
         # This will currently not work and is more like pseudocode
-        if person.age is in years:
+        if full_closure:
             person.policy_subgroup.pop('school')
+        else:
+            if person.age is in years:
+                key_workers = True:
+                for parent in person.parents:
+                    if not parent.is_key_worker:
+                        key_workers = False
+
+                # if BOTH parents are not key workers then do not send child to school
+                if not key_workers:
+                    person.policy_subgroups.pop('school')
+                    
+                    
     
     def company_closure(self, sectors, full_closure):
 
