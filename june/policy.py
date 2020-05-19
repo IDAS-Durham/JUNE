@@ -116,7 +116,7 @@ class Policy:
         full_closure: (bool) if True then all sectors closed, otherwise only close certain sectors
 
         TODO:
-        - Handly hospital workers in full_closure
+        - Handle hospital workers in full_closure
         '''
 
         if len(sectors) == 0 and full_closure = False:
@@ -141,6 +141,9 @@ class Policy:
         person: member of the Persons class
         venues: (list) venue types to close
         full_closure: (bool) if True then all venues closed, otherwise only close certain venues
+
+        TODO:
+        - Handle adherence
         '''
 
         possible_venues = ['pubs', 'cinemas', 'supermarkets', 'shopping_malls']
