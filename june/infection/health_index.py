@@ -21,16 +21,15 @@ class HealthIndexGenerator:
     Computes  probabilities for (non-symptomatic, influenza-like symptoms, pneumonia, 
     hospitalisation, intensive care, fatality), using the age and sex of the subject.
 
-    The probablities of hospitalisation,death and ICU are taken taken from fits made by Miguel Icaza to the 
-    Spanish data taken from:
+    The probablities of hospitalisation,death and ICU are taken taken from fits made by 
+    Miguel Icaza to the Spanish data taken from:
 
     https://github.com/datadista/datasets/tree/master/COVID%2019
 
 
-    We will assume that the symptomatic
-    cases that do not need hospitalisation have either influenza-like or penumonia-like
-    symptoms the percentage of those are distrubuted according to the ratios in the RKI publication
-    (table 1/column 2 of
+    We will assume that the symptomatic cases that do not need hospitalisation have either 
+    influenza-like or penumonia-like symptoms the percentage of those are distrubuted 
+    according to the ratios in the RKI publication (table 1/column 2 of
      https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile)
 
      For this I assume a "pneumonia probability for the asyptomatic, non-hospitalised cases
@@ -38,20 +37,21 @@ class HealthIndexGenerator:
      """
 
     def __init__(self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict):
-
         """
         Parameters:
-        poli_hosp,poli_icu,poli_deaths:
-          Each of this arrays contains 2 list of 4 elements. 
+        - poli_hosp,poli_icu,poli_deaths:
+          Each of this arrays contains 2 lists of 4 elements. 
           The first element of the list correpdons to males and the second to females.
           The elements are the indexes C,C1,C2,C3
-          of the polinomail fit defined to the probability of being hospitalised, send to a ICU unit or dying 
-          the probaility (P) is computed as 
+          of the polynomial fit defined to be the probability of being hospitalised, 
+          sent to an ICU unit or dying 
+        - the probaility (P) is computed as 
           P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
           The 10 exponent is requiered as the fits where done in logarithmic space.
-        asimpto_ratio:
-           The percentage of the population that will be asymptomatic, we fixed it to 43% and 
-           assume that is age independent this assumptions come from Vo et all 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
+        - asimpto_ratio:
+          The percentage of the population that will be asymptomatic, we fixed it to 
+          43% and assume that is age-independent.  This assumptions comes from 
+          Vo et al 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
           
         """
         self.poli_hosp = poli_hosp
@@ -68,10 +68,9 @@ class HealthIndexGenerator:
         Initialize the Health index from path to data frame, and path to config file 
 
         Parameters:
-        
-          filename:
-            polinome_filename:  path to the file where the coefficients of the fits to the spanish data
-            are stored.
+        - filename:
+            polinome_filename:  path to the file where the coefficients of the fits to 
+            the spanish data are stored.
         
         Returns:
           Interaction instance
@@ -95,10 +94,11 @@ class HealthIndexGenerator:
               array of ages where the probability should be computed.
           Poli:
               The values C,C1,C2,C3
-              of the polinomail fit defined to the probability of being hospitalised, send to a ICU unit or dying 
+              of the polinomail fit defined to the probability of being hospitalised, 
+              sent to an ICU unit or dying 
               the probaility (P) is computed as 
               P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
-          Retruns:
+          Returns:
              The probability P for all ages in the array "age".
         """
         C, C1, C2, C3 = poli
@@ -177,7 +177,7 @@ class HealthIndexGenerator:
                 1 - Pneumonia
         )
 
-    def __call__(self, age, sex):
+    def __call__(self, person):
         """
         Computes the probability of having all 6 posible outcomes for all ages between 0 and 120. 
         And for male and female 
@@ -186,11 +186,9 @@ class HealthIndexGenerator:
              3D matrix of dimensions 2 X 120 X 6. With all the probabilities of all 6 
              outcomes for 120 ages and the 2 sex.
         """
-        # TODO: change this when we unify sex to "m" and "f".
-        if sex == "f":
-            sex = 1
-        elif sex == "m":
+        
+        sex = 1
+        if person.sex == "m":
             sex = 0
-        roundage = int(round(age))
-        sex = int(sex)
+        roundage = int(round(person.age))
         return self.prob_lists[sex][roundage]

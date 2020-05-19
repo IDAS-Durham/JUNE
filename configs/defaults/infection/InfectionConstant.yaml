@@ -1,6 +1,6 @@
-threshold_transmission: 0.001
-threshold_symptoms: 0.001
 transmission:
-  type: constant
+  type:          Constant
+  probability:   0.3
 symptoms:
-  type: constant 
+  type:          Constant
+  recovery_rate: 0.2

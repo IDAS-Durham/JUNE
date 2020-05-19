@@ -7,6 +7,8 @@ from june.demography.geography import Geography
 
 from june.groups import *
 from june.demography import Person
+from june.infection import Symptom_Tags 
+from june.infection import InfectionSelector, Infection
 
 default_data_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent.parent
@@ -17,6 +19,10 @@ default_config_filename = (
     / "configs/defaults/groups/hospitals.yaml"
 )
 
+from pathlib import Path
+path_pwd = Path(__file__)
+dir_pwd  = path_pwd.parent
+constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 
 @pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
@@ -53,16 +59,25 @@ class MockHealthInformation:
     def __init__(self, tag):
         self.tag = tag
 
+@pytest.fixture(name='selector', scope='module')
+def create_selector():
+    selector = InfectionSelector.from_file(constant_config)
+    selector.recovery_rate            = 0.05
+    selector.transmission_probability = 0.7
+    return selector
 
-@pytest.mark.parametrize("health_info", ["hospitalised", "intensive care"])
-def test__add_patient_release_patient(hospitals, health_info):
+
+@pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
+def test__add_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person()
-    dummy_person.health_information = MockHealthInformation(health_info)
+    selector.infect_person_at_time(dummy_person, 0.0)
+    dummy_person.health_information.infection.symptoms.tag = getattr(Symptom_Tags, health_info)
+    print('symptoms = ', dummy_person.health_information.infection.symptoms.tag)
     assert dummy_person.hospital is None
     hospitals.members[0].add_as_patient(dummy_person)
     if health_info == "hospitalised":
         assert hospitals.members[0][Hospital.SubgroupType.patients][0] == dummy_person
-    elif health_info == "intensive care":
+    elif health_info == "intensive_care":
         assert (
             hospitals.members[0][Hospital.SubgroupType.icu_patients][0] == dummy_person
         )
@@ -77,18 +92,19 @@ class MockArea:
         self.coordinates = coordinates
 
 
-@pytest.mark.parametrize("health_info", ["hospitalised", "intensive care"])
-def test__allocate_patient_release_patient(hospitals, health_info):
+@pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
+def test__allocate_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person()
-    dummy_person.health_information = MockHealthInformation(health_info)
+    selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
     assert dummy_person.hospital is None
+    dummy_person.health_information.infection.symptoms.tag = getattr(Symptom_Tags, health_info)
     hospitals.allocate_patient(dummy_person)
     if health_info == "hospitalised":
         assert (
             dummy_person in hospitals.members[0][Hospital.SubgroupType.patients].people
         )
-    elif health_info == "intensive care":
+    elif health_info == "intensive_care":
         assert (
             dummy_person
             in hospitals.members[0][Hospital.SubgroupType.icu_patients].people
@@ -99,10 +115,12 @@ def test__allocate_patient_release_patient(hospitals, health_info):
     assert dummy_person.hospital is None
 
 
-@pytest.mark.parametrize("health_info", ["hospitalised", "intensive care"])
-def test_try_allocate_patient_to_full_hospital(hospitals, health_info):
+@pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
+def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector):
     dummy_person = Person()
-    dummy_person.health_information = MockHealthInformation(health_info)
+    selector.infect_person_at_time(dummy_person, 0.0)
+    dummy_person.health_information.infection.symptoms.tag = getattr(Symptom_Tags, health_info)
+
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
 
     for hospital in hospitals.members:
