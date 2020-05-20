@@ -25,7 +25,7 @@ def save_households_to_hdf5(
     """
     n_households = len(households)
     n_chunks = int(np.ceil(n_households / chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         households_dset = f.create_group("households")
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -34,7 +34,7 @@ def save_households_to_hdf5(
             areas = []
             communals = []
             max_sizes = []
-            for household in households:
+            for household in households[idx1:idx2]:
                 ids.append(household.id)
                 if household.area is None:
                     areas.append(nan_integer)
@@ -48,10 +48,10 @@ def save_households_to_hdf5(
             max_sizes = np.array(max_sizes, dtype=np.float)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
-                households_dset.create_dataset("id", data=ids)
-                households_dset.create_dataset("area", data=areas)
-                households_dset.create_dataset("communal", data=communals)
-                households_dset.create_dataset("max_size", data=max_sizes)
+                households_dset.create_dataset("id", data=ids, maxshape=(None,))
+                households_dset.create_dataset("area", data=areas, maxshape=(None,))
+                households_dset.create_dataset("communal", data=communals, maxshape=(None,))
+                households_dset.create_dataset("max_size", data=max_sizes, maxshape=(None,))
             else:
                 newshape = (households_dset["id"].shape[0] + ids.shape[0],)
                 households_dset["id"].resize(newshape)
