@@ -42,6 +42,22 @@ class Stage:
         )
 
 
+class Trajectory:
+    def __init__(self, *stages):
+        self.trajectory = list()
+        cumulative = 0.
+        for stage in stages:
+            time = stage.time
+            self.trajectory.append([
+                cumulative,
+                stage.symptoms_tag
+            ])
+            cumulative += time
+
+    def __iter__(self):
+        return iter(self.trajectory)
+
+
 class TrajectoryMaker:
     """
     The various trajectories should depend on external data, and may depend on age &
@@ -82,104 +98,109 @@ class TrajectoryMaker:
         return cls()
 
     def __getitem__(self, tag):
-        template = self.trajectories[tag]
-        cumulative = 0.
-        trajectory = []
-        for stage in template:
-            time = stage.time
-            trajectory.append([cumulative, stage.symptoms_tag])
-            cumulative += time
-        return trajectory
+        return self.trajectories[tag]
 
     def FillAsymptomaticTrajectory(self):
         recovery_time = 14.  # parameters["asymptomatic_recovery_time"] etc.
-        return [self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.asymptomatic,
-                    completion_time=recovery_time
-                ),
-                self.recovery_info]
+        return Trajectory(
+            self.incubation_info,
+            Stage(
+                symptoms_tag=SymptomTags.asymptomatic,
+                completion_time=recovery_time
+            ),
+            self.recovery_info
+        )
 
     def FillInfluenzaLikeTrajectory(self):
         recovery_time = 20.  # parameters["influenza_recovery_time"] etc.
-        return [self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=recovery_time
-                ),
-                self.recovery_info]
+        return Trajectory(
+            self.incubation_info,
+            Stage(
+                symptoms_tag=SymptomTags.influenza,
+                completion_time=recovery_time
+            ),
+            self.recovery_info
+        )
 
     def FillPneumoniaTrajectory(self):
         influenza_time = 5.  # parameters["pre_pneumonia_time"] etc.
         recovery_time = 20.  # parameters["pneumonia_recovery_time"] etc.
-        return [self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=recovery_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.pneumonia,
-                    completion_time=recovery_time
-                ),
-                self.recovery_info]
+        return Trajectory(
+            self.incubation_info,
+            Stage(
+                symptoms_tag=SymptomTags.influenza,
+                completion_time=recovery_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.pneumonia,
+                completion_time=recovery_time
+            ),
+            self.recovery_info
+        )
 
     def FillHospitalisedTrajectory(self):
         prehospital_time = 2.  # parameters["pre_hospital_time"] etc.
         recovery_time = 20.  # parameters["hospital_recovery_time"] etc.
-        return [self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=prehospital_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=recovery_time
-                ),
-                self.recovery_info]
+        return Trajectory(
+            self.incubation_info,
+            Stage(
+                symptoms_tag=SymptomTags.influenza,
+                completion_time=prehospital_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.hospitalised,
+                completion_time=recovery_time
+            ),
+            self.recovery_info
+        )
 
     def FillIntensiveCareTrajectory(self):
         prehospital_time = 2.  # parameters["pre_hospital_time"] etc.
         hospital_time = 2.  # parameters["hospital_time"] etc.
         ICU_time = 20.  # parameters["intensive_care_time"] etc.
         recovery_time = 20.  # parameters["ICU_recovery_time"] etc.
-        return [self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=prehospital_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=prehospital_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.intensive_care,
-                    completion_time=ICU_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=recovery_time
-                ),
-                self.recovery_info]
+        return Trajectory(
+            self.incubation_info,
+            Stage(
+                symptoms_tag=SymptomTags.influenza,
+                completion_time=prehospital_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.hospitalised,
+                completion_time=prehospital_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.intensive_care,
+                completion_time=ICU_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.hospitalised,
+                completion_time=recovery_time
+            ),
+            self.recovery_info
+        )
 
     def FillDeathTrajectory(self):
         prehospital_time = 2.  # parameters["pre_hospital_time"] etc.
         hospital_time = 2.  # parameters["hospital_time"] etc.
         ICU_time = 10.  # parameters["intensive_care_time"] etc.
         death_time = 0.  # parameters["ICU_recovery_time"] etc.
-        return [self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=prehospital_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=hospital_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.intensive_care,
-                    completion_time=ICU_time
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.dead,
-                    completion_time=death_time
-                )]
+        return Trajectory(
+            self.incubation_info,
+            Stage(
+                symptoms_tag=SymptomTags.influenza,
+                completion_time=prehospital_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.hospitalised,
+                completion_time=hospital_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.intensive_care,
+                completion_time=ICU_time
+            ),
+            Stage(
+                symptoms_tag=SymptomTags.dead,
+                completion_time=death_time
+            )
+         )
