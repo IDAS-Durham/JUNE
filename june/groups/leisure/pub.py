@@ -46,14 +46,16 @@ class PubDistributor(SocialVenueDistributor):
         neighbours_to_consider=5,
         maximum_distance=5,
         weekend_boost: float = 2.0,
+        drags_household_probability=0.5,
     ):
         super().__init__(
-            pubs,
-            male_age_probabilities,
-            female_age_probabilities,
-            neighbours_to_consider,
-            maximum_distance,
-            weekend_boost,
+            social_venues=pubs,
+            male_age_probabilities=male_age_probabilities,
+            female_age_probabilities=female_age_probabilities,
+            neighbours_to_consider=neighbours_to_consider,
+            maximum_distance=maximum_distance,
+            weekend_boost=weekend_boost,
+            drags_household_probability=drags_household_probability,
         )
 
     @classmethod

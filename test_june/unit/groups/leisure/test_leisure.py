@@ -1,5 +1,6 @@
 import numpy as np
 from pytest import fixture
+from june.groups import Household
 
 from june.groups.leisure import (
     Leisure,
@@ -23,10 +24,12 @@ def make_geography():
 @fixture(name="leisure")
 def make_leisure():
     pubs = Pubs([Pub()],)
-    pub_distributor = PubDistributor(pubs, male_age_probabilities={"18-50": 0.5})
+    pub_distributor = PubDistributor(
+        pubs, male_age_probabilities={"18-50": 0.5}, drags_household_probability=0.0
+    )
     cinemas = Cinemas([Cinema()])
     cinema_distributor = CinemaDistributor(
-        cinemas, male_age_probabilities={"10-40": 0.2}
+        cinemas, male_age_probabilities={"10-40": 0.2}, drags_household_probability=1.0,
     )
     leisure = Leisure(leisure_distributors=[pub_distributor, cinema_distributor])
     # leisure = Leisure.from_geography(["pubs", "cinemas"], geography)
@@ -59,3 +62,21 @@ def test__probability_of_leisure(leisure):
             break
     assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0, rtol=0.1)
     assert np.isclose(times_goes_pub / times_goes_cinema, 0.5 / 0.2, atol=0, rtol=0.1)
+
+
+def test__person_drags_household(leisure):
+    person1 = Person(sex="m", age=26)
+    person2 = Person(sex="f", age=26)
+    person3 = Person(sex="m", age=27)
+    household = Household()
+    household.add(person1)
+    person1.housemates = [person2, person3]
+    social_venue = leisure.leisure_distributors[1].social_venues[0]
+    social_venue.add(person1)
+    leisure.send_household_with_person_if_necessary(
+        person=person1,
+        social_venue=social_venue,
+        leisure_distributor=leisure.leisure_distributors[1],
+    )
+    for person in [person1, person2, person3]:
+        assert person.subgroups[person.ActivityType.dynamic] == social_venue.subgroups[0]
