@@ -27,7 +27,7 @@ def save_population_to_hdf5(
     n_people = len(population.people)
     dt = h5py.vlen_dtype(np.dtype("int32"))
     n_chunks = int(np.ceil(n_people / chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         people_dset = f.create_group("population")
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -99,36 +99,36 @@ def save_population_to_hdf5(
 
             if chunk == 0:
                 people_dset.attrs["n_people"] = n_people
-                people_dset.create_dataset("id", data=ids, maxshape=(n_people,))
-                people_dset.create_dataset("age", data=ages, maxshape=(n_people,))
-                people_dset.create_dataset("sex", data=sexes, maxshape=(n_people,))
+                people_dset.create_dataset("id", data=ids, maxshape=(None,))
+                people_dset.create_dataset("age", data=ages, maxshape=(None,))
+                people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
                 people_dset.create_dataset(
-                    "home_city", data=home_city, maxshape=(n_people,)
+                    "home_city", data=home_city, maxshape=(None,)
                 )
                 people_dset.create_dataset(
-                    "mode_of_transport", data=mode_of_transport, maxshape=(n_people,),
+                    "mode_of_transport", data=mode_of_transport, maxshape=(None,),
                 )
                 people_dset.create_dataset(
-                    "ethnicity", data=ethns, maxshape=(n_people,)
+                    "ethnicity", data=ethns, maxshape=(None,)
                 )
                 people_dset.create_dataset(
                     "group_ids",
                     data=group_ids,
-                    maxshape=(n_people, group_ids.shape[1]),
+                    maxshape=(None, group_ids.shape[1]),
                 )
                 people_dset.create_dataset(
                     "group_specs",
                     data=group_specs,
-                    maxshape=(n_people, group_specs.shape[1]),
+                    maxshape=(None, group_specs.shape[1]),
                 )
                 people_dset.create_dataset(
                     "subgroup_types",
                     data=subgroup_types,
-                    maxshape=(n_people, subgroup_types.shape[1]),
+                    maxshape=(None, subgroup_types.shape[1]),
                 )
-                people_dset.create_dataset("area", data=areas, maxshape=(n_people,))
+                people_dset.create_dataset("area", data=areas, maxshape=(None,))
                 people_dset.create_dataset(
-                    "housemates", data=housemates, dtype=dt, maxshape=(n_people,),
+                    "housemates", data=housemates, dtype=dt, maxshape=(None,),
                 )
             else:
                 newshape = (people_dset["id"].shape[0] + ids.shape[0],)
