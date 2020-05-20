@@ -4,6 +4,14 @@ contact_matrices:
     beta: 1
     contacts: [[1.]]
     physical: [[0.]]
+  commute_unit:
+    beta: 1
+    contacts: [[1]]
+    physical: [[0.]]
+  commute_city_unit:
+    beta: 1
+    contacts: [[1]]
+    physical: [[0.]]
   hospital:
     contacts: [[5.00, 1., 1.], [10., 0., 0.], [5., 0., 0.]]
     physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
