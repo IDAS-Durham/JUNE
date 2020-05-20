@@ -88,7 +88,7 @@ class CinemaDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(cls, config_filename: str = default_config_filename):
+    def from_config(cls, cinemas: Cinemas, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(**config)
+        return cls(cinemas, **config)

@@ -4,15 +4,18 @@ from june.groups import Household
 
 from june.groups.leisure import (
     Leisure,
+    generate_leisure_for_world,
     Pub,
     Pubs,
     Cinemas,
     Cinema,
+    Groceries,
     PubDistributor,
     CinemaDistributor,
 )
 from june.demography.geography import Geography
-from june.demography import Person
+from june.demography import Person, Demography
+from june import World
 
 
 @fixture(name="geography")
@@ -52,16 +55,14 @@ def test__probability_of_leisure(leisure):
             if activity_distributor is None:
                 continue
             if activity_distributor.spec == "pub":
-                print("pub +1")
                 times_goes_pub += 1
             elif activity_distributor.spec == "cinema":
                 times_goes_cinema += 1
-                print("cinema +1")
             else:
                 raise ValueError
             times.append(counter)
             break
-    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0, rtol=0.1)
+    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0, rtol=0.25)
     assert np.isclose(times_goes_pub / times_goes_cinema, 0.5 / 0.2, atol=0, rtol=0.25)
 
 
@@ -80,4 +81,19 @@ def test__person_drags_household(leisure):
         leisure_distributor=leisure.leisure_distributors[1],
     )
     for person in [person1, person2, person3]:
-        assert person.subgroups[person.ActivityType.dynamic] == social_venue.subgroups[0]
+        assert (
+            person.subgroups[person.ActivityType.dynamic] == social_venue.subgroups[0]
+        )
+
+
+def test__generate_leisure_from_world():
+    geography = Geography.from_file({"msoa": ["E02000140"]})
+    demography = Demography.for_geography(geography)
+    world = World(geography, demography, include_households=False)
+    world.pubs = Pubs.for_geography(geography)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+    assert np.isclose(len(world.groceries), len(world.people) * 1/500, atol=0, rtol=0.1)
+    leisure = generate_leisure_for_world(
+        list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
+    )
