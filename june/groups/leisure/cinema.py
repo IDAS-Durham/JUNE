@@ -17,7 +17,7 @@ class Cinema(SocialVenue):
     Pubs are fun.
     """
 
-    def __init__(self, n_seats):
+    def __init__(self, n_seats=np.inf):
         super().__init__()
         self.max_size = n_seats
 
@@ -75,14 +75,16 @@ class CinemaDistributor(SocialVenueDistributor):
         neighbours_to_consider=5,
         maximum_distance=5,
         weekend_boost: float = 2.0,
+        drags_household_probability=0.5,
     ):
         super().__init__(
-            cinemas,
-            male_age_probabilities,
-            female_age_probabilities,
-            neighbours_to_consider,
-            maximum_distance,
-            weekend_boost,
+            social_venues=cinemas,
+            male_age_probabilities=male_age_probabilities,
+            female_age_probabilities=female_age_probabilities,
+            neighbours_to_consider=neighbours_to_consider,
+            maximum_distance=maximum_distance,
+            weekend_boost=weekend_boost,
+            drags_household_probability=drags_household_probability,
         )
 
     @classmethod

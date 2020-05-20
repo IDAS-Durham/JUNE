@@ -74,9 +74,10 @@ class Leisure:
         """
         person_residence = person.subgroups[person.ActivityType.residence].group
         if person_residence.spec == "care_home" or person_residence.communal:
-            return
-        if leisure_distributor.person_drags_household(person):
+            return False
+        if leisure_distributor.person_drags_household():
             for mate in person.housemates:
                 social_venue.add(mate) # ignores size checking
+            return True
 
 
