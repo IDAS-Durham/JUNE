@@ -385,10 +385,10 @@ class Simulator:
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
-        self.move_people_to_active_subgroups(activities)
 
         if 'commute' in activities:
             self.group_maker.distribute_people('commute')
+        self.move_people_to_active_subgroups(activities)
 
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
@@ -407,7 +407,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(f"Number of people active in {group.spec} = {n_active_in_group}")
+            print(f"Number of people active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):

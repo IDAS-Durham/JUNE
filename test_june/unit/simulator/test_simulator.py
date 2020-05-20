@@ -56,10 +56,10 @@ def test__apply_activity_hierarchy(sim):
 
 
 def test__activities_to_groups(sim):
-    activities = ["hospital", "primary_activity", "residence"]
+    activities = ["hospital", "commute", "primary_activity", "residence"]
     groups = sim.activities_to_groups(activities)
 
-    assert groups == ["hospitals", "schools", "companies", "households", "care_homes"]
+    assert groups == ["hospitals", "commuteunits", "commutecityunits", "schools", "companies", "households", "care_homes"]
 
 
 def test__clear_world(sim):
@@ -96,6 +96,16 @@ def test__move_people_to_primary_activity(sim):
         if person.primary_activity is not None:
             assert person in person.primary_activity.people
     sim.clear_world()
+
+def test__move_people_to_commute(sim):
+
+    sim.move_people_to_active_subgroups(["commute", "residence"])
+    sim.group_maker.distribute_people('commute')
+    for person in sim.world.people.members:
+        if person.commute is not None:
+            assert person in person.commute.people
+    sim.clear_world()
+
 
 
 def test__kid_at_home_is_supervised(sim, health_index):
