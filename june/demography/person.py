@@ -158,7 +158,7 @@ class Person:
         primary_activity = 1
         hospital = 2
         commute = 3
-        dynamic = 4
+        leisure = 4
         box = 5
 
     def __init__(
