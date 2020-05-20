@@ -8,7 +8,7 @@ from june.interaction import DefaultInteraction
 from june.infection import InfectionSelector, Infection
 from june.infection import Symptom_Tags, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries, Cinemas
 from june.simulator import Simulator
 from june import paths
 
@@ -18,7 +18,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
-    geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559"]})
+    geography = Geography.from_file({"msoa": ["E02001720", "E00088544", "E02002560", "E02002559"]})
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
@@ -26,6 +26,7 @@ def create_simulator():
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=True, include_commute=True)
+    world.cinemas = Cinemas.for_geography(geography)
     selector                          = InfectionSelector.from_file(constant_config)
     selector.recovery_rate            = 0.05
     selector.transmission_probability = 0.7
@@ -56,10 +57,10 @@ def test__apply_activity_hierarchy(sim):
 
 
 def test__activities_to_groups(sim):
-    activities = ["hospital", "primary_activity", "residence"]
+    activities = ["hospital", "commute", "primary_activity", "residence"]
     groups = sim.activities_to_groups(activities)
 
-    assert groups == ["hospitals", "schools", "companies", "households", "care_homes"]
+    assert groups == ["hospitals", "commuteunits", "commutecityunits", "schools", "companies", "households", "care_homes"]
 
 
 def test__clear_world(sim):
@@ -95,6 +96,28 @@ def test__move_people_to_primary_activity(sim):
     for person in sim.world.people.members:
         if person.primary_activity is not None:
             assert person in person.primary_activity.people
+    sim.clear_world()
+
+def test__move_people_to_commute(sim):
+    sim.group_maker.distribute_people('commute')
+    sim.move_people_to_active_subgroups(["commute", "residence"])
+    n_commuters = 0
+    for person in sim.world.people.members:
+        if person.commute is not None:
+            n_commuters += 1
+            assert person in person.commute.people
+    assert n_commuters > 0
+    sim.clear_world()
+
+def test__move_people_to_leisure(sim):
+    sim.group_maker.distribute_people('leisure')
+    sim.move_people_to_active_subgroups(["leisure", "residence"])
+    n_lazy = 0
+    for person in sim.world.people.members:
+        if person.dynamic is not None:
+            n_lazy  += 1
+            assert person in person.dynamic.people
+    assert n_lazy  > 0
     sim.clear_world()
 
 
