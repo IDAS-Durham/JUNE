@@ -61,9 +61,9 @@ def test__decide_person_goes_to_social_venue(social_venue_distributor):
     estimated_day_to_go_to_the_pub = 1 / 0.5
     estimated_day_to_go_to_the_pub_weekend = 1 / ( 2 * 0.5)
     rest = get_days_until_pub(person, dt, False, social_venue_distributor)
-    assert np.isclose(rest, estimated_day_to_go_to_the_pub, atol=0, rtol=0.1)
+    assert np.isclose(rest, estimated_day_to_go_to_the_pub, atol=0, rtol=0.2)
     rest = get_days_until_pub(person, dt, True, social_venue_distributor)
-    assert np.isclose(rest, estimated_day_to_go_to_the_pub_weekend, atol=0, rtol=0.1)
+    assert np.isclose(rest, estimated_day_to_go_to_the_pub_weekend, atol=0, rtol=0.2)
 
 
     person = Person(age=68, sex="m")
