@@ -1,7 +1,7 @@
 from itertools import count
 import random
 from enum import IntEnum
-from june.infection import Symptom_Tags
+from june.infection import SymptomTags
 
 
 
@@ -37,11 +37,11 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag in (Symptom_Tags.influenza, Symptom_Tags.pneumonia)
+        return self.tag in (SymptomTags.influenza, SymptomTags.pneumonia)
 
     @property
     def should_be_in_hospital(self) -> bool:
-        return self.tag in (Symptom_Tags.hospitalised, Symptom_Tags.intensive_care)
+        return self.tag in (SymptomTags.hospitalised, SymptomTags.intensive_care)
 
     @property
     def infected_at_home(self) -> bool:
@@ -49,7 +49,7 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == Symptom_Tags.dead
+        return self.tag == SymptomTags.dead
 
     def update_health_status(self, time, delta_time):
         if self.infected:

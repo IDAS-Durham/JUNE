@@ -1,4 +1,4 @@
-from june.infection.symptoms import Symptoms, Symptom_Tags
+from june.infection.symptoms import Symptoms, SymptomTags
 from june.infection.trajectory_maker import TrajectoryMaker
 import numpy as np
 
@@ -29,10 +29,10 @@ class SymptomsTrajectory(Symptoms):
         
     def max_tag(self,severity):
         index = np.searchsorted(self.health_index, self.max_severity)
-        return Symptom_Tags(index+2)
+        return SymptomTags(index + 2)
         
     def update_severity_from_delta_time(self, delta_time):
-        self.tag = Symptom_Tags.healthy
+        self.tag = SymptomTags.healthy
         if self.trajectory==[]:
             raise MissingTrajectoryMakerError(
                 f"SymptomsTrajectory has no trajectory"
