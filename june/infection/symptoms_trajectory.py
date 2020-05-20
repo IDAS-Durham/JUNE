@@ -1,5 +1,6 @@
 import numpy as np
 
+from june.infection.trajectory_maker import TrajectoryMaker
 from june.infection.symptoms import Symptoms, SymptomTags
 
 
@@ -18,18 +19,12 @@ class MissingPatientError(BaseException):
 class SymptomsTrajectory(Symptoms):
     def __init__(self, health_index=None):
         super().__init__(health_index=health_index)
+        self.make_trajectory()
 
-    def make_trajectory(self, trajectory_maker, patient):
+    def make_trajectory(self):
+        trajectory_maker = TrajectoryMaker()
         maxtag = self.max_tag()
-        if trajectory_maker == None:
-            raise MissingTrajectoryMakerError(
-                f"SymptomsTrajectory instantiated without patient"
-            )
-        if patient == None:
-            raise MissingPatientError(
-                f"SymptomsTrajectory instantiated without patient"
-            )
-        self.trajectory = trajectory_maker[maxtag, patient]
+        self.trajectory = trajectory_maker[maxtag]
 
     def max_tag(self):
         index = np.searchsorted(self.health_index, self.max_severity)
