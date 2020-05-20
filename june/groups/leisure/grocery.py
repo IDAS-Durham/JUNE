@@ -6,13 +6,14 @@ from typing import List
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
-from june.geography import SuperArea
+from june.demography.geography import SuperArea
 
 default_config_filename = configs_path / "defaults/groups/leisure/groceries.yaml"
 
 
 class Grocery(SocialVenue):
-    def __init__(self):
+    def __init__(self, max_size=100):
+        self.max_size = max_size
         super().__init__()
 
 
@@ -21,7 +22,7 @@ class Groceries(SocialVenues):
         super().__init__(groceries)
 
     @classmethod
-    def for_super_areas(cls, super_areas: List[SuperArea], venues_per_super_area=1):
+    def for_super_areas(cls, super_areas: List[SuperArea], venues_per_capita=1/760, max_size=100):
         """
         Generates social venues in the given super areas.
 
@@ -34,12 +35,15 @@ class Groceries(SocialVenues):
         """
         groceries = []
         for super_area in super_areas:
-            for _ in range(venues_per_super_area):
-                grocery = Grocery()
-                grocery.super_area = super_area
-                super_area.groceries.append(grocery)
+            area_population = len(super_area.people)
+            print(area_population)
+            for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
+                grocery = Grocery(max_size)
                 groceries.append(grocery)
+        print("gorceries")
+        print(groceries)
         return cls(groceries)
+
 
 class GroceryDistributor(SocialVenueDistributor):
     def __init__(
@@ -48,19 +52,21 @@ class GroceryDistributor(SocialVenueDistributor):
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
         weekend_boost: float = 2.0,
+        drags_household_probability = 0.5
     ):
         super().__init__(
-            groceries,
-            male_age_probabilities,
-            female_age_probabilities,
-            weekend_boost,
+            social_venues=groceries,
+            male_age_probabilities=male_age_probabilities,
+            female_age_probabilities=female_age_probabilities,
+            weekend_boost=weekend_boost,
+            drags_household_probability=drags_household_probability
         )
 
     @classmethod
-    def from_config(cls, config_filename: str = default_config_filename):
+    def from_config(cls, groceries, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(**config)
+        return cls(groceries, **config)
 
     def add_person_to_social_venue(self, person):
         """

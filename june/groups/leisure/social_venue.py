@@ -101,7 +101,7 @@ class SocialVenues(Supergroup):
         return cls(social_venues)
 
     @classmethod
-    def for_super_areas(cls, super_areas: List[SuperArea], venues_per_super_area=1):
+    def for_super_areas(cls, super_areas: List[SuperArea], venues_per_super_area=1, venues_per_capita =1):
         """
         Generates social venues in the given super areas.
 
@@ -112,12 +112,28 @@ class SocialVenues(Supergroup):
         venues_per_super_area
             how many venus per super_area to generate
         """
+        if venues_per_super_area is not None and venues_per_capita is not None:
+            raise SocialVenueError(
+                "Please specify only one of venues_per_capita or venues_per_area."
+            )
         social_venues = []
-        for super_area in super_areas:
-            for _ in range(venues_per_super_area):
-                sv = SocialVenue()
-                sv.super_area = super_area
-                social_venues.append(sv)
+        if venues_per_super_area is not None:
+            for area in super_areas:
+                for _ in range(venues_per_super_area):
+                    sv = SocialVenue()
+                    sv.area = area
+                    social_venues.append(sv)
+        elif venues_per_capita is not None:
+            for area in super_areas:
+                area_population = len(area.people)
+                for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
+                    sv = SocialVenue()
+                    sv.area = area
+                    social_venues.append(sv)
+        else:
+            raise SocialVenueError(
+                "Specify one of venues_per_capita or venues_per_area"
+            )
         return cls(social_venues)
 
     def make_tree(self):
