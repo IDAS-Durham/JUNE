@@ -42,25 +42,24 @@ class TestSymptomsTrajectory:
         np.testing.assert_allclose(frequencies[4] / N_samples, health_index[4] - health_index[3],
                                    atol=0.05)
 
-    def test__construct__trajectory__from__maxseverity(self, trajectories,
-                                                       symptoms_trajectories):
+    def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
-        trajectory = trajectories[symptoms_trajectories.make_tag()]
-        assert (trajectory ==
-                [[0.0, sym.SymptomTags.infected],
-                 [5.1, sym.SymptomTags.influenza],
-                 [7.1, sym.SymptomTags.hospitalised],
-                 [9.1, sym.SymptomTags.intensive_care],
-                 [19.1, sym.SymptomTags.dead]])
+        symptoms_trajectories.make_trajectory()
+        assert bool(symptoms_trajectories.trajectory ==
+                    [[0.0, sym.SymptomTags.infected],
+                     [5.1, sym.SymptomTags.influenza],
+                     [7.1, sym.SymptomTags.hospitalised],
+                     [9.1, sym.SymptomTags.intensive_care],
+                     [19.1, sym.SymptomTags.dead]]) is True
         symptoms_trajectories.max_severity = 0.45
-        trajectory = trajectories[symptoms_trajectories.make_tag()]
-        assert (trajectory ==
-                [[0.0, sym.SymptomTags.infected],
-                 [5.1, sym.SymptomTags.influenza],
-                 [7.1, sym.SymptomTags.hospitalised],
-                 [9.1, sym.SymptomTags.intensive_care],
-                 [29.1, sym.SymptomTags.hospitalised],
-                 [49.1, sym.SymptomTags.recovered]])
+        symptoms_trajectories.make_trajectory()
+        assert bool(symptoms_trajectories.trajectory ==
+                    [[0.0, sym.SymptomTags.infected],
+                     [5.1, sym.SymptomTags.influenza],
+                     [7.1, sym.SymptomTags.hospitalised],
+                     [9.1, sym.SymptomTags.intensive_care],
+                     [29.1, sym.SymptomTags.hospitalised],
+                     [49.1, sym.SymptomTags.recovered]]) is True
 
     def test__symptoms__progression(self):
         selector = infect.InfectionSelector()
@@ -70,8 +69,8 @@ class TestSymptomsTrajectory:
         infection.symptoms.max_severity = fixed_severity
         max_tag = infection.symptoms.max_tag()
         assert max_tag == sym.SymptomTags.hospitalised
-        trajectory = selector.trajectory_maker[max_tag]
-        assert (trajectory ==
+        infection.symptoms.trajectory = selector.trajectory_maker[max_tag]
+        assert (infection.symptoms.trajectory ==
                 [[0.0, sym.SymptomTags.infected],
                  [5.1, sym.SymptomTags.influenza],
                  [7.1, sym.SymptomTags.hospitalised],
