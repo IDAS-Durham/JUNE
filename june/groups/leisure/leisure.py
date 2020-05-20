@@ -2,12 +2,45 @@ import numpy as np
 from numba import jit
 from typing import List
 from june.demography import Person
-from june.groups.leisure import SocialVenueDistributor
+from june.demography.geography import Geography
+from june.groups.leisure import (
+    SocialVenueDistributor,
+    PubDistributor,
+    GroceryDistributor,
+    CinemaDistributor,
+)
+from june.groups.leisure import Pubs, Cinemas, Groceries
 
 
 @jit(nopython=True)
 def roll_poisson_dice(poisson_parameter, delta_time):
     return np.random.rand() < (1.0 - np.exp(-poisson_parameter * delta_time))
+
+
+def generate_leisure_for_world(list_of_leisure_groups, world):
+    """
+    Generates an instance of the leisure class for the specified geography and leisure groups.
+
+    Parameters
+    ----------
+    list_of_leisure_groups
+        list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
+    """
+    leisure_distributors = []
+    if "pubs" in list_of_leisure_groups:
+        if not hasattr(world, "pubs"):
+            raise ValueError("Your world does not have pubs.")
+        leisure_distributors.append(PubDistributor.from_config(world.pubs))
+    if "cinemas" in list_of_leisure_groups:
+        if not hasattr(world, "cinemas"):
+            raise ValueError("Your world does not have cinemas.")
+        leisure_distributors.append(CinemaDistributor.from_config(world.cinemas))
+    if "groceries" in list_of_leisure_groups:
+        if not hasattr(world, "groceries"):
+            raise ValueError("Your world does not have groceries.")
+        leisure_distributors.append(GroceryDistributor.from_config(world.groceries))
+
+    return Leisure(leisure_distributors)
 
 
 class Leisure:

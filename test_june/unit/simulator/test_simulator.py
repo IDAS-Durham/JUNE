@@ -8,7 +8,8 @@ from june.interaction import DefaultInteraction
 from june.infection import InfectionSelector, Infection
 from june.infection import Symptom_Tags, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries, Cinemas
+from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups.leisure import Cinemas, Pubs, Groceries
 from june.simulator import Simulator
 from june import paths
 
@@ -16,23 +17,31 @@ from june import paths
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
+
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
-    geography = Geography.from_file({"msoa": ["E02001720", "E00088544", "E02002560", "E02002559"]})
+    geography = Geography.from_file(
+        {"msoa": ["E02001720", "E00088544", "E02002560", "E02002559"]}
+    )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
+    geography.cinemas = Cinemas.for_geography(geography)
+    geography.pubs = Pubs.for_geography(geography)
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=True, include_commute=True)
-    selector                          = InfectionSelector.from_file(constant_config)
-    selector.recovery_rate            = 0.05
+    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+    selector = InfectionSelector.from_file(constant_config)
+    selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
-    interaction            = DefaultInteraction.from_file()
-    interaction.selector   = selector
-    return Simulator.from_file(world, interaction, selector,
-            config_filename = test_config)
+    interaction = DefaultInteraction.from_file()
+    interaction.selector = selector
+    return Simulator.from_file(
+        world, interaction, selector, config_filename=test_config
+    )
+
 
 @pytest.fixture(name="health_index")
 def create_health_index():
@@ -56,10 +65,21 @@ def test__apply_activity_hierarchy(sim):
 
 
 def test__activities_to_groups(sim):
-    activities = ["hospital", "commute", "primary_activity", "residence"]
+    activities = ["hospital", "commute", "primary_activity", "leisure", "residence"]
     groups = sim.activities_to_groups(activities)
 
-    assert groups == ["hospitals", "commuteunits", "commutecityunits", "schools", "companies", "households", "care_homes"]
+    assert groups == [
+        "hospitals",
+        "commuteunits",
+        "commutecityunits",
+        "schools",
+        "companies",
+        "cinemas",
+        "pubs",
+        "groceries",
+        "households",
+        "care_homes",
+    ]
 
 
 def test__clear_world(sim):
@@ -97,8 +117,9 @@ def test__move_people_to_primary_activity(sim):
             assert person in person.primary_activity.people
     sim.clear_world()
 
+
 def test__move_people_to_commute(sim):
-    sim.group_maker.distribute_people('commute')
+    sim.group_maker.distribute_people("commute")
     sim.move_people_to_active_subgroups(["commute", "residence"])
     n_commuters = 0
     for person in sim.world.people.members:
@@ -108,15 +129,16 @@ def test__move_people_to_commute(sim):
     assert n_commuters > 0
     sim.clear_world()
 
+
 def test__move_people_to_leisure(sim):
-    sim.group_maker.distribute_people('leisure')
+    sim.group_maker.distribute_people("leisure")
     sim.move_people_to_active_subgroups(["leisure", "residence"])
     n_lazy = 0
     for person in sim.world.people.members:
         if person.dynamic is not None:
-            n_lazy  += 1
+            n_lazy += 1
             assert person in person.dynamic.people
-    assert n_lazy  > 0
+    assert n_lazy > 0
     sim.clear_world()
 
 
@@ -149,7 +171,7 @@ def test__hospitalise_the_sick(sim):
     sim.selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
     assert dummy_person.health_information.should_be_in_hospital
-    sim.update_health_status(0., 0.)
+    sim.update_health_status(0.0, 0.0)
     assert dummy_person.hospital is not None
     sim.move_people_to_active_subgroups(["hospital", "residence"])
     assert dummy_person in dummy_person.hospital.people
@@ -159,16 +181,17 @@ def test__hospitalise_the_sick(sim):
 def test__move_people_from_hospital_to_icu(sim):
     dummy_person = sim.world.people.members[0]
     dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.intensive_care
-    sim.hospitalise_the_sick(dummy_person, 'hospitalised')
+    sim.hospitalise_the_sick(dummy_person, "hospitalised")
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
     assert dummy_person in hospital[hospital.SubgroupType.icu_patients]
     sim.clear_world()
 
+
 def test__move_people_from_icu_to_hospital(sim):
     dummy_person = sim.world.people.members[0]
     dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
-    sim.hospitalise_the_sick(dummy_person, 'intensive care')
+    sim.hospitalise_the_sick(dummy_person, "intensive care")
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
     assert dummy_person in hospital[hospital.SubgroupType.patients]
@@ -177,7 +200,7 @@ def test__move_people_from_icu_to_hospital(sim):
 
 def test__bury_the_dead(sim):
     dummy_person = sim.world.people.members[0]
-    sim.bury_the_dead(dummy_person, 0.)
+    sim.bury_the_dead(dummy_person, 0.0)
 
     assert dummy_person in sim.world.cemeteries.members[0].people
     assert dummy_person.health_information.dead

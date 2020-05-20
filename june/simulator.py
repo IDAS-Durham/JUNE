@@ -8,7 +8,8 @@ import numpy as np
 import yaml
 
 from june.demography import Person
-from june.groups import Group, GroupMaker
+from june.groups import Group
+from june.groups.leisure import leisure
 from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
@@ -34,11 +35,11 @@ class Simulator:
         world: World,
         interaction: Interaction,
         selector: InfectionSelector,
-        activities_to_group: dict,
+        activity_to_groups: dict,
         time_config: dict,
-        min_age_alone: int = 15,
+        min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        logger_path: str = "results",
+        save_path: str = "results",
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -72,20 +73,19 @@ class Simulator:
         self.activity_to_group_dict = {
             "box": ["boxes"],
             "hospital": ["hospitals"],
-            "primary_activity": activities_to_groups["primary_activity"],
-            "leisure": activities_to_groups["leisure"],
-            "residence": activities_to_groups["residence"],
-            "commute": activities_to_group["commute"],
+            "primary_activity": activity_to_groups["primary_activity"],
+            "leisure": activity_to_groups["leisure"],
+            "residence": activity_to_groups["residence"],
+            "commute": activity_to_groups["commute"],
         }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
-        #TODO: MAKE SURE THAT CAN USE ONLY COMMUTEUNITS/COMMUTECITYUNITS
+        # TODO: MAKE SURE THAT CAN USE ONLY COMMUTEUNITS/COMMUTECITYUNITS
         if "commute" in self.all_activities:
-            self.initialize_commute(activities_to_groups["commute"])
+            self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
-            self.initialize_leisure(activities_to_groups["leisure"])
+            self.initialize_leisure(activity_to_groups["leisure"])
 
-    #TODO: NOW NEEDS TO BE CHANGED ACCORDINGLY
     @classmethod
     def from_file(
         cls,
@@ -109,28 +109,20 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Simulator(world, interaction, selector, config)
+        activity_to_groups = config["activity_to_groups"]
+        time_config = config["time"]
+        return Simulator(
+            world, interaction, selector, activity_to_groups, time_config
+        )
 
     def get_all_activities(self, time_config):
-        # TODO: make more reasonable
-        return set(
-            chain(
-                *(
-                    [
-                        activity
-                        for activity in time_config["step_activities"][
-                            "weekday"
-                        ].values()
-                    ]
-                    + [
-                        activity
-                        for activity in time_config["step_activities"][
-                            "weekend"
-                        ].values()
-                    ]
-                )
-            )
-        )
+        weekday_activities = [
+            activity for activity in time_config["step_activities"]["weekday"].values()
+        ]
+        weekend_activities = [
+            activity for activity in time_config["step_activities"]["weekend"].values()
+        ]
+        return set(chain(*(weekday_activities + weekend_activities)))
 
     def initialize_commute(self, commute_options):
         if "commuteunits" in commute_options:
@@ -141,33 +133,39 @@ class Simulator:
             self.commute_city_unit_distributor = CommuteCityUnitDistributor(
                 self.world.commutecities.members
             )
-        self.group_maker = GroupMaker(self)
+    def distribute_commuters(self):
+        if hasattr(self, commute_unit_distributor): 
+            self.commute_unit_distributor.distribute_people()
+        if hasattr(self, commute_city_unit_distributor): 
+            self.commute_city_unit_distributor.distribute_people()
 
-    def initialize_leisure(self, leisure=["cinemas", "pubs", "groceries"]):
-        pass
+    def initialize_leisure(self, leisure_options):
+        leisure.generate_leisure_for_world(
+            list_of_leisure_groups=leisure_options, world=self.world
+        )
 
-    def check_inputs(self, config: dict):
+    def check_inputs(self, time_config: dict):
         """
         Check that the iput time configuration is correct, i.e., activities are among allowed activities
         and days have 24 hours.
 
         Parameters
         ----------
-        config
+        time_config:
             dictionary with time steps configuration
         """
 
         # Sadly, days only have 24 hours
-        assert sum(config["step_duration"]["weekday"].values()) == 24
+        assert sum(time_config["step_duration"]["weekday"].values()) == 24
         # even during the weekend :(
-        assert sum(config["step_duration"]["weekend"].values()) == 24
+        assert sum(time_config["step_duration"]["weekend"].values()) == 24
 
-        # Check that all groups given in config file are in the valid group hierarchy
+        # Check that all groups given in time_config file are in the valid group hierarchy
         all_groups = self.activity_hierarchy
-        for step, activities in config["step_activities"]["weekday"].items():
+        for step, activities in time_config["step_activities"]["weekday"].items():
             assert all(group in all_groups for group in activities)
 
-        for step, activities in config["step_activities"]["weekend"].items():
+        for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
@@ -399,9 +397,7 @@ class Simulator:
             return
 
         if "commute" in activities:
-            self.commute_unit_distributor.distribute_people()
-            self.commute_city_unit_distributor.distribute_people()
-
+            self.distribute_commuters()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
