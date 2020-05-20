@@ -14,6 +14,7 @@ class Leisure:
     """
     Class to manage all possible activites that happen during leisure time.
     """
+
     def __init__(self, leisure_distributors: List[SocialVenueDistributor]):
         """
         Parameters
@@ -66,7 +67,9 @@ class Leisure:
         social_venue.add(person)
         return social_venue
 
-    def send_household_with_person_if_necessary(self, person, leisure_distributor, social_venue):
+    def send_household_with_person_if_necessary(
+        self, person, leisure_distributor, social_venue
+    ):
         """
         When we know that the person does an activity in the social venue X,
         then we ask X whether the person needs to drag the household with 
@@ -77,7 +80,44 @@ class Leisure:
             return False
         if leisure_distributor.person_drags_household():
             for mate in person.housemates:
-                social_venue.add(mate) # ignores size checking
+                social_venue.add(mate)  # ignores size checking
             return True
 
-
+    def get_subgroup_for_person_and_housemates(
+        self, person: Person, delta_time: float, is_weekend: bool
+    ):
+        """
+        Main function of the Leisure class. For every possible activity a person can do,
+        we chech the Poisson parameter lambda = probability / day * deltat of that activty 
+        taking place. We then sum up the Poisson parameters to decide whether a person
+        does any activity at all. The relative weight of the Poisson parameters gives then
+        the specific activity a person does. 
+        If a person ends up going to a social venue, we do a second check to see if his/her
+        entire household accompanies him/her.
+        The social venue subgroups are attached to the involved people, but they are not 
+        added to the subgroups, since it is possible they change their plans if a policy is in
+        place or they have other responsibilities.
+        The function returns None if no activity takes place.
+        Parameters
+        ----------
+        person
+            an instance of person
+        delta_time
+            the time someone has for leisure
+        is_weekend
+            whether it is a weekend or not
+        """
+        social_venue_distributor = self.get_leisure_distributor_for_person(
+            person, delta_time, is_weekend
+        )
+        if social_venue_distributor is None:
+            return None
+        social_venue = self.assign_social_venue_to_person(
+            person=person, leisure_distributor=social_venue_distributor
+        )
+        self.send_household_with_person_if_necessary(
+            person=person,
+            leisure_distributor=social_venue_distributor,
+            social_venue=social_venue,
+        )
+        return social_venue

@@ -25,6 +25,7 @@ class SocialVenue(Group):
             person,
             activity_type=person.ActivityType.dynamic,
             subgroup_type=self.SubgroupType.default,
+            dynamic=True
         )
 
 

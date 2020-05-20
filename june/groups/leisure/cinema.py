@@ -34,7 +34,7 @@ class Cinemas(SocialVenues):
         max_distance_to_area=5,
     ):
         cinemas_df = pd.read_csv(coordinates_filename)
-        coordinates = cinemas_df.loc[:, ["Latitude", "Longitude"]].values
+        coordinates = cinemas_df.loc[:, ["latitude", "longitude"]].values
         n_seats = cinemas_df.loc[:, ["seats"]].values
         return cls.from_coordinates(
             coordinates,
