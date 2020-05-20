@@ -144,13 +144,3 @@ class TestRegionalGenerator:
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
-
-
-class TestCommuteGenerator:
-    def test__load_from_file__uses_correct_values_from_configs(self):
-        commute_gen = c.CommuteGenerator.from_file(test_data_filename)
-
-        assert isinstance(commute_gen, c.CommuteGenerator)
-
-        regional_generators = commute_gen.regional_generators
-        assert len(regional_generators) == 181408
