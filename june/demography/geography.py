@@ -1,4 +1,5 @@
-import logging
+import logging, os
+from pathlib import Path
 from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
@@ -9,18 +10,18 @@ import h5py
 from june import paths
 from june.demography.person import Person
 
-
+default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
 default_hierarchy_filename = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    default_base_path / "data/processed/geographical_data/oa_msoa_region.csv"
 )
 default_area_coord_filename = (
-    paths.data_path / "processed/geographical_data/oa_coordinates.csv"
+    default_base_path / "data/processed/geographical_data/oa_coordinates.csv"
 )
 default_superarea_coord_filename = (
-    paths.data_path / "processed/geographical_data/msoa_coordinates.csv"
+    default_base_path / "data/processed/geographical_data/msoa_coordinates.csv"
 )
 default_logging_config_filename = (
-    paths.configs_path / "config_world_creation_logger.yaml"
+    default_base_path / "configs/config_world_creation_logger.yaml"
 )
 
 logger = logging.getLogger(__name__)

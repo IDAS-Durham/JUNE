@@ -6,20 +6,24 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
+from june import paths
 from june.demography.geography import Geography, Area
 from june.demography import Person
 from june.groups.company import Company, Companies
 
 
-default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data/processed/census_data/company_data/"
+default_data_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / "data/"
 default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
 default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
 
 
 @pytest.fixture(name="super_area_companies", scope="module")
 def create_geography():
-    g = Geography.from_file(filter_key={"msoa" : ["E02002559"]})
+    g = Geography.from_file(
+        filter_key={"msoa" : ["E02002559"]},
+        #size_nr_file = default_size_nr_file,
+        #sector_nr_per_msoa_file = default_sector_nr_per_msoa_file,
+    )
     return g.super_areas.members[0]
 
 @pytest.fixture(name="person")
@@ -48,7 +52,11 @@ class TestCompany:
 
     def test__person_is_employed(self, person, company):
         company.add(person)
-        assert person.subgroups[person.ActivityType.primary_activity] == company.subgroups[Company.SubgroupType.workers]
+        persons_primary_activity = person.subgroups[
+            person.ActivityType.primary_activity
+        ]
+        company_workers = company.subgroups[Company.SubgroupType.workers]
+        assert persons_primary_activity == company_workers
 
 
 @pytest.fixture(name="companies_example")
