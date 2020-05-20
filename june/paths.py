@@ -13,7 +13,7 @@ project_directory = Path(
 
 working_directory = Path(
     os.getcwd()
-)
+).parent
 
 
 def find_default(name: str) -> Path:
