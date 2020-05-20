@@ -6,10 +6,10 @@ import numpy as np
 import pytest
 import yaml
 
-from june import paths
 from june.demography import Demography, Population
+from june.demography.geography import Geography
+from june import paths
 from june.distributors import WorkerDistributor, load_workflow_df, load_sex_per_sector
-from june.geography import Geography
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent
 default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
@@ -85,7 +85,7 @@ class TestInitialization:
             worker_super_areas: list,
     ):
         WorkerDistributor.from_file(area_names = worker_super_areas)
-    
+
 
     def test__distributor_from_geography(
             self,
@@ -115,7 +115,7 @@ class TestDistribution:
         work_super_area_name = list(np.unique(work_super_area_name))
         case.assertCountEqual(work_super_area_name, worker_super_areas)
 
-    
+
     def test__workers_that_stay_home(
             self,
             worker_config: dict,
@@ -151,4 +151,4 @@ class TestDistribution:
            sector_worker_nr = len(idx)
            p_sub_sector = p_sub_sectors[idx]
            sub_sector_worker_nr = len(p_sub_sector[p_sub_sector != None])
-           print("------>", sector_worker_nr, sub_sector_worker_nr) 
+           print("------>", sector_worker_nr, sub_sector_worker_nr)
