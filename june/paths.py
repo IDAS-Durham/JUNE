@@ -7,10 +7,33 @@ logger = logging.getLogger(
     __name__
 )
 
-directory = Path(
-    # os.path.abspath(__file__)
+project_directory = Path(
+    os.path.abspath(__file__)
+).parent.parent
+
+working_directory = Path(
     os.getcwd()
-)  # .parent
+)
+
+
+def find_default(name: str) -> Path:
+    """
+
+
+    Parameters
+    ----------
+    name
+
+    Returns
+    -------
+
+    """
+    cwd_default = working_directory / name
+    if os.path.exists(
+            cwd_default
+    ):
+        return cwd_default
+    return project_directory / name
 
 
 def path_for_name(name: str) -> Path:
@@ -34,14 +57,19 @@ def path_for_name(name: str) -> Path:
     """
     flag = f"--{name}"
     try:
-        path = argv[argv.index(flag) + 1]
+        path = Path(argv[argv.index(flag) + 1])
     except (IndexError, ValueError):
-        path = str(directory.parent / name)
+        path = find_default(name)
         logger.warning(
             f"No {flag} argument given - defaulting to:\n{path}"
         )
 
-    return Path(path)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"No such folder {path}"
+        )
+
+    return path
 
 
 data_path = path_for_name("data")
