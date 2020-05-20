@@ -407,7 +407,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            print(f"Number of people active in {group.spec} = {n_active_in_group}")
+            sim_logger.info(f"Number of people active in {group.spec} = {n_active_in_group}")
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
