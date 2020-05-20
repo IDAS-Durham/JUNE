@@ -219,7 +219,7 @@ class Simulator:
         """
         activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
-            if activity = 'leisure':
+            if activity == 'leisure':
                 subgroup = self.world.leisure.get_subgroup_for_person_and_housemates(person, 
                         self.timer.duration, 
                         self.timer.is_weekend) 
