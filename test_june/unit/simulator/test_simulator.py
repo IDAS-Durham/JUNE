@@ -26,7 +26,6 @@ def create_simulator():
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=True, include_commute=True)
-    world.cinemas = Cinemas.for_geography(geography)
     selector                          = InfectionSelector.from_file(constant_config)
     selector.recovery_rate            = 0.05
     selector.transmission_probability = 0.7
