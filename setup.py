@@ -31,6 +31,7 @@ setup(
                   'june.distributors',
                   'june.groups',
                   'june.groups.group',
+                  'june.groups.leisure',
                   'june.groups.commute',
                   'june.interaction',
                   'june.box',
