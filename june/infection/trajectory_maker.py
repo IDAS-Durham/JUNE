@@ -53,8 +53,10 @@ class Stage:
             self.variation_type is other.variation_type
         ])
 
-    @property
-    def time(self):
+    def generate_time(self) -> float:
+        """
+        How long does this stage take for a particular patient?
+        """
         return self.variation_type.time_for_stage(
             self
         )
@@ -62,13 +64,33 @@ class Stage:
 
 class Trajectory:
     def __init__(self, *stages):
+        """
+        Generate trajectories of a particular kind.
+
+        This defines how a given person moves through a series of symptoms.
+
+        Parameters
+        ----------
+        stages
+            A list of stages through which the person progresses
+        """
         self.stages = stages
 
-    def create_trajectory(self):
+    def generate_trajectory(self) -> List[
+        Tuple[
+            float,
+            SymptomTags
+        ]
+    ]:
+        """
+        Generate a trajectory for a person. This is a list of tuples
+        describing what symptoms the person should display at a given
+        time.
+        """
         trajectory = list()
         cumulative = 0.
         for stage in self.stages:
-            time = stage.time
+            time = stage.generate_time()
             trajectory.append((
                 cumulative,
                 stage.symptoms_tag
@@ -91,6 +113,11 @@ class TrajectoryMaker:
     __instance = None
 
     def __init__(self):
+        """
+        Trajectories and their stages should be parsed from configuration. I've
+        removed params for now as they weren't being used but it will be trivial
+        to reintroduce them when we are ready for configurable trajectories.
+        """
         self.incubation_info = Stage(
             symptoms_tag=SymptomTags.infected,
             completion_time=5.1
@@ -183,6 +210,14 @@ class TrajectoryMaker:
 
     @classmethod
     def from_file(cls) -> "TrajectoryMaker":
+        """
+        Currently this doesn't do what it says it does.
+
+        By setting an instance on the class we can make the trajectory maker
+        something like a singleton. However, if it were being loaded from
+        configurations we'd need to be careful as this could give unexpected
+        effects.
+        """
         if cls.__instance is None:
             cls.__instance = cls()
         return cls.__instance
@@ -194,4 +229,25 @@ class TrajectoryMaker:
         float,
         SymptomTags
     ]]:
-        return self.trajectories[tag].create_trajectory()
+        """
+        Generate a trajectory from a tag.
+
+        It might be better to have this return the Trajectory class
+        rather than generating the trajectory itself. I feel the getitem
+        syntax disguises the fact that something new is being created.
+
+        I've removed the person (patient) argument because it was not
+        being used. It can be passed to the generate_trajectory class.
+
+        Parameters
+        ----------
+        tag
+            A tag describing the symptoms being experienced by a
+            patient.
+
+        Returns
+        -------
+        A list describing the symptoms experienced by the patient
+        at given times.
+        """
+        return self.trajectories[tag].generate_trajectory()
