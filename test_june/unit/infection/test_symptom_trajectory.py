@@ -43,22 +43,22 @@ class TestSymptomsTrajectory:
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
         symptoms_trajectories.update_trajectory()
-        assert list(symptoms_trajectories.trajectory) == [
-            [0.0, sym.SymptomTags.infected],
-            [5.1, sym.SymptomTags.influenza],
-            [7.1, sym.SymptomTags.hospitalised],
-            [9.1, sym.SymptomTags.intensive_care],
-            [19.1, sym.SymptomTags.dead]
+        assert symptoms_trajectories.trajectory == [
+            (0.0, sym.SymptomTags.infected),
+            (5.1, sym.SymptomTags.influenza),
+            (7.1, sym.SymptomTags.hospitalised),
+            (9.1, sym.SymptomTags.intensive_care),
+            (19.1, sym.SymptomTags.dead)
         ]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
-        assert list(symptoms_trajectories.trajectory) == [
-            [0.0, sym.SymptomTags.infected],
-            [5.1, sym.SymptomTags.influenza],
-            [7.1, sym.SymptomTags.hospitalised],
-            [9.1, sym.SymptomTags.intensive_care],
-            [29.1, sym.SymptomTags.hospitalised],
-            [49.1, sym.SymptomTags.recovered]
+        assert symptoms_trajectories.trajectory == [
+            (0.0, sym.SymptomTags.infected),
+            (5.1, sym.SymptomTags.influenza),
+            (7.1, sym.SymptomTags.hospitalised),
+            (9.1, sym.SymptomTags.intensive_care),
+            (29.1, sym.SymptomTags.hospitalised),
+            (49.1, sym.SymptomTags.recovered)
         ]
 
     def test__symptoms__progression(self):
@@ -70,11 +70,11 @@ class TestSymptomsTrajectory:
         max_tag = infection.symptoms.max_tag()
         assert max_tag == sym.SymptomTags.hospitalised
         infection.symptoms.trajectory = selector.trajectory_maker[max_tag]
-        assert list(infection.symptoms.trajectory) == [
-            [0.0, sym.SymptomTags.infected],
-            [5.1, sym.SymptomTags.influenza],
-            [7.1, sym.SymptomTags.hospitalised],
-            [27.1, sym.SymptomTags.recovered]
+        assert infection.symptoms.trajectory == [
+            (0.0, sym.SymptomTags.infected),
+            (5.1, sym.SymptomTags.influenza),
+            (7.1, sym.SymptomTags.hospitalised),
+            (27.1, sym.SymptomTags.recovered)
         ]
         infection.update_at_time(float(1.))
         assert infection.symptoms.tag == sym.SymptomTags.infected
