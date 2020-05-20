@@ -22,8 +22,10 @@ def find_default(name: str) -> Path:
     """
     Get a default path when no command line argument is passed.
 
-    First attempt to find the folder in the current working directory.
-    If it is not found there then default to the directory in which June lives.
+    - First attempt to find the folder in the current working directory.
+    - If it is not found there then try the directory in which June lives.
+    - Finally, try the directory above the current working directory. This
+    is for the build pipeline.
 
     This means that tests will find the configuration regardless of whether
     they are run together or individually.
