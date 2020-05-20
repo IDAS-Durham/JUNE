@@ -691,10 +691,6 @@ class HouseholdDistributor:
             <= total_number_of_households
         ):
             raise HouseholdError("Number of households does not match.")
-        ## destroy any empty houses
-        all_households = [
-            household for household in all_households if household.size > 0
-        ]
         people_in_households = 0
         for household in all_households:
             people_in_households += len(household.people)

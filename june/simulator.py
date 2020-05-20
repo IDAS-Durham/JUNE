@@ -436,6 +436,7 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
+        self.logger.log_timestep(1.0)
         for day in self.timer:
             if day > self.timer.total_days:
                 break
