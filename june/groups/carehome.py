@@ -1,6 +1,8 @@
 import logging
 from enum import IntEnum
 from typing import List
+import numpy as np
+import h5py
 
 import pandas as pd
 
@@ -23,6 +25,7 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
+    __slots__ = "n_residents", "area"
 
     class SubgroupType(IntEnum):
         workers = 0
@@ -79,3 +82,4 @@ class CareHomes(Supergroup):
                 area.care_home = CareHome(area, n_residents)
                 care_homes.append(area.care_home)
         return cls(care_homes)
+

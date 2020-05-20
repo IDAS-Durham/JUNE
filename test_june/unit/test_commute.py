@@ -1,33 +1,9 @@
-import os
-
-import pandas as pd
 import pytest
 
 from june import commute as c
-from june.groups import CommuteHubDistributor
-from june.groups.commute import default_geographical_data_directory
+from june import paths
 
-test_data_filename = os.path.join(
-    os.path.dirname(os.getcwd()),
-    "data",
-    "census_data",
-    "commute.csv"
-)
-
-
-#class TestCommute:
-    #def test_coordinate_lookup(self):
-    #    distributor = CommuteHubDistributor.from_file(
-    #        commute_cities=[]
-    #    )
-    #    assert distributor._get_msoa_oa(
-    #        "E00000001"
-    #    ) == "E02000001"
-    #    lat, long = distributor._get_area_lat_lon(
-    #        "E00000001"
-    #    )
-    #    assert lat == pytest.approx(51.520271, abs=5)
-    #    assert long == pytest.approx(-0.094911, abs=5)
+test_data_filename = paths.data_path / "census_data/commute.csv"
 
 
 class TestModeOfTransport:
@@ -168,47 +144,3 @@ class TestRegionalGenerator:
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
-
-
-class TestCommuteGenerator:
-    # def test__region_gen_from_commute_gen__via_msoarea(self):
-    #     regional_gen_0 = c.RegionalGenerator(
-    #         msoarea="test_area", weighted_modes=[(2, c.ModeOfTransport("car"))]
-    #     )
-
-    #     commute_gen = c.CommuteGenerator(regional_generators={"north": regional_gen_0})
-
-    #     regional_gen = commute_gen.regional_gen_from_msoarea(super_area="north")
-
-    #     assert regional_gen == regional_gen_0
-
-    #     regional_gen_1 = c.RegionalGenerator(
-    #         msoarea="test_area",
-    #         weighted_modes=[
-    #             (2, c.ModeOfTransport("car")),
-    #             (4, c.ModeOfTransport("bus")),
-    #             (1, c.ModeOfTransport("magic_carpet")),
-    #         ],
-    #     )
-
-    #     commute_gen = c.CommuteGenerator(
-    #         regional_generators={
-    #             "north": regional_gen_0, "south": regional_gen_1
-    #         }
-    #     )
-
-    #     regional_gen = commute_gen.regional_gen_from_msoarea(super_area="north")
-
-    #     assert regional_gen == regional_gen_0
-
-    #     regional_gen = commute_gen.regional_gen_from_msoarea(super_area="south")
-
-    #     assert regional_gen == regional_gen_1
-
-    def test__load_from_file__uses_correct_values_from_configs(self):
-        commute_gen = c.CommuteGenerator.from_file(test_data_filename)
-
-        assert isinstance(commute_gen, c.CommuteGenerator)
-
-        regional_generators = commute_gen.regional_generators
-        assert len(regional_generators) == 8802
