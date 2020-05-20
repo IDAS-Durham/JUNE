@@ -17,10 +17,7 @@ default_travel_data_directory = f"{paths.data_path}/travel"
 default_file = f"{default_geographical_data_directory}/msoa_oa.csv"
 
 
-default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/"
-)
+default_data_path = paths.data_path
 
 default_msoa_oa_coordinates = default_data_path / "geographical_data/msoa_oa.csv"
 
@@ -112,7 +109,10 @@ class CommuteHubDistributor:
 
                 _, hub_index = commutehub_tree.query(live_lat_lon,1) 
                 
-                commutehub_in_city[hub_index].add(work_person)
+                commutehub_in_city[hub_index].add(work_person,
+                        activity_type=None,
+                        subgroup_type=commutehub_in_city[hub_index].SubgroupType.default
+                        )
 
             for work_person in to_commute_in:
                 commutecity.commute_internal.append(work_person)
