@@ -227,6 +227,7 @@ class Simulator:
         Subgroup to which person has to go, given the hierarchy of activities
         """
         activities = self.apply_activity_hierarchy(activities)
+        #TODO: call policy to modify activities
         for group_name in activities:
             subgroup = getattr(person, group_name)
             if subgroup is not None:

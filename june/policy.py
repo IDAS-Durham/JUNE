@@ -1,7 +1,28 @@
+school_policy = Policy('school', years, start, end)
+company_policy = Policy('company', sectors, start2, end2)
+school_policy_2 = Policy('school', years, start, end)
+policies = Policies([school_policy, company_policy])
+#policies = [school_policy, company_policy]
 
+# Simulator(policies)
 
+class Policies()
+    
+    def modified_activities(self, policy, person, activities, time):
+        for policy:
+            if politcy.start_time < time < policy.end_time:
+                policy.restrict_activities()
 
-class Policy:
+    def activities_policy(self,person, activities, time):
+        activities = ['primary_activity', 'residence']
+        modified_activities = self.modified_activities(person, activities, time)
+        modified_activities = ['residence']
+        return modified_activities
+
+    def social_distancing_policy(policies,interaction, time):
+        return interaction
+
+class Policy: # takes list of Policy
     '''
     Implement certain policy decisions into the simulartor
     Policies should be implemented in a modular fashion applying one after the other
