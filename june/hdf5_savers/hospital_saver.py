@@ -24,7 +24,7 @@ def save_hospitals_to_hdf5(
     """
     n_hospitals = len(hospitals)
     n_chunks = int(np.ceil(n_hospitals/ chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         hospitals_dset = f.create_group("hospitals")
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -34,7 +34,7 @@ def save_hospitals_to_hdf5(
             n_icu_beds = []
             super_areas = []
             coordinates = []
-            for hospital in hospitals:
+            for hospital in hospitals[idx1:idx2]:
                 ids.append(hospital.id)
                 if hospital.super_area is None:
                     super_areas.append(nan_integer)
@@ -51,11 +51,11 @@ def save_hospitals_to_hdf5(
             coordinates = np.array(coordinates, dtype=np.float)
             if chunk == 0:
                 hospitals_dset.attrs["n_hospitals"] = n_hospitals
-                hospitals_dset.create_dataset("id", data=ids)
-                hospitals_dset.create_dataset("super_area", data=super_areas)
-                hospitals_dset.create_dataset("n_beds", data=n_beds)
-                hospitals_dset.create_dataset("n_icu_beds", data=n_icu_beds)
-                hospitals_dset.create_dataset("coordinates", data=coordinates)
+                hospitals_dset.create_dataset("id", data=ids, maxshape=(None,))
+                hospitals_dset.create_dataset("super_area", data=super_areas, maxshape=(None,))
+                hospitals_dset.create_dataset("n_beds", data=n_beds, maxshape=(None,))
+                hospitals_dset.create_dataset("n_icu_beds", data=n_icu_beds, maxshape=(None,))
+                hospitals_dset.create_dataset("coordinates", data=coordinates, maxshape=(None, coordinates.shape[1]))
             else:
                 newshape = (hospitals_dset["id"].shape[0] + ids.shape[0],)
                 hospitals_dset["id"].resize(newshape)
