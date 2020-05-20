@@ -7,40 +7,6 @@ import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 
-
-# @jit(nopython=True)
-# def poisson_probability(probability, delta_time):
-#    return 1 - np.exp(-probability * delta_time)
-#
-# @jit(nopython=True, cache=True)
-# def probability_to_go_to_social_venue(
-#    age,
-#    sex,
-#    delta_time,
-#    male_bins,
-#    male_probabilities,
-#    female_bins,
-#    female_probabilities,
-#    is_weekend,
-#    weekend_boost,
-# ):
-#    if sex == "m":
-#        if age < male_bins[0] or age > male_bins[-1]:
-#            return 0
-#        else:
-#            idx = np.searchsorted(male_bins, age)
-#            probability = male_probabilities[idx]
-#    else:
-#        if age < female_bins[0] or age > female_bins[-1]:
-#            return 0
-#        else:
-#            idx = np.searchsorted(female_bins, age)
-#            probability = female_probabilities[idx]
-#    if is_weekend:
-#        probability = probability * weekend_boost
-#    return 1 - np.exp(-probability * delta_time)
-
-
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
