@@ -19,17 +19,14 @@ class SymptomTags(IntEnum):
 
 
 class Symptoms:
-    def __init__(self, health_index=[]):
-        self.health_index = health_index
+    def __init__(self, health_index=None):
+        self.health_index = list() if health_index is None else health_index
         self.tag = SymptomTags.infected
         self.max_severity = random.random()
         self.severity = 0.0
 
     def update_severity_from_delta_time(self, time):
         raise NotImplementedError()
-
-    def make_trajectory(self, trajectory_maker, patient):
-        pass
 
     def is_recovered(self):
         return self.tag == SymptomTags.recovered
@@ -67,7 +64,7 @@ class SymptomsHealthy(Symptoms):
 
 
 class SymptomsConstant(Symptoms):
-    def __init__(self, health_index=[], recovery_rate=0.2):
+    def __init__(self, health_index=None, recovery_rate=0.2):
         super().__init__(health_index=health_index)
         self.recovery_rate = recovery_rate
         self.severity = self.max_severity
@@ -79,7 +76,7 @@ class SymptomsConstant(Symptoms):
 
 class SymptomsGaussian(Symptoms):
     # TODO: Add recovery_theshold for recovery, and check parameters to find days to recover
-    def __init__(self, health_index=[], mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
+    def __init__(self, health_index=None, mean_time=1.0, sigma_time=3.0, recovery_rate=0.05):
         super().__init__(health_index=health_index)
         self.mean_time = max(0.0, mean_time)
         self.sigma_time = max(0.001, sigma_time)
@@ -96,7 +93,7 @@ class SymptomsGaussian(Symptoms):
 
 
 class SymptomsStep(Symptoms):
-    def __init__(self, health_index=[], time_offset=2.0, end_time=5.0):
+    def __init__(self, health_index=None, time_offset=2.0, end_time=5.0):
 
         super().__init__(health_index)
         self.time_offset = max(0.0, time_offset)

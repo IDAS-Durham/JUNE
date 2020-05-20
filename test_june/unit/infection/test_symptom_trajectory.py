@@ -69,7 +69,7 @@ class TestSymptomsTrajectory:
         infection = selector.make_infection(person=dummy, time=0.1)
         fixed_severity = 0.8
         infection.symptoms.max_severity = fixed_severity
-        max_tag = infection.symptoms.max_tag(fixed_severity)
+        max_tag = infection.symptoms.max_tag()
         assert max_tag == sym.SymptomTags.hospitalised
         infection.symptoms.trajectory = selector.trajectory_maker[max_tag, dummy]
         assert (infection.symptoms.trajectory ==
