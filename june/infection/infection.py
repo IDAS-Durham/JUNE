@@ -83,8 +83,8 @@ class InfectionSelector:
 
     @classmethod
     def from_file(
-            cls,
-            config_filename: str = default_config_filename
+        cls,
+        config_filename: str = default_config_filename,
     ) -> "InfectionSelector":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
