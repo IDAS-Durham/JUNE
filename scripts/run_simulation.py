@@ -22,8 +22,9 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 # *********** INITIALIZE WORLD ***************** #
 
 t1 = time.time()
-geography = Geography.from_file({"msoa":['E02001731', 'E02001709', "E00088544", "E02002560", "E02002559", "E02003353"]})
-    
+geography = Geography.from_file({"msoa":['E02001720', 'E02001724', 'E02001730', 'E02006841', 'E02001691',
+"E00088544", "E02002560", "E02002559"]
+    })
 
 geography.hospitals = Hospitals.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
