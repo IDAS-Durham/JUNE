@@ -19,7 +19,8 @@ class Pub(SocialVenue):
     Pubs are fun.
     """
 
-    def __init__(self):
+    def __init__(self, max_size=100):
+        self.max_size = max_size
         super().__init__()
 
 
@@ -59,7 +60,7 @@ class PubDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(cls, config_filename: str = default_config_filename):
+    def from_config(cls, pubs: Pubs, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(**config)
+        return cls(pubs, **config)

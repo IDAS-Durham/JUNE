@@ -1,6 +1,6 @@
 title: Covid configuration example
 
-activities_to_groups:
+activity_to_groups:
   primary_activity: ['schools', 'companies']
   leisure: ['cinemas', 'pubs', 'groceries'] 
   residence: ['households', 'care_homes']
@@ -21,5 +21,3 @@ time:
       weekend:
           1: ['hospital', 'leisure', 'residence']
 
-min_age_home_alone: 15
-stay_at_home_complacency: 0.95
