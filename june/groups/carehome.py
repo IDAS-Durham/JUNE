@@ -1,4 +1,4 @@
-import logging
+in_residentsmport logging
 import yaml
 from enum import IntEnum
 from typing import Dict, List, Optional
@@ -8,7 +8,7 @@ import h5py
 import pandas as pd
 
 from june import paths
-from june.demography.geography import Geography
+from june.demography.geography import Geography, Area
 from june.groups.group import Group, Supergroup
 
 default_data_filename = (
@@ -19,6 +19,10 @@ default_areas_map_path = (
 )
 default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 logger = logging.getLogger(__name__)
+
+
+class CareHomeError(BaseException):
+    pass
 
 
 class CareHome(Group):
@@ -37,9 +41,10 @@ class CareHome(Group):
         residents = 1
         visitors = 2
 
-    def __init__(self, area, n_residents):
+    def __init__(self, area, n_residents, n_worker):
         super().__init__()
         self.n_residents = n_residents
+        self.n_worker = n_worker
         self.area = area
 
     def add(
@@ -82,8 +87,8 @@ class CareHomes(Supergroup):
         Initializes care homes from geography.
         """
         area = [area for area in geography.areas]
-        if len(area_names) == 0:
-            raise SchoolError("Empty geography!")
+        if len(area) == 0:
+            raise CareHomeError("Empty geography!")
         return cls.for_areas(area, data_file, config_file)
 
 
@@ -106,16 +111,16 @@ class CareHomes(Supergroup):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         care_home_df = pd.read_csv(data_file, index_col=0)
-        if len(area_names) != 0:
+        if len(areas) != 0:
             area_names = [area.name for area in areas]
             # filter out carehomes that are in the area of interest
             care_home_df = care_home_df.loc[area_names]
         care_homes = []
         logger.info(f"There are {len(care_home_df)} care_homes in this geography.")
-        for area in geography.areas:
+        for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]
-            n_worker = int(n_residents / worker_per_clients)
+            n_worker = int(n_residents / config["sector"]["Q"]["nr_of_clients"])
             if n_residents != 0:
-                area.care_home = CareHome(area, n_residents)
+                area.care_home = CareHome(area, n_residents, n_worker)
                 care_homes.append(area.care_home)
         return cls(care_homes)

@@ -159,7 +159,12 @@ class Companies(Supergroup):
         return cls(companies)
 
     @classmethod
-    def create_companies_in_super_area(cls, super_area, company_sizes, company_sectors):
+    def create_companies_in_super_area(
+            cls,
+            super_area: SuperArea,
+            company_sizes,
+            company_sectors,
+    ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.
         """
