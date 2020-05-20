@@ -37,7 +37,7 @@ def test__age_dict_parsing(social_venue_distributor):
     age_dict = {"40-60" : 0.4, "10-20" : 0.2}
     bins, probs = social_venue_distributor._parse_age_probabilites(age_dict)
     assert bins == [10, 20, 40, 60]
-    assert probs == [0, 0.2, 0.4, 0]
+    assert probs == [0.0, 0.2, 0.0,  0.4, 0.0]
 
 def get_days_until_pub(person, delta_time, is_weekend, distrib):
     days = []
@@ -91,7 +91,9 @@ def test__add_person_to_social_venues(social_venues, social_venue_distributor):
     social_venues.make_tree()
     person = Person(age=20, sex="m")
     person.area = MockArea()
-    social_venue_distributor.add_person_to_social_venue(person)
+    social_venue = social_venue_distributor.get_social_venue_for_person(person)
+    social_venue.add(person)
     social_venue = social_venues[-1]
     assert person.subgroups[person.ActivityType.dynamic] == social_venue[0]
-    assert social_venue.people[0] == person
+    # not added to group
+    assert len(social_venue.people) == 0

@@ -44,7 +44,7 @@ def test_create_ball_tree_for_super_areas():
     geo = g.Geography.from_file(
         filter_key={"msoa": ["E02004935", "E02000140"]}
     )
-    super_area = geo.super_areas.get_super_area(coordinates = [51.752179, -0.334667 ])
+    super_area = geo.super_areas.get_closest_super_areas(coordinates = [51.752179, -0.334667 ])[0]
     assert super_area.name == "E02004935"
 
 
