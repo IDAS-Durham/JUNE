@@ -13,7 +13,9 @@ project_directory = Path(
 
 working_directory = Path(
     os.getcwd()
-).parent
+)
+
+working_directory_parent = working_directory.parent
 
 
 def find_default(name: str) -> Path:
@@ -35,12 +37,19 @@ def find_default(name: str) -> Path:
     -------
     The full path to that directory
     """
-    cwd_default = working_directory / name
-    if os.path.exists(
-            cwd_default
+    for directory in (
+        working_directory,
+        project_directory,
+        working_directory_parent
     ):
-        return cwd_default
-    return project_directory / name
+        path = directory / name
+        if os.path.exists(
+                path
+        ):
+            return path
+    raise FileNotFoundError(
+        f"Could not find a default path for {name}"
+    )
 
 
 def path_for_name(name: str) -> Path:
@@ -65,15 +74,14 @@ def path_for_name(name: str) -> Path:
     flag = f"--{name}"
     try:
         path = Path(argv[argv.index(flag) + 1])
+        if not path.exists():
+            raise FileNotFoundError(
+                f"No such folder {path}"
+            )
     except (IndexError, ValueError):
         path = find_default(name)
         logger.warning(
             f"No {flag} argument given - defaulting to:\n{path}"
-        )
-
-    if not path.exists():
-        raise FileNotFoundError(
-            f"No such folder {path}"
         )
 
     return path
