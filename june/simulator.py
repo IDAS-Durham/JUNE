@@ -55,18 +55,13 @@ class Simulator:
         self.world       = world
         self.interaction = interaction
         self.selector    = selector
-        self.permanent_activity_hierarchy = [
+        self.activity_hierarchy = [
             "box",
             "hospital",
             "commute",
             "primary_activity",
+            "leisure",
             "residence",
-        ]
-        self.randomly_order_activities = [
-            "pubs",
-            "cinemas",
-            "groceries",
-            "churches",
         ]
         self.check_inputs(config["time"])
         self.timer = Timer(config["time"])
@@ -96,6 +91,7 @@ class Simulator:
             "box": ["boxes"],
             "hospital": ["hospitals"],
             "primary_activity": ["schools", "companies"],
+            "leisure": ["cinemas", "pubs", "groceries"],
             "residence": ["households", "care_homes"],
             "commute": ["commuteunits", "commutecityunits"]
         }
@@ -150,7 +146,7 @@ class Simulator:
         assert sum(config["step_duration"]["weekend"].values()) == 24
 
         # Check that all groups given in config file are in the valid group hierarchy
-        all_groups = self.permanent_activity_hierarchy + self.randomly_order_activities
+        all_groups = self.activity_hierarchy 
         for step, activities in config["step_activities"]["weekday"].items():
             assert all(group in all_groups for group in activities)
 
@@ -170,12 +166,7 @@ class Simulator:
         -------
         Ordered list of activities according to hierarchy
         """
-        random.shuffle(self.randomly_order_activities)
-        activity_hierarchy = [
-            group for group in self.permanent_activity_hierarchy if group != "residence"
-        ]
-        activity_hierarchy += self.randomly_order_activities + ["residence"]
-        activities.sort(key=lambda x: activity_hierarchy.index(x))
+        activities.sort(key=lambda x: self.activity_hierarchy.index(x))
         return activities
 
     def activities_to_groups(self, activities: List[str]) -> List[str]:
@@ -227,8 +218,13 @@ class Simulator:
         Subgroup to which person has to go, given the hierarchy of activities
         """
         activities = self.apply_activity_hierarchy(activities)
-        for group_name in activities:
-            subgroup = getattr(person, group_name)
+        for activity in activities:
+            if activity = 'leisure':
+                subgroup = self.world.leisure.get_subgroup_for_person_and_housemates(person, 
+                        self.timer.duration, 
+                        self.timer.is_weekend) 
+            else:
+                subgroup = getattr(person, activity)
             if subgroup is not None:
                 return subgroup
 
