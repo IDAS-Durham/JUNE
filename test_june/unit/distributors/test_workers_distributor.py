@@ -129,7 +129,7 @@ class TestDistribution:
                 ) and isinstance(person.work_super_area, str)
 
         ])
-        assert 0.055 < nr_working_from_home / len(worker_population) < 0.065
+        assert 0.050 < nr_working_from_home / len(worker_population) < 0.070
 
 
     def test__worker_nr_in_sector_larger_than_its_sub(
