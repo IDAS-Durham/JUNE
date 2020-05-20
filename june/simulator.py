@@ -9,7 +9,7 @@ import yaml
 
 from june.demography import Person
 from june.groups import Group, GroupMaker
-from june.infection.infection    import InfectionSelector
+from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
@@ -17,7 +17,7 @@ from june.logger_simulation import Logger
 from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
-from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor 
+from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -28,15 +28,17 @@ class SimulatorError(BaseException):
     pass
 
 
-# TODO: Split the config into more manageable parts for tests
 class Simulator:
     def __init__(
         self,
         world: World,
         interaction: Interaction,
         selector: InfectionSelector,
-        config: dict,
-        commute=True,
+        activities_to_group: dict,
+        time_config: dict,
+        min_age_alone: int = 15,
+        stay_at_home_complacency: float = 0.95,
+        logger_path: str = "results",
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -52,9 +54,9 @@ class Simulator:
         config:
             dictionary with configuration to set up the simulation
         """
-        self.world       = world
+        self.world = world
         self.interaction = interaction
-        self.selector    = selector
+        self.selector = selector
         self.activity_hierarchy = [
             "box",
             "hospital",
@@ -63,47 +65,27 @@ class Simulator:
             "leisure",
             "residence",
         ]
-        self.check_inputs(config["time"])
-        self.timer = Timer(config["time"])
-        self.logger = Logger(
-            self, self.world, self.timer, config["logger"]["save_path"],
-        )
-        self.all_activities = set(
-            chain(
-                *(
-                    [
-                        activity
-                        for activity in config["time"]["step_activities"][
-                            "weekday"
-                        ].values()
-                    ]
-                    + [
-                        activity
-                        for activity in config["time"]["step_activities"][
-                            "weekend"
-                        ].values()
-                    ]
-                )
-            )
-        )
-
+        self.check_inputs(time_config)
+        self.timer = Timer(time_config)
+        self.logger = Logger(self, self.world, self.timer, save_path,)
+        self.all_activities = self.get_all_activities(time_config)
         self.activity_to_group_dict = {
             "box": ["boxes"],
             "hospital": ["hospitals"],
-            "primary_activity": ["schools", "companies"],
-            "leisure": ["cinemas", "pubs", "groceries"],
-            "residence": ["households", "care_homes"],
-            "commute": ["commuteunits", "commutecityunits"]
+            "primary_activity": activities_to_groups["primary_activity"],
+            "leisure": activities_to_groups["leisure"],
+            "residence": activities_to_groups["residence"],
+            "commute": activities_to_group["commute"],
         }
+        self.min_age_home_alone = min_age_home_alone
+        self.stay_at_home_complacency = stay_at_home_complacency
+        #TODO: MAKE SURE THAT CAN USE ONLY COMMUTEUNITS/COMMUTECITYUNITS
+        if "commute" in self.all_activities:
+            self.initialize_commute(activities_to_groups["commute"])
+        if "leisure" in self.all_activities:
+            self.initialize_leisure(activities_to_groups["leisure"])
 
-        if not self.world.box_mode:
-            self.min_age_home_alone = config["min_age_home_alone"]
-            self.stay_at_home_complacency = config["stay_at_home_complacency"]
-            if commute:
-                self.commuteunit_distributor = CommuteUnitDistributor(self.world.commutehubs.members)
-                self.commutecityunit_distributor = CommuteCityUnitDistributor(self.world.commutecities.members)
-                self.group_maker = GroupMaker(self)
-
+    #TODO: NOW NEEDS TO BE CHANGED ACCORDINGLY
     @classmethod
     def from_file(
         cls,
@@ -129,6 +111,41 @@ class Simulator:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return Simulator(world, interaction, selector, config)
 
+    def get_all_activities(self, time_config):
+        # TODO: make more reasonable
+        return set(
+            chain(
+                *(
+                    [
+                        activity
+                        for activity in time_config["step_activities"][
+                            "weekday"
+                        ].values()
+                    ]
+                    + [
+                        activity
+                        for activity in time_config["step_activities"][
+                            "weekend"
+                        ].values()
+                    ]
+                )
+            )
+        )
+
+    def initialize_commute(self, commute_options):
+        if "commuteunits" in commute_options:
+            self.commute_unit_distributor = CommuteUnitDistributor(
+                self.world.commutehubs.members
+            )
+        elif "commutecityunits" in commute_options:
+            self.commute_city_unit_distributor = CommuteCityUnitDistributor(
+                self.world.commutecities.members
+            )
+        self.group_maker = GroupMaker(self)
+
+    def initialize_leisure(self, leisure=["cinemas", "pubs", "groceries"]):
+        pass
+
     def check_inputs(self, config: dict):
         """
         Check that the iput time configuration is correct, i.e., activities are among allowed activities
@@ -146,7 +163,7 @@ class Simulator:
         assert sum(config["step_duration"]["weekend"].values()) == 24
 
         # Check that all groups given in config file are in the valid group hierarchy
-        all_groups = self.activity_hierarchy 
+        all_groups = self.activity_hierarchy
         for step, activities in config["step_activities"]["weekday"].items():
             assert all(group in all_groups for group in activities)
 
@@ -219,10 +236,10 @@ class Simulator:
         """
         activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
-            if activity = 'leisure':
-                subgroup = self.world.leisure.get_subgroup_for_person_and_housemates(person, 
-                        self.timer.duration, 
-                        self.timer.is_weekend) 
+            if activity == "leisure":
+                subgroup = self.world.leisure.get_subgroup_for_person_and_housemates(
+                    person, self.timer.duration, self.timer.is_weekend
+                )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
@@ -311,7 +328,6 @@ class Simulator:
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
- 
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
         """
@@ -377,15 +393,16 @@ class Simulator:
 
         """
         activities = self.timer.activities()
-        
+
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
 
-        if 'commute' in activities:
-            self.group_maker.distribute_people('commute')
-        self.move_people_to_active_subgroups(activities)
+        if "commute" in activities:
+            self.commute_unit_distributor.distribute_people()
+            self.commute_city_unit_distributor.distribute_people()
 
+        self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
         n_people = 0
@@ -397,13 +414,13 @@ class Simulator:
             n_active_in_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
-                    self.timer.now,
-                    self.timer.duration,
-                    group,
+                    self.timer.now, self.timer.duration, group,
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(f"Number of people active in {group.spec} = {n_active_in_group}")
+            sim_logger.info(
+                f"Number of people active in {group.spec} = {n_active_in_group}"
+            )
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
