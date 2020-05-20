@@ -20,12 +20,14 @@ class HealthInformation:
         self.time_of_infection = -1
         self.group_type_of_infection = "none"
         self.length_of_infection = -1
+        self.infecter = None
 
     def set_infection(self, infection):
         self.infection = infection
         self.infected = True
         self.susceptible = False
         self.susceptibility = 0.0
+        self.time_of_infection = infection.start_time
 
     @property
     def tag(self):
@@ -91,10 +93,12 @@ class HealthInformation:
             self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
-    def update_infection_data(self, time, group_type=None):
+    def update_infection_data(self, time, group_type=None, infecter=None):
         self.time_of_infection = time
         if group_type is not None:
             self.group_type_of_infection = group_type
+        if infecter is not None:
+            self.infecter = infecter
 
     def set_length_of_infection(self, time):
         self.length_of_infection = time - self.time_of_infection
