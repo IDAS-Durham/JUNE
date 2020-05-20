@@ -132,7 +132,6 @@ class SocialVenueDistributor:
         """
         poisson_parameter = self.get_poisson_parameter(person, is_weekend)
         return 1 - np.exp(-poisson_parameter * delta_time)
-        # return poisson_probability(poisson_parameter, delta_time)
 
     def get_social_venue_for_person(self, person):
         """
