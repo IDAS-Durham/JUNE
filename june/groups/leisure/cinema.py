@@ -27,7 +27,7 @@ class Cinemas(SocialVenues):
         super().__init__(cinemas)
 
     @classmethod
-    def from_geography(
+    def for_geography(
         cls,
         geography,
         coordinates_filename: str = default_cinemas_coordinates_filename,
