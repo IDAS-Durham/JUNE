@@ -3,22 +3,29 @@ import numpy as np
 from june.demography.person import Person
 from june.infection import infection as infect
 from june.infection import symptoms as sym
-from june.infection import trajectory_maker as tmaker
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsStep
+from june.infection.trajectory_maker import Stage
 
 
 class TestTrajectoryMaker:
     def test__make__trajectories(self, trajectories):
         assert len(trajectories.trajectories) == 6
         assert (trajectories.incubation_info ==
-                [tmaker.VariationType.constant, sym.SymptomTags.infected, 5.1])
+                Stage(
+                    symptoms_tag=sym.SymptomTags.infected, completion_time=5.1))
         assert (trajectories.recovery_info ==
-                [tmaker.VariationType.constant, sym.SymptomTags.recovered, 0.0])
+                Stage(
+                    symptoms_tag=sym.SymptomTags.recovered, completion_time=0.0))
         assert (trajectories.trajectories[sym.SymptomTags.asymptomatic] ==
-                [[tmaker.VariationType.constant, sym.SymptomTags.infected, 5.1],
-                 [tmaker.VariationType.constant, sym.SymptomTags.asymptomatic, 14.],
-                 [tmaker.VariationType.constant, sym.SymptomTags.recovered, 0.0]])
+                [
+                    Stage(
+                        symptoms_tag=sym.SymptomTags.infected, completion_time=5.1),
+                    Stage(
+                        symptoms_tag=sym.SymptomTags.asymptomatic, completion_time=14.),
+                    Stage(
+                        symptoms_tag=sym.SymptomTags.recovered, completion_time=0.0)
+                ])
 
 
 class TestSymptomsTrajectory:
@@ -44,7 +51,7 @@ class TestSymptomsTrajectory:
 
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
-        symptoms_trajectories.make_trajectory()
+        symptoms_trajectories.update_trajectory()
         assert bool(symptoms_trajectories.trajectory ==
                     [[0.0, sym.SymptomTags.infected],
                      [5.1, sym.SymptomTags.influenza],
@@ -52,7 +59,7 @@ class TestSymptomsTrajectory:
                      [9.1, sym.SymptomTags.intensive_care],
                      [19.1, sym.SymptomTags.dead]]) is True
         symptoms_trajectories.max_severity = 0.45
-        symptoms_trajectories.make_trajectory()
+        symptoms_trajectories.update_trajectory()
         assert bool(symptoms_trajectories.trajectory ==
                     [[0.0, sym.SymptomTags.infected],
                      [5.1, sym.SymptomTags.influenza],
