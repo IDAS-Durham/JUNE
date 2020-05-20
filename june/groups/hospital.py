@@ -386,3 +386,4 @@ class Hospitals(Supergroup):
         )
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
+

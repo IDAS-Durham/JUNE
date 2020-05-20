@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 earth_radius = 6371  # km
 
+
 class GeographyError(BaseException):
     pass
 
@@ -97,21 +98,19 @@ class Areas:
         if self.ball_tree is None:
             raise GeographyError("Areas initialized without a BallTree")
         if coordinates.shape == (2,):
-            coordinates = coordinates.reshape(1,-1)
+            coordinates = coordinates.reshape(1, -1)
         if return_distance:
             distances, indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            areas = [self[idx] for idx in indcs[:,0]]
+            areas = [self[idx] for idx in indcs[:, 0]]
             return areas, distances[:, 0] * earth_radius
         else:
             indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            areas = [self[idx] for idx in indcs[:,0]]
+            areas = [self[idx] for idx in indcs[:, 0]]
             return areas
-
-
 
 
 class SuperArea:
@@ -131,7 +130,7 @@ class SuperArea:
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
-        self.areas = areas
+        self.areas = areas or list()
         self.workers = list()
         self.companies = list()
 
@@ -185,27 +184,24 @@ class SuperAreas:
         if self.ball_tree is None:
             raise GeographyError("Areas initialized without a BallTree")
         if coordinates.shape == (2,):
-            coordinates = coordinates.reshape(1,-1)
+            coordinates = coordinates.reshape(1, -1)
         if return_distance:
             distances, indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            super_areas = [self[idx] for idx in indcs[:,0]]
+            super_areas = [self[idx] for idx in indcs[:, 0]]
             return super_areas, distances[:, 0] * earth_radius
         else:
             indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            super_areas = [self[idx] for idx in indcs[:,0]]
+            super_areas = [self[idx] for idx in indcs[:, 0]]
             return super_areas
 
 
 class Geography:
     def __init__(
-        self,
-        hierarchy: pd.DataFrame,
-        area_coordinates: pd.DataFrame,
-        super_area_coordinates: pd.DataFrame,
+        self, areas: List[Area], super_areas: List[SuperArea],
     ):
         """
         Generate hierachical devision of geography.
@@ -219,12 +215,12 @@ class Geography:
 
         Note: It would be nice to find a better way to handle coordinates.
         """
-        self.create_geographical_units(
-            hierarchy, area_coordinates, super_area_coordinates
-        )
+        self.areas = areas
+        self.super_areas = super_areas
 
+    @classmethod
     def _create_areas(
-        self, area_coords: pd.DataFrame, super_area: pd.DataFrame
+        cls, area_coords: pd.DataFrame, super_area: pd.DataFrame
     ) -> List[Area]:
         """
         Applies the _create_area function throught the area_coords dataframe.
@@ -247,8 +243,9 @@ class Geography:
                 areas.append(Area(name, super_area, coordinates.values))
         return areas
 
+    @classmethod
     def create_geographical_units(
-        self,
+        cls,
         hierarchy: pd.DataFrame,
         area_coordinates: pd.DataFrame,
         super_area_coordinates: pd.DataFrame,
@@ -266,17 +263,18 @@ class Geography:
                 areas=None, name=superarea_name, coordinates=row.values
             )
             areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
-            areas_list = self._create_areas(areas_df, super_area)
+            areas_list = cls._create_areas(areas_df, super_area)
             super_area.areas = areas_list
             total_areas_list += list(areas_list)
             super_areas_list.append(super_area)
 
-        self.areas = Areas(total_areas_list)
-        self.super_areas = SuperAreas(super_areas_list)
+        areas = Areas(total_areas_list)
+        super_areas = SuperAreas(super_areas_list)
         logger.info(
-            f"There are {len(self.areas)} areas and "
-            + f"{len(self.super_areas)} super_areas in the world."
+            f"There are {len(areas)} areas and "
+            + f"{len(super_areas)} super_areas in the world."
         )
+        return areas, super_areas
 
     @classmethod
     def from_file(
@@ -326,7 +324,10 @@ class Geography:
             .drop_duplicates()
         )
         geo_hierarchy.set_index("msoa", inplace=True)
-        return cls(geo_hierarchy, areas_coord, super_areas_coord)
+        areas, super_areas = cls.create_geographical_units(
+            geo_hierarchy, areas_coord, super_areas_coord
+        )
+        return cls(areas, super_areas)
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:

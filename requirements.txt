@@ -41,3 +41,4 @@ typing-extensions==3.7.4.2
 typing-inspect==0.6.0
 wcwidth==0.1.9
 wrapt==1.12.1
+h5py==2.10.0 
