@@ -207,11 +207,11 @@ class World:
             save_hospitals_to_hdf5(self.hospitals, file_path, chunk_size)
         if hasattr(self, "schools"):
             save_schools_to_hdf5(self.schools, file_path, chunk_size)
-        if hasattr(self, "hospitals"):
+        if hasattr(self, "companies"):
             save_companies_to_hdf5(self.companies, file_path, chunk_size)
-        if hasattr(self, "hospitals"):
+        if hasattr(self, "households"):
             save_households_to_hdf5(self.households, file_path, chunk_size)
-        if hasattr(self, "hospitals"):
+        if hasattr(self, "care_homes"):
             save_care_homes_to_hdf5(self.care_homes, file_path, chunk_size)
 
 
