@@ -85,10 +85,10 @@ class Simulator:
         else:
             self.activity_to_group_dict = {
                 "hospital": ["hospitals"],
-                "primary_activity": activity_to_groups["primary_activity"],
-                "leisure": activity_to_groups["leisure"],
-                "residence": activity_to_groups["residence"],
-                "commute": activity_to_groups["commute"],
+                "primary_activity": activity_to_groups.get("primary_activity", []),
+                "leisure": activity_to_groups.get("leisure", []),
+                "residence": activity_to_groups.get("residence", []),
+                "commute": activity_to_groups.get("commute", []),
             }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
@@ -431,6 +431,7 @@ class Simulator:
             sim_logger.info(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
+
 
         # assert conservation of people
         if n_people != len(self.world.people.members):
