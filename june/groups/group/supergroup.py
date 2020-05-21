@@ -47,14 +47,3 @@ class Supergroup:
     @classmethod
     def for_box_mode(cls):
         raise NotImplementedError("Supergroup not available in box mode")
-
-    def erase_people_from_groups_and_subgroups(self):
-        """
-        Erases all people from subgroups.
-        Erases all subgroup references to group.
-        """
-        for group in self:
-            for subgroup in group.subgroups:
-                subgroup._people.clear()
-                subgroup.group = None
-

@@ -1,7 +1,7 @@
 from itertools import count
 import random
 from enum import IntEnum
-from june.infection import Symptom_Tags
+from june.infection import SymptomTags
 
 
 
@@ -20,12 +20,14 @@ class HealthInformation:
         self.time_of_infection = -1
         self.group_type_of_infection = "none"
         self.length_of_infection = -1
+        self.infecter = None
 
     def set_infection(self, infection):
         self.infection = infection
         self.infected = True
         self.susceptible = False
         self.susceptibility = 0.0
+        self.time_of_infection = infection.start_time
 
     @property
     def tag(self):
@@ -35,11 +37,11 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag in (Symptom_Tags.influenza, Symptom_Tags.pneumonia)
+        return self.tag in (SymptomTags.influenza, SymptomTags.pneumonia)
 
     @property
     def should_be_in_hospital(self) -> bool:
-        return self.tag in (Symptom_Tags.hospitalised, Symptom_Tags.intensive_care)
+        return self.tag in (SymptomTags.hospitalised, SymptomTags.intensive_care)
 
     @property
     def infected_at_home(self) -> bool:
@@ -47,7 +49,7 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == Symptom_Tags.dead
+        return self.tag == SymptomTags.dead
 
     def update_health_status(self, time, delta_time):
         if self.infected:
@@ -91,10 +93,12 @@ class HealthInformation:
             self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
-    def update_infection_data(self, time, group_type=None):
+    def update_infection_data(self, time, group_type=None, infecter=None):
         self.time_of_infection = time
         if group_type is not None:
             self.group_type_of_infection = group_type
+        if infecter is not None:
+            self.infecter = infecter
 
     def set_length_of_infection(self, time):
         self.length_of_infection = time - self.time_of_infection
@@ -154,7 +158,7 @@ class Person:
         primary_activity = 1
         hospital = 2
         commute = 3
-        dynamic = 4
+        leisure = 4
         box = 5
 
     def __init__(
@@ -205,8 +209,8 @@ class Person:
         return self.subgroups[self.ActivityType.commute]
 
     @property
-    def dynamic(self):
-        return self.subgroups[self.ActivityType.dynamic]
+    def leisure(self):
+        return self.subgroups[self.ActivityType.leisure]
 
     @property
     def box(self):
