@@ -12,7 +12,7 @@ from sklearn.neighbors import BallTree
 from june.groups import Group, Supergroup
 
 from june.demography.geography import SuperArea
-from june.infection.symptoms import Symptom_Tags
+from june.infection.symptoms import SymptomTags
 
 
 logger = logging.getLogger(__name__)
@@ -123,9 +123,9 @@ class Hospital(Group):
             person instance to add as patient
         """
 
-        if person.health_information.tag == Symptom_Tags.intensive_care:
+        if person.health_information.tag == SymptomTags.intensive_care:
             self.add(person, self.SubgroupType.icu_patients)
-        elif person.health_information.tag == Symptom_Tags.hospitalised:
+        elif person.health_information.tag == SymptomTags.hospitalised:
             self.add(person, self.SubgroupType.patients)
         else:
             raise AssertionError(
@@ -136,9 +136,9 @@ class Hospital(Group):
        person.subgroups[person.ActivityType.hospital] = None
 
     def move_patient_within_hospital(self, person):
-        if person.health_information.tag == Symptom_Tags.intensive_care:
+        if person.health_information.tag == SymptomTags.intensive_care:
             person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.icu_patients]
-        elif person.health_information.tag == Symptom_Tags.hospitalised:
+        elif person.health_information.tag == SymptomTags.hospitalised:
             person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.patients]
         else:
             raise AssertionError(
@@ -320,8 +320,8 @@ class Hospitals(Supergroup):
         hospital with availability
 
         """
-        assign_icu = person.health_information.tag == Symptom_Tags.intensive_care
-        assign_patient = person.health_information.tag == Symptom_Tags.hospitalised
+        assign_icu = person.health_information.tag == SymptomTags.intensive_care
+        assign_patient = person.health_information.tag == SymptomTags.hospitalised
 
         if self.box_mode:
             for hospital in self.members:

@@ -413,7 +413,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            print(
+            sim_logger.info(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
 
