@@ -209,8 +209,8 @@ class Person:
         return self.subgroups[self.ActivityType.commute]
 
     @property
-    def dynamic(self):
-        return self.subgroups[self.ActivityType.dynamic]
+    def leisure(self):
+        return self.subgroups[self.ActivityType.leisure]
 
     @property
     def box(self):

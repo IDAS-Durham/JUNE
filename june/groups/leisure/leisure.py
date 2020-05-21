@@ -113,7 +113,8 @@ class Leisure:
             return False
         if leisure_distributor.person_drags_household():
             for mate in person.housemates:
-                social_venue.add(mate)  # ignores size checking
+                if not mate.busy:
+                    social_venue.add(mate)  # ignores size checking
             return True
 
     def get_subgroup_for_person_and_housemates(
@@ -153,4 +154,4 @@ class Leisure:
             leisure_distributor=social_venue_distributor,
             social_venue=social_venue,
         )
-        return social_venue
+        return social_venue.subgroups[0]
