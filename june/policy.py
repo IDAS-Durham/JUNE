@@ -239,18 +239,19 @@ class Policy: # takes list of Policy
         TODO:
         - Implement structure for people to adhere to social distancing
         '''
+        #TODO: should probably leave alpha value for households untouched! 
         
         if self.config_file is not None:
             alpha /= 2
         else:
             alpha /= self.config_file['social distancing']['alpha factor']
 
-        for group in betas:
-            
-            if not self.config_file:
-                betas[group] /= 2
-            else:
-                betas[group] /= self.config_file['social distancing']['beta factor']
+        for group in betas.keys():
+            if group != 'household': 
+                if not self.config_file:
+                    betas[group] /= 2
+                else:
+                    betas[group] /= self.config_file['social distancing']['beta factor']
 
     def lockdown(self):
 
