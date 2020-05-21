@@ -1,11 +1,32 @@
 from itertools import count
 import random
-from enum import IntEnum
+from enum import IntEnum, Enum
 from june.infection import SymptomTags
+import struct
+from recordclass import dataobject
+from collections import namedtuple
 
+# import june.groups.household
+import numpy as np
 
 
 class HealthInformation:
+    __slots__ = (
+        "susceptibility",
+        "susceptible",
+        "infected",
+        "infection",
+        "recovered",
+        "dead",
+        "number_of_infected",
+        "maximal_symptoms",
+        "maximal_symptoms_time",
+        "maximal_symptoms_tag",
+        "time_of_infection",
+        "group_type_of_infection",
+        "length_of_infection",
+        "infecter")
+
     def __init__(self):
         self.susceptibility = 1.0
         self.susceptible = True
@@ -16,9 +37,9 @@ class HealthInformation:
         self.number_of_infected = 0
         self.maximal_symptoms = 0
         self.maximal_symptoms_time = -1
-        self.maximal_symptoms_tag = "none"
+        self.maximal_symptoms_tag = None
         self.time_of_infection = -1
-        self.group_type_of_infection = "none"
+        self.group_type_of_infection = None
         self.length_of_infection = -1
         self.infecter = None
 
@@ -107,48 +128,129 @@ class HealthInformation:
         self.number_of_infected += 1
 
 
-class Person:
-    """
-    Primitive version of class person.  This needs to be connected to the full class 
-    structure including health and social indices, employment, etc..  The current 
-    implementation is only meant to get a simplistic dynamics of social interactions coded.
-    
-    The logic is the following:
-    People can get infected with an Infection, which is characterised by time-dependent
-    transmission probabilities and symptom severities (see class descriptions for
-    Infection, Transmission, Severity).  The former define the infector part for virus
-    transmission, while the latter decide if individuals realise symptoms (we need
-    to define a threshold for that).  The symptoms will eventually change the behavior 
-    of the person (i.e. intensity and frequency of social contacts), if they need to be 
-    treated, hospitalized, plugged into an ICU or even die.  This part of the model is 
-    still opaque.   
-    
-    Since the realization of the infection will be different from person to person, it is
-    a characteristic of the person - we will need to allow different parameters describing
-    the same functional forms of transmission probability and symptom severity, distributed
-    according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
-    smearing of 2 sigma around a mean with left-/right-widths is implemented.    
-    """
+class Household:
+    __slots__ = "id"
 
-    _id = count()
-    __slots__ = (
-        "id",
-        "age",
-        "sex",
-        "ethnicity",
-        "work_super_area",
-        "area",
-        "housemates",
-        "mode_of_transport",
-        "subgroups",
-        "sector",
-        "sub_sector",
-        "home_city",
-        "socioecon_index",
-        "health_information",
-        "busy",
-    )
+    def __init__(self):
+        pass
 
+
+# class Person:
+#    #_id = count()
+#    __slots__ = (
+#        #"id",
+#        "age",
+#        "sex",
+#        "ethnicity",
+#        "socioecon_index",
+#        "area",
+#        "work_super_area",
+#        "mode_of_transport",
+#        "home_city",
+#        "sector",
+#        "sub_sector",
+#        "busy",
+#        #"attributes",
+#        "housemates",
+#        "subgroups",
+#        ##"health_information",
+#    )
+#
+#    class ActivityType(IntEnum):
+#        """
+#        Defines the indices of the subgroups a person belongs to
+#        """
+#
+#        residence = 0
+#        primary_activity = 1
+#        hospital = 2
+#        commute = 3
+#        leisure = 4
+#        box = 5
+#
+#    def __init__(
+#        self,
+#        age=-1,
+#        sex=None,
+#        ethnicity=None,
+#        socioecon_index=None,
+#        area=None,
+#        work_super_area=None,
+#        sector="asdasd",
+#        sub_sector="Q",
+#        home_city = "Manchester",
+#        busy=False,
+#        subgroups=(None, None, None, None, None),
+#        ):
+#        """
+#        Inputs:
+#        """
+#        #self.id = next(self._id)
+#        # biological attributes
+#        #self.attributes = (sex, age, ethnicity, socioecon_index)
+#        self.age = age
+#        self.sex = sex
+#        self.ethnicity = ethnicity
+#        self.socioecon_index = socioecon_index
+#        # geo-graphical attributes
+#        self.area = area
+#        self.work_super_area = work_super_area
+#        self.housemates = None
+#        ### primary activity attributes
+#        self.mode_of_transport = "bus"#None#mode_of_transport
+#        self.subgroups = subgroups
+#        self.sector = sector
+#        self.sub_sector = sub_sector
+#        self.home_city = home_city
+#        ##self.health_information = HealthInformation()
+#        self.busy = busy
+#
+#    @property
+#    def residence(self):
+#        return self.subgroups[self.ActivityType.residence]
+#
+#    @property
+#    def primary_activity(self):
+#        return self.subgroups[self.ActivityType.primary_activity]
+#
+#    @property
+#    def hospital(self):
+#        return self.subgroups[self.ActivityType.hospital]
+#
+#    @property
+#    def commute(self):
+#        return self.subgroups[self.ActivityType.commute]
+#
+#    @property
+#    def leisure(self):
+#        return self.subgroups[self.ActivityType.leisure]
+#
+#    @property
+#    def box(self):
+#        return self.subgroups[self.ActivityType.box]
+#
+#    @property
+#    def in_hospital(self):
+#        if self.hospital is None:
+#            return True
+#        return False
+#
+#    def find_guardian(self):
+#
+#        possible_guardians = [person for person in self.housemates if person.age >= 18]
+#        if len(possible_guardians) == 0:
+#            return None
+#        guardian = random.choice(possible_guardians)
+#        if (
+#            guardian.health_information.should_be_in_hospital
+#            or guardian.health_information.dead
+#        ):
+#            return None
+#        else:
+#            return guardian
+
+
+class Person(dataobject):
     class ActivityType(IntEnum):
         """
         Defines the indices of the subgroups a person belongs to
@@ -161,36 +263,38 @@ class Person:
         leisure = 4
         box = 5
 
-    def __init__(
-        self,
-        age=-1,
-        sex=None,
-        ethnicity=None,
-        socioecon_index=None,
-        mode_of_transport=None,
-        area=None,
-    ):
-        """
-        Inputs:
-        """
-        self.id = next(self._id)
-        # biological attributes
-        self.age = age
-        self.sex = sex
-        self.ethnicity = ethnicity
-        # geo-graphical attributes
-        self.work_super_area = None
-        self.area = area
-        self.housemates = list()
-        # primary activity attributes
-        self.mode_of_transport = mode_of_transport
-        self.subgroups = [None] * len(self.ActivityType)  # number of subgroups
-        self.sector = None
-        self.sub_sector = None
-        self.home_city = None
-        self.socioecon_index = socioecon_index
-        self.health_information = HealthInformation()
-        self.busy = False
+    # attributes: tuple
+    sex: str
+    age: int
+    ethnicity: str
+    socioecon_index: str
+    area: None
+    work_super_area: str
+    sector: str
+    sub_sector: str
+    home_city: str
+    busy: bool
+    subgroups: tuple
+    housemates: tuple
+    #health_information: HealthInformation
+
+    @classmethod
+    def from_attributes(cls, sex, age, ethnicity, socioecon_index):
+        return Person(
+            sex,
+            age,
+            ethnicity,
+            socioecon_index,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            #HealthInformation(),
+        )
 
     @property
     def residence(self):
@@ -215,7 +319,7 @@ class Person:
     @property
     def box(self):
         return self.subgroups[self.ActivityType.box]
- 
+
     @property
     def in_hospital(self):
         if self.hospital is None:
