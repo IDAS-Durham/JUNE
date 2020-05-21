@@ -45,12 +45,14 @@ def create_symptoms_healthy():
 
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
-    return tmaker.TrajectoryMaker(None)
+    return tmaker.TrajectoryMaker()
 
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")
-def create_symptoms_trajectories(trajectories):
-    return strans.SymptomsTrajectory(health_index=[0.1, 0.2, 0.3, 0.4, 0.5])
+def create_symptoms_trajectories():
+    return strans.SymptomsTrajectory(
+        health_index=[0.1, 0.2, 0.3, 0.4, 0.5]
+    )
 
 
 @pytest.fixture(name="transmission", scope="session")
