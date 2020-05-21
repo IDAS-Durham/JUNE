@@ -26,9 +26,10 @@ class Pub(SocialVenue):
 
 
 class Pubs(SocialVenues):
-    def __init__(self, pubs: List[Pub]):
+    def __init__(self, pubs: List[Pub], make_tree:bool = True):
         super().__init__(pubs)
-        self.make_tree()
+        if make_tree:
+            self.make_tree()
 
     @classmethod
     def for_geography(

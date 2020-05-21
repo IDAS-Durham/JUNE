@@ -94,6 +94,6 @@ def test__add_person_to_social_venues(social_venues, social_venue_distributor):
     social_venue = social_venue_distributor.get_social_venue_for_person(person)
     social_venue.add(person)
     social_venue = social_venues[-1]
-    assert person.subgroups[person.ActivityType.dynamic] == social_venue[0]
+    assert person.subgroups[person.ActivityType.leisure] == social_venue[0]
     # not added to group
     assert len(social_venue.people) == 0

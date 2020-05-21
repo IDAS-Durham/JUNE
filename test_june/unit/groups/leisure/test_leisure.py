@@ -27,11 +27,11 @@ def make_geography():
 
 @fixture(name="leisure")
 def make_leisure():
-    pubs = Pubs([Pub()],)
+    pubs = Pubs([Pub()],make_tree=False)
     pub_distributor = PubDistributor(
         pubs, male_age_probabilities={"18-50": 0.5}, drags_household_probability=0.0
     )
-    cinemas = Cinemas([Cinema()])
+    cinemas = Cinemas([Cinema()], make_tree=False)
     cinema_distributor = CinemaDistributor(
         cinemas, male_age_probabilities={"10-40": 0.2}, drags_household_probability=1.0,
     )
@@ -83,7 +83,7 @@ def test__person_drags_household(leisure):
     )
     for person in [person1, person2, person3]:
         assert (
-            person.subgroups[person.ActivityType.dynamic] == social_venue.subgroups[0]
+            person.subgroups[person.ActivityType.leisure] == social_venue.subgroups[0]
         )
 
 

@@ -1,7 +1,8 @@
 title: SI model 
 
-logger:
-  save_path: box_results
+activity_to_groups:
+  box: ['boxes']
+
 
 time:
   total_days: 50 

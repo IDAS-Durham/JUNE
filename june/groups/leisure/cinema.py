@@ -23,9 +23,9 @@ class Cinema(SocialVenue):
 
 
 class Cinemas(SocialVenues):
-    def __init__(self, cinemas):
+    def __init__(self, cinemas, make_tree:bool = True):
         super().__init__(cinemas)
-        if len(cinemas) != 0:
+        if len(cinemas) != 0 and make_tree:
             self.make_tree()
 
     @classmethod
