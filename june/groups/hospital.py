@@ -94,13 +94,13 @@ class Hospital(Group):
         ]:
             super().add(
                 person,
-                activity_type=person.ActivityType.hospital,
+                activity_type="hospital",#person.ActivityType.hospital,
                 subgroup_type=subgroup_type,
             )
         else:
             super().add(
                 person,
-                activity_type=person.ActivityType.primary_activity,
+                activity_type="primary_activity", #person.ActivityType.primary_activity,
                 subgroup_type=self.SubgroupType.workers,
             )
 
