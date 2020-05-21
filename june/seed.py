@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from june.geography import SuperAreas
+from june.demography.geography import SuperAreas
 from june.infection.infection import InfectionSelector
 from june import paths
 from typing import List, Tuple
@@ -134,7 +134,7 @@ class Seed:
 
         for choice in choices:
             person = list(super_area.people)[choice]
-            self.selector.infect_person_at_time(person = person, time = 0.0)
+            self.selector.infect_person_at_time(person = person, time = 1.0)
 
     def unleash_virus_per_region(self):
         """

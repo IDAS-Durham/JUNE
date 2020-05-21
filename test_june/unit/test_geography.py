@@ -2,7 +2,7 @@ import pytest
 import numpy.testing as npt
 from time import time
 
-from june import geography as g
+from june.demography import geography as g
 
 
 @pytest.fixture()
@@ -40,13 +40,12 @@ def test__create_single_area():
     geography = g.Geography.from_file(filter_key={"oa" : ["E00120481"]})
     assert len(geography.areas) == 1
 
-def test__create_north_east():
-    t1 = time()
-    geography = g.Geography.from_file(
-        filter_key={"region": ["North East"]}
+def test_create_ball_tree_for_super_areas():
+    geo = g.Geography.from_file(
+        filter_key={"msoa": ["E02004935", "E02000140"]}
     )
-    t2 = time()
-    assert t2 - t1 < 20 
-    assert len(geography.areas) == 8802 
-    assert len(geography.super_areas) == 340
+    super_area = geo.super_areas.get_closest_super_areas(coordinates = [51.752179, -0.334667 ])[0]
+    assert super_area.name == "E02004935"
+
+
 
