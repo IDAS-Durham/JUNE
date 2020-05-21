@@ -1,5 +1,5 @@
 import sys
-from june.groups.pub import PubFiller
+#from june.groups.pub import PubFiller
 
 class GroupMaker:
     def __init__(self, simulator):

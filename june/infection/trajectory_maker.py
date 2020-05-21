@@ -1,32 +1,105 @@
-from june.infection.symptoms import Symptom_Tags
-from enum import IntEnum
-import random
-import numpy as np
+from abc import ABC, abstractmethod
+from typing import List, Tuple
 
-class VariationType(IntEnum):
-    constant  = 0,
-    gaussian  = 1,
-    lognormal = 2
+from june.infection.symptoms import SymptomTags
 
-    
+
+class VariationType(ABC):
+    @staticmethod
+    @abstractmethod
+    def time_for_stage(stage: "Stage") -> float:
+        """
+        Compute the time a given stage should take to complete
+
+        Currently only ConstantVariationType is implemented. Other
+        VariationTypes should extend this class.
+        """
+
+
+class ConstantVariationType(VariationType):
+    @staticmethod
+    def time_for_stage(stage):
+        return stage.completion_time
+
+
+class Stage:
+    def __init__(
+            self,
+            *,
+            symptoms_tag: SymptomTags,
+            completion_time: float,
+            variation_type: VariationType = ConstantVariationType
+    ):
+        """
+        A stage on an illness,
+
+        Parameters
+        ----------
+        symptoms_tag
+            What symptoms does the person have at this stage?
+        completion_time
+            How long does this stage take to complete?
+        variation_type
+            The type of variation applied to the time of this stage
+        """
+        self.variation_type = variation_type
+        self.symptoms_tag = symptoms_tag
+        self.completion_time = completion_time
+
+    def __eq__(self, other):
+        return all([
+            self.symptoms_tag is other.symptoms_tag,
+            self.completion_time == other.completion_time,
+            self.variation_type is other.variation_type
+        ])
+
+    def generate_time(self) -> float:
+        """
+        How long does this stage take for a particular patient?
+        """
+        return self.variation_type.time_for_stage(
+            self
+        )
+
+
+class Trajectory:
+    def __init__(self, *stages):
+        """
+        Generate trajectories of a particular kind.
+
+        This defines how a given person moves through a series of symptoms.
+
+        Parameters
+        ----------
+        stages
+            A list of stages through which the person progresses
+        """
+        self.stages = stages
+
+    def generate_trajectory(self) -> List[
+        Tuple[
+            float,
+            SymptomTags
+        ]
+    ]:
+        """
+        Generate a trajectory for a person. This is a list of tuples
+        describing what symptoms the person should display at a given
+        time.
+        """
+        trajectory = list()
+        cumulative = 0.
+        for stage in self.stages:
+            time = stage.generate_time()
+            trajectory.append((
+                cumulative,
+                stage.symptoms_tag
+            ))
+            cumulative += time
+        return trajectory
+
+
 class TrajectoryMaker:
-    class TimeSetter:
-        def make_time(params):
-            if params[0]==VariationType.constant:
-                return params[2]
-            elif params[0]==VariationType.gaussian:
-                return self.Gaussian(params[2],params[3])
-            elif params[0]==VariationType.lognormal:
-                return self.LogNormal(params[2],params[3])
-            else:
-                print("Variation method not yet implemented:",params[0])
-
-        def Gaussian(self,mean,width):
-            raise NotImplementedError()
-
-        def LogNormal(self,mean,width):
-            raise NotImplementedError()
-
     """
     The various trajectories should depend on external data, and may depend on age &
     gender of the patient.  This would lead to a table of tons of trajectories, with
@@ -36,97 +109,145 @@ class TrajectoryMaker:
     The trajectories will count "backwards" with zero time being the moment of
     infection.
     """
-    def __init__(self, parameters):
-        self.trajectories = {}
-        self.init_tables(parameters)
+
+    __instance = None
+
+    def __init__(self):
+        """
+        Trajectories and their stages should be parsed from configuration. I've
+        removed params for now as they weren't being used but it will be trivial
+        to reintroduce them when we are ready for configurable trajectories.
+        """
+        self.incubation_info = Stage(
+            symptoms_tag=SymptomTags.infected,
+            completion_time=5.1
+        )
+        self.recovery_info = Stage(
+            symptoms_tag=SymptomTags.recovered,
+            completion_time=0.0
+        )
+        self.trajectories = {
+            SymptomTags.asymptomatic: Trajectory(
+                self.incubation_info,
+                Stage(
+                    symptoms_tag=SymptomTags.asymptomatic,
+                    completion_time=14.
+                ),
+                self.recovery_info
+            ),
+            SymptomTags.influenza: Trajectory(
+                self.incubation_info,
+                Stage(
+                    symptoms_tag=SymptomTags.influenza,
+                    completion_time=20.
+                ),
+                self.recovery_info
+            ),
+            SymptomTags.pneumonia: Trajectory(
+                self.incubation_info,
+                Stage(
+                    symptoms_tag=SymptomTags.influenza,
+                    completion_time=5.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.pneumonia,
+                    completion_time=20.
+                ),
+                self.recovery_info
+            ),
+            SymptomTags.hospitalised: Trajectory(
+                self.incubation_info,
+                Stage(
+                    symptoms_tag=SymptomTags.influenza,
+                    completion_time=2.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.hospitalised,
+                    completion_time=20.
+                ),
+                self.recovery_info
+            ),
+            SymptomTags.intensive_care: Trajectory(
+                self.incubation_info,
+                Stage(
+                    symptoms_tag=SymptomTags.influenza,
+                    completion_time=2.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.hospitalised,
+                    completion_time=2.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.intensive_care,
+                    completion_time=20.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.hospitalised,
+                    completion_time=20.
+                ),
+                self.recovery_info
+            ),
+            SymptomTags.dead: Trajectory(
+                self.incubation_info,
+                Stage(
+                    symptoms_tag=SymptomTags.influenza,
+                    completion_time=2.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.hospitalised,
+                    completion_time=2.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.intensive_care,
+                    completion_time=10.
+                ),
+                Stage(
+                    symptoms_tag=SymptomTags.dead,
+                    completion_time=0.
+                )
+            )
+        }
 
     @classmethod
     def from_file(cls) -> "TrajectoryMaker":
-        return cls(parameters=None)
+        """
+        Currently this doesn't do what it says it does.
 
-    def __getitem__(self,tag):
-        template   = self.trajectories[tag[0]]
-        cumulative = 0.
-        trajectory = []
-        for stage in template:
-            time = self.TimeSetter.make_time(stage)
-            trajectory.append([cumulative,stage[1]])
-            cumulative += time
-        return trajectory
+        By setting an instance on the class we can make the trajectory maker
+        something like a singleton. However, if it were being loaded from
+        configurations we'd need to be careful as this could give unexpected
+        effects.
+        """
+        if cls.__instance is None:
+            cls.__instance = cls()
+        return cls.__instance
 
-    def init_tables(self,parameters):
-        self.incubation_info = self.FillIncubationTime(parameters)
-        self.recovery_info   = self.FillRecoveryInfo()
-        for tag in Symptom_Tags:
-            if tag==Symptom_Tags.asymptomatic:
-                self.trajectories[tag] = self.FillAsymptomaticTrajectory(parameters)
-            elif tag==Symptom_Tags.influenza:
-                self.trajectories[tag] = self.FillInfluenzaLikeTrajectory(parameters)
-            elif tag==Symptom_Tags.pneumonia:
-                self.trajectories[tag] = self.FillPneumoniaTrajectory(parameters)
-            elif tag==Symptom_Tags.hospitalised:
-                self.trajectories[tag] = self.FillHospitalisedTrajectory(parameters)
-            elif tag==Symptom_Tags.intensive_care:
-                self.trajectories[tag] = self.FillIntensiveCareTrajectory(parameters)
-            elif tag==Symptom_Tags.dead:
-                self.trajectories[tag] = self.FillDeathTrajectory(parameters)
+    def __getitem__(
+            self,
+            tag: SymptomTags
+    ) -> List[Tuple[
+        float,
+        SymptomTags
+    ]]:
+        """
+        Generate a trajectory from a tag.
 
-    def FillIncubationTime(self,parameters):
-        incubation_time = 5.1  #parameters["incubation_time"] etc.
-        return [VariationType.constant,Symptom_Tags.infected,incubation_time]
+        It might be better to have this return the Trajectory class
+        rather than generating the trajectory itself. I feel the getitem
+        syntax disguises the fact that something new is being created.
 
-    def FillRecoveryInfo(self):
-        return [VariationType.constant,Symptom_Tags.recovered,0.0]
+        I've removed the person (patient) argument because it was not
+        being used. It can be passed to the generate_trajectory class.
 
-        
-    def FillAsymptomaticTrajectory(self,parameters):
-        recovery_time = 14.    #parameters["asymptomatic_recovery_time"] etc.
-        return [self.incubation_info,
-                [VariationType.constant,Symptom_Tags.asymptomatic,recovery_time],
-                self.recovery_info]
-    
-    def FillInfluenzaLikeTrajectory(self,parameters):
-        recovery_time = 20.    #parameters["influenza_recovery_time"] etc.
-        return [self.incubation_info,
-                [VariationType.constant,Symptom_Tags.influenza,recovery_time],
-                self.recovery_info]
-    
-    def FillPneumoniaTrajectory(self,parameters):
-        influenza_time = 5.     #parameters["pre_pneumonia_time"] etc.
-        recovery_time  = 20.    #parameters["pneumonia_recovery_time"] etc.
-        return [self.incubation_info,
-                [VariationType.constant,Symptom_Tags.influenza,recovery_time],
-                [VariationType.constant,Symptom_Tags.pneumonia,recovery_time],
-                self.recovery_info]
-    
-    def FillHospitalisedTrajectory(self,parameters):
-        prehospital_time = 2.  #parameters["pre_hospital_time"] etc.
-        recovery_time    = 20. #parameters["hospital_recovery_time"] etc.
-        return [self.incubation_info,
-                [VariationType.constant,Symptom_Tags.influenza,prehospital_time],
-                [VariationType.constant,Symptom_Tags.hospitalised,recovery_time],
-                self.recovery_info]    
-    
-    def FillIntensiveCareTrajectory(self,parameters):
-        prehospital_time = 2.  #parameters["pre_hospital_time"] etc.
-        hospital_time    = 2.  #parameters["hospital_time"] etc.
-        ICU_time         = 20. #parameters["intensive_care_time"] etc.
-        recovery_time    = 20. #parameters["ICU_recovery_time"] etc.
-        return [self.incubation_info,
-                [VariationType.constant,Symptom_Tags.influenza,prehospital_time],
-                [VariationType.constant,Symptom_Tags.hospitalised,prehospital_time],
-                [VariationType.constant,Symptom_Tags.intensive_care,ICU_time],    
-                [VariationType.constant,Symptom_Tags.hospitalised,recovery_time],
-                self.recovery_info]        
-    
-    def FillDeathTrajectory(self,parameters):
-        prehospital_time = 2.  #parameters["pre_hospital_time"] etc.
-        hospital_time    = 2.  #parameters["hospital_time"] etc.
-        ICU_time         = 10. #parameters["intensive_care_time"] etc.
-        death_time       = 0.  #parameters["ICU_recovery_time"] etc.
-        return [self.incubation_info,
-                [VariationType.constant,Symptom_Tags.influenza,prehospital_time],
-                [VariationType.constant,Symptom_Tags.hospitalised,hospital_time],
-                [VariationType.constant,Symptom_Tags.intensive_care,ICU_time],
-                [VariationType.constant,Symptom_Tags.dead,death_time]]        
+        Parameters
+        ----------
+        tag
+            A tag describing the symptoms being experienced by a
+            patient.
 
+        Returns
+        -------
+        A list describing the symptoms experienced by the patient
+        at given times.
+        """
+        return self.trajectories[tag].generate_trajectory()

@@ -1,8 +1,5 @@
 title: SI model 
 
-logger:
-  save_path: box_results
-
 time:
   total_days: 50 
   step_duration: 
