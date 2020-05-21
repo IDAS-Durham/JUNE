@@ -52,8 +52,16 @@ class Simulator:
             instance of Interaction class 
         infection:
             instance of Infection class
-        config:
-            dictionary with configuration to set up the simulation
+        activity_to_groups:
+            mapping between an activity and its corresponding groups
+        time_config:
+            dictionary with temporal configuration to set up the simulation
+        min_age_home_alone:
+            minimum age of a child to be left alone at home when ill
+        stay_at_home_complacency:
+            probability that an ill person will not stay at home
+        save_path:
+            path to save logger results
         """
         self.world = world
         self.interaction = interaction
@@ -70,14 +78,18 @@ class Simulator:
         self.timer = Timer(time_config)
         self.logger = Logger(self, self.world, self.timer, save_path,)
         self.all_activities = self.get_all_activities(time_config)
-        self.activity_to_group_dict = {
+        if self.world.box_mode:
+            self.activity_to_group_dict = {
             "box": ["boxes"],
-            "hospital": ["hospitals"],
-            "primary_activity": activity_to_groups["primary_activity"],
-            "leisure": activity_to_groups["leisure"],
-            "residence": activity_to_groups["residence"],
-            "commute": activity_to_groups["commute"],
-        }
+            }
+        else:
+            self.activity_to_group_dict = {
+                "hospital": ["hospitals"],
+                "primary_activity": activity_to_groups["primary_activity"],
+                "leisure": activity_to_groups["leisure"],
+                "residence": activity_to_groups["residence"],
+                "commute": activity_to_groups["commute"],
+            }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
         if "commute" in self.all_activities:
@@ -108,7 +120,10 @@ class Simulator:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        activity_to_groups = config["activity_to_groups"]
+        if world.box_mode:
+            activity_to_groups = None
+        else:
+            activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
         return Simulator(
             world, interaction, selector, activity_to_groups, time_config
