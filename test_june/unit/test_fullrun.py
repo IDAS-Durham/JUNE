@@ -12,6 +12,7 @@ from june.demography import Demography
 import june.interaction as inter
 from june.infection import InfectionSelector
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
+from june.groups.leisure import Cinemas, Pubs, Groceries
 from june.infection import transmission as trans
 from june.infection import symptoms as sym
 from june import World
@@ -34,6 +35,9 @@ def test_full_run():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     world       = World(geography, demography, include_households=True, include_commute=True)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.pubs = Pubs.for_geography(geography)
+    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
     selector    = InfectionSelector.from_file(selector_config)
     interaction = inter.DefaultInteraction.from_file()
     interaction.selector = selector
