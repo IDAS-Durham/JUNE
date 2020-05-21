@@ -90,12 +90,12 @@ class Logger:
                 for ages in self.age_ranges:
                     self.group_by_age(day, area, ages, susceptible, infected, recovered)
 
-            self.data_dict["world"][day] = {
-                    "susceptible": susceptible_world,
-                    "infected": infected_world,
-                    "recovered": recovered_world,
-                    "cumulative_infected": total_people - susceptible_world
-                    }
+                self.data_dict["world"][day] = {
+                        "susceptible": susceptible_world,
+                        "infected": infected_world,
+                        "recovered": recovered_world,
+                        "cumulative_infected": total_people - susceptible_world
+                        }
 
             self.log_r0()
         else:
@@ -150,10 +150,9 @@ class Logger:
                 
 
     def get_infected_people_box(self, box):
-        empty_dict = {age: 0 for age in range(100)} # max age is 99
-        infected = empty_dict
-        susceptible = empty_dict
-        recovered = empty_dict
+        infected ={age: 0 for age in range(100)} # max age is 99
+        susceptible ={age: 0 for age in range(100)} # max age is 99
+        recovered = {age: 0 for age in range(100)} # max age is 99
         for person in self.world.people.infected:
             infected[person.age] += 1
         for person in self.world.people.susceptible:
@@ -164,10 +163,9 @@ class Logger:
         
 
     def get_infected_people_area(self, area):
-        empty_dict = {age: 0 for age in range(100)}
-        infected = empty_dict
-        susceptible = empty_dict
-        recovered = empty_dict
+        infected = {age: 0 for age in range(100)}
+        susceptible ={age: 0 for age in range(100)}
+        recovered = {age: 0 for age in range(100)}
         
         for person in area.people:
             if person.health_information.susceptible:
@@ -266,6 +264,7 @@ class Logger:
         plt.bar(locations.keys(), locations.values())
         plt.title('Locations of where infections took place')
         plt.ylabel('Number of people')
+        plt.xticks(rotation='vertical')
 
         if return_data == False:
             return fig
