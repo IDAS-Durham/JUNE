@@ -1,9 +1,5 @@
 title: SI model 
 
-activity_to_groups:
-  box: ['boxes']
-
-
 time:
   total_days: 50 
   step_duration: 
