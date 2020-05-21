@@ -7,21 +7,22 @@ from pathlib import Path
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 import june.interaction as inter
 from june.infection import InfectionSelector
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
+from june.groups.leisure import Cinemas, Pubs, Groceries
 from june.infection import transmission as trans
 from june.infection import symptoms as sym
 from june import World
 from june.seed import Seed
+from june import paths
 
 from pathlib import Path
-path_pwd = Path(__file__)
-dir_pwd  = path_pwd.parent
-selector_config = dir_pwd.parent.parent/"configs/defaults/infection/InfectionConstant.yaml"
-test_config = Path(__file__).parent.parent / "test_simulator.yaml"
+
+selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 def test_full_run():
     geography = Geography.from_file(
@@ -34,6 +35,9 @@ def test_full_run():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     world       = World(geography, demography, include_households=True, include_commute=True)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.pubs = Pubs.for_geography(geography)
+    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
     selector    = InfectionSelector.from_file(selector_config)
     interaction = inter.DefaultInteraction.from_file()
     interaction.selector = selector

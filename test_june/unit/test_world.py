@@ -1,6 +1,4 @@
-import pytest
-from june.geography import Geography
-from june.demography import Demography
+from june.demography.geography import Geography
 from june import World
 from june.groups import Schools, Hospitals, Companies, Households, Cemeteries, CareHomes
 
