@@ -1,7 +1,9 @@
 title: Covid configuration example
 
-logger:
-  save_path: results
+activity_to_groups:
+  primary_activity: ['schools', 'companies']
+  residence: ['households', 'care_homes']
+  commute: ['commuteunits', 'commutecityunits']
 
 time:
   total_days: 10
@@ -14,9 +16,7 @@ time:
   step_activities:
       weekday:
           1: ['hospital', 'primary_activity', 'residence'] 
-          2: ['hospital', 'residence']
+          2: ['hospital', 'commute', 'residence']
       weekend:
           1: ['hospital','residence']
 
-min_age_home_alone: 15
-stay_at_home_complacency: 0.95
