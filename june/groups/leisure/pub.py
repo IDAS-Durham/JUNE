@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List
+from typing import List, Optional
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 from june.demography.geography import Geography
+from june.demography.geography import Area, Areas
 
 default_pub_coordinates_filename = (
     data_path / "geographical_data/pubs_uk24727_latlong.txt"
@@ -37,6 +38,27 @@ class Pubs(SocialVenues):
     ):
         pub_coordinates = np.loadtxt(coordinates_filename)
         return cls.from_coordinates(pub_coordinates, geography.areas)
+
+    @classmethod
+    def from_coordinates(
+        cls,
+        coordinates: List[np.array],
+        areas: Optional[Areas] = None,
+        max_distance_to_area=5,
+        **kwargs
+    ):
+        if areas is not None:
+            _, distances = areas.get_closest_areas(
+                coordinates, k=1, return_distance=True
+            )
+            distances_close = np.where(distances < max_distance_to_area)
+            coordinates = coordinates[distances_close]
+        social_venues = list()
+        for coord in coordinates:
+            sv = Pub()
+            sv.coordinates = coord
+            social_venues.append(sv)
+        return cls(social_venues, **kwargs)
 
 
 class PubDistributor(SocialVenueDistributor):

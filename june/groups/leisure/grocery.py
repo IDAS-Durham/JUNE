@@ -36,12 +36,10 @@ class Groceries(SocialVenues):
         groceries = []
         for super_area in super_areas:
             area_population = len(super_area.people)
-            print(area_population)
             for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
                 grocery = Grocery(max_size)
+                super_area.groceries.append(grocery)
                 groceries.append(grocery)
-        print("gorceries")
-        print(groceries)
         return cls(groceries)
 
 
@@ -68,16 +66,10 @@ class GroceryDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(groceries, **config)
 
-    def add_person_to_social_venue(self, person):
+    def get_social_venue_for_person(self, person):
         """
-        Adds a person to one of the social venues in the distributor. To decide, we select randomly
-        from a certain number of neighbours, or the closest venue if the distance is greater than
-        the maximum_distance.
-
-        Parameters
-        ----------
-        person
-            
+        We select a random grocery shop from the person super area.
         """
         venue = np.random.choice(person.area.super_area.groceries) 
-        venue.add(person)
+        return venue
+
