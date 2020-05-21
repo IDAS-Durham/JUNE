@@ -80,7 +80,6 @@ class Simulator:
         }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
-        # TODO: MAKE SURE THAT CAN USE ONLY COMMUTEUNITS/COMMUTECITYUNITS
         if "commute" in self.all_activities:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
@@ -414,7 +413,7 @@ class Simulator:
                 )
                 n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(
+            print(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
 

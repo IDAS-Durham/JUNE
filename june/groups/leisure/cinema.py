@@ -25,7 +25,8 @@ class Cinema(SocialVenue):
 class Cinemas(SocialVenues):
     def __init__(self, cinemas):
         super().__init__(cinemas)
-        self.make_tree()
+        if len(cinemas) != 0:
+            self.make_tree()
 
     @classmethod
     def for_geography(
@@ -61,7 +62,7 @@ class Cinemas(SocialVenues):
             coordinates = coordinates[distances_close]
         social_venues = list()
         for coord, n_seats in zip(coordinates, seats):
-            sv = Cinema(n_seats)
+            sv = Cinema(int(n_seats))
             sv.coordinates = coord
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
