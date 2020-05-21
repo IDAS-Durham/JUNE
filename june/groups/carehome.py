@@ -1,4 +1,4 @@
-in_residentsmport logging
+import logging
 import yaml
 from enum import IntEnum
 from typing import Dict, List, Optional
@@ -41,7 +41,7 @@ class CareHome(Group):
         residents = 1
         visitors = 2
 
-    def __init__(self, area, n_residents, n_worker):
+    def __init__(self, area: Area, n_residents: int, n_worker: int):
         super().__init__()
         self.n_residents = n_residents
         self.n_worker = n_worker
