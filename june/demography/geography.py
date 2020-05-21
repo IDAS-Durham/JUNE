@@ -38,6 +38,7 @@ class Area:
         "coordinates",
         "super_area",
         "care_home",
+        "households"
     )
     _id = count()
 
@@ -52,6 +53,7 @@ class Area:
         self.coordinates = coordinates
         self.super_area = super_area
         self.people = list()
+        self.households = list()
 
     def add(self, person: Person):
         self.people.append(person)
