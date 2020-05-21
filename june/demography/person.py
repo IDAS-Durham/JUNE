@@ -248,6 +248,9 @@ class Activities(dataobject):
     commute: None
     leisure: None
     box: None
+     
+    def iter(self):
+        return [getattr(self, activity) for activity in self.__fields__]
 
 
 class Person(dataobject):
@@ -270,20 +273,23 @@ class Person(dataobject):
     age: int
     ethnicity: str
     socioecon_index: str
-    area: None
+    area: "Area"
     work_super_area: str
     sector: str
     sub_sector: str
     home_city: str
+    mode_of_transport: str
     busy: bool
     subgroups: Activities
     housemates: tuple
     #health_information: HealthInformation
 
     @classmethod
-    def from_attributes(cls, sex, age, ethnicity, socioecon_index):
+    def from_attributes(cls, sex, age, ethnicity, socioecon_index, id=None):
+        if id is None:
+            id = next(Person._id)
         return Person(
-            next(Person._id),
+            id,
             sex,
             age,
             ethnicity,
@@ -294,9 +300,9 @@ class Person(dataobject):
             None,
             None,
             None,
-            #(None, None, None, None, None, None),
-            Activities(None, None, None, None, None, None),#(None, None, None, None, None),
             None,
+            Activities(None, None, None, None, None, None),
+            (),
             #HealthInformation(),
         )
 

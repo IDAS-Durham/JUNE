@@ -1210,7 +1210,8 @@ class HouseholdDistributor:
                         min_age=self.young_adult_min_age,
                         max_age=self.young_adult_max_age,
                     )
-                    self._add_to_household(household, second_kid, subgroup="young_adults")
+                    if second_kid is not None:
+                        self._add_to_household(household, second_kid, subgroup="young_adults")
         return households
 
     def fill_nokids_households(

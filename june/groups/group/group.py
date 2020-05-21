@@ -121,7 +121,8 @@ class Group(AbstractGroup):
         if not dynamic:
             self[subgroup_type].append(person)
         if activity_type is not None:
-            person.subgroups[activity_type] = self[subgroup_type]
+            #person.subgroups[activity_type] = self[subgroup_type]
+            setattr(person.subgroups, activity_type, self[subgroup_type])
 
     @property
     def people(self) -> List[Person]:
