@@ -1,6 +1,7 @@
 import numpy as np
 from pytest import fixture
 from june.groups import Household
+from june.demography.geography import Area, SuperArea
 
 from june.groups.leisure import (
     Leisure,
@@ -93,7 +94,13 @@ def test__generate_leisure_from_world():
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+    person = Person(sex="m", age=27)
+    household = Household()
+    household.add(person)
+    person.area = geography.areas[0]
     assert np.isclose(len(world.groceries), len(world.people) * 1/500, atol=0, rtol=0.1)
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
+    for _ in range(0,100):
+        leisure.get_subgroup_for_person_and_housemates(person, 0.1, False)

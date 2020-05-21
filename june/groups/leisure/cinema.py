@@ -25,6 +25,8 @@ class Cinema(SocialVenue):
 class Cinemas(SocialVenues):
     def __init__(self, cinemas):
         super().__init__(cinemas)
+        if len(cinemas) != 0:
+            self.make_tree()
 
     @classmethod
     def for_geography(

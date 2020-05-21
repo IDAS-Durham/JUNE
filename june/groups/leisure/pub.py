@@ -27,6 +27,7 @@ class Pub(SocialVenue):
 class Pubs(SocialVenues):
     def __init__(self, pubs: List[Pub]):
         super().__init__(pubs)
+        self.make_tree()
 
     @classmethod
     def for_geography(

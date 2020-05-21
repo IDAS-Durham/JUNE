@@ -98,6 +98,8 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
+        if len(self.social_venues) == 0:
+            return 0
         if person.sex == "m":
             if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
                 return 0

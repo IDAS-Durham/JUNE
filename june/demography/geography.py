@@ -118,7 +118,7 @@ class SuperArea:
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies"
+    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies", "groceries"
     _id = count()
 
     def __init__(
@@ -133,6 +133,7 @@ class SuperArea:
         self.areas = areas or list()
         self.workers = list()
         self.companies = list()
+        self.groceries = list()
 
     def add_worker(self, person: Person):
         self.workers.append(person)
