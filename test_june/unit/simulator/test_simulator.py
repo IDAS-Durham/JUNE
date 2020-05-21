@@ -6,7 +6,7 @@ from june.demography import Demography
 from june.world import World
 from june.interaction import DefaultInteraction
 from june.infection import InfectionSelector, Infection
-from june.infection import Symptom_Tags, SymptomsConstant
+from june.infection import SymptomTags, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.simulator import Simulator
@@ -107,7 +107,7 @@ def test__kid_at_home_is_supervised(sim, health_index):
 
     for kid in kids_at_school:
         sim.selector.infect_person_at_time(kid, 0.0)
-        kid.health_information.infection.symptoms.tag = Symptom_Tags.influenza
+        kid.health_information.infection.symptoms.tag = SymptomTags.influenza
         assert kid.health_information.must_stay_at_home
 
     sim.move_people_to_active_subgroups(["primary_activity", "residence"])
@@ -125,7 +125,7 @@ def test__kid_at_home_is_supervised(sim, health_index):
 def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]
     sim.selector.infect_person_at_time(dummy_person, 0.0)
-    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
+    dummy_person.health_information.infection.symptoms.tag = SymptomTags.hospitalised
     assert dummy_person.health_information.should_be_in_hospital
     sim.update_health_status(0., 0.)
     assert dummy_person.hospital is not None
@@ -136,7 +136,7 @@ def test__hospitalise_the_sick(sim):
 
 def test__move_people_from_hospital_to_icu(sim):
     dummy_person = sim.world.people.members[0]
-    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.intensive_care
+    dummy_person.health_information.infection.symptoms.tag = SymptomTags.intensive_care
     sim.hospitalise_the_sick(dummy_person, 'hospitalised')
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
@@ -145,7 +145,7 @@ def test__move_people_from_hospital_to_icu(sim):
 
 def test__move_people_from_icu_to_hospital(sim):
     dummy_person = sim.world.people.members[0]
-    dummy_person.health_information.infection.symptoms.tag = Symptom_Tags.hospitalised
+    dummy_person.health_information.infection.symptoms.tag = SymptomTags.hospitalised
     sim.hospitalise_the_sick(dummy_person, 'intensive care')
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
