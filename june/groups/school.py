@@ -97,11 +97,13 @@ class School(Group):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
-            person.subgroups[person.ActivityType.primary_activity] = subgroup
+            #person.subgroups[person.ActivityType.primary_activity] = subgroup
+            person.subgroups.primary_activity = subgroup
         else:  # teacher
             subgroup = self.subgroups[self.SubgroupType.teachers]
             subgroup.append(person)
-            person.subgroups[person.ActivityType.primary_activity] = subgroup
+            #person.subgroups[person.ActivityType.primary_activity] = subgroup
+            person.subgroups.primary_activity = subgroup
 
     @property
     def is_full(self):
