@@ -9,6 +9,7 @@ import time
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
+from recordclass import dataobject
 
 
 class Household(Group):
@@ -38,12 +39,17 @@ class Household(Group):
         self.n_residents = 0
 
     def add(self, person, subgroup_type=SubgroupType.adults):
+        housemates = []
         for mate in self.people:
             if person != mate:
-                mate.housemates.append(person)
-                person.housemates.append(mate)
+                housemates.append(person)
+                person.housemates = housemates
         self[subgroup_type].append(person)
-        person.subgroups[person.ActivityType.residence] = self[subgroup_type]
+        person.subgroups.residence = self[subgroup_type]
+        #subgroups = list(person.subgroups)
+        #subgroups[person.ActivityType.residence] = self[subgroup_type]
+        #person.subgroups = tuple(subgroups)
+        #person.subgroups[person.ActivityType.residence] = self[subgroup_type]
 
     @property
     def kids(self):
@@ -67,8 +73,6 @@ class Households(Supergroup):
     Contains all households for the given area, and information about them.
     """
 
-    __slots__ = "members"
-
     def __init__(self, households: List[Household]):
         super().__init__()
         self.members = households
@@ -86,15 +90,3 @@ class Households(Supergroup):
         self.members += households.members
         return self
 
-    def erase_people_from_groups_and_subgroups(self):
-        """
-        Erases all people from subgroups.
-        Erases all subgroup references to group.
-        Empties housemates list.
-        """
-        for group in self:
-            for person in group.people:
-                person.housemates.clear()
-            for subgroup in group.subgroups:
-                subgroup._people.clear()
-                subgroup.group = None
