@@ -37,13 +37,6 @@ def create_simulator():
     return Simulator.from_file(world, interaction, selector,
             config_filename = test_config)
 
-@pytest.fixture(name="health_index")
-def create_health_index():
-    def dummy_health_index(age, sex):
-        return [0.1, 0.3, 0.5, 0.7, 0.9]
-
-    return dummy_health_index
-
 
 def test__everyone_has_an_activity(sim):
     for person in sim.world.people.members:
