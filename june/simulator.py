@@ -9,7 +9,7 @@ import yaml
 
 from june.demography import Person
 from june.groups import Group
-from june.groups.leisure import leisure
+#from june.groups.leisure import leisure
 from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
