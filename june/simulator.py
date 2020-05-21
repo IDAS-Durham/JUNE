@@ -134,13 +134,13 @@ class Simulator:
                 self.world.commutecities.members
             )
     def distribute_commuters(self):
-        if hasattr(self, commute_unit_distributor): 
+        if hasattr(self, 'commute_unit_distributor'): 
             self.commute_unit_distributor.distribute_people()
-        if hasattr(self, commute_city_unit_distributor): 
+        if hasattr(self, 'commute_city_unit_distributor'): 
             self.commute_city_unit_distributor.distribute_people()
 
     def initialize_leisure(self, leisure_options):
-        leisure.generate_leisure_for_world(
+        self.leisure = leisure.generate_leisure_for_world(
             list_of_leisure_groups=leisure_options, world=self.world
         )
 
@@ -234,8 +234,8 @@ class Simulator:
         """
         activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
-            if activity == "leisure":
-                subgroup = self.world.leisure.get_subgroup_for_person_and_housemates(
+            if activity == "leisure" and person.leisure is None:
+                subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person, self.timer.duration, self.timer.is_weekend
                 )
             else:
