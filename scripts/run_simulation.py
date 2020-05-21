@@ -11,6 +11,7 @@ from june.infection import InfectionSelector, Infection
 from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups.leisure import Cinemas, Pubs, Groceries
 from june.simulator import Simulator
 from june.seed import Seed
 from june import paths
@@ -33,6 +34,10 @@ geography.companies = Companies.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
 demography = Demography.for_geography(geography)
 world = World(geography, demography, include_households=True, include_commute=True)
+world.cinemas = Cinemas.for_geography(geography)
+world.pubs = Pubs.for_geography(geography)
+world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+
 t2 = time.time()
 print(f"Creating the world took {t2 -t1} seconds to run.")
 
