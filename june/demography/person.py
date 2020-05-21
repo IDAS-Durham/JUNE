@@ -158,7 +158,7 @@ class Person:
         primary_activity = 1
         hospital = 2
         commute = 3
-        dynamic = 4
+        leisure = 4
         box = 5
 
     def __init__(
@@ -209,8 +209,8 @@ class Person:
         return self.subgroups[self.ActivityType.commute]
 
     @property
-    def dynamic(self):
-        return self.subgroups[self.ActivityType.dynamic]
+    def leisure(self):
+        return self.subgroups[self.ActivityType.leisure]
 
     @property
     def box(self):

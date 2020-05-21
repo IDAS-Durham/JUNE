@@ -4,7 +4,7 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 import pandas as pd
 import numpy as np
-import h5py
+from sklearn.neighbors import BallTree
 
 from june import paths
 from june.demography.person import Person
@@ -24,6 +24,12 @@ default_logging_config_filename = (
 )
 
 logger = logging.getLogger(__name__)
+
+earth_radius = 6371  # km
+
+
+class GeographyError(BaseException):
+    pass
 
 
 class Area:
@@ -63,11 +69,15 @@ class Area:
 
 
 class Areas:
-    __slots__ = "members", "super_area"
+    __slots__ = "members", "super_area", "ball_tree"
 
-    def __init__(self, areas: List[Area], super_area=None):
+    def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
         self.members = areas
         self.super_area = super_area
+        if ball_tree:
+            self.ball_tree = self.construct_ball_tree()
+        else:
+            self.ball_tree = None
 
     def __iter__(self):
         return iter(self.members)
@@ -78,12 +88,37 @@ class Areas:
     def __getitem__(self, index):
         return self.members[index]
 
+    def construct_ball_tree(self):
+        coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
+        ball_tree = BallTree(coordinates)
+        return ball_tree
+
+    def get_closest_areas(self, coordinates, k=1, return_distance=False):
+        coordinates = np.array(coordinates)
+        if self.ball_tree is None:
+            raise GeographyError("Areas initialized without a BallTree")
+        if coordinates.shape == (2,):
+            coordinates = coordinates.reshape(1, -1)
+        if return_distance:
+            distances, indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            areas = [self[idx] for idx in indcs[:, 0]]
+            return areas, distances[:, 0] * earth_radius
+        else:
+            indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            areas = [self[idx] for idx in indcs[:, 0]]
+            return areas
+
+
 class SuperArea:
     """
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies"
+    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies", "groceries"
     _id = count()
 
     def __init__(
@@ -98,6 +133,7 @@ class SuperArea:
         self.areas = areas or list()
         self.workers = list()
         self.companies = list()
+        self.groceries = list()
 
     def add_worker(self, person: Person):
         self.workers.append(person)
@@ -109,10 +145,24 @@ class SuperArea:
 
 
 class SuperAreas:
-    __slots__ = "members"
+    __slots__ = "members", "ball_tree"
 
-    def __init__(self, super_areas: List[SuperArea]):
+    def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
+        """
+        Group to aggregate SuperArea objects.
+
+        Parameters
+        ----------
+        super_areas
+            list of super areas
+        ball_tree
+            whether to construct a NN tree for the super areas
+        """
         self.members = super_areas
+        if ball_tree:
+            self.ball_tree = self.construct_ball_tree()
+        else:
+            self.ball_tree = None
 
     def __iter__(self):
         return iter(self.members)
@@ -122,6 +172,32 @@ class SuperAreas:
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def construct_ball_tree(self):
+        coordinates = np.array(
+            [np.deg2rad(super_area.coordinates) for super_area in self]
+        )
+        ball_tree = BallTree(coordinates)
+        return ball_tree
+
+    def get_closest_super_areas(self, coordinates, k=1, return_distance=False):
+        coordinates = np.array(coordinates)
+        if self.ball_tree is None:
+            raise GeographyError("Areas initialized without a BallTree")
+        if coordinates.shape == (2,):
+            coordinates = coordinates.reshape(1, -1)
+        if return_distance:
+            distances, indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            super_areas = [self[idx] for idx in indcs[:, 0]]
+            return super_areas, distances[:, 0] * earth_radius
+        else:
+            indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            super_areas = [self[idx] for idx in indcs[:, 0]]
+            return super_areas
 
 
 class Geography:
@@ -253,7 +329,6 @@ class Geography:
             geo_hierarchy, areas_coord, super_areas_coord
         )
         return cls(areas, super_areas)
-
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
