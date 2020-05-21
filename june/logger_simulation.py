@@ -150,9 +150,9 @@ class Logger:
                 
 
     def get_infected_people_box(self, box):
-        infected ={age: 0 for age in range(100)} # max age is 99
-        susceptible ={age: 0 for age in range(100)} # max age is 99
-        recovered = {age: 0 for age in range(100)} # max age is 99
+        infected ={age: 0 for age in range(100)} 
+        susceptible ={age: 0 for age in range(100)} 
+        recovered = {age: 0 for age in range(100)} 
         for person in self.world.people.infected:
             infected[person.age] += 1
         for person in self.world.people.susceptible:
@@ -163,6 +163,8 @@ class Logger:
         
 
     def get_infected_people_area(self, area):
+        #TODO: combine into one dictionary per age,
+        #TODO: add number of deaths information
         infected = {age: 0 for age in range(100)}
         susceptible ={age: 0 for age in range(100)}
         recovered = {age: 0 for age in range(100)}
