@@ -4,7 +4,6 @@ from enum import IntEnum, Enum
 from june.infection import SymptomTags
 import struct
 from recordclass import dataobject
-from collections import namedtuple
 
 # import june.groups.household
 import numpy as np
@@ -128,13 +127,6 @@ class HealthInformation:
         self.number_of_infected += 1
 
 
-class Household:
-    __slots__ = "id"
-
-    def __init__(self):
-        pass
-
-
 # class Person:
 #    #_id = count()
 #    __slots__ = (
@@ -249,8 +241,17 @@ class Household:
 #        else:
 #            return guardian
 
+class Activities(dataobject):
+    residence: None
+    primary_activity: None
+    hospital: None
+    commute: None
+    leisure: None
+    box: None
+
 
 class Person(dataobject):
+    _id = count()
     class ActivityType(IntEnum):
         """
         Defines the indices of the subgroups a person belongs to
@@ -264,6 +265,7 @@ class Person(dataobject):
         box = 5
 
     # attributes: tuple
+    id: int
     sex: str
     age: int
     ethnicity: str
@@ -274,13 +276,14 @@ class Person(dataobject):
     sub_sector: str
     home_city: str
     busy: bool
-    subgroups: tuple
+    subgroups: Activities
     housemates: tuple
     #health_information: HealthInformation
 
     @classmethod
     def from_attributes(cls, sex, age, ethnicity, socioecon_index):
         return Person(
+            next(Person._id),
             sex,
             age,
             ethnicity,
@@ -291,34 +294,41 @@ class Person(dataobject):
             None,
             None,
             None,
-            None,
+            #(None, None, None, None, None, None),
+            Activities(None, None, None, None, None, None),#(None, None, None, None, None),
             None,
             #HealthInformation(),
         )
 
     @property
     def residence(self):
-        return self.subgroups[self.ActivityType.residence]
+        #return self.subgroups[self.ActivityType.residence]
+        return self.subgroups.residence
 
     @property
     def primary_activity(self):
-        return self.subgroups[self.ActivityType.primary_activity]
+        #return self.subgroups[self.ActivityType.primary_activity]
+        return self.subgroups.primary_activity
 
     @property
     def hospital(self):
-        return self.subgroups[self.ActivityType.hospital]
+        #return self.subgroups[self.ActivityType.hospital]
+        return self.subgroups.hospital
 
     @property
     def commute(self):
-        return self.subgroups[self.ActivityType.commute]
+        #return self.subgroups[self.ActivityType.commute]
+        return self.subgroups.commute
 
     @property
     def leisure(self):
-        return self.subgroups[self.ActivityType.leisure]
+        #return self.subgroups[self.ActivityType.leisure]
+        return self.subgroups.leisure
 
     @property
     def box(self):
-        return self.subgroups[self.ActivityType.box]
+        #return self.subgroups[self.ActivityType.box]
+        return self.subgroups.box
 
     @property
     def in_hospital(self):
