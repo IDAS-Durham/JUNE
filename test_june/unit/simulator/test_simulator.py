@@ -28,10 +28,10 @@ def create_simulator():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
-    geography.cinemas = Cinemas.for_geography(geography)
-    geography.pubs = Pubs.for_geography(geography)
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=True, include_commute=True)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.pubs = Pubs.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
@@ -58,10 +58,10 @@ def test__everyone_has_an_activity(sim):
 
 def test__apply_activity_hierarchy(sim):
     unordered_activities = random.sample(
-        sim.permanent_activity_hierarchy, len(sim.permanent_activity_hierarchy)
+        sim.activity_hierarchy, len(sim.activity_hierarchy)
     )
     ordered_activities = sim.apply_activity_hierarchy(unordered_activities)
-    assert ordered_activities == sim.permanent_activity_hierarchy
+    assert ordered_activities == sim.activity_hierarchy
 
 
 def test__activities_to_groups(sim):
@@ -108,6 +108,17 @@ def test__move_people_to_residence(sim):
         assert person in person.residence.people
     sim.clear_world()
 
+def test__move_people_to_leisure(sim):
+    sim.move_people_to_active_subgroups(["leisure", "residence"])
+    n_lazy = 0
+    for person in sim.world.people.members:
+        if person.leisure is not None:
+            n_lazy += 1
+            print(f'There are {len(person.leisure.people)} in this group')
+            assert person in person.leisure.people
+    assert n_lazy > 0
+    sim.clear_world()
+
 
 def test__move_people_to_primary_activity(sim):
 
@@ -119,7 +130,7 @@ def test__move_people_to_primary_activity(sim):
 
 
 def test__move_people_to_commute(sim):
-    sim.group_maker.distribute_people("commute")
+    sim.distribute_commuters()
     sim.move_people_to_active_subgroups(["commute", "residence"])
     n_commuters = 0
     for person in sim.world.people.members:
@@ -129,17 +140,6 @@ def test__move_people_to_commute(sim):
     assert n_commuters > 0
     sim.clear_world()
 
-
-def test__move_people_to_leisure(sim):
-    sim.group_maker.distribute_people("leisure")
-    sim.move_people_to_active_subgroups(["leisure", "residence"])
-    n_lazy = 0
-    for person in sim.world.people.members:
-        if person.dynamic is not None:
-            n_lazy += 1
-            assert person in person.dynamic.people
-    assert n_lazy > 0
-    sim.clear_world()
 
 
 def test__kid_at_home_is_supervised(sim, health_index):
