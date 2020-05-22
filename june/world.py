@@ -183,7 +183,7 @@ class World:
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
 
-    def to_hdf5(self, file_path: str, chunk_size=1000):
+    def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
         are stored as groups. Class instances are substituted by ids of the 
@@ -207,7 +207,7 @@ class World:
         if hasattr(self, "hospitals"):
             save_hospitals_to_hdf5(self.hospitals, file_path, chunk_size)
         if hasattr(self, "schools"):
-            save_schools_to_hdf5(self.schools, file_path, chunk_size)
+            save_schools_to_hdf5(self.schools, file_path, chunk_size=10)
         if hasattr(self, "companies"):
             save_companies_to_hdf5(self.companies, file_path, chunk_size)
         if hasattr(self, "households"):
