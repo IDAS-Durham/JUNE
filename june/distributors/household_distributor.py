@@ -869,7 +869,7 @@ class HouseholdDistributor:
         sex = int(not person.sex)  # get opposite sex
         sampled_age_difference = self._couples_age_differences_list.pop()
         if under_65:
-            target_age = min(person.age - abs(sampled_age_difference), 64)
+            target_age = min(person.age + abs(sampled_age_difference), 64)
         else:
             target_age = person.age + sampled_age_difference
         if over_65:
