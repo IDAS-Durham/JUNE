@@ -85,7 +85,7 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_hospitals)
-            ids = hospitals["id"]
+            ids = hospitals["id"][idx1:idx2]
             super_areas = hospitals["super_area"][idx1:idx2]
             n_beds_list = hospitals["n_beds"][idx1:idx2]
             n_icu_beds_list = hospitals["n_icu_beds"][idx1:idx2]

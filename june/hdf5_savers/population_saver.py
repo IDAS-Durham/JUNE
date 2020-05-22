@@ -177,6 +177,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
+            print(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             ids = population["id"][idx1:idx2]

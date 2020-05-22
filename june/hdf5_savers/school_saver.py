@@ -107,7 +107,7 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
-            ids = schools["id"]
+            ids = schools["id"][idx1:idx2]
             super_areas = schools["super_area"][idx1:idx2]
             n_teachers_max = schools["n_teachers_max"][idx1:idx2]
             n_teachers = schools["n_teachers"][idx1:idx2]
