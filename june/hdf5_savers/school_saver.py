@@ -43,7 +43,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 n_teachers.append(school.n_teachers)
                 age_min.append(school.age_min)
                 age_max.append(school.age_max)
-                sectors.append(school.sector.encode("ascii", "ignore"))
+                if type(school.sector) is float:
+                    sectors.append(" ".encode("ascii", "ignore"))
+                else:
+                    sectors.append(school.sector.encode("ascii", "ignore"))
                 coordinates.append(np.array(school.coordinates))
 
             ids = np.array(ids, dtype=np.int)
@@ -107,13 +110,18 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             coordinates = schools["coordinates"][idx1:idx2]
             sectors = schools["sector"][idx1:idx2]
             for k in range(idx2 - idx1):
+                sector = sectors[k]
+                if sector.decode() == " ":
+                    sector = None
+                else:
+                    sector = sector.decode()
                 school = School(
                     coordinates[k],
                     n_pupils_max[k],
                     n_teachers_max[k],
                     age_min[k],
                     age_max[k],
-                    sectors[k].decode(),
+                    sector,
                 )
                 school.id = ids[k]
                 school.n_teachers = n_teachers[k]

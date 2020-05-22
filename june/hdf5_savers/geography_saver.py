@@ -105,4 +105,6 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
                 )
                 super_area.id = ids[k]
                 super_area_list.append(super_area)
-    return Geography(area_list, super_area_list)
+    areas = Areas(area_list)
+    super_areas = SuperAreas(super_area_list)
+    return Geography(areas, super_areas)
