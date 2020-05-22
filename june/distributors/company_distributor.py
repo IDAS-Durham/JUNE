@@ -38,7 +38,6 @@ class CompanyDistributor:
             full_idx[company.sector] = 0
 
         for worker in super_area.workers:
-            #if worker.subgroups[worker.ActivityType.primary_activity] is not None:
             if worker.primary_activity is not None:
                 continue
             if company_dict[worker.sector]:
