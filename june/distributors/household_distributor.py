@@ -701,7 +701,7 @@ class HouseholdDistributor:
         return all_households
 
     def _create_household(
-        self, area: Area, communal: bool = False, max_household_size: int = np.inf
+            self, area: Area, type= None, max_household_size: int = np.inf
     ) -> Household:
         """Creates household in the area.
 
@@ -715,7 +715,7 @@ class HouseholdDistributor:
             Maximum number of people allowed in the household.
 
         """
-        household = Household(communal=communal, max_size=max_household_size)
+        household = Household(type=type, max_size=max_household_size)
         return household
 
     def _add_to_household(
@@ -869,7 +869,7 @@ class HouseholdDistributor:
         sex = int(not person.sex)  # get opposite sex
         sampled_age_difference = self._couples_age_differences_list.pop()
         if under_65:
-            target_age = min(person.age + abs(sampled_age_difference), 64)
+            target_age = min(person.age - abs(sampled_age_difference), 64)
         else:
             target_age = person.age + sampled_age_difference
         if over_65:
@@ -1144,7 +1144,7 @@ class HouseholdDistributor:
         households = []
         for i in range(0, n_households):
             household = self._create_household(
-                area, max_household_size=max_household_size
+                area, max_household_size=max_household_size, type="family"
             )
             households.append(household)
             first_kid = self._get_random_person_in_age_bracket(
@@ -1416,7 +1416,7 @@ class HouseholdDistributor:
                     if person is None:
                         no_adults = True
                         break
-                    household = self._create_household(area, communal=True)
+                    household = self._create_household(area, type="communal")
                     communal_houses.append(household)
                     self._add_to_household(household, person, subgroup="default")
                     people_left -= 1

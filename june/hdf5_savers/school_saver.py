@@ -9,7 +9,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
     """
     Saves the schools object to hdf5 format file ``file_path``. Currently for each person,
     the following values are stored:
-    - id, n_pupils_max, n_teachers_max, n_teachers, age_min, age_max, sector, super_area, coordiantes
+    - id, n_pupils_max, n_teachers_max, n_teachers, age_min, age_max, sector, coordiantes
 
     Parameters
     ----------
@@ -35,14 +35,9 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             age_min = []
             age_max = []
             sectors = []
-            super_areas = []
             coordinates = []
             for school in schools[idx1:idx2]:
                 ids.append(school.id)
-                if school.super_area is None:
-                    super_areas.append(nan_integer)
-                else:
-                    super_areas.append(school.super_area.id)
                 n_pupils_max.append(school.n_pupils_max)
                 n_teachers_max.append(school.n_teachers_max)
                 n_teachers.append(school.n_teachers)
@@ -52,7 +47,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 coordinates.append(np.array(school.coordinates))
 
             ids = np.array(ids, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
             n_pupils_max = np.array(n_pupils_max, dtype=np.int)
             n_teachers_max = np.array(n_teachers_max, dtype=np.int)
             n_teachers = np.array(n_teachers, dtype=np.int)
@@ -63,20 +57,17 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
-                schools_dset.create_dataset("super_area", data=super_areas, maxshape=(None,))
                 schools_dset.create_dataset("n_teachers_max", data=n_teachers_max, maxshape=(None,))
                 schools_dset.create_dataset("n_pupils_max", data=n_pupils_max, maxshape=(None,))
                 schools_dset.create_dataset("n_teachers", data=n_teachers, maxshape=(None,))
                 schools_dset.create_dataset("age_min", data=age_min, maxshape=(None,))
                 schools_dset.create_dataset("age_max", data=age_max, maxshape=(None,))
-                schools_dset.create_dataset("sector", data=sectors)
+                schools_dset.create_dataset("sector", data=sectors, maxshape=(None,))
                 schools_dset.create_dataset("coordinates", data=coordinates, maxshape=(None, coordinates.shape[1]))
             else:
                 newshape = (schools_dset["id"].shape[0] + ids.shape[0],)
                 schools_dset["id"].resize(newshape)
                 schools_dset["id"][idx1:idx2] = ids
-                schools_dset["super_area"].resize(newshape)
-                schools_dset["super_area"][idx1:idx2] = super_areas
                 schools_dset["n_teachers_max"].resize(newshape)
                 schools_dset["n_teachers_max"][idx1:idx2] = n_teachers_max
                 schools_dset["n_pupils_max"].resize(newshape)
@@ -108,7 +99,6 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
             ids = schools["id"][idx1:idx2]
-            super_areas = schools["super_area"][idx1:idx2]
             n_teachers_max = schools["n_teachers_max"][idx1:idx2]
             n_teachers = schools["n_teachers"][idx1:idx2]
             n_pupils_max = schools["n_pupils_max"][idx1:idx2]
@@ -117,9 +107,6 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             coordinates = schools["coordinates"][idx1:idx2]
             sectors = schools["sector"][idx1:idx2]
             for k in range(idx2 - idx1):
-                super_area = super_areas[k]
-                if super_area == nan_integer:
-                    super_area = None
                 school = School(
                     coordinates[k],
                     n_pupils_max[k],

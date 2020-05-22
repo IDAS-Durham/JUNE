@@ -23,7 +23,7 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = ("area", "communal", "max_size", "n_residents", "residents")
+    __slots__ = ("area", "type", "max_size", "n_residents", "residents")
 
     class SubgroupType(IntEnum):
         kids = 0
@@ -31,10 +31,11 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, communal=False, area=None, max_size=np.inf):
+    def __init__(self, type=None, area=None, max_size=np.inf):
         super().__init__()
         self.area = area
-        self.communal = communal
+        self.type = type
+        #self.communal = communal
         self.residents = tuple()
         self.max_size = max_size
         self.n_residents = 0
