@@ -1,4 +1,4 @@
-#from .logger_simulation import Logger
+from .logger_simulation import Logger
 from .time import Timer
 
 from . import infection

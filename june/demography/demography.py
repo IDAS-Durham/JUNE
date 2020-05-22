@@ -191,13 +191,6 @@ class Demography:
         people = list()
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
-            #person = Person(
-            #    age=age_and_sex_generator.age(),
-            #    sex=age_and_sex_generator.sex(),
-            #    ethnicity=age_and_sex_generator.ethnicity(),
-            #    socioecon_index=age_and_sex_generator.socioecon_index(),
-            #    area=None
-            #)
             person = Person.from_attributes(
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
