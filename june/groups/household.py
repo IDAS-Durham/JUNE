@@ -23,7 +23,7 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = ("area", "communal", "max_size", "n_residents")
+    __slots__ = ("area", "communal", "max_size", "n_residents", "residents")
 
     class SubgroupType(IntEnum):
         kids = 0
@@ -35,15 +35,16 @@ class Household(Group):
         super().__init__()
         self.area = area
         self.communal = communal
+        self.residents = ()
         self.max_size = max_size
         self.n_residents = 0
 
     def add(self, person, subgroup_type=SubgroupType.adults):
-        housemates = []
-        for mate in self.people:
-            if person != mate:
-                housemates.append(person)
-                person.housemates = housemates
+        #housemates = []
+        #for mate in self.people:
+        #    if person != mate:
+        #        housemates.append(person)
+        #        person.housemates = housemates
         self[subgroup_type].append(person)
         person.subgroups.residence = self[subgroup_type]
         #subgroups = list(person.subgroups)
