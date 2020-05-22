@@ -189,7 +189,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                 person = Person.from_attributes(
                     id=ids[k],
                     age=ages[k],
-                    sex=sexes[k],
+                    sex=sexes[k].decode(),
                     ethnicity=ethns[k].decode(),
                     socioecon_index=socioecon_indices[k],
                 )

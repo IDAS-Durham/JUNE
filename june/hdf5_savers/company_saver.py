@@ -4,6 +4,7 @@ from june.groups import Company, Companies
 
 nan_integer = -999
 
+
 def save_companies_to_hdf5(
     companies: Companies, file_path: str, chunk_size: int = 500000
 ):
@@ -26,6 +27,7 @@ def save_companies_to_hdf5(
     n_chunks = int(np.ceil(n_companies / chunk_size))
     with h5py.File(file_path, "a") as f:
         companies_dset = f.create_group("companies")
+        first_company_idx = companies[0].id
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
@@ -35,7 +37,9 @@ def save_companies_to_hdf5(
             n_workers_max = []
             company_idx = [company.id for company in companies[idx1:idx2]]
             # sort companies by id
-            companies_sorted = [companies[i] for i in np.sort(company_idx)]
+            companies_sorted = [
+                companies[i - first_company_idx] for i in np.sort(company_idx)
+            ]
             for company in companies_sorted:
                 ids.append(company.id)
                 if company.super_area is None:
@@ -55,9 +59,7 @@ def save_companies_to_hdf5(
                 companies_dset.create_dataset(
                     "super_area", data=super_areas, maxshape=(None,)
                 )
-                companies_dset.create_dataset(
-                    "sector", data=sectors, maxshape=(None,)
-                )
+                companies_dset.create_dataset("sector", data=sectors, maxshape=(None,))
                 companies_dset.create_dataset(
                     "n_workers_max", data=n_workers_max, maxshape=(None,)
                 )
