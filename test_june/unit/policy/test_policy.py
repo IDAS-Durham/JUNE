@@ -146,5 +146,3 @@ def test__close_pubs(world, selector, interaction):
                 assert len(pub.people == 0)
 
         sim.clear_world()
-
-
