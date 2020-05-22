@@ -14,14 +14,18 @@ default_data_path = (
         paths.data_path
         / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
-
+default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 
 class CareHomeError(BaseException):
     pass
 
 
 class CareHomeDistributor:
-    def __init__(self, min_age_in_care_home: int = 65):
+    def __init__(
+        self,
+        min_age_in_care_home: int = 65,
+        config_file: str = default_config_filename,
+    ):
         """
         Tool to distribute people from a certain area into a care home, if there is one.
 
@@ -31,6 +35,9 @@ class CareHomeDistributor:
             minimum age to put people in care home.
         """
         self.min_age_in_care_home = min_age_in_care_home
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        self.config = config
 
     def _create_people_dicts(self, area: Area):
         """
@@ -78,6 +85,7 @@ class CareHomeDistributor:
         if n_residents == 0:
             raise CareHomeError("No care home residents in this area.")
         self.populate_care_home(area.care_home, men_by_age, women_by_age)
+        self.assign_workers(area.care_home)
 
     def _get_person_of_age(self, people_dict: dict, age: int):
         person = people_dict[age].pop()
@@ -126,21 +134,20 @@ class CareHomeDistributor:
                 if current_age_to_fill < self.min_age_in_care_home:
                     break
 
-    def distribute_workers(self, area):
+    def assign_workers(self, area: Area, care_home: CareHome):
         """
         Healthcares sector
             Q: Carers
         """
-        hospitals_in_msoa = self.hospitals_in_msoa(area)
-        if len(hospitals_in_msoa) == 0:
-            return
-        medics = [
+        carers = [
             person
-            for idx, person in enumerate(msoa.workers)
-            if person.sector == self.healthcare_sector_label
+            for idx, person in enumerate(area.super_area.workers)
+            if person.sector == list(module_config["sector"].keys())[0]
         ]
-        if len(medics) == 0:
-            logger.info(f"\n The MSOArea {msoa.name} has no people that work in it!")
+        if len(carers) == 0:
+            logger.info(
+                f"\n The SuperArea {area.super_area.name} has no health-care workers in it!"
+            )
             return
         else:
             # equal chance to work in any hospital nearest to any area within msoa

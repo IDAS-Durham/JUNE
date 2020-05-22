@@ -119,7 +119,8 @@ class World:
         )
 
     def distribute_people_to_care_homes(self):
-        CareHomeDistributor().populate_care_home_in_areas(self.areas)
+        carehome_distr = CareHomeDistributor()
+        carehome_distr.populate_care_home_in_areas(self.areas)
 
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
