@@ -73,7 +73,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_carehomes)
-            ids = carehomes["id"]
+            ids = carehomes["id"][idx1:idx2]
             areas = carehomes["area"][idx1:idx2]
             n_residents = carehomes["n_residents"][idx1:idx2]
             for k in range(idx2 - idx1):
