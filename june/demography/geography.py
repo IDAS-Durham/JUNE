@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 import pandas as pd
 import numpy as np
+from sklearn.neighbors import BallTree
 
 from june import paths
 from june.demography.person import Person
@@ -23,6 +24,12 @@ default_logging_config_filename = (
 )
 
 logger = logging.getLogger(__name__)
+
+earth_radius = 6371  # km
+
+
+class GeographyError(BaseException):
+    pass
 
 
 class Area:
@@ -62,11 +69,15 @@ class Area:
 
 
 class Areas:
-    __slots__ = "members", "super_area"
+    __slots__ = "members", "super_area", "ball_tree"
 
-    def __init__(self, areas: List[Area], super_area=None):
+    def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
         self.members = areas
         self.super_area = super_area
+        if ball_tree:
+            self.ball_tree = self.construct_ball_tree()
+        else:
+            self.ball_tree = None
 
     def __iter__(self):
         return iter(self.members)
@@ -77,13 +88,29 @@ class Areas:
     def __getitem__(self, index):
         return self.members[index]
 
-    def erase_people_from_geographical_unit(self):
-        """
-        Sets all attributes in self.references_to_people to None for all groups.
-        Erases all people from subgroups.
-        """
-        for geo_unit in self:
-            geo_unit.people.clear()
+    def construct_ball_tree(self):
+        coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
+        ball_tree = BallTree(coordinates)
+        return ball_tree
+
+    def get_closest_areas(self, coordinates, k=1, return_distance=False):
+        coordinates = np.array(coordinates)
+        if self.ball_tree is None:
+            raise GeographyError("Areas initialized without a BallTree")
+        if coordinates.shape == (2,):
+            coordinates = coordinates.reshape(1, -1)
+        if return_distance:
+            distances, indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            areas = [self[idx] for idx in indcs[:, 0]]
+            return areas, distances[:, 0] * earth_radius
+        else:
+            indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            areas = [self[idx] for idx in indcs[:, 0]]
+            return areas
 
 
 class SuperArea:
@@ -91,7 +118,7 @@ class SuperArea:
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies"
+    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies", "groceries"
     _id = count()
 
     def __init__(
@@ -103,9 +130,10 @@ class SuperArea:
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
-        self.areas = areas
+        self.areas = areas or list()
         self.workers = list()
         self.companies = list()
+        self.groceries = list()
 
     def add_worker(self, person: Person):
         self.workers.append(person)
@@ -117,10 +145,24 @@ class SuperArea:
 
 
 class SuperAreas:
-    __slots__ = "members"
+    __slots__ = "members", "ball_tree"
 
-    def __init__(self, super_areas: List[SuperArea]):
+    def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
+        """
+        Group to aggregate SuperArea objects.
+
+        Parameters
+        ----------
+        super_areas
+            list of super areas
+        ball_tree
+            whether to construct a NN tree for the super areas
+        """
         self.members = super_areas
+        if ball_tree:
+            self.ball_tree = self.construct_ball_tree()
+        else:
+            self.ball_tree = None
 
     def __iter__(self):
         return iter(self.members)
@@ -131,24 +173,36 @@ class SuperAreas:
     def __getitem__(self, index):
         return self.members[index]
 
-    def erase_people_from_geographical_unit(self):
-        """
-        Sets all attributes in self.references_to_people to None for all groups.
-        Erases all people from subgroups.
-        """
-        for geo_unit in self:
-            geo_unit.people.clear()
-            geo_unit.workers.clear()
-            geo_unit.areas.clear()
-            # geo_unit.companies.clear()
+    def construct_ball_tree(self):
+        coordinates = np.array(
+            [np.deg2rad(super_area.coordinates) for super_area in self]
+        )
+        ball_tree = BallTree(coordinates)
+        return ball_tree
+
+    def get_closest_super_areas(self, coordinates, k=1, return_distance=False):
+        coordinates = np.array(coordinates)
+        if self.ball_tree is None:
+            raise GeographyError("Areas initialized without a BallTree")
+        if coordinates.shape == (2,):
+            coordinates = coordinates.reshape(1, -1)
+        if return_distance:
+            distances, indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            super_areas = [self[idx] for idx in indcs[:, 0]]
+            return super_areas, distances[:, 0] * earth_radius
+        else:
+            indcs = self.ball_tree.query(
+                np.deg2rad(coordinates), return_distance=return_distance, k=k
+            )
+            super_areas = [self[idx] for idx in indcs[:, 0]]
+            return super_areas
 
 
 class Geography:
     def __init__(
-        self,
-        hierarchy: pd.DataFrame,
-        area_coordinates: pd.DataFrame,
-        super_area_coordinates: pd.DataFrame,
+        self, areas: List[Area], super_areas: List[SuperArea],
     ):
         """
         Generate hierachical devision of geography.
@@ -162,12 +216,12 @@ class Geography:
 
         Note: It would be nice to find a better way to handle coordinates.
         """
-        self.create_geographical_units(
-            hierarchy, area_coordinates, super_area_coordinates
-        )
+        self.areas = areas
+        self.super_areas = super_areas
 
+    @classmethod
     def _create_areas(
-        self, area_coords: pd.DataFrame, super_area: pd.DataFrame
+        cls, area_coords: pd.DataFrame, super_area: pd.DataFrame
     ) -> List[Area]:
         """
         Applies the _create_area function throught the area_coords dataframe.
@@ -190,8 +244,9 @@ class Geography:
                 areas.append(Area(name, super_area, coordinates.values))
         return areas
 
+    @classmethod
     def create_geographical_units(
-        self,
+        cls,
         hierarchy: pd.DataFrame,
         area_coordinates: pd.DataFrame,
         super_area_coordinates: pd.DataFrame,
@@ -209,17 +264,18 @@ class Geography:
                 areas=None, name=superarea_name, coordinates=row.values
             )
             areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
-            areas_list = self._create_areas(areas_df, super_area)
+            areas_list = cls._create_areas(areas_df, super_area)
             super_area.areas = areas_list
             total_areas_list += list(areas_list)
             super_areas_list.append(super_area)
 
-        self.areas = Areas(total_areas_list)
-        self.super_areas = SuperAreas(super_areas_list)
+        areas = Areas(total_areas_list)
+        super_areas = SuperAreas(super_areas_list)
         logger.info(
-            f"There are {len(self.areas)} areas and "
-            + f"{len(self.super_areas)} super_areas in the world."
+            f"There are {len(areas)} areas and "
+            + f"{len(super_areas)} super_areas in the world."
         )
+        return areas, super_areas
 
     @classmethod
     def from_file(
@@ -269,7 +325,10 @@ class Geography:
             .drop_duplicates()
         )
         geo_hierarchy.set_index("msoa", inplace=True)
-        return cls(geo_hierarchy, areas_coord, super_areas_coord)
+        areas, super_areas = cls.create_geographical_units(
+            geo_hierarchy, areas_coord, super_areas_coord
+        )
+        return cls(areas, super_areas)
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
