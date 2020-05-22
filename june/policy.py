@@ -11,11 +11,13 @@ class Policies:
     def __init__(self, policies):
         self.policies = policies
         self.closure_policies = 1# filter out closure ones
+
+    def get_fully_closed_groups(self, 
     
-    def get_closed_groups(self, person, time):
+    def get_partially_closed_groups(self, person, time):
         closed_groups = []
         for policy in self.closure_policies:
-            if policy.is_closed(person, time):
+            if policy.is_partially_closed(person, time):
                 closed_groups.append(policy.group)
         return closed_groups
 
@@ -38,16 +40,22 @@ class Closure(Policy):
         super().__init__(start_time, end_time)
         self.group = group
 
-    def is_closed(self, person, time):
+    def is_fully_closed(self, time):
+        if self.partial is None:
+            if self.start_time < time < self.end_time:
+                return True
+            return False
+     
+    def is_partially_closed(self, person, time):
         # TODO: need to use mapping between activities and groups
         subgroup = person.primary_activity
-        if subgroup.group.spec == self.group:
-            if start_time < time < end_time:
-                if partial:
+        if self.partial:
+            if subgroup.group.spec == self.group:
+                if self.start_time < time < self.end_time:
                     if getattr(subgroup, partial[0]) in partial[1]:
                         return True
-                else:
-                    return True
+                    else:
+                        return True
         return False
     
 class Policy: # takes list of Policy
