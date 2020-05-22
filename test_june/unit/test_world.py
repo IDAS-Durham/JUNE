@@ -28,6 +28,6 @@ def test__people_in_world_right_subgroups(world):
     dummy_people = world.people.members[:40]
 
     for dummy_person in dummy_people:
-        for subgroup in dummy_person.subgroups:
+        for subgroup in dummy_person.subgroups.iter():
             if subgroup is not None:
                 assert dummy_person in subgroup.people

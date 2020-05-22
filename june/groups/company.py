@@ -54,7 +54,7 @@ class Company(Group):
     def add(self, person):
         super().add(
             person,
-            activity_type="primary_activity", #person.ActivityType.primary_activity,
+            activity="primary_activity", 
             subgroup_type=self.SubgroupType.workers,
         )
 

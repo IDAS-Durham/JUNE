@@ -5,126 +5,7 @@ import struct
 from recordclass import dataobject
 import numpy as np
 
-from june.infection import SymptomTags
-#from june.groups import Household
-
-
-class HealthInformation:
-    __slots__ = (
-        "susceptibility",
-        "susceptible",
-        "infected",
-        "infection",
-        "recovered",
-        "dead",
-        "number_of_infected",
-        "maximal_symptoms",
-        "maximal_symptoms_time",
-        "maximal_symptoms_tag",
-        "time_of_infection",
-        "group_type_of_infection",
-        "length_of_infection",
-        "infecter")
-
-    def __init__(self):
-        self.susceptibility = 1.0
-        self.susceptible = True
-        self.infected = False
-        self.infection = None
-        self.recovered = False
-        self.dead = False
-        self.number_of_infected = 0
-        self.maximal_symptoms = 0
-        self.maximal_symptoms_time = -1
-        self.maximal_symptoms_tag = None
-        self.time_of_infection = -1
-        self.group_type_of_infection = None
-        self.length_of_infection = -1
-        self.infecter = None
-
-    def set_infection(self, infection):
-        self.infection = infection
-        self.infected = True
-        self.susceptible = False
-        self.susceptibility = 0.0
-        self.time_of_infection = infection.start_time
-
-    @property
-    def tag(self):
-        if self.infection is not None:
-            return self.infection.symptoms.tag
-        return None
-
-    @property
-    def must_stay_at_home(self) -> bool:
-        return self.tag in (SymptomTags.influenza, SymptomTags.pneumonia)
-
-    @property
-    def should_be_in_hospital(self) -> bool:
-        return self.tag in (SymptomTags.hospitalised, SymptomTags.intensive_care)
-
-    @property
-    def infected_at_home(self) -> bool:
-        return self.infected and not (self.dead or self.should_be_in_hospital)
-
-    @property
-    def is_dead(self) -> bool:
-        return self.tag == SymptomTags.dead
-
-    def update_health_status(self, time, delta_time):
-        if self.infected:
-            if self.infection.symptoms.is_recovered():
-                self.recovered = True
-            else:
-                self.infection.update_at_time(time + delta_time)
-
-    def set_recovered(self, time):
-        self.recovered = True
-        self.infected = False
-        self.susceptible = False
-        self.susceptibility = 0.0
-        self.set_length_of_infection(time)
-        self.infection = None
-
-    def set_dead(self, time):
-        self.dead = True
-        self.infected = False
-        self.susceptible = False
-        self.susceptibility = 0.0
-        self.set_length_of_infection(time)
-        self.infection = None
-
-    def get_symptoms_tag(self, symptoms):
-        return self.infection.symptoms.tag
-
-    def transmission_probability(self, time):
-        if self.infection is not None:
-            return 0.0
-        return self.infection.transmission_probability(time)
-
-    def symptom_severity(self, severity):
-        if self.infection is None:
-            return 0.0
-        return self.infection.symptom_severity(severity)
-
-    def update_symptoms(self, time):  # , symptoms, time):
-        if self.infection.symptoms.severity > self.maximal_symptoms:
-            self.maximal_symptoms = self.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
-            self.maximal_symptoms_time = time - self.time_of_infection
-
-    def update_infection_data(self, time, group_type=None, infecter=None):
-        self.time_of_infection = time
-        if group_type is not None:
-            self.group_type_of_infection = group_type
-        if infecter is not None:
-            self.infecter = infecter
-
-    def set_length_of_infection(self, time):
-        self.length_of_infection = time - self.time_of_infection
-
-    def increment_infected(self):
-        self.number_of_infected += 1
+from june.infection.health_information import HealthInformation
 
 
 class Activities(dataobject):
@@ -134,46 +15,41 @@ class Activities(dataobject):
     commute: None
     leisure: None
     box: None
-     
+
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
 
 
+person_ids = count()
+
+
 class Person(dataobject):
     _id = count()
-    class ActivityType(IntEnum):
-        """
-        Defines the indices of the subgroups a person belongs to
-        """
-
-        residence = 0
-        primary_activity = 1
-        hospital = 2
-        commute = 3
-        leisure = 4
-        box = 5
-
-    # personal attributes
-    id: int
-    sex: str
-    age: int
-    ethnicity: str
-    socioecon_index: str
-    area: "Area"
+    id: int = 0
+    sex: str = "f"
+    age: int = 27
+    ethnicity: str = None
+    socioecon_index: str = None
+    area: "Area" = None
     # work info
-    work_super_area: str
-    sector: str
-    sub_sector: str
-    # commute 
-    home_city: str
-    mode_of_transport: str
+    work_super_area: str = None
+    sector: str = None
+    sub_sector: str = None
+    # commute
+    home_city: str = None
+    mode_of_transport: str = None
     # activities
-    busy: bool
-    subgroups: Activities
-    health_information: HealthInformation
+    busy: bool = False
+    subgroups: Activities = Activities(None, None, None, None, None, None)
+    # infection
+    health_information: HealthInformation = HealthInformation()
+    susceptibility: float = 1.0
+    dead: bool = False
 
     @classmethod
-    def from_attributes(cls, sex, age, ethnicity, socioecon_index, id=None):
+    def from_attributes(
+        cls, sex=27, age="f", ethnicity=None, socioecon_index=None, id=None
+    ):
         if id is None:
             id = next(Person._id)
         return Person(
@@ -190,8 +66,28 @@ class Person(dataobject):
             None,
             None,
             Activities(None, None, None, None, None, None),
-            None
+            HealthInformation(),
+            1.0,
+            False,
         )
+
+    @property
+    def infected(self):
+        if (
+            self.health_information is not None
+            and self.health_information.infection is not None
+        ):
+            return True
+
+        return False
+
+    @property
+    def susceptible(self):
+        return self.susceptibility <= 0 and not self.infected
+
+    @property
+    def recovered(self):
+        return not (self.dead or self.susceptible)
 
     @property
     def residence(self):
@@ -225,7 +121,10 @@ class Person(dataobject):
 
     @property
     def housemates(self):
-        return [person for person in self.residence.people if person != self]
+        hmates = [
+            person for person in self.residence.group.residents if person is not self
+        ]
+        return hmates
 
     def find_guardian(self):
 

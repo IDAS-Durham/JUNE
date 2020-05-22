@@ -147,17 +147,17 @@ class Population:
 
     @property
     def infected(self):
-        return [person for person in self.people if person.health_information.infected]
+        return [person for person in self.people if person.infected]
 
     @property
     def susceptible(self):
         return [
-            person for person in self.people if person.health_information.susceptible
+            person for person in self.people if person.susceptible
         ]
 
     @property
     def recovered(self):
-        return [person for person in self.people if person.health_information.recovered]
+        return [person for person in self.people if person.recovered]
 
 
 class Demography:

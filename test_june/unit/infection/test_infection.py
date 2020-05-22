@@ -7,6 +7,7 @@ from june.demography import person
 from june.infection import Infection, InfectionSelector, SymptomsType, TransmissionType
 from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission_xnexp as transxnexp
+from june.infection.health_information import HealthInformation
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -17,6 +18,7 @@ class TestInfection:
     def test__infect_person__gives_them_symptoms_and_transmission(self):
         selector = InfectionSelector.from_file()
         victim = person.Person(sex='f', age=26)
+        victim.health_information = HealthInformation()
         selector.infect_person_at_time(person=victim, time=0.2)
 
         assert victim.health_information.infection.start_time == 0.2

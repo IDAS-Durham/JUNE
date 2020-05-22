@@ -103,7 +103,7 @@ class Group(AbstractGroup):
     def add(
         self,
         person: Person,
-        activity_type: Person.ActivityType,
+        activity: str,
         subgroup_type: SubgroupType,
         dynamic: bool = False,
     ):
@@ -120,9 +120,8 @@ class Group(AbstractGroup):
         """
         if not dynamic:
             self[subgroup_type].append(person)
-        if activity_type is not None:
-            #person.subgroups[activity_type] = self[subgroup_type]
-            setattr(person.subgroups, activity_type, self[subgroup_type])
+        if activity is not None:
+            setattr(person.subgroups, activity, self[subgroup_type])
 
     @property
     def people(self) -> List[Person]:

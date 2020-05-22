@@ -118,6 +118,10 @@ class World:
             self.areas
         )
 
+    def distribute_people_to_care_homes(self):
+        CareHomeDistributor().populate_care_home_in_areas(self.areas)
+
+
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
             geography
@@ -274,10 +278,4 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
             subgroup = group[subgroup_type]
             subgroups_instances[i] = subgroup
         person.subgroups = subgroups_instances
-        # restore housemates
-        housemate_ids = person.housemates
-        housemates = []
-        for mateid in housemate_ids:
-            housemates.append(world.people[mateid - first_people_id])
-        person.housemates = housemates
     return world

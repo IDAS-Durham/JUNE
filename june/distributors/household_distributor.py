@@ -692,7 +692,6 @@ class HouseholdDistributor:
         people_in_households = 0
         # convert permanent residents list to tuples
         for household in all_households:
-            household.residents = tuple(household.people)
             people_in_households += len(household.people)
         assert total_people == people_in_households
         return all_households
