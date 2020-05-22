@@ -80,7 +80,7 @@ class Simulator:
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
-            "box": ["boxes"],
+                "box": ["boxes"],
             }
         else:
             self.activity_to_group_dict = {
@@ -125,9 +125,7 @@ class Simulator:
         else:
             activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
-        return Simulator(
-            world, interaction, selector, activity_to_groups, time_config
-        )
+        return Simulator(world, interaction, selector, activity_to_groups, time_config)
 
     def get_all_activities(self, time_config):
         weekday_activities = [
@@ -147,10 +145,11 @@ class Simulator:
             self.commute_city_unit_distributor = CommuteCityUnitDistributor(
                 self.world.commutecities.members
             )
+
     def distribute_commuters(self):
-        if hasattr(self, 'commute_unit_distributor'): 
+        if hasattr(self, "commute_unit_distributor"):
             self.commute_unit_distributor.distribute_people()
-        if hasattr(self, 'commute_city_unit_distributor'): 
+        if hasattr(self, "commute_city_unit_distributor"):
             self.commute_city_unit_distributor.distribute_people()
 
     def initialize_leisure(self, leisure_options):
@@ -247,17 +246,24 @@ class Simulator:
         Subgroup to which person has to go, given the hierarchy of activities
         """
         activities = self.apply_activity_hierarchy(activities)
-        # erase fully closed activities
+        personal_closed_groups = self.policies.get_fully_closed_groups(
+            time=self.timer.now
+        ) + self.policies.get_partially_closed_groups(
+            person=person, time=self.timer.now
+        )
+
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person, self.timer.duration, self.timer.is_weekend
+                    person,
+                    self.timer.duration,
+                    self.timer.is_weekend,
+                    closed_groups=personal_closed_groups,
                 )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                #TODO: apply policy on partial group closure
-                if subgroup.group.spec in self.policies.get_partially_closed_groups(person, self.timer.now):
+                if subgroup.group.spec in personal_closed_groups:
                     continue
                 return subgroup
 
@@ -435,7 +441,6 @@ class Simulator:
             sim_logger.info(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
-
 
         # assert conservation of people
         if n_people != len(self.world.people.members):

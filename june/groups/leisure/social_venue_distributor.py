@@ -43,6 +43,7 @@ class SocialVenueDistributor:
             boosting factor for the weekend probability
         """
         self.social_venues = social_venues
+        self.spec = social_venues.spec
         self.male_bins, self.male_probabilities = self._parse_age_probabilites(
             male_age_probabilities
         )

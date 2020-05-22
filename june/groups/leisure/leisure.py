@@ -58,7 +58,7 @@ class Leisure:
         self.leisure_distributors = leisure_distributors
 
     def get_leisure_distributor_for_person(
-        self, person: Person, delta_time: float, is_weekend: bool = False
+        self, person: Person, delta_time: float, is_weekend: bool = False, closed_groups = [],
     ):
         """
         Given a person, reads its characteristics, and the amount of free time it has,
@@ -80,9 +80,12 @@ class Leisure:
         """
         poisson_parameters = []
         for distributor in self.leisure_distributors:
-            poisson_parameters.append(
-                distributor.get_poisson_parameter(person, is_weekend)
-            )
+            if distributor.spec not in closed_groups:
+                poisson_parameters.append(
+                    distributor.get_poisson_parameter(person, is_weekend)
+                )
+        if len(poisson_parameters) == 0:
+            return None
         total_poisson_parameter = np.sum(poisson_parameters)
         does_activity = roll_poisson_dice(total_poisson_parameter, delta_time)
         if does_activity is False:
@@ -142,7 +145,7 @@ class Leisure:
             whether it is a weekend or not
         """
         social_venue_distributor = self.get_leisure_distributor_for_person(
-            person, delta_time, is_weekend
+            person, delta_time, is_weekend, closed_groups
         )
         if social_venue_distributor is None:
             return None
