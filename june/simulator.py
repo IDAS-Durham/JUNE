@@ -247,6 +247,7 @@ class Simulator:
         Subgroup to which person has to go, given the hierarchy of activities
         """
         activities = self.apply_activity_hierarchy(activities)
+        # erase fully closed activities
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -255,8 +256,8 @@ class Simulator:
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                #TODO: apply policy on some sort of group closure
-                if subgroup.group.spec in self.policies.closed_groups(person, self.timer.now):
+                #TODO: apply policy on partial group closure
+                if subgroup.group.spec in self.policies.get_partially_closed_groups(person, self.timer.now):
                     continue
                 return subgroup
 
