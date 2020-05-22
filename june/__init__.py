@@ -5,6 +5,7 @@ from . import infection
 from . import simulator
 from . import logger_creation
 from .demography import geography
+from .demography import Person, HealthInformation
 from . import commute
 from . import commute_rail_travel
 

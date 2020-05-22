@@ -33,7 +33,7 @@ class CommuteUnitDistributor:
                         passenger_id = indices.pop()
                         passenger = commuting_people[passenger_id]
                         unit.add(passenger,
-                            activity_type=passenger.ActivityType.commute,
+                            activity="commute",
                             subgroup_type=unit.SubgroupType.default,
                             dynamic=True
                             )
@@ -43,7 +43,7 @@ class CommuteUnitDistributor:
                     passenger_id = indices.pop()
                     passenger = commuting_people[passenger_id]
                     unit.add(passenger,
-                            activity_type = passenger.ActivityType.commute,
+                            activity= "commute",
                             subgroup_type=unit.SubgroupType.default,
                             dynamic=True
                             )

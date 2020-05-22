@@ -73,7 +73,8 @@ def test__person_drags_household(leisure):
     person3 = Person(sex="m", age=27)
     household = Household()
     household.add(person1)
-    person1.housemates = [person2, person3]
+    household.add(person2)
+    household.add(person3)
     social_venue = leisure.leisure_distributors[1].social_venues[0]
     social_venue.add(person1)
     leisure.send_household_with_person_if_necessary(
@@ -83,7 +84,7 @@ def test__person_drags_household(leisure):
     )
     for person in [person1, person2, person3]:
         assert (
-            person.subgroups[person.ActivityType.leisure] == social_venue.subgroups[0]
+            person.subgroups.leisure == social_venue.subgroups[0]
         )
 
 

@@ -101,7 +101,6 @@ def save_population_to_hdf5(
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S10")
-            housemates = np.array(housemates, dtype=object)
 
             if chunk == 0:
                 people_dset.attrs["n_people"] = n_people
@@ -132,9 +131,6 @@ def save_population_to_hdf5(
                     maxshape=(None, subgroup_types.shape[1]),
                 )
                 people_dset.create_dataset("area", data=areas, maxshape=(None,))
-                #people_dset.create_dataset(
-                #    "housemates", data=housemates, dtype=dt, maxshape=(None, None),
-                #)
             else:
                 newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                 people_dset["id"].resize(newshape)
@@ -159,8 +155,6 @@ def save_population_to_hdf5(
                 people_dset["group_specs"][idx1:idx2] = group_specs
                 people_dset["subgroup_types"].resize(newshape[0], axis=0)
                 people_dset["subgroup_types"][idx1:idx2] = subgroup_types
-                #people_dset["housemates"].resize(newshape)
-                #people_dset["housemates"][idx1:idx2] = housemates
 
 
 def load_population_from_hdf5(file_path: str, chunk_size=100000):
@@ -191,12 +185,11 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             group_specs = population["group_specs"][idx1:idx2]
             subgroup_types = population["subgroup_types"][idx1:idx2]
             areas = population["area"][idx1:idx2]
-            #housemates = population["housemates"][idx1:idx2]
             for k in range(idx2 - idx1):
                 person = Person.from_attributes(
                     id=ids[k],
                     age=ages[k],
-                    sex=sexes[k],
+                    sex=sexes[k].decode(),
                     ethnicity=ethns[k].decode(),
                     socioecon_index=socioecon_indices[k],
                 )
@@ -223,8 +216,5 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     subgroups.append([group_spec, group_id, subgroup_type])
                 person.subgroups = subgroups
                 person.area = areas[k]
-                #person.housemates = housemates[k]
-                #if person.housemates[0] == nan_integer:
-                #    person.housemates = []
                 people.append(person)
     return Population(people)
