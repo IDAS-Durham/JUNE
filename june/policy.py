@@ -10,13 +10,19 @@ class Policies:
 
     def __init__(self, policies):
         self.policies = policies
-        self.closure_policies = 1# filter out closure ones
+        self.full_closure_policies = 1# filter out closure ones
+        self.partial_closure_policies = 1# filter out closure ones
 
-    def get_fully_closed_groups(self, 
-    
+    def get_fully_closed_groups(self, time):
+        closed_groups = []
+        for policy in self.full_closure_policies:
+            if policy.is_fully_closed(person, time):
+                closed_groups.append(policy.group)
+        return closed_groups
+
     def get_partially_closed_groups(self, person, time):
         closed_groups = []
-        for policy in self.closure_policies:
+        for policy in self.partial_closure_policies:
             if policy.is_partially_closed(person, time):
                 closed_groups.append(policy.group)
         return closed_groups
@@ -39,6 +45,7 @@ class Closure(Policy):
                 ):
         super().__init__(start_time, end_time)
         self.group = group
+        self.partial = partial
 
     def is_fully_closed(self, time):
         if self.partial is None:
@@ -48,6 +55,9 @@ class Closure(Policy):
      
     def is_partially_closed(self, person, time):
         # TODO: need to use mapping between activities and groups
+        # TODO: if it is a company closure, key workers can send their
+        # children to school with a certain probability:
+            # i) make sure there is a teacher
         subgroup = person.primary_activity
         if self.partial:
             if subgroup.group.spec == self.group:
