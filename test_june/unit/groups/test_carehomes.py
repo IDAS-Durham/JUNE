@@ -1,8 +1,12 @@
 import os
+import yaml
 import pytest
+from june import paths
 from june.demography.geography import Geography, Area
 from june.demography import Person
 from june.groups.carehome import CareHome, CareHomes
+
+default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 
 @pytest.fixture(name="module_area", scope="module")
 def create_area():
@@ -10,6 +14,14 @@ def create_area():
         filter_key={"oa" : ["E00081795"]},
     )
     return g.areas.members[0]
+
+
+@pytest.fixture(name="module_config", scope="module")
+def read_config():
+    with open(default_config_file) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return config
+
 
 class TestCareHome:
     @pytest.fixture(name="module_carehome")
@@ -65,7 +77,10 @@ class TestCareHomes:
     def test__carehome_nr_for_geography(self, module_carehomes):
         assert len(module_carehomes) == 1
     
-    def test__people_in_carehome(self, module_carehomes):
+    def test__people_in_carehome(self, module_carehomes, module_config):
         carehome = module_carehomes.members[0]
+        n_workers = int(
+            carehome.n_residents / module_config["sector"]["Q"]["nr_of_clients"]
+        )
         assert carehome.n_residents == 24
-        assert carehome.n_worker == 2
+        assert n_workers == 2
