@@ -42,7 +42,6 @@ def save_population_to_hdf5(
             group_ids = []
             group_specs = []
             subgroup_types = []
-            housemates = []
             mode_of_transport = []
             home_city = []
 
@@ -84,11 +83,6 @@ def save_population_to_hdf5(
                 group_specs.append(np.array(specs, dtype="S10"))
                 group_ids.append(np.array(gids, dtype=np.int))
                 subgroup_types.append(np.array(stypes, dtype=np.int))
-                hmates = [mate.id for mate in person.housemates]
-                if len(hmates) == 0:
-                    housemates.append(np.array([nan_integer], dtype=np.int))
-                else:
-                    housemates.append(np.array(hmates, dtype=np.int))
 
             ids = np.array(ids, dtype=np.int)
             ages = np.array(ages, dtype=np.int)

@@ -1,11 +1,13 @@
 import logging
 import pickle
 import h5py
+from tqdm import tqdm
 import numpy as np
 from typing import Optional
 from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
+from june.demography.person import Activities
 from june.hdf5_savers import *
 from june.distributors import (
     SchoolDistributor,
@@ -207,7 +209,7 @@ class World:
         if hasattr(self, "hospitals"):
             save_hospitals_to_hdf5(self.hospitals, file_path, chunk_size)
         if hasattr(self, "schools"):
-            save_schools_to_hdf5(self.schools, file_path, chunk_size=10)
+            save_schools_to_hdf5(self.schools, file_path, chunk_size)
         if hasattr(self, "companies"):
             save_companies_to_hdf5(self.companies, file_path, chunk_size)
         if hasattr(self, "households"):
@@ -216,7 +218,7 @@ class World:
             save_care_homes_to_hdf5(self.care_homes, file_path, chunk_size)
 
 
-def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
+def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
     by actual references to the relevant instances.
@@ -226,7 +228,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
         path of the hdf5 file
     chunk_size
         how many units of supergroups to process at a time.
-        It is advise to keep it around 1e5
+        It is advise to keep it around 1e6
     """
     geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World(geography, include_households=False)
@@ -263,10 +265,18 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
         area.super_area = world.super_areas[super_area_id - super_areas_first_id]
         area.super_area.areas.append(area)
 
+
+    activities = Activities.__fields__
+
     # restore person -> subgroups
-    first_people_id = world.people[0].id
+    first_area_id = world.areas[0].id
+    pbar = tqdm(total=len(world.people))
     for person in world.people:
-        subgroups_instances = [None] * len(person.subgroups)
+        pbar.update(1)
+        # add to geography
+        person.area = world.areas[person.area - first_area_id]
+        person.area.people.append(person)
+        subgroups_instances = Activities(None, None, None, None, None, None)
         for i, subgroup_info in enumerate(person.subgroups):
             spec, group_id, subgroup_type = subgroup_info
             if spec is None:
@@ -276,6 +286,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
             group = supergroup.members[group_id - first_group_id]
             assert group_id == group.id
             subgroup = group[subgroup_type]
-            subgroups_instances[i] = subgroup
+            setattr(subgroups_instances, activities[i], subgroup)
         person.subgroups = subgroups_instances
+
+    # add people in super areas
+    for super_area in world.super_areas:
+        for area in super_area.areas:
+            super_area.people.extend(area.people)
     return world
