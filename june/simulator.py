@@ -255,6 +255,9 @@ class Simulator:
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
+                #TODO: apply policy on some sort of group closure
+                if subgroup.group.spec in self.policies.closed_groups(person, self.timer.now):
+                    continue
                 return subgroup
 
     def kid_drags_guardian(

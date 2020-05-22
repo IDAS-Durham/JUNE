@@ -6,22 +6,50 @@ policies = Policies([school_policy, company_policy])
 
 # Simulator(policies)
 
-class Policies()
+class Policies:
+
+    def __init__(self, policies):
+        self.policies = policies
+        self.closure_policies = 1# filter out closure ones
     
-    def modified_activities(self, policy, person, activities, time):
-        for policy:
-            if politcy.start_time < time < policy.end_time:
-                policy.restrict_activities()
+    def get_closed_groups(self, person, time):
+        closed_groups = []
+        for policy in self.closure_policies:
+            if policy.is_closed(person, time):
+                closed_groups.append(policy.group)
+        return closed_groups
 
-    def activities_policy(self,person, activities, time):
-        activities = ['primary_activity', 'residence']
-        modified_activities = self.modified_activities(person, activities, time)
-        modified_activities = ['residence']
-        return modified_activities
-
-    def social_distancing_policy(policies,interaction, time):
+    def social_distancing_policy(self,interaction, time):
         return interaction
 
+
+class Policy:
+    def __init__(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
+
+class Closure(Policy):
+    def __init__(self, 
+                group='school', 
+                start_time=3, 
+                end_time=10,
+                partial=('year', [5,7,8]),
+                ):
+        super().__init__(start_time, end_time)
+        self.group = group
+
+    def is_closed(self, person, time):
+        # TODO: need to use mapping between activities and groups
+        subgroup = person.primary_activity
+        if subgroup.group.spec == self.group:
+            if start_time < time < end_time:
+                if partial:
+                    if getattr(subgroup, partial[0]) in partial[1]:
+                        return True
+                else:
+                    return True
+        return False
+    
 class Policy: # takes list of Policy
     '''
     Implement certain policy decisions into the simulartor
@@ -115,7 +143,7 @@ class Policy: # takes list of Policy
 
                 if 'quarantine_household' in person.household.member[0].policy_subgroups:
                     for member in person.household.members:
-                        if 
+                        #if
                         member.quarantine_days += 1
         
 
@@ -138,7 +166,6 @@ class Policy: # takes list of Policy
         years: (list) year groups to close schools with
         full_closure: (bool) if True then all years closed, otherwise only close certain years
         '''
-
         if len(years) == 0 and full_closure = False:
             print ('WARNING: Policy applied and no schools are being closed')
 

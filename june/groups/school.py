@@ -81,8 +81,9 @@ class School(Group):
         """
         super().__init__()
         self.subgroups = []
-        for i, _ in enumerate(range(age_min, age_max + 2)):
+        for i, year in enumerate(range(age_min, age_max + 2)):
             self.subgroups.append(Subgroup(self, i))
+            self.subgroups[i].year = year
         self.coordinates = coordinates
         self.super_area = None
         self.n_teachers = 0
