@@ -576,128 +576,128 @@ class TestMultipleHouseholdCompositions:
 
 
 
-class TestSpecificArea:
-    """
-    Let's carefully check the first output area of the test set.
-    This area has no carehomes so we don't have to account for them.
-    The area E00062207 has this configuration:
-    0 0 0 0 1              15
-    0 0 0 1 0              20
-    0 0 0 0 2              11
-    0 0 0 2 0              24
-    1 0 >=0 2 0            12
-    >=2 0 >=0 2 0           9
-    0 0 >=1 2 0             6
-    1 0 >=0 1 0             5
-    >=2 0 >=0 1 0           3
-    0 0 >=1 1 0             7
-    1 0 >=0 >=1 >=0         0
-    >=2 0 >=0 >=1 >=0       1
-    0 >=1 0 0 0             0
-    0 0 0 0 >=2             0
-    0 0 >=0 >=0 >=0         1
-    >=0 >=0 >=0 >=0 >=0     0
-    Name: E00062207, dtype: int64
-    """
-    @pytest.fixture(name="example_area", scope="module")
-    def make_geo(self):
-        geo = Geography.from_file({"oa": ["E00062207"]})
-        dem = Demography.for_geography(geo)
-        geo.areas[0].populate(dem)
-        return geo.areas[0]
-
-    @pytest.fixture(name="hd_area", scope="module")
-    def populate_example_area(self, example_area):
-        area = example_area
-        household_distributor = HouseholdDistributor.from_file()
-        household_distributor.distribute_people_and_households_to_areas(
-            [area],
-        )
-        return household_distributor
-
-    def test__all_household_have_reasonable_size(
-        self, example_area, hd_area
-    ):
-        sizes_dict = {}
-        for household in example_area.households:
-            size = len(household.people)
-            if size not in sizes_dict:
-                sizes_dict[size] = 0
-            sizes_dict[size] += 1
-
-        assert max(list(sizes_dict.keys())) <= 8
-        assert sizes_dict[2] >= 35
-        assert sizes_dict[1] >= 35
-
-    def test__oldpeople_have_suitable_accomodation(
-        self, example_area,
-    ):
-        """
-        run the test ten times to be sure
-        """
-        area = example_area
-        oldpeople_household_sizes = {}
-        maxsize = 0
-        for household in area.households:
-            has_old_people = False
-            house_size = 0
-            for person in household.people:
-                house_size += 1
-                if person.age >= 65:
-                    has_old_people = True
-            if has_old_people:
-                if house_size not in oldpeople_household_sizes:
-                    oldpeople_household_sizes[house_size] = 0
-                oldpeople_household_sizes[house_size] += 1
-            if house_size > maxsize:
-                maxsize = house_size
-
-        # only the three generation family can have more than 3 people in it
-        big_houses = 0
-        for size in oldpeople_household_sizes.keys():
-            if size > 3:
-                big_houses += 1
-        assert big_houses <= 1
-
-    def test__kids_live_in_families(self, example_area):
-        area = example_area
-        kids_household_sizes = {}
-        for household in area.households:
-            has_kids = False
-            has_adults = False
-            house_size = 0
-            for person in household.people:
-                house_size += 1
-                if person.age <= 17:
-                    has_kids = True
-                else:
-                    has_adults = True
-            if has_kids:
-                assert has_adults
-                if house_size not in kids_household_sizes:
-                    kids_household_sizes[house_size] = 0
-                kids_household_sizes[house_size] += 1
-        # only big family is the multigenerational one
-        for size in kids_household_sizes.keys():
-            assert size <= 8
-
-    def test__most_couples_are_heterosexual(self, example_area):
-        different_sex = 0
-        total = 0
-        for household in example_area.households:
-            if len(household.people) == 2:
-                if household.people[0].sex != household.people[1].sex:
-                    different_sex += 1
-                    total += 1
-                else:
-                    total += 1
-
-        assert different_sex / total > 0.65
-
-    def test__household_size_is_acceptable(self, example_area):
-        for household in example_area.households:
-            size = len(household.people)
-            assert size <= 8
+#class TestSpecificArea:
+#    """
+#    Let's carefully check the first output area of the test set.
+#    This area has no carehomes so we don't have to account for them.
+#    The area E00062207 has this configuration:
+#    0 0 0 0 1              15
+#    0 0 0 1 0              20
+#    0 0 0 0 2              11
+#    0 0 0 2 0              24
+#    1 0 >=0 2 0            12
+#    >=2 0 >=0 2 0           9
+#    0 0 >=1 2 0             6
+#    1 0 >=0 1 0             5
+#    >=2 0 >=0 1 0           3
+#    0 0 >=1 1 0             7
+#    1 0 >=0 >=1 >=0         0
+#    >=2 0 >=0 >=1 >=0       1
+#    0 >=1 0 0 0             0
+#    0 0 0 0 >=2             0
+#    0 0 >=0 >=0 >=0         1
+#    >=0 >=0 >=0 >=0 >=0     0
+#    Name: E00062207, dtype: int64
+#    """
+#    @pytest.fixture(name="example_area", scope="module")
+#    def make_geo(self):
+#        geo = Geography.from_file({"oa": ["E00062207"]})
+#        dem = Demography.for_geography(geo)
+#        geo.areas[0].populate(dem)
+#        return geo.areas[0]
+#
+#    @pytest.fixture(name="hd_area", scope="module")
+#    def populate_example_area(self, example_area):
+#        area = example_area
+#        household_distributor = HouseholdDistributor.from_file()
+#        household_distributor.distribute_people_and_households_to_areas(
+#            [area],
+#        )
+#        return household_distributor
+#
+#    def test__all_household_have_reasonable_size(
+#        self, example_area, hd_area
+#    ):
+#        sizes_dict = {}
+#        for household in example_area.households:
+#            size = len(household.people)
+#            if size not in sizes_dict:
+#                sizes_dict[size] = 0
+#            sizes_dict[size] += 1
+#
+#        assert max(list(sizes_dict.keys())) <= 8
+#        assert sizes_dict[2] >= 35
+#        assert sizes_dict[1] >= 35
+#
+#    def test__oldpeople_have_suitable_accomodation(
+#        self, example_area,
+#    ):
+#        """
+#        run the test ten times to be sure
+#        """
+#        area = example_area
+#        oldpeople_household_sizes = {}
+#        maxsize = 0
+#        for household in area.households:
+#            has_old_people = False
+#            house_size = 0
+#            for person in household.people:
+#                house_size += 1
+#                if person.age >= 65:
+#                    has_old_people = True
+#            if has_old_people:
+#                if house_size not in oldpeople_household_sizes:
+#                    oldpeople_household_sizes[house_size] = 0
+#                oldpeople_household_sizes[house_size] += 1
+#            if house_size > maxsize:
+#                maxsize = house_size
+#
+#        # only the three generation family can have more than 3 people in it
+#        big_houses = 0
+#        for size in oldpeople_household_sizes.keys():
+#            if size > 3:
+#                big_houses += 1
+#        assert big_houses <= 1
+#
+#    def test__kids_live_in_families(self, example_area):
+#        area = example_area
+#        kids_household_sizes = {}
+#        for household in area.households:
+#            has_kids = False
+#            has_adults = False
+#            house_size = 0
+#            for person in household.people:
+#                house_size += 1
+#                if person.age <= 17:
+#                    has_kids = True
+#                else:
+#                    has_adults = True
+#            if has_kids:
+#                assert has_adults
+#                if house_size not in kids_household_sizes:
+#                    kids_household_sizes[house_size] = 0
+#                kids_household_sizes[house_size] += 1
+#        # only big family is the multigenerational one
+#        for size in kids_household_sizes.keys():
+#            assert size <= 8
+#
+#    def test__most_couples_are_heterosexual(self, example_area):
+#        different_sex = 0
+#        total = 0
+#        for household in example_area.households:
+#            if len(household.people) == 2:
+#                if household.people[0].sex != household.people[1].sex:
+#                    different_sex += 1
+#                    total += 1
+#                else:
+#                    total += 1
+#
+#        assert different_sex / total > 0.65
+#
+#    def test__household_size_is_acceptable(self, example_area):
+#        for household in example_area.households:
+#            size = len(household.people)
+#            assert size <= 8
 
 
 ###class TestSpecificArea2:
