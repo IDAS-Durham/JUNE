@@ -4,6 +4,18 @@ contact_matrices:
     beta: 1
     contacts: [[1.]]
     physical: [[0.]]
+  pub:
+    beta: 1
+    contacts: [[1.]]
+    physical: [[0.]]
+  grocery:
+    beta: 1
+    contacts: [[1.]]
+    physical: [[0.]]
+  cinema:
+    beta: 1
+    contacts: [[1.]]
+    physical: [[0.]]
   commute_unit:
     beta: 1
     contacts: [[1]]

@@ -6,12 +6,12 @@ from june.demography.person import Person
 from june.groups import Group 
 from june.interaction import DefaultInteraction
 from june.infection.infection import InfectionSelector
+from june import paths
 from pathlib import Path
-path_pwd = Path(__file__)
-dir_pwd  = path_pwd.parent
-constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 
-test_config_file = Path(__file__).parent.parent.parent / "default_interaction.yaml"
+constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+
+test_config_file = paths.configs_path / "tests/default_interaction.yaml"
 
 
 def test__set_up_collective_from_file():

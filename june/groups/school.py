@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.groups.group import Group, Subgroup, Supergroup
 
 
@@ -80,7 +80,10 @@ class School(Group):
         n - year of highest age (age_max)
         """
         super().__init__()
-        self.subgroups = [Subgroup(self) for _ in range(age_min, age_max + 2)]
+        self.subgroups = []
+        for i, year in enumerate(range(age_min, age_max + 2)):
+            self.subgroups.append(Subgroup(self, i))
+            self.subgroups[i].year = year
         self.coordinates = coordinates
         self.super_area = None
         self.n_teachers = 0
@@ -96,7 +99,7 @@ class School(Group):
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
             person.subgroups[person.ActivityType.primary_activity] = subgroup
-        else: # teacher
+        else:  # teacher
             subgroup = self.subgroups[self.SubgroupType.teachers]
             subgroup.append(person)
             person.subgroups[person.ActivityType.primary_activity] = subgroup
@@ -118,6 +121,7 @@ class School(Group):
     @property
     def students(self):
         return self.subgroups[self.SubgroupType.students]
+
 
 class Schools(Supergroup):
     def __init__(
@@ -359,3 +363,4 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
+

@@ -1,7 +1,74 @@
+school_policy = Policy('school', years, start, end)
+company_policy = Policy('company', sectors, start2, end2)
+school_policy_2 = Policy('school', years, start, end)
+policies = Policies([school_policy, company_policy])
+#policies = [school_policy, company_policy]
 
+# Simulator(policies)
+
+class Policies:
+
+    def __init__(self, policies):
+        self.policies = policies
+        self.full_closure_policies = 1# filter out closure ones
+        self.partial_closure_policies = 1# filter out closure ones
+
+    def get_fully_closed_groups(self, time):
+        closed_groups = []
+        for policy in self.full_closure_policies:
+            if policy.is_fully_closed(person, time):
+                closed_groups.append(policy.group)
+        return closed_groups
+
+    def get_partially_closed_groups(self, person, time):
+        closed_groups = []
+        for policy in self.partial_closure_policies:
+            if policy.is_partially_closed(person, time):
+                closed_groups.append(policy.group)
+        return closed_groups
+
+    def social_distancing_policy(self,interaction, time):
+        return interaction
 
 
 class Policy:
+    def __init__(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
+
+class Closure(Policy):
+    def __init__(self, 
+                group='school', 
+                start_time=3, 
+                end_time=10,
+                partial=('year', [5,7,8]),
+                ):
+        super().__init__(start_time, end_time)
+        self.group = group
+        self.partial = partial
+
+    def is_fully_closed(self, time):
+        if self.partial is None:
+            if self.start_time < time < self.end_time:
+                return True
+            return False
+     
+    def is_partially_closed(self, person, time):
+        # TODO: need to use mapping between activities and groups
+        # TODO: if it is a company closure, key workers can send their
+        # children to school with a certain probability:
+            # i) make sure there is a teacher
+        subgroup = person.primary_activity
+        if self.partial:
+            if subgroup.group.spec == self.group:
+                if self.start_time < time < self.end_time:
+                    if getattr(subgroup, partial[0]) in partial[1]:
+                        return True
+                    else:
+                        return True
+        return False
+    
+class Policy: # takes list of Policy
     '''
     Implement certain policy decisions into the simulartor
     Policies should be implemented in a modular fashion applying one after the other
@@ -102,7 +169,7 @@ class Policy:
         #         if 'quarantine_household' in person.household.member[0].policy_subgroups:
         #             for member in person.household.members:
         #                 pass
-        
+
 
     #def categorise_key_workers(self, person):
     #
@@ -123,7 +190,6 @@ class Policy:
         years: (list) year groups to close schools with
         full_closure: (bool) if True then all years closed, otherwise only close certain years
         '''
-
         if len(years) == 0 and full_closure = False:
             print ('WARNING: Policy applied and no schools are being closed')
 
@@ -225,19 +291,20 @@ class Policy:
         TODO:
         - Implement structure for people to adhere to social distancing
         '''
+        #TODO: should probably leave alpha value for households untouched! 
         
         if self.config_file is not None:
             alpha /= 2
         else:
             alpha /= self.config_file['social distancing']['alpha factor']
 
-        for group in betas:
-            # check households
-            
-            if not self.config_file:
-                betas[group] /= 2
-            else:
-                betas[group] /= self.config_file['social distancing']['beta factor']
+        for group in betas.keys():
+            if group != 'household': 
+                if not self.config_file:
+                    betas[group] /= 2
+                else:
+                    betas[group] /= self.config_file['social distancing']['beta factor']
+
 
     def lockdown(self):
 
