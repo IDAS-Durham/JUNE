@@ -378,7 +378,7 @@ class Simulator:
         cemetery.add(person)
         person.health_information.set_dead(time)
 
-    def update_health_status(self, time: float, delta_time: float):
+    def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
         Send them to hospital if necessary, or bury them if they
@@ -388,14 +388,14 @@ class Simulator:
         ----------
         time:
             time now
-        delta_time:
+        duration:
             duration of time step
         """
 
         for person in self.world.people.infected:
             health_information = person.health_information
             previous_tag = health_information.tag
-            health_information.update_health_status(time, delta_time)
+            health_information.update_health_status(time, duration)
             # release patients that recovered
             if health_information.recovered:
                 if person.hospital is not None:
@@ -412,7 +412,7 @@ class Simulator:
         Perform a time step in the simulation
 
         """
-        activities = self.timer.activities()
+        activities = self.timer.activities
 
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
