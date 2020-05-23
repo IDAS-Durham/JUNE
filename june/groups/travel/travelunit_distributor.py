@@ -5,19 +5,22 @@ class TravelUnitDistributor:
     """
     Distirbute people to other cities and back again if not active elsewhere
 
+    Note: This distibutor is dynamic and so should be called at each travel time step to decide who
+          is assigned to which units to determine mixing
+
     Assumptions:
     - People will travel to and from the same cities in a day if not active
     - In the return journey the only people travelling will be those who are returning from where they came
     """
 
-    def __init__(self, travelcities, travelunits, msoas):
+    def __init__(self, travelcities, travelunits):
         """
-        
+        travelcities: (list) members of the TravelCities class
+        travelunits: (list) members of the TravelUnits class
         """
         
         self.travelcities = travelcities
         self.travelunits = travelunits
-        self.msoas = mspas
 
     def from_file(self):
 
@@ -43,35 +46,43 @@ class TravelUnitDistributor:
                 # drawing people from specific msoas
                 msoas = travel_msoas[np.random.choice(len(travel_msoas), len(to_distribute))]
 
+                unique_msoas, counts = np.unique(msoas, return_counts = True)
+                
                 travel_unit = TravelUnit(
                     city = travelcity.city,
                 )
-            
-                for msoa in msoas:
+                
+                for msoa_idx, msoa in enumerate(unique_msoas):
 
-                    if len(travel_unit.no_passengers) < travel_unit.max_passengers:
-
-                        # get people who live in msoa
-                        person = msoa.people[np.random.choice(len(msoa.people), 1)]
-                        travel_unit.passengers.add(person)
-                        travel_unit.no_passengers += 1
+                    people = np.array(msoa.people)[np.random.choice(len(msoa.people), counts[msoa_idx], replace=False)]
                     
-                    else:
-                        self.travelunits.append(travel_unit)
+                    for person in people:
+                    
+                        if len(travel_unit.no_passengers) < travel_unit.max_passengers:
 
-                        # seed new travel unit once other has been filled
-                        travel_unit = TravelUnit(
-                            city = travelcity.city,
-                        )
-                        person = msoa.people[np.random.choice(len(msoa.people), 1)]
-                        person.home_city = travelcity
-                        travel_unit.passengers.add(person)
-                        travel_unit.no_passengers += 1
+                            person.home_city = travelcity.city
+                            travel_unit.passengers.add(person)
+                            travel_unit.no_passengers += 1
+                            
+                        else:
+                            self.travelunits.append(travel_unit)
 
+                            # seed new travel unit once other has been filled
+                            travel_unit = TravelUnit(
+                                city = travelcity.city,
+                            )
 
+                            person.home_city = travelcity.city
+                            travel_unit.passengers.add(person)
+                            travel_unit.no_passengers += 1
+
+                        # send person to city
+                        self.travelcities[dest_city_idx].arrived.append(person)
+
+                # cleanup
                 self.travelunits.append(travel_unit)
-                # sent person to city
-                self.travelcities[dest_city_idx].arrived.append(person)
+                
+                
             
 
 
@@ -98,30 +109,28 @@ class TravelUnitDistributor:
 
             to_distirbute = travelcity_from.arrived
 
-            # TODO: check if not active
-
             for person in to_distirbute:
 
                 travel_city_index = np.where(travel_cities == person.home_city)[0]
                 
                 if len(units[travel_city_index].no_passengers) < units[travel_city_index].max_passengers:
 
-                    units[travel_city_index].passengers.add(person)
+                    units[travel_city_index].add(person)
                     travel_unit.no_passengers += 1
 
                 else:
 
                     self.travelunits.append(units[travel_city_index])
 
-                    ids += 1
+                    # Create fresh unit in same location as previous one
                     units[travel_city_index] = TravelUnit(
                         city = travelcity.city
                     )
 
-                    units[travel_city_index].passengers.add(person)
+                    units[travel_city_index].add(person)
                     travel_unit.no_passengers += 1
 
-        # assign hanging units
+        # clean up
         for unit in units:
             self.travelunits.append(unit)
 
