@@ -30,12 +30,16 @@ class TravelCities(SuperGroup):
         """
         commutecities: (list) members of CommuteCities
         members: (list) list of all travel cities
+
+        Assumptions:
+        - Commting is turned on and all commute cities have been distirbuted
         """
         
         self.commutecities = commutecities
         self.members = []
 
     def init_cities(self):
+        'Initialise all cities'
 
         for commutecity in self.commutecities:
 
