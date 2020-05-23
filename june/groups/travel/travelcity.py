@@ -22,8 +22,15 @@ class TravelCity(Group):
         self.msoa = []
 
 class TravelCities(SuperGroup):
+    """
+    Initialise travel cities based on commute cities
+    """
 
     def __init__(self, commutecities):
+        """
+        commutecities: (list) members of CommuteCities
+        members: (list) list of all travel cities
+        """
         
         self.commutecities = commutecities
         self.members = []
