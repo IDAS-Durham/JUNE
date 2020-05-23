@@ -22,7 +22,7 @@ class TravelCity(Group):
         self.metro_centroid = metro_centroid
         self.msoas = []
 
-class TravelCities(SuperGroup):
+class TravelCities(Supergroup):
     """
     Initialise travel cities based on commute cities
     """
@@ -46,7 +46,7 @@ class TravelCities(SuperGroup):
 
             travel_city = TravelCity(
                 city = commutecity.city,
-                metro_centroid = commutecity.metrocentroid,
+                metro_centroid = commutecity.metro_centroid,
             )
 
             self.members.append(travel_city)
