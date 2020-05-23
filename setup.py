@@ -35,6 +35,7 @@ setup(
                   'june.groups.commute',
                   'june.interaction',
                   'june.box',
-                  'june.hdf5_savers',]
+                  'june.hdf5_savers',
+                  'june.visualization']
 )
 
