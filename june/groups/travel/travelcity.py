@@ -2,16 +2,26 @@ import numpy as np
 import pandas as pd
 from scipy import spatial
 
-class TravelCity:
-
-    def __init__(self, travelcity_id, city, metro_centroid):
-        self.id = travelcity_id
+class TravelCity(Group):
+    """
+    Defines a city with details abouts its metropolitan area and who has arrived at the station after initial distirbution
+    """
+    
+    def __init__(self, city, metro_centroid):
+        """
+        city: (string) name of the city
+        metro_centroid: (array) the centroid of the metropolitan area
+        msoa: (list)
+        people: (Group attribute) people who have arrived at the city
+        """
+        
+        super().__init__()
+        
         self.city = city
         self.metro_centroid = metro_centroid
         self.msoa = []
-        self.arrived = []
 
-class TravelCities:
+class TravelCities(SuperGroup):
 
     def __init__(self, commutecities):
         
