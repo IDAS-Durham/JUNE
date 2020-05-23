@@ -4,8 +4,9 @@ from june.groups import Company, Companies
 
 nan_integer = -999
 
+
 def save_companies_to_hdf5(
-    companies: Companies, file_path: str, chunk_size: int = 50000
+    companies: Companies, file_path: str, chunk_size: int = 500000
 ):
     """
     Saves the Population object to hdf5 format file ``file_path``. Currently for each person,
@@ -24,8 +25,9 @@ def save_companies_to_hdf5(
     """
     n_companies = len(companies)
     n_chunks = int(np.ceil(n_companies / chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         companies_dset = f.create_group("companies")
+        first_company_idx = companies[0].id
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
@@ -33,10 +35,12 @@ def save_companies_to_hdf5(
             super_areas = []
             sectors = []
             n_workers_max = []
-            company_idx = [company.id for company in companies]
+            company_idx = [company.id for company in companies[idx1:idx2]]
             # sort companies by id
-            companies = [companies[i] for i in np.argsort(company_idx)]
-            for company in companies:
+            companies_sorted = [
+                companies[i - first_company_idx] for i in np.sort(company_idx)
+            ]
+            for company in companies_sorted:
                 ids.append(company.id)
                 if company.super_area is None:
                     super_areas.append(nan_integer)
@@ -51,15 +55,13 @@ def save_companies_to_hdf5(
             n_workers_max = np.array(n_workers_max, dtype=np.float)
             if chunk == 0:
                 companies_dset.attrs["n_companies"] = n_companies
-                companies_dset.create_dataset("id", data=ids, maxshape=(n_companies,))
+                companies_dset.create_dataset("id", data=ids, maxshape=(None,))
                 companies_dset.create_dataset(
-                    "super_area", data=super_areas, maxshape=(n_companies,)
+                    "super_area", data=super_areas, maxshape=(None,)
                 )
+                companies_dset.create_dataset("sector", data=sectors, maxshape=(None,))
                 companies_dset.create_dataset(
-                    "sector", data=sectors, maxshape=(n_companies,)
-                )
-                companies_dset.create_dataset(
-                    "n_workers_max", data=n_workers_max, maxshape=(n_companies,)
+                    "n_workers_max", data=n_workers_max, maxshape=(None,)
                 )
             else:
                 newshape = (companies_dset["id"].shape[0] + ids.shape[0],)
@@ -86,9 +88,10 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
+            print(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
-            ids = companies["id"]
+            ids = companies["id"][idx1:idx2]
             super_areas = companies["super_area"][idx1:idx2]
             sectors = companies["sector"][idx1:idx2]
             n_workers_maxs = companies["n_workers_max"][idx1:idx2]

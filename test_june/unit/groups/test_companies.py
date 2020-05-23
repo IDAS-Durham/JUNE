@@ -48,7 +48,7 @@ class TestCompany:
 
     def test__person_is_employed(self, person, company):
         company.add(person)
-        assert person.subgroups[person.ActivityType.primary_activity] == company.subgroups[Company.SubgroupType.workers]
+        assert person.primary_activity == company.subgroups[Company.SubgroupType.workers]
 
 
 @pytest.fixture(name="companies_example")
