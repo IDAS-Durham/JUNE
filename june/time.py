@@ -55,6 +55,10 @@ class Timer:
     def previous(self):
         return self.previous_day
 
+    @property
+    def total_hours(self):
+        return self.day * 24
+
     def get_number_shifts(self, weekend):
         self.type_day = "weekend" if weekend else "weekday"
         return len(self.time_config["step_duration"][self.type_day])
