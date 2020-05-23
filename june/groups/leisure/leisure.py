@@ -108,7 +108,7 @@ class Leisure:
         then we ask X whether the person needs to drag the household with 
         him or her.
         """
-        if person.residence.group.spec == "care_home" or person.residence.group.communal:
+        if person.residence.group.spec == "care_home" or person.residence.group.type == "communal":
             return False
         if leisure_distributor.person_drags_household():
             for mate in person.housemates:

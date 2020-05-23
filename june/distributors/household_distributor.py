@@ -312,8 +312,8 @@ class HouseholdDistributor:
             n_students_df.iterrows(),
             n_communal_df.iterrows(),
         ):
+            men_by_age, women_by_age = self._create_people_dicts(area)
             try:
-                men_by_age, women_by_age = self._create_people_dicts(area)
                 area.households = self.distribute_people_to_households(
                     men_by_age,
                     women_by_age,
@@ -323,7 +323,8 @@ class HouseholdDistributor:
                     n_communal.values[0],
                 )
                 households_total += area.households
-            except:
+            except Exception as e:
+                print(e)
                 print(f"Household distributor failed at area {area.name}")
                 continue
             counter += 1
@@ -647,7 +648,7 @@ class HouseholdDistributor:
             house_number = number_households_per_composition[key]
             if house_number > 0:
                 for _ in range(house_number):
-                    household = self._create_household(area)
+                    household = self._create_household(area, type="other")
                     households_with_extra_youngadults.append(household)
                     households_with_extra_adults.append(household)
                     households_with_extra_oldpeople.append(household)
@@ -1004,7 +1005,7 @@ class HouseholdDistributor:
         students_left = n_students
         student_houses = []
         for _ in range(0, student_houses_number):
-            household = self._create_household(area)
+            household = self._create_household(area, type="student")
             student_houses.append(household)
             for _ in range(0, ratio):
                 student = self._get_random_person_in_age_bracket(
@@ -1073,7 +1074,7 @@ class HouseholdDistributor:
         households = []
         for i in range(0, n_households):
             household = self._create_household(
-                area, max_household_size=max_household_size
+                area, max_household_size=max_household_size, type="old"
             )
             households.append(household)
             person = self._get_random_person_in_age_bracket(
@@ -1088,7 +1089,7 @@ class HouseholdDistributor:
                     array.append(household)
                 for _ in range(i + 1, n_households):
                     household = self._create_household(
-                        area, max_household_size=max_household_size
+                        area, max_household_size=max_household_size, type="old"
                     )
                     households.append(household)
                     for array in extra_people_lists:
@@ -1167,7 +1168,7 @@ class HouseholdDistributor:
                         array.append(household)
                     for _ in range(i + 1, n_households):
                         household = self._create_household(
-                            area, max_household_size=max_household_size
+                            area, max_household_size=max_household_size, type="family"
                         )
                         households.append(household)
                         for array in extra_people_lists:
@@ -1248,7 +1249,7 @@ class HouseholdDistributor:
         households = []
         for _ in range(0, n_households):
             household = self._create_household(
-                area, max_household_size=max_household_size
+                area, max_household_size=max_household_size, type="nokids"
             )
             households.append(household)
             if self._check_if_oldpeople_left(men_by_age, women_by_age):
@@ -1312,7 +1313,7 @@ class HouseholdDistributor:
         """
         households = []
         for _ in range(0, n_households):
-            household = self._create_household(area)
+            household = self._create_household(area, type="youngadults")
             households.append(household)
             for _ in range(youngadults_per_household):
                 person = self._get_random_person_in_age_bracket(
@@ -1352,7 +1353,7 @@ class HouseholdDistributor:
         """
         households = []
         for _ in range(0, n_households):
-            household = self._create_household(area)
+            household = self._create_household(area, "ya_parents")
             households.append(household)
             for array in extra_people_lists:
                 array.append(household)
