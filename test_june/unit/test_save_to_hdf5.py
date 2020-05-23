@@ -112,9 +112,12 @@ class TestSaveHouses:
         save_households_to_hdf5(households, "test.hdf5")
         households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
-            for attribute_name in ["id", "max_size", "communal"]:
+            for attribute_name in ["id", "max_size", "type"]:
+                if attribute_name == "type":
+                    attribute2 = getattr(household2, attribute_name)
+                else:
+                    attribute2 = getattr(household2, attribute_name)
                 attribute = getattr(household, attribute_name)
-                attribute2 = getattr(household2, attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
@@ -283,7 +286,7 @@ class TestSaveWorld:
 
     def test__subgroups(self, world_h5, world_h5_loaded):
         for person1, person2 in zip(world_h5.people, world_h5_loaded.people):
-            for subgroup1, subgroup2 in zip(person1.subgroups.iter(), person2.subgroups):
+            for subgroup1, subgroup2 in zip(person1.subgroups.iter(), person2.subgroups.iter()):
                 if subgroup1 is None:
                     assert subgroup2 is None
                     continue

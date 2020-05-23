@@ -35,7 +35,6 @@ class Household(Group):
         super().__init__()
         self.area = area
         self.type = type
-        #self.communal = communal
         self.residents = tuple()
         self.max_size = max_size
         self.n_residents = 0

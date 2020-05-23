@@ -40,7 +40,10 @@ def save_households_to_hdf5(
                     areas.append(nan_integer)
                 else:
                     areas.append(household.area.id)
-                types.append(household.type)
+                if household.type is None:
+                    types.append(" ".encode("ascii", "ignore"))
+                else:
+                    types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
@@ -86,9 +89,15 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 area = areas[k]
                 if area == nan_integer:
                     area = None
+                type = types[k]
+                if type.decode() == " ":
+                    type = None
+                else:
+                    type = type.decode()
                 household = Household(
-                    type=types[k], area=area, max_size=max_sizes[k]
+                    type=type, area=area, max_size=max_sizes[k]
                 )
+
                 household.id = ids[k]
                 households_list.append(household)
     return Households(households_list)

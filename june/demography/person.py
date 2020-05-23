@@ -53,22 +53,15 @@ class Person(dataobject):
         if id is None:
             id = next(Person._id)
         return Person(
-            id,
-            sex,
-            age,
-            ethnicity,
-            socioecon_index,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            Activities(None, None, None, None, None, None),
-            HealthInformation(),
-            1.0,
-            False,
+            id=id,
+            sex=sex,
+            age=age,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            # IMPORTANT, these objects need to be recreated, otherwise the default
+            # is always the same object !!!!
+            subgroups=Activities(None, None, None, None, None, None),
+            health_information=HealthInformation(),
         )
 
     @property
