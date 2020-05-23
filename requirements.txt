@@ -43,3 +43,4 @@ wcwidth==0.1.9
 wrapt==1.12.1
 h5py==2.10.0 
 numba==0.49.1
+recordclass==0.13.1
