@@ -38,21 +38,20 @@ class CommuteCity(Group):
     
     def __init__(self, city=None, metro_msoas=None, metro_centroid=None):
         """
-        id: (int) id of the city
         metro_centriod: (array) the centriod of the metropolitan area
         metro_msoas: (list) names of all MSOAs in the metropolitain area of the city
         city: (string) name of the city
-        passengers: (list) passengers commuting into any of the metropolitan MSOAs
+        people: (Group attribute) passengers commuting into any of the metropolitan MSOAs
                            - this includes those living AND working in the metropolitan area
         commutehubs: (list) commute hubs associated with the city
+        commute_internal: (list) people who live and work in the metro_msoas
+        commutecityunits: (list) units associated with commute_internal persons
         """
         super().__init__()
         
-        #self.id = commutecity_id
         self.metro_centroid = metro_centroid
         self.metro_msoas = metro_msoas
         self.city = city
-        #self.passengers = [] -> in new structure to people by Group inheritance
         self.commutehubs = []
         self.commute_internal = []
         self.commutecityunits = []
