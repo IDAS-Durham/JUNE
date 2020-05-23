@@ -66,6 +66,7 @@ class Logger:
 
 
     def log_timestep(self, day):
+        hour = int((day - 1) * 24)
         susceptible_world = 0
         infected_world = 0
         recovered_world = 0
@@ -81,23 +82,23 @@ class Logger:
                 infected_world += summed_infected
                 recovered_world += summed_recovered
                 
-                self.data_dict[area.name][day] = {
+                self.data_dict[area.name][hour] = {
                         "susceptible": summed_susceptible,
                         "infected": summed_infected,
                         "recovered": summed_recovered,
                         }
                 
-                for ages in self.age_ranges:
-                    self.group_by_age(day, area, ages, susceptible, infected, recovered)
+                #for ages in self.age_ranges:
+                #    self.group_by_age(hour, area, ages, susceptible, infected, recovered)
 
-                self.data_dict["world"][day] = {
+                self.data_dict["world"][hour] = {
                         "susceptible": susceptible_world,
                         "infected": infected_world,
                         "recovered": recovered_world,
                         "cumulative_infected": total_people - susceptible_world
                         }
 
-            self.log_r0()
+            #self.log_r0()
         else:
             box = self.world.boxes.members[0]
             susceptible, infected, recovered = self.get_infected_people_box(box)
