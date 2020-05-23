@@ -22,7 +22,7 @@ class TestTrajectoryMaker:
 class TestSymptomsTrajectory:
     def test__right_frequency_in_health_index(self):
         N_samples = 1000
-        health_index = HealthIndexGenerator.from_file()(Person(age=27, sex='m'))
+        health_index = HealthIndexGenerator.from_file()(Person())
         frequencies = np.zeros(len(sym.SymptomTags))
         for i in range(N_samples):
             symptoms = SymptomsStep(health_index=health_index, time_offset=0.)
