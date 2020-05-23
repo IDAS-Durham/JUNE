@@ -75,7 +75,12 @@ class Simulator:
             "residence",
         ]
         self.check_inputs(time_config)
-        self.timer = Timer(time_config)
+        self.timer = Timer(
+            weekday_step_duration=time_config["step_duration"]["weekday"],
+            weekend_step_duration=time_config["step_duration"]["weekend"],
+            weekday_activities=time_config["step_activities"]["weekday"],
+            weekend_activities=time_config["step_activities"]["weekend"],
+        )
         self.logger = Logger(self, self.world, self.timer, save_path,)
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
