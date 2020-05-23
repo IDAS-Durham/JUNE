@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from june.groups.group import Group, Supergroup
 
 class TravelCity(Group):
     """
@@ -44,7 +45,6 @@ class TravelCities(SuperGroup):
         for commutecity in self.commutecities:
 
             travel_city = TravelCity(
-                id = commutecity.id,
                 city = commutecity.city,
                 metro_centroid = commutecity.metrocentroid,
             )
