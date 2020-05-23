@@ -1,20 +1,24 @@
 import calendar
 import datetime
+from typing import List
 
+SECONDS_PER_DAY = 24 * 60 * 60
 
 class Timer:
     def __init__(
         self,
         initial_day: str = "2020-03-10",
-        weekday_step_duration=[12, 12],
-        weekend_step_duration=[24],
-        weekday_activities=[["primary_activity", "residence"], ["residence"]],
-        weekend_activities=[["residence"]],
+        total_days : int = 10,
+        weekday_step_duration: List[int]=[12, 12],
+        weekend_step_duration: List[int]=[24],
+        weekday_activities: List[List[str]]=[["primary_activity", "residence"], ["residence"]],
+        weekend_activities: List[List[str]]=[["residence"]],
     ):
 
         self.initial_date = datetime.datetime(
             *[int(value) for value in initial_day.split("-")]
         )
+        self.total_days = total_days
         self.weekday_step_duration = weekday_step_duration
         self.weekend_step_duration = weekend_step_duration
         self.weekday_activities = weekday_activities
@@ -35,8 +39,11 @@ class Timer:
     @property
     def now(self):
         difference = self.date - self.initial_date
-        seconds_per_day = 24 * 60 * 60
-        return difference.total_seconds() / seconds_per_day
+        return difference.total_seconds() / SECONDS_PER_DAY
+
+    @property
+    def duration(self):
+        return self.delta_time.total_seconds() / SECONDS_PER_DAY
 
     @property
     def day(self):
