@@ -11,7 +11,7 @@ class TravelCity(Group):
         """
         city: (string) name of the city
         metro_centroid: (array) the centroid of the metropolitan area
-        msoa: (list)
+        msoas: (list) msoas associated with city
         people: (Group attribute) people who have arrived at the city
         """
         
@@ -19,7 +19,7 @@ class TravelCity(Group):
         
         self.city = city
         self.metro_centroid = metro_centroid
-        self.msoa = []
+        self.msoas = []
 
 class TravelCities(SuperGroup):
     """

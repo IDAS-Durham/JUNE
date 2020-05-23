@@ -1,6 +1,6 @@
 class CommuteCityDistributor:
     """
-    Distirbute people to cities based on where they work
+    Distirbute people to commute cities based on where they work
     """
 
     def __init__(self, commutecities, msoas):
@@ -8,10 +8,12 @@ class CommuteCityDistributor:
         commutecities: members of CommuteCities class
         msoa: members of the MSOArea class
         """
+        
         self.commutecities = commutecities
         self.msoas = msoas
 
     def distribute_people(self):
+        'Distirbute people to commute cities'
 
         for commutecity in self.commutecities:
             metro_msoas = commutecity.metro_msoas
