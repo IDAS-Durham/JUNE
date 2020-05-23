@@ -6,6 +6,7 @@ from recordclass import dataobject
 import numpy as np
 
 from june.infection.health_information import HealthInformation
+from june.commute import ModeOfTransport
 
 
 class Activities(dataobject):
@@ -37,7 +38,7 @@ class Person(dataobject):
     sub_sector: str = None
     # commute
     home_city: str = None
-    mode_of_transport: str = None
+    mode_of_transport: ModeOfTransport = None
     # activities
     busy: bool = False
     subgroups: Activities = Activities(None, None, None, None, None, None)
