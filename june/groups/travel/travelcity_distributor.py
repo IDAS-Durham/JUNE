@@ -1,6 +1,12 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from june import paths
+
+
+default_data_path = paths.data_path
 
 default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
 
