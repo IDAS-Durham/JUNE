@@ -1,6 +1,87 @@
 import calendar
+import datetime
+
+class Timer:
+    def __init__(
+            self, 
+            initial_day:str="2020-03-10", 
+            weekday_step_duration = [12,12],
+            weekend_step_duration = [24],
+            weekday_activities = [['primary_activity', 'residence'], ['residence']],
+            weekend_activities = [['residence']],
+            ):
+
+        self.initial_date_time = datetime.datetime(*[int(value) for value in initial_day.split('-')])
+        self.weekday_step_duration = weekday_step_duration 
+        self.weekend_step_duration = weekend_step_duration
+        self.weekday_activities = weekday_activities
+        self.weekend_activities = weekend_activities
+
+        self.previous_date = self.initial_date_time
+        self.date_time = datetime.datetime(*[int(value) for value in initial_day.split('-')])
+        self.shift = 0
+        self.delta_time = datetime.timedelta(hours = self.shift_duration)
+
+    @property
+    def is_weekend(self):
+        week_number = self.date_time.weekday()
+        if week_number < 5:
+            return False
+        return  True
+
+    @property
+    def now(self):
+        difference = (self.date_time - self.initial_date_time)
+        seconds_per_day = 24*60*60
+        return difference.total_seconds()/seconds_per_day
+    
+    @property
+    def day(self):
+        return int(self.now)
+
+    @property
+    def day_of_week(self):
+        return calendar.day_name[self.date_time.weekday()]
+
+    @property
+    def activities(self):
+        type_day = "weekend" if self.is_weekend else "weekday"
+        return getattr(self, type_day + '_activities')[self.shift]
+
+    @property
+    def shift_duration(self):
+        type_day = "weekend" if self.is_weekend else "weekday"
+        return getattr(self, type_day + '_step_duration')[self.shift]
+
+    def reset(self):
+        self.date_time = self.initial_date_time
+        self.shift = 0
+        self.delta_time = datetime.timedelta(hours = self.shift_duration)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.previous_date = self.date_time
+        self.date_time += self.delta_time
+        self.shift += 1
+        if self.previous_date.day != self.date_time.day:
+            self.shift = 0
+        self.delta_time = datetime.timedelta(hours = self.shift_duration)
+        return self.now
 
 
+if __name__ == '__main__':
+    time = Timer()
+    for i in range(8):
+        print(time.date_time)
+        print(time.now)
+        print(time.is_weekend)
+        print(time.day_of_week)
+        print(time.activities)
+        next(time)
+    
+'''
 class Timer:
     def __init__(self, time_config=None, initial_day="Monday"):
         if time_config is None:
@@ -95,29 +176,4 @@ class Timer:
         self.shift = 0
         self.hours = 0
 
-
-if __name__ == "__main__":
-
-    import yaml
-    import os
-
-    config_file = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "configs",
-        "config_example.yaml",
-    )
-    with open(config_file, "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-    day_iter = Timer(config["time"])
-
-    while day_iter.day <= day_iter.total_days:
-
-        # print('Previous time : ', day_iter.previous)
-        print("Day of the week ", day_iter.day_of_week())
-        print("Current time : ", day_iter.now)
-        print("Active groups : ", day_iter.activities())
-
-        print("**********************************")
-        next(day_iter)
+'''
