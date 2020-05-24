@@ -1,5 +1,25 @@
+import logging
+import os
+from enum import IntEnum
+from pathlib import Path
+from typing import List, Dict, Optional
+
 import numpy as np
-from travelunit import TravelUnit, TravelUnits
+import pandas as pd
+import yaml
+from june.groups.travel.travelunit import TravelUnit, TravelUnits
+
+from june import paths
+
+default_config_filename = paths.configs_path / "defaults/rail_travel.yaml"
+
+default_data_path = paths.data_path
+
+default_to_distirbute = default_data_path / "travel/rail_travel_no_commute.csv"
+
+default_distribution = default_data_path / "travel/rail_travel_distribution.csv"
+
+
 
 class TravelUnitDistributor:
     """
@@ -22,21 +42,31 @@ class TravelUnitDistributor:
         self.travelcities = travelcities
         self.travelunits = travelunits
 
-    def from_file(self):
+    def from_file(self, \
+                  to_distribute = default_to_distirbute, \
+                  distribution = default_to_distirbute, \
+                  config_filename = default_config_filename
+    ):
 
-        self.to_distribute_df = # TODO
-        self.distribution_df = # TODO
+        self.to_distribute_df = pd.read_csv(to_distribute)
+        self.distribution_df = pd.read_csv(distribution)
 
-    def distribute_people_out(self):.
+        with open(config_filename) as f:
+            self.configs = yaml.load(f, Loader=yaml.FullLoader)
+
+    def distribute_people_out(self):
         'Distirbute people out in the day to other cities'
 
         # initialise new travelunits
         self.travelunits = []
         
-        for travelcity in self.travelcities:
-            to_distribute_global = self.to_distribute_df[travelcity.city]
+        for idx, travelcity in enumerate(self.travelcities):
+            if travelcity.city == 'London':
+                to_distribute_global = float(self.to_distribute_df[self.to_distribute['station'] == travelcity.city]['average_no_commute'])*(1-self.configs['London damping factor'])
+            else:
+                to_distribute_global = float(self.to_distribute_df[self.to_distribute['station'] == travelcity.city]['average_no_commute'])*(1-self.configs['non-London damping factor'])
             
-            to_distirbute_per_city = to_distribute_global*np.array(self.distribution_df[travelcity.city])
+            to_distirbute_per_city = to_distribute_global*list(self.distribution_df[self.distribution_df['station'] == travelcity.city]['distribution'])[0]
 
             # where to draw people from overall
             travel_msoas = np.array(travelcity.msoas)
