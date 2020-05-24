@@ -14,7 +14,8 @@ from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
-from june.logger_simulation import Logger
+#from june.logger_simulation import Logger
+from june.simulator_logger import Logger
 from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
@@ -39,7 +40,6 @@ class Simulator:
         time_config: dict,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        save_path: str = "results",
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -81,7 +81,7 @@ class Simulator:
             weekday_activities=time_config["step_activities"]["weekday"],
             weekend_activities=time_config["step_activities"]["weekend"],
         )
-        self.logger = Logger(self, self.world, self.timer, save_path,)
+        self.logger = Logger(self.timer)
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
@@ -467,12 +467,13 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        self.logger.log_timestep(1.0)
-        for day in self.timer:
-            if day > self.timer.total_days:
+        self.logger.log_timestep(self.timer.date,
+                self.world.areas, save=True)
+        for time in self.timer:
+            if time > self.timer.final_date:
                 break
-            self.logger.log_timestep(day)
             self.do_timestep()
+            self.logger.log_timestep(time, self.world.areas, save=True)
         # Save the world
         if save:
-            self.world.to_pickle("world.pickle")
+            self.world.to_pickle("final_world.pickle")
