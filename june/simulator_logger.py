@@ -15,13 +15,17 @@ class Logger:
             "susceptible",
             "hospitalised",
             "intensive_care",
+            "dead",
         ],
+        max_people_to_follow = 100,
         save_path="results",
     ):
         self.timer = timer
         self.output_dict = {}
+        self.trajectories_dict = {}
         self.age_range = age_range
         self.infection_keys = infection_keys
+        self.max_people_to_follow = max_people_to_follow
         self.save_path = save_path
 
     def initialize_logging_dict(self):
@@ -81,18 +85,33 @@ class Logger:
                 personal_keys.append(key)
         return personal_keys
 
-    """
-    def initialize_column_names(self, logging_options, sex, age_ranges):
-        column_names = [] 
-        for logging_option in logging_options:
-            for s in sex:
-                for age_range in age_ranges:
-                    column_names.append(f'{logging_option}_{s}_{age_range[0]}_{age_range[1]}')
-        column_names.insert(0,'time_stamp')
-        return column_names
+    def find_person_location(self, person):
+        for subgroup in person.subgroups.iter():
+            if subgroup is not None:
+                if person in subgroup.people:
+                    return subgroup.group.spec
+        return 'seed' 
 
-    
-    def initialize_dataframe(self, logging_options, sex, age_ranges):
-        column_names = self.initialize_column_names(logging_options, sex, age_ranges)
-        return pd.DataFrame(columns = column_names)
-    """
+    def follow_seed(self, time_stamp, first_infected_people, save=False): 
+        if len([person for person in first_infected_people if person.infected]) > 0:
+            time_stamp = time_stamp.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            self.trajectories_dict[time_stamp] = {}
+            for person in first_infected_people:
+                if person.infected:
+                    symptom_tag = int(person.health_information.tag.value)
+                    location = self.find_person_location(person)
+                    self.trajectories_dict[time_stamp][int(person.id)] = {
+                                                                    'symptoms': symptom_tag,
+                                                                    'location': location,
+                                                                    'age': int(person.age),
+                                                                    }
+            if save:
+                json_path = Path(self.save_path) / "trajectories.json"
+                with open(json_path, "w") as f:
+                    json.dump(self.trajectories_dict, f)
+
+
+
+
+            
+        

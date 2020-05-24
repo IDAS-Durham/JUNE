@@ -2,6 +2,7 @@ import logging
 import random
 from june import paths
 from typing import List
+import datetime
 
 from itertools import chain
 import numpy as np
@@ -76,6 +77,7 @@ class Simulator:
         ]
         self.check_inputs(time_config)
         self.timer = Timer(
+            total_days = time_config["total_days"],
             weekday_step_duration=time_config["step_duration"]["weekday"],
             weekend_step_duration=time_config["step_duration"]["weekend"],
             weekday_activities=time_config["step_activities"]["weekday"],
@@ -374,6 +376,7 @@ class Simulator:
         person:
             person sent to cemetery
         """
+        person.dead = True 
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
@@ -447,6 +450,7 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
 
+        self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
         self.update_health_status(self.timer.now, self.timer.duration)
         self.clear_world()
 
@@ -469,6 +473,8 @@ class Simulator:
         self.clear_world()
         self.logger.log_timestep(self.timer.date,
                 self.world.areas, save=True)
+        self.first_infected = self.world.people.infected[:self.logger.max_people_to_follow]
+        self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
         for time in self.timer:
             if time > self.timer.final_date:
                 break
