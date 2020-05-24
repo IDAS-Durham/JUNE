@@ -52,6 +52,6 @@ class TravelCityDistributor:
         for idx, msoa_coord in enumerate(self.lat_lon_msoas):
 
             # append msoa class to travel_cities
-            travel_cities[centroids_kd.query(msoa_coord, 1)[1]].msoas.append(self.msoa_names[idx])
+            travel_cities[centroids_kd.query(msoa_coord, 1)[1]].msoas.append(self.msoas[idx])
 
         
