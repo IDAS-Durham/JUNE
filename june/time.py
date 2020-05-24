@@ -25,6 +25,7 @@ class Timer:
         self.weekend_activities = weekend_activities
 
         self.previous_date = self.initial_date
+        self.final_date = self.initial_date + datetime.timedelta(days=total_days)
         self.date = datetime.datetime(*[int(value) for value in initial_day.split("-")])
         self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
@@ -79,7 +80,7 @@ class Timer:
         if self.previous_date.day != self.date.day:
             self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
-        return self.now
+        return self.date
 
 
 if __name__ == "__main__":
