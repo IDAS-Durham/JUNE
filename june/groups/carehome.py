@@ -52,7 +52,7 @@ class CareHome(Group):
     ):
         super().add(
             person,
-            activity_type=person.ActivityType.residence,
+            activity="residence",
             subgroup_type=subgroup_type,
         )
 

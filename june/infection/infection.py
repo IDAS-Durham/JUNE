@@ -10,6 +10,7 @@ from june.infection.symptoms_trajectory import SymptomsTrajectory
 from june.infection.trajectory_maker import TrajectoryMaker
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
+from june.infection.health_information import HealthInformation
 
 default_config_filename = (
         paths.configs_path
@@ -94,6 +95,7 @@ class InfectionSelector:
 
     def infect_person_at_time(self, person, time):
         infection = self.make_infection(person, time)
+        person.health_information = HealthInformation()
         person.health_information.set_infection(infection=infection)
 
     def make_infection(self, person, time):

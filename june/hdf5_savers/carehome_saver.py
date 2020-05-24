@@ -25,7 +25,7 @@ def save_care_homes_to_hdf5(
     """
     n_care_homes = len(care_homes)
     n_chunks = int(np.ceil(n_care_homes / chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         care_homes_dset = f.create_group("care_homes")
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -33,7 +33,7 @@ def save_care_homes_to_hdf5(
             ids = []
             areas = []
             n_residents = []
-            for carehome in care_homes:
+            for carehome in care_homes[idx1:idx2]:
                 ids.append(carehome.id)
                 if carehome.area is None:
                     areas.append(nan_integer)
@@ -46,9 +46,9 @@ def save_care_homes_to_hdf5(
             n_residents = np.array(n_residents, dtype=np.float)
             if chunk == 0:
                 care_homes_dset.attrs["n_care_homes"] = n_care_homes
-                care_homes_dset.create_dataset("id", data=ids)
-                care_homes_dset.create_dataset("area", data=areas)
-                care_homes_dset.create_dataset("n_residents", data=n_residents)
+                care_homes_dset.create_dataset("id", data=ids, maxshape=(None,))
+                care_homes_dset.create_dataset("area", data=areas, maxshape=(None,))
+                care_homes_dset.create_dataset("n_residents", data=n_residents, maxshape=(None,))
             else:
                 newshape = (care_homes_dset["id"].shape[0] + ids.shape[0],)
                 care_homes_dset["id"].resize(newshape)
@@ -73,7 +73,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_carehomes)
-            ids = carehomes["id"]
+            ids = carehomes["id"][idx1:idx2]
             areas = carehomes["area"][idx1:idx2]
             n_residents = carehomes["n_residents"][idx1:idx2]
             for k in range(idx2 - idx1):
