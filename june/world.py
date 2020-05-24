@@ -43,6 +43,7 @@ class World:
         demography: Optional[Demography] = None,
         include_households: bool = True,
         include_commute: bool = False,
+        include_rail_travel: bool = False,
         box_mode=False,
     ):
         """
@@ -60,6 +61,9 @@ class World:
         include_households
             whether to include households in the world or not (defualt = True)
         """
+        if include_rail_travel and not include_commute:
+            raise ValueError('Rail travel depends on commute and so both must be true')
+        
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
@@ -90,6 +94,9 @@ class World:
 
         if include_commute:
             self.initialise_commuting()
+
+        if include_rail_travel:
+            self.initialise_rail_travel()
 
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
@@ -182,6 +189,20 @@ class World:
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
 
+    def initialise_rail_travel(self):
+
+        # TravelCity
+        self.travelcities = TravelCities(self.commutecities)
+        self.init_cities()
+
+        # TravelCityDistributor
+        self.travelcity_distributor = TravelCityDistributor(self.travelcities.members, self.super_areas.members)
+        self.travelcity_distributor.distribute_msoas()
+
+        # TravelUnit
+        self.travelunits = TravelUnits()
+
+        
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
