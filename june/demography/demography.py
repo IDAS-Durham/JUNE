@@ -147,17 +147,17 @@ class Population:
 
     @property
     def infected(self):
-        return [person for person in self.people if person.health_information.infected]
+        return [person for person in self.people if person.infected]
 
     @property
     def susceptible(self):
         return [
-            person for person in self.people if person.health_information.susceptible
+            person for person in self.people if person.susceptible
         ]
 
     @property
     def recovered(self):
-        return [person for person in self.people if person.health_information.recovered]
+        return [person for person in self.people if person.recovered]
 
 
 class Demography:
@@ -191,11 +191,11 @@ class Demography:
         people = list()
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
-            person = Person(
+            person = Person.from_attributes(
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
                 ethnicity=age_and_sex_generator.ethnicity(),
-                socioecon_index=age_and_sex_generator.socioecon_index()
+                socioecon_index=age_and_sex_generator.socioecon_index(),
             )
             people.append(person)  # add person to population
         return Population(people=people)
