@@ -69,7 +69,8 @@ class Simulator:
         self.activity_hierarchy = [
             "box",
             "hospital",
-            "rail_travel",
+            "rail_travel_out",
+            "rail_travel_back",
             "commute",
             "primary_activity",
             "leisure",
@@ -97,6 +98,8 @@ class Simulator:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
             self.initialize_leisure(activity_to_groups["leisure"])
+        if "rail_travel_out" or "rail_travel_back" in self.all_activities:
+            self.initialize_rail_travel()
 
     @classmethod
     def from_file(
@@ -148,11 +151,21 @@ class Simulator:
             self.commute_city_unit_distributor = CommuteCityUnitDistributor(
                 self.world.commutecities.members
             )
+            
     def distribute_commuters(self):
         if hasattr(self, 'commute_unit_distributor'): 
             self.commute_unit_distributor.distribute_people()
         if hasattr(self, 'commute_city_unit_distributor'): 
             self.commute_city_unit_distributor.distribute_people()
+
+    def initialize_rail_travel(self):
+        self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
+
+    def distribute_rail_out(self):
+        self.travelunit_distributor.distirbute_people_out()
+
+    def distribute_rail_back(self):
+        self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
         self.leisure = leisure.generate_leisure_for_world(
@@ -413,6 +426,10 @@ class Simulator:
 
         if "commute" in activities:
             self.distribute_commuters()
+        if "rail_travel_out" in activities:
+            self.distribute_rail_out()
+        if "rail_travel_back" in activities:
+            self.distribute_rail_back()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
