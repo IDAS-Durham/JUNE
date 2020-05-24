@@ -74,29 +74,43 @@ class TravelUnitDistributor:
 
             for dest_city_idx, to_distribute in enumerate(to_distribute_per_city):
 
+                print ()
+
                 # drawing people from specific msoas
                 try:
                     msoas = travel_msoas[np.random.choice(len(travel_msoas), int(to_distribute))]
                 except:
                     msoas = []
-                    print ('Skipping distirbuting from city {} to city {}'.format(travelcity.city, self.travelcities[dest_city_idx].city))
+                    #print ('Skipping distirbuting from city {} to city {}'.format(travelcity.city, self.travelcities[dest_city_idx].city))
 
-                unique_msoas, counts = np.unique(msoas, return_counts = True)
+                msoa_names = []
+                for msoa in msoas:
+                    msoa_names.append(msoa.name)
+                msoa_names = np.array(msoa_names)
+
+                unique_msoa_names, counts = np.unique(msoa_names, return_counts = True)
+
                 
                 travel_unit = TravelUnit(
                     city = travelcity.city,
                 )
                 
-                for msoa_idx, msoa in enumerate(unique_msoas):
+                for msoa_idx, msoa_name in enumerate(unique_msoa_names):
+                    
+                    msoa = msoas[np.where(msoa_names == msoa_name)[0][0]]
 
                     people = np.array(msoa.people)[np.random.choice(len(msoa.people), counts[msoa_idx], replace=False)]
                     
                     for person in people:
                     
-                        if len(travel_unit.no_passengers) < travel_unit.max_passengers:
+                        if travel_unit.no_passengers < travel_unit.max_passengers:
 
                             person.home_city = travelcity.city
-                            travel_unit.passengers.add(person)
+                            travel_unit.add(person,
+                                            activity_type=person.ActivityType.rail_travel,
+                                            subgroup_type=travel_unit.SubgroupType.default,
+                                            dynamic=True
+                            )
                             travel_unit.no_passengers += 1
                             
                         else:
@@ -108,7 +122,11 @@ class TravelUnitDistributor:
                             )
 
                             person.home_city = travelcity.city
-                            travel_unit.passengers.add(person)
+                            travel_unit.add(person,
+                                            activity_type=person.ActivityType.rail_travel,
+                                            subgroup_type=travel_unit.SubgroupType.default,
+                                            dynamic=True
+                            )
                             travel_unit.no_passengers += 1
 
                         # send person to city
@@ -148,9 +166,13 @@ class TravelUnitDistributor:
 
                 travel_city_index = np.where(travel_cities == person.home_city)[0]
                 
-                if len(units[travel_city_index].no_passengers) < units[travel_city_index].max_passengers:
+                if units[travel_city_index].no_passengers < units[travel_city_index].max_passengers:
 
-                    units[travel_city_index].add(person)
+                    units[travel_city_index].add(person,
+                                                 activity_type=person.ActivityType.rail_travel,
+                                                 subgroup_type=travel_unit.SubgroupType.default,
+                                                 dynamic=True
+                    )
                     travel_unit.no_passengers += 1
 
                 else:
@@ -162,7 +184,11 @@ class TravelUnitDistributor:
                         city = travelcity.city
                     )
 
-                    units[travel_city_index].add(person)
+                    units[travel_city_index].add(person,
+                                                 activity_type=person.ActivityType.rail_travel,
+                                                 subgroup_type=travel_unit.SubgroupType.default,
+                                                 dynamic=True
+                    )
                     travel_unit.no_passengers += 1
 
         # clean up
