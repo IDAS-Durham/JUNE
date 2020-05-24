@@ -313,20 +313,15 @@ class HouseholdDistributor:
             n_communal_df.iterrows(),
         ):
             men_by_age, women_by_age = self._create_people_dicts(area)
-            try:
-                area.households = self.distribute_people_to_households(
-                    men_by_age,
-                    women_by_age,
-                    area,
-                    number_households.to_dict(),
-                    n_students.values[0],
-                    n_communal.values[0],
-                )
-                households_total += area.households
-            except Exception as e:
-                print(e)
-                print(f"Household distributor failed at area {area.name}")
-                continue
+            area.households = self.distribute_people_to_households(
+                men_by_age,
+                women_by_age,
+                area,
+                number_households.to_dict(),
+                n_students.values[0],
+                n_communal.values[0],
+            )
+            households_total += area.households
             counter += 1
             if counter % 5000 == 0:
                 logger.info(f"filled {counter} areas of {len(area_names)}")
@@ -1432,6 +1427,14 @@ class HouseholdDistributor:
 
         index = 0
         while people_left > 0:
+            if len(communal_houses) == 0:
+                # this extreme case happens in area E00174453 (only case in England!!!)
+                person = self._get_random_person_in_age_bracket(men_by_age, women_by_age, min_age=15)
+                household = self._create_household(area, type="communal")
+                communal_houses.append(household)
+                self._add_to_household(household, person, subgroup="default")
+                people_left -= 1
+                continue
             person = self._get_random_person_in_age_bracket(men_by_age, women_by_age)
             household = communal_houses[index]
             self._add_to_household(household, person, subgroup="default")
