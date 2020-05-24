@@ -11,16 +11,39 @@ def create_carehome_dist():
     carehome_dist = CareHomeDistributor()
     return carehome_dist
 
+
+@pytest.fixture(name="module_config", scope="module")
+def read_config():
+    with open(config_file) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return config
+
+
+class MockSuperArea:
+    def __init__(self, module_config):
+        self.workers = []
+        n_workers = 2
+        # workers/carers
+        for _ in range(n_workers):
+            carer = Person(
+                sector = list(module_config["sector"].keys())[0]
+                sub_sector = None,
+            )
+            self.workers.append(carer)
+
 class MockArea:
     def __init__(self):
         self.care_home = None
         self.people = []
+        # residents
         for age in range(50, 101):
             for _ in range(0,2):
                 man = Person(sex='m', age=age)
                 self.people.append(man)
                 woman = Person(sex='f', age=age)
                 self.people.append(woman)
+        # workers/carers
+        self.super_area = MockSuperArea()
 
 
 def test__assertion_no_carehome_residents(carehome_distributor):
@@ -37,4 +60,3 @@ def test__carehome_populated_correctly(carehome_distributor):
     carehome_distributor.populate_care_home_in_area(area)
     assert area.care_home.n_residents == 10
     assert len(area.care_home.people) == 10
-
