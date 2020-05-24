@@ -106,12 +106,12 @@ class TestNewcastle:
 
         return commutecities
 
-    # def init_stations(self, commutecities_nc):
-    #     commutecities_nc.init_non_london()
-    #     commutecities_nc.init_london()
+    def init_stations(self, commutecities_nc):
+         commutecities_nc.init_non_london()
+         commutecities_nc.init_london()
 
-    # def test__init_stations(self, commutecities_nc):
-    #     assert len(commutecities_nc.members) == 11
+    #def test__init_stations(self, commutecities_nc):
+    #    assert len(commutecities_nc.members) == 11
 
     # def commutecity_distiribute(self, commutecities_nc, world_nc):
     #     commutecity_distributor = CommuteCityDistributor(commutecities_nc.members, world_nc.super_areas.members)
