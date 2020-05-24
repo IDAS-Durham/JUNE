@@ -6,10 +6,6 @@ from scipy import spatial
 from june import paths
 
 
-default_data_path = paths.data_path
-
-default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
-
 class TravelCityDistributor:
     """
     Distirbute msoas to travel cities based on proximity
@@ -36,10 +32,7 @@ class TravelCityDistributor:
         self.lat_lon_msoas = lat_lon_msoas
         self.msoa_names = msoa_names
 
-    def from_file(self):
-
-        self.msoa_coordinates = pd.read_csv(default_msoa_coordinates)
-
+ 
     def distribute_msoas(self):
         'Distribute MSOAs to cities'
 
