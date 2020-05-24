@@ -1,213 +1,104 @@
 from itertools import count
 import random
-from enum import IntEnum
-from june.infection import SymptomTags
+from enum import IntEnum, Enum
+import struct
+from recordclass import dataobject
+import numpy as np
+
+from june.infection.health_information import HealthInformation
 
 
+class Activities(dataobject):
+    residence: None
+    primary_activity: None
+    hospital: None
+    commute: None
+    rail_travel: None
+    leisure: None
+    box: None
 
-class HealthInformation:
-    def __init__(self):
-        self.susceptibility = 1.0
-        self.susceptible = True
-        self.infected = False
-        self.infection = None
-        self.recovered = False
-        self.dead = False
-        self.number_of_infected = 0
-        self.maximal_symptoms = 0
-        self.maximal_symptoms_time = -1
-        self.maximal_symptoms_tag = "none"
-        self.time_of_infection = -1
-        self.group_type_of_infection = "none"
-        self.length_of_infection = -1
-        self.infecter = None
-
-    def set_infection(self, infection):
-        self.infection = infection
-        self.infected = True
-        self.susceptible = False
-        self.susceptibility = 0.0
-        self.time_of_infection = infection.start_time
-
-    @property
-    def tag(self):
-        if self.infection is not None:
-            return self.infection.symptoms.tag
-        return None
-
-    @property
-    def must_stay_at_home(self) -> bool:
-        return self.tag in (SymptomTags.influenza, SymptomTags.pneumonia)
-
-    @property
-    def should_be_in_hospital(self) -> bool:
-        return self.tag in (SymptomTags.hospitalised, SymptomTags.intensive_care)
-
-    @property
-    def infected_at_home(self) -> bool:
-        return self.infected and not (self.dead or self.should_be_in_hospital)
-
-    @property
-    def is_dead(self) -> bool:
-        return self.tag == SymptomTags.dead
-
-    def update_health_status(self, time, delta_time):
-        if self.infected:
-            if self.infection.symptoms.is_recovered():
-                self.recovered = True
-            else:
-                self.infection.update_at_time(time + delta_time)
-
-    def set_recovered(self, time):
-        self.recovered = True
-        self.infected = False
-        self.susceptible = False
-        self.susceptibility = 0.0
-        self.set_length_of_infection(time)
-        self.infection = None
-
-    def set_dead(self, time):
-        self.dead = True
-        self.infected = False
-        self.susceptible = False
-        self.susceptibility = 0.0
-        self.set_length_of_infection(time)
-        self.infection = None
-
-    def get_symptoms_tag(self, symptoms):
-        return self.infection.symptoms.tag
-
-    def transmission_probability(self, time):
-        if self.infection is not None:
-            return 0.0
-        return self.infection.transmission_probability(time)
-
-    def symptom_severity(self, severity):
-        if self.infection is None:
-            return 0.0
-        return self.infection.symptom_severity(severity)
-
-    def update_symptoms(self, time):  # , symptoms, time):
-        if self.infection.symptoms.severity > self.maximal_symptoms:
-            self.maximal_symptoms = self.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
-            self.maximal_symptoms_time = time - self.time_of_infection
-
-    def update_infection_data(self, time, group_type=None, infecter=None):
-        self.time_of_infection = time
-        if group_type is not None:
-            self.group_type_of_infection = group_type
-        if infecter is not None:
-            self.infecter = infecter
-
-    def set_length_of_infection(self, time):
-        self.length_of_infection = time - self.time_of_infection
-
-    def increment_infected(self):
-        self.number_of_infected += 1
+    def iter(self):
+        return [getattr(self, activity) for activity in self.__fields__]
 
 
-class Person:
-    """
-    Primitive version of class person.  This needs to be connected to the full class 
-    structure including health and social indices, employment, etc..  The current 
-    implementation is only meant to get a simplistic dynamics of social interactions coded.
-    
-    The logic is the following:
-    People can get infected with an Infection, which is characterised by time-dependent
-    transmission probabilities and symptom severities (see class descriptions for
-    Infection, Transmission, Severity).  The former define the infector part for virus
-    transmission, while the latter decide if individuals realise symptoms (we need
-    to define a threshold for that).  The symptoms will eventually change the behavior 
-    of the person (i.e. intensity and frequency of social contacts), if they need to be 
-    treated, hospitalized, plugged into an ICU or even die.  This part of the model is 
-    still opaque.   
-    
-    Since the realization of the infection will be different from person to person, it is
-    a characteristic of the person - we will need to allow different parameters describing
-    the same functional forms of transmission probability and symptom severity, distributed
-    according to a (tunable) parameter distribution.  Currently a non-symmetric Gaussian 
-    smearing of 2 sigma around a mean with left-/right-widths is implemented.    
-    """
+person_ids = count()
 
+
+class Person(dataobject):
     _id = count()
-    __slots__ = (
-        "id",
-        "age",
-        "sex",
-        "ethnicity",
-        "work_super_area",
-        "area",
-        "housemates",
-        "mode_of_transport",
-        "subgroups",
-        "sector",
-        "sub_sector",
-        "home_city",
-        "socioecon_index",
-        "health_information",
-        "busy",
-    )
+    id: int = 0
+    sex: str = "f"
+    age: int = 27
+    ethnicity: str = None
+    socioecon_index: str = None
+    area: "Area" = None
+    # work info
+    work_super_area: str = None
+    sector: str = None
+    sub_sector: str = None
+    # commute
+    home_city: str = None
+    mode_of_transport: str = None
+    # rail travel
+    # activities
+    busy: bool = False
+    subgroups: Activities = Activities(None, None, None, None, None, None)
+    # infection
+    health_information: HealthInformation = HealthInformation()
+    susceptibility: float = 1.0
+    dead: bool = False
 
-    class ActivityType(IntEnum):
-        """
-        Defines the indices of the subgroups a person belongs to
-        """
-
-        residence = 0
-        primary_activity = 1
-        hospital = 2
-        commute = 3
-        leisure = 4
-        box = 5
-        rail_travel = 6
-
-    def __init__(
-        self,
-        age=-1,
-        sex=None,
-        ethnicity=None,
-        socioecon_index=None,
-        mode_of_transport=None,
-        area=None,
+    @classmethod
+    def from_attributes(
+        cls, sex=27, age="f", ethnicity=None, socioecon_index=None, id=None
     ):
-        """
-        Inputs:
-        """
-        self.id = next(self._id)
-        # biological attributes
-        self.age = age
-        self.sex = sex
-        self.ethnicity = ethnicity
-        # geo-graphical attributes
-        self.work_super_area = None
-        self.area = area
-        self.housemates = list()
-        # primary activity attributes
-        self.mode_of_transport = mode_of_transport
-        self.subgroups = [None] * len(self.ActivityType)  # number of subgroups
-        self.sector = None
-        self.sub_sector = None
-        self.home_city = None
-        self.socioecon_index = socioecon_index
-        self.health_information = HealthInformation()
-        self.busy = False
+        if id is None:
+            id = next(Person._id)
+        return Person(
+            id=id,
+            sex=sex,
+            age=age,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            # IMPORTANT, these objects need to be recreated, otherwise the default
+            # is always the same object !!!!
+            subgroups=Activities(None, None, None, None, None, None),
+            health_information=HealthInformation(),
+        )
+
+    @property
+    def infected(self):
+        if (
+            self.health_information is not None
+            and self.health_information.infection is not None
+        ):
+            return True
+
+        return False
+
+    @property
+    def susceptible(self):
+        return self.susceptibility <= 0 and not self.infected
+
+    @property
+    def recovered(self):
+        return not (self.dead or self.susceptible)
 
     @property
     def residence(self):
-        return self.subgroups[self.ActivityType.residence]
+        return self.subgroups.residence
 
     @property
     def primary_activity(self):
-        return self.subgroups[self.ActivityType.primary_activity]
+        return self.subgroups.primary_activity
 
     @property
     def hospital(self):
-        return self.subgroups[self.ActivityType.hospital]
+        return self.subgroups.hospital
 
     @property
     def commute(self):
-        return self.subgroups[self.ActivityType.commute]
+        return self.subgroups.commute
 
     @property
     def rail_travel(self):
@@ -215,17 +106,24 @@ class Person:
 
     @property
     def leisure(self):
-        return self.subgroups[self.ActivityType.leisure]
+        return self.subgroups.leisure
 
     @property
     def box(self):
-        return self.subgroups[self.ActivityType.box]
- 
+        return self.subgroups.box
+
     @property
     def in_hospital(self):
         if self.hospital is None:
             return True
         return False
+
+    @property
+    def housemates(self):
+        hmates = [
+            person for person in self.residence.group.residents if person is not self
+        ]
+        return hmates
 
     def find_guardian(self):
 

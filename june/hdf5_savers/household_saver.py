@@ -25,41 +25,44 @@ def save_households_to_hdf5(
     """
     n_households = len(households)
     n_chunks = int(np.ceil(n_households / chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         households_dset = f.create_group("households")
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             ids = []
             areas = []
-            communals = []
+            types = []
             max_sizes = []
-            for household in households:
+            for household in households[idx1:idx2]:
                 ids.append(household.id)
                 if household.area is None:
                     areas.append(nan_integer)
                 else:
                     areas.append(household.area.id)
-                communals.append(household.communal)
+                if household.type is None:
+                    types.append(" ".encode("ascii", "ignore"))
+                else:
+                    types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
-            communals = np.array(communals, dtype=np.bool)
+            types = np.array(types, dtype="S15")
             max_sizes = np.array(max_sizes, dtype=np.float)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
-                households_dset.create_dataset("id", data=ids)
-                households_dset.create_dataset("area", data=areas)
-                households_dset.create_dataset("communal", data=communals)
-                households_dset.create_dataset("max_size", data=max_sizes)
+                households_dset.create_dataset("id", data=ids, maxshape=(None,))
+                households_dset.create_dataset("area", data=areas, maxshape=(None,))
+                households_dset.create_dataset("type", data=types, maxshape=(None,))
+                households_dset.create_dataset("max_size", data=max_sizes, maxshape=(None,))
             else:
                 newshape = (households_dset["id"].shape[0] + ids.shape[0],)
                 households_dset["id"].resize(newshape)
                 households_dset["id"][idx1:idx2] = ids
                 households_dset["area"].resize(newshape)
                 households_dset["area"][idx1:idx2] = areas 
-                households_dset["communal"].resize(newshape)
-                households_dset["communal"][idx1:idx2] = communals
+                households_dset["type"].resize(newshape)
+                households_dset["type"][idx1:idx2] = types
                 households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
 
@@ -73,23 +76,28 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
     with h5py.File(file_path, "r") as f:
         households = f["households"]
         households_list = list()
-        chunk_size = 50000
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             ids = households["id"][idx1:idx2]
-            communals = households["communal"][idx1:idx2]
+            types = households["type"][idx1:idx2]
             areas = households["area"][idx1:idx2]
             max_sizes = households["max_size"][idx1:idx2]
             for k in range(idx2 - idx1):
                 area = areas[k]
                 if area == nan_integer:
                     area = None
+                type = types[k]
+                if type.decode() == " ":
+                    type = None
+                else:
+                    type = type.decode()
                 household = Household(
-                    communal=communals[k], area=area, max_size=max_sizes[k]
+                    type=type, area=area, max_size=max_sizes[k]
                 )
+
                 household.id = ids[k]
                 households_list.append(household)
     return Households(households_list)
