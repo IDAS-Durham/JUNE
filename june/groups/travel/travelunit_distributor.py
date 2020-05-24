@@ -58,7 +58,12 @@ class TravelUnitDistributor:
         'Distirbute people out in the day to other cities'
 
         # initialise new travelunits
-        self.travelunits = []
+        self.travelunits.clear()
+
+        # Clear arrived list
+        # Note: this may need to be diabled for oevrnight stays
+        for travelcity in self.travelcities:
+            travelcity.arrived.clear()
         
         for idx, travelcity in enumerate(self.travelcities):
             if travelcity.city == 'London':
@@ -73,8 +78,6 @@ class TravelUnitDistributor:
             travel_msoas = np.array(travelcity.msoas)
 
             for dest_city_idx, to_distribute in enumerate(to_distribute_per_city):
-
-                print ()
 
                 # drawing people from specific msoas
                 try:
@@ -112,8 +115,10 @@ class TravelUnitDistributor:
                                             dynamic=True
                             )
                             travel_unit.no_passengers += 1
+
                             
                         else:
+                            #assert len(travel_unit.people) == travel_unit.no_passengers
                             self.travelunits.append(travel_unit)
 
                             # seed new travel unit once other has been filled
@@ -139,7 +144,7 @@ class TravelUnitDistributor:
         'If people are not active in another group (like hotels) then send them back home again'
 
         # initialise new travelunits
-        self.travelunits = []
+        self.travelunits.clear()
 
         units = []
         travel_cities = []
@@ -151,8 +156,8 @@ class TravelUnitDistributor:
             )
             travel_cities.append(travelcity.city)
 
-        units = np.array(units)
-        travel_city = np.array(travel_city)
+        #units = np.array(units)
+        travel_cities = np.array(travel_cities)
 
         for travelcity_from in self.travelcities:
 
@@ -160,30 +165,34 @@ class TravelUnitDistributor:
 
             for person in to_distirbute:
 
-                travel_city_index = np.where(travel_cities == person.home_city)[0]
-                
-                if units[travel_city_index].no_passengers < units[travel_city_index].max_passengers:
+                travel_city_index = np.where(travel_cities == person.home_city)[0][0]
 
-                    units[travel_city_index].add(person,
-                                                 activity_type=person.ActivityType.rail_travel,
-                                                 subgroup_type=travel_unit.SubgroupType.default,
-                                                 dynamic=True
+                travel_unit = units[travel_city_index]
+                
+                if travel_unit.no_passengers < travel_unit.max_passengers:
+
+                    travel_unit.add(person,
+                                    activity_type=person.ActivityType.rail_travel,
+                                    subgroup_type=travel_unit.SubgroupType.default,
+                                    dynamic=True
                     )
                     travel_unit.no_passengers += 1
 
                 else:
 
-                    self.travelunits.append(units[travel_city_index])
+                    self.travelunits.append(travel_unit)
 
                     # Create fresh unit in same location as previous one
-                    units[travel_city_index] = TravelUnit(
+                    travel_unit = TravelUnit(
                         city = travelcity.city
                     )
 
-                    units[travel_city_index].add(person,
-                                                 activity_type=person.ActivityType.rail_travel,
-                                                 subgroup_type=travel_unit.SubgroupType.default,
-                                                 dynamic=True
+                    units[travel_city_index] = travel_unit
+
+                    travel_unit.add(person,
+                                    activity_type=person.ActivityType.rail_travel,
+                                    subgroup_type=travel_unit.SubgroupType.default,
+                                    dynamic=True
                     )
                     travel_unit.no_passengers += 1
 
