@@ -66,17 +66,20 @@ class TravelUnitDistributor:
             else:
                 to_distribute_global = list(self.to_distribute_df[self.to_distribute_df['station'] == travelcity.city]['average_no_commute'])[0]*(1-self.configs['non-London damping factor'])
 
-            print (np.array(list(self.distribution_df[self.distribution_df['station'] == travelcity.city]['distribution'])[0]))
             
-            to_distirbute_per_city = to_distribute_global*np.array(list(self.distribution_df[self.distribution_df['station'] == travelcity.city]['distribution'])[0])
+            to_distribute_per_city = to_distribute_global*np.array(self.distribution_df[travelcity.city])
 
             # where to draw people from overall
             travel_msoas = np.array(travelcity.msoas)
-            
+
             for dest_city_idx, to_distribute in enumerate(to_distribute_per_city):
 
                 # drawing people from specific msoas
-                msoas = travel_msoas[np.random.choice(len(travel_msoas), len(to_distribute))]
+                try:
+                    msoas = travel_msoas[np.random.choice(len(travel_msoas), int(to_distribute))]
+                except:
+                    msoas = []
+                    print ('Skipping distirbuting from city {} to city {}'.format(travelcity.city, self.travelcities[dest_city_idx].city))
 
                 unique_msoas, counts = np.unique(msoas, return_counts = True)
                 
