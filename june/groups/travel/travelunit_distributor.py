@@ -44,7 +44,7 @@ class TravelUnitDistributor:
 
     def from_file(self, \
                   to_distribute = default_to_distirbute, \
-                  distribution = default_to_distirbute, \
+                  distribution = default_distribution, \
                   config_filename = default_config_filename
     ):
 
@@ -62,11 +62,13 @@ class TravelUnitDistributor:
         
         for idx, travelcity in enumerate(self.travelcities):
             if travelcity.city == 'London':
-                to_distribute_global = float(self.to_distribute_df[self.to_distribute['station'] == travelcity.city]['average_no_commute'])*(1-self.configs['London damping factor'])
+                to_distribute_global = list(self.to_distribute_df[self.to_distribute_df['station'] == travelcity.city]['average_no_commute'])[0]*(1-self.configs['London damping factor'])
             else:
-                to_distribute_global = float(self.to_distribute_df[self.to_distribute['station'] == travelcity.city]['average_no_commute'])*(1-self.configs['non-London damping factor'])
+                to_distribute_global = list(self.to_distribute_df[self.to_distribute_df['station'] == travelcity.city]['average_no_commute'])[0]*(1-self.configs['non-London damping factor'])
+
+            print (np.array(list(self.distribution_df[self.distribution_df['station'] == travelcity.city]['distribution'])[0]))
             
-            to_distirbute_per_city = to_distribute_global*list(self.distribution_df[self.distribution_df['station'] == travelcity.city]['distribution'])[0]
+            to_distirbute_per_city = to_distribute_global*np.array(list(self.distribution_df[self.distribution_df['station'] == travelcity.city]['distribution'])[0])
 
             # where to draw people from overall
             travel_msoas = np.array(travelcity.msoas)
