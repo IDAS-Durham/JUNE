@@ -18,6 +18,9 @@ class TravelUnit(Group):
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
 
 class TravelUnits(Supergroup):
+    """
+    Initialise travel unit members list to be dynamically filled as people fill units
+    """
 
     def __init__(self):
 
