@@ -17,7 +17,7 @@ class TravelUnit(Group):
         self.no_passengers = 0
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
 
-class TravelUnits(SuperGroup):
+class TravelUnits(Supergroup):
 
     def __init__(self):
 
