@@ -160,6 +160,7 @@ class Person:
         commute = 3
         leisure = 4
         box = 5
+        rail_travel = 6
 
     def __init__(
         self,
@@ -207,6 +208,10 @@ class Person:
     @property
     def commute(self):
         return self.subgroups[self.ActivityType.commute]
+
+    @property
+    def rail_travel(self):
+        return self.subgroups[self.ActivityType.rail_travel]
 
     @property
     def leisure(self):
