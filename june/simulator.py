@@ -19,6 +19,7 @@ from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
+from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
