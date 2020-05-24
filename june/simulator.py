@@ -69,6 +69,7 @@ class Simulator:
         self.activity_hierarchy = [
             "box",
             "hospital",
+            "rail_travel",
             "commute",
             "primary_activity",
             "leisure",
