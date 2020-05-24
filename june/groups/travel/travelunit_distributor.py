@@ -24,8 +24,8 @@ class TravelUnitDistributor:
 
     def from_file(self):
 
-        self.to_distribute_df = 
-        self.distribution_df = 
+        self.to_distribute_df = # TODO
+        self.distribution_df = # TODO
 
     def distribute_people_out(self):.
         'Distirbute people out in the day to other cities'
