@@ -110,8 +110,7 @@ class TravelUnitDistributor:
 
                             person.home_city = travelcity.city
                             travel_unit.add(person,
-                                            activity_type=person.ActivityType.rail_travel,
-                                            subgroup_type=travel_unit.SubgroupType.default,
+                                            subgroup_type=travel_unit.SubgroupType.rail_travel,
                                             dynamic=True
                             )
                             travel_unit.no_passengers += 1
@@ -128,8 +127,7 @@ class TravelUnitDistributor:
 
                             person.home_city = travelcity.city
                             travel_unit.add(person,
-                                            activity_type=person.ActivityType.rail_travel,
-                                            subgroup_type=travel_unit.SubgroupType.default,
+                                            subgroup_type=travel_unit.SubgroupType.rail_travel,
                                             dynamic=True
                             )
                             travel_unit.no_passengers += 1
@@ -172,8 +170,7 @@ class TravelUnitDistributor:
                 if travel_unit.no_passengers < travel_unit.max_passengers:
 
                     travel_unit.add(person,
-                                    activity_type=person.ActivityType.rail_travel,
-                                    subgroup_type=travel_unit.SubgroupType.default,
+                                    subgroup_type=travel_unit.SubgroupType.rail_travel,
                                     dynamic=True
                     )
                     travel_unit.no_passengers += 1
@@ -190,8 +187,7 @@ class TravelUnitDistributor:
                     units[travel_city_index] = travel_unit
 
                     travel_unit.add(person,
-                                    activity_type=person.ActivityType.rail_travel,
-                                    subgroup_type=travel_unit.SubgroupType.default,
+                                    subgroup_type=travel_unit.SubgroupType.rail_travel,
                                     dynamic=True
                     )
                     travel_unit.no_passengers += 1

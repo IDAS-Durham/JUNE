@@ -62,7 +62,7 @@ class Person(dataobject):
             socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
-            subgroups=Activities(None, None, None, None, None, None),
+            subgroups=Activities(None, None, None, None, None, None, None),
             health_information=HealthInformation(),
         )
 
@@ -102,7 +102,7 @@ class Person(dataobject):
 
     @property
     def rail_travel(self):
-        return self.subgroups[self.ActivityType.rail_travel]
+        return self.subgroups.rail_travel
 
     @property
     def leisure(self):
