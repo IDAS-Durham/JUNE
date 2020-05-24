@@ -1,8 +1,11 @@
 import pytest
 
+from june import World
 from june.demography.geography import Geography, Area
-from june.demography import Person
-from june.groups import CommuteCity, CommuteCities, CommuteHub, CommuteHubs, CommuteUnit, CommuteUnits, CommuteCityUnit, CommuteCityUnits
+from june.demography import Person, Demography
+from june.distributors import WorkerDistributor
+from june.commute import CommuteGenerator
+from june.groups import CommuteCity, CommuteCities, CommuteCityDistributor, CommuteHub, CommuteHubs, CommuteHubDistributor, CommuteUnit, CommuteUnits, CommuteUnitDistributor, CommuteCityUnit, CommuteCityUnits, CommuteCityUnitDistributor
 
 @pytest.fixture(name="super_area_commute", scope="module")
 def super_area_name():
@@ -86,10 +89,10 @@ class TestNewcastle:
 
     @pytest.fixture(name="world_nc")
     def create_world_nc(self, geography_commute_nc):
-        demography = Demography.for_geography(geography)
-        world = World(geography, demography, include_households=False, include_commute=False)
-        worker_distr = WorkerDistributor.for_geography(geography)
-        worker_distr.distribute(geography, world.people)
+        demography = Demography.for_geography(geography_commute_nc)
+        world = World(geography_commute_nc, demography, include_households=False, include_commute=False)
+        worker_distr = WorkerDistributor.for_geography(geography_commute_nc)
+        worker_distr.distribute(geography_commute_nc, world.people)
         commute_generator = CommuteGenerator.from_file()
 
         for area in world.areas:
@@ -106,29 +109,29 @@ class TestNewcastle:
 
         return commutecities
 
-    def init_stations(self, commutecities_nc):
-         commutecities_nc.init_non_london()
-         commutecities_nc.init_london()
+    def test__commutecity_distiribute(self, commutecities_nc, world_nc):
+        commutecities_nc.init_non_london()
+        commutecities_nc.init_london()
+        assert len(commutecities_nc.members) == 11
+        commutecity_distributor = CommuteCityDistributor(commutecities_nc.members, world_nc.super_areas.members)
+        commutecity_distributor.distribute_people()
+        assert (len(commutecities_nc.members[7].people)) > 0
 
-    #def test__init_stations(self, commutecities_nc):
-    #    assert len(commutecities_nc.members) == 11
+    #def test__city_distribution(self, commutecities_nc):
+    #    assert (len(commutecities_nc.members[7].people)) > 0
 
-    # def commutecity_distiribute(self, commutecities_nc, world_nc):
-    #     commutecity_distributor = CommuteCityDistributor(commutecities_nc.members, world_nc.super_areas.members)
-    #     commutecity_distributor.distribute_people()
+    @pytest.fixture(name="commutehubs_nc")
+    def create_commutehubs(self, commutecities_nc):
+        commutehubs = CommuteHubs(commutecities_nc.members)
+        commutehubs.from_file()
 
-    # def test__city_distribution(self, commutecities_nc):
-    #     assert (len(commutecities_nc.members[7].people)) > 0
+        return commutehubs
 
-    # @pytest.fixture(name="commutehubs_nc")
-    # def create_commutehubs(self, commutecities_nc):
-    #     commutehubs = CommuteHubs(commutecities_nc.members)
-    #     commutehubs.from_file()
-
-    #     return commutehubs
-
-    # def init_commutehubs(self, commutehubs_nc):
-    #     commutehubs_nc.init_hubs()
+    def init_commutehubs(self, commutehubs_nc):
+        commutehubs_nc.init_hubs()
+        commutehub_distributor = CommuteHubDistributor(commutecities_nc.members)
+        commutehub_distributor.from_file()
+        commutehub_distributor.distribute_people()
 
     # def commutehub_distribute(self, commutecities_nc):
     #     commutehub_distributor = CommuteHubDistributor(commutecities_nc.members)
