@@ -85,7 +85,7 @@ class CareHomeDistributor:
         if n_residents == 0:
             raise CareHomeError("No care home residents in this area.")
         self.populate_care_home(area.care_home, men_by_age, women_by_age)
-        self.assign_workers(area.care_home)
+        self.assign_workers(area, area.care_home)
 
     def _get_person_of_age(self, people_dict: dict, age: int):
         person = people_dict[age].pop()
@@ -150,20 +150,7 @@ class CareHomeDistributor:
             )
             return
         else:
-            # equal chance to work in any hospital nearest to any area within msoa
-            # Note: doing it this way rather then putting them into the area which
-            # is currently chose in the for-loop in the world.py file ensure that
-            # medics are equally distr., no over-crowding
-            areas_rv = stats.rv_discrete(
-                values=(
-                    np.arange(len(hospitals_in_msoa)),
-                    np.array([1 / len(hospitals_in_msoa)] * len(hospitals_in_msoa)),
-                )
-            )
-            hospitals_rnd_arr = areas_rv.rvs(size=len(medics))
-
-            for i, medic in enumerate(medics):
-                if medic.sub_sector is not None:
-                    hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
-                    # if (hospital.n_medics < hospital.n_medics_max):# and \
-                    hospital.add(medic, hospital.SubgroupType.workers)
+            for i, carer in enumerate(carers):
+                if (carer.sub_sector is None) and  # because we have no sub_sector for carer
+                    (person.primary_activity is not None):
+                    care_home.add(carer, carehome.SubgroupType.workers)
