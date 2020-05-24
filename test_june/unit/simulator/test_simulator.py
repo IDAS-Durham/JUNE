@@ -46,7 +46,7 @@ def create_simulator():
 
 def test__everyone_has_an_activity(sim):
     for person in sim.world.people.members:
-        assert person.subgroups.count(None) != len(person.subgroups)
+        assert person.subgroups.iter().count(None) != len(person.subgroups)
 
 
 def test__apply_activity_hierarchy(sim):

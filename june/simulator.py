@@ -343,9 +343,12 @@ class Simulator:
         """
 
         for person in self.world.people.members:
-            if person.health_information.dead or person.busy:
+            if person.dead or person.busy:
                 continue
-            if person.health_information.must_stay_at_home:
+            if (
+                person.health_information is not None
+                and person.health_information.must_stay_at_home
+            ):
                 self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
@@ -404,6 +407,7 @@ class Simulator:
                 if person.hospital is not None:
                     person.hospital.group.release_as_patient(person)
                 health_information.set_recovered(time)
+                person.susceptibility = 0
             elif health_information.should_be_in_hospital:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
