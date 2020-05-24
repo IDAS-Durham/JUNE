@@ -134,10 +134,6 @@ class TravelUnitDistributor:
 
                 # cleanup
                 self.travelunits.append(travel_unit)
-                
-                
-            
-
 
     def distribute_people_back(self):
         'If people are not active in another group (like hotels) then send them back home again'
