@@ -42,7 +42,7 @@ class Person(dataobject):
     # rail travel
     # activities
     busy: bool = False
-    subgroups: Activities = Activities(None, None, None, None, None, None)
+    subgroups: Activities = Activities(None, None, None, None, None, None, None)
     # infection
     health_information: HealthInformation = HealthInformation()
     susceptibility: float = 1.0
