@@ -28,7 +28,7 @@ class TestCareHome:
     def create_carehome(self, module_area: Area):
         return CareHome(
             n_residents = 30,
-            n_worker = 8,
+            n_workers = 8,
             area = module_area,
         )
 
