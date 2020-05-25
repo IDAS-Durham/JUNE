@@ -100,7 +100,7 @@ class Simulator:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
             self.initialize_leisure(activity_to_groups["leisure"])
-        if "rail_travel_out" or "rail_travel_back" in self.all_activities:
+        if "rail_travel_out" in self.all_activities or "rail_travel_back" in self.all_activities:
             self.initialize_rail_travel(activity_to_groups["rail_travel"])
 
     @classmethod
