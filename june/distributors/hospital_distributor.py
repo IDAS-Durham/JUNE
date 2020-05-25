@@ -71,7 +71,7 @@ class HospitalDistributor:
             if person.sector == self.healthcare_sector_label
         ]
         if len(medics) == 0:
-            logger.info(f"\n The SuperArea {msoa.name} has no people that work in it!")
+            logger.info(f"\n The SuperArea {super_area.name} has no people that work in it!")
             return
         else:
             # equal chance to work in any hospital nearest to any area within msoa
