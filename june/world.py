@@ -108,13 +108,13 @@ class World:
             self.distribute_workers_to_companies()
 
     @classmethod
-    def from_geography(cls, geography: Geography, box_mode=False):
+    def from_geography(cls, geography: Geography, box_mode=False, include_households=True):
         """
         Initializes the world given a geometry. The demography is calculated
         with the default settings for that geography.
         """
         demography = Demography.for_geography(geography)
-        return cls(geography, demography, box_mode=box_mode)
+        return cls(geography, demography, box_mode=box_mode, include_households=include_households)
 
     def distribute_people_to_households(self):
         household_distributor = HouseholdDistributor.from_file()
