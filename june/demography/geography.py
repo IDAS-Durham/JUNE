@@ -10,18 +10,17 @@ from sklearn.neighbors import BallTree
 from june import paths
 from june.demography.person import Person
 
-default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent
 default_hierarchy_filename = (
-    default_base_path / "data/processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
 default_area_coord_filename = (
-    default_base_path / "data/processed/geographical_data/oa_coordinates.csv"
+    paths.data_path / "processed/geographical_data/oa_coordinates.csv"
 )
 default_superarea_coord_filename = (
-    default_base_path / "data/processed/geographical_data/msoa_coordinates.csv"
+    paths.data_path / "processed/geographical_data/msoa_coordinates.csv"
 )
 default_logging_config_filename = (
-    default_base_path / "configs/config_world_creation_logger.yaml"
+    paths.configs_path / "config_world_creation_logger.yaml"
 )
 
 logger = logging.getLogger(__name__)
