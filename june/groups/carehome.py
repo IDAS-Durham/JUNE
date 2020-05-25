@@ -48,7 +48,10 @@ class CareHome(Group):
         self.area = area
 
     def add(
-        self, person, subgroup_type=SubgroupType.residents,
+        self,
+        person,
+        subgroup_type=SubgroupType.residents,
+        activity: str = "residence",
     ):
         super().add(
             person,
