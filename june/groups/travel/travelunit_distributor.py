@@ -109,7 +109,7 @@ class TravelUnitDistributor:
 
                             person.home_city = travelcity.city
                             travel_unit.add(person,
-                                            activity="rail_travel",
+                                            activity="commute",
                                             subgroup_type=travel_unit.SubgroupType.default,
                                             dynamic=True
                             )
@@ -127,7 +127,7 @@ class TravelUnitDistributor:
 
                             person.home_city = travelcity.city
                             travel_unit.add(person,
-                                            activity="rail_travel",
+                                            activity="commute",
                                             subgroup_type=travel_unit.SubgroupType.default,
                                             dynamic=True
                             )
@@ -171,7 +171,7 @@ class TravelUnitDistributor:
                 if travel_unit.no_passengers < travel_unit.max_passengers:
 
                     travel_unit.add(person,
-                                    activity="rail_travel",
+                                    activity="commute",
                                     subgroup_type=travel_unit.SubgroupType.default,
                                     dynamic=True
                     )
@@ -189,7 +189,7 @@ class TravelUnitDistributor:
                     units[travel_city_index] = travel_unit
 
                     travel_unit.add(person,
-                                    activity="rail_travel",
+                                    activity="commute",
                                     subgroup_type=travel_unit.SubgroupType.default,
                                     dynamic=True
                     )
