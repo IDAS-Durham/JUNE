@@ -3,9 +3,13 @@ import json
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
+from tqdm import tqdm
 from collections import defaultdict
 from june.logger_simulation import Logger
 import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
 
 
 default_shape_file_data_path = "/home/arnau/uk_msoa_shapefile/Middle_Layer_Super_Output_Areas__December_2011__Boundaries.shp"
@@ -96,7 +100,7 @@ class Plotter:
             )
 
     def create_infected_by_super_area_coordinate_df(
-        self, super_area_coordinates_filename: str = default_super_area_coordinates_path
+        self, time_jumps=5, super_area_coordinates_filename: str = default_super_area_coordinates_path
     ):
         coords_df = pd.read_csv(
             super_area_coordinates_filename,
@@ -105,15 +109,23 @@ class Plotter:
             skiprows=1,
         )
         data_df = pd.DataFrame(columns=["super_area", "lat", "lon", "infected", "time"])
-        for time in self.timesteps:
+        pbar = tqdm(total = len(self.timesteps))
+        for time in list(self.timesteps)[::time_jumps]:
+            pbar.update(1)
             infected_dict = defaultdict(int)
+            recovered_dict = defaultdict(int)
+            susceptible_dict = defaultdict(int)
             for area in self.data:
                 if area[0] != "E":
                     continue
                 data_area_time = self.data[area][time]
                 infected = data_area_time["infected"]
+                recovered = data_area_time["recovered"]
+                susceptible = data_area_time["susceptible"]
                 super_area = self.area_conversion_df.loc[area].msoa
                 infected_dict[super_area] += infected
+                recovered_dict[super_area] += recovered
+                susceptible_dict[super_area] += susceptible
             lons = coords_df.loc[list(infected_dict.keys())]["longitude"]
             lats = coords_df.loc[list(infected_dict.keys())]["latitude"]
             aux_df = pd.DataFrame.from_dict(
@@ -122,15 +134,20 @@ class Plotter:
                     "lat": lons,
                     "lon": lats,
                     "infected": list(infected_dict.values()),
+                    "recovered" : list(recovered_dict.values()),
+                    "susceptible" : list(susceptible_dict.values()),
                     "time": [time] * len(lons),
                 }
             )
             data_df = data_df.append(aux_df)
         data_df["infected"] = data_df["infected"].astype(np.int)
+        data_df["recovered"] = data_df["recovered"].astype(np.int)
+        data_df["susceptible"] = data_df["susceptible"].astype(np.int)
         return data_df
 
-    def create_infected_interactive_map(self, html_filename: str = "june_map.html"):
-        data_df = self.create_infected_by_super_area_coordinate_df()
+    def create_infected_interactive_map(self, time_jumps=5, html_filename: str = "june_map.html"):
+        data_df = self.create_infected_by_super_area_coordinate_df(time_jumps=time_jumps)
+        data_df.to_csv("visualization_df.csv")
         px.set_mapbox_access_token(
             "pk.eyJ1IjoiYXN0cm9ieXRlIiwiYSI6ImNrYWwxeHNxZTA3cXMyeG15dGlsbzd1aHAifQ.XvkJbn9mEZ2cuctaX1UwTw"
         )
@@ -145,3 +162,22 @@ class Plotter:
             animation_frame="time",
         )
         fig.write_html(html_filename)
+
+        data_df.drop(columns=["lat", "lon", "super_area"], inplace=True)
+        data_df = data_df.groupby("time").sum()
+        data_df.reset_index(inplace=True)
+        data_df.sort_values(by=['time'])
+        fig = make_subplots(rows = 1, cols=1, shared_xaxes=True, )
+        fig.add_trace(go.Scatter(x=data_df["time"], y = data_df["infected"], name="infected"))
+        fig.add_trace(go.Scatter(x=data_df["time"], y = data_df["recovered"], name="recovered"))
+        fig.update_layout(
+            title="Infection curves",
+            xaxis_title="Days",
+            yaxis_title="Infected & Recovered",
+            font=dict(
+                family="Courier New, monospace",
+                size=18,
+                color="#7f7f7f"
+            )
+        )
+        fig.write_html("infection_curves.html")
