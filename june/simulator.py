@@ -92,6 +92,7 @@ class Simulator:
                 "leisure": activity_to_groups.get("leisure", []),
                 "residence": activity_to_groups.get("residence", []),
                 "commute": activity_to_groups.get("commute", []),
+                "rail_travel": activity_to_groups.get("rail_travel", [])
             }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
@@ -100,7 +101,7 @@ class Simulator:
         if "leisure" in self.all_activities:
             self.initialize_leisure(activity_to_groups["leisure"])
         if "rail_travel_out" or "rail_travel_back" in self.all_activities:
-            self.initialize_rail_travel()
+            self.initialize_rail_travel(activity_to_groups["rail_travel"])
 
     @classmethod
     def from_file(
@@ -157,14 +158,17 @@ class Simulator:
         if hasattr(self, "commute_city_unit_distributor"):
             self.commute_city_unit_distributor.distribute_people()
 
-    def initialize_rail_travel(self):
-        self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
+    def initialize_rail_travel(self, travel_options):
+        if "travelunits" in travel_options:
+            self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
 
     def distribute_rail_out(self):
-        self.travelunit_distributor.distirbute_people_out()
+        if hasattr(self, "travelunit_distributor"):
+            self.travelunit_distributor.distirbute_people_out()
 
     def distribute_rail_back(self):
-        self.travelunit_distributor.distribute_people_back()
+        if hasattr(self, "travelunit_distributor"):
+            self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
         self.leisure = leisure.generate_leisure_for_world(
