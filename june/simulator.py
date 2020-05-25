@@ -456,6 +456,7 @@ class Simulator:
 
         #self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
         self.update_health_status(self.timer.now, self.timer.duration)
+        self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
     def run(self, save=False):
@@ -478,6 +479,7 @@ class Simulator:
         self.logger.log_population(self.world.people)
         for time in self.timer:
             if time > self.timer.final_date:
+                self.logger.log_infection_location(self.world.people)
                 break
             self.do_timestep()
         # Save the world

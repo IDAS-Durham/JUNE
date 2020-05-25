@@ -1,4 +1,5 @@
 import h5py
+import os
 import numpy as np
 from june.demography import Population, Person
 from pathlib import Path
@@ -10,6 +11,10 @@ class Logger:
         self.save_path = save_path
         self.file_path = Path(self.save_path) / file_name
         # Remove if exists
+        try:
+            os.remove(self.file_path)
+        except OSError:
+            pass
 
     def log_population(self, population: Population, chunk_size: int = 100000):
         """
@@ -72,6 +77,15 @@ class Logger:
                     people_dset["super_area"].resize(newshape)
                     people_dset["super_area"][idx1:idx2] = super_areas
 
+    def log_infection_location(self,people):
+        locations = []
+        for person in people:
+            if person.health_information.group_type_of_infection is not None:
+                locations.append(person.health_information.group_type_of_infection)
+        locations = np.array(locations, dtype="S10")
+        with h5py.File(self.file_path, "a") as f:
+            f.create_dataset("infection_location", data=locations)
+
     def log_infected(self, date, infected_people, symptoms):
         # TODO: might have to do in chunks ?
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -85,3 +99,28 @@ class Logger:
             symptoms = np.array(symptoms, dtype=np.int)
             infected_dset["id"] = ids
             infected_dset["symptoms"] = symptoms
+
+    def log_hospital_capacity(self, date, hospitals):
+        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        hospital_ids = []
+        coordinates = []
+        n_patients = []
+        n_patients_icu = []
+        for hospital in hospitals:
+            hospital_ids.append(hospital.id)
+            coordinates.append(np.array(hospital.coordinates))
+            n_patients.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
+            n_patients_icu.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
+        # save to hdf5
+        hospitals_ids = np.array(hospital_ids, dtype=np.int)
+        coordinates = np.array(coordinates, dtype=np.float)
+        n_patients = np.array(n_patients, dtype=np.int)
+        n_patients_icu = np.array(n_patients_icu, dtype=np.int)
+        with h5py.File(self.file_path, "a") as f:
+            hospital_dset = f.require_group("hospitals")
+            time_dset = hospital_dset.create_group(time_stamp)
+            time_dset.create_dataset("hospital_id", data=hospital_ids)
+            time_dset.create_dataset("coordinates", data=coordinates)
+            time_dset.create_dataset("n_patients", data=n_patients)
+            time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
+
