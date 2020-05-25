@@ -80,11 +80,10 @@ class TravelUnitDistributor:
             for dest_city_idx, to_distribute in enumerate(to_distribute_per_city):
 
                 # drawing people from specific msoas
-                try:
-                    msoas = travel_msoas[np.random.choice(len(travel_msoas), int(to_distribute))]
-                except:
+                if len(travel_msoas) == 0:
                     msoas = []
-                    #print ('Skipping distirbuting from city {} to city {}'.format(travelcity.city, self.travelcities[dest_city_idx].city))
+                else:
+                    msoas = travel_msoas[np.random.choice(len(travel_msoas), int(to_distribute))]
 
                 msoa_names = []
                 for msoa in msoas:
