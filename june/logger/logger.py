@@ -77,14 +77,37 @@ class Logger:
                     people_dset["super_area"].resize(newshape)
                     people_dset["super_area"][idx1:idx2] = super_areas
 
-    def log_infection_location(self,people):
+    def get_number_group_instances(self, world, location):
+        plural = location + 's'
+        if location== 'grocery':
+            plural = 'groceries'
+        elif location== 'company':
+            plural = 'companies'
+        elif location == 'commute_unit':
+            plural = 'commuteunits'
+        elif location == 'commutecity_unit':
+            plural = 'commutecityunits'
+        return len(getattr(world, plural).members)
+
+    def log_infection_location(self,world):
+        #TODO: can not rely on health_information, we should erase it from anyone that is not in 
+        # the infected group, save group_type_of_infection inside person
         locations = []
-        for person in people:
+        for person in world.people:
             if person.health_information.group_type_of_infection is not None:
                 locations.append(person.health_information.group_type_of_infection)
-        locations = np.array(locations, dtype="S10")
+        unique_locations, counts = np.unique(np.array(locations), return_counts=True)
+        group_sizes = []
+        for group in unique_locations:
+            group_sizes.append(self.get_number_group_instances(world, group))
+        unique_locations = np.array(unique_locations, dtype='S10')
+        group_sizes = np.array(group_sizes, dtype=np.int)
+        counts = np.array(counts, dtype=np.int)
         with h5py.File(self.file_path, "a") as f:
-            f.create_dataset("infection_location", data=locations)
+            locations_dset = f.create_group('locations')
+            locations_dset.create_dataset("infection_location", data=unique_locations)
+            locations_dset.create_dataset("infection_counts", data=counts)
+            locations_dset.create_dataset("n_locations", data=group_sizes)
 
     def log_infected(self, date, infected_people, symptoms):
         # TODO: might have to do in chunks ?

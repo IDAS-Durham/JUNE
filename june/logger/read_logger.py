@@ -24,7 +24,7 @@ class ReadLogger:
 
     def load_infected_data(self,):
         with h5py.File(self.file_path, "r") as f:
-            time_stamps = [key for key in f.keys() if key not in ("population", "hospitals", "infection_location")]
+            time_stamps = [key for key in f.keys() if key not in ("population", "hospitals", "locations")]
             ids = []
             symptoms = []
             for time_stamp in time_stamps:
@@ -114,6 +114,20 @@ class ReadLogger:
             for random_id in random_ids
         ]
 
+    def load_infection_location(self):
+        with h5py.File(self.file_path, "r") as f:
+            infection_locations = f['locations']['infection_location'][:].astype('U13')
+            counts = f['locations']['infection_counts'][:]
+            n_locations = f['locations']['n_locations'][:]
+        locations_df = pd.DataFrame({'location': infection_locations,
+                              'counts': counts,
+                              'n_locations': n_locations})
+        locations_df['average_counts'] = locations_df['counts'] / locations_df['n_locations']
+        locations_df.set_index('location', inplace=True)
+        return locations_df
+
+
+
     def load_hospital_capacity(self):
         with h5py.File(self.file_path, "r") as f:
             hospitals = f["hospitals"]
@@ -136,4 +150,5 @@ class ReadLogger:
                 "n_patients_icu": n_patients_icu,
                 }
             )
-        return hospitals_df
+        return hospitals_df.apply(pd.Series.explode)
+
