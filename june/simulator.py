@@ -16,7 +16,7 @@ from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
 #from june.logger_simulation import Logger
-from june.simulator_logger import Logger
+from june.logger.logger import Logger
 from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
@@ -83,7 +83,7 @@ class Simulator:
             weekday_activities=time_config["step_activities"]["weekday"],
             weekend_activities=time_config["step_activities"]["weekend"],
         )
-        self.logger = Logger(self.timer)
+        self.logger = Logger()
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
@@ -395,11 +395,14 @@ class Simulator:
             duration of time step
         """
 
-        for person in self.world.people.infected:
+        infected_people = self.world.people.infected
+        symptoms = []
+        for person in infected_people:
             health_information = person.health_information
             previous_tag = health_information.tag
             health_information.update_health_status(time, duration)
-            # release patients that recovered
+            symptoms.append(int(person.health_information.tag.value))
+            # Take actions on new symptoms
             if health_information.recovered:
                 if person.hospital is not None:
                     person.hospital.group.release_as_patient(person)
@@ -409,6 +412,7 @@ class Simulator:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
+        self.logger.log_infected(self.timer.date, infected_people, symptoms)
 
     def do_timestep(self):
         """
@@ -435,7 +439,7 @@ class Simulator:
             n_active_in_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group,
+                    self.timer.now, self.timer.duration, group, #self.logger,
                 )
                 n_active_in_group += group.size
                 n_people += group.size
@@ -450,7 +454,7 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
 
-        self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
+        #self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
         self.update_health_status(self.timer.now, self.timer.duration)
         self.clear_world()
 
@@ -471,15 +475,11 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        self.logger.log_timestep(self.timer.date,
-                self.world.areas, save=True)
-        self.first_infected = self.world.people.infected[:self.logger.max_people_to_follow]
-        self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
+        self.logger.log_population(self.world.people)
         for time in self.timer:
             if time > self.timer.final_date:
                 break
             self.do_timestep()
-            self.logger.log_timestep(time, self.world.areas, save=True)
         # Save the world
         if save:
             self.world.to_pickle("final_world.pickle")

@@ -76,7 +76,7 @@ class Person(dataobject):
 
     @property
     def susceptible(self):
-        return self.susceptibility == 1.0 and not self.infected
+        return self.susceptibility == 1.0 and not self.infected and not self.dead
 
     @property
     def recovered(self):

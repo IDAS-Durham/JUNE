@@ -17,12 +17,13 @@ class Logger:
             "intensive_care",
             "dead",
         ],
-        max_people_to_follow = 100,
+        max_people_to_follow=100,
         save_path="results",
     ):
         self.timer = timer
         self.output_dict = {}
         self.trajectories_dict = {}
+        self.locations_dict = {}
         self.age_range = age_range
         self.infection_keys = infection_keys
         self.max_people_to_follow = max_people_to_follow
@@ -51,10 +52,8 @@ class Logger:
         return area_dict
 
     def log_timestep(self, time_stamp, areas, save=False):
-        time_stamp = time_stamp.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        self.output_dict[time_stamp] = self.initialize_area_dict(
-            areas, 
-        )
+        time_stamp = time_stamp.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        self.output_dict[time_stamp] = self.initialize_area_dict(areas,)
         for area in areas.members:
             self.log_area(
                 area, self.output_dict[time_stamp][area.name],
@@ -90,28 +89,31 @@ class Logger:
             if subgroup is not None:
                 if person in subgroup.people:
                     return subgroup.group.spec
-        return 'seed' 
+        return "seed"
 
-    def follow_seed(self, time_stamp, first_infected_people, save=False): 
+    def follow_seed(self, time_stamp, first_infected_people, save=False):
         if len([person for person in first_infected_people if person.infected]) > 0:
-            time_stamp = time_stamp.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            time_stamp = time_stamp.strftime("%Y-%m-%dT%H:%M:%S.%f")
             self.trajectories_dict[time_stamp] = {}
             for person in first_infected_people:
                 if person.infected:
                     symptom_tag = int(person.health_information.tag.value)
                     location = self.find_person_location(person)
                     self.trajectories_dict[time_stamp][int(person.id)] = {
-                                                                    'symptoms': symptom_tag,
-                                                                    'location': location,
-                                                                    'age': int(person.age),
-                                                                    }
+                        "symptoms": symptom_tag,
+                        "location": location,
+                        "age": int(person.age),
+                    }
             if save:
                 json_path = Path(self.save_path) / "trajectories.json"
                 with open(json_path, "w") as f:
                     json.dump(self.trajectories_dict, f)
 
+    def save_infection_location(self, infected, save=False):
+        key = infected.health_information.group_type_of_infection
+        self.locations_dict[key] = self.locations_dict.get(key,0) + 1
+        if save:
+            json_path = Path(self.save_path) / "locations_infection.json"
+            with open(json_path, "w") as f:
+                json.dump(self.locations_dict, f)
 
-
-
-            
-        
