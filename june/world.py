@@ -299,7 +299,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         # add to geography
         person.area = world.areas[person.area - first_area_id]
         person.area.people.append(person)
-        subgroups_instances = Activities(None, None, None, None, None, None, None)
+        subgroups_instances = Activities(None, None, None, None, None, None)
         for i, subgroup_info in enumerate(person.subgroups):
             spec, group_id, subgroup_type = subgroup_info
             if spec is None:
