@@ -153,11 +153,16 @@ class CareHomeDistributor:
         else:
             n_assigned = 0
             for i, carer in enumerate(carers):
-                if n_assigned == care_home.n_workers:
+                if n_assigned >= care_home.n_workers:
                     break
                 elif (carer.sub_sector is None and  # because we have no sub_sector for carer
                     carer.primary_activity is None):
-                    care_home.add(carer, care_home.SubgroupType.workers)
+                    print("-----1______", care_home.n_workers)
+                    care_home.add(
+                        person = carer,
+                        subgroup_type = care_home.SubgroupType.workers,
+                        activity = "workers"
+                    )
                     n_assigned += 1
             if care_home.n_workers > n_assigned:
                 logger.info(
