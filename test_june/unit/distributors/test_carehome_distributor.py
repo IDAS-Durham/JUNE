@@ -49,7 +49,7 @@ class MockArea:
 
 def test__assertion_no_carehome_residents(module_config, carehome_distributor):
     area = MockArea(module_config)
-    care_home = CareHome(area, n_residents=0, n_worker=0)
+    care_home = CareHome(area, n_residents=0, n_workers=0)
     area.care_home = care_home
     with pytest.raises(CareHomeError) as e:
         assert carehome_distributor.populate_care_home_in_area(area)
@@ -57,7 +57,7 @@ def test__assertion_no_carehome_residents(module_config, carehome_distributor):
 
 def test__carehome_populated_correctly(module_config, carehome_distributor):
     area = MockArea(module_config)
-    area.care_home = CareHome(area, n_residents = 10, n_worker=2)
+    area.care_home = CareHome(area, n_residents = 10, n_workers=2)
     carehome_distributor.populate_care_home_in_area(area)
     assert area.care_home.n_residents == 10
     assert area.care_home.n_workers == 2
