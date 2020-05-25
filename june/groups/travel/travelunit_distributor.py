@@ -195,8 +195,23 @@ class TravelUnitDistributor:
                     )
                     travel_unit.no_passengers += 1
 
+            # clear all arrived list after distirbuting back
+            travelcity_from.arrived.clear()
+
         # clean up
         for unit in units:
             self.travelunits.append(unit)
 
-                
+    
+    def distirbute_people(self):
+
+        any_arrived = False
+        for travelcity in self.travelcities:
+            if len(travelcity.arrived) > 0:
+                any_arrived = True
+                break
+
+        if any_arrived:
+            self.distribute_people_back()
+        else:
+            self.distribute_people_out()
