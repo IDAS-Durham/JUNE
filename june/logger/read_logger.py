@@ -24,7 +24,7 @@ class ReadLogger:
 
     def load_infected_data(self,):
         with h5py.File(self.file_path, "r") as f:
-            time_stamps = [key for key in f.keys() if key != "population"]
+            time_stamps = [key for key in f.keys() if key not in ("population", "hospitals", "infection_location")]
             ids = []
             symptoms = []
             for time_stamp in time_stamps:
@@ -96,7 +96,8 @@ class ReadLogger:
             ages_df.append(age_df)
         return pd.concat(ages_df)
 
-
+    def infection_duration(self):
+        pass
 
     def draw_random_trajectories(self, time_window=50):
         starting_id = np.random.randint(0, high=len(self.infections_df))
@@ -112,3 +113,27 @@ class ReadLogger:
             random_trajectories[random_trajectories["infected_id"] == random_id]
             for random_id in random_ids
         ]
+
+    def load_hospital_capacity(self):
+        with h5py.File(self.file_path, "r") as f:
+            hospitals = f["hospitals"]
+            hospital_ids = []
+            coordinates = []
+            n_patients = []
+            n_patients_icu = []
+            for time_stamp in hospitals.keys():
+                hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
+                coordinates.append(hospitals[time_stamp]["coordinates"][:])
+                n_patients.append(hospitals[time_stamp]["n_patients"][:])
+                n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
+            time_stamps = list(hospitals.keys()) 
+
+        hospitals_df = pd.DataFrame(
+                {"time_stamp": time_stamps,
+                "id": hospital_ids,
+                "coordinates": coordinates,
+                "n_patients": n_patients,
+                "n_patients_icu": n_patients_icu,
+                }
+            )
+        return hospitals_df
