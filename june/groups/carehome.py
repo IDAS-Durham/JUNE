@@ -41,10 +41,10 @@ class CareHome(Group):
         residents = 1
         visitors = 2
 
-    def __init__(self, area: Area, n_residents: int, n_worker: int):
+    def __init__(self, area: Area, n_residents: int, n_workers: int):
         super().__init__()
         self.n_residents = n_residents
-        self.n_worker = n_worker
+        self.n_workers = n_workers
         self.area = area
 
     def add(

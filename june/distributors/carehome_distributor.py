@@ -1,4 +1,5 @@
 import logging
+import yaml
 from collections import OrderedDict, defaultdict
 
 import numpy as np
@@ -142,7 +143,7 @@ class CareHomeDistributor:
         carers = [
             person
             for idx, person in enumerate(area.super_area.workers)
-            if person.sector == list(module_config["sector"].keys())[0]
+            if person.sector == list(self.config["sector"].keys())[0]
         ]
         if len(carers) == 0:
             logger.info(
@@ -150,7 +151,16 @@ class CareHomeDistributor:
             )
             return
         else:
+            n_assigned = 0
             for i, carer in enumerate(carers):
-                if (carer.sub_sector is None) and  # because we have no sub_sector for carer
-                    (person.primary_activity is not None):
-                    care_home.add(carer, carehome.SubgroupType.workers)
+                if n_assigned == care_home.n_workers:
+                    break
+                elif (carer.sub_sector is None and  # because we have no sub_sector for carer
+                    carer.primary_activity is None):
+                    care_home.add(carer, care_home.SubgroupType.workers)
+                    n_assigned += 1
+            if care_home.n_workers > n_assigned:
+                logger.info(
+                    f"\n There are {care_home.n_workers - n_assigned} carers missing" + \
+                    "in care_home.id = {care_home.id}"
+                )
