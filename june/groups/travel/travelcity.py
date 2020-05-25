@@ -43,11 +43,17 @@ class TravelCities(Supergroup):
     def init_cities(self):
         'Initialise all cities'
 
+        members = []
         for commutecity in self.commutecities:
-
+            
             travel_city = TravelCity(
                 city = commutecity.city,
                 metro_centroid = commutecity.metro_centroid,
             )
 
-            self.members.append(travel_city)
+            members.append(travel_city)
+
+        # fix ordering of cities with London in the correct place for data
+        member_order = [0,1,2,3,4,5,10,6,7,8,9]
+        for i in member_order:
+            self.members.append(members[i])
