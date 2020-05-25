@@ -479,7 +479,7 @@ class Simulator:
         self.logger.log_population(self.world.people)
         for time in self.timer:
             if time > self.timer.final_date:
-                self.logger.log_infection_location(self.world.people)
+                self.logger.log_infection_location(self.world)
                 break
             self.do_timestep()
         # Save the world
