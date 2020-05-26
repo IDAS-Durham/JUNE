@@ -55,7 +55,7 @@ class CareHome(Group):
     ):
         super().add(
             person,
-            activity="residence",
+            activity=activity,
             subgroup_type=subgroup_type,
         )
 
