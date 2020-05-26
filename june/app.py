@@ -27,8 +27,9 @@ app.layout = html.Div(
             id="tabs-example",
             value="tab-1",
             children=[
-                dcc.Tab(label="Tab one", value="tab-1"),
-                dcc.Tab(label="Tab two", value="tab-2"),
+                dcc.Tab(label="County data", value="tab-1"),
+                dcc.Tab(label="Animated global map", value="tab-2"),
+                dcc.Tab(label="Hospitals", value="tab-3"),
             ],
         ),
         html.Div(id="tabs-example-content"),
@@ -44,7 +45,6 @@ def render_content(tab):
     if tab == "tab-1":
         content = html.Div(
             [
-                html.H3("County based data"),
                 html.Div(
                     [
                         html.Div(
@@ -102,14 +102,9 @@ def render_content(tab):
                 html.Div(
                     dcc.Slider(
                         id="crossfilter-time--slider",
-                        # min=dash_plotter.day_timestamps.min(),
-                        # max=dash_plotter.day_timestamps.max(),
-                        # value=dash_plotter.day_timestamps.min(),
-                        # marks={str(date): str(date) for date in dash_plotter.day_timestamps},
                         min=0,
                         max=len(dash_plotter.day_timestamps_marks) - 1,
                         value=0,
-                        # marks=dash_plotter.day_timestamps_marks,
                         marks={
                             i: str(day)
                             for i, day in enumerate(dash_plotter.day_timestamps_marks)
@@ -127,9 +122,21 @@ def render_content(tab):
             [
                 html.H3("Animated map"),
                 html.Div(
-                    dcc.Graph(figure=dash_plotter.generate_animated_general_map())
+                    dcc.Graph(figure=dash_plotter.generate_animated_general_map()),
+                    style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
                 ),
-            ]
+            ],
+            style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
+        )
+    elif tab == "tab-3":
+        return html.Div(
+            [
+                html.Div(
+                    dcc.Graph(figure=dash_plotter.generate_hospital_map()),
+                    style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
+                ),
+            ],
+            style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
         )
 
 
