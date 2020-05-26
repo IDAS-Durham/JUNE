@@ -109,7 +109,7 @@ class Logger:
             locations_dset.create_dataset("infection_counts", data=counts)
             locations_dset.create_dataset("n_locations", data=group_sizes)
 
-    def log_infected(self, date, infected_people, symptoms):
+    def log_infected(self, date, infected_people, symptoms, n_secondary_infections):
         # TODO: might have to do in chunks ?
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         with h5py.File(self.file_path, "a") as f:
@@ -117,11 +117,12 @@ class Logger:
             ids = []
             for person in infected_people:
                 ids.append(person.id)
-
             ids = np.array(ids, dtype=np.int)
             symptoms = np.array(symptoms, dtype=np.int)
+            n_secondary_infections = np.array(n_secondary_infections, dtype=np.int)
             infected_dset["id"] = ids
             infected_dset["symptoms"] = symptoms
+            infected_dset["n_secondary_infections"] = n_secondary_infections
 
     def log_hospital_capacity(self, date, hospitals):
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -133,7 +134,7 @@ class Logger:
             hospital_ids.append(hospital.id)
             coordinates.append(np.array(hospital.coordinates))
             n_patients.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
-            n_patients_icu.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
+            n_patients_icu.append(len(hospital.subgroups[hospital.SubgroupType.icu_patients].people))
         # save to hdf5
         hospitals_ids = np.array(hospital_ids, dtype=np.int)
         coordinates = np.array(coordinates, dtype=np.float)
