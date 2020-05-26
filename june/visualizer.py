@@ -7,19 +7,17 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from june.visualization.plotter import DashPlotter
+import sys
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-df = pd.read_csv("https://plotly.github.io/datasets/country_indicators.csv")
-
 available_indicators = [
     "Infection curves",
-    "Hospitalization",
 ]
 
-dash_plotter = DashPlotter("/home/arnau/code/JUNE/scripts/results")
+dash_plotter = DashPlotter(sys.argv[1])
 
 app.layout = html.Div(
     [
@@ -35,7 +33,6 @@ app.layout = html.Div(
         html.Div(id="tabs-example-content"),
     ]
 )
-
 
 @app.callback(
     dash.dependencies.Output("tabs-example-content", "children"),
@@ -94,7 +91,7 @@ def render_content(tab):
                         )
                     ],
                     style={
-                        "width": "100%",
+                        "width": "90%",
                         "display": "inline-block",
                         "padding": "0 20",
                     },
@@ -112,6 +109,14 @@ def render_content(tab):
                         step=None,
                     ),
                     style={"width": "49%", "padding": "0px 20px 20px 20px"},
+                ),
+                html.Div(
+                    dcc.Graph(figure=dash_plotter.generate_infections_by_age()),
+                    style={"display": "inline-block", "width": "100%"},
+                ),
+                html.Div(
+                    dcc.Graph(figure=dash_plotter.generate_general_infection_curves()),
+                    style={"display": "inline-block", "width": "100%"},
                 ),
             ],
             style={"columnCount": 2},
@@ -161,4 +166,4 @@ def update_infection_plot(hoverData, axis_type):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
