@@ -27,11 +27,14 @@ class ReadLogger:
             time_stamps = [key for key in f.keys() if key not in ("population", "hospitals", "locations")]
             ids = []
             symptoms = []
+            n_secondary_infections = []
             for time_stamp in time_stamps:
                 ids.append(f[time_stamp]["id"][:])
                 symptoms.append(f[time_stamp]["symptoms"][:])
+                n_secondary_infections.append(f[time_stamp]["n_secondary_infections"][:])
             self.infections_df = pd.DataFrame(
-                {"time_stamp": time_stamps, "infected_id": ids, "symptoms": symptoms}
+                {"time_stamp": time_stamps, "infected_id": ids, 
+                    "symptoms": symptoms, "n_secondary_infections": n_secondary_infections}
             )
             self.infections_df["time_stamp"] = pd.to_datetime(
                 self.infections_df["time_stamp"]
@@ -151,4 +154,11 @@ class ReadLogger:
                 }
             )
         return hospitals_df.apply(pd.Series.explode)
+
+    def compute_r0(self):
+        r_df = pd.DataFrame()
+        r_df["value"] = self.infections_df.apply(
+            lambda x: np.mean(x.n_secondary_infections[x.symptoms > 1]), axis=1
+        )
+        return r_df
 
