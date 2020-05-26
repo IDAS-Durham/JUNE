@@ -50,13 +50,15 @@ class CareHome(Group):
     def add(
         self,
         person,
-        subgroup_type=SubgroupType.residents,
+        subgroup_type = SubgroupType.residents,
         activity: str = "residence",
+        dynamic: bool = False,
     ):
         super().add(
             person,
-            activity=activity,
-            subgroup_type=subgroup_type,
+            subgroup_type = subgroup_type,
+            activity = activity,
+            dynamic = dynamic,
         )
 
     @property

@@ -120,7 +120,11 @@ class CareHomeDistributor:
             for people_dict in [men_by_age, women_by_age]:
                 if current_age_to_fill in people_dict.keys():
                     person = self._get_person_of_age(people_dict, current_age_to_fill)
-                    care_home.add(person, subgroup_type=care_home.SubgroupType.residents)
+                    care_home.add(
+                        person,
+                        subgroup_type = care_home.SubgroupType.residents,
+                        activity = "residence",
+                    )
                     people_counter += 1
                     if people_counter == care_home.n_residents:
                         break
@@ -156,12 +160,11 @@ class CareHomeDistributor:
                 if n_assigned >= care_home.n_workers:
                     break
                 elif (carer.sub_sector is None and  # because we have no sub_sector for carer
-                    carer.primary_activity is None):
-                    print("-----1______", care_home.n_workers)
+                    carer.subgroups.primary_activity is None):
                     care_home.add(
                         person = carer,
                         subgroup_type = care_home.SubgroupType.workers,
-                        activity = "workers"
+                        activity = "primary_activity",
                     )
                     n_assigned += 1
             if care_home.n_workers > n_assigned:

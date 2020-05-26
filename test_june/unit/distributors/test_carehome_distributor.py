@@ -26,10 +26,10 @@ class MockSuperArea:
         n_workers = 5
         # workers/carers
         for _ in range(n_workers):
-            carer = Person(
-                sector = list(module_config["sector"].keys())[0],
-                sub_sector = None,
+            carer = Person.from_attributes(
             )
+            carer.sector = list(module_config["sector"].keys())[0]
+            carer.sub_sector = None
             self.workers.append(carer)
 
 class MockArea:
@@ -39,9 +39,9 @@ class MockArea:
         # residents
         for age in range(50, 101):
             for _ in range(0,2):
-                man = Person(sex='m', age=age)
+                man = Person.from_attributes(sex='m', age=age)
                 self.people.append(man)
-                woman = Person(sex='f', age=age)
+                woman = Person.from_attributes(sex='f', age=age)
                 self.people.append(woman)
         # workers/carers
         self.super_area = MockSuperArea(module_config)
