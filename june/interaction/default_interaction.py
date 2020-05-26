@@ -56,7 +56,7 @@ class DefaultInteraction(Interaction):
         return DefaultInteraction(config["alpha_physical"], config["contact_matrices"], selector)
 
     def single_time_step_for_group(
-            self, group, time, delta_time
+            self, group, time, delta_time, 
     ):
         """
         Runs the interaction model for a time step
@@ -89,7 +89,7 @@ class DefaultInteraction(Interaction):
                     self.contaminate(group, time, delta_time, j, i)
 
     def contaminate(
-            self, group, time, delta_time, infecters, recipients
+            self, group, time, delta_time, infecters, recipients, 
     ):
         infecter_probability = self.probabilities[infecters]
         if infecter_probability <= 0.0:

@@ -64,11 +64,10 @@ class HealthInformation:
         return self.tag == SymptomTags.dead
 
     def update_health_status(self, time, delta_time):
-        if self.infected:
-            if self.infection.symptoms.is_recovered():
-                self.recovered = True
-            else:
-                self.infection.update_at_time(time + delta_time)
+         self.infection.update_at_time(time + delta_time)
+         if self.infection.symptoms.is_recovered():
+            self.recovered = True
+
 
     def set_recovered(self, time):
         self.recovered = True

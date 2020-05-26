@@ -10,14 +10,14 @@ time:
   total_days: 10
   step_duration: 
       weekday:
+          0: 12 
           1: 12 
-          2: 12 
       weekend:
-          1: 24
+          0: 24
   step_activities:
       weekday:
-          1: ['hospital', 'commute', 'residence'] 
-          2: ['hospital', 'primary_activity', 'residence']
+          0: ['hospital', 'commute', 'residence'] 
+          1: ['hospital', 'primary_activity', 'residence']
       weekend:
-          1: ['hospital', 'leisure', 'residence']
+          0: ['hospital', 'leisure', 'residence']
 
