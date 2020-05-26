@@ -1,0 +1,209 @@
+import pandas as pd
+import json
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+from datetime import timedelta
+
+from june.logger.read_logger import ReadLogger
+from june.paths import data_path
+
+sa_to_county_filename = data_path / "processed/geographical_data/oa_msoa_lad.csv"
+county_shapes_filename = data_path / "processed/geographical_data/lad_boundaries.geojson"
+super_area_coordinates_filename = (
+    data_path / "processed/geographical_data/msoa_coordinates.csv"
+)
+
+mapbox_access_token = "pk.eyJ1IjoiYXN0cm9ieXRlIiwiYSI6ImNrYWwxeHNxZTA3cXMyeG15dGlsbzd1aHAifQ.XvkJbn9mEZ2cuctaX1UwTw"
+px.set_mapbox_access_token(mapbox_access_token)
+
+
+class DashPlotter:
+    def __init__(self, results_folder_path: str):
+        self.logger_reader = ReadLogger(results_folder_path)
+        with open(county_shapes_filename, "r") as f:
+            self.county_shapes = json.load(f)
+        self.super_area_coordinates = pd.read_csv(super_area_coordinates_filename)
+        self.world_data = self.logger_reader.world_summary()
+        self.area_data = self.logger_reader.super_area_summary()
+        self.county_data = self.group_data_by_counties(self.area_data.copy())
+        self.hospital_data = self.logger_reader.load_hospital_capacity()
+        self.ages_data = self.logger_reader.age_summary(
+            [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        )
+
+    def group_data_by_counties(self, area_df: pd.DataFrame):
+        area_df.reset_index(inplace=True)
+        sa_to_county_df = pd.read_csv(sa_to_county_filename)
+        data = area_df.reset_index()
+        data = pd.merge(
+            area_df,
+            sa_to_county_df[["MSOA11CD", "LAD17NM"]],
+            left_on="super_area",
+            right_on="MSOA11CD",
+        )
+        data = data.groupby(["LAD17NM", "time_stamp"]).sum()
+        data.reset_index(inplace=True)
+        data.set_index("time_stamp", inplace=True)
+        return data
+
+    def generate_infection_map_by_county(self, day_number):
+        date = self.county_data.index[0] + timedelta(days=day_number)
+        data = self.county_data.loc[date]
+        fig = px.choropleth(
+            data,
+            geojson=self.county_shapes,
+            color="infected",
+            locations="LAD17NM",
+            featureidkey="properties.lad17nm",
+            projection="mercator",
+            hover_data=[
+                "infected",
+                "recovered",
+                "hospitalised",
+                "intensive_care",
+                "dead",
+            ],
+            range_color=(0, self.max_infected),
+        )
+        fig.update_geos(fitbounds="locations", visible=False)
+        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+        return fig
+
+    def generate_animated_general_map(self):
+        data = self.area_data.reset_index()
+        data["time_stamp"] = data["time_stamp"].dt.day
+        data = data.groupby(["time_stamp", "super_area"]).sum()
+        data.reset_index(inplace=True)
+        data = pd.merge(
+            data, self.super_area_coordinates, left_on="super_area", right_on="msoa"
+        )
+        fig = px.scatter_mapbox(
+            data,
+            lat="Y",
+            lon="X",
+            size="infected",
+            color_continuous_scale=px.colors.cyclical.IceFire,
+            size_max=15,
+            zoom=10,
+            animation_frame="time_stamp",
+            height=800,
+            width=2000,
+        )
+        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+        return fig
+
+    def generate_county_infection_curves(self, county, axis_type="Linear"):
+        data = self.county_data[self.county_data["LAD17NM"] == county]
+        data = data.groupby(by=data.index.date).sum()
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=data.index.values, y=data["infected"].values, name="infected")
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=data.index.values, y=data["hospitalised"].values, name="hospitalised"
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=data.index.values, y=data["intensive_care"].values, name="intensive care"
+            )
+        )
+        fig.add_trace(
+            go.Scatter(x=data.index.values, y=data["dead"].values, name="dead")
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=data.index.values, y=data["recovered"].values, name="recovered"
+            )
+        )
+        fig.update_layout(template="simple_white", title="Infection curves by county")
+        if axis_type == "Log":
+            fig.update_layout(yaxis_type="log")
+        return fig
+
+
+    def generate_general_infection_curves(self, axis_type="Linear"):
+        data = self.world_data
+        data = data.groupby(by=data.index.date).sum()
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=data.index.values, y=data["infected"].values, name="infected")
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=data.index.values, y=data["hospitalised"].values, name="hospitalised"
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=data.index.values, y=data["intensive_care"].values, name="intensive care"
+            )
+        )
+        fig.add_trace(
+            go.Scatter(x=data.index.values, y=data["dead"].values, name="dead")
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=data.index.values, y=data["recovered"].values, name="recovered"
+            )
+        )
+        fig.update_layout(template="simple_white", title="world infection curves")
+        if axis_type == "Log":
+            fig.update_layout(yaxis_type="log")
+        return fig
+
+    def generate_hospital_map(self):
+        coordinates = self.hospital_data["coordinates"].values
+        latitudes = [coordinate[0] for coordinate in coordinates]
+        longitudes = [coordinate[1] for coordinate in coordinates]
+        fig = go.Figure(
+            go.Scattermapbox(
+                mode="markers",
+                lon=longitudes,
+                lat=latitudes,
+                marker={"size": 20, "symbol": ["marker"] * len(longitudes),},
+                text=self.hospital_data["n_patients"],
+                textposition="bottom right",
+            )
+        )
+        fig.update_layout(
+            margin={"r": 0, "t": 0, "l": 0, "b": 0},
+            width=2000,
+            height=800,
+            mapbox={
+                "accesstoken": mapbox_access_token,
+                "style": "light",
+                "zoom": 10,
+                "center": {"lat": np.mean(latitudes), "lon": np.mean(longitudes)},
+            },
+        )
+        return fig
+
+    def generate_infections_by_age(self):
+        data = self.ages_data.reset_index().set_index("age_range")
+        fig = go.Figure()
+        for age_range in data.index.unique():
+            toplot = data.loc[age_range]
+            fig.add_trace(
+                go.Scatter(x=toplot["time_stamp"], y=toplot["infected"], name=age_range)
+            )
+        fig.update_layout(template="simple_white")
+        return fig
+
+    @property
+    def max_infected(self):
+        return self.county_data["infected"].max()
+
+    @property
+    def day_timestamps(self):
+        return self.county_data.index.date
+
+    @property
+    def day_timestamps_marks(self):
+        dates = []
+        for z in self.day_timestamps:
+            dates.append(str(z.day)) 
+        dates = np.unique(dates)
+        return dates
