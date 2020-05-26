@@ -65,8 +65,7 @@ class Logger:
                 self.data_dict["ByAge"][label]["cumulative_infected"][day] = (self.total_people_per_area[label] - susceptible_per_area)
 
 
-    def log_timestep(self, day):
-        hour = int((day - 1) * 24)
+    def log_timestep(self, date):
         susceptible_world = 0
         infected_world = 0
         recovered_world = 0
@@ -82,16 +81,16 @@ class Logger:
                 infected_world += summed_infected
                 recovered_world += summed_recovered
                 
-                self.data_dict[area.name][hour] = {
+                self.data_dict[area.name][date] = {
                         "susceptible": summed_susceptible,
                         "infected": summed_infected,
                         "recovered": summed_recovered,
                         }
                 
-                #for ages in self.age_ranges:
-                #    self.group_by_age(hour, area, ages, susceptible, infected, recovered)
+                for ages in self.age_ranges:
+                    self.group_by_age(date, area, ages, susceptible, infected, recovered)
 
-                self.data_dict["world"][hour] = {
+                self.data_dict["world"][date] = {
                         "susceptible": susceptible_world,
                         "infected": infected_world,
                         "recovered": recovered_world,
@@ -107,7 +106,7 @@ class Logger:
             infected_world = len(self.world.people.infected)
             recovered_world = len(self.world.people.recovered)
 
-            self.data_dict["world"][day] = {
+            self.data_dict["world"][date] = {
                     "susceptible": susceptible_world,
                     "infected": infected_world,
                     "recovered": recovered_world,
@@ -115,7 +114,7 @@ class Logger:
                     }
 
             for ages in self.age_ranges:
-                self.group_by_age(day, None, ages, susceptible, infected, recovered)
+                self.group_by_age(date, None, ages, susceptible, infected, recovered)
 
             self.log_r0()
         json_path = os.path.join(self.save_path, "data.json")
@@ -184,7 +183,7 @@ class Logger:
 
 
     def log_r0(self):
-        if self.timer.day_int+1 == self.timer.total_days: # dirty fix, need to rethink later
+        if int(self.timer.now)+1 == self.timer.total_days: # dirty fix, need to rethink later
             r0s_raw = []
             r0s_recon = []
             for person in self.world.people.recovered:
@@ -350,9 +349,11 @@ class Logger:
             I_0 = self.data_dict["world"][list(self.data_dict["world"].keys())[0]]["infected"]
 
             beta = self.simulator.selector.transmission_probability
-            beta /= self.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
+            # TODO:  FIX THIS!
+            #beta /= self.timer.get_number_shifts(None) # divide by the number of timesteps we do per day, this only works if the timesteps are equal in length for now
             gamma = self.simulator.selector.recovery_rate
-            gamma /= self.timer.get_number_shifts(None)
+            # TODO:  FIX THIS!
+            #gamma /= self.timer.get_number_shifts(None)
             # multiply by 2 to compensate for updating health status twice in each timestep, see interaction/base.py
 
             n_sus, n_inf, n_rec = ratio_SIR_numerical(beta, gamma, N, I_0, days)

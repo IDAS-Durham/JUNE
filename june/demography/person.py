@@ -76,11 +76,11 @@ class Person(dataobject):
 
     @property
     def susceptible(self):
-        return self.susceptibility <= 0 and not self.infected
+        return self.susceptibility == 1.0 and not self.infected and not self.dead
 
     @property
     def recovered(self):
-        return not (self.dead or self.susceptible)
+        return not (self.dead or self.susceptible or self.infected)
 
     @property
     def residence(self):
@@ -107,8 +107,21 @@ class Person(dataobject):
         return self.subgroups.box
 
     @property
-    def in_hospital(self):
-        if self.hospital is None:
+    def hospitalised(self):
+        if (
+            self.hospital is not None
+            and self.hospital.subgroup_type == self.hospital.group.SubgroupType.patients
+        ):
+            return True
+        return False
+
+    @property
+    def intensive_care(self):
+        if (
+            self.hospital is not None
+            and self.hospital.subgroup_type
+            == self.hospital.group.SubgroupType.icu_patients
+        ):
             return True
         return False
 
