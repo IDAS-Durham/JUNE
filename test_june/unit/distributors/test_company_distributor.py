@@ -21,4 +21,3 @@ def test__company_distributor(super_area):
     for company in super_area.companies:
         assert len(company.people) == 1
         assert list(company.people)[0].sector == company.sector
-        assert 1 == 2
