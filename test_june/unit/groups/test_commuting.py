@@ -1,8 +1,11 @@
 import pytest
 
+from june import World
 from june.demography.geography import Geography, Area
-from june.demography import Person
-from june.groups import CommuteCity, CommuteCities, CommuteHub, CommuteHubs, CommuteUnit, CommuteUnits, CommuteCityUnit, CommuteCityUnits
+from june.demography import Person, Demography
+from june.distributors import WorkerDistributor
+from june.commute import CommuteGenerator
+from june.groups import CommuteCity, CommuteCities, CommuteCityDistributor, CommuteHub, CommuteHubs, CommuteHubDistributor, CommuteUnit, CommuteUnits, CommuteUnitDistributor, CommuteCityUnit, CommuteCityUnits, CommuteCityUnitDistributor
 
 @pytest.fixture(name="super_area_commute", scope="module")
 def super_area_name():
@@ -72,10 +75,11 @@ class TestNewcastle:
 
     @pytest.fixture(name="super_area_commute_nc")
     def super_area_name_nc(self):
-        return ['E02001731', 'E02001729', 'E02001688', 'E02001689', 'E02001736',
-                'E02001720', 'E02001724', 'E02001730', 'E02006841', 'E02001691',
-                'E02001713', 'E02001712', 'E02001694', 'E02006842', 'E02001723',
-                'E02001715', 'E02001710', 'E02001692', 'E02001734', 'E02001709']
+        #return ['E02001731', 'E02001729', 'E02001688', 'E02001689', 'E02001736',
+        #        'E02001720', 'E02001724', 'E02001730', 'E02006841', 'E02001691',
+        #        'E02001713', 'E02001712', 'E02001694', 'E02006842', 'E02001723',
+        #        'E02001715', 'E02001710', 'E02001692', 'E02001734', 'E02001709']
+        return ['E02001731', 'E02001729']
     
     @pytest.fixture(name="geography_commute_nc")
     def create_geography_nc(self, super_area_commute_nc):
@@ -86,10 +90,10 @@ class TestNewcastle:
 
     @pytest.fixture(name="world_nc")
     def create_world_nc(self, geography_commute_nc):
-        demography = Demography.for_geography(geography)
-        world = World(geography, demography, include_households=False, include_commute=False)
-        worker_distr = WorkerDistributor.for_geography(geography)
-        worker_distr.distribute(geography, world.people)
+        demography = Demography.for_geography(geography_commute_nc)
+        world = World(geography_commute_nc, demography, include_households=False, include_commute=False)
+        worker_distr = WorkerDistributor.for_geography(geography_commute_nc)
+        worker_distr.distribute(geography_commute_nc, world.people)
         commute_generator = CommuteGenerator.from_file()
 
         for area in world.areas:
@@ -100,46 +104,58 @@ class TestNewcastle:
         return world
 
     @pytest.fixture(name="commutecities_nc")
-    def create_cities(self):
+    def create_cities_with_people(self, world_nc):
         commutecities = CommuteCities()
         commutecities.from_file()
+        commutecities.init_non_london()
+        commutecities.init_london()
+        commutecity_distributor = CommuteCityDistributor(commutecities.members, world_nc.super_areas.members)
+        commutecity_distributor.distribute_people()
 
         return commutecities
 
-    # def init_stations(self, commutecities_nc):
-    #     commutecities_nc.init_non_london()
-    #     commutecities_nc.init_london()
+    def test__commutecities(self, commutecities_nc):
+        assert len(commutecities_nc.members) == 11
+        assert (len(commutecities_nc.members[7].people)) > 0
 
-    # def test__init_stations(self, commutecities_nc):
-    #     assert len(commutecities_nc.members) == 11
+    @pytest.fixture(name="commutehubs_nc")
+    def create_commutehubs_with_people(self, commutecities_nc):
+        commutehubs = CommuteHubs(commutecities_nc.members)
+        commutehubs.from_file()
+        commutehubs.init_hubs()
+        commutehub_distributor = CommuteHubDistributor(commutecities_nc.members)
+        commutehub_distributor.from_file()
+        commutehub_distributor.distribute_people()
 
-    # def commutecity_distiribute(self, commutecities_nc, world_nc):
-    #     commutecity_distributor = CommuteCityDistributor(commutecities_nc.members, world_nc.super_areas.members)
-    #     commutecity_distributor.distribute_people()
+        return commutehubs
 
-    # def test__city_distribution(self, commutecities_nc):
-    #     assert (len(commutecities_nc.members[7].people)) > 0
+    def test__commutehubs(self, commutecities_nc, commutehubs_nc):
+        assert len(commutecities_nc.members[7].commutehubs) == 4
+        #assert len(commutecities_nc.members[7].commute_internal) > 0
 
-    # @pytest.fixture(name="commutehubs_nc")
-    # def create_commutehubs(self, commutecities_nc):
-    #     commutehubs = CommuteHubs(commutecities_nc.members)
-    #     commutehubs.from_file()
+    @pytest.fixture(name="commuteunits_nc")
+    def create_commute_units_with_people(self, commutecities_nc, commutehubs_nc):
+        commuteunits = CommuteUnits(commutehubs_nc.members)
+        commuteunits.init_units()
+        commuteunit_distributor = CommuteUnitDistributor(commutehubs_nc.members)
+        commuteunit_distributor.distribute_people()
 
-    #     return commutehubs
+        return commuteunits
 
-    # def init_commutehubs(self, commutehubs_nc):
-    #     commutehubs_nc.init_hubs()
+    def test__commuteunits(self, commuteunits_nc):
+        assert len(commuteunits_nc.members[0].people) == 0
 
-    # def commutehub_distribute(self, commutecities_nc):
-    #     commutehub_distributor = CommuteHubDistributor(commutecities_nc.members)
-    #     commutehub_distributor.from_file()
-    #     commutehub_distributor.distribute_people()
-
-    # #def test__
     
-    
-        
-        
-        
-    
+    @pytest.fixture(name="commutecityunits_nc")
+    def create_commute_city_units_with_people(self, commutecities_nc, commutehubs_nc):
+        commutecityunits = CommuteCityUnits(commutecities_nc.members)
+        commutecityunits.init_units()
+        commutecityunit_distributor = CommuteCityUnitDistributor(commutecities_nc.members)
+        commutecityunit_distributor.distribute_people()
+
+        return commutecityunits
+
+    def test__commutecityunits(self, commutecityunits_nc):
+        assert len(commutecityunits_nc.members) > 0
+        #assert len(commutecityunits_nc.members[0].people) > 0
     

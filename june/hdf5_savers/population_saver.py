@@ -26,8 +26,9 @@ def save_population_to_hdf5(
     """
     n_people = len(population.people)
     dt = h5py.vlen_dtype(np.dtype("int32"))
+    #dt = tuple
     n_chunks = int(np.ceil(n_people / chunk_size))
-    with h5py.File(file_path, "a", libver="latest") as f:
+    with h5py.File(file_path, "a") as f:
         people_dset = f.create_group("population")
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -36,11 +37,11 @@ def save_population_to_hdf5(
             ages = []
             sexes = []
             ethns = []
+            socioecon_indices = []
             areas = []
             group_ids = []
             group_specs = []
             subgroup_types = []
-            housemates = []
             mode_of_transport = []
             home_city = []
 
@@ -49,6 +50,9 @@ def save_population_to_hdf5(
                 ages.append(person.age)
                 sexes.append(person.sex.encode("ascii", "ignore"))
                 ethns.append(person.ethnicity.encode("ascii", "ignore"))
+                socioecon_indices.append(
+                    person.socioecon_index
+                )
                 if person.home_city is None:
                     home_city.append(" ".encode("ascii", "ignore"))
                 else:
@@ -67,7 +71,7 @@ def save_population_to_hdf5(
                 gids = []
                 stypes = []
                 specs = []
-                for subgroup in person.subgroups:
+                for subgroup in person.subgroups.iter():
                     if subgroup is None:
                         gids.append(nan_integer)
                         stypes.append(nan_integer)
@@ -79,57 +83,48 @@ def save_population_to_hdf5(
                 group_specs.append(np.array(specs, dtype="S10"))
                 group_ids.append(np.array(gids, dtype=np.int))
                 subgroup_types.append(np.array(stypes, dtype=np.int))
-                hmates = [mate.id for mate in person.housemates]
-                if len(hmates) == 0:
-                    housemates.append(np.array([nan_integer], dtype=np.int))
-                else:
-                    housemates.append(np.array(hmates, dtype=np.int))
 
             ids = np.array(ids, dtype=np.int)
             ages = np.array(ages, dtype=np.int)
             sexes = np.array(sexes, dtype="S10")
             ethns = np.array(ethns, dtype="S10")
+            socioecon_indices = np.array(socioecon_indices, dtype=np.int)
             home_city = np.array(home_city, dtype="S15")
             mode_of_transport = np.array(mode_of_transport, dtype="S15")
             areas = np.array(areas, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S10")
-            housemates = np.array(housemates, dtype=object)
 
             if chunk == 0:
                 people_dset.attrs["n_people"] = n_people
-                people_dset.create_dataset("id", data=ids, maxshape=(n_people,))
-                people_dset.create_dataset("age", data=ages, maxshape=(n_people,))
-                people_dset.create_dataset("sex", data=sexes, maxshape=(n_people,))
+                people_dset.create_dataset("id", data=ids, maxshape=(None,))
+                people_dset.create_dataset("age", data=ages, maxshape=(None,))
+                people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
                 people_dset.create_dataset(
-                    "home_city", data=home_city, maxshape=(n_people,)
+                    "socioecon_index", data=socioecon_indices, maxshape=(None,)
                 )
                 people_dset.create_dataset(
-                    "mode_of_transport", data=mode_of_transport, maxshape=(n_people,),
+                    "home_city", data=home_city, maxshape=(None,)
                 )
                 people_dset.create_dataset(
-                    "ethnicity", data=ethns, maxshape=(n_people,)
+                    "mode_of_transport", data=mode_of_transport, maxshape=(None,),
                 )
+                people_dset.create_dataset("ethnicity", data=ethns, maxshape=(None,))
                 people_dset.create_dataset(
-                    "group_ids",
-                    data=group_ids,
-                    maxshape=(n_people, group_ids.shape[1]),
+                    "group_ids", data=group_ids, maxshape=(None, group_ids.shape[1]),
                 )
                 people_dset.create_dataset(
                     "group_specs",
                     data=group_specs,
-                    maxshape=(n_people, group_specs.shape[1]),
+                    maxshape=(None, group_specs.shape[1]),
                 )
                 people_dset.create_dataset(
                     "subgroup_types",
                     data=subgroup_types,
-                    maxshape=(n_people, subgroup_types.shape[1]),
+                    maxshape=(None, subgroup_types.shape[1]),
                 )
-                people_dset.create_dataset("area", data=areas, maxshape=(n_people,))
-                people_dset.create_dataset(
-                    "housemates", data=housemates, dtype=dt, maxshape=(n_people,),
-                )
+                people_dset.create_dataset("area", data=areas, maxshape=(None,))
             else:
                 newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                 people_dset["id"].resize(newshape)
@@ -140,6 +135,8 @@ def save_population_to_hdf5(
                 people_dset["sex"][idx1:idx2] = sexes
                 people_dset["ethnicity"].resize(newshape)
                 people_dset["ethnicity"][idx1:idx2] = ethns
+                people_dset["socioecon_index"].resize(newshape)
+                people_dset["socioecon_index"][idx1:idx2] = socioecon_indices
                 people_dset["home_city"].resize(newshape)
                 people_dset["home_city"][idx1:idx2] = home_city
                 people_dset["mode_of_transport"].resize(newshape)
@@ -152,8 +149,7 @@ def save_population_to_hdf5(
                 people_dset["group_specs"][idx1:idx2] = group_specs
                 people_dset["subgroup_types"].resize(newshape[0], axis=0)
                 people_dset["subgroup_types"][idx1:idx2] = subgroup_types
-                people_dset["housemates"].resize(newshape)
-                people_dset["housemates"][idx1:idx2] = housemates
+
 
 def load_population_from_hdf5(file_path: str, chunk_size=100000):
     """
@@ -169,25 +165,28 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
+            print(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             ids = population["id"][idx1:idx2]
             ages = population["age"][idx1:idx2]
             sexes = population["sex"][idx1:idx2]
             ethns = population["ethnicity"][idx1:idx2]
+            socioecon_indices = population["socioecon_index"][idx1:idx2]
             mode_of_transport = population["mode_of_transport"][idx1:idx2]
             home_city = population["home_city"][idx1:idx2]
             group_ids = population["group_ids"][idx1:idx2]
             group_specs = population["group_specs"][idx1:idx2]
             subgroup_types = population["subgroup_types"][idx1:idx2]
             areas = population["area"][idx1:idx2]
-            housemates = population["housemates"][idx1:idx2]
             for k in range(idx2 - idx1):
-                person = Person()
-                person.id = ids[k]
-                person.age = ages[k]
-                person.sex = sexes[k].decode()
-                person.ethnicity = ethns[k].decode()
+                person = Person.from_attributes(
+                    id=ids[k],
+                    age=ages[k],
+                    sex=sexes[k].decode(),
+                    ethnicity=ethns[k].decode(),
+                    socioecon_index=socioecon_indices[k],
+                )
                 hc = home_city[k].decode()
                 if hc == " ":
                     person.home_city = None
@@ -211,8 +210,5 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     subgroups.append([group_spec, group_id, subgroup_type])
                 person.subgroups = subgroups
                 person.area = areas[k]
-                person.housemates = housemates[k]
-                if person.housemates[0] == nan_integer:
-                    person.housemates = []
                 people.append(person)
     return Population(people)

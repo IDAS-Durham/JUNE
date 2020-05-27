@@ -4,4 +4,3 @@ from .pub import Pub, Pubs, PubDistributor
 from .cinema import Cinema, Cinemas, CinemaDistributor
 from .grocery import Groceries, Grocery, GroceryDistributor
 from .leisure import Leisure, generate_leisure_for_world
-

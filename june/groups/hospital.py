@@ -12,7 +12,7 @@ from sklearn.neighbors import BallTree
 from june.groups import Group, Supergroup
 
 from june.demography.geography import SuperArea
-from june.infection.symptoms import SymptomTags
+from june.infection.symptoms import SymptomTag
 
 
 logger = logging.getLogger(__name__)
@@ -94,13 +94,13 @@ class Hospital(Group):
         ]:
             super().add(
                 person,
-                activity_type=person.ActivityType.hospital,
+                activity="hospital",  
                 subgroup_type=subgroup_type,
             )
         else:
             super().add(
                 person,
-                activity_type=person.ActivityType.primary_activity,
+                activity="primary_activity",
                 subgroup_type=self.SubgroupType.workers,
             )
 
@@ -123,9 +123,9 @@ class Hospital(Group):
             person instance to add as patient
         """
 
-        if person.health_information.tag == SymptomTags.intensive_care:
+        if person.health_information.tag == SymptomTag.intensive_care:
             self.add(person, self.SubgroupType.icu_patients)
-        elif person.health_information.tag == SymptomTags.hospitalised:
+        elif person.health_information.tag == SymptomTag.hospitalised:
             self.add(person, self.SubgroupType.patients)
         else:
             raise AssertionError(
@@ -133,13 +133,17 @@ class Hospital(Group):
             )
 
     def release_as_patient(self, person):
-       person.subgroups[person.ActivityType.hospital] = None
+        person.subgroups.hospital = None
 
     def move_patient_within_hospital(self, person):
-        if person.health_information.tag == SymptomTags.intensive_care:
-            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.icu_patients]
-        elif person.health_information.tag == SymptomTags.hospitalised:
-            person.subgroups[person.ActivityType.hospital] = person.hospital.group[self.SubgroupType.patients]
+        if person.health_information.tag == SymptomTag.intensive_care:
+            person.subgroups.hospital = person.hospital.group[
+                self.SubgroupType.icu_patients
+            ]
+        elif person.health_information.tag == SymptomTag.hospitalised:
+            person.subgroups.hospital = person.hospital.group[
+                self.SubgroupType.patients
+            ]
         else:
             raise AssertionError(
                 "ERROR: This person shouldn't be trying to get to a hospital"
@@ -320,8 +324,8 @@ class Hospitals(Supergroup):
         hospital with availability
 
         """
-        assign_icu = person.health_information.tag == SymptomTags.intensive_care
-        assign_patient = person.health_information.tag == SymptomTags.hospitalised
+        assign_icu = person.health_information.tag == SymptomTag.intensive_care
+        assign_patient = person.health_information.tag == SymptomTag.hospitalised
 
         if self.box_mode:
             for hospital in self.members:
@@ -386,4 +390,3 @@ class Hospitals(Supergroup):
         )
         distances = np.array(distances[0]) * earth_radius
         return distances, idx[0]
-

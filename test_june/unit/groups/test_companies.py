@@ -48,7 +48,7 @@ class TestCompany:
 
     def test__person_is_employed(self, person, company):
         company.add(person)
-        assert person.subgroups[person.ActivityType.primary_activity] == company.subgroups[Company.SubgroupType.workers]
+        assert person.primary_activity == company.subgroups[Company.SubgroupType.workers]
 
 
 @pytest.fixture(name="companies_example")
@@ -77,8 +77,4 @@ def test__company_sizes(companies_example):
 def test__companies_multiple_areas():
     g = Geography.from_file(filter_key={"msoa" : ["E02002559", "E02000001"]})
     companies = Companies.for_geography(g)
-
-
-
-
 

@@ -23,7 +23,7 @@ class SocialVenue(Group):
     def add(self, person):
         super().add(
             person,
-            activity_type=person.ActivityType.leisure,
+            activity="leisure",
             subgroup_type=self.SubgroupType.default,
             dynamic=True
         )

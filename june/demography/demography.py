@@ -147,17 +147,17 @@ class Population:
 
     @property
     def infected(self):
-        return [person for person in self.people if person.health_information.infected]
+        return [person for person in self.people if person.infected]
 
     @property
     def susceptible(self):
         return [
-            person for person in self.people if person.health_information.susceptible
+            person for person in self.people if person.susceptible
         ]
 
     @property
     def recovered(self):
-        return [person for person in self.people if person.health_information.recovered]
+        return [person for person in self.people if person.recovered]
 
 
 class Demography:
@@ -191,12 +191,11 @@ class Demography:
         people = list()
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
-            person = Person(
+            person = Person.from_attributes(
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
                 ethnicity=age_and_sex_generator.ethnicity(),
-                socioecon_index=age_and_sex_generator.socioecon_index()
-                # TODO socioeconomic_generators.socioeconomic_index()
+                socioecon_index=age_and_sex_generator.socioecon_index(),
             )
             people.append(person)  # add person to population
         return Population(people=people)
@@ -294,9 +293,17 @@ def _load_age_and_sex_generators(
     ethnicity_structure_path: str,
     socioecon_structure_path: str,
     area_names: List[str],
-):
+)-> Dict[str, AgeSexGenerator]:
     """
-    A dictionary mapping area identifiers to a generator of age and sex.
+    A dictionary mapping area identifiers to a generator of age, sex, ethnicity,
+    and socio-economic index.
+
+    Returns
+    -------
+    ethnicity_structure_path
+        File containing ethnicity nr. per Area.
+        This approach chosen based on:
+        Davis, J. A., & Smith, T. W. (1999); Chicago: National Opinion Research Center
     """
     age_structure_df = pd.read_csv(age_structure_path, index_col=0)
     age_structure_df = age_structure_df.loc[area_names]
