@@ -17,7 +17,7 @@ class SymptomsTrajectory(Symptoms):
 
     def max_tag(self):
         index = np.searchsorted(self.health_index, self.max_severity)
-        return SymptomTag(index + 2)
+        return SymptomTag(index)
 
     def update_severity_from_delta_time(self, delta_time):
         self.tag = SymptomTag.healthy
