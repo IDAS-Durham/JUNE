@@ -397,11 +397,13 @@ class Simulator:
 
         infected_people = self.world.people.infected
         symptoms = []
+        n_secondary_infections = []
         for person in infected_people:
             health_information = person.health_information
             previous_tag = health_information.tag
             health_information.update_health_status(time, duration)
             symptoms.append(int(person.health_information.tag.value))
+            n_secondary_infections.append(int(person.health_information.number_of_infected))
             # Take actions on new symptoms
             if health_information.recovered:
                 if person.hospital is not None:
@@ -412,7 +414,7 @@ class Simulator:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
-        self.logger.log_infected(self.timer.date, infected_people, symptoms)
+        self.logger.log_infected(self.timer.date, infected_people, symptoms, n_secondary_infections)
 
     def do_timestep(self):
         """
