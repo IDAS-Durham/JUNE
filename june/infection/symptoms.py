@@ -18,7 +18,7 @@ class SymptomTag(IntEnum):
     dead = 5
 
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string: str) -> "SymptomTag":
         for item in SymptomTag:
             if item.name == string:
                 return item

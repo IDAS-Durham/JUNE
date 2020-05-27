@@ -1,7 +1,7 @@
 trajectories:
-  - symptom_tag: asymptomatic
-    stages:
-      - symptom_tag: infected
+
+  - stages:
+      - symptom_tag: exposed
         completion_time:
           type: constant
           value: 5.1
@@ -19,9 +19,8 @@ trajectories:
           value: 0.0
 
 
-  - symptom_tag: influenza
-    stages:
-      - symptom_tag: infected
+  - stages:
+      - symptom_tag: exposed
         completion_time:
           type: constant
           value: 5.1
@@ -39,9 +38,8 @@ trajectories:
           value: 0.0
 
 
-  - symptom_tag: pneumonia
-    stages:
-      - symptom_tag: infected
+  - stages:
+      - symptom_tag: exposed
         completion_time:
           type: constant
           value: 5.1
@@ -65,9 +63,8 @@ trajectories:
           value: 0.0
 
 
-  - symptom_tag: hospitalised
-    stages:
-      - symptom_tag: infected
+  - stages:
+      - symptom_tag: exposed
         completion_time:
           type: constant
           value: 5.1
@@ -91,9 +88,8 @@ trajectories:
           value: 0.0
 
 
-  - symptom_tag: intensive_care
-    stages:
-      - symptom_tag: infected
+  - stages:
+      - symptom_tag: exposed
         completion_time:
           type: constant
           value: 5.1
@@ -129,9 +125,8 @@ trajectories:
           value: 0.0
 
 
-  - symptom_tag: dead
-    stages:
-      - symptom_tag: infected
+  - stages:
+      - symptom_tag: exposed
         completion_time:
           type: constant
           value: 5.1

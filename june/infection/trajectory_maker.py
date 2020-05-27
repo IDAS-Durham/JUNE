@@ -130,8 +130,8 @@ class Stage:
         )
 
 
-class Trajectory:
-    def __init__(self, *stages, symptom_tag: SymptomTag = None):
+class TrajectoryMaker:
+    def __init__(self, *stages):
         """
         Generate trajectories of a particular kind.
 
@@ -143,7 +143,19 @@ class Trajectory:
             A list of stages through which the person progresses
         """
         self.stages = stages
-        self.symptom_tag = symptom_tag
+
+    @property
+    def _symptoms_tags(self):
+        return [
+            stage.symptoms_tag
+            for stage in self.stages
+        ]
+
+    @property
+    def most_severe_symptoms(self):
+        return max(
+            self._symptoms_tags
+        )
 
     def generate_trajectory(self) -> List[
         Tuple[
@@ -172,18 +184,15 @@ class Trajectory:
             cls,
             trajectory_dict
     ):
-        return Trajectory(
+        return TrajectoryMaker(
             *map(
                 Stage.from_dict,
                 trajectory_dict["stages"]
             ),
-            symptom_tag=SymptomTag.from_string(
-                trajectory_dict["symptom_tag"]
-            )
         )
 
 
-class TrajectoryMaker:
+class TrajectoryMakers:
     """
     The various trajectories should depend on external data, and may depend on age &
     gender of the patient.  This would lead to a table of tons of trajectories, with
@@ -197,19 +206,19 @@ class TrajectoryMaker:
     __instance = None
     __path = None
 
-    def __init__(self, trajectories: List[Trajectory]):
+    def __init__(self, trajectories: List[TrajectoryMaker]):
         """
         Trajectories and their stages should be parsed from configuration. I've
         removed params for now as they weren't being used but it will be trivial
         to reintroduce them when we are ready for configurable trajectories.
         """
         self.trajectories = {
-            trajectory.symptom_tag: trajectory
+            trajectory.most_severe_symptoms: trajectory
             for trajectory in trajectories
         }
 
     @classmethod
-    def from_file(cls, config_path: str = default_config_path) -> "TrajectoryMaker":
+    def from_file(cls, config_path: str = default_config_path) -> "TrajectoryMakers":
         """
         Currently this doesn't do what it says it does.
 
@@ -220,7 +229,7 @@ class TrajectoryMaker:
         """
         if cls.__instance is None or cls.__path != config_path:
             with open(config_path) as f:
-                cls.__instance = TrajectoryMaker.from_list(
+                cls.__instance = TrajectoryMakers.from_list(
                     yaml.safe_load(f)["trajectories"]
                 )
                 cls.__path = config_path
@@ -258,9 +267,9 @@ class TrajectoryMaker:
 
     @classmethod
     def from_list(cls, trajectory_dicts):
-        return TrajectoryMaker(
+        return TrajectoryMakers(
             trajectories=list(map(
-                Trajectory.from_dict,
+                TrajectoryMaker.from_dict,
                 trajectory_dicts
             ))
         )
