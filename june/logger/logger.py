@@ -7,7 +7,16 @@ from pathlib import Path
 
 class Logger:
     def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
+        '''
+        Logger used by the simulator to store the relevant information.
 
+        Parameters
+        ----------
+        save_path: 
+            path to save file
+        file_name:
+            name of output hdf5 file
+        '''
         self.save_path = save_path
         self.file_path = Path(self.save_path) / file_name
         # Remove if exists
@@ -24,9 +33,9 @@ class Logger:
 
         Parameters
         ----------
-        population
+        population:
             population object
-        chunk_size
+        chunk_size:
             number of people to save at a time. Note that they have to be copied to be saved,
             so keep the number below 1e6.
         """
@@ -77,7 +86,98 @@ class Logger:
                     people_dset["super_area"].resize(newshape)
                     people_dset["super_area"][idx1:idx2] = super_areas
 
-    def get_number_group_instances(self, world, location):
+    def log_infected(self, date: "datetime", infected_ids: List[int], symptoms: List[int], n_secondary_infections: List[int]):
+        '''
+        Log relevant information of infected people per time step.
+
+        Parameters
+        ----------
+        date:
+            datetime of time step to log
+        infected_ids:
+            list of IDs of everyone infected 
+        symptoms:
+            list of symptoms of everyone infected
+        n_secondary_infections:
+            list of number of secondary infections for everyone infected
+        '''
+        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        with h5py.File(self.file_path, "a") as f:
+            infected_dset = f.create_group(time_stamp)
+            ids = np.array(infected_ids, dtype=np.int)
+            symptoms = np.array(symptoms, dtype=np.int)
+            n_secondary_infections = np.array(n_secondary_infections, dtype=np.int)
+            infected_dset["id"] = ids
+            infected_dset["symptoms"] = symptoms
+            infected_dset["n_secondary_infections"] = n_secondary_infections
+
+    def log_hospital_characteristics(self, hospitals: "Hospitals"):
+        '''
+        Log hospital's coordinates and number of beds per hospital
+        
+        Parameters
+        ----------
+        hospitals:
+            hospitals to log
+        '''
+        coordinates = []
+        n_beds = []
+        n_icu_beds []
+        for hospital in hospitals:
+            coordinates.append(hospital.coordinates)
+            n_beds.append(hospital.n_beds)
+            n_icu_beds.append(hospital.n_icu_beds)
+        coordinates = np.array(coordinates, dtype=np.float)
+        n_beds = np.array(n_beds, dtype=np.int)
+        n_icu_beds = np.array(n_icu_beds, dtype=np.int)
+        with h5py.File(self.file_path, "a") as f:
+            hospital_dset = f.require_group("hospitals")
+            time_dset.create_dataset("coordinates", data=coordinates)
+            time_dset.create_dataset("n_beds", data=coordinates)
+            time_dset.create_dataset("n_icu_beds", data=coordinates)
+     
+
+    def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
+        '''
+        Log the variation of number of patients in hospitals over time
+    
+        Parameters
+        ----------
+        date:
+            date to log
+        hospitals:
+            hospitals to log
+        '''
+        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        hospital_ids = []
+        n_patients = []
+        n_patients_icu = []
+        for hospital in hospitals:
+            hospital_ids.append(hospital.id)
+            n_patients.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
+            n_patients_icu.append(len(hospital.subgroups[hospital.SubgroupType.icu_patients].people))
+        # save to hdf5
+        hospitals_ids = np.array(hospital_ids, dtype=np.int)
+        n_patients = np.array(n_patients, dtype=np.int)
+        n_patients_icu = np.array(n_patients_icu, dtype=np.int)
+        with h5py.File(self.file_path, "a") as f:
+            hospital_dset = f.require_group("hospitals")
+            time_dset = hospital_dset.create_group(time_stamp)
+            time_dset.create_dataset("hospital_id", data=hospital_ids)
+            time_dset.create_dataset("n_patients", data=n_patients)
+            time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
+
+    def get_number_group_instances(self, world: "World", location: str):
+        '''
+        Given the world and a location, find the number of instances of that location that exist in the world
+
+        Parameters
+        ----------
+        world:
+            world instance
+        location:
+            location type
+        '''
         plural = location + 's'
         if location== 'grocery':
             plural = 'groceries'
@@ -89,13 +189,21 @@ class Logger:
             plural = 'commutecityunits'
         return len(getattr(world, plural).members)
 
-    def log_infection_location(self,world):
-        #TODO: can not rely on health_information, we should erase it from anyone that is not in 
-        # the infected group, save group_type_of_infection inside person
+    def log_infection_location(self,world: "World"):
+        '''
+        Log relevant information on where did people get infected
+
+        Parameters
+        ----------
+        world:
+            world instance
+        '''
+        # TODO : might want to log this over time, once the policies are in place could be interestingi,
+        # might be better to combine it with infections information
         locations = []
         for person in world.people:
-            if person.health_information.group_type_of_infection is not None:
-                locations.append(person.health_information.group_type_of_infection)
+            if person.group_type_of_infection is not None:
+                locations.append(person.group_type_of_infection)
         unique_locations, counts = np.unique(np.array(locations), return_counts=True)
         group_sizes = []
         for group in unique_locations:
@@ -109,42 +217,4 @@ class Logger:
             locations_dset.create_dataset("infection_counts", data=counts)
             locations_dset.create_dataset("n_locations", data=group_sizes)
 
-    def log_infected(self, date, infected_people, symptoms, n_secondary_infections):
-        # TODO: might have to do in chunks ?
-        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        with h5py.File(self.file_path, "a") as f:
-            infected_dset = f.create_group(time_stamp)
-            ids = []
-            for person in infected_people:
-                ids.append(person.id)
-            ids = np.array(ids, dtype=np.int)
-            symptoms = np.array(symptoms, dtype=np.int)
-            n_secondary_infections = np.array(n_secondary_infections, dtype=np.int)
-            infected_dset["id"] = ids
-            infected_dset["symptoms"] = symptoms
-            infected_dset["n_secondary_infections"] = n_secondary_infections
-
-    def log_hospital_capacity(self, date, hospitals):
-        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        hospital_ids = []
-        coordinates = []
-        n_patients = []
-        n_patients_icu = []
-        for hospital in hospitals:
-            hospital_ids.append(hospital.id)
-            coordinates.append(np.array(hospital.coordinates))
-            n_patients.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
-            n_patients_icu.append(len(hospital.subgroups[hospital.SubgroupType.icu_patients].people))
-        # save to hdf5
-        hospitals_ids = np.array(hospital_ids, dtype=np.int)
-        coordinates = np.array(coordinates, dtype=np.float)
-        n_patients = np.array(n_patients, dtype=np.int)
-        n_patients_icu = np.array(n_patients_icu, dtype=np.int)
-        with h5py.File(self.file_path, "a") as f:
-            hospital_dset = f.require_group("hospitals")
-            time_dset = hospital_dset.create_group(time_stamp)
-            time_dset.create_dataset("hospital_id", data=hospital_ids)
-            time_dset.create_dataset("coordinates", data=coordinates)
-            time_dset.create_dataset("n_patients", data=n_patients)
-            time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
 

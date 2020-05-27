@@ -371,15 +371,30 @@ class Simulator:
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! 
+
         Parameters
         ----------
         person:
-            person sent to cemetery
+            person to send to cemetery
         """
         person.dead = True 
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
+
+    def recover(self, person: "Person"):
+        '''
+        When someone recovers, erase the health information they carry and change their susceptibility.
+
+        Parameters
+        ----------
+        person:
+            person to recover
+        '''
+        person.health_information.set_recovered(time)
+        person.susceptibility = 0
+        person.group_type_of_infection = person.health_information.group_type_of_infection
+        person.health_information = None
 
     def update_health_status(self, time: float, duration: float):
         """
@@ -394,27 +409,26 @@ class Simulator:
         duration:
             duration of time step
         """
-
-        infected_people = self.world.people.infected
+        ids = []
         symptoms = []
         n_secondary_infections = []
-        for person in infected_people:
+        for person in self.world.people.infected:
             health_information = person.health_information
             previous_tag = health_information.tag
             health_information.update_health_status(time, duration)
-            symptoms.append(int(person.health_information.tag.value))
-            n_secondary_infections.append(int(person.health_information.number_of_infected))
+            ids.append(person.id)
+            symptoms.append(person.health_information.tag.value)
+            n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
             if health_information.recovered:
                 if person.hospital is not None:
                     person.hospital.group.release_as_patient(person)
-                health_information.set_recovered(time)
-                person.susceptibility = 0
+                self.recover(person)
             elif health_information.should_be_in_hospital:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
-        self.logger.log_infected(self.timer.date, infected_people, symptoms, n_secondary_infections)
+        self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
 
     def do_timestep(self):
         """
@@ -448,15 +462,11 @@ class Simulator:
             sim_logger.info(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
-
-        # assert conservation of people
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-
-        #self.logger.follow_seed(self.timer.date,self.first_infected, save=True)
         self.update_health_status(self.timer.now, self.timer.duration)
         self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
@@ -479,6 +489,7 @@ class Simulator:
         )
         self.clear_world()
         self.logger.log_population(self.world.people)
+        self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
                 self.logger.log_infection_location(self.world)
