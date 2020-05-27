@@ -6,7 +6,7 @@ import autofit as af
 import numpy as np
 
 
-class SymptomTags(IntEnum):
+class SymptomTag(IntEnum):
     healthy = 0
     infected = 1
     asymptomatic = 2
@@ -19,7 +19,7 @@ class SymptomTags(IntEnum):
 
     @classmethod
     def from_string(cls, string):
-        for item in SymptomTags:
+        for item in SymptomTag:
             if item.name == string:
                 return item
         raise AssertionError(
@@ -30,7 +30,7 @@ class SymptomTags(IntEnum):
 class Symptoms:
     def __init__(self, health_index=None):
         self.health_index = list() if health_index is None else health_index
-        self.tag = SymptomTags.infected
+        self.tag = SymptomTag.infected
         self.max_severity = random.random()
         self.severity = 0.0
 
@@ -38,13 +38,13 @@ class Symptoms:
         raise NotImplementedError()
 
     def is_recovered(self):
-        return self.tag == SymptomTags.recovered
+        return self.tag == SymptomTag.recovered
 
     def make_tag(self):
         if self.severity <= 0.0 or len(self.health_index) == 0:
-            return SymptomTags.recovered
+            return SymptomTag.recovered
         index = np.searchsorted(self.health_index, self.severity)
-        return SymptomTags(index + 2)
+        return SymptomTag(index + 2)
 
     @classmethod
     def object_from_config(cls):
@@ -80,7 +80,7 @@ class SymptomsConstant(Symptoms):
 
     def update_severity_from_delta_time(self, delta_time):
         if np.random.rand() <= 1.0 - np.exp(-self.recovery_rate * delta_time):
-            self.tag = SymptomTags.recovered
+            self.tag = SymptomTag.recovered
 
 
 class SymptomsGaussian(Symptoms):
@@ -94,7 +94,7 @@ class SymptomsGaussian(Symptoms):
 
     def update_severity_from_delta_time(self, delta_time):
         if np.random.rand() <= 1.0 - np.exp(-self.recovery_rate * delta_time):
-            self.tag = SymptomTags.recovered
+            self.tag = SymptomTag.recovered
         else:
             dt = delta_time - self.mean_time
             self.severity = self.max_severity * np.exp(-(dt ** 2) / self.sigma_time ** 2)

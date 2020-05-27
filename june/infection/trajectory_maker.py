@@ -5,7 +5,7 @@ import yaml
 from scipy import stats
 
 from june import paths
-from june.infection.symptoms import SymptomTags
+from june.infection.symptoms import SymptomTag
 
 default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 
@@ -99,7 +99,7 @@ class Stage:
     def __init__(
             self,
             *,
-            symptoms_tag: SymptomTags,
+            symptoms_tag: SymptomTag,
             completion_time: CompletionTime = ConstantCompletionTime
     ):
         """
@@ -121,7 +121,7 @@ class Stage:
         completion_time = CompletionTime.from_dict(
             stage_dict["completion_time"]
         )
-        symptom_tag = SymptomTags.from_string(
+        symptom_tag = SymptomTag.from_string(
             stage_dict["symptom_tag"]
         )
         return Stage(
@@ -131,7 +131,7 @@ class Stage:
 
 
 class Trajectory:
-    def __init__(self, *stages, symptom_tag: SymptomTags = None):
+    def __init__(self, *stages, symptom_tag: SymptomTag = None):
         """
         Generate trajectories of a particular kind.
 
@@ -148,7 +148,7 @@ class Trajectory:
     def generate_trajectory(self) -> List[
         Tuple[
             float,
-            SymptomTags
+            SymptomTag
         ]
     ]:
         """
@@ -177,7 +177,7 @@ class Trajectory:
                 Stage.from_dict,
                 trajectory_dict["stages"]
             ),
-            symptom_tag=SymptomTags.from_string(
+            symptom_tag=SymptomTag.from_string(
                 trajectory_dict["symptom_tag"]
             )
         )
@@ -228,10 +228,10 @@ class TrajectoryMaker:
 
     def __getitem__(
             self,
-            tag: SymptomTags
+            tag: SymptomTag
     ) -> List[Tuple[
         float,
-        SymptomTags
+        SymptomTag
     ]]:
         """
         Generate a trajectory from a tag.

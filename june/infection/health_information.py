@@ -1,4 +1,4 @@
-from june.infection.symptoms import SymptomTags
+from june.infection.symptoms import SymptomTag
 
 class HealthInformation:
     __slots__ = (
@@ -49,11 +49,11 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag in (SymptomTags.influenza, SymptomTags.pneumonia)
+        return self.tag in (SymptomTag.influenza, SymptomTag.pneumonia)
 
     @property
     def should_be_in_hospital(self) -> bool:
-        return self.tag in (SymptomTags.hospitalised, SymptomTags.intensive_care)
+        return self.tag in (SymptomTag.hospitalised, SymptomTag.intensive_care)
 
     @property
     def infected_at_home(self) -> bool:
@@ -61,7 +61,7 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == SymptomTags.dead
+        return self.tag == SymptomTag.dead
 
     def update_health_status(self, time, delta_time):
         if self.infected:
