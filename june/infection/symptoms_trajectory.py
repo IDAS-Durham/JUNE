@@ -11,7 +11,7 @@ class SymptomsTrajectory(Symptoms):
         self.update_trajectory()
 
     def update_trajectory(self):
-        trajectory_maker = TrajectoryMaker()
+        trajectory_maker = TrajectoryMaker.from_file()
         maxtag = self.max_tag()
         self.trajectory = trajectory_maker[maxtag]
 

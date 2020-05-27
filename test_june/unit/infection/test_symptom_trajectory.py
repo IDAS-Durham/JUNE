@@ -98,9 +98,9 @@ class TestParse:
         assert stage.completion_time == 1.0
 
     def test_parse_trajectory_maker(self, trajectory_dict):
-        trajectory_maker = TrajectoryMaker.from_dict({
-            "trajectories": [trajectory_dict],
-        })
+        trajectory_maker = TrajectoryMaker.from_list(
+            [trajectory_dict]
+        )
         assert trajectory_maker.trajectories[
                    SymptomTags.healthy
                ].stages[0].completion_time == 1.0
@@ -109,12 +109,16 @@ class TestParse:
 class TestTrajectoryMaker:
     def test__make__trajectories(self, trajectories):
         assert len(trajectories.trajectories) == 6
-        assert (trajectories.incubation_info ==
-                Stage(
-                    symptoms_tag=sym.SymptomTags.infected, completion_time=5.1))
-        assert (trajectories.recovery_info ==
-                Stage(
-                    symptoms_tag=sym.SymptomTags.recovered, completion_time=0.0))
+        influenza_trajectory = trajectories.trajectories[
+            SymptomTags.influenza
+        ]
+        infected = influenza_trajectory.stages[0]
+        assert infected.symptoms_tag == sym.SymptomTags.infected
+        assert infected.completion_time == 5.1
+
+        recovered = influenza_trajectory.stages[-1]
+        assert recovered.symptoms_tag == sym.SymptomTags.recovered
+        assert recovered.completion_time == 0.0
 
 
 class TestSymptomsTrajectory:
