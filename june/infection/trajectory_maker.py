@@ -15,13 +15,28 @@ class CompletionTime(ABC):
     def __call__(self) -> float:
         """
         Compute the time a given stage should take to complete
-
-        Currently only ConstantVariationType is implemented. Other
-        VariationTypes should extend this class.
         """
 
     @staticmethod
-    def class_for_type(type_string):
+    def class_for_type(type_string: str) -> type:
+        """
+        Get a CompletionTime class from a string in configuration
+
+        Parameters
+        ----------
+        type_string
+            The type of CompletionTime
+            e.g. constant/exponential/beta
+
+        Returns
+        -------
+        The corresponding class
+
+        Raises
+        ------
+        AssertionError
+            If the type string is not recognised
+        """
         if type_string == "constant":
             return ConstantCompletionTime
         if type_string == "exponential":
@@ -43,7 +58,7 @@ class CompletionTime(ABC):
 
 
 class ConstantCompletionTime(CompletionTime):
-    def __init__(self, value):
+    def __init__(self, value: float):
         self.value = value
 
     def __call__(self):
@@ -152,7 +167,10 @@ class TrajectoryMaker:
         ]
 
     @property
-    def most_severe_symptoms(self):
+    def most_severe_symptoms(self) -> SymptomTag:
+        """
+        The most severe symptoms experienced at any stage in this trajectory
+        """
         return max(
             self._symptoms_tags
         )
