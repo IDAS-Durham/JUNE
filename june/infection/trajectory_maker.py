@@ -15,11 +15,40 @@ class VariationType(ABC):
         VariationTypes should extend this class.
         """
 
+    @staticmethod
+    def class_for_type(type_string):
+        if type_string == "constant":
+            return ConstantVariationType
+        if type_string == "exponential":
+            return ExponentialVariationType
+        raise AssertionError(
+            f"Unrecognised variation type {type_string}"
+        )
+
+    @classmethod
+    def from_dict(cls, variation_type_dict):
+        type_string = variation_type_dict.pop(
+            "type"
+        )
+        return VariationType.class_for_type(
+            type_string
+        )(**variation_type_dict)
+
 
 class ConstantVariationType(VariationType):
     @staticmethod
     def time_for_stage(stage):
         return stage.completion_time
+
+
+class ExponentialVariationType(VariationType):
+    def __init__(self, loc: float, scale: float):
+        self.loc = loc
+        self.scale = scale
+
+    @staticmethod
+    def time_for_stage(stage: "Stage") -> float:
+        raise NotImplementedError("ExponentialVariationType not implemented")
 
 
 class Stage:
