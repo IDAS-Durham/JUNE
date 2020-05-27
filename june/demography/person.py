@@ -13,6 +13,7 @@ class Activities(dataobject):
     primary_activity: None
     hospital: None
     commute: None
+    rail_travel: None
     leisure: None
     box: None
 
@@ -38,9 +39,10 @@ class Person(dataobject):
     # commute
     home_city: str = None
     mode_of_transport: str = None
+    # rail travel
     # activities
     busy: bool = False
-    subgroups: Activities = Activities(None, None, None, None, None, None)
+    subgroups: Activities = Activities(None, None, None, None, None, None, None)
     # infection
     health_information: HealthInformation = HealthInformation()
     susceptibility: float = 1.0
@@ -60,7 +62,7 @@ class Person(dataobject):
             socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
-            subgroups=Activities(None, None, None, None, None, None),
+            subgroups=Activities(None, None, None, None, None, None, None),
             health_information=HealthInformation(),
         )
 
@@ -97,6 +99,10 @@ class Person(dataobject):
     @property
     def commute(self):
         return self.subgroups.commute
+
+    @property
+    def rail_travel(self):
+        return self.subgroups.rail_travel
 
     @property
     def leisure(self):
