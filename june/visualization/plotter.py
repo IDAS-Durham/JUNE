@@ -95,7 +95,7 @@ class DashPlotter:
 
     def generate_county_infection_curves(self, county, axis_type="Linear"):
         data = self.county_data[self.county_data["LAD17NM"] == county]
-        data = data.groupby(by=data.index.date).sum()
+        data = data.groupby(by=data.index.date).first()
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(x=data.index.values, y=data["infected"].values, name="infected")
@@ -126,7 +126,7 @@ class DashPlotter:
 
     def generate_general_infection_curves(self, axis_type="Linear"):
         data = self.world_data
-        data = data.groupby(by=data.index.date).sum()
+        data = data.groupby(by=data.index.date).first()
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(x=data.index.values, y=data["infected"].values, name="infected")
@@ -194,12 +194,19 @@ class DashPlotter:
 
     def generate_r0(self):
         r_df = self.logger_reader.compute_r0()
-        r_df = r_df.loc[r_df.index.day]
+        r_df = r_df.groupby(by=r_df.index.day).first()
         fig = go.Figure()
-        fig.add_trace(go.Satter(r_df.index, r_df[r_df.columns[0]]))
-        fig.add_trace(go.Scatter(r_df.index, [1] * len(r_df.index)))
+        fig.add_trace(go.Scatter(x=r_df.index, y=r_df["value"].values, name="R0"))
+        fig.add_trace(go.Scatter(x=[r_df.index[0], r_df.index[-1]], y=[1,1], name="unity"))
         fig.update_layout(template="simple_white", title="R0")
         return fig
+
+    def generate_place_of_infection(self):
+        places = self.logger_reader.load_infection_location()
+        places = places['counts'].sort_values()
+        print(places)
+        fig = px.bar(places, x='year', y='pop')
+        fig.show()
 
 
     @property

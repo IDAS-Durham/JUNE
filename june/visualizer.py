@@ -28,6 +28,7 @@ app.layout = html.Div(
                 dcc.Tab(label="County data", value="tab-1"),
                 dcc.Tab(label="Animated global map", value="tab-2"),
                 dcc.Tab(label="Hospitals", value="tab-3"),
+                dcc.Tab(label="Other", value="tab-4"),
             ],
         ),
         html.Div(id="tabs-example-content"),
@@ -143,6 +144,20 @@ def render_content(tab):
             ],
             style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
         )
+    elif tab == "tab-4":
+        return html.Div(
+            [
+                html.Div(
+                    dcc.Graph(figure=dash_plotter.generate_r0()),
+                    style = {"display": "inline-block"},
+                ),
+                html.Div(
+                    dcc.Graph(figure=dash_plotter.generate_place_of_infection()),
+                    style = {"display": "inline-block"},
+                ),
+            ],
+            style = {"display": "inline-block"},
+        )
 
 
 @app.callback(
@@ -166,4 +181,4 @@ def update_infection_plot(hoverData, axis_type):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
