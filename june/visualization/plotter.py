@@ -192,6 +192,16 @@ class DashPlotter:
         fig.update_layout(template="simple_white")
         return fig
 
+    def generate_r0(self):
+        r_df = self.logger_reader.compute_r0()
+        r_df = r_df.loc[r_df.index.day]
+        fig = go.Figure()
+        fig.add_trace(go.Satter(r_df.index, r_df[r_df.columns[0]]))
+        fig.add_trace(go.Scatter(r_df.index, [1] * len(r_df.index)))
+        fig.update_layout(template="simple_white", title="R0")
+        return fig
+
+
     @property
     def max_infected(self):
         return self.county_data["infected"].max()
