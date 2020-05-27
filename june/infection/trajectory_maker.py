@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 import yaml
+from scipy import stats
 
 from june import paths
 from june.infection.symptoms import SymptomTags
@@ -25,6 +26,8 @@ class CompletionTime(ABC):
             return ConstantCompletionTime
         if type_string == "exponential":
             return ExponentialCompletionTime
+        if type_string == "beta":
+            return BetaCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
         )
@@ -47,13 +50,49 @@ class ConstantCompletionTime(CompletionTime):
         return self.value
 
 
-class ExponentialCompletionTime(CompletionTime):
-    def __init__(self, loc: float, scale: float):
+class DistributionCompletionTime(CompletionTime, ABC):
+    def __init__(
+            self,
+            distribution
+    ):
+        self.distribution = distribution
+
+    def __call__(self):
+        return self.distribution.rvs()
+
+
+class ExponentialCompletionTime(DistributionCompletionTime):
+    def __init__(self, loc: float, scale):
+        super().__init__(
+            stats.expon(
+                loc=loc,
+                scale=scale
+            )
+        )
         self.loc = loc
         self.scale = scale
 
-    def __call__(self):
-        raise NotImplementedError("ExponentialVariationType not implemented")
+
+class BetaCompletionTime(DistributionCompletionTime):
+    def __init__(
+            self,
+            a,
+            b,
+            loc=0.0,
+            scale=1.0
+    ):
+        super().__init__(
+            stats.beta(
+                a,
+                b,
+                loc=loc,
+                scale=scale
+            )
+        )
+        self.a = a
+        self.b = b
+        self.loc = loc
+        self.scale = scale
 
 
 class Stage:
