@@ -8,18 +8,18 @@ world:
 
 time:
   total_days: 10
-  step_duration: 
-      weekday:
-          1: 8 # first time step duration in hours
-          2: 16
-      weekend:
-          1: 24
+  step_duration:
+    weekday:
+      1: 8 # first time step duration in hours
+      2: 16
+    weekend:
+      1: 24
   step_active_groups:
-      weekday:
-          1: [] # active groups during first time step
-          2: [] 
-      weekend:
-          1: [] 
+    weekday:
+      1: [] # active groups during first time step
+      2: []
+    weekend:
+      1: []
 
 
 people:
