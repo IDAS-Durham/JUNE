@@ -1,4 +1,5 @@
 import logging
+import yaml
 from collections import OrderedDict, defaultdict
 
 import numpy as np
@@ -11,9 +12,9 @@ from june.groups import CareHome
 logger = logging.getLogger(__name__)
 
 default_data_path = (
-        paths.data_path
-        / "processed/census_data/output_area/EnglandWales/carehomes.csv"
+    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
+default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 
 
 class CareHomeError(BaseException):
@@ -21,7 +22,11 @@ class CareHomeError(BaseException):
 
 
 class CareHomeDistributor:
-    def __init__(self, min_age_in_care_home: int = 65):
+    def __init__(
+        self,
+        min_age_in_care_home: int = 65,
+        config_file: str = default_config_filename,
+    ):
         """
         Tool to distribute people from a certain area into a care home, if there is one.
 
@@ -31,6 +36,9 @@ class CareHomeDistributor:
             minimum age to put people in care home.
         """
         self.min_age_in_care_home = min_age_in_care_home
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        self.config = config
 
     def _create_people_dicts(self, area: Area):
         """
@@ -46,7 +54,7 @@ class CareHomeDistributor:
         return men_by_age, women_by_age
 
     def populate_care_home_in_areas(
-            self, areas: Areas, data_filename: str = default_data_path
+        self, areas: Areas, data_filename: str = default_data_path
     ):
         """
         Creates care homes in areas from dataframe.
@@ -59,9 +67,7 @@ class CareHomeDistributor:
             if care_home_residents_number != 0:
                 self.populate_care_home_in_area(area)
 
-    def populate_care_home_in_area(
-            self, area: Area
-    ):
+    def populate_care_home_in_area(self, area: Area):
         """
         Crates care home in area, if there needs to be one, and fills it with the
         oldest people in that area.
@@ -78,6 +84,7 @@ class CareHomeDistributor:
         if n_residents == 0:
             raise CareHomeError("No care home residents in this area.")
         self.populate_care_home(area.care_home, men_by_age, women_by_age)
+        self.assign_workers(area, area.care_home)
 
     def _get_person_of_age(self, people_dict: dict, age: int):
         person = people_dict[age].pop()
@@ -86,7 +93,7 @@ class CareHomeDistributor:
         return person
 
     def populate_care_home(
-            self, care_home: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
+        self, care_home: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
     ):
         """
         Takes the oldest men and women from men_by_age and women_by_age dictionaries,
@@ -111,17 +118,58 @@ class CareHomeDistributor:
             for people_dict in [men_by_age, women_by_age]:
                 if current_age_to_fill in people_dict.keys():
                     person = self._get_person_of_age(people_dict, current_age_to_fill)
-                    care_home.add(person, activity="residence", subgroup_type=care_home.SubgroupType.residents)
+                    care_home.add(
+                        person,
+                        activity="residence",
+                        subgroup_type=care_home.SubgroupType.residents,
+                    )
                     people_counter += 1
                     if people_counter == care_home.n_residents:
                         break
                     next_age = next_age and False
                 else:
                     next_age = (
-                            next_age and True
+                        next_age and True
                     )  # only decrease age if there are no man nor women left
 
             if next_age:
                 current_age_to_fill -= 1
                 if current_age_to_fill < self.min_age_in_care_home:
                     break
+
+    def assign_workers(self, area: Area, care_home: CareHome):
+        """
+        Healthcares sector
+            Q: Carers
+        """
+        carers = [
+            person
+            for idx, person in enumerate(area.super_area.workers)
+            if person.sector == list(self.config["sector"].keys())[0]
+        ]
+        if len(carers) == 0:
+            logger.info(
+                f"\n The SuperArea {area.super_area.name} has no health-care workers in it!"
+            )
+            return
+        else:
+            n_assigned = 0
+            for i, carer in enumerate(carers):
+                if n_assigned >= care_home.n_workers:
+                    break
+                elif (
+                    carer.sub_sector is None
+                    and carer.subgroups.primary_activity  # because we have no sub_sector for carer
+                    is None
+                ):
+                    care_home.add(
+                        person=carer,
+                        subgroup_type=care_home.SubgroupType.workers,
+                        activity="primary_activity",
+                    )
+                    n_assigned += 1
+            if care_home.n_workers > n_assigned:
+                logger.info(
+                    f"\n There are {care_home.n_workers - n_assigned} carers missing"
+                    + "in care_home.id = {care_home.id}"
+                )

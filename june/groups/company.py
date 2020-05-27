@@ -54,8 +54,8 @@ class Company(Group):
     def add(self, person):
         super().add(
             person,
-            activity="primary_activity", 
-            subgroup_type=self.SubgroupType.workers,
+            subgroup_type = self.SubgroupType.workers,
+            activity = "primary_activity", 
         )
 
     @property
@@ -159,7 +159,12 @@ class Companies(Supergroup):
         return cls(companies)
 
     @classmethod
-    def create_companies_in_super_area(cls, super_area, company_sizes, company_sectors):
+    def create_companies_in_super_area(
+            cls,
+            super_area: SuperArea,
+            company_sizes,
+            company_sectors,
+    ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.
         """

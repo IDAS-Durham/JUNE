@@ -78,7 +78,3 @@ def test__companies_multiple_areas():
     g = Geography.from_file(filter_key={"msoa" : ["E02002559", "E02000001"]})
     companies = Companies.for_geography(g)
 
-
-
-
-
