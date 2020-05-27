@@ -25,7 +25,7 @@ def days_to_infection(interaction, susceptible_person, group):
     while (
         not susceptible_person.health_information.infected and days_to_infection < 100
     ):
-        interaction.single_time_step_for_group(group, days_to_infection, delta_time)
+        interaction.single_time_step_for_group(group, days_to_infection, delta_time, logger=None)
         days_to_infection += 1
 
     return days_to_infection
