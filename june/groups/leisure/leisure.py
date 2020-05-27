@@ -137,6 +137,7 @@ class Leisure:
         added to the subgroups, since it is possible they change their plans if a policy is in
         place or they have other responsibilities.
         The function returns None if no activity takes place.
+
         Parameters
         ----------
         person
@@ -159,4 +160,4 @@ class Leisure:
             leisure_distributor=social_venue_distributor,
             social_venue=social_venue,
         )
-        return social_venue.subgroups[0]
+        return person.leisure

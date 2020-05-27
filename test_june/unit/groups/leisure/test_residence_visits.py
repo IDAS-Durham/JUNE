@@ -40,17 +40,14 @@ def test__every_household_has_up_to_2_links(world_visits, visits_distributor):
                     "other",
                     "communal",
                 ]:
-                    assert household.associated_households is None
+                    assert household.relatives is None
                 elif household.type in ["family", "ya_parents", "nokids"]:
-                    assert (
-                        household.associated_households is None
-                        or len(household.associated_households) <= 2
-                    )
-                    if household.associated_households is not None:
-                    # for now we only allow household -> care_home
-                        for link in household.associated_households:
-                            assert link.subgroup_type == 2
-                            assert link.group.spec == "care_home"
+                    assert household.relatives is None or len(household.relatives) <= 2
+                    if household.relatives is not None:
+                        # for now we only allow household -> care_home
+                        for link in household.relatives:
+                            assert link.residence.subgroup_type == 1 # link is a resident
+                            assert link.residence.group.spec == "care_home"
                 else:
                     raise ValueError
 
@@ -61,7 +58,7 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
     for super_area in super_areas:
         for area in super_area.areas:
             for household in area.households:
-                if household.associated_households is not None:
+                if household.relatives is not None:
                     person = household.people[0]
                     found_person = True
                     break
@@ -70,32 +67,52 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
 
     assert found_person
     social_venue = visits_distributor.get_social_venue_for_person(person)
-    assert social_venue.group.spec == "care_home"
-    assert social_venue.subgroup_type == 2  # visitors
+    assert social_venue.spec == "care_home"
+
 
 @fixture(name="leisure")
 def make_leisure(world_visits):
-    leisure  = generate_leisure_for_world(["residence_visits"], world_visits)
+    leisure = generate_leisure_for_world(["residence_visits"], world_visits)
     return leisure
 
 
-def test__care_home_visits_leisure_integration(leisure):
+def test__care_home_visits_leisure_integration(world_visits, leisure):
     person1 = Person.from_attributes(sex="m", age=26)
     person2 = Person.from_attributes(sex="f", age=28)
     household = Household(type="family")
-    care_home = CareHome()
     household.add(person1)
     household.add(person2)
     person1.busy = False
     person2.busy = False
-    person1.residence.group.associated_households = [care_home]
+    for area in world_visits.areas:
+        if area.care_home is not None:
+            break
+    person1.residence.group.relatives = [area.care_home.people[0]]
     assigned = False
-    for _ in range(0,100):
-        subgroup = leisure.get_subgroup_for_person_and_housemates(person1, delta_time=1, is_weekend=True)
+    for _ in range(0, 100):
+        subgroup = leisure.get_subgroup_for_person_and_housemates(
+            person1, delta_time=1, is_weekend=True
+        )
         if subgroup is not None:
             assigned = True
-            assert subgroup.group.spec == "care_home"
-            assert person2.leisure.group.spec == "care_home"
+            assert (
+                subgroup
+                == area.care_home.subgroups[area.care_home.SubgroupType.visitors]
+            )
+            assert subgroup.group == area.care_home
     assert assigned
 
+def test__do_not_visit_old_people(world_visits, leisure):
+    for area in world_visits.areas:
+        for person in area.people:
+            if person.residence.group.spec != "household":
+                continue
+            if person.residence.group.relatives is not None:
+                break
+
+    relative = person.residence.group.relatives[0]
+    relative.dead == True
+    for _ in range(0,100):
+        care_home = leisure.get_subgroup_for_person_and_housemates(person, 0.1, True)
+        assert care_home is None
 

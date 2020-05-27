@@ -42,6 +42,13 @@ class VisitsDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(super_areas, **config)
 
+    def get_people_living_in_carehome(self, area):
+        ret = []
+        for person in area.people:
+            if person.residence.group.spec == "care_home":
+                ret.append(person)
+        return ret
+
     def link_households_to_care_homes(self, super_areas):
         """
         Links households and care homes in the giving super areas. For each care home,
@@ -64,27 +71,28 @@ class VisitsDistributor(SocialVenueDistributor):
                 np.random.shuffle(households_super_area)
             for area in super_area.areas:
                 if area.care_home is not None:
-                    care_home_residents = area.care_home[
-                        area.care_home.SubgroupType.residents
-                    ].people
-                    for i, _ in enumerate(care_home_residents):
-                        if households_super_area[i].associated_households is None:
-                            households_super_area[i].associated_households = [
-                                area.care_home[area.care_home.SubgroupType.visitors]
-                            ]
+                    people_in_care_home = self.get_people_living_in_carehome(area)
+                    for i, person in enumerate(people_in_care_home):
+                        if households_super_area[i].relatives is None:
+                            households_super_area[i].relatives = [person]
                         else:
-                            households_super_area[i].associated_households.append(
-                                area.care_home[area.care_home.SubgroupType.visitors]
-                            )
+                            households_super_area[i].relatives.append(person)
 
     def get_social_venue_for_person(self, person):
-        associated_households = person.residence.group.associated_households
-        if associated_households is None:
+        relatives = person.residence.group.relatives
+        if relatives is None:
             return
-        elif len(associated_households) == 1:
-            return associated_households[0]
+        if len([person for person in relatives if person.dead is False]) == 0:
+            return
+        elif len(relatives) == 1:
+            return relatives[0].residence.group.subgroups[
+                relatives[0].residence.group.SubgroupType.visitors
+            ].group
         else:
-            return np.random.choice(associated_households)
+            relative = np.random.choice(relatives)
+            return relative.residence.group.subgroups[
+                relative.residence.group.SubgroupType.visitors
+                ].group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
@@ -100,7 +108,10 @@ class VisitsDistributor(SocialVenueDistributor):
         is_weekend
             whether it is a weekend or not
         """
-        if person.residence.group.associated_households is None:
+        if person.residence.group.relatives is None:
+            return 0
+        # do not visit dead people
+        if len([person for person in person.residence.group.relatives if person.dead is False]) == 0:
             return 0
         if person.sex == "m":
             if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
@@ -117,5 +128,3 @@ class VisitsDistributor(SocialVenueDistributor):
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
-
-
