@@ -18,8 +18,8 @@ class Logger:
         file_name:
             name of output hdf5 file
         """
-        self.save_path = save_path
-        self.file_path = Path(self.save_path) / file_name
+        self.save_path = Path(self.save_path).mkdir(parents=True, exist_ok=True)
+        self.file_path = self.save_path / file_name
         self.infection_location = []
         # Remove if exists
         try:
@@ -201,27 +201,29 @@ class Logger:
         return len(getattr(world, plural).members)
 
     def accumulate_infection_location(self, location):
-        '''
+        """
         Store where infections happend in a time step
         
         Parameters
         ----------
         location:
             group type of the group in which the infection took place
-        '''
+        """
         self.infection_location.append(location)
 
     def log_infection_location(self, time):
-        '''
+        """
         Log where did all infections in a time step happened, as a number count
 
         Parameters
         ----------
         time:
             datetime to log
-        '''
+        """
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        unique_locations, counts = np.unique(np.array(self.infection_location), return_counts=True)
+        unique_locations, counts = np.unique(
+            np.array(self.infection_location), return_counts=True
+        )
         unique_locations = np.array(unique_locations, dtype="S10")
         with h5py.File(self.file_path, "a") as f:
             locations_dset = f.require_group("locations")
