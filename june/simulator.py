@@ -15,7 +15,8 @@ from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
-#from june.logger_simulation import Logger
+
+# from june.logger_simulation import Logger
 from june.logger.logger import Logger
 from june.time import Timer
 from june.world import World
@@ -77,7 +78,7 @@ class Simulator:
         ]
         self.check_inputs(time_config)
         self.timer = Timer(
-            total_days = time_config["total_days"],
+            total_days=time_config["total_days"],
             weekday_step_duration=time_config["step_duration"]["weekday"],
             weekend_step_duration=time_config["step_duration"]["weekend"],
             weekday_activities=time_config["step_activities"]["weekday"],
@@ -377,23 +378,25 @@ class Simulator:
         person:
             person to send to cemetery
         """
-        person.dead = True 
+        person.dead = True
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
 
     def recover(self, person: "Person"):
-        '''
+        """
         When someone recovers, erase the health information they carry and change their susceptibility.
 
         Parameters
         ----------
         person:
             person to recover
-        '''
+        """
         person.health_information.set_recovered(time)
         person.susceptibility = 0
-        person.group_type_of_infection = person.health_information.group_type_of_infection
+        person.group_type_of_infection = (
+            person.health_information.group_type_of_infection
+        )
         person.health_information = None
 
     def update_health_status(self, time: float, duration: float):
@@ -455,7 +458,7 @@ class Simulator:
             n_active_in_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group, #self.logger,
+                    self.timer.now, self.timer.duration, group,  # self.logger,
                 )
                 n_active_in_group += group.size
                 n_people += group.size

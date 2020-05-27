@@ -7,7 +7,7 @@ from pathlib import Path
 
 class Logger:
     def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
-        '''
+        """
         Logger used by the simulator to store the relevant information.
 
         Parameters
@@ -16,7 +16,7 @@ class Logger:
             path to save file
         file_name:
             name of output hdf5 file
-        '''
+        """
         self.save_path = save_path
         self.file_path = Path(self.save_path) / file_name
         # Remove if exists
@@ -86,8 +86,14 @@ class Logger:
                     people_dset["super_area"].resize(newshape)
                     people_dset["super_area"][idx1:idx2] = super_areas
 
-    def log_infected(self, date: "datetime", infected_ids: List[int], symptoms: List[int], n_secondary_infections: List[int]):
-        '''
+    def log_infected(
+        self,
+        date: "datetime",
+        infected_ids: List[int],
+        symptoms: List[int],
+        n_secondary_infections: List[int],
+    ):
+        """
         Log relevant information of infected people per time step.
 
         Parameters
@@ -100,7 +106,7 @@ class Logger:
             list of symptoms of everyone infected
         n_secondary_infections:
             list of number of secondary infections for everyone infected
-        '''
+        """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         with h5py.File(self.file_path, "a") as f:
             infected_dset = f.create_group(time_stamp)
@@ -112,17 +118,17 @@ class Logger:
             infected_dset["n_secondary_infections"] = n_secondary_infections
 
     def log_hospital_characteristics(self, hospitals: "Hospitals"):
-        '''
+        """
         Log hospital's coordinates and number of beds per hospital
         
         Parameters
         ----------
         hospitals:
             hospitals to log
-        '''
+        """
         coordinates = []
         n_beds = []
-        n_icu_beds []
+        n_icu_beds = []
         for hospital in hospitals:
             coordinates.append(hospital.coordinates)
             n_beds.append(hospital.n_beds)
@@ -135,10 +141,9 @@ class Logger:
             time_dset.create_dataset("coordinates", data=coordinates)
             time_dset.create_dataset("n_beds", data=coordinates)
             time_dset.create_dataset("n_icu_beds", data=coordinates)
-     
 
     def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
-        '''
+        """
         Log the variation of number of patients in hospitals over time
     
         Parameters
@@ -147,15 +152,19 @@ class Logger:
             date to log
         hospitals:
             hospitals to log
-        '''
+        """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         hospital_ids = []
         n_patients = []
         n_patients_icu = []
         for hospital in hospitals:
             hospital_ids.append(hospital.id)
-            n_patients.append(len(hospital.subgroups[hospital.SubgroupType.patients].people))
-            n_patients_icu.append(len(hospital.subgroups[hospital.SubgroupType.icu_patients].people))
+            n_patients.append(
+                len(hospital.subgroups[hospital.SubgroupType.patients].people)
+            )
+            n_patients_icu.append(
+                len(hospital.subgroups[hospital.SubgroupType.icu_patients].people)
+            )
         # save to hdf5
         hospitals_ids = np.array(hospital_ids, dtype=np.int)
         n_patients = np.array(n_patients, dtype=np.int)
@@ -168,7 +177,7 @@ class Logger:
             time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
 
     def get_number_group_instances(self, world: "World", location: str):
-        '''
+        """
         Given the world and a location, find the number of instances of that location that exist in the world
 
         Parameters
@@ -177,27 +186,27 @@ class Logger:
             world instance
         location:
             location type
-        '''
-        plural = location + 's'
-        if location== 'grocery':
-            plural = 'groceries'
-        elif location== 'company':
-            plural = 'companies'
-        elif location == 'commute_unit':
-            plural = 'commuteunits'
-        elif location == 'commutecity_unit':
-            plural = 'commutecityunits'
+        """
+        plural = location + "s"
+        if location == "grocery":
+            plural = "groceries"
+        elif location == "company":
+            plural = "companies"
+        elif location == "commute_unit":
+            plural = "commuteunits"
+        elif location == "commutecity_unit":
+            plural = "commutecityunits"
         return len(getattr(world, plural).members)
 
-    def log_infection_location(self,world: "World"):
-        '''
+    def log_infection_location(self, world: "World"):
+        """
         Log relevant information on where did people get infected
 
         Parameters
         ----------
         world:
             world instance
-        '''
+        """
         # TODO : might want to log this over time, once the policies are in place could be interestingi,
         # might be better to combine it with infections information
         locations = []
@@ -208,13 +217,11 @@ class Logger:
         group_sizes = []
         for group in unique_locations:
             group_sizes.append(self.get_number_group_instances(world, group))
-        unique_locations = np.array(unique_locations, dtype='S10')
+        unique_locations = np.array(unique_locations, dtype="S10")
         group_sizes = np.array(group_sizes, dtype=np.int)
         counts = np.array(counts, dtype=np.int)
         with h5py.File(self.file_path, "a") as f:
-            locations_dset = f.create_group('locations')
+            locations_dset = f.create_group("locations")
             locations_dset.create_dataset("infection_location", data=unique_locations)
             locations_dset.create_dataset("infection_counts", data=counts)
             locations_dset.create_dataset("n_locations", data=group_sizes)
-
-
