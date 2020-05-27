@@ -139,8 +139,8 @@ class Person(dataobject):
             return None
         guardian = random.choice(possible_guardians)
         if (
-            guardian.health_information.should_be_in_hospital
-            or guardian.health_information.dead
+            (guardian.health_information is not None and guardian.health_information.should_be_in_hospital)
+            or guardian.dead
         ):
             return None
         else:
