@@ -2,160 +2,160 @@ trajectories:
   - symptom_tag: asymptomatic
     stages:
       - symptom_tag: infected
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.1
+          value: 5.1
 
 
       - symptom_tag: asymptomatic
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 14.
+          value: 14.
 
 
       - symptom_tag: recovered
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 0.0
+          value: 0.0
 
 
   - symptom_tag: influenza
     stages:
       - symptom_tag: infected
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.1
+          value: 5.1
 
 
       - symptom_tag: influenza
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 20.
+          value: 20.
 
 
       - symptom_tag: recovered
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 0.0
+          value: 0.0
 
 
   - symptom_tag: pneumonia
     stages:
       - symptom_tag: infected
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.1
+          value: 5.1
 
 
       - symptom_tag: influenza
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.
+          value: 5.
 
 
       - symptom_tag: pneumonia
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 20.
+          value: 20.
 
 
       - symptom_tag: recovered
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 0.0
+          value: 0.0
 
 
   - symptom_tag: hospitalised
     stages:
       - symptom_tag: infected
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.1
+          value: 5.1
 
 
       - symptom_tag: influenza
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 2.
+          value: 2.
 
 
       - symptom_tag: hospitalised
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 20.
+          value: 20.
 
 
       - symptom_tag: recovered
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 0.0
+          value: 0.0
 
 
   - symptom_tag: intensive_care
     stages:
       - symptom_tag: infected
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.1
+          value: 5.1
 
 
       - symptom_tag: influenza
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 2.
+          value: 2.
 
 
       - symptom_tag: hospitalised
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 2.
+          value: 2.
 
 
       - symptom_tag: intensive_care
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 20.
+          value: 20.
 
 
       - symptom_tag: hospitalised
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 20.
+          value: 20.
 
 
       - symptom_tag: recovered
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 0.0
+          value: 0.0
 
 
   - symptom_tag: dead
     stages:
       - symptom_tag: infected
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 5.1
+          value: 5.1
 
 
       - symptom_tag: influenza
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 2.
+          value: 2.
 
 
       - symptom_tag: hospitalised
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 2.
+          value: 2.
 
 
       - symptom_tag: intensive_care
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 10.
+          value: 10.
 
 
       - symptom_tag: dead
-        variation_type:
+        completion_time:
           type: constant
-        completion_time: 0.
+          value: 0.
