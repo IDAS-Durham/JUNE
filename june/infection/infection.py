@@ -7,7 +7,7 @@ from june import paths
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsConstant
 from june.infection.symptoms_trajectory import SymptomsTrajectory
-from june.infection.trajectory_maker import TrajectoryMaker
+from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 from june.infection.health_information import HealthInformation
@@ -46,7 +46,7 @@ class InfectionSelector:
     def init_symptoms_parameters(self, symptoms_type, config):
         if symptoms_type == "Trajectories":
             self.stype = SymptomsType.trajectories
-            self.trajectory_maker = TrajectoryMaker.from_file()
+            self.trajectory_maker = TrajectoryMakers.from_file()
         else:
             self.stype = SymptomsType.constant
             self.recovery_rate = 0.2
