@@ -18,7 +18,8 @@ class Logger:
         file_name:
             name of output hdf5 file
         """
-        self.save_path = Path(self.save_path).mkdir(parents=True, exist_ok=True)
+        self.save_path = Path(save_path)
+        self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / file_name
         self.infection_location = []
         # Remove if exists

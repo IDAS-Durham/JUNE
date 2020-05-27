@@ -266,9 +266,9 @@ class ReadLogger:
             last date to count
         """
         if start_date is None:
-            start_date = self.infection_df.index.min()
+            start_date = self.infections_df.index.min()
         if end_date is None:
-            end_date = self.infection_df.index.max()
+            end_date = self.infections_df.index.max()
         selected_dates = self.locations_df.loc[start_date:end_date]
         all_locations = selected_dates.sum().location
         all_counts = selected_dates.sum().counts

@@ -27,13 +27,7 @@ def test__population_box(box, population_box):
 
 def test__box_infected_properties(box, population_box):
     person = list(box.people)[0]
-    person.health_information.infected = True
-    assert len(box.infected) == 1
     assert len(box.people) == len(population_box)
-    person.health_information.infected = False
-    person.health_information.recovered = True
-    assert len(box.recovered) == 1
-    assert len(box.infected) == 0
     person.health_information.dead == True
     assert len(box.dead) == 0
     assert len(box.people) == len(population_box)
