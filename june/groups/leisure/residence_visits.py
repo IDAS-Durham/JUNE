@@ -32,27 +32,90 @@ class VisitsDistributor(SocialVenueDistributor):
             weekend_boost=weekend_boost,
             drags_household_probability=drags_household_probability,
         )
-        self.link_households_and_carehomes(super_areas)
+        self.link_households_to_care_homes(super_areas)
 
     @classmethod
-    def from_config(cls, super_areas: SuperAreas, config_filename: str = default_config_filename):
+    def from_config(
+        cls, super_areas: SuperAreas, config_filename: str = default_config_filename
+    ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(super_areas, **config)
 
-    def link_households_and_carehomes(self, super_areas):
+    def link_households_to_care_homes(self, super_areas):
+        """
+        Links households and care homes in the giving super areas. For each care home,
+        we find a random house in the super area and link it to it.
+        The house needs to be occupied by a family, or a couple.
+
+        Parameters
+        ----------
+        super_areas
+            list of super areas
+        """
         for super_area in super_areas:
             households_super_area = []
             for area in super_area.areas:
-                households_super_area += [household for household in area.households if household.type in ["families", "ya_parents", "nokids"]]
+                households_super_area += [
+                    household
+                    for household in area.households
+                    if household.type in ["families", "ya_parents", "nokids"]
+                ]
                 np.random.shuffle(households_super_area)
-            for area in super_areas.areas:
-                if area.carehome is not None:
-                    carehome_residents = area.carehome[area.carehome.SubgroupType.residents].people 
-                    for i, _ in enumerate(carehome_residents):
+            for area in super_area.areas:
+                if area.care_home is not None:
+                    care_home_residents = area.care_home[
+                        area.care_home.SubgroupType.residents
+                    ].people
+                    for i, _ in enumerate(care_home_residents):
                         if households_super_area[i].associated_households is None:
-                            households_super_area[i].associated_households = [area.carehome[area.carehome.SubgroupType.visitors]]
+                            households_super_area[i].associated_households = [
+                                area.care_home[area.care_home.SubgroupType.visitors]
+                            ]
                         else:
-                            households_super_area[i].associated_households.append(area.carehome[area.carehome.SubgroupType.visitors])
+                            households_super_area[i].associated_households.append(
+                                area.care_home[area.care_home.SubgroupType.visitors]
+                            )
+
+    def get_social_venue_for_person(self, person):
+        associated_households = person.residence.group.associated_households
+        if associated_households is None:
+            return
+        elif len(associated_households) == 1:
+            return associated_households[0]
+        else:
+            return np.random.choice(associated_households)
+
+    def get_poisson_parameter(self, person, is_weekend: bool = False):
+        """
+        Poisson parameter (lambda) of a person going to one social venue according to their
+        age and sex and the distribution of visitors in the venue.
+
+        Parameters
+        ----------
+        person
+            an instance of Person
+        delta_t
+            interval of time in units of days
+        is_weekend
+            whether it is a weekend or not
+        """
+        if person.residence.group.associated_households is None:
+            return 0
+        if person.sex == "m":
+            if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
+                return 0
+            else:
+                idx = np.searchsorted(self.male_bins, person.age)
+                probability = self.male_probabilities[idx]
+        else:
+            if person.age < self.female_bins[0] or person.age > self.female_bins[-1]:
+                return 0
+            else:
+                idx = np.searchsorted(self.female_bins, person.age)
+                probability = self.female_probabilities[idx]
+        if is_weekend:
+            probability = probability * self.weekend_boost
+        return probability
 
 

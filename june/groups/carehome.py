@@ -32,17 +32,17 @@ class CareHome(Group):
         residents = 1
         visitors = 2
 
-    def __init__(self, area, n_residents):
+    def __init__(self, area=None, n_residents=None):
         super().__init__()
         self.n_residents = n_residents
         self.area = area
 
     def add(
-        self, person, subgroup_type=SubgroupType.residents,
+        self, person, activity, subgroup_type=SubgroupType.residents,
     ):
         super().add(
             person,
-            activity="residence",
+            activity,
             subgroup_type=subgroup_type,
         )
 
