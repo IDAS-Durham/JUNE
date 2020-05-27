@@ -1,6 +1,6 @@
 import numpy as np
 
-from june.infection.symptoms import Symptoms, SymptomTags
+from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMaker
 
 
@@ -17,10 +17,10 @@ class SymptomsTrajectory(Symptoms):
 
     def max_tag(self):
         index = np.searchsorted(self.health_index, self.max_severity)
-        return SymptomTags(index + 2)
+        return SymptomTag(index + 2)
 
     def update_severity_from_delta_time(self, delta_time):
-        self.tag = SymptomTags.healthy
+        self.tag = SymptomTag.healthy
         for stage in self.trajectory:
             if delta_time > stage[0]:
                 self.tag = stage[1]

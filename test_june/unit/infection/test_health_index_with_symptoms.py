@@ -2,7 +2,7 @@ import numpy as np
 from june.demography.person import Person
 from june.infection.symptoms import SymptomsStep
 from june.infection.health_index import HealthIndexGenerator
-from june.infection.symptoms import SymptomTags
+from june.infection.symptoms import SymptomTag
 
 def test__right_frequency_in_health_index():
     N_samples = 1000
@@ -14,7 +14,7 @@ def test__right_frequency_in_health_index():
         symptoms.update_severity_from_delta_time(0.01)
         # check their symptoms matches the frequency in health index 
         if symptoms.tag != 'healthy':
-            frequencies[SymptomTags(symptoms.tag) - 2] += 1
+            frequencies[SymptomTag(symptoms.tag) - 2] += 1
 
     np.testing.assert_allclose(frequencies[0]/N_samples, health_index[0], atol=0.05)
     np.testing.assert_allclose(frequencies[1]/N_samples, health_index[1]-health_index[0],
