@@ -17,6 +17,15 @@ class SymptomTags(IntEnum):
     dead = 7
     recovered = 8
 
+    @classmethod
+    def from_string(cls, string):
+        for item in SymptomTags:
+            if item.name == string:
+                return item
+        raise AssertionError(
+            f"{string} is not the name of a SymptomTag"
+        )
+
 
 class Symptoms:
     def __init__(self, health_index=None):
