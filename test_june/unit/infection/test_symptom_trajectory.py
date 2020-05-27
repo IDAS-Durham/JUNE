@@ -6,16 +6,39 @@ from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsStep, SymptomTags
-from june.infection.trajectory_maker import Stage
+from june.infection.trajectory_maker import Stage, VariationType, ConstantVariationType, ExponentialVariationType
 
 
 class TestParse:
     def test_symptoms_tag_for_string(self):
         assert SymptomTags.from_string("healthy") == SymptomTags.healthy
         with pytest.raises(
-            AssertionError
+                AssertionError
         ):
             SymptomTags.from_string("nonsense")
+
+    def test_parse_variation_type(self):
+        constant = VariationType.from_dict({
+            "type": "constant"
+        })
+        assert isinstance(
+            constant,
+            ConstantVariationType
+        )
+
+        exponential = VariationType.from_dict(
+            {
+                "type": "exponential",
+                "loc": 1.0,
+                "scale": 2.0
+            }
+        )
+        assert isinstance(
+            exponential,
+            ExponentialVariationType
+        )
+        assert exponential.loc == 1.0
+        assert exponential.scale == 2.0
 
 
 class TestTrajectoryMaker:
