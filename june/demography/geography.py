@@ -56,6 +56,7 @@ class Area:
         """
         self.id = next(self._id)
         self.name = name
+        self.care_home = None
         self.coordinates = coordinates
         self.super_area = super_area
         self.people = list()

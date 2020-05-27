@@ -8,6 +8,7 @@ from june.groups.leisure import (
     PubDistributor,
     GroceryDistributor,
     CinemaDistributor,
+    VisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 
@@ -39,6 +40,11 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "groceries"):
             raise ValueError("Your world does not have groceries.")
         leisure_distributors.append(GroceryDistributor.from_config(world.groceries))
+
+    if "residence_visits" in list_of_leisure_groups:
+        if not hasattr(world, "households") or not hasattr(world, "care_homes"):
+            raise ValueError("Your world does not have households or care homes.")
+        leisure_distributors.append(VisitsDistributor.from_config(world.super_areas))
 
     return Leisure(leisure_distributors)
 
@@ -97,7 +103,7 @@ class Leisure:
 
     def assign_social_venue_to_person(self, person, leisure_distributor):
         social_venue = leisure_distributor.get_social_venue_for_person(person)
-        social_venue.add(person)
+        social_venue.add(person, activity="leisure")
         return social_venue
 
     def send_household_with_person_if_necessary(
@@ -111,9 +117,9 @@ class Leisure:
         if person.residence.group.spec == "care_home" or person.residence.group.type == "communal":
             return False
         if leisure_distributor.person_drags_household():
-            for mate in person.housemates:
+            for mate in person.residence.group.residents:
                 if not mate.busy:
-                    social_venue.add(mate)  # ignores size checking
+                    social_venue.add(mate, activity="leisure")  # ignores size checking
             return True
 
     def get_subgroup_for_person_and_housemates(

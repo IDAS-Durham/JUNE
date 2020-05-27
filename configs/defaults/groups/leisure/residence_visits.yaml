@@ -1,0 +1,10 @@
+male_age_probabilities:
+  0-65: 0.05
+female_age_probabilities:
+  0-65: 0.05
+weekend_boost: 2
+drags_household_probability: 1.0
+
+# 2019: 176.1 million cinema visitors per year
+# (from https://www.cinemauk.org.uk/the-industry/facts-and-figures/uk-cinema-admissions-and-box-office/annual-admissions/)
+# age/gender distribution from https://www.statista.com/statistics/296240/age-and-gender-of-the-cinema-audience-uk/
