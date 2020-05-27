@@ -7,6 +7,13 @@ import numpy as np
 
 
 class SymptomTag(IntEnum):
+    """
+    A tag for the symptoms exhibited by a person.
+
+    Higher numbers are more severe.
+    0 - 5 correspond to indices in the health index array.
+    """
+
     recovered = -3
     healthy = -2
     exposed = -1
