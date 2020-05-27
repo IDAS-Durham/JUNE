@@ -72,8 +72,9 @@ trajectories:
 
       - symptom_tag: influenza
         completion_time:
-          type: constant
-          value: 2.
+          type: exponential
+          loc: 1
+          scale: 4.12
 
 
       - symptom_tag: hospitalised
@@ -100,8 +101,9 @@ trajectories:
 
       - symptom_tag: influenza
         completion_time:
-          type: constant
-          value: 2.
+          type: exponential
+          loc: 1
+          scale: 4.12
 
 
       - symptom_tag: hospitalised
@@ -140,8 +142,9 @@ trajectories:
 
       - symptom_tag: influenza
         completion_time:
-          type: constant
-          value: 2.
+          type: exponential
+          loc: 1
+          scale: 4.12
 
 
       - symptom_tag: hospitalised
