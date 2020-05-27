@@ -7,9 +7,10 @@ from june import paths
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsConstant
 from june.infection.symptoms_trajectory import SymptomsTrajectory
-from june.infection.trajectory_maker import TrajectoryMaker
+from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
+from june.infection.health_information import HealthInformation
 
 default_config_filename = (
         paths.configs_path
@@ -45,7 +46,7 @@ class InfectionSelector:
     def init_symptoms_parameters(self, symptoms_type, config):
         if symptoms_type == "Trajectories":
             self.stype = SymptomsType.trajectories
-            self.trajectory_maker = TrajectoryMaker.from_file()
+            self.trajectory_maker = TrajectoryMakers.from_file()
         else:
             self.stype = SymptomsType.constant
             self.recovery_rate = 0.2
@@ -85,8 +86,8 @@ class InfectionSelector:
 
     @classmethod
     def from_file(
-            cls,
-            config_filename: str = default_config_filename
+        cls,
+        config_filename: str = default_config_filename,
     ) -> "InfectionSelector":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -94,6 +95,7 @@ class InfectionSelector:
 
     def infect_person_at_time(self, person, time):
         infection = self.make_infection(person, time)
+        person.health_information = HealthInformation()
         person.health_information.set_infection(infection=infection)
 
     def make_infection(self, person, time):

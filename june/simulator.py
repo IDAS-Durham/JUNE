@@ -19,6 +19,7 @@ from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
+from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -69,6 +70,8 @@ class Simulator:
         self.activity_hierarchy = [
             "box",
             "hospital",
+            "rail_travel_out",
+            "rail_travel_back",
             "commute",
             "primary_activity",
             "leisure",
@@ -80,7 +83,7 @@ class Simulator:
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
-            "box": ["boxes"],
+                "box": ["boxes"],
             }
         else:
             self.activity_to_group_dict = {
@@ -89,6 +92,7 @@ class Simulator:
                 "leisure": activity_to_groups.get("leisure", []),
                 "residence": activity_to_groups.get("residence", []),
                 "commute": activity_to_groups.get("commute", []),
+                "rail_travel": activity_to_groups.get("rail_travel", [])
             }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
@@ -96,6 +100,8 @@ class Simulator:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
             self.initialize_leisure(activity_to_groups["leisure"])
+        if "rail_travel_out" in self.all_activities or "rail_travel_back" in self.all_activities:
+            self.initialize_rail_travel(activity_to_groups["rail_travel"])
 
     @classmethod
     def from_file(
@@ -125,9 +131,7 @@ class Simulator:
         else:
             activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
-        return Simulator(
-            world, interaction, selector, activity_to_groups, time_config
-        )
+        return Simulator(world, interaction, selector, activity_to_groups, time_config)
 
     def get_all_activities(self, time_config):
         weekday_activities = [
@@ -147,11 +151,24 @@ class Simulator:
             self.commute_city_unit_distributor = CommuteCityUnitDistributor(
                 self.world.commutecities.members
             )
+
     def distribute_commuters(self):
-        if hasattr(self, 'commute_unit_distributor'): 
+        if hasattr(self, "commute_unit_distributor"):
             self.commute_unit_distributor.distribute_people()
-        if hasattr(self, 'commute_city_unit_distributor'): 
+        if hasattr(self, "commute_city_unit_distributor"):
             self.commute_city_unit_distributor.distribute_people()
+
+    def initialize_rail_travel(self, travel_options):
+        if "travelunits" in travel_options:
+            self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
+
+    def distribute_rail_out(self):
+        if hasattr(self, "travelunit_distributor"):
+            self.travelunit_distributor.distirbute_people_out()
+
+    def distribute_rail_back(self):
+        if hasattr(self, "travelunit_distributor"):
+            self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
         self.leisure = leisure.generate_leisure_for_world(
@@ -333,9 +350,12 @@ class Simulator:
         """
 
         for person in self.world.people.members:
-            if person.health_information.dead or person.busy:
+            if person.dead or person.busy:
                 continue
-            if person.health_information.must_stay_at_home:
+            if (
+                person.health_information is not None
+                and person.health_information.must_stay_at_home
+            ):
                 self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
@@ -394,6 +414,7 @@ class Simulator:
                 if person.hospital is not None:
                     person.hospital.group.release_as_patient(person)
                 health_information.set_recovered(time)
+                person.susceptibility = 0
             elif health_information.should_be_in_hospital:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
@@ -412,6 +433,10 @@ class Simulator:
 
         if "commute" in activities:
             self.distribute_commuters()
+        if "rail_travel_out" in activities:
+            self.distribute_rail_out()
+        if "rail_travel_back" in activities:
+            self.distribute_rail_back()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
@@ -431,7 +456,6 @@ class Simulator:
             sim_logger.info(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
-
 
         # assert conservation of people
         if n_people != len(self.world.people.members):

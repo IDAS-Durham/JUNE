@@ -9,6 +9,7 @@ import time
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
+from recordclass import dataobject
 
 
 class Household(Group):
@@ -22,7 +23,7 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = ("area", "communal", "max_size", "n_residents")
+    __slots__ = ("area", "type", "max_size", "n_residents", "residents")
 
     class SubgroupType(IntEnum):
         kids = 0
@@ -30,20 +31,18 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, communal=False, area=None, max_size=np.inf):
+    def __init__(self, type=None, area=None, max_size=np.inf):
         super().__init__()
         self.area = area
-        self.communal = communal
+        self.type = type
+        self.residents = tuple()
         self.max_size = max_size
         self.n_residents = 0
 
     def add(self, person, subgroup_type=SubgroupType.adults):
-        for mate in self.people:
-            if person != mate:
-                mate.housemates.append(person)
-                person.housemates.append(mate)
         self[subgroup_type].append(person)
-        person.subgroups[person.ActivityType.residence] = self[subgroup_type]
+        self.residents = tuple((*self.residents, person))
+        person.subgroups.residence = self[subgroup_type]
 
     @property
     def kids(self):
@@ -67,8 +66,6 @@ class Households(Supergroup):
     Contains all households for the given area, and information about them.
     """
 
-    __slots__ = "members"
-
     def __init__(self, households: List[Household]):
         super().__init__()
         self.members = households
@@ -86,15 +83,3 @@ class Households(Supergroup):
         self.members += households.members
         return self
 
-    def erase_people_from_groups_and_subgroups(self):
-        """
-        Erases all people from subgroups.
-        Erases all subgroup references to group.
-        Empties housemates list.
-        """
-        for group in self:
-            for person in group.people:
-                person.housemates.clear()
-            for subgroup in group.subgroups:
-                subgroup._people.clear()
-                subgroup.group = None

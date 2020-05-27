@@ -1,11 +1,13 @@
 import logging
 import pickle
 import h5py
+from tqdm import tqdm
 import numpy as np
 from typing import Optional
 from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
+from june.demography.person import Activities
 from june.hdf5_savers import *
 from june.distributors import (
     SchoolDistributor,
@@ -43,6 +45,7 @@ class World:
         demography: Optional[Demography] = None,
         include_households: bool = True,
         include_commute: bool = False,
+        include_rail_travel: bool = False,
         box_mode=False,
     ):
         """
@@ -60,6 +63,9 @@ class World:
         include_households
             whether to include households in the world or not (defualt = True)
         """
+        if include_rail_travel and not include_commute:
+            raise ValueError('Rail travel depends on commute and so both must be true')
+        
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
@@ -72,9 +78,11 @@ class World:
         print("populating the world's geography with the specified demography...")
         if demography is not None:
             self.people = _populate_areas(geography, demography)
+
         if hasattr(geography, "care_homes"):
             self.care_homes = geography.care_homes
             self.distribute_people_to_care_homes()
+
         if include_households:
             self.distribute_people_to_households()
         if (
@@ -90,6 +98,9 @@ class World:
 
         if include_commute:
             self.initialise_commuting()
+
+        if include_rail_travel:
+            self.initialise_rail_travel()
 
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
@@ -119,7 +130,9 @@ class World:
         )
 
     def distribute_people_to_care_homes(self):
-        CareHomeDistributor().populate_care_home_in_areas(self.areas)
+        carehome_distr = CareHomeDistributor()
+        carehome_distr.populate_care_home_in_areas(self.areas)
+
 
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
@@ -182,6 +195,20 @@ class World:
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
 
+    def initialise_rail_travel(self):
+
+        # TravelCity
+        self.travelcities = TravelCities(self.commutecities)
+        self.init_cities()
+
+        # TravelCityDistributor
+        self.travelcity_distributor = TravelCityDistributor(self.travelcities.members, self.super_areas.members)
+        self.travelcity_distributor.distribute_msoas()
+
+        # TravelUnit
+        self.travelunits = TravelUnits()
+
+        
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
@@ -215,7 +242,7 @@ class World:
             save_care_homes_to_hdf5(self.care_homes, file_path, chunk_size)
 
 
-def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
+def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
     by actual references to the relevant instances.
@@ -225,7 +252,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
         path of the hdf5 file
     chunk_size
         how many units of supergroups to process at a time.
-        It is advise to keep it around 1e5
+        It is advise to keep it around 1e6
     """
     geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World(geography, include_households=False)
@@ -262,10 +289,18 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
         area.super_area = world.super_areas[super_area_id - super_areas_first_id]
         area.super_area.areas.append(area)
 
+
+    activities = Activities.__fields__
+
     # restore person -> subgroups
-    first_people_id = world.people[0].id
+    first_area_id = world.areas[0].id
+    pbar = tqdm(total=len(world.people))
     for person in world.people:
-        subgroups_instances = [None] * len(person.subgroups)
+        pbar.update(1)
+        # add to geography
+        person.area = world.areas[person.area - first_area_id]
+        person.area.people.append(person)
+        subgroups_instances = Activities(None, None, None, None, None, None, None)
         for i, subgroup_info in enumerate(person.subgroups):
             spec, group_id, subgroup_type = subgroup_info
             if spec is None:
@@ -275,12 +310,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=100000) -> World:
             group = supergroup.members[group_id - first_group_id]
             assert group_id == group.id
             subgroup = group[subgroup_type]
-            subgroups_instances[i] = subgroup
+            setattr(subgroups_instances, activities[i], subgroup)
         person.subgroups = subgroups_instances
-        # restore housemates
-        housemate_ids = person.housemates
-        housemates = []
-        for mateid in housemate_ids:
-            housemates.append(world.people[mateid - first_people_id])
-        person.housemates = housemates
+
+    # add people in super areas
+    for super_area in world.super_areas:
+        for area in super_area.areas:
+            super_area.people.extend(area.people)
     return world
