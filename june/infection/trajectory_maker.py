@@ -9,10 +9,9 @@ from june.infection.symptoms import SymptomTags
 default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 
 
-class VariationType(ABC):
-    @staticmethod
+class CompletionTime(ABC):
     @abstractmethod
-    def time_for_stage(stage: "Stage") -> float:
+    def __call__(self) -> float:
         """
         Compute the time a given stage should take to complete
 
@@ -23,9 +22,9 @@ class VariationType(ABC):
     @staticmethod
     def class_for_type(type_string):
         if type_string == "constant":
-            return ConstantVariationType
+            return ConstantCompletionTime
         if type_string == "exponential":
-            return ExponentialVariationType
+            return ExponentialCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
         )
@@ -35,24 +34,25 @@ class VariationType(ABC):
         type_string = variation_type_dict.pop(
             "type"
         )
-        return VariationType.class_for_type(
+        return CompletionTime.class_for_type(
             type_string
         )(**variation_type_dict)
 
 
-class ConstantVariationType(VariationType):
-    @staticmethod
-    def time_for_stage(stage):
-        return stage.completion_time
+class ConstantCompletionTime(CompletionTime):
+    def __init__(self, value):
+        self.value = value
+
+    def __call__(self):
+        return self.value
 
 
-class ExponentialVariationType(VariationType):
+class ExponentialCompletionTime(CompletionTime):
     def __init__(self, loc: float, scale: float):
         self.loc = loc
         self.scale = scale
 
-    @staticmethod
-    def time_for_stage(stage: "Stage") -> float:
+    def __call__(self):
         raise NotImplementedError("ExponentialVariationType not implemented")
 
 
@@ -61,8 +61,7 @@ class Stage:
             self,
             *,
             symptoms_tag: SymptomTags,
-            completion_time: float,
-            variation_type: VariationType = ConstantVariationType
+            completion_time: CompletionTime = ConstantCompletionTime
     ):
         """
         A stage on an illness,
@@ -72,33 +71,21 @@ class Stage:
         symptoms_tag
             What symptoms does the person have at this stage?
         completion_time
-            How long does this stage take to complete?
-        variation_type
-            The type of variation applied to the time of this stage
+            Function that returns value for how long this stage takes
+            to complete.
         """
-        self.variation_type = variation_type
         self.symptoms_tag = symptoms_tag
         self.completion_time = completion_time
 
-    def generate_time(self) -> float:
-        """
-        How long does this stage take for a particular patient?
-        """
-        return self.variation_type.time_for_stage(
-            self
-        )
-
     @classmethod
     def from_dict(cls, stage_dict):
-        variation_type = VariationType.from_dict(
-            stage_dict["variation_type"]
+        completion_time = CompletionTime.from_dict(
+            stage_dict["completion_time"]
         )
         symptom_tag = SymptomTags.from_string(
             stage_dict["symptom_tag"]
         )
-        completion_time = stage_dict["completion_time"]
         return Stage(
-            variation_type=variation_type,
             symptoms_tag=symptom_tag,
             completion_time=completion_time
         )
@@ -133,7 +120,7 @@ class Trajectory:
         trajectory = list()
         cumulative = 0.
         for stage in self.stages:
-            time = stage.generate_time()
+            time = stage.completion_time()
             trajectory.append((
                 cumulative,
                 stage.symptoms_tag
