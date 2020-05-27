@@ -227,11 +227,13 @@ class ReadLogger:
             data frame with infection locations, and average count of infections per group type
         """
         with h5py.File(self.file_path, "r") as f:
-            locations = f['locations']
+            locations = f["locations"]
             infection_location = []
             counts = []
             for time_stamp in locations.keys():
-                infection_location.append(list(locations[time_stamp]["infection_location"][:].astype("U13")))
+                infection_location.append(
+                    list(locations[time_stamp]["infection_location"][:].astype("U13"))
+                )
                 counts.append(list(locations[time_stamp]["infection_counts"][:]))
             time_stamps = list(locations.keys())
 
@@ -243,11 +245,15 @@ class ReadLogger:
             }
         )
         self.locations_df["time_stamp"] = pd.to_datetime(
-                self.locations_df["time_stamp"]
-            )
+            self.locations_df["time_stamp"]
+        )
         self.locations_df.set_index("time_stamp", inplace=True)
 
-    def get_locations_infections(self, start_date='2020-03-15', end_date='2020-04-10')->pd.DataFrame:
+    def get_locations_infections(
+        self,
+        start_date=None,
+        end_date=None,
+    ) -> pd.DataFrame:
         """
         Get a data frame with the number of infection happening at each type of place, within the given time
         period
@@ -259,6 +265,10 @@ class ReadLogger:
         end_date:
             last date to count
         """
+        if start_date is None:
+            start_date = self.infection_df.index.min()
+        if end_date is None:
+            end_date = self.infection_df.index.max()
         selected_dates = self.locations_df.loc[start_date:end_date]
         all_locations = selected_dates.sum().location
         all_counts = selected_dates.sum().counts
@@ -266,9 +276,11 @@ class ReadLogger:
         count_dict = {location: 0 for location in unique_locations}
         for i, location in enumerate(all_locations):
             count_dict[location] += all_counts[i]
-        locations = pd.DataFrame(count_dict.values(), index=count_dict.keys(), columns=['counts'])
-        locations['percentage_infections'] = (100*locations/locations.sum())    
-        return locations 
+        locations = pd.DataFrame(
+            count_dict.values(), index=count_dict.keys(), columns=["counts"]
+        )
+        locations["percentage_infections"] = 100 * locations / locations.sum()
+        return locations
 
     def load_hospital_characteristics(self) -> pd.DataFrame:
         """
@@ -309,7 +321,7 @@ class ReadLogger:
             n_patients_icu = []
             time_stamps = []
             for time_stamp in hospitals.keys():
-                if time_stamp not in ('coordinates', 'n_beds', 'n_icu_beds'): 
+                if time_stamp not in ("coordinates", "n_beds", "n_icu_beds"):
                     hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
                     n_patients.append(hospitals[time_stamp]["n_patients"][:])
                     n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
