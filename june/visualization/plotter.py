@@ -9,7 +9,9 @@ from june.logger.read_logger import ReadLogger
 from june.paths import data_path
 
 sa_to_county_filename = data_path / "processed/geographical_data/oa_msoa_lad.csv"
-county_shapes_filename = data_path / "processed/geographical_data/lad_boundaries.geojson"
+county_shapes_filename = (
+    data_path / "processed/geographical_data/lad_boundaries.geojson"
+)
 super_area_coordinates_filename = (
     data_path / "processed/geographical_data/msoa_coordinates.csv"
 )
@@ -27,6 +29,9 @@ class DashPlotter:
         self.world_data = self.logger_reader.world_summary()
         self.area_data = self.logger_reader.super_area_summary()
         self.county_data = self.group_data_by_counties(self.area_data.copy())
+        self.hospital_characteristics = (
+            self.logger_reader.load_hospital_characteristics()
+        )
         self.hospital_data = self.logger_reader.load_hospital_capacity()
         self.ages_data = self.logger_reader.age_summary(
             [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -107,7 +112,9 @@ class DashPlotter:
         )
         fig.add_trace(
             go.Scatter(
-                x=data.index.values, y=data["intensive_care"].values, name="intensive care"
+                x=data.index.values,
+                y=data["intensive_care"].values,
+                name="intensive care",
             )
         )
         fig.add_trace(
@@ -123,7 +130,6 @@ class DashPlotter:
             fig.update_layout(yaxis_type="log")
         return fig
 
-
     def generate_general_infection_curves(self, axis_type="Linear"):
         data = self.world_data
         data = data.groupby(by=data.index.date).first()
@@ -138,7 +144,9 @@ class DashPlotter:
         )
         fig.add_trace(
             go.Scatter(
-                x=data.index.values, y=data["intensive_care"].values, name="intensive care"
+                x=data.index.values,
+                y=data["intensive_care"].values,
+                name="intensive care",
             )
         )
         fig.add_trace(
@@ -155,16 +163,24 @@ class DashPlotter:
         return fig
 
     def generate_hospital_map(self):
-        coordinates = self.hospital_data["coordinates"].values
-        latitudes = [coordinate[0] for coordinate in coordinates]
-        longitudes = [coordinate[1] for coordinate in coordinates]
+        lon = self.hospital_characteristics["longitude"].values
+        lat = self.hospital_characteristics["latitude"].values
+        text_list = []
+        for n_patients, n_patients_icu, n_beds, n_icu_beds in zip(
+            self.hospital_data["n_patients"],
+            self.hospital_data["n_patients_icu"],
+            self.hospital_characteristics["n_beds"],
+            self.hospital_characteristics["n_icu_beds"],
+        ):
+            text = f"Occupied {n_patients} beds of {n_beds}. \nOccupied {n_patients_icu} ICU beds of {n_icu_beds}"
+            text_list.append(text)
         fig = go.Figure(
             go.Scattermapbox(
                 mode="markers",
-                lon=longitudes,
-                lat=latitudes,
-                marker={"size": 20, "symbol": ["marker"] * len(longitudes),},
-                text=self.hospital_data["n_patients"],
+                lon=lon,
+                lat=lat,
+                marker={"size": 20, "symbol": ["marker"] * len(lat),},
+                text=text_list,
                 textposition="bottom right",
             )
         )
@@ -176,7 +192,7 @@ class DashPlotter:
                 "accesstoken": mapbox_access_token,
                 "style": "light",
                 "zoom": 10,
-                "center": {"lat": np.mean(latitudes), "lon": np.mean(longitudes)},
+                "center": {"lat": np.mean(lat), "lon": np.mean(lon)},
             },
         )
         return fig
@@ -193,21 +209,27 @@ class DashPlotter:
         return fig
 
     def generate_r0(self):
-        r_df = self.logger_reader.compute_r0()
+        r_df = self.logger_reader.get_r()
         r_df = r_df.groupby(by=r_df.index.day).first()
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=r_df.index, y=r_df["value"].values, name="R0"))
-        fig.add_trace(go.Scatter(x=[r_df.index[0], r_df.index[-1]], y=[1,1], name="unity"))
+        fig.add_trace(
+            go.Scatter(x=[r_df.index[0], r_df.index[-1]], y=[1, 1], name="unity")
+        )
         fig.update_layout(template="simple_white", title="R0")
         return fig
 
     def generate_place_of_infection(self):
-        places = self.logger_reader.load_infection_location()
-        places = places['counts'].sort_values()
-        print(places)
-        fig = px.bar(places, x='year', y='pop')
-        fig.show()
-
+        start_date = self.ages_data.index[0].strftime("%Y/%m/%d")
+        end_date = self.ages_data.index[-1].strftime("%Y/%m/%d")
+        places = self.logger_reader.get_locations_infections(
+            start_date=start_date, end_date=end_date,
+        )
+        places = places["percentage_infections"].sort_values()
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=places.index, y=places.values))
+        fig.update_layout(template="simple_white", title="Places of infection")
+        return fig
 
     @property
     def max_infected(self):
@@ -221,6 +243,6 @@ class DashPlotter:
     def day_timestamps_marks(self):
         dates = []
         for z in self.day_timestamps:
-            dates.append(str(z.day)) 
+            dates.append(str(z.day))
         dates = np.unique(dates)
         return dates
