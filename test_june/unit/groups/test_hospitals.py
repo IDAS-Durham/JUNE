@@ -69,7 +69,7 @@ def create_selector():
 
 @pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
 def test__add_patient_release_patient(hospitals, health_info, selector):
-    dummy_person = Person()
+    dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTags, health_info)
     print('symptoms = ', dummy_person.health_information.infection.symptoms.tag)
@@ -94,7 +94,7 @@ class MockArea:
 
 @pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
 def test__allocate_patient_release_patient(hospitals, health_info, selector):
-    dummy_person = Person()
+    dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
     assert dummy_person.hospital is None
@@ -109,7 +109,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
             dummy_person
             in hospitals.members[0][Hospital.SubgroupType.icu_patients].people
         )
-    selected_hospital = dummy_person.in_hospital
+    selected_hospital = dummy_person.hospital
     assert dummy_person.hospital is not None
     dummy_person.hospital.group.release_as_patient(dummy_person)
     assert dummy_person.hospital is None
@@ -117,7 +117,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
 
 @pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
 def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector):
-    dummy_person = Person()
+    dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTags, health_info)
 
