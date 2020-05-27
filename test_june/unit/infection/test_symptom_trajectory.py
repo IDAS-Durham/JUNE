@@ -187,7 +187,7 @@ class TestSymptomsTrajectory:
             (7.1, sym.SymptomTag.hospitalised),
             (9.1, sym.SymptomTag.intensive_care),
             (29.1, sym.SymptomTag.hospitalised),
-            (49.1, sym.SymptomTag.recovered)
+            (pytest.approx(50, abs=30), sym.SymptomTag.recovered)
         ]
 
     def test__symptoms__progression(self):
@@ -203,7 +203,7 @@ class TestSymptomsTrajectory:
             (0.0, sym.SymptomTag.exposed),
             (5.1, sym.SymptomTag.influenza),
             (7.1, sym.SymptomTag.hospitalised),
-            (27.1, sym.SymptomTag.recovered)
+            (pytest.approx(30, rel=0.5), sym.SymptomTag.recovered)
         ]
         infection.update_at_time(float(1.))
         assert infection.symptoms.tag == sym.SymptomTag.exposed
@@ -215,5 +215,5 @@ class TestSymptomsTrajectory:
         assert infection.symptoms.tag == sym.SymptomTag.hospitalised
         infection.update_at_time(float(20.))
         assert infection.symptoms.tag == sym.SymptomTag.hospitalised
-        infection.update_at_time(float(30.))
+        infection.update_at_time(float(50.))
         assert infection.symptoms.tag == sym.SymptomTag.recovered

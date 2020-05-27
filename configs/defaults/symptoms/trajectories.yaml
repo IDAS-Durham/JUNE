@@ -78,8 +78,11 @@ trajectories:
 
       - symptom_tag: hospitalised
         completion_time:
-          type: constant
-          value: 20.
+          type: beta
+          a: 6.56
+          b: 61.22
+          loc: -4.0
+          scale: 273
 
 
       - symptom_tag: recovered
@@ -115,8 +118,11 @@ trajectories:
 
       - symptom_tag: hospitalised
         completion_time:
-          type: constant
-          value: 20.
+          type: beta
+          a: 6.56
+          b: 61.22
+          loc: -4.0
+          scale: 273
 
 
       - symptom_tag: recovered
