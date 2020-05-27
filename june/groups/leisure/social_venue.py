@@ -20,10 +20,10 @@ class SocialVenue(Group):
         super().__init__()
         self.max_size = max_size
 
-    def add(self, person):
+    def add(self, person, activity="leisure"):
         super().add(
             person,
-            activity="leisure",
+            activity,
             subgroup_type=self.SubgroupType.default,
             dynamic=True
         )
