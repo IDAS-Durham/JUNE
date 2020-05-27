@@ -16,7 +16,6 @@ from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
 
-# from june.logger_simulation import Logger
 from june.logger.logger import Logger
 from june.time import Timer
 from june.world import World
