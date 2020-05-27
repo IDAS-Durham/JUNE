@@ -90,6 +90,21 @@ class Stage:
             self
         )
 
+    @classmethod
+    def from_dict(cls, stage_dict):
+        variation_type = VariationType.from_dict(
+            stage_dict["variation_type"]
+        )
+        symptom_tag = SymptomTags.from_string(
+            stage_dict["symptom_tag"]
+        )
+        completion_time = stage_dict["completion_time"]
+        return Stage(
+            variation_type=variation_type,
+            symptoms_tag=symptom_tag,
+            completion_time=completion_time
+        )
+
 
 class Trajectory:
     def __init__(self, *stages):
