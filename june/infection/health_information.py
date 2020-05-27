@@ -13,7 +13,6 @@ class HealthInformation:
         "maximal_symptoms_time",
         "maximal_symptoms_tag",
         "time_of_infection",
-        "group_type_of_infection",
         "length_of_infection",
         "infecter",
     )
@@ -30,7 +29,6 @@ class HealthInformation:
         self.maximal_symptoms_time = -1
         self.maximal_symptoms_tag = None
         self.time_of_infection = -1
-        self.group_type_of_infection = None
         self.length_of_infection = -1
         self.infecter = None
 
@@ -104,10 +102,10 @@ class HealthInformation:
             self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
-    def update_infection_data(self, time, group_type=None, infecter=None):
+    def update_infection_data(self, time, group_type=None, infecter=None, logger=None):
         self.time_of_infection = time
-        if group_type is not None:
-            self.group_type_of_infection = group_type
+        if group_type is not None and logger is not None:
+            logger.accumulate_infection_location(group_type)
         if infecter is not None:
             self.infecter = infecter
 
