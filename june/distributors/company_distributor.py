@@ -38,7 +38,6 @@ class CompanyDistributor:
             full_idx[company.sector] = 0
 
         for worker in super_area.workers:
-            print("---> 4 <---", worker.sub_sector, worker.subgroups.primary_activity)
             if worker.primary_activity is not None:
                 continue
             if company_dict[worker.sector]:
@@ -51,7 +50,6 @@ class CompanyDistributor:
                 company.add(worker)
             else:
                 unallocated_workers.append(worker)
-            print("---> 5 <---", worker.sub_sector, worker.subgroups.primary_activity)
 
         if unallocated_workers:
             companies_for_unallocated = np.random.choice(
