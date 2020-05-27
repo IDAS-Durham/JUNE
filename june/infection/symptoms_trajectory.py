@@ -1,7 +1,7 @@
 import numpy as np
 
 from june.infection.symptoms import Symptoms, SymptomTag
-from june.infection.trajectory_maker import TrajectoryMaker
+from june.infection.trajectory_maker import TrajectoryMakers
 
 
 class SymptomsTrajectory(Symptoms):
@@ -11,7 +11,7 @@ class SymptomsTrajectory(Symptoms):
         self.update_trajectory()
 
     def update_trajectory(self):
-        trajectory_maker = TrajectoryMaker.from_file()
+        trajectory_maker = TrajectoryMakers.from_file()
         maxtag = self.max_tag()
         self.trajectory = trajectory_maker[maxtag]
 

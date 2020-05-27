@@ -8,8 +8,8 @@ from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsStep, SymptomTag
 from june.infection.trajectory_maker import (
     Stage, CompletionTime, ConstantCompletionTime, ExponentialCompletionTime,
-    Trajectory,
     TrajectoryMaker,
+    TrajectoryMakers,
     BetaCompletionTime
 )
 
@@ -112,16 +112,16 @@ class TestParse:
         assert stage.completion_time.value == 1.0
 
     def test_parse_trajectory(self, trajectory_dict):
-        trajectory = Trajectory.from_dict(
+        trajectory = TrajectoryMaker.from_dict(
             trajectory_dict
         )
-        assert trajectory.symptom_tag == SymptomTag.healthy
+        assert trajectory.most_severe_symptoms == SymptomTag.healthy
 
         stage, = trajectory.stages
         assert stage.completion_time.value == 1.0
 
     def test_parse_trajectory_maker(self, trajectory_dict):
-        trajectory_maker = TrajectoryMaker.from_list(
+        trajectory_maker = TrajectoryMakers.from_list(
             [trajectory_dict]
         )
         assert trajectory_maker.trajectories[
@@ -142,6 +142,10 @@ class TestTrajectoryMaker:
         recovered = influenza_trajectory.stages[-1]
         assert recovered.symptoms_tag == sym.SymptomTag.recovered
         assert recovered.completion_time.value == 0.0
+
+    def test_most_severe_symptoms(self, trajectories):
+        for symptom_tag, trajectory in trajectories.trajectories.items():
+            assert symptom_tag == trajectory.most_severe_symptoms
 
 
 class TestSymptomsTrajectory:
