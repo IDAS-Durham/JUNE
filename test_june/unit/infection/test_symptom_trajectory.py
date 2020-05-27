@@ -7,18 +7,19 @@ from june.infection import symptoms as sym
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsStep, SymptomTags
 from june.infection.trajectory_maker import (
-    Stage, VariationType, ConstantVariationType, ExponentialVariationType,
+    Stage, CompletionTime, ConstantCompletionTime, ExponentialCompletionTime,
     Trajectory,
     TrajectoryMaker
 )
 
 
 @pytest.fixture(
-    name="constant_variation_dict"
+    name="constant_completion_dict"
 )
-def make_variation_type_dict():
+def make_completion_time_dict():
     return {
-        "type": "constant"
+        "type": "constant",
+        "value": 1.0
     }
 
 
@@ -26,12 +27,11 @@ def make_variation_type_dict():
     name="stage_dict"
 )
 def make_stage_dict(
-        constant_variation_dict
+        constant_completion_dict
 ):
     return {
-        "variation_type": constant_variation_dict,
-        "symptom_tag": "healthy",
-        "completion_time": 1.0
+        "completion_time": constant_completion_dict,
+        "symptom_tag": "healthy"
     }
 
 
@@ -57,14 +57,14 @@ class TestParse:
         ):
             SymptomTags.from_string("nonsense")
 
-    def test_parse_variation_type(self, constant_variation_dict):
-        constant = VariationType.from_dict(constant_variation_dict)
+    def test_parse_completion_time(self, constant_completion_dict):
+        constant = CompletionTime.from_dict(constant_completion_dict)
         assert isinstance(
             constant,
-            ConstantVariationType
+            ConstantCompletionTime
         )
 
-        exponential = VariationType.from_dict(
+        exponential = CompletionTime.from_dict(
             {
                 "type": "exponential",
                 "loc": 1.0,
@@ -73,7 +73,7 @@ class TestParse:
         )
         assert isinstance(
             exponential,
-            ExponentialVariationType
+            ExponentialCompletionTime
         )
         assert exponential.loc == 1.0
         assert exponential.scale == 2.0
@@ -82,11 +82,11 @@ class TestParse:
         stage = Stage.from_dict(stage_dict)
 
         assert isinstance(
-            stage.variation_type,
-            ConstantVariationType
+            stage.completion_time,
+            ConstantCompletionTime
         )
         assert stage.symptoms_tag == SymptomTags.healthy
-        assert stage.completion_time == 1.0
+        assert stage.completion_time.value == 1.0
 
     def test_parse_trajectory(self, trajectory_dict):
         trajectory = Trajectory.from_dict(
@@ -95,7 +95,7 @@ class TestParse:
         assert trajectory.symptom_tag == SymptomTags.healthy
 
         stage, = trajectory.stages
-        assert stage.completion_time == 1.0
+        assert stage.completion_time.value == 1.0
 
     def test_parse_trajectory_maker(self, trajectory_dict):
         trajectory_maker = TrajectoryMaker.from_list(
@@ -103,7 +103,7 @@ class TestParse:
         )
         assert trajectory_maker.trajectories[
                    SymptomTags.healthy
-               ].stages[0].completion_time == 1.0
+               ].stages[0].completion_time.value == 1.0
 
 
 class TestTrajectoryMaker:
@@ -114,11 +114,11 @@ class TestTrajectoryMaker:
         ]
         infected = influenza_trajectory.stages[0]
         assert infected.symptoms_tag == sym.SymptomTags.infected
-        assert infected.completion_time == 5.1
+        assert infected.completion_time.value == 5.1
 
         recovered = influenza_trajectory.stages[-1]
         assert recovered.symptoms_tag == sym.SymptomTags.recovered
-        assert recovered.completion_time == 0.0
+        assert recovered.completion_time.value == 0.0
 
 
 class TestSymptomsTrajectory:
