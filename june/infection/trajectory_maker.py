@@ -144,7 +144,10 @@ class Trajectory:
         return trajectory
 
     @classmethod
-    def from_dict(cls, trajectory_dict):
+    def from_dict(
+            cls,
+            trajectory_dict
+    ):
         return Trajectory(
             *map(
                 Stage.from_dict,
@@ -169,100 +172,15 @@ class TrajectoryMaker:
 
     __instance = None
 
-    def __init__(self):
+    def __init__(self, trajectories: List[Trajectory]):
         """
         Trajectories and their stages should be parsed from configuration. I've
         removed params for now as they weren't being used but it will be trivial
         to reintroduce them when we are ready for configurable trajectories.
         """
-        self.incubation_info = Stage(
-            symptoms_tag=SymptomTags.infected,
-            completion_time=5.1
-        )
-        self.recovery_info = Stage(
-            symptoms_tag=SymptomTags.recovered,
-            completion_time=0.0
-        )
         self.trajectories = {
-            SymptomTags.asymptomatic: Trajectory(
-                self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.asymptomatic,
-                    completion_time=14.
-                ),
-                self.recovery_info
-            ),
-            SymptomTags.influenza: Trajectory(
-                self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=20.
-                ),
-                self.recovery_info
-            ),
-            SymptomTags.pneumonia: Trajectory(
-                self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=5.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.pneumonia,
-                    completion_time=20.
-                ),
-                self.recovery_info
-            ),
-            SymptomTags.hospitalised: Trajectory(
-                self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=2.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=20.
-                ),
-                self.recovery_info
-            ),
-            SymptomTags.intensive_care: Trajectory(
-                self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=2.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=2.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.intensive_care,
-                    completion_time=20.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=20.
-                ),
-                self.recovery_info
-            ),
-            SymptomTags.dead: Trajectory(
-                self.incubation_info,
-                Stage(
-                    symptoms_tag=SymptomTags.influenza,
-                    completion_time=2.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.hospitalised,
-                    completion_time=2.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.intensive_care,
-                    completion_time=10.
-                ),
-                Stage(
-                    symptoms_tag=SymptomTags.dead,
-                    completion_time=0.
-                )
-            )
+            trajectory.symptom_tag: trajectory
+            for trajectory in trajectories
         }
 
     @classmethod
@@ -308,3 +226,14 @@ class TrajectoryMaker:
         at given times.
         """
         return self.trajectories[tag].generate_trajectory()
+
+    @classmethod
+    def from_dict(cls, trajectory_maker_dict):
+        return TrajectoryMaker(
+            trajectories=list(map(
+                Trajectory.from_dict,
+                trajectory_maker_dict[
+                    "trajectories"
+                ]
+            ))
+        )
