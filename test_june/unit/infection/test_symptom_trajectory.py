@@ -154,7 +154,7 @@ class TestSymptomsTrajectory:
             symptoms.update_severity_from_delta_time(0.01)
             # check their symptoms matches the frequency in health index 
             if symptoms.tag != sym.SymptomTag.healthy:
-                frequencies[symptoms.tag - 2] += 1
+                frequencies[symptoms.tag] += 1
         np.testing.assert_allclose(frequencies[0] / N_samples, health_index[0], atol=0.05)
         np.testing.assert_allclose(frequencies[1] / N_samples, health_index[1] - health_index[0],
                                    atol=0.05)
