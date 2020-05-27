@@ -7,15 +7,15 @@ import numpy as np
 
 
 class SymptomTag(IntEnum):
-    healthy = 0
-    infected = 1
-    asymptomatic = 2
-    influenza = 3
-    pneumonia = 4
-    hospitalised = 5
-    intensive_care = 6
-    dead = 7
-    recovered = 8
+    recovered = -3
+    healthy = -2
+    infected = -1
+    asymptomatic = 0
+    influenza = 1
+    pneumonia = 2
+    hospitalised = 3
+    intensive_care = 4
+    dead = 5
 
     @classmethod
     def from_string(cls, string):
@@ -44,7 +44,7 @@ class Symptoms:
         if self.severity <= 0.0 or len(self.health_index) == 0:
             return SymptomTag.recovered
         index = np.searchsorted(self.health_index, self.severity)
-        return SymptomTag(index + 2)
+        return SymptomTag(index)
 
     @classmethod
     def object_from_config(cls):
