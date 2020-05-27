@@ -7,7 +7,7 @@ from june.demography.geography import Geography
 
 from june.groups import *
 from june.demography import Person
-from june.infection import SymptomTags
+from june.infection import SymptomTag
 from june.infection import InfectionSelector, Infection
 
 default_data_filename = (
@@ -71,7 +71,7 @@ def create_selector():
 def test__add_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
-    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTags, health_info)
+    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
     print('symptoms = ', dummy_person.health_information.infection.symptoms.tag)
     assert dummy_person.hospital is None
     hospitals.members[0].add_as_patient(dummy_person)
@@ -98,7 +98,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
     assert dummy_person.hospital is None
-    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTags, health_info)
+    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
     hospitals.allocate_patient(dummy_person)
     if health_info == "hospitalised":
         assert (
@@ -119,7 +119,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
 def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
-    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTags, health_info)
+    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
 
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
 

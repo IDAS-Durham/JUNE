@@ -19,7 +19,5 @@ def test__company_distributor(super_area):
     cd = CompanyDistributor()
     cd.distribute_adults_to_companies_in_super_area(super_area)
     for company in super_area.companies:
-        print(company.people)
         assert len(company.people) == 1
         assert list(company.people)[0].sector == company.sector
-
