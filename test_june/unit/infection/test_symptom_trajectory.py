@@ -136,7 +136,7 @@ class TestTrajectoryMaker:
             SymptomTag.influenza
         ]
         infected = influenza_trajectory.stages[0]
-        assert infected.symptoms_tag == sym.SymptomTag.infected
+        assert infected.symptoms_tag == sym.SymptomTag.exposed
         assert infected.completion_time.value == 5.1
 
         recovered = influenza_trajectory.stages[-1]
@@ -169,7 +169,7 @@ class TestSymptomsTrajectory:
         symptoms_trajectories.max_severity = 0.9
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
-            (0.0, sym.SymptomTag.infected),
+            (0.0, sym.SymptomTag.exposed),
             (5.1, sym.SymptomTag.influenza),
             (7.1, sym.SymptomTag.hospitalised),
             (9.1, sym.SymptomTag.intensive_care),
@@ -178,7 +178,7 @@ class TestSymptomsTrajectory:
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
-            (0.0, sym.SymptomTag.infected),
+            (0.0, sym.SymptomTag.exposed),
             (5.1, sym.SymptomTag.influenza),
             (7.1, sym.SymptomTag.hospitalised),
             (9.1, sym.SymptomTag.intensive_care),
@@ -196,15 +196,15 @@ class TestSymptomsTrajectory:
         assert max_tag == sym.SymptomTag.hospitalised
         infection.symptoms.trajectory = selector.trajectory_maker[max_tag]
         assert infection.symptoms.trajectory == [
-            (0.0, sym.SymptomTag.infected),
+            (0.0, sym.SymptomTag.exposed),
             (5.1, sym.SymptomTag.influenza),
             (7.1, sym.SymptomTag.hospitalised),
             (27.1, sym.SymptomTag.recovered)
         ]
         infection.update_at_time(float(1.))
-        assert infection.symptoms.tag == sym.SymptomTag.infected
+        assert infection.symptoms.tag == sym.SymptomTag.exposed
         infection.update_at_time(float(5.))
-        assert infection.symptoms.tag == sym.SymptomTag.infected
+        assert infection.symptoms.tag == sym.SymptomTag.exposed
         infection.update_at_time(float(6.))
         assert infection.symptoms.tag == sym.SymptomTag.influenza
         infection.update_at_time(float(10.))
