@@ -9,6 +9,15 @@ from june.infection.symptoms import SymptomsStep, SymptomTags
 from june.infection.trajectory_maker import Stage, VariationType, ConstantVariationType, ExponentialVariationType
 
 
+@pytest.fixture(
+    name="constant_variation_dict"
+)
+def make_variation_type_dict():
+    return {
+        "type": "constant"
+    }
+
+
 class TestParse:
     def test_symptoms_tag_for_string(self):
         assert SymptomTags.from_string("healthy") == SymptomTags.healthy
@@ -17,10 +26,8 @@ class TestParse:
         ):
             SymptomTags.from_string("nonsense")
 
-    def test_parse_variation_type(self):
-        constant = VariationType.from_dict({
-            "type": "constant"
-        })
+    def test_parse_variation_type(self, constant_variation_dict):
+        constant = VariationType.from_dict(constant_variation_dict)
         assert isinstance(
             constant,
             ConstantVariationType
@@ -39,6 +46,20 @@ class TestParse:
         )
         assert exponential.loc == 1.0
         assert exponential.scale == 2.0
+
+    def test_parse_stage(self, constant_variation_dict):
+        stage = Stage.from_dict({
+            "variation_type": constant_variation_dict,
+            "symptom_tag": "healthy",
+            "completion_time": 1.0
+        })
+
+        assert isinstance(
+            stage.variation_type,
+            ConstantVariationType
+        )
+        assert stage.symptoms_tag == SymptomTags.healthy
+        assert stage.completion_time == 1.0
 
 
 class TestTrajectoryMaker:
