@@ -107,7 +107,7 @@ class Stage:
 
 
 class Trajectory:
-    def __init__(self, *stages):
+    def __init__(self, *stages, symptom_tag: SymptomTags = None):
         """
         Generate trajectories of a particular kind.
 
@@ -119,6 +119,7 @@ class Trajectory:
             A list of stages through which the person progresses
         """
         self.stages = stages
+        self.symptom_tag = symptom_tag
 
     def generate_trajectory(self) -> List[
         Tuple[
@@ -141,6 +142,18 @@ class Trajectory:
             ))
             cumulative += time
         return trajectory
+
+    @classmethod
+    def from_dict(cls, trajectory_dict):
+        return Trajectory(
+            *map(
+                Stage.from_dict,
+                trajectory_dict["stages"]
+            ),
+            symptom_tag=SymptomTags.from_string(
+                trajectory_dict["symptom_tag"]
+            )
+        )
 
 
 class TrajectoryMaker:
