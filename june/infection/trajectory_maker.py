@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
+import yaml
+
+from june import paths
 from june.infection.symptoms import SymptomTags
+
+default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 
 
 class VariationType(ABC):
@@ -74,13 +79,6 @@ class Stage:
         self.variation_type = variation_type
         self.symptoms_tag = symptoms_tag
         self.completion_time = completion_time
-
-    def __eq__(self, other):
-        return all([
-            self.symptoms_tag is other.symptoms_tag,
-            self.completion_time == other.completion_time,
-            self.variation_type is other.variation_type
-        ])
 
     def generate_time(self) -> float:
         """
@@ -171,6 +169,7 @@ class TrajectoryMaker:
     """
 
     __instance = None
+    __path = None
 
     def __init__(self, trajectories: List[Trajectory]):
         """
@@ -184,7 +183,7 @@ class TrajectoryMaker:
         }
 
     @classmethod
-    def from_file(cls) -> "TrajectoryMaker":
+    def from_file(cls, config_path: str = default_config_path) -> "TrajectoryMaker":
         """
         Currently this doesn't do what it says it does.
 
@@ -193,8 +192,12 @@ class TrajectoryMaker:
         configurations we'd need to be careful as this could give unexpected
         effects.
         """
-        if cls.__instance is None:
-            cls.__instance = cls()
+        if cls.__instance is None or cls.__path != config_path:
+            with open(config_path) as f:
+                cls.__instance = TrajectoryMaker.from_list(
+                    yaml.safe_load(f)["trajectories"]
+                )
+                cls.__path = config_path
         return cls.__instance
 
     def __getitem__(
@@ -228,12 +231,10 @@ class TrajectoryMaker:
         return self.trajectories[tag].generate_trajectory()
 
     @classmethod
-    def from_dict(cls, trajectory_maker_dict):
+    def from_list(cls, trajectory_dicts):
         return TrajectoryMaker(
             trajectories=list(map(
                 Trajectory.from_dict,
-                trajectory_maker_dict[
-                    "trajectories"
-                ]
+                trajectory_dicts
             ))
         )

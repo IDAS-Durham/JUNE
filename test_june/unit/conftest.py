@@ -45,7 +45,9 @@ def create_symptoms_healthy():
 
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
-    return tmaker.TrajectoryMaker()
+    return tmaker.TrajectoryMaker.from_file(
+        paths.configs_path / "config.test.yaml"
+    )
 
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")
