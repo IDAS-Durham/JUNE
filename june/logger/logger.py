@@ -141,8 +141,8 @@ class Logger:
         with h5py.File(self.file_path, "a") as f:
             hospital_dset = f.require_group("hospitals")
             hospital_dset.create_dataset("coordinates", data=coordinates)
-            hospital_dset.create_dataset("n_beds", data=coordinates)
-            hospital_dset.create_dataset("n_icu_beds", data=coordinates)
+            hospital_dset.create_dataset("n_beds", data=n_beds)
+            hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
 
     def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
         """
