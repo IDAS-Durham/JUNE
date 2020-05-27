@@ -84,7 +84,10 @@ class Simulator:
             weekday_activities=time_config["step_activities"]["weekday"],
             weekend_activities=time_config["step_activities"]["weekend"],
         )
-        self.logger = Logger()
+        if not self.world.box_mode:
+            self.logger = Logger()
+        else:
+            self.logger = None
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
@@ -432,7 +435,8 @@ class Simulator:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
-        self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
+        if self.logger:
+            self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
 
     def do_timestep(self):
         """
@@ -472,8 +476,9 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
         self.update_health_status(self.timer.now, self.timer.duration)
-        self.logger.log_infection_location(self.timer.date)
-        self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        if self.logger: 
+            self.logger.log_infection_location(self.timer.date)
+            self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
     def run(self, save=False):
@@ -493,8 +498,9 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        self.logger.log_population(self.world.people)
-        self.logger.log_hospital_characteristics(self.world.hospitals)
+        if self.logger:
+            self.logger.log_population(self.world.people)
+            self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
                 break

@@ -5,7 +5,6 @@ import struct
 from recordclass import dataobject
 import numpy as np
 
-from june.infection.health_information import HealthInformation
 
 
 class Activities(dataobject):
@@ -41,8 +40,8 @@ class Person(dataobject):
     # activities
     busy: bool = False
     subgroups: Activities = Activities(None, None, None, None, None, None)
+    health_information: None
     # infection
-    health_information: HealthInformation = HealthInformation()
     susceptibility: float = 1.0
     dead: bool = False
 
@@ -61,7 +60,6 @@ class Person(dataobject):
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             subgroups=Activities(None, None, None, None, None, None),
-            health_information=HealthInformation(),
         )
 
     @property
