@@ -9,7 +9,7 @@ from typing import List
 
 class ReadLogger:
     def __init__(
-        self, output_path: str = "results", ouput_file_name: str = "logger.hdf5"
+        self, output_path: str = "results", output_file_name: str = "logger.hdf5"
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -25,6 +25,7 @@ class ReadLogger:
         self.file_path = Path(self.output_path) / output_file_name
         self.load_population_data()
         self.load_infected_data()
+        self.load_infection_location()
 
     def load_population_data(self):
         """
@@ -184,7 +185,7 @@ class ReadLogger:
         pass
 
     def draw_symptom_trajectories(
-        self, window_length: int = 50, n_people: int = 5
+        self, window_length: int = 50, n_people: int = 4
     ) -> pd.DataFrame:
         """
         Get data frame with symptoms trajectories of n_people random people that are infected 
@@ -203,7 +204,7 @@ class ReadLogger:
         """
         starting_id = np.random.randint(0, high=len(self.infections_df))
         starting_time = self.infections_df.index[starting_id]
-        end_date = starting_time + datetime.timedelta(days=time_window)
+        end_date = starting_time + datetime.timedelta(days=window_length)
         mask = (self.infections_df.index > starting_time) & (
             self.infections_df.index <= end_date
         )
@@ -226,21 +227,48 @@ class ReadLogger:
             data frame with infection locations, and average count of infections per group type
         """
         with h5py.File(self.file_path, "r") as f:
-            infection_locations = f["locations"]["infection_location"][:].astype("U13")
-            counts = f["locations"]["infection_counts"][:]
-            n_locations = f["locations"]["n_locations"][:]
-        locations_df = pd.DataFrame(
+            locations = f['locations']
+            infection_location = []
+            counts = []
+            for time_stamp in locations.keys():
+                infection_location.append(list(locations[time_stamp]["infection_location"][:].astype("U13")))
+                counts.append(list(locations[time_stamp]["infection_counts"][:]))
+            time_stamps = list(locations.keys())
+
+        self.locations_df = pd.DataFrame(
             {
-                "location": infection_locations,
+                "time_stamp": time_stamps,
+                "location": infection_location,
                 "counts": counts,
-                "n_locations": n_locations,
             }
         )
-        locations_df["average_counts"] = (
-            locations_df["counts"] / locations_df["n_locations"]
-        )
-        locations_df.set_index("location", inplace=True)
-        return locations_df
+        self.locations_df["time_stamp"] = pd.to_datetime(
+                self.locations_df["time_stamp"]
+            )
+        self.locations_df.set_index("time_stamp", inplace=True)
+
+    def get_locations_infections(self, start_date='2020-03-15', end_date='2020-04-10')->pd.DataFrame:
+        """
+        Get a data frame with the number of infection happening at each type of place, within the given time
+        period
+
+        Parameters
+        ----------
+        start_date:
+            first date to count
+        end_date:
+            last date to count
+        """
+        selected_dates = self.locations_df.loc[start_date:end_date]
+        all_locations = selected_dates.sum().location
+        all_counts = selected_dates.sum().counts
+        unique_locations = set(all_locations)
+        count_dict = {location: 0 for location in unique_locations}
+        for i, location in enumerate(all_locations):
+            count_dict[location] += all_counts[i]
+        locations = pd.DataFrame(count_dict.values(), index=count_dict.keys(), columns=['counts'])
+        locations['percentage_infections'] = (100*locations/locations.sum())    
+        return locations 
 
     def load_hospital_characteristics(self) -> pd.DataFrame:
         """
@@ -279,12 +307,13 @@ class ReadLogger:
             hospital_ids = []
             n_patients = []
             n_patients_icu = []
+            time_stamps = []
             for time_stamp in hospitals.keys():
-                hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
-                n_patients.append(hospitals[time_stamp]["n_patients"][:])
-                n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
-            time_stamps = list(hospitals.keys())
-
+                if time_stamp not in ('coordinates', 'n_beds', 'n_icu_beds'): 
+                    hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
+                    n_patients.append(hospitals[time_stamp]["n_patients"][:])
+                    n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
+                    time_stamps.append(time_stamp)
         hospitals_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
