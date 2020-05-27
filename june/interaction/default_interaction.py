@@ -56,7 +56,7 @@ class DefaultInteraction(Interaction):
         return DefaultInteraction(config["alpha_physical"], config["contact_matrices"], selector)
 
     def single_time_step_for_group(
-            self, group, time, delta_time, 
+            self, group, time, delta_time, logger
     ):
         """
         Runs the interaction model for a time step
@@ -83,13 +83,13 @@ class DefaultInteraction(Interaction):
         for i in subgroups_containing_people:
             for j in subgroups_containing_people:
                 # grouping[i] infected infects grouping[j] susceptible
-                self.contaminate(group, time, delta_time, i, j)
+                self.contaminate(group, time, delta_time, i, j, logger)
                 if i != j:
                     # grouping[j] infected infects grouping[i] susceptible
-                    self.contaminate(group, time, delta_time, j, i)
+                    self.contaminate(group, time, delta_time, j, i, logger)
 
     def contaminate(
-            self, group, time, delta_time, infecters, recipients, 
+            self, group, time, delta_time, infecters, recipients, logger 
     ):
         infecter_probability = self.probabilities[infecters]
         if infecter_probability <= 0.0:
@@ -110,7 +110,7 @@ class DefaultInteraction(Interaction):
                 self.selector.infect_person_at_time(person = recipient, time = time)
                 infecter.health_information.increment_infected()
                 recipient.health_information.update_infection_data(
-                    time=time, group_type=group.spec, infecter=infecter
+                    time=time, group_type=group.spec, infecter=infecter, logger=logger
                 )
 
     def intensity(self, group, infecter, recipient):
