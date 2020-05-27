@@ -14,7 +14,7 @@ def test__right_frequency_in_health_index():
         symptoms.update_severity_from_delta_time(0.01)
         # check their symptoms matches the frequency in health index 
         if symptoms.tag != 'healthy':
-            frequencies[SymptomTag(symptoms.tag) - 2] += 1
+            frequencies[SymptomTag(symptoms.tag)] += 1
 
     np.testing.assert_allclose(frequencies[0]/N_samples, health_index[0], atol=0.05)
     np.testing.assert_allclose(frequencies[1]/N_samples, health_index[1]-health_index[0],
