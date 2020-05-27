@@ -79,19 +79,19 @@ class TestSavePeople:
             group_specs = np.array(
                 [
                     subgroup.group.spec if subgroup is not None else None
-                    for subgroup in person.subgroups
+                    for subgroup in person.subgroups.iter()
                 ]
             )
             group_ids = np.array(
                 [
                     subgroup.group.id if subgroup is not None else None
-                    for subgroup in person.subgroups
+                    for subgroup in person.subgroups.iter()
                 ]
             )
             subgroup_types = np.array(
                 [
                     subgroup.subgroup_type if subgroup is not None else None
-                    for subgroup in person.subgroups
+                    for subgroup in person.subgroups.iter()
                 ]
             )
             for group_spec, group_id, subgroup_type, group_array in zip(
@@ -100,8 +100,6 @@ class TestSavePeople:
                 assert group_spec == group_array[0]
                 assert group_id == group_array[1]
                 assert subgroup_type == group_array[2]
-            housemates = [mate.id for mate in person.housemates]
-            assert housemates == list(person2.housemates)
             if person.area is not None:
                 assert person.area.id == person2.area
             else:
@@ -114,9 +112,12 @@ class TestSaveHouses:
         save_households_to_hdf5(households, "test.hdf5")
         households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
-            for attribute_name in ["id", "max_size", "communal"]:
+            for attribute_name in ["id", "max_size", "type"]:
+                if attribute_name == "type":
+                    attribute2 = getattr(household2, attribute_name)
+                else:
+                    attribute2 = getattr(household2, attribute_name)
                 attribute = getattr(household, attribute_name)
-                attribute2 = getattr(household2, attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
@@ -188,6 +189,7 @@ class TestSaveSchools:
             ]:
                 attribute = getattr(school, attribute_name)
                 attribute2 = getattr(school2, attribute_name)
+                print(attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
@@ -284,20 +286,13 @@ class TestSaveWorld:
 
     def test__subgroups(self, world_h5, world_h5_loaded):
         for person1, person2 in zip(world_h5.people, world_h5_loaded.people):
-            for subgroup1, subgroup2 in zip(person1.subgroups, person2.subgroups):
+            for subgroup1, subgroup2 in zip(person1.subgroups.iter(), person2.subgroups.iter()):
                 if subgroup1 is None:
                     assert subgroup2 is None
                     continue
                 assert subgroup1.group.spec == subgroup2.group.spec
                 assert subgroup1.group.id == subgroup2.group.id
                 assert subgroup1.subgroup_type == subgroup2.subgroup_type
-            # housemates
-            assert len(person1.housemates) == len(person2.housemates)
-            for mate1, mate2 in zip(person1.housemates, person2.housemates):
-                assert mate1.id == mate2.id
-                assert mate1.age == mate2.age
-                assert mate1.sex == mate2.sex
-                assert mate1.ethnicity == mate2.ethnicity
 
     def test__company_super_area(self, world_h5, world_h5_loaded):
         for company1, company2 in zip(world_h5.companies, world_h5_loaded.companies):
