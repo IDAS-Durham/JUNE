@@ -5,4 +5,3 @@ from .cinema import Cinema, Cinemas, CinemaDistributor
 from .grocery import Groceries, Grocery, GroceryDistributor
 from .residence_visits import VisitsDistributor
 from .leisure import Leisure, generate_leisure_for_world
-
