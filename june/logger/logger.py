@@ -1,7 +1,8 @@
 import h5py
 import os
 import numpy as np
-from june.demography import Population, Person
+from typing import List
+from june.demography import Population
 from pathlib import Path
 
 
@@ -19,6 +20,7 @@ class Logger:
         """
         self.save_path = save_path
         self.file_path = Path(self.save_path) / file_name
+        self.infection_location = []
         # Remove if exists
         try:
             os.remove(self.file_path)
@@ -138,9 +140,9 @@ class Logger:
         n_icu_beds = np.array(n_icu_beds, dtype=np.int)
         with h5py.File(self.file_path, "a") as f:
             hospital_dset = f.require_group("hospitals")
-            time_dset.create_dataset("coordinates", data=coordinates)
-            time_dset.create_dataset("n_beds", data=coordinates)
-            time_dset.create_dataset("n_icu_beds", data=coordinates)
+            hospital_dset.create_dataset("coordinates", data=coordinates)
+            hospital_dset.create_dataset("n_beds", data=coordinates)
+            hospital_dset.create_dataset("n_icu_beds", data=coordinates)
 
     def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
         """
@@ -198,7 +200,37 @@ class Logger:
             plural = "commutecityunits"
         return len(getattr(world, plural).members)
 
-    def log_infection_location(self, world: "World"):
+    def accumulate_infection_location(self, location):
+        '''
+        Store where infections happend in a time step
+        
+        Parameters
+        ----------
+        location:
+            group type of the group in which the infection took place
+        '''
+        self.infection_location.append(location)
+
+    def log_infection_location(self, time):
+        '''
+        Log where did all infections in a time step happened, as a number count
+
+        Parameters
+        ----------
+        time:
+            datetime to log
+        '''
+        time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        unique_locations, counts = np.unique(np.array(self.infection_location), return_counts=True)
+        unique_locations = np.array(unique_locations, dtype="S10")
+        with h5py.File(self.file_path, "a") as f:
+            locations_dset = f.require_group("locations")
+            time_dset = locations_dset.create_group(time_stamp)
+            time_dset.create_dataset("infection_location", data=unique_locations)
+            time_dset.create_dataset("infection_counts", data=counts)
+        self.infection_location = []
+
+    def log_number_of_locations(self, world: "World"):
         """
         Log relevant information on where did people get infected
 
@@ -209,11 +241,6 @@ class Logger:
         """
         # TODO : might want to log this over time, once the policies are in place could be interestingi,
         # might be better to combine it with infections information
-        locations = []
-        for person in world.people:
-            if person.group_type_of_infection is not None:
-                locations.append(person.group_type_of_infection)
-        unique_locations, counts = np.unique(np.array(locations), return_counts=True)
         group_sizes = []
         for group in unique_locations:
             group_sizes.append(self.get_number_group_instances(world, group))
@@ -222,6 +249,4 @@ class Logger:
         counts = np.array(counts, dtype=np.int)
         with h5py.File(self.file_path, "a") as f:
             locations_dset = f.create_group("locations")
-            locations_dset.create_dataset("infection_location", data=unique_locations)
-            locations_dset.create_dataset("infection_counts", data=counts)
             locations_dset.create_dataset("n_locations", data=group_sizes)
