@@ -1,7 +1,7 @@
 from .infection import Infection, InfectionSelector, SymptomsType, TransmissionType
 from .trajectory_maker import TrajectoryMaker
 from .health_index import HealthIndexGenerator
-from .symptoms import Symptoms, SymptomTags
+from .symptoms import Symptoms, SymptomTag
 from .symptoms import SymptomsConstant, SymptomsGaussian
 from .symptoms import SymptomsStep, SymptomsTanh
 from .symptoms_trajectory import SymptomsTrajectory
