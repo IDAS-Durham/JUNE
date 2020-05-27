@@ -9,7 +9,8 @@ from june.infection.symptoms import SymptomsStep, SymptomTags
 from june.infection.trajectory_maker import (
     Stage, CompletionTime, ConstantCompletionTime, ExponentialCompletionTime,
     Trajectory,
-    TrajectoryMaker
+    TrajectoryMaker,
+    BetaCompletionTime
 )
 
 
@@ -47,6 +48,28 @@ def make_trajectory_dict(
             stage_dict
         ]
     }
+
+
+class TestCompletionTime:
+    def test_constant_completion_time(self):
+        completion_time = ConstantCompletionTime(
+            value=1.0
+        )
+        assert completion_time() == 1.0
+
+    def test_exponential_completion_time(self):
+        completion_time = ExponentialCompletionTime(
+            loc=1.0,
+            scale=1.0
+        )
+        assert completion_time() >= 1.0
+
+    def test_beta_completion_time(self):
+        completion_time = BetaCompletionTime(
+            1.0,
+            1.0
+        )
+        assert 0.0 <= completion_time() <= 1.0
 
 
 class TestParse:
