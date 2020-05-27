@@ -4,6 +4,7 @@ import random
 import pandas as pd
 import datetime
 from pathlib import Path
+from typing import List
 
 
 class ReadLogger:
@@ -184,7 +185,7 @@ class ReadLogger:
 
     def draw_symptom_trajectories(
         self, window_length: int = 50, n_people: int = 5
-    ) -> pd.DataFrime:
+    ) -> pd.DataFrame:
         """
         Get data frame with symptoms trajectories of n_people random people that are infected 
         in a time window starting at a random time and recording for ``window_length`` time steps
