@@ -6,7 +6,10 @@ from june.infection import infection as infect
 from june.infection import symptoms as sym
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.symptoms import SymptomsStep, SymptomTags
-from june.infection.trajectory_maker import Stage, VariationType, ConstantVariationType, ExponentialVariationType
+from june.infection.trajectory_maker import (
+    Stage, VariationType, ConstantVariationType, ExponentialVariationType,
+    Trajectory
+)
 
 
 @pytest.fixture(
@@ -15,6 +18,19 @@ from june.infection.trajectory_maker import Stage, VariationType, ConstantVariat
 def make_variation_type_dict():
     return {
         "type": "constant"
+    }
+
+
+@pytest.fixture(
+    name="stage_dict"
+)
+def make_stage_dict(
+        constant_variation_dict
+):
+    return {
+        "variation_type": constant_variation_dict,
+        "symptom_tag": "healthy",
+        "completion_time": 1.0
     }
 
 
@@ -47,18 +63,26 @@ class TestParse:
         assert exponential.loc == 1.0
         assert exponential.scale == 2.0
 
-    def test_parse_stage(self, constant_variation_dict):
-        stage = Stage.from_dict({
-            "variation_type": constant_variation_dict,
-            "symptom_tag": "healthy",
-            "completion_time": 1.0
-        })
+    def test_parse_stage(self, stage_dict):
+        stage = Stage.from_dict(stage_dict)
 
         assert isinstance(
             stage.variation_type,
             ConstantVariationType
         )
         assert stage.symptoms_tag == SymptomTags.healthy
+        assert stage.completion_time == 1.0
+
+    def test_parse_trajectory(self, stage_dict):
+        trajectory = Trajectory.from_dict({
+            "symptom_tag": "healthy",
+            "stages": [
+                stage_dict
+            ]
+        })
+        assert trajectory.symptom_tag == SymptomTags.healthy
+
+        stage, = trajectory.stages
         assert stage.completion_time == 1.0
 
 
