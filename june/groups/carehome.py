@@ -54,12 +54,20 @@ class CareHome(Group):
         activity: str = "residence",
         dynamic: bool = False,
     ):
-        super().add(
-            person,
-            subgroup_type = subgroup_type,
-            activity = activity,
-            dynamic = dynamic,
-        )
+        if activity == "leisure":
+            super().add(
+                person,
+                subgroup_type = self.SubgroupType.visitors,
+                activity = "leisure",
+                dynamic = True,
+            )
+        else:
+            super().add(
+                person,
+                subgroup_type = subgroup_type,
+                activity = activity,
+                dynamic = dynamic,
+            )
 
     @property
     def workers(self):
