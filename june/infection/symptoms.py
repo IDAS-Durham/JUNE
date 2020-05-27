@@ -9,7 +9,7 @@ import numpy as np
 class SymptomTag(IntEnum):
     recovered = -3
     healthy = -2
-    infected = -1
+    exposed = -1
     asymptomatic = 0
     influenza = 1
     pneumonia = 2
@@ -30,7 +30,7 @@ class SymptomTag(IntEnum):
 class Symptoms:
     def __init__(self, health_index=None):
         self.health_index = list() if health_index is None else health_index
-        self.tag = SymptomTag.infected
+        self.tag = SymptomTag.exposed
         self.max_severity = random.random()
         self.severity = 0.0
 
