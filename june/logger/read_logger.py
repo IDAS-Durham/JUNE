@@ -6,6 +6,8 @@ import datetime
 from pathlib import Path
 from typing import List
 
+from june.infection.symptoms import SymptomTag
+
 
 class ReadLogger:
     def __init__(
@@ -91,21 +93,21 @@ class ReadLogger:
         """
         df = pd.DataFrame()
         df["recovered"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(x.symptoms == 8), axis=1
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
         ).cumsum()
         df["dead"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(x.symptoms == 7), axis=1
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead), axis=1
         ).cumsum()
         # get rid of those that just recovered or died
         df["infected"] = symptoms_df.apply(
-            lambda x: ((x.symptoms != 7) & (x.symptoms != 8)).sum(), axis=1
+            lambda x: ((x.symptoms != SymptomTag.recovered) & (x.symptoms != SymptomTag.dead)).sum(), axis=1
         )
         df["susceptible"] = n_people - df[["infected", "dead", "recovered"]].sum(axis=1)
         df["hospitalised"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(x.symptoms == 5), axis=1
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.hospitalised), axis=1
         )
         df["intensive_care"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(x.symptoms == 6), axis=1
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
         return df
 
