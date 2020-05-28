@@ -7,6 +7,7 @@ import datetime
 from itertools import chain
 import numpy as np
 import yaml
+import time
 
 from june.demography import Person
 from june.groups import Group

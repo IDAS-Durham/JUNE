@@ -33,7 +33,7 @@ class ReadLogger:
         """
         Load data related to population (age, sex, ...)
         """
-        with h5py.File(self.file_path, "r") as f:
+        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
             population = f["population"]
             self.n_people = population.attrs["n_people"]
             self.ids = population["id"][:]
@@ -45,7 +45,7 @@ class ReadLogger:
         """
         Load data on infected people over time and convert to a data frame ``self.infections_df``
         """
-        with h5py.File(self.file_path, "r") as f:
+        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
             time_stamps = [
                 key
                 for key in f.keys()
@@ -228,7 +228,7 @@ class ReadLogger:
         -------
             data frame with infection locations, and average count of infections per group type
         """
-        with h5py.File(self.file_path, "r") as f:
+        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
             locations = f["locations"]
             infection_location = []
             counts = []
@@ -292,15 +292,15 @@ class ReadLogger:
         -------
             data frame indexed by the hospital id
         """
-        with h5py.File(self.file_path, "r") as f:
+        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
             hospitals = f["hospitals"]
             coordinates = hospitals["coordinates"][:]
             n_beds = hospitals["n_beds"][:]
             n_icu_beds = hospitals["n_icu_beds"][:]
         hospitals_df = pd.DataFrame(
             {
-                "longitude": coordinates[:, 0],
-                "latitude": coordinates[:, 1],
+                "longitude": coordinates[:, 1],
+                "latitude": coordinates[:, 0],
                 "n_beds": n_beds,
                 "n_icu_beds": n_icu_beds,
             }
@@ -316,7 +316,7 @@ class ReadLogger:
         -------
             data frame indexed by time stamp
         """
-        with h5py.File(self.file_path, "r") as f:
+        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
             hospitals = f["hospitals"]
             hospital_ids = []
             n_patients = []
