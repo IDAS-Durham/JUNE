@@ -149,11 +149,15 @@ def render_content(tab):
             [
                 html.Div(
                     dcc.Graph(figure=dash_plotter.generate_r0()),
-                    style = {"display": "inline-block"},
+                    style = {"display": "inline-block", "width" : "50%", "height" : "50%"},
                 ),
                 html.Div(
                     dcc.Graph(figure=dash_plotter.generate_place_of_infection()),
-                    style = {"display": "inline-block"},
+                    style = {"display": "inline-block", "width": "50%", "height" : "50%"},
+                ),
+                html.Div(
+                    dcc.Graph(figure=dash_plotter.generate_symptom_trajectories()),
+                    style = {"display": "inline-block", "width" : "50%", "height" : "50%"},
                 ),
             ],
             style = {"display": "inline-block"},
