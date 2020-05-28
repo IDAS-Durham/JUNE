@@ -34,18 +34,19 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
-    __slots__ = "n_residents", "area"
+    __slots__ = "n_residents", "area", 'n_workers', 'relatives'
 
     class SubgroupType(IntEnum):
         workers = 0
         residents = 1
         visitors = 2
 
-    def __init__(self, area: Area, n_residents: int, n_workers: int):
+    def __init__(self, area: Area=None, n_residents: int=None, n_workers: int=None):
         super().__init__()
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
+        self.relatives = None
 
     def add(
         self,
@@ -54,12 +55,20 @@ class CareHome(Group):
         activity: str = "residence",
         dynamic: bool = False,
     ):
-        super().add(
-            person,
-            subgroup_type = subgroup_type,
-            activity = activity,
-            dynamic = dynamic,
-        )
+        if activity == "leisure":
+            super().add(
+                person,
+                subgroup_type = self.SubgroupType.visitors,
+                activity = "leisure",
+                dynamic = True,
+            )
+        else:
+            super().add(
+                person,
+                subgroup_type = subgroup_type,
+                activity = activity,
+                dynamic = dynamic,
+            )
 
     @property
     def workers(self):
