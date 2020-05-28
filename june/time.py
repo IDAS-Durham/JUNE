@@ -92,3 +92,4 @@ if __name__ == "__main__":
         print(time.day_of_week)
         print(time.activities)
         next(time)
+

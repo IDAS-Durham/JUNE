@@ -37,6 +37,7 @@ setup(
                   'june.interaction',
                   'june.logger',
                   'june.box',
-                  'june.hdf5_savers',]
+                  'june.hdf5_savers',
+                  'june.visualization']
 )
 
