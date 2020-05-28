@@ -182,6 +182,7 @@ class Simulator:
             self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
+        print(leisure_options)
         self.leisure = leisure.generate_leisure_for_world(
             list_of_leisure_groups=leisure_options, world=self.world
         )
@@ -249,6 +250,8 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
+            if group_name == "residence_visits":
+                continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
                 for subgroup in group.subgroups:
@@ -475,7 +478,7 @@ class Simulator:
             self.distribute_rail_back()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
-        group_instances = [getattr(self.world, group) for group in active_groups]
+        group_instances = [getattr(self.world, group) for group in active_groups if group != "residence_visits"]
         n_people = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
