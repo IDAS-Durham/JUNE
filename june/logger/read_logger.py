@@ -299,8 +299,8 @@ class ReadLogger:
             n_icu_beds = hospitals["n_icu_beds"][:]
         hospitals_df = pd.DataFrame(
             {
-                "longitude": coordinates[:, 0],
-                "latitude": coordinates[:, 1],
+                "longitude": coordinates[:, 1],
+                "latitude": coordinates[:, 0],
                 "n_beds": n_beds,
                 "n_icu_beds": n_icu_beds,
             }
