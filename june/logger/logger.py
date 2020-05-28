@@ -46,7 +46,7 @@ class Logger:
         dt = h5py.vlen_dtype(np.dtype("int32"))
         # dt = tuple
         n_chunks = int(np.ceil(n_people / chunk_size))
-        with h5py.File(self.file_path, "a") as f:
+        with h5py.File(self.file_path, "a", libver='latest') as f:
             people_dset = f.create_group("population")
             for chunk in range(n_chunks):
                 idx1 = chunk * chunk_size
@@ -111,7 +111,7 @@ class Logger:
             list of number of secondary infections for everyone infected
         """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        with h5py.File(self.file_path, "a") as f:
+        with h5py.File(self.file_path, "a", libver='latest') as f:
             infected_dset = f.create_group(time_stamp)
             ids = np.array(infected_ids, dtype=np.int)
             symptoms = np.array(symptoms, dtype=np.int)
@@ -139,7 +139,7 @@ class Logger:
         coordinates = np.array(coordinates, dtype=np.float)
         n_beds = np.array(n_beds, dtype=np.int)
         n_icu_beds = np.array(n_icu_beds, dtype=np.int)
-        with h5py.File(self.file_path, "a") as f:
+        with h5py.File(self.file_path, "a", libver='latest') as f:
             hospital_dset = f.require_group("hospitals")
             hospital_dset.create_dataset("coordinates", data=coordinates)
             hospital_dset.create_dataset("n_beds", data=n_beds)
@@ -172,7 +172,7 @@ class Logger:
         hospitals_ids = np.array(hospital_ids, dtype=np.int)
         n_patients = np.array(n_patients, dtype=np.int)
         n_patients_icu = np.array(n_patients_icu, dtype=np.int)
-        with h5py.File(self.file_path, "a") as f:
+        with h5py.File(self.file_path, "a", libver='latest') as f:
             hospital_dset = f.require_group("hospitals")
             time_dset = hospital_dset.create_group(time_stamp)
             time_dset.create_dataset("hospital_id", data=hospital_ids)
@@ -226,7 +226,7 @@ class Logger:
             np.array(self.infection_location), return_counts=True
         )
         unique_locations = np.array(unique_locations, dtype="S10")
-        with h5py.File(self.file_path, "a") as f:
+        with h5py.File(self.file_path, "a", libver='latest') as f:
             locations_dset = f.require_group("locations")
             time_dset = locations_dset.create_group(time_stamp)
             time_dset.create_dataset("infection_location", data=unique_locations)
@@ -250,6 +250,6 @@ class Logger:
         unique_locations = np.array(unique_locations, dtype="S10")
         group_sizes = np.array(group_sizes, dtype=np.int)
         counts = np.array(counts, dtype=np.int)
-        with h5py.File(self.file_path, "a") as f:
+        with h5py.File(self.file_path, "a", libver='latest') as f:
             locations_dset = f.create_group("locations")
             locations_dset.create_dataset("n_locations", data=group_sizes)
