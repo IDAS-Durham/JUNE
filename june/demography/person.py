@@ -4,6 +4,7 @@ from enum import IntEnum, Enum
 import struct
 from recordclass import dataobject
 import numpy as np
+from june.infection.health_information import HealthInformation
 
 
 
@@ -42,7 +43,7 @@ class Person(dataobject):
     # activities
     busy: bool = False
     subgroups: Activities = Activities(None, None, None, None, None, None, None)
-    health_information: None
+    health_information: HealthInformation = None
     # infection
     susceptibility: float = 1.0
     dead: bool = False
