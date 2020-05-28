@@ -181,6 +181,7 @@ class Simulator:
             self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
+        print(leisure_options)
         self.leisure = leisure.generate_leisure_for_world(
             list_of_leisure_groups=leisure_options, world=self.world
         )
@@ -363,15 +364,12 @@ class Simulator:
 
         for person in self.world.people.members:
             if person.dead or person.busy:
-                print(person.dead)
-                print(person.busy)
                 continue
             if (
                 person.health_information is not None
                 and person.health_information.must_stay_at_home
             ):
                 self.move_mild_ill_to_household(person, activities)
-                print("home?")
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
@@ -479,7 +477,7 @@ class Simulator:
             self.distribute_rail_back()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
-        group_instances = [getattr(self.world, group) for group in active_groups]
+        group_instances = [getattr(self.world, group) for group in active_groups if group != "residence_visits"]
         n_people = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:

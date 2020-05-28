@@ -16,7 +16,14 @@ from june.infection import transmission as trans
 from june.simulator import Simulator
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+# set seed
+import random
+import numpy as np
 
+@pytest.fixture
+def set_random_seed():
+    random.seed(0)
+    np.random.seed(0)
 
 @pytest.fixture()
 def data(pytestconfig):
