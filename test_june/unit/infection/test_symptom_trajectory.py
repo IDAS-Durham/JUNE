@@ -13,7 +13,6 @@ from june.infection.trajectory_maker import (
     BetaCompletionTime
 )
 
-
 @pytest.fixture(
     name="constant_completion_dict"
 )
