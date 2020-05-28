@@ -43,7 +43,7 @@ class Group(AbstractGroup):
 
         default = 0
 
-    __slots__ = "id", "subgroups"
+    __slots__ = "id", "subgroups", "spec"
 
     __id_generators = defaultdict(count)
 
@@ -63,6 +63,7 @@ class Group(AbstractGroup):
         by converting the class name into snakecase.
         """
         self.id = self._next_id()
+        self.spec = self.get_spec()
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
 
@@ -74,8 +75,7 @@ class Group(AbstractGroup):
         """
         return f"{self.__class__.__name__}_{self.id:05d}"
 
-    @property
-    def spec(self) -> str:
+    def get_spec(self) -> str:
         """
         Returns the speciailization of the group.
         """
