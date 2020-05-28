@@ -12,10 +12,10 @@ from june.groups import CareHome
 logger = logging.getLogger(__name__)
 
 default_data_path = (
-        paths.data_path
-        / "processed/census_data/output_area/EnglandWales/carehomes.csv"
+    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
+
 
 class CareHomeError(BaseException):
     pass
@@ -54,7 +54,7 @@ class CareHomeDistributor:
         return men_by_age, women_by_age
 
     def populate_care_home_in_areas(
-            self, areas: Areas, data_filename: str = default_data_path
+        self, areas: Areas, data_filename: str = default_data_path
     ):
         """
         Creates care homes in areas from dataframe.
@@ -67,9 +67,7 @@ class CareHomeDistributor:
             if care_home_residents_number != 0:
                 self.populate_care_home_in_area(area)
 
-    def populate_care_home_in_area(
-            self, area: Area
-    ):
+    def populate_care_home_in_area(self, area: Area):
         """
         Crates care home in area, if there needs to be one, and fills it with the
         oldest people in that area.
@@ -95,7 +93,7 @@ class CareHomeDistributor:
         return person
 
     def populate_care_home(
-            self, care_home: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
+        self, care_home: CareHome, men_by_age: OrderedDict, women_by_age: OrderedDict
     ):
         """
         Takes the oldest men and women from men_by_age and women_by_age dictionaries,
@@ -122,8 +120,8 @@ class CareHomeDistributor:
                     person = self._get_person_of_age(people_dict, current_age_to_fill)
                     care_home.add(
                         person,
-                        subgroup_type = care_home.SubgroupType.residents,
-                        activity = "residence",
+                        activity="residence",
+                        subgroup_type=care_home.SubgroupType.residents,
                     )
                     people_counter += 1
                     if people_counter == care_home.n_residents:
@@ -131,7 +129,7 @@ class CareHomeDistributor:
                     next_age = next_age and False
                 else:
                     next_age = (
-                            next_age and True
+                        next_age and True
                     )  # only decrease age if there are no man nor women left
 
             if next_age:
@@ -159,16 +157,19 @@ class CareHomeDistributor:
             for i, carer in enumerate(carers):
                 if n_assigned >= care_home.n_workers:
                     break
-                elif (carer.sub_sector is None and  # because we have no sub_sector for carer
-                    carer.subgroups.primary_activity is None):
+                elif (
+                    carer.sub_sector is None
+                    and carer.subgroups.primary_activity  # because we have no sub_sector for carer
+                    is None
+                ):
                     care_home.add(
-                        person = carer,
-                        subgroup_type = care_home.SubgroupType.workers,
-                        activity = "primary_activity",
+                        person=carer,
+                        subgroup_type=care_home.SubgroupType.workers,
+                        activity="primary_activity",
                     )
                     n_assigned += 1
             if care_home.n_workers > n_assigned:
                 logger.info(
-                    f"\n There are {care_home.n_workers - n_assigned} carers missing" + \
-                    "in care_home.id = {care_home.id}"
+                    f"\n There are {care_home.n_workers - n_assigned} carers missing"
+                    + "in care_home.id = {care_home.id}"
                 )
