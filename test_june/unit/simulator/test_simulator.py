@@ -1,5 +1,6 @@
 import pytest
 import random
+import numpy as np
 
 from june.demography.geography import Geography
 from june.demography import Demography
@@ -33,14 +34,16 @@ def create_simulator():
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+    
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = DefaultInteraction.from_file()
     interaction.selector = selector
-    return Simulator.from_file(
+    sim = Simulator.from_file(
         world, interaction, selector, config_filename=test_config
     )
+    return sim
 
 
 @pytest.fixture(name="health_index")
@@ -77,6 +80,7 @@ def test__activities_to_groups(sim):
         "pubs",
         "cinemas",
         "groceries",
+        "residence_visits",
         "households",
         "care_homes",
     ]
@@ -85,6 +89,8 @@ def test__activities_to_groups(sim):
 def test__clear_world(sim):
     sim.clear_world()
     for group_name in sim.activities_to_groups(sim.all_activities):
+        if group_name == "residence_visits":
+            continue
         grouptype = getattr(sim.world, group_name)
         for group in grouptype.members:
             for subgroup in group.subgroups:
@@ -111,30 +117,27 @@ def test__move_people_to_residence(sim):
 def test__move_people_to_leisure(sim):
     sim.clear_world()
     sim.move_people_to_active_subgroups(["leisure", "residence"])
-    n_lazy = 0
-    n_pub = 0
-    n_cinema = 0
+    n_leisure = 0
+    n_cinemas = 0
+    n_pubs = 0
     n_groceries = 0
-    n_carehome = 0
     for person in sim.world.people.members:
         if person.leisure is not None:
-            if person.leisure.group.spec == "pub":
-                n_pub += 1
+            n_leisure += 1
+            if person.leisure.group.spec == "care_home":
+                assert person.leisure.subgroup_type == 2 # visitors
             elif person.leisure.group.spec == "cinema":
-                n_cinema += 1
+                n_cinemas += 1
+            elif person.leisure.group.spec == "pub":
+                n_pubs += 1
             elif person.leisure.group.spec == "grocery":
                 n_groceries += 1
-            elif person.leisure.group.spec == "care_home":
-                assert person.leisure.subgroup_type == 2 # visitors
-                n_carehome += 1
-            else:
-                raise ValueError("leisure group not recognized")
-            print(f'There are {len(person.leisure.people)} in this group')
+            #print(f'There are {len(person.leisure.people)} in this group')
             assert person in person.leisure.people
-    assert n_pub > 0
+    assert n_leisure > 0
+    assert n_cinemas > 0
+    assert n_pubs > 0
     assert n_groceries > 0
-    assert n_carehome > 0
-    assert n_cinema > 0
     sim.clear_world()
 
 
