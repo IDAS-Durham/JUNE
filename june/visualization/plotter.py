@@ -47,8 +47,9 @@ class DashPlotter:
             left_on="super_area",
             right_on="MSOA11CD",
         )
-        data = data.groupby(["LAD17NM", "time_stamp"]).sum()
-        data.reset_index(inplace=True)
+        data.drop(columns=["MSOA11CD", "super_area"], inplace=True)
+        data.drop_duplicates(inplace=True)
+        data = data.groupby(["time_stamp", "LAD17NM"]).sum().reset_index()
         data.set_index("time_stamp", inplace=True)
         return data
 
@@ -229,6 +230,37 @@ class DashPlotter:
         fig = go.Figure()
         fig.add_trace(go.Bar(x=places.index, y=places.values))
         fig.update_layout(template="simple_white", title="Places of infection")
+        return fig
+
+    def generate_symptom_trajectories(self):
+        random_trajectories = self.logger_reader.draw_symptom_trajectories(
+            window_length=100, n_people=5
+        )
+        fig = go.Figure()
+        for df_person in random_trajectories:
+            fig.add_trace(go.Scatter(x=df_person.index, y=df_person["symptoms"]))
+        symptoms_names = [
+            "recovered",
+            "healthy",
+            "exposed",
+            "asymptomatic",
+            "influenza",
+            "pneumonia",
+            "hospitalised",
+            "intensive_care",
+            "dead",
+        ]
+        fig.update_layout(
+            template="simple_white",
+            title="Symptoms trajectories",
+            yaxis=dict(
+                tickmode="array",
+                tickvals=np.arange(-3, 6),
+                ticktext=symptoms_names,
+            ),
+            xaxis_title="Date",
+            yaxis_title="Symptoms",
+        )
         return fig
 
     @property
