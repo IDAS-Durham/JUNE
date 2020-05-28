@@ -74,13 +74,13 @@ def test__n_infected_total(seed):
     n_infected = 0
     for super_area in super_areas:
         for person in super_area.people:
-            if person.health_information.infected:
+            if person.infected:
                 n_infected += 1
     np.testing.assert_allclose(n_cases,n_infected, rtol=0.05)
 
     n_infected = 0
     for person in super_areas[1].people:
-        if person.health_information.infected:
+        if person.infected:
             n_infected += 1
 
     
