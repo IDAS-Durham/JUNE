@@ -17,12 +17,12 @@ from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
 
-# from june.logger_simulation import Logger
 from june.logger.logger import Logger
 from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
+from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -72,6 +72,8 @@ class Simulator:
         self.activity_hierarchy = [
             "box",
             "hospital",
+            "rail_travel_out",
+            "rail_travel_back",
             "commute",
             "primary_activity",
             "leisure",
@@ -85,7 +87,10 @@ class Simulator:
             weekday_activities=time_config["step_activities"]["weekday"],
             weekend_activities=time_config["step_activities"]["weekend"],
         )
-        self.logger = Logger()
+        if not self.world.box_mode:
+            self.logger = Logger()
+        else:
+            self.logger = None
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
@@ -98,6 +103,7 @@ class Simulator:
                 "leisure": activity_to_groups.get("leisure", []),
                 "residence": activity_to_groups.get("residence", []),
                 "commute": activity_to_groups.get("commute", []),
+                "rail_travel": activity_to_groups.get("rail_travel", [])
             }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
@@ -105,6 +111,8 @@ class Simulator:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
             self.initialize_leisure(activity_to_groups["leisure"])
+        if "rail_travel_out" in self.all_activities or "rail_travel_back" in self.all_activities:
+            self.initialize_rail_travel(activity_to_groups["rail_travel"])
 
     @classmethod
     def from_file(
@@ -160,6 +168,18 @@ class Simulator:
             self.commute_unit_distributor.distribute_people()
         if hasattr(self, "commute_city_unit_distributor"):
             self.commute_city_unit_distributor.distribute_people()
+
+    def initialize_rail_travel(self, travel_options):
+        if "travelunits" in travel_options:
+            self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
+
+    def distribute_rail_out(self):
+        if hasattr(self, "travelunit_distributor"):
+            self.travelunit_distributor.distirbute_people_out()
+
+    def distribute_rail_back(self):
+        if hasattr(self, "travelunit_distributor"):
+            self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
         self.leisure = leisure.generate_leisure_for_world(
@@ -433,7 +453,8 @@ class Simulator:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
-        self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
+        if self.logger:
+            self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
 
     def do_timestep(self):
         """
@@ -448,6 +469,10 @@ class Simulator:
 
         if "commute" in activities:
             self.distribute_commuters()
+        if "rail_travel_out" in activities:
+            self.distribute_rail_out()
+        if "rail_travel_back" in activities:
+            self.distribute_rail_back()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
         group_instances = [getattr(self.world, group) for group in active_groups]
@@ -473,8 +498,9 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
         self.update_health_status(self.timer.now, self.timer.duration)
-        self.logger.log_infection_location(self.timer.date)
-        self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        if self.logger: 
+            self.logger.log_infection_location(self.timer.date)
+            self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
     def run(self, save=False):
@@ -494,8 +520,9 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        self.logger.log_population(self.world.people)
-        self.logger.log_hospital_characteristics(self.world.hospitals)
+        if self.logger:
+            self.logger.log_population(self.world.people)
+            self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
                 break

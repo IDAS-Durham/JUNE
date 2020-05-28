@@ -1,5 +1,6 @@
 import logging
 import re
+import functools
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
