@@ -24,10 +24,10 @@ class Subgroup:
         """
         self.group = group
         self.subgroup_type = subgroup_type
-        self.infected = list()
-        self.susceptible = list()
-        self.recovered = list()
-        self.people = list()
+        self.infected = []
+        self.susceptible = []
+        self.recovered = []
+        self.people = []
         self.size_infected = 0
         self.size_recovered = 0
         self.size_susceptible = 0
@@ -58,13 +58,13 @@ class Subgroup:
         return len(self.people)
 
     def clear(self):
-        self.recovered = list()
+        self.recovered = []
         self.size_recovered = 0
-        self.susceptible = list()
+        self.susceptible = []
         self.size_susceptible = 0
-        self.infected = list()
+        self.infected = []
         self.size_infected = 0
-        self.people = list()
+        self.people = []
         self.size = 0
 
     #@property
