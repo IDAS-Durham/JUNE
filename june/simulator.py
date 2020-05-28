@@ -2,6 +2,7 @@ import logging
 import random
 from june import paths
 from typing import List
+import datetime
 
 from itertools import chain
 import numpy as np
@@ -14,7 +15,8 @@ from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
-from june.logger_simulation import Logger
+
+from june.logger.logger import Logger
 from june.time import Timer
 from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
@@ -40,7 +42,6 @@ class Simulator:
         time_config: dict,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        save_path: str = "results",
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -78,8 +79,17 @@ class Simulator:
             "residence",
         ]
         self.check_inputs(time_config)
-        self.timer = Timer(time_config)
-        self.logger = Logger(self, self.world, self.timer, save_path,)
+        self.timer = Timer(
+            total_days=time_config["total_days"],
+            weekday_step_duration=time_config["step_duration"]["weekday"],
+            weekend_step_duration=time_config["step_duration"]["weekend"],
+            weekday_activities=time_config["step_activities"]["weekday"],
+            weekend_activities=time_config["step_activities"]["weekend"],
+        )
+        if not self.world.box_mode:
+            self.logger = Logger()
+        else:
+            self.logger = None
         self.all_activities = self.get_all_activities(time_config)
         if self.world.box_mode:
             self.activity_to_group_dict = {
@@ -382,16 +392,35 @@ class Simulator:
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! 
+
         Parameters
         ----------
         person:
-            person sent to cemetery
+            person to send to cemetery
         """
+        person.dead = True
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
 
-    def update_health_status(self, time: float, delta_time: float):
+    def recover(self, person: "Person", time: float):
+        """
+        When someone recovers, erase the health information they carry and change their susceptibility.
+
+        Parameters
+        ----------
+        person:
+            person to recover
+        time:
+            time (in days), at which the person recovers
+        """
+        # TODO: seems to be only used to set the infection length at the moment, but this is not logged
+        # anywhere, so we could get rid of this potentially
+        person.health_information.set_recovered(time)
+        person.susceptibility = 0.
+        person.health_information = None
+
+    def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
         Send them to hospital if necessary, or bury them if they
@@ -401,31 +430,37 @@ class Simulator:
         ----------
         time:
             time now
-        delta_time:
+        duration:
             duration of time step
         """
-
+        ids = []
+        symptoms = []
+        n_secondary_infections = []
         for person in self.world.people.infected:
             health_information = person.health_information
             previous_tag = health_information.tag
-            health_information.update_health_status(time, delta_time)
-            # release patients that recovered
+            health_information.update_health_status(time, duration)
+            ids.append(person.id)
+            symptoms.append(person.health_information.tag.value)
+            n_secondary_infections.append(person.health_information.number_of_infected)
+            # Take actions on new symptoms
             if health_information.recovered:
                 if person.hospital is not None:
                     person.hospital.group.release_as_patient(person)
-                health_information.set_recovered(time)
-                person.susceptibility = 0
+                self.recover(person, time)
             elif health_information.should_be_in_hospital:
                 self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
+        if self.logger:
+            self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
 
     def do_timestep(self):
         """
         Perform a time step in the simulation
 
         """
-        activities = self.timer.activities()
+        activities = self.timer.activities
 
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
@@ -449,22 +484,22 @@ class Simulator:
             n_active_in_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group,
+                    self.timer.now, self.timer.duration, group, self.logger,
                 )
                 n_active_in_group += group.size
                 n_people += group.size
             sim_logger.info(
                 f"Number of people active in {group.spec} = {n_active_in_group}"
             )
-
-        # assert conservation of people
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-
         self.update_health_status(self.timer.now, self.timer.duration)
+        if self.logger: 
+            self.logger.log_infection_location(self.timer.date)
+            self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
     def run(self, save=False):
@@ -484,12 +519,13 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        self.logger.log_timestep(1.0)
-        for day in self.timer:
-            if day > self.timer.total_days:
+        if self.logger:
+            self.logger.log_population(self.world.people)
+            self.logger.log_hospital_characteristics(self.world.hospitals)
+        for time in self.timer:
+            if time > self.timer.final_date:
                 break
-            self.logger.log_timestep(day)
             self.do_timestep()
         # Save the world
         if save:
-            self.world.to_pickle("world.pickle")
+            self.world.to_pickle("final_world.pickle")
