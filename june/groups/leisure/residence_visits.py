@@ -74,9 +74,12 @@ class VisitsDistributor(SocialVenueDistributor):
                     people_in_care_home = self.get_people_living_in_carehome(area)
                     for i, person in enumerate(people_in_care_home):
                         if households_super_area[i].relatives is None:
-                            households_super_area[i].relatives = [person]
+                            households_super_area[i].relatives = (person, )
                         else:
-                            households_super_area[i].relatives.append(person)
+                            households_super_area[i].relatives = tuple((
+                                *households_super_area[i].relatives,
+                                person,
+                            ))
 
     def get_social_venue_for_person(self, person):
         relatives = person.residence.group.relatives
@@ -85,14 +88,18 @@ class VisitsDistributor(SocialVenueDistributor):
         if len([person for person in relatives if person.dead is False]) == 0:
             return
         elif len(relatives) == 1:
-            return relatives[0].residence.group.subgroups[
-                relatives[0].residence.group.SubgroupType.visitors
-            ].group
+            return (
+                relatives[0]
+                .residence.group.subgroups[
+                    relatives[0].residence.group.SubgroupType.visitors
+                ]
+                .group
+            )
         else:
             relative = np.random.choice(relatives)
             return relative.residence.group.subgroups[
                 relative.residence.group.SubgroupType.visitors
-                ].group
+            ].group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
@@ -111,7 +118,16 @@ class VisitsDistributor(SocialVenueDistributor):
         if person.residence.group.relatives is None:
             return 0
         # do not visit dead people
-        if len([person for person in person.residence.group.relatives if person.dead is False]) == 0:
+        if (
+            len(
+                [
+                    person
+                    for person in person.residence.group.relatives
+                    if person.dead is False
+                ]
+            )
+            == 0
+        ):
             return 0
         if person.sex == "m":
             if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
