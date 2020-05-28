@@ -254,8 +254,7 @@ class Simulator:
                 continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
-                for subgroup in group.subgroups:
-                    subgroup._people.clear()
+                group.clear()
 
         for person in self.world.people.members:
             person.busy = False
@@ -485,16 +484,11 @@ class Simulator:
                 n_people += len(cemetery.people)
         sim_logger.info(f"number of deaths =  {n_people}")
         for group_type in group_instances:
-            n_active_in_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now, self.timer.duration, group, self.logger,
                 )
-                n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(
-                f"Number of people active in {group.spec} = {n_active_in_group}"
-            )
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
