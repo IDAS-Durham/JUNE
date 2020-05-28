@@ -103,16 +103,20 @@ def test__care_home_visits_leisure_integration(world_visits, leisure):
     assert assigned
 
 def test__do_not_visit_old_people(world_visits, leisure):
+    # look for a person in carehome
+    found = False
     for area in world_visits.areas:
         for person in area.people:
-            if person.residence.group.spec != "household":
-                continue
-            if person.residence.group.relatives is not None:
+            if person.residence.group.spec == "care_home":
+                found = True
                 break
-
-    relative = person.residence.group.relatives[0]
-    relative.dead == True
+    assert found
+    person2 = Person.from_attributes()
+    household = Household(type="family")
+    household.add(person2)
+    household.relatives = [person]
+    person.dead = True
     for _ in range(0,100):
-        care_home = leisure.get_subgroup_for_person_and_housemates(person, 0.1, True)
+        care_home = leisure.get_subgroup_for_person_and_housemates(person2, 0.1, True)
         assert care_home is None
 
