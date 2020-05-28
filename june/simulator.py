@@ -248,6 +248,8 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
+            if group_name == "residence_visits":
+                continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
                 for subgroup in group.subgroups:
@@ -361,12 +363,15 @@ class Simulator:
 
         for person in self.world.people.members:
             if person.dead or person.busy:
+                print(person.dead)
+                print(person.busy)
                 continue
             if (
                 person.health_information is not None
                 and person.health_information.must_stay_at_home
             ):
                 self.move_mild_ill_to_household(person, activities)
+                print("home?")
             else:
                 subgroup = self.get_subgroup_active(activities, person)
                 subgroup.append(person)
