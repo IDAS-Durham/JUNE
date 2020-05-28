@@ -20,7 +20,7 @@ constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yam
 import random
 import numpy as np
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def set_random_seed():
     random.seed(0)
     np.random.seed(0)
