@@ -276,7 +276,7 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-        activities = self.apply_activity_hierarchy(activities)
+    #    activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -343,6 +343,7 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
+        #activities = self.apply_activity_hierarchy(activities)
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -361,7 +362,7 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
-
+        activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
