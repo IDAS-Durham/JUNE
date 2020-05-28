@@ -109,14 +109,32 @@ def test__move_people_to_residence(sim):
     sim.clear_world()
 
 def test__move_people_to_leisure(sim):
+    sim.clear_world()
     sim.move_people_to_active_subgroups(["leisure", "residence"])
     n_lazy = 0
+    n_pub = 0
+    n_cinema = 0
+    n_groceries = 0
+    n_carehome = 0
     for person in sim.world.people.members:
         if person.leisure is not None:
-            n_lazy += 1
+            if person.leisure.group.spec == "pub":
+                n_pub += 1
+            elif person.leisure.group.spec == "cinema":
+                n_cinema += 1
+            elif person.leisure.group.spec == "grocery":
+                n_groceries += 1
+            elif person.leisure.group.spec == "care_home":
+                assert person.leisure.subgroup_type == 2 # visitors
+                n_carehome += 1
+            else:
+                raise ValueError("leisure group not recognized")
             print(f'There are {len(person.leisure.people)} in this group')
             assert person in person.leisure.people
-    assert n_lazy > 0
+    assert n_pub > 0
+    assert n_groceries > 0
+    assert n_carehome > 0
+    assert n_cinema > 0
     sim.clear_world()
 
 

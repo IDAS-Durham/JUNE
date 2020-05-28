@@ -34,7 +34,7 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
-    __slots__ = "n_residents", "area"
+    __slots__ = "n_residents", "area", 'n_workers', 'relatives'
 
     class SubgroupType(IntEnum):
         workers = 0
@@ -46,6 +46,7 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
+        self.relatives = None
 
     def add(
         self,
