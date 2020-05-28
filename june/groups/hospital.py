@@ -44,7 +44,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name", "super_area"
 
     def __init__(
         self,

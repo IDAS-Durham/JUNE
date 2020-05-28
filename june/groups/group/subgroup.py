@@ -1,20 +1,37 @@
 from june.demography.person import Person
 from .abstract import AbstractGroup
 from typing import Set, List
+from itertools import chain
 
 
-class Subgroup(AbstractGroup):
+class Subgroup:
     __slots__ = (
-        "_people",
+        "group",
+        "subgroup_type",
+        "people",
+        "size",
+        "size_infected",
+        "size_recovered",
+        "size_susceptible",
+        "infected",
+        "susceptible",
+        "recovered",
     )
 
     def __init__(self, group, subgroup_type: int):
         """
         A group within a group. For example, children in a household.
         """
-        self._people = list()
         self.group = group
         self.subgroup_type = subgroup_type
+        self.infected = list()
+        self.susceptible = list()
+        self.recovered = list()
+        self.people = list()
+        self.size_infected = 0
+        self.size_recovered = 0
+        self.size_susceptible = 0
+        self.size = 0
 
     def _collate(self, attribute: str) -> List[Person]:
         collection = list()
@@ -22,18 +39,6 @@ class Subgroup(AbstractGroup):
             if getattr(person, attribute):
                 collection.append(person)
         return collection
-
-    @property
-    def susceptible(self):
-        return self._collate("susceptible")
-
-    @property
-    def infected(self):
-        return self._collate("infected")
-
-    @property
-    def recovered(self):
-        return self._collate("recovered")
 
     @property
     def dead(self):
@@ -44,40 +49,61 @@ class Subgroup(AbstractGroup):
         return self._collate("in_hospital")
 
     def __contains__(self, item):
-        return item in self._people
+        return item in self.people
 
     def __iter__(self):
-        return iter(self._people)
+        return iter(self.people)
 
     def __len__(self):
-        return len(self._people)
+        return len(self.people)
 
     def clear(self):
-        self._people = list()
+        self.recovered = list()
+        self.size_recovered = 0
+        self.susceptible = list()
+        self.size_susceptible = 0
+        self.infected = list()
+        self.size_infected = 0
+        self.people = list()
+        self.size = 0
 
-    @property
-    def people(self):
-        return self._people
+    #@property
+    #def people(self):
+    #    return list(chain(*[self.infected, self.susceptible, self.recovered]))
 
     @property
     def contains_people(self) -> bool:
         """
         Whether or not the group contains people.
         """
-        return len(self._people) > 0
+        return len(self.people) > 0
 
     def append(self, person: Person):
         """
         Add a person to this group
         """
-        self._people.append(person)
+        ret = False
+        if person.infected:
+            self.infected.append(person)
+            self.size_infected += 1
+            ret = True
+        elif person.susceptible:
+            self.susceptible.append(person)
+            self.size_susceptible += 1
+            ret = True
+        else:
+            self.recovered.append(person)
+            self.size_recovered += 1
+            ret = True
+        try:
+            assert ret
+        except:
+            print(person)
+            raise ValueError
+        self.size += 1
+        self.people.append(person)
+        self.group.size += 1
         person.busy = True
 
-    def remove(self, person: Person):
-        """
-        Remove a person from this group
-        """
-        self._people.remove(person)
-
     def __getitem__(self, item):
-        return list(self._people)[item]
+        return list(self.people)[item]
