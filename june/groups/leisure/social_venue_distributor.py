@@ -7,6 +7,14 @@ import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 
+@jit(nopython=True)
+def random_choice_numba(arr, prob):
+    """
+    Fast implementation of np.random.choice
+    """
+    return arr[np.searchsorted(np.cumsum(prob), np.random.rand(), side="right")]
+
+
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
@@ -43,12 +51,14 @@ class SocialVenueDistributor:
             boosting factor for the weekend probability
         """
         self.social_venues = social_venues
-        self.male_bins, self.male_probabilities = self._parse_age_probabilites(
-            male_age_probabilities
-        )
-        self.female_bins, self.female_probabilities = self._parse_age_probabilites(
-            female_age_probabilities
-        )
+        #self.male_bins, self.male_probabilities = self._parse_age_probabilites(
+        #    male_age_probabilities
+        #)
+        #self.female_bins, self.female_probabilities = self._parse_age_probabilites(
+        #    female_age_probabilities
+        #)
+        self.male_probabilities = self._parse_age_probabilites(male_age_probabilities)
+        self.female_probabilities = self._parse_age_probabilites(female_age_probabilities)
         self.weekend_boost = weekend_boost
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
@@ -82,7 +92,12 @@ class SocialVenueDistributor:
             probabilities_binned.append(0.0)
             probabilities_binned.append(prob)
         probabilities_binned.append(0.0)
-        return bins, probabilities_binned
+        #return bins, probabilities_binned
+        probabilities_per_age = []
+        for age in range(0, 100):
+            idx = np.searchsorted(bins, age)
+            probabilities_per_age.append(probabilities_binned[idx])
+        return probabilities_per_age
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
@@ -101,17 +116,21 @@ class SocialVenueDistributor:
         if len(self.social_venues) == 0:
             return 0
         if person.sex == "m":
-            if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
-                return 0
-            else:
-                idx = np.searchsorted(self.male_bins, person.age)
-                probability = self.male_probabilities[idx]
+            probability = self.male_probabilities[person.age]
         else:
-            if person.age < self.female_bins[0] or person.age > self.female_bins[-1]:
-                return 0
-            else:
-                idx = np.searchsorted(self.female_bins, person.age)
-                probability = self.female_probabilities[idx]
+            probability = self.female_probabilities[person.age]
+        #if person.sex == "m":
+        #    if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
+        #        return 0
+        #    else:
+        #        idx = np.searchsorted(self.male_bins, person.age)
+        #        probability = self.male_probabilities[idx]
+        #else:
+        #    if person.age < self.female_bins[0] or person.age > self.female_bins[-1]:
+        #        return 0
+        #    else:
+        #        idx = np.searchsorted(self.female_bins, person.age)
+        #        probability = self.female_probabilities[idx]
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
