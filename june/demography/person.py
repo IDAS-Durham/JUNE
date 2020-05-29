@@ -5,6 +5,7 @@ import struct
 from recordclass import dataobject
 import numpy as np
 from june.infection.health_information import HealthInformation
+from june.commute import ModeOfTransport
 
 
 
@@ -38,7 +39,7 @@ class Person(dataobject):
     sub_sector: str = None
     # commute
     home_city: str = None
-    mode_of_transport: str = None
+    mode_of_transport: ModeOfTransport = None
     # rail travel
     # activities
     busy: bool = False

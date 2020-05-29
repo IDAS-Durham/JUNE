@@ -101,11 +101,11 @@ def render_content(tab):
                     dcc.Slider(
                         id="crossfilter-time--slider",
                         min=0,
-                        max=len(dash_plotter.day_timestamps_marks) - 1,
+                        max=len(dash_plotter.days) - 1,
                         value=0,
                         marks={
                             i: str(day)
-                            for i, day in enumerate(dash_plotter.day_timestamps_marks)
+                            for i, day in enumerate(dash_plotter.days)
                         },
                         step=None,
                     ),
@@ -138,9 +138,25 @@ def render_content(tab):
         return html.Div(
             [
                 html.Div(
-                    dcc.Graph(figure=dash_plotter.generate_hospital_map()),
+                    dcc.Graph(figure=dash_plotter.generate_hospital_map(0)),
+                    id="hospital-map",
                     style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
                 ),
+                html.Div(
+                    dcc.Slider(
+                        id="hospital-time-slider",
+                        min=0,
+                        max=len(dash_plotter.days) - 1,
+                        value=0,
+                        marks={
+                            i: str(i)
+                            for i, day in enumerate(dash_plotter.days)
+                        },
+                        step=None,
+                    ),
+                    style={"width": "100%", "padding": "0px 20px 20px 20px"},
+                ),
+
             ],
             style = {"display": "inline-block", "height" : "400%", "width" : "100%"},
         )
@@ -183,6 +199,12 @@ def update_infection_plot(hoverData, axis_type):
     county_name = hoverData["points"][0]["location"]
     return dash_plotter.generate_county_infection_curves(county_name, axis_type)
 
+@app.callback(
+    dash.dependencies.Output("hospital-map", "figure"),
+    [dash.dependencies.Input("hospital-time-slider", "value"),],
+)
+def update_hospital_map(day_number):
+    return dash_plotter.generate_hospital_map(day_number=day_number)
 
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
