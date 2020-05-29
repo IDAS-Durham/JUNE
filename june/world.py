@@ -240,6 +240,10 @@ class World:
             save_households_to_hdf5(self.households, file_path, chunk_size)
         if hasattr(self, "care_homes"):
             save_care_homes_to_hdf5(self.care_homes, file_path, chunk_size)
+        if hasattr(self, "commutecities"):
+            save_commute_cities_to_hdf5(self.commutecities, file_path)
+        if hasattr(self, "commutehubs"):
+            save_commute_hubs_to_hdf5(self.commutehubs, file_path)
 
 
 def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
@@ -267,14 +271,18 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.schools = load_schools_from_hdf5(file_path, chunk_size)
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(file_path, chunk_size)
-        #first_idx = super_area_ids.index(world.companies[0].super_area, 0)
         for company in world.companies:
-            #idx = np.searchsorted(super_area_ids, company.super_area)
             company.super_area = world.super_areas[company.super_area - super_areas_first_id]
     if "care_homes" in f_keys:
         world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
     if "households" in f_keys:
         world.households = load_households_from_hdf5(file_path, chunk_size)
+    if "commute_cities" in f_keys:
+        world.commutecities = load_commute_cities_from_hdf5(file_path)
+        world.commutecityunits = CommuteCityUnits(world.commutecities.members)
+    if "commute_hubs" in f_keys:
+        world.commutehubs = load_commute_hubs_from_hdf5(file_path)
+        world.commuteunits = CommuteUnits(world.commutehubs.members)
 
     spec_mapper = {
         "hospital": "hospitals",
@@ -317,4 +325,17 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     for super_area in world.super_areas:
         for area in super_area.areas:
             super_area.people.extend(area.people)
+
+    # commute
+    if hasattr(world, "commutehubs") and hasattr(world, "commutecities"):
+        first_hub_idx = world.commutehubs[0].id
+        first_person_idx = world.people[0].id
+        for city in world.commutecities:
+            for i in range(0, len(city.commutehubs)):
+                city.commutehubs[i] = world.commutehubs[city.commutehubs[i] - first_hub_idx]
+                city.commute_internal[i] = world.people[city.commute_internal[i] - first_person_idx]
+        for hub in world.commutehubs:
+            for i in range(len(hub.people)):
+                hub.subgroups._people[i] = world.people[hub.people[i] - first_person_idx]
+
     return world
