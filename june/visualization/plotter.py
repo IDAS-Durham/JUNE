@@ -33,6 +33,10 @@ class DashPlotter:
             self.logger_reader.load_hospital_characteristics()
         )
         self.hospital_data = self.logger_reader.load_hospital_capacity()
+        self.hospital_data["time_stamp"] = pd.to_datetime(
+            self.hospital_data["time_stamp"]
+        )
+        self.hospital_data.set_index("time_stamp", inplace=True)
         self.ages_data = self.logger_reader.age_summary(
             [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         )
@@ -163,15 +167,17 @@ class DashPlotter:
             fig.update_layout(yaxis_type="log")
         return fig
 
-    def generate_hospital_map(self):
+    def generate_hospital_map(self, day_number):
+        date = self.hospital_data.index[0] + timedelta(days=day_number)
+        hospital_data = self.hospital_data.loc[date]
         lon = self.hospital_characteristics["longitude"].values
         lat = self.hospital_characteristics["latitude"].values
         text_list = []
         for n_patients, n_patients_icu, n_beds, n_icu_beds in zip(
-            self.hospital_data["n_patients"],
-            self.hospital_data["n_patients_icu"],
-            self.hospital_characteristics["n_beds"],
-            self.hospital_characteristics["n_icu_beds"],
+            hospital_data["n_patients"].values,
+            hospital_data["n_patients_icu"].values,
+            self.hospital_characteristics["n_beds"].values,
+            self.hospital_characteristics["n_icu_beds"].values,
         ):
             text = f"Occupied {n_patients} beds of {n_beds}. \nOccupied {n_patients_icu} ICU beds of {n_icu_beds}"
             text_list.append(text)
@@ -211,7 +217,6 @@ class DashPlotter:
 
     def generate_r0(self):
         r_df = self.logger_reader.get_r()
-        r_df = r_df.groupby(by=r_df.index.day).first()
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=r_df.index, y=r_df["value"].values, name="R0"))
         fig.add_trace(
@@ -254,9 +259,7 @@ class DashPlotter:
             template="simple_white",
             title="Symptoms trajectories",
             yaxis=dict(
-                tickmode="array",
-                tickvals=np.arange(-3, 6),
-                ticktext=symptoms_names,
+                tickmode="array", tickvals=np.arange(-3, 6), ticktext=symptoms_names,
             ),
             xaxis_title="Date",
             yaxis_title="Symptoms",
@@ -268,13 +271,11 @@ class DashPlotter:
         return self.county_data["infected"].max()
 
     @property
-    def day_timestamps(self):
+    def dates(self):
         return self.county_data.index.date
 
     @property
-    def day_timestamps_marks(self):
-        dates = []
-        for z in self.day_timestamps:
-            dates.append(str(z.day))
-        dates = np.unique(dates)
-        return dates
+    def days(self):
+        dates = np.unique(self.dates)
+        days = [date.day for date in dates]
+        return days

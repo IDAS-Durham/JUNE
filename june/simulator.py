@@ -43,6 +43,7 @@ class Simulator:
         time_config: dict,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
+        save_path: str = "results",
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -88,7 +89,7 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger()
+            self.logger = Logger(save_path=save_path)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -103,7 +104,7 @@ class Simulator:
                 "leisure": activity_to_groups.get("leisure", []),
                 "residence": activity_to_groups.get("residence", []),
                 "commute": activity_to_groups.get("commute", []),
-                "rail_travel": activity_to_groups.get("rail_travel", [])
+                "rail_travel": activity_to_groups.get("rail_travel", []),
             }
         self.min_age_home_alone = min_age_home_alone
         self.stay_at_home_complacency = stay_at_home_complacency
@@ -111,7 +112,10 @@ class Simulator:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
             self.initialize_leisure(activity_to_groups["leisure"])
-        if "rail_travel_out" in self.all_activities or "rail_travel_back" in self.all_activities:
+        if (
+            "rail_travel_out" in self.all_activities
+            or "rail_travel_back" in self.all_activities
+        ):
             self.initialize_rail_travel(activity_to_groups["rail_travel"])
 
     @classmethod
@@ -121,6 +125,7 @@ class Simulator:
         interaction: "Interaction",
         selector: "InfectionSelector",
         config_filename: str = default_config_filename,
+        save_path: str = "results",
     ) -> "Simulator":
 
         """
@@ -142,7 +147,14 @@ class Simulator:
         else:
             activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
-        return Simulator(world, interaction, selector, activity_to_groups, time_config)
+        return Simulator(
+            world,
+            interaction,
+            selector,
+            activity_to_groups,
+            time_config,
+            save_path=save_path,
+        )
 
     def get_all_activities(self, time_config):
         weekday_activities = [
@@ -171,7 +183,9 @@ class Simulator:
 
     def initialize_rail_travel(self, travel_options):
         if "travelunits" in travel_options:
-            self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
+            self.travelunit_distributor = TravelUnitDistributor(
+                self.world.travelcities.members, self.world.travelunits.members
+            )
 
     def distribute_rail_out(self):
         if hasattr(self, "travelunit_distributor"):
@@ -182,7 +196,6 @@ class Simulator:
             self.travelunit_distributor.distribute_people_back()
 
     def initialize_leisure(self, leisure_options):
-        print(leisure_options)
         self.leisure = leisure.generate_leisure_for_world(
             list_of_leisure_groups=leisure_options, world=self.world
         )
@@ -421,7 +434,7 @@ class Simulator:
         # TODO: seems to be only used to set the infection length at the moment, but this is not logged
         # anywhere, so we could get rid of this potentially
         person.health_information.set_recovered(time)
-        person.susceptibility = 0.
+        person.susceptibility = 0.0
         person.health_information = None
 
     def update_health_status(self, time: float, duration: float):
@@ -457,7 +470,9 @@ class Simulator:
             elif health_information.is_dead and not self.world.box_mode:
                 self.bury_the_dead(person, time)
         if self.logger:
-            self.logger.log_infected(self.timer.date, ids, symptoms, n_secondary_infections)
+            self.logger.log_infected(
+                self.timer.date, ids, symptoms, n_secondary_infections
+            )
 
     def do_timestep(self):
         """
@@ -478,7 +493,11 @@ class Simulator:
             self.distribute_rail_back()
         self.move_people_to_active_subgroups(activities)
         active_groups = self.activities_to_groups(activities)
-        group_instances = [getattr(self.world, group) for group in active_groups if group != "residence_visits"]
+        group_instances = [
+            getattr(self.world, group)
+            for group in active_groups
+            if group != "residence_visits"
+        ]
         n_people = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
@@ -496,7 +515,7 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
         self.update_health_status(self.timer.now, self.timer.duration)
-        if self.logger: 
+        if self.logger:
             self.logger.log_infection_location(self.timer.date)
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
