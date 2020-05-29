@@ -45,6 +45,7 @@ class World:
         demography: Optional[Demography] = None,
         include_households: bool = True,
         include_commute: bool = False,
+        include_rail_travel: bool = False,
         box_mode=False,
     ):
         """
@@ -62,6 +63,9 @@ class World:
         include_households
             whether to include households in the world or not (defualt = True)
         """
+        if include_rail_travel and not include_commute:
+            raise ValueError('Rail travel depends on commute and so both must be true')
+        
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
@@ -95,6 +99,9 @@ class World:
         if include_commute:
             self.initialise_commuting()
 
+        if include_rail_travel:
+            self.initialise_rail_travel()
+
         if hasattr(geography, "hospitals"):
             self.hospitals = geography.hospitals
             self.distribute_medics_to_hospitals()
@@ -108,13 +115,13 @@ class World:
             self.distribute_workers_to_companies()
 
     @classmethod
-    def from_geography(cls, geography: Geography, box_mode=False):
+    def from_geography(cls, geography: Geography, box_mode=False, include_households=True):
         """
         Initializes the world given a geometry. The demography is calculated
         with the default settings for that geography.
         """
         demography = Demography.for_geography(geography)
-        return cls(geography, demography, box_mode=box_mode)
+        return cls(geography, demography, box_mode=box_mode, include_households=include_households)
 
     def distribute_people_to_households(self):
         household_distributor = HouseholdDistributor.from_file()
@@ -123,7 +130,8 @@ class World:
         )
 
     def distribute_people_to_care_homes(self):
-        CareHomeDistributor().populate_care_home_in_areas(self.areas)
+        carehome_distr = CareHomeDistributor()
+        carehome_distr.populate_care_home_in_areas(self.areas)
 
 
     def distribute_workers_to_super_areas(self, geography):
@@ -187,6 +195,20 @@ class World:
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
 
+    def initialise_rail_travel(self):
+
+        # TravelCity
+        self.travelcities = TravelCities(self.commutecities)
+        self.init_cities()
+
+        # TravelCityDistributor
+        self.travelcity_distributor = TravelCityDistributor(self.travelcities.members, self.super_areas.members)
+        self.travelcity_distributor.distribute_msoas()
+
+        # TravelUnit
+        self.travelunits = TravelUnits()
+
+        
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
@@ -286,7 +308,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         # add to geography
         person.area = world.areas[person.area - first_area_id]
         person.area.people.append(person)
-        subgroups_instances = Activities(None, None, None, None, None, None)
+        subgroups_instances = Activities(None, None, None, None, None, None, None)
         for i, subgroup_info in enumerate(person.subgroups):
             spec, group_id, subgroup_type = subgroup_info
             if spec is None:
