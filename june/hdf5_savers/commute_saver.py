@@ -18,7 +18,6 @@ def save_commute_cities_to_hdf5(
     commute_cities: CommuteCities, file_path: str
 ):
     n_cities = len(commute_cities)
-    dt = h5py.vlen_dtype(np.dtype("int32"))
     with h5py.File(file_path, "a") as f:
         commute_cities_dset = f.create_group("commute_cities")
         ids = []
@@ -41,7 +40,7 @@ def save_commute_cities_to_hdf5(
             commute_internal_list.append(commute_internal)
             commute_city_units = []
             for commute_city_unit in city.commutecityunits:
-                commute_city_units.append(commute_city_unit.id)
+                commute_city_units.append([commute_city_unit.id, commute_city_unit.is_peak])
             commute_city_units = np.array(commute_city_units, dtype=np.int)
             commute_city_units_list.append(commute_city_units)
 
@@ -80,7 +79,7 @@ def load_commute_cities_from_hdf5(file_path: str):
         ids = commute_cities["id"]
         city_names = commute_cities["city_names"]
         commute_hubs = commute_cities["commute_hubs"]
-        commute_city_units = commute_cities["commute_city_units"]
+        commute_city_units_list = commute_cities["commute_city_units"]
         commute_internal = commute_cities["commute_internal"]
         for k in range(n_commute_cities):
             commute_city = CommuteCity()
@@ -88,7 +87,11 @@ def load_commute_cities_from_hdf5(file_path: str):
             commute_city.city = city_names[k].decode()
             commute_city.commute_internal = commute_internal[k]
             commute_city.commute_hubs = commute_hubs[k]
-            commute_city.commute_city_units = commute_city_units[k]
+            commute_city_units = commute_city_units_list[k]
+            for i in range(len(commute_city_units)):
+                cu = CommuteCityUnit(city = commute_city.city, is_peak = commute_city_units[i,1])
+                cu.id = commute_city_units[i,0]
+                commute_city.commutecityunits.append(cu)
             commute_cities_list.append(commute_city)
     cc = CommuteCities()
     cc.members = commute_cities_list

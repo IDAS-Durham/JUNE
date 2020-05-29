@@ -311,10 +311,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         for city in world.commutecities:
             for i in range(0, len(city.commutehubs)):
                 city.commutehubs[i] = world.commutehubs[city.commutehubs[i] - first_hub_idx]
-            #for i in range(0, len(city.commute_internal)):
-            #    city.commutehubs[i] = world.commutehubs[city.commutehubs[i] - first_hub_idx]
-            #for i in range(0, len(city.commutecityunits)):
-                #city.commutecityunits[i] = world.commutehubs[city.commutehubs[i] - first_hub_idx]
+                city.commute_internal[i] = world.people[city.commute_internal[i] - first_person_idx]
         for hub in world.commutehubs:
             for i in range(len(hub.people)):
                 hub.subgroups._people[i] = world.people[hub.people[i] - first_person_idx]
