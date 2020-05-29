@@ -23,7 +23,7 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = ("area", "type", "max_size", "n_residents", "residents")
+    __slots__ = ("area", "type", "max_size", "n_residents", "residents", "relatives")
 
     class SubgroupType(IntEnum):
         kids = 0
@@ -32,12 +32,17 @@ class Household(Group):
         old_adults = 3
 
     def __init__(self, type=None, area=None, max_size=np.inf):
+        """
+        Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
+        Relatives is a list of people that are related to the family living in the household
+        """
         super().__init__()
         self.area = area
         self.type = type
         self.residents = tuple()
         self.max_size = max_size
         self.n_residents = 0
+        self.relatives = None
 
     def add(self, person, subgroup_type=SubgroupType.adults):
         self[subgroup_type].append(person)

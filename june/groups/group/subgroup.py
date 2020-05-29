@@ -19,7 +19,7 @@ class Subgroup(AbstractGroup):
     def _collate(self, attribute: str) -> List[Person]:
         collection = list()
         for person in self.people:
-            if getattr(person.health_information, attribute):
+            if getattr(person, attribute):
                 collection.append(person)
         return collection
 

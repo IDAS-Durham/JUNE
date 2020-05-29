@@ -19,3 +19,5 @@ __MACOSX
 *.log
 *.hdf5
 box_results/
+build/
+dist/

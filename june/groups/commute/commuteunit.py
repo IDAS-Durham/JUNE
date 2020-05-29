@@ -15,10 +15,9 @@ class CommuteUnit(Group):
 
     def __init__(self, city, commutehub_id, is_peak):
         """
-        id: (int) id of the commute unit
-        station: (string) name of the city the commute unt is associated to
+        city: (string) name of the city the commute unt is associated to
         commutehub_id: (int) id of commute hub unit is associated to
-        passengers: (list) passengers commuting in the commute unit
+        people: (Group structure) passengers commuting in the commute unit
         no_passenders: (int) counter of the number of passengers currently in the commute unit
         max_passengers: (int) capacity of the commute unit
         is_peak: (bool) if True, unit travels at peak time, else it does not
@@ -29,10 +28,8 @@ class CommuteUnit(Group):
         """
         super().__init__()
         
-        #self.id = commuteunit_id -> not needed becuase of Group integration
         self.city = city
         self.commutehub_id = commutehub_id
-        #self.passengers = [] -> people from group inherience
         self.no_passengers = 0
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
         self.is_peak = is_peak
