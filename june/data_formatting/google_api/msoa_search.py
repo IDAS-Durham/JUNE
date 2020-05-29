@@ -73,7 +73,7 @@ if __name__ == "__main__":
         api = f.read()
     apikey = api.split('\n')[0]
 
-    regions = ['East']#, 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'Yorkshire','London', 'Wales', 'EastMidlands', 'WestMidlands']
+    regions = ['East', 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'Yorkshire','London', 'Wales', 'EastMidlands', 'WestMidlands']
 
     for region in regions:
         print ('Working on region: {}'.format(region))
