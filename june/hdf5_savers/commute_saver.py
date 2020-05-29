@@ -86,7 +86,7 @@ def load_commute_cities_from_hdf5(file_path: str):
             commute_city.id = ids[k]
             commute_city.city = city_names[k].decode()
             commute_city.commute_internal = commute_internal[k]
-            commute_city.commute_hubs = commute_hubs[k]
+            commute_city.commutehubs = commute_hubs[k]
             commute_city_units = commute_city_units_list[k]
             for i in range(len(commute_city_units)):
                 cu = CommuteCityUnit(city = commute_city.city, is_peak = commute_city_units[i,1])
