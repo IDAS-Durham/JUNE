@@ -1,4 +1,5 @@
-import logging
+import logging, os
+from pathlib import Path
 from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
@@ -8,7 +9,6 @@ from sklearn.neighbors import BallTree
 
 from june import paths
 from june.demography.person import Person
-
 
 default_hierarchy_filename = (
     paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
@@ -56,6 +56,7 @@ class Area:
         """
         self.id = next(self._id)
         self.name = name
+        self.care_home = None
         self.coordinates = coordinates
         self.super_area = super_area
         self.people = list()
