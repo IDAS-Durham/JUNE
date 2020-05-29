@@ -35,7 +35,7 @@ print("leisure good")
 world.cemeteries = Cemeteries()
 
 # commute
-world.initialise_commuting()
+#world.initialise_commuting()
 print("commute OK")
 ######
 
