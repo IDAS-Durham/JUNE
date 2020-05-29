@@ -288,7 +288,9 @@ class TestSaveCommute:
             for commute_city_unit, commute_city_unit_recovered in zip(
                 city.commutecityunits, city_recovered.commutecityunits
             ):
-                assert commute_city_unit.id == commute_city_unit_recovered 
+                assert commute_city_unit.id == commute_city_unit_recovered.id
+                assert commute_city_unit.city == commute_city_unit_recovered.city
+                assert commute_city_unit.is_peak == commute_city_unit_recovered.is_peak
 
     def test__save_hubs(self, world_h5):
         commute_hubs = world_h5.commutehubs
