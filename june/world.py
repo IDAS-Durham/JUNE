@@ -271,9 +271,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.schools = load_schools_from_hdf5(file_path, chunk_size)
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(file_path, chunk_size)
-        #first_idx = super_area_ids.index(world.companies[0].super_area, 0)
         for company in world.companies:
-            #idx = np.searchsorted(super_area_ids, company.super_area)
             company.super_area = world.super_areas[company.super_area - super_areas_first_id]
     if "care_homes" in f_keys:
         world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
@@ -281,8 +279,10 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.households = load_households_from_hdf5(file_path, chunk_size)
     if "commute_cities" in f_keys:
         world.commutecities = load_commute_cities_from_hdf5(file_path)
+        world.commutecityunits = CommuteCityUnits(world.commutecities.members)
     if "commute_hubs" in f_keys:
         world.commutehubs = load_commute_hubs_from_hdf5(file_path)
+        world.commuteunits = CommuteUnits(world.commutehubs.members)
 
     spec_mapper = {
         "hospital": "hospitals",
