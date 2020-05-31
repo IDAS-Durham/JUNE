@@ -27,6 +27,7 @@ class ContactSampling(Interaction):
         """
         Get the number of contacts between one member of subgroup i, with members of subgroup j,
         using the contact matrix to sample from a Poisson distribution.
+
         Parameters
         ----------
         subgroup_i:
@@ -44,6 +45,7 @@ class ContactSampling(Interaction):
         idx_i = subgroup_i.subgroup_type
         idx_j = subgroup_j.subgroup_type
         n_contacts_per_day = self.contact_matrices.get(group_spec)[idx_i][idx_j]
+        #TODO: betas should enter here
         n_contacts = np.random.poisson(n_contacts_per_day * delta_time)
         return n_contacts
 
@@ -52,6 +54,7 @@ class ContactSampling(Interaction):
     ) -> List["Person"]:
         """
         Sample the susceptible people that the infected individual contacts
+
         Parameters
         ----------
         infecter:
@@ -82,6 +85,7 @@ class ContactSampling(Interaction):
     ):
         """
         Make the infecter interact with all susceptibles
+        
         Parameters
         ----------
         infecter:
@@ -94,6 +98,7 @@ class ContactSampling(Interaction):
             time at which the infection might happen
         """
         should_be_infected = np.random.random(len(susceptibles))
+        # TODO: should add susceptibility somewhere here if needed
         for recipient, luck in zip(susceptibles, should_be_infected):
             if luck < infecter.health_information.infection.transmission.probability:
                 self.selector.infect_person_at_time(person=recipient, time=time)
@@ -106,6 +111,7 @@ class ContactSampling(Interaction):
     ):
         """
         Run the interaction for a time step over the group.
+
         Parameters
         ----------
         group:
