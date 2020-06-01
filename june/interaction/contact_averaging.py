@@ -11,11 +11,12 @@ default_config_filename = (
 
 class ContactAveraging(Interaction):
     def __init__(
-        self, alpha_physical, beta, selector,
+        self, alpha_physical, beta, selector, inverted = False
     ):
         self.beta = beta
         self.alpha_physical = alpha_physical
         self.selector = selector
+        self.inverted = inverted
 
     @classmethod
     def from_file(
@@ -92,7 +93,10 @@ class ContactAveraging(Interaction):
             number of contacts a susceptible person has with infected people,
             times the average transmission probability of the subgroup with infected people
         """
-        subgroup_size = len(infecters_subgroup)
+        if self.inverted:
+            subgroup_size = len(susceptibles_subgroup)
+        else:
+            subgroup_size = len(infecters_subgroup)
         if susceptibles_subgroup == infecters_subgroup:
             subgroup_size -= 1
         susceptibles_idx = susceptibles_subgroup.subgroup_type
@@ -192,7 +196,7 @@ class ContactAveraging(Interaction):
                 )
 
     def single_time_step_for_group(
-        self, group: "Group", time: float, delta_time: float, logger: "Logger"
+        self, group: "Group", time: float, delta_time: float, logger: "Logger", 
     ):
         """
         Run the interaction for a time step over the group.
@@ -210,6 +214,8 @@ class ContactAveraging(Interaction):
  
         """
         contact_matrix = self.get_contact_matrix(group)
+        if self.inverted:
+            contact_matrix = contact_matrix.T
         subgroup_transmission_probabilities = self.get_sum_transmission_per_subgroup(
             group
         )
