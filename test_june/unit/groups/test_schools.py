@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import numpy as np
 import pytest
 
 from june.demography.geography import Geography
@@ -34,13 +34,17 @@ def area_name():
 class TestSchool:
     @pytest.fixture(name="school")
     def create_school(self):
+        contact_matrices = {'contacts': [[1,2],[3,1]],
+                            'proportion_physical': [[1,1],[1,1]],
+                            'xi': 0.5}
         return School(
             coordinates=(1.0, 1.0),
             n_pupils_max=467,
             n_teachers_max=73,
             age_min=6,
-            age_max=19,
+            age_max=8,
             sector="primary_secondary",
+            contact_matrices = contact_matrices
         )
 
     def test__school_grouptype(self, school):
@@ -55,6 +59,12 @@ class TestSchool:
         person = Person(sex="f", age=7)
         school.add(person, School.SubgroupType.students)
         assert bool(school.subgroups[2].people) is True
+
+    def test__contact_matrix(self, school):
+        true_contact = [[1, 2, 2, 2],[3,1,0.5,0.25], [3,0.5,1,0.5],[3,0.25,0.5,1]]         
+        np.testing.assert_allclose(school.contact_matrices['contacts'],
+                true_contact)
+
 
 
 class TestSchools:
@@ -87,4 +97,5 @@ class TestSchools:
             schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
         ]
         assert closest_school == school
+
 
