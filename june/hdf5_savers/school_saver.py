@@ -23,6 +23,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
     """
     n_schools = len(schools)
     n_chunks = int(np.ceil(n_schools / chunk_size))
+    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         schools_dset = f.create_group("schools")
         for chunk in range(n_chunks):
@@ -36,6 +37,9 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             age_max = []
             sectors = []
             coordinates = []
+            contact_matrices_sizes = []
+            contact_matrices_contacts = []
+            contact_matrices_physical = []
             for school in schools[idx1:idx2]:
                 ids.append(school.id)
                 n_pupils_max.append(school.n_pupils_max)
@@ -43,6 +47,13 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 n_teachers.append(school.n_teachers)
                 age_min.append(school.age_min)
                 age_max.append(school.age_max)
+                contact_matrices_sizes.append(school.contact_matrices["contacts"].shape)
+                contact_matrices_contacts.append(
+                    school.contact_matrices["contacts"].flatten()
+                )
+                contact_matrices_physical.append(
+                    school.contact_matrices["proportion_physical"].flatten()
+                )
                 if type(school.sector) is float:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
@@ -57,16 +68,48 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             age_max = np.array(age_max, dtype=np.int)
             sectors = np.array(sectors, dtype="S20")
             coordinates = np.array(coordinates, dtype=np.float)
+            contact_matrices_size = np.array(contact_matrices_sizes, dtype=np.int)
+            contact_matrices_contacts = np.array(
+                contact_matrices_contacts, dtype=vlen_type
+            )
+            contact_matrices_physical = np.array(
+                contact_matrices_physical, dtype=vlen_type
+            )
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
-                schools_dset.create_dataset("n_teachers_max", data=n_teachers_max, maxshape=(None,))
-                schools_dset.create_dataset("n_pupils_max", data=n_pupils_max, maxshape=(None,))
-                schools_dset.create_dataset("n_teachers", data=n_teachers, maxshape=(None,))
+                schools_dset.create_dataset(
+                    "n_teachers_max", data=n_teachers_max, maxshape=(None,)
+                )
+                schools_dset.create_dataset(
+                    "n_pupils_max", data=n_pupils_max, maxshape=(None,)
+                )
+                schools_dset.create_dataset(
+                    "n_teachers", data=n_teachers, maxshape=(None,)
+                )
                 schools_dset.create_dataset("age_min", data=age_min, maxshape=(None,))
                 schools_dset.create_dataset("age_max", data=age_max, maxshape=(None,))
                 schools_dset.create_dataset("sector", data=sectors, maxshape=(None,))
-                schools_dset.create_dataset("coordinates", data=coordinates, maxshape=(None, coordinates.shape[1]))
+                schools_dset.create_dataset(
+                    "coordinates",
+                    data=coordinates,
+                    maxshape=(None, coordinates.shape[1]),
+                )
+                schools_dset.create_dataset(
+                    "contact_matrices_size",
+                    data=contact_matrices_size,
+                    maxshape=(None, contact_matrices_size.shape[1]),
+                ),
+                schools_dset.create_dataset(
+                    "contact_matrices_contacts",
+                    data=contact_matrices_contacts,
+                    maxshape=(None,),
+                )
+                schools_dset.create_dataset(
+                    "contact_matrices_physical",
+                    data=contact_matrices_physical,
+                    maxshape=(None,),
+                )
             else:
                 newshape = (schools_dset["id"].shape[0] + ids.shape[0],)
                 schools_dset["id"].resize(newshape)
@@ -85,6 +128,17 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["sector"][idx1:idx2] = sectors
                 schools_dset["coordinates"].resize(newshape[0], axis=0)
                 schools_dset["coordinates"][idx1:idx2] = coordinates
+                schools_dset["contact_matrices_size"].resize(newshape[0], axis=0)
+                schools_dset["contact_matrices_size"][idx1:idx2] = contact_matrices_size 
+                schools_dset["contact_matrices_contacts"].resize(newshape)
+                schools_dset["contact_matrices_contacts"][
+                    idx1:idx2
+                ] = contact_matrices_contacts
+                schools_dset["contact_matrices_physical"].resize(newshape)
+                schools_dset["contact_matrices_physical"][
+                    idx1:idx2
+                ] = contact_matrices_physical
+
 
 def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
     """
@@ -107,6 +161,9 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             n_pupils_max = schools["n_pupils_max"][idx1:idx2]
             age_min = schools["age_min"][idx1:idx2]
             age_max = schools["age_max"][idx1:idx2]
+            contact_matrices_size = schools["contact_matrices_size"][idx1:idx2]
+            contact_matrices_contacts = schools["contact_matrices_contacts"][idx1:idx2]
+            contact_matrices_physical = schools["contact_matrices_physical"][idx1:idx2]
             coordinates = schools["coordinates"][idx1:idx2]
             sectors = schools["sector"][idx1:idx2]
             for k in range(idx2 - idx1):
@@ -125,5 +182,9 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
                 )
                 school.id = ids[k]
                 school.n_teachers = n_teachers[k]
+                school.contact_matrices = {
+                    "contacts": contact_matrices_contacts[k].reshape(contact_matrices_size[k]),
+                    "proportion_physical": contact_matrices_physical[k].reshape(contact_matrices_size[k]),
+                }
                 schools_list.append(school)
     return Schools(schools_list)

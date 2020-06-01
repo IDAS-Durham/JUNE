@@ -57,7 +57,7 @@ class School(Group):
         age_min: int,
         age_max: int,
         sector: str,
-        contact_matrices: dict,
+        contact_matrices: dict = None,
     ):
         """
         Create a School given its description.
@@ -96,7 +96,7 @@ class School(Group):
         self.age_max = age_max
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
-        if contact_matrices:
+        if contact_matrices is not None:
             self.contact_matrices = self.initialize_contacts(contact_matrices)
 
     def initialize_contacts(self, input_contact_matrices):

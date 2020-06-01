@@ -106,7 +106,7 @@ msoaslist = [
 t1 = time.time()
 
 # we have two options, we can take the list of areas above and select a few:
-geography = Geography.from_file({"msoa" : msoaslist[:10]})
+geography = Geography.from_file({"msoa" : msoaslist[:20]})
 # or select an entire region:
 #geography = Geography.from_file({"region" : ["North East"]})
 
@@ -118,7 +118,7 @@ geography.schools = Schools.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
-world = World(geography, demography, include_households=True, include_commute=True)
+world = World(geography, demography, include_households=True, include_commute=False)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving hdf5...")
