@@ -1,0 +1,13 @@
+alpha_physical: 2.
+
+beta:
+ box: 1
+ pub: 1
+ grocery: 0.1
+ cinema: 0.1
+ commute_unit: 1
+ commute_city_unit: 1
+ hospital: 1
+ company: 1
+ school: 1
+ household: 1
