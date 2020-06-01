@@ -35,7 +35,7 @@ class DefaultInteraction(Interaction):
                 self.contacts[tag] = contact_matrices[tag]["contacts"]
             if "physical" in contact_matrices[tag]:
                 self.physical[tag] = contact_matrices[tag]["physical"]
-        elif tag == "school":
+        if tag == "school":
             if "xi" in contact_matrices[tag]:
                 self.schoolxi = float(contact_matrices[tag]["xi"])
             if len(self.contacts["school"]) == 2 and len(self.physical["school"]) == 2:
@@ -108,16 +108,6 @@ class DefaultInteraction(Interaction):
     def intensity(self, group, infecter, recipient):
         tag = group.spec
         if tag == "school":
-            """
-            if infecter > 0 and recipient > 0:
-                return 5 
-            elif infecter == 0 and recipient > 0:
-                return 30 
-            elif infecter > 0 and recipient == 0:
-                return 40 
-            else:
-                return 3
-            """
             if infecter > 0 and recipient > 0:
                 delta = pow(self.schoolxi, abs(recipient - infecter))
                 mixer = self.schoolC * delta
