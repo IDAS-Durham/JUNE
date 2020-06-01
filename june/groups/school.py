@@ -42,6 +42,7 @@ class School(Group):
         "age_max",
         "age_structure",
         "sector",
+        "contact_matrices"
     )
 
     class SubgroupType(IntEnum):
@@ -56,6 +57,7 @@ class School(Group):
         age_min: int,
         age_max: int,
         sector: str,
+        contact_matrices: dict,
     ):
         """
         Create a School given its description.
@@ -72,6 +74,8 @@ class School(Group):
             maximum age of the pupils
         sector:
             whether it is a "primary", "secondary" or both "primary_secondary"
+        contact_matrices:
+            dictionary containing the physical and conversational contact matrices
 
         number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
         0 - teachers
@@ -92,6 +96,30 @@ class School(Group):
         self.age_max = age_max
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
+        if contact_matrices:
+            self.contact_matrices = self.initialize_contacts(contact_matrices)
+
+    def initialize_contacts(self, input_contact_matrices):
+        contact_matrices = {}
+        contact_matrices["contacts"] = self.adapt_contacts_to_schools(
+            input_contact_matrices["contacts"], input_contact_matrices['xi']
+        )
+        contact_matrices["proportion_physical"] = self.adapt_contacts_to_schools(
+            input_contact_matrices["proportion_physical"], input_contact_matrices['xi']
+        )
+        return contact_matrices
+
+    def adapt_contacts_to_schools(self, input_contact_matrix, xi):
+        n_subgroups = len(self.subgroups)
+        contact_matrix = np.zeros((n_subgroups, n_subgroups))
+        contact_matrix[0,0] = input_contact_matrix[0][0]
+        contact_matrix[0,1:] = input_contact_matrix[0][1]
+        contact_matrix[1:,0] = input_contact_matrix[1][0]
+        age_differences = np.subtract.outer(
+            range(self.age_min, self.age_max+1), range(self.age_min, self.age_max+1)
+        )
+        contact_matrix[1:,1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
+        return contact_matrix
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
@@ -245,6 +273,7 @@ class Schools(Supergroup):
         school_df: pd.DataFrame,
         age_range: Tuple[int, int] = (0, 19),
         employee_per_clients: Dict[str, int] = None,
+        contact_matrices: Dict[str, List[float]] = None,
     ) -> "Schools":
         """
         Parameters
@@ -273,6 +302,7 @@ class Schools(Supergroup):
                 int(row["age_min"]),
                 int(row["age_max"]),
                 row["sector"],
+                contact_matrices,
             )
             schools.append(school)
 
@@ -362,4 +392,3 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
-

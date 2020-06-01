@@ -4,14 +4,40 @@ from typing import List
 from june import paths
 from june.interaction.interaction import Interaction
 
+default_config_filename = (
+    paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
+)
+
 
 class ContactAveraging(Interaction):
-    def __init__(self, betas, contact_matrices, selector):
+    def __init__(
+        self, alpha_physical, betas, selector,
+    ):
         self.betas = betas
-        self.contact_matrices = contact_matrices
+        self.alpha_physical = alpha_physical
         self.selector = selector
 
-    def get_sum_transmission_per_subgroup(self, group: "Group")->List[float]:
+    @classmethod
+    def from_file(
+        cls, config_fileanme: str = default_config_filename, selector=None,
+    ) -> "ContactAveraging":
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        return ContactAveraging(
+            alpha_physical=config["alpha_physical"],
+            betas=config["beta"],
+            selector=selector,
+        )
+
+    def get_contact_matrix(self, group):
+        contacts = group.contact_matrices.get("contacts", [[1]])
+        proportion_physical = group.contact_matrices.get("proportion_physical", [[0]])
+        return contacts * (
+            1.0 + (self.alpha_physical - 1.0) * proportion_physical
+        )
+
+    def get_sum_transmission_per_subgroup(self, group: "Group") -> List[float]:
         """
         Given a group, computes the sum of the transmission probabilities 
         of the infected people per subgroup
@@ -22,12 +48,12 @@ class ContactAveraging(Interaction):
         group:
             instance of group to run the interaction model on
         """
-        self.transmission_per_subgroup = [
+        return [
             self.get_sum_transmission_probabilities(subgroup)
             for subgroup in group.subgroups
         ]
 
-    def get_sum_transmission_probabilities(self, subgroup: "Subgroup")->float:
+    def get_sum_transmission_probabilities(self, subgroup: "Subgroup") -> float:
         """
         Compute the sum of transmission probabilities for a subgroup
 
@@ -44,8 +70,13 @@ class ContactAveraging(Interaction):
         )
 
     def subgroup_to_subgroup_transmission(
-        self, susceptibles_subgroup, infecters_subgroup, group_spec
-    )->float:
+        self,
+        contact_matrix,
+        subgroup_transmission_probabilities,
+        susceptibles_subgroup,
+        infecters_subgroup,
+        group_spec,
+    ) -> float:
         """
         Computes the transmission power from one subgroup to another, given by their
         number of contacts that a susceptible person might do with an infected person in
@@ -69,15 +100,22 @@ class ContactAveraging(Interaction):
             subgroup_size -= 1
         susceptibles_idx = susceptibles_subgroup.subgroup_type
         infecters_idx = infecters_subgroup.subgroup_type
-        n_contacts = self.contact_matrices.get(group_spec)[susceptibles_idx][
-            infecters_idx
-        ]
+        n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
         return (
-            n_contacts / subgroup_size * self.transmission_per_subgroup[infecters_idx]
+            n_contacts
+            / subgroup_size
+            * subgroup_transmission_probabilities[infecters_idx]
         )
 
-    def compute_effective_transmission(self, susceptibles_subgroup: "Subgroup", group: "Group", delta_time: float)->List[float]:
-        '''
+    def compute_effective_transmission(
+        self,
+        contact_matrix,
+        subgroup_transmission_probabilities,
+        susceptibles_subgroup: "Subgroup",
+        group: "Group",
+        delta_time: float,
+    ) -> List[float]:
+        """
         Compute the effective transmission probability of infected people, by summing the 
         transmissions from different subgroups.
 
@@ -93,7 +131,7 @@ class ContactAveraging(Interaction):
         Returns
         -------
             list of transmission probabilities for each susceptible person
-        '''
+        """
         transmission_exponent = 0
         susceptibilities = np.array(
             [person.susceptibility for person in susceptibles_subgroup]
@@ -101,19 +139,29 @@ class ContactAveraging(Interaction):
         for subgroup in group.subgroups:
             if len(subgroup.infected) > 0:
                 transmission_exponent += self.subgroup_to_subgroup_transmission(
-                    susceptibles_subgroup, subgroup, group.spec
+                    contact_matrix,
+                    subgroup_transmission_probabilities,
+                    susceptibles_subgroup,
+                    subgroup,
+                    group.spec,
                 )
         return 1.0 - np.exp(
             -delta_time
             * susceptibilities
-            * self.betas.get(group.spec)
+            * self.betas.get(group.spec, 1)
             * transmission_exponent
         )
 
     def single_time_step_for_subgroup(
-            self, susceptibles_subgroup: "Subgroup", group: "Group", time: float, delta_time: float
+        self,
+        contact_matrix,
+        subgroup_transmission_probabilities,
+        susceptibles_subgroup: "Subgroup",
+        group: "Group",
+        time: float,
+        delta_time: float,
     ):
-        '''
+        """
         Run the interaction for a time step over a subgroup
         
         Parameters
@@ -126,9 +174,13 @@ class ContactAveraging(Interaction):
             time at which the interaction happens (in units of days)
         delta_time:
             duration of the interaction (in units of days)
-        '''
+        """
         transmission_probability = self.compute_effective_transmission(
-            susceptibles_subgroup, group, delta_time
+            contact_matrix,
+            subgroup_transmission_probabilities,
+            susceptibles_subgroup,
+            group,
+            delta_time,
         )
         should_be_infected = np.random.random(len(susceptibles_subgroup))
         for i, (recipient, luck) in enumerate(
@@ -140,8 +192,10 @@ class ContactAveraging(Interaction):
                     time=time, group_type=group.spec, infecter=None, logger=None
                 )
 
-    def single_time_step_for_group(self, group: "Group", time: float, delta_time: float, logger: "Logger"):
-        '''
+    def single_time_step_for_group(
+        self, group: "Group", time: float, delta_time: float, logger: "Logger"
+    ):
+        """
         Run the interaction for a time step over the group.
 
         Parameters
@@ -155,10 +209,18 @@ class ContactAveraging(Interaction):
         logger:
             logger to save R related information 
  
-        '''
-        self.get_sum_transmission_per_subgroup(group)
+        """
+        contact_matrix = self.get_contact_matrix(group)
+        subgroup_transmission_probabilities = self.get_sum_transmission_per_subgroup(
+            group
+        )
         for susceptibles_subgroup in group.subgroups:
             if len(susceptibles_subgroup.susceptible) > 0:
                 self.single_time_step_for_subgroup(
-                    susceptibles_subgroup, group, time, delta_time
+                    contact_matrix,
+                    subgroup_transmission_probabilities,
+                    susceptibles_subgroup,
+                    group,
+                    time,
+                    delta_time,
                 )

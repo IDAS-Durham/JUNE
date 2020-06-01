@@ -108,14 +108,15 @@ class DefaultInteraction(Interaction):
     def intensity(self, group, infecter, recipient):
         tag = group.spec
         if tag == "school":
+            """
             if infecter > 0 and recipient > 0:
-                return 20
+                return 5 
             elif infecter == 0 and recipient > 0:
-                return 5 
+                return 30 
             elif infecter > 0 and recipient == 0:
-                return 5 
+                return 40 
             else:
-                return 1
+                return 3
             """
             if infecter > 0 and recipient > 0:
                 delta = pow(self.schoolxi, abs(recipient - infecter))
@@ -130,7 +131,6 @@ class DefaultInteraction(Interaction):
             else:
                 mixer = self.contacts[tag][0][0]
                 phys  = self.physical[tag][0][0]
-            """
         else:
             if recipient >= len(self.contacts[tag]) or infecter >= len(
                 self.contacts[tag][recipient]
