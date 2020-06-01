@@ -44,6 +44,7 @@ print("commute OK")
 #selector_config = "./config_infection.yaml"
 selector = InfectionSelector.from_file()
 interaction = ContactAveraging.from_file(selector=selector)
+#interaction = DefaultInteraction.from_file(selector=selector)
 
 print("interaction OK")
 
