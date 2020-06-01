@@ -74,6 +74,7 @@ class Group:
         self.size = 0
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
+        self.contact_matrices = {}
 
     @property
     def name(self) -> str:
