@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from june.demography.geography import Geography
 from june.demography import Demography
 from june.world import World
-from june.interaction import DefaultInteraction
+from june.interaction import DefaultInteraction, ContactAveraging
 from june.infection import InfectionSelector, Infection
 from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
@@ -45,7 +45,7 @@ print(f"Creating the world took {t2 -t1} seconds to run.")
 selector                          = InfectionSelector.from_file(constant_config)
 selector.recovery_rate            = 0.05
 selector.transmission_probability = 0.7
-interaction            = DefaultInteraction.from_file()
+interaction            = ContactAveraging.from_file()
 interaction.selector   = selector
 # *********** INITIALIZE SIMULATOR ***************** #
 simulator = Simulator.from_file(world, interaction, selector,

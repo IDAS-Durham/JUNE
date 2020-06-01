@@ -31,8 +31,8 @@ class ContactAveraging(Interaction):
         )
 
     def get_contact_matrix(self, group):
-        contacts = np.array(group.contact_matrices.get("contacts", [[1]]))
-        proportion_physical = np.array(group.contact_matrices.get("proportion_physical", [[0]]))
+        contacts = group.contact_matrices.get("contacts", np.array([[1]]))
+        proportion_physical = group.contact_matrices.get("proportion_physical", np.array([[0]]))
         return contacts * (
             1.0 + (self.alpha_physical - 1.0) * proportion_physical
         )
@@ -111,6 +111,7 @@ class ContactAveraging(Interaction):
         self,
         contact_matrix,
         subgroup_transmission_probabilities,
+        susceptibilities: np.array,
         susceptibles_subgroup: "Subgroup",
         group: "Group",
         delta_time: float,
@@ -133,11 +134,8 @@ class ContactAveraging(Interaction):
             list of transmission probabilities for each susceptible person
         """
         transmission_exponent = 0
-        susceptibilities = np.array(
-            [person.susceptibility for person in susceptibles_subgroup]
-        )
         for subgroup in group.subgroups:
-            if len(subgroup.infected) > 0:
+            if subgroup.infected:
                 transmission_exponent += self.subgroup_to_subgroup_transmission(
                     contact_matrix,
                     subgroup_transmission_probabilities,
@@ -175,16 +173,21 @@ class ContactAveraging(Interaction):
         delta_time:
             duration of the interaction (in units of days)
         """
+        susceptibles = susceptibles_subgroup.susceptible
+        susceptibilities = np.array(
+            [person.susceptibility for person in susceptibles]
+        )
         transmission_probability = self.compute_effective_transmission(
             contact_matrix,
             subgroup_transmission_probabilities,
+            susceptibilities,
             susceptibles_subgroup,
             group,
             delta_time,
         )
-        should_be_infected = np.random.random(len(susceptibles_subgroup))
+        should_be_infected = np.random.random(len(susceptibles))
         for i, (recipient, luck) in enumerate(
-            zip(susceptibles_subgroup, should_be_infected)
+            zip(susceptibles, should_be_infected)
         ):
             if luck < transmission_probability[i]:
                 self.selector.infect_person_at_time(person=recipient, time=time)

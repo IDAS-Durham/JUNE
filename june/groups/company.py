@@ -53,6 +53,13 @@ class Company(Group):
         self.sector = sector
         self.n_workers_max = n_workers_max
         self.contact_matrices = contact_matrices
+        if contact_matrices:
+            self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
+            self.contact_matrices["proportion_physical"] = np.array(
+                self.contact_matrices["proportion_physical"]
+            )
+
+
 
     def add(self, person):
         super().add(
