@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import yaml
-from typing import List
+from typing import List, Tuple
 from june.interaction.interaction import Interaction
 
 
@@ -76,6 +76,30 @@ class ContactSampling(Interaction):
             susceptibles = np.random.choice(subgroup_j.people, size=n_contacts)
         return [person for person in susceptibles if person.susceptible]
 
+    def sample_pair(
+        self, subgroup_i: "Subgroup", subgroup_j: "Subgroup", 
+    ) -> Tuple["Person"]:
+        """
+        Sample the susceptible people that the infected individual contacts
+
+        Parameters
+        ----------
+        subgroup_j:
+            subgroup of people looking to be infected 
+        n_contacts:
+            number of contacts the infecter has with people from subgroup_j
+        Returns
+        -------
+            list of susceptible people to contact
+        """
+        person_i = random_choice(subgroup_i.people)
+        if subgroup_i == subgroup_j:
+            person_j = random_choice([person for person in subgroup_j if person != person_i])
+        else:
+            person_j = random_choice(subgroup_j.people)
+
+        return (person_i, person_j) 
+
     def pair_interaction(
         self,
         infecter: "Person",
@@ -129,8 +153,6 @@ class ContactSampling(Interaction):
                 n_contacts = self.number_of_contacts(
                     subgroup_i, subgroup_j, group_spec, delta_time
                 )
-                for infecter in subgroup_i.infected:
-                    susceptibles = self.sample_susceptible_pairs_for_infected(
-                        infecter, subgroup_j, n_contacts
-                    )
-                    self.pair_interaction(infecter, susceptibles, group_spec, time)
+                for n in range(n_contacts):
+                    pair = self.sample_pairs(subgroup_i, subgroup_j)
+                    self.pair_interaction(pair, group_spec, time)
