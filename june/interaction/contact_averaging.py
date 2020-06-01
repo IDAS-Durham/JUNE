@@ -40,15 +40,6 @@ class ContactAveraging(Interaction):
             selector=selector,
         )
 
-    #def get_contact_matrix(self, group):
-    #    contacts = group.contact_matrices.get("contacts", np.array([[1]]))
-    #    # contacts = group.contact_matrices["contacts"] #.get("contacts", np.array([[1]]))
-    #    # proportion_physical = group.contact_matrices["proportion_physical"]
-    #    proportion_physical = group.contact_matrices.get(
-    #        "proportion_physical", np.array([[0]])
-    #    )
-    #    return contacts * (1.0 + (self.alpha_physical - 1.0) * proportion_physical)
-
     def get_sum_transmission_per_subgroup(self, group: "Group") -> List[float]:
         """
         Given a group, computes the sum of the transmission probabilities 
@@ -61,25 +52,14 @@ class ContactAveraging(Interaction):
             instance of group to run the interaction model on
         """
         return [
-            self.get_sum_transmission_probabilities(subgroup)
+            sum(
+                [
+                    person.health_information.infection.transmission.probability
+                    for person in subgroup.infected
+                ]
+            )
             for subgroup in group.subgroups
         ]
-
-    def get_sum_transmission_probabilities(self, subgroup: "Subgroup") -> float:
-        """
-        Compute the sum of transmission probabilities for a subgroup
-
-        Parameters
-        ----------
-        subgroup:
-            an instance of subgroup 
-        """
-        return sum(
-            [
-                person.health_information.infection.transmission.probability
-                for person in subgroup.infected
-            ]
-        )
 
     def subgroup_to_subgroup_transmission(
         self,
@@ -161,12 +141,6 @@ class ContactAveraging(Interaction):
             beta=self.beta[group.spec],
             transmission_exponent=transmission_exponent,
         )
-        #return 1.0 - np.exp(
-        #    -delta_time
-        #    * susceptibilities
-        #    * self.beta[group.spec]  # .get(group.spec, 1)
-        #    * transmission_exponent
-        #)
 
     # @profile
     def single_time_step_for_subgroup(
@@ -195,12 +169,12 @@ class ContactAveraging(Interaction):
         susceptibles = susceptibles_subgroup.susceptible
         susceptibilities = np.array([person.susceptibility for person in susceptibles])
         transmission_probability = self.compute_effective_transmission(
-           contact_matrix,
-           subgroup_transmission_probabilities,
-           susceptibilities,
-           susceptibles_subgroup,
-           group,
-           delta_time,
+            contact_matrix,
+            subgroup_transmission_probabilities,
+            susceptibilities,
+            susceptibles_subgroup,
+            group,
+            delta_time,
         )
         should_be_infected = np.random.rand(len(susceptibles))
         for i, (recipient, luck) in enumerate(zip(susceptibles, should_be_infected)):
@@ -210,7 +184,7 @@ class ContactAveraging(Interaction):
                     time=time, group_type=group.spec, infecter=None, logger=None
                 )
 
-    # @profile
+    @profile
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",
     ):

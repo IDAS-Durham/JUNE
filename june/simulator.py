@@ -224,6 +224,7 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
+    #@profile
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
@@ -240,6 +241,7 @@ class Simulator:
         activities.sort(key=lambda x: self.activity_hierarchy.index(x))
         return activities
 
+    #@profile
     def activities_to_groups(self, activities: List[str]) -> List[str]:
         """
         Converts activities into Groups, the interaction will run over these Groups.
@@ -256,6 +258,7 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
+    #@profile
     def clear_world(self):
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
@@ -272,6 +275,7 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
 
+    #@profile
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
     ) -> "Subgroup":
@@ -437,6 +441,7 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
+    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -474,6 +479,7 @@ class Simulator:
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
 
+    #@profile
     def do_timestep(self):
         """
         Perform a time step in the simulation
