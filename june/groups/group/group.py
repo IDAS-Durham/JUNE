@@ -49,7 +49,8 @@ class Group:
         "id",
         "subgroups",
         "spec",
-        "size"
+        "size",
+        "contact_matrices"
     )
 
     __id_generators = defaultdict(count)

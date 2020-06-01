@@ -74,7 +74,7 @@ class Hospital(Group):
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.contact_matrices = contact_matrices
-        if contact_matrices:
+        if contact_matrices is not None:
             self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
             self.contact_matrices["proportion_physical"] = np.array(
                 self.contact_matrices["proportion_physical"]

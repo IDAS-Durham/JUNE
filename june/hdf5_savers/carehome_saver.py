@@ -25,6 +25,7 @@ def save_care_homes_to_hdf5(
     """
     n_care_homes = len(care_homes)
     n_chunks = int(np.ceil(n_care_homes / chunk_size))
+    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         care_homes_dset = f.create_group("care_homes")
         for chunk in range(n_chunks):
@@ -34,6 +35,9 @@ def save_care_homes_to_hdf5(
             areas = []
             n_residents = []
             n_workers = []
+            contact_matrices_sizes = []
+            contact_matrices_contacts = []
+            contact_matrices_physical = []
             for carehome in care_homes[idx1:idx2]:
                 ids.append(carehome.id)
                 if carehome.area is None:
@@ -42,17 +46,48 @@ def save_care_homes_to_hdf5(
                     areas.append(carehome.area.id)
                 n_residents.append(carehome.n_residents)
                 n_workers.append(carehome.n_workers)
+                contact_matrices_sizes.append(
+                    carehome.contact_matrices["contacts"].shape
+                )
+                contact_matrices_contacts.append(
+                    carehome.contact_matrices["contacts"].flatten()
+                )
+                contact_matrices_physical.append(
+                    carehome.contact_matrices["proportion_physical"].flatten()
+                )
 
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
             n_residents = np.array(n_residents, dtype=np.float)
             n_workers = np.array(n_workers, dtype=np.float)
+            contact_matrices_size = np.array(contact_matrices_sizes, dtype=np.int)
+            contact_matrices_contacts = np.array(contact_matrices_contacts,)
+            contact_matrices_physical = np.array(contact_matrices_physical,)
             if chunk == 0:
                 care_homes_dset.attrs["n_care_homes"] = n_care_homes
                 care_homes_dset.create_dataset("id", data=ids, maxshape=(None,))
                 care_homes_dset.create_dataset("area", data=areas, maxshape=(None,))
-                care_homes_dset.create_dataset("n_residents", data=n_residents, maxshape=(None,))
-                care_homes_dset.create_dataset("n_workers", data=n_workers, maxshape=(None,))
+                care_homes_dset.create_dataset(
+                    "n_residents", data=n_residents, maxshape=(None,)
+                )
+                care_homes_dset.create_dataset(
+                    "n_workers", data=n_workers, maxshape=(None,)
+                )
+                care_homes_dset.create_dataset(
+                    "contact_matrices_size",
+                    data=contact_matrices_size,
+                    maxshape=(None, contact_matrices_size.shape[1]),
+                ),
+                care_homes_dset.create_dataset(
+                    "contact_matrices_contacts",
+                    data=contact_matrices_contacts,
+                    maxshape=(None, contact_matrices_contacts.shape[1]),
+                )
+                care_homes_dset.create_dataset(
+                    "contact_matrices_physical",
+                    data=contact_matrices_physical,
+                    maxshape=(None, contact_matrices_physical.shape[1]),
+                )
             else:
                 newshape = (care_homes_dset["id"].shape[0] + ids.shape[0],)
                 care_homes_dset["id"].resize(newshape)
@@ -63,6 +98,19 @@ def save_care_homes_to_hdf5(
                 care_homes_dset["n_residents"][idx1:idx2] = n_residents
                 care_homes_dset["n_workers"].resize(newshape)
                 care_homes_dset["n_workers"][idx1:idx2] = n_workers
+                care_homes_dset["contact_matrices_size"].resize(newshape[0], axis=0)
+                care_homes_dset["contact_matrices_size"][
+                    idx1:idx2
+                ] = contact_matrices_size
+                care_homes_dset["contact_matrices_contacts"].resize(newshape)
+                care_homes_dset["contact_matrices_contacts"][
+                    idx1:idx2
+                ] = contact_matrices_contacts
+                care_homes_dset["contact_matrices_physical"].resize(newshape)
+                care_homes_dset["contact_matrices_physical"][
+                    idx1:idx2
+                ] = contact_matrices_physical
+
 
 def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
     """
@@ -83,11 +131,26 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
             areas = carehomes["area"][idx1:idx2]
             n_residents = carehomes["n_residents"][idx1:idx2]
             n_workers = carehomes["n_workers"][idx1:idx2]
+            contact_matrices_size = carehomes["contact_matrices_size"][idx1:idx2]
+            contact_matrices_contacts = carehomes["contact_matrices_contacts"][
+                idx1:idx2
+            ]
+            contact_matrices_physical = carehomes["contact_matrices_physical"][
+                idx1:idx2
+            ]
             for k in range(idx2 - idx1):
                 area = areas[k]
                 if area == nan_integer:
                     area = None
                 carehome = CareHome(area, n_residents[k], n_workers[k])
                 carehome.id = ids[k]
+                carehome.contact_matrices = {
+                    "contacts": contact_matrices_contacts[k].reshape(
+                        contact_matrices_size[k]
+                    ),
+                    "proportion_physical": contact_matrices_physical[k].reshape(
+                        contact_matrices_size[k]
+                    ),
+                }
                 carehomes_list.append(carehome)
     return CareHomes(carehomes_list)
