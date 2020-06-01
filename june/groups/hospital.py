@@ -74,6 +74,11 @@ class Hospital(Group):
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.contact_matrices = contact_matrices
+        if contact_matrices:
+            self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
+            self.contact_matrices["proportion_physical"] = np.array(
+                self.contact_matrices["proportion_physical"]
+            )
 
     @property
     def full(self):
@@ -95,9 +100,7 @@ class Hospital(Group):
             self.SubgroupType.icu_patients,
         ]:
             super().add(
-                person,
-                activity="hospital",  
-                subgroup_type=subgroup_type,
+                person, activity="hospital", subgroup_type=subgroup_type,
             )
         else:
             super().add(
@@ -245,7 +248,7 @@ class Hospitals(Supergroup):
                 else:
                     for _, row in hospitals_in_area.iterrows():
                         hospital = cls.create_hospital_from_df_row(
-                                super_area, row, icu_fraction, contact_matrices
+                            super_area, row, icu_fraction, contact_matrices
                         )
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
@@ -253,7 +256,9 @@ class Hospitals(Supergroup):
         return cls(hospitals, max_distance, False)
 
     @classmethod
-    def create_hospital_from_df_row(cls, super_area, row, icu_fraction, contact_matrices):
+    def create_hospital_from_df_row(
+        cls, super_area, row, icu_fraction, contact_matrices
+    ):
         coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
         n_beds = row["beds"]
         n_icu_beds = round(icu_fraction * n_beds)
@@ -268,7 +273,7 @@ class Hospitals(Supergroup):
         return hospital
 
     def init_hospitals(
-            self, hospital_df: pd.DataFrame, icu_fraction: float, contact_matrices: dict
+        self, hospital_df: pd.DataFrame, icu_fraction: float, contact_matrices: dict
     ) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics,
@@ -292,7 +297,7 @@ class Hospitals(Supergroup):
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,
-                contact_matrices = contact_matrices,
+                contact_matrices=contact_matrices,
             )
             hospitals.append(hospital)
         return hospitals
