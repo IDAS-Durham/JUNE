@@ -44,6 +44,12 @@ class Household(Group):
         self.n_residents = 0
         self.relatives = None
         self.contact_matrices = contact_matrices
+        if contact_matrices:
+            self.contact_matrices["contacts"] = np.array(contact_matrices["contacts"])
+            self.contact_matrices["proportion_physical"] = np.array(
+                contact_matrices["proportion_physical"]
+            )
+
 
     def add(self, person, subgroup_type=SubgroupType.adults):
         self[subgroup_type].append(person)
