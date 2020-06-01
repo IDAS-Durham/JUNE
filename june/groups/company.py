@@ -4,6 +4,7 @@ from enum import IntEnum
 from june import paths
 from typing import List
 import h5py
+import yaml
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_20
 default_areas_map_path = (
     paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
+default_config_filename = paths.configs_path / "defaults/groups/companies.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +47,19 @@ class Company(Group):
     class SubgroupType(IntEnum):
         workers = 0
 
-    def __init__(self, super_area=None, n_workers_max=np.inf, sector=None):
+    def __init__(self, super_area=None, n_workers_max=np.inf, sector=None, contact_matrices=None):
         super().__init__()
         self.super_area = super_area
         self.sector = sector
         self.n_workers_max = n_workers_max
+        self.contact_matrices = contact_matrices
+        if contact_matrices:
+            self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
+            self.contact_matrices["proportion_physical"] = np.array(
+                self.contact_matrices["proportion_physical"]
+            )
+
+
 
     def add(self, person):
         super().add(
@@ -89,6 +99,7 @@ class Companies(Supergroup):
         geography: Geography,
         size_nr_file: str = default_size_nr_file,
         sector_nr_per_msoa_file: str = default_sector_nr_per_msoa_file,
+        default_config_filename: str = default_config_filename,
     ) -> "Companies":
         """
         Creates companies for the specified geography, and saves them 
@@ -105,7 +116,7 @@ class Companies(Supergroup):
         if len(geography.super_areas) == 0:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
-            geography.super_areas, size_nr_file, sector_nr_per_msoa_file
+            geography.super_areas, size_nr_file, sector_nr_per_msoa_file, default_config_filename
         )
 
     @classmethod
@@ -114,6 +125,7 @@ class Companies(Supergroup):
         super_areas: List[SuperArea],
         size_nr_per_super_area_file: str = default_size_nr_file,
         sector_nr_per_super_area_file: str = default_sector_nr_per_msoa_file,
+        default_config_filename: str = default_config_filename,
     ) -> "Companies":
         """Creates companies for the specified super_areas, and saves them 
         to the super_aresa they belong to
@@ -129,6 +141,10 @@ class Companies(Supergroup):
         Parameters
         ----------
         """
+        with open(default_config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        contact_matrices = config['contact_matrices']
+
         size_per_superarea_df = pd.read_csv(size_nr_per_super_area_file, index_col=0)
         sector_per_superarea_df = pd.read_csv(
             sector_nr_per_super_area_file, index_col=0
@@ -143,6 +159,7 @@ class Companies(Supergroup):
                 super_area,
                 company_sizes_per_super_area,
                 company_sectors_per_super_area,
+                contact_matrices,
             )
             super_area.companies = companies
         else:
@@ -153,7 +170,7 @@ class Companies(Supergroup):
                 company_sectors_per_super_area.iterrows(),
             ):
                 super_area.companies = cls.create_companies_in_super_area(
-                    super_area, company_sizes, company_sectors
+                    super_area, company_sizes, company_sectors, contact_matrices
                 )
                 companies += super_area.companies
         return cls(companies)
@@ -164,6 +181,7 @@ class Companies(Supergroup):
             super_area: SuperArea,
             company_sizes,
             company_sectors,
+            contact_matrices,
     ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.
@@ -179,7 +197,7 @@ class Companies(Supergroup):
         companies = list(
             map(
                 lambda company_size, company_sector: cls.create_company(
-                    super_area, company_size, company_sector
+                    super_area, company_size, company_sector, contact_matrices
                 ),
                 sizes,
                 sectors,
@@ -193,8 +211,8 @@ class Companies(Supergroup):
         return companies
 
     @classmethod
-    def create_company(cls, super_area, company_size, company_sector):
-        company = Company(super_area, company_size, company_sector)
+    def create_company(cls, super_area, company_size, company_sector, contact_matrices):
+        company = Company(super_area, company_size, company_sector, contact_matrices)
         return company
 
 

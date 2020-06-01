@@ -3,3 +3,8 @@ employee_per_clients:
   primary: 30
   secondary: 30   # how many this job gives service to
   primary_secondary: 30
+
+contact_matrices:
+  contacts: [[25, 0.75], [15, 2.5]]
+  proportion_physical: [[0.05, 0.08], [0.08, 0.15]]
+  xi: 0.3
