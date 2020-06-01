@@ -35,7 +35,7 @@ print("leisure good")
 world.cemeteries = Cemeteries()
 
 # commute
-world.initialise_commuting()
+#world.initialise_commuting()
 print("commute OK")
 ######
 
@@ -43,7 +43,6 @@ print("commute OK")
 # select path to infection configuration
 #selector_config = "./config_infection.yaml"
 selector = InfectionSelector.from_file()
-<<<<<<< HEAD
 interaction = ContactAveraging.from_file(selector=selector)
 #interaction = DefaultInteraction.from_file(selector=selector)
 
@@ -65,7 +64,7 @@ n_cases = 2_000
 
 # 2. randomly distribute
 seed.unleash_virus(
-    50,
+    int(len(world.people)/10),
 )  # this will put 500 infected randomly
 
 print("seeding OK")

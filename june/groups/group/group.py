@@ -45,13 +45,7 @@ class Group:
 
         default = 0
 
-    __slots__ = (
-        "id",
-        "subgroups",
-        "spec",
-        "size",
-        "contact_matrices"
-    )
+    __slots__ = ("id", "subgroups", "spec", "size", "contact_matrices")
 
     __id_generators = defaultdict(count)
 
@@ -75,7 +69,10 @@ class Group:
         self.size = 0
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
-        self.contact_matrices = {}
+        self.contact_matrices = {
+            "contacts": np.array([[1]]),
+            "proportion_physical": np.array([[0]]),
+        }
 
     @property
     def name(self) -> str:
