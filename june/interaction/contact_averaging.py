@@ -75,7 +75,6 @@ class ContactAveraging(Interaction):
         subgroup_transmission_probabilities,
         susceptibles_subgroup,
         infecters_subgroup,
-        group_spec,
     ) -> float:
         """
         Computes the transmission power from one subgroup to another, given by their
@@ -88,8 +87,6 @@ class ContactAveraging(Interaction):
             subgroup containing susceptible people
         infecters_subgroup:
             subgroup containing infected people
-        group_spec:
-            specifier of the group
         Returns
         -------
             number of contacts a susceptible person has with infected people,
@@ -141,7 +138,6 @@ class ContactAveraging(Interaction):
                     subgroup_transmission_probabilities,
                     susceptibles_subgroup,
                     subgroup,
-                    group.spec,
                 )
         return 1.0 - np.exp(
             -delta_time
