@@ -184,7 +184,7 @@ class ContactAveraging(Interaction):
                     time=time, group_type=group.spec, infecter=None, logger=None
                 )
 
-    @profile
+    #@profile
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",
     ):
