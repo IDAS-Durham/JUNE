@@ -34,20 +34,19 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
-    __slots__ = "n_residents", "area", 'n_workers', 'relatives'
-
+    __slots__ = "n_residents", "area", 'n_workers', "relatives"
     class SubgroupType(IntEnum):
         workers = 0
         residents = 1
         visitors = 2
 
-    def __init__(self, area: Area=None, n_residents: int=None, n_workers: int=None, contact_matrices: dict={}):
+    def __init__(self, area: Area=None, n_residents: int=None, n_workers: int=None, contact_matrices: dict = None):
         super().__init__()
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
         self.relatives = None
-        if contact_matrices:
+        if contact_matrices is not None:
             self.contact_matrices["contacts"] = np.array(contact_matrices["contacts"])
             self.contact_matrices["proportion_physical"] = np.array(
                 contact_matrices["proportion_physical"]

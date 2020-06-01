@@ -139,6 +139,15 @@ class TestSaveHouses:
                 assert household.area.id == household2.area
             else:
                 assert household2.area is None
+            # contact matrices
+            assert (
+                household.contact_matrices["contacts"]
+                == household2.contact_matrices["contacts"]
+            ).all()
+            assert (
+                household.contact_matrices["proportion_physical"]
+                == household2.contact_matrices["proportion_physical"]
+            ).all()
 
 
 class TestSaveCompanies:
@@ -158,6 +167,15 @@ class TestSaveCompanies:
                 assert company.super_area.id == company2.super_area
             else:
                 assert company2.super_area is None
+            # contact matrices
+            assert (
+                company.contact_matrices["contacts"]
+                == company2.contact_matrices["contacts"]
+            ).all()
+            assert (
+                company.contact_matrices["proportion_physical"]
+                == company2.contact_matrices["proportion_physical"]
+            ).all()
 
 
 class TestSaveHospitals:
@@ -183,6 +201,16 @@ class TestSaveHospitals:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
+            # contact matrices
+            assert (
+                hospital.contact_matrices["contacts"]
+                == hospital2.contact_matrices["contacts"]
+            ).all()
+            assert (
+                hospital.contact_matrices["proportion_physical"]
+                == hospital2.contact_matrices["proportion_physical"]
+            ).all()
+
 
 
 class TestSaveSchools:
@@ -202,7 +230,6 @@ class TestSaveSchools:
             ]:
                 attribute = getattr(school, attribute_name)
                 attribute2 = getattr(school2, attribute_name)
-                print(attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
@@ -213,6 +240,15 @@ class TestSaveSchools:
                 assert school2.super_area is None
             assert school.coordinates[0] == school2.coordinates[0]
             assert school.coordinates[1] == school2.coordinates[1]
+            # contact matrices
+            assert (
+                school.contact_matrices["contacts"]
+                == school2.contact_matrices["contacts"]
+            ).all()
+            assert (
+                school.contact_matrices["proportion_physical"]
+                == school2.contact_matrices["proportion_physical"]
+            ).all()
 
 
 class TestSaveCarehomes:
@@ -232,6 +268,15 @@ class TestSaveCarehomes:
                 assert carehome.area.id == carehome2.area
             else:
                 assert carehome2.area is None
+            # contact matrices
+            assert (
+                carehome.contact_matrices["contacts"]
+                == carehome2.contact_matrices["contacts"]
+            ).all()
+            assert (
+                carehome.contact_matrices["proportion_physical"]
+                == carehome2.contact_matrices["proportion_physical"]
+            ).all()
 
 
 class TestSaveGeography:
@@ -284,7 +329,7 @@ class TestSaveCommute:
             for commute_internal, commute_internal_recovered in zip(
                 city.commute_internal, city_recovered.commute_internal
             ):
-                assert commute_internal.id == commute_internal_recovered 
+                assert commute_internal.id == commute_internal_recovered
             for commute_city_unit, commute_city_unit_recovered in zip(
                 city.commutecityunits, city_recovered.commutecityunits
             ):
@@ -305,6 +350,7 @@ class TestSaveCommute:
                 assert unit1.id == unit2.id
                 assert unit1.commutehub_id == unit2.commutehub_id
                 assert unit1.city == unit2.city
+
 
 class TestSaveWorld:
     @fixture(name="world_h5_loaded", scope="module")
@@ -353,4 +399,3 @@ class TestSaveWorld:
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
                 assert person1 == person2
-
