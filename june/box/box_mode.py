@@ -6,6 +6,7 @@ from june.demography import Population
 class Box(Group):
     def __init__(self):
         super().__init__()
+        self.contact_matrices = {}
     
     def set_population(self, population: Population):
         self[super().SubgroupType.default]._people += population
