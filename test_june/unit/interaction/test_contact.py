@@ -38,8 +38,8 @@ def test__average_time_to_infect(n_teachers, mode):
     n_students = 1
     if mode == "average":
         interaction = ContactAveraging(
-            betas={"school": 1,},
-            alphas = {'school':1,},
+            beta={"school": 1,},
+            alpha_physical = 1,
             selector=selector,
         )
     elif mode == "sampling":

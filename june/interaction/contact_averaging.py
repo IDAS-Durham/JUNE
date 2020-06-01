@@ -11,28 +11,28 @@ default_config_filename = (
 
 class ContactAveraging(Interaction):
     def __init__(
-        self, alpha_physical, betas, selector,
+        self, alpha_physical, beta, selector,
     ):
-        self.betas = betas
+        self.beta = beta
         self.alpha_physical = alpha_physical
         self.selector = selector
 
     @classmethod
     def from_file(
-        cls, config_fileanme: str = default_config_filename, selector=None,
+        cls, config_filename: str = default_config_filename, selector=None,
     ) -> "ContactAveraging":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
         return ContactAveraging(
             alpha_physical=config["alpha_physical"],
-            betas=config["beta"],
+            beta=config["beta"],
             selector=selector,
         )
 
     def get_contact_matrix(self, group):
-        contacts = group.contact_matrices.get("contacts", [[1]])
-        proportion_physical = group.contact_matrices.get("proportion_physical", [[0]])
+        contacts = np.array(group.contact_matrices.get("contacts", [[1]]))
+        proportion_physical = np.array(group.contact_matrices.get("proportion_physical", [[0]]))
         return contacts * (
             1.0 + (self.alpha_physical - 1.0) * proportion_physical
         )
@@ -148,7 +148,7 @@ class ContactAveraging(Interaction):
         return 1.0 - np.exp(
             -delta_time
             * susceptibilities
-            * self.betas.get(group.spec, 1)
+            * self.beta.get(group.spec, 1)
             * transmission_exponent
         )
 
