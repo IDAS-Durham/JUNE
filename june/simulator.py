@@ -156,6 +156,7 @@ class Simulator:
             selector,
             activity_to_groups,
             time_config,
+            seed=seed,
             save_path=save_path,
         )
 
@@ -553,6 +554,7 @@ class Simulator:
                 break
             if self.seed:
                 if time <= self.seed.max_date:
+                    print('in seed')
                     self.seed.unleash_virus_per_region(time)
             self.do_timestep()
         # Save the world
