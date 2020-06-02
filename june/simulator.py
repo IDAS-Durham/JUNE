@@ -41,6 +41,7 @@ class Simulator:
         selector: InfectionSelector,
         activity_to_groups: dict,
         time_config: dict,
+        seed: "Seed" = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
         save_path: str = "results",
@@ -69,6 +70,7 @@ class Simulator:
         """
         self.world = world
         self.interaction = interaction
+        self.seed = seed
         self.selector = selector
         self.activity_hierarchy = [
             "box",
@@ -124,6 +126,7 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
+        seed: "Seed" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ) -> "Simulator":
@@ -548,6 +551,9 @@ class Simulator:
         for time in self.timer:
             if time > self.timer.final_date:
                 break
+            if self.seed:
+                if time <= self.seed.max_date:
+                    self.seed.unleash_virus_per_region(time)
             self.do_timestep()
         # Save the world
         if save:
