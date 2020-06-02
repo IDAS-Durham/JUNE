@@ -44,7 +44,7 @@ def test__time_it_takes_to_infect(group_size=2):
     n_days = []
     for n in range(1_000):
         group = TestGroup()
-        infected_person = Person(sex='m', age=75)
+        infected_person = Person.from_attributes(sex='m', age=75)
         selector.infect_person_at_time(infected_person,time=0)
         group.add(
             infected_person,
@@ -52,7 +52,7 @@ def test__time_it_takes_to_infect(group_size=2):
             subgroup_type=TestGroup.SubgroupType.default,
         )
         group[TestGroup.SubgroupType.default].infected.append(infected_person)
-        susceptible_person = Person(sex="m", age=55)
+        susceptible_person = Person.from_attributes(sex="m", age=55)
         group.add(
             susceptible_person,
             activity="box",
