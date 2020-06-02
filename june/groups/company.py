@@ -47,17 +47,11 @@ class Company(Group):
     class SubgroupType(IntEnum):
         workers = 0
 
-    def __init__(self, super_area=None, n_workers_max=np.inf, sector=None, contact_matrices=None):
+    def __init__(self, super_area=None, n_workers_max=np.inf, sector=None):
         super().__init__()
         self.super_area = super_area
         self.sector = sector
         self.n_workers_max = n_workers_max
-        self.contact_matrices = contact_matrices
-        if contact_matrices is not None:
-            self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
-            self.contact_matrices["proportion_physical"] = np.array(
-                self.contact_matrices["proportion_physical"]
-            )
 
 
 
@@ -143,7 +137,6 @@ class Companies(Supergroup):
         """
         with open(default_config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        contact_matrices = config['contact_matrices']
 
         size_per_superarea_df = pd.read_csv(size_nr_per_super_area_file, index_col=0)
         sector_per_superarea_df = pd.read_csv(
@@ -159,7 +152,6 @@ class Companies(Supergroup):
                 super_area,
                 company_sizes_per_super_area,
                 company_sectors_per_super_area,
-                contact_matrices,
             )
             super_area.companies = companies
         else:
@@ -170,7 +162,7 @@ class Companies(Supergroup):
                 company_sectors_per_super_area.iterrows(),
             ):
                 super_area.companies = cls.create_companies_in_super_area(
-                    super_area, company_sizes, company_sectors, contact_matrices
+                    super_area, company_sizes, company_sectors, 
                 )
                 companies += super_area.companies
         return cls(companies)
@@ -181,7 +173,6 @@ class Companies(Supergroup):
             super_area: SuperArea,
             company_sizes,
             company_sectors,
-            contact_matrices,
     ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.
@@ -197,7 +188,7 @@ class Companies(Supergroup):
         companies = list(
             map(
                 lambda company_size, company_sector: cls.create_company(
-                    super_area, company_size, company_sector, contact_matrices
+                    super_area, company_size, company_sector
                 ),
                 sizes,
                 sectors,
@@ -211,8 +202,8 @@ class Companies(Supergroup):
         return companies
 
     @classmethod
-    def create_company(cls, super_area, company_size, company_sector, contact_matrices):
-        company = Company(super_area, company_size, company_sector, contact_matrices)
+    def create_company(cls, super_area, company_size, company_sector):
+        company = Company(super_area, company_size, company_sector)
         return company
 
 

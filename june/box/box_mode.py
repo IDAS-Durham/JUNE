@@ -9,9 +9,10 @@ class Box(Group):
         self.contact_matrices = {}
     
     def set_population(self, population: Population):
-        self[super().SubgroupType.default]._people += population
         for person in population:
-            person.subgroups.box = self[super().SubgroupType.default]
+            subgroup = self[self.SubgroupType.default]
+            subgroup.append(person)
+            person.subgroups.box = subgroup
 
 class Boxes(Supergroup):
     def __init__(self, boxes: List[Box]):
