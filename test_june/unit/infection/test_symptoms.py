@@ -1,6 +1,6 @@
 import autofit as af
 from june.infection import symptoms as sym
-from june.infection import SymptomTags
+from june.infection import SymptomTag
 
 import os
 import numpy as np
@@ -18,21 +18,21 @@ class TestSymptoms:
         symptom = sym.Symptoms(health_index=None)
         symptom.severity = -0.1
         symptom.tag = symptom.make_tag()
-        assert symptom.tag == SymptomTags.recovered
+        assert symptom.tag == SymptomTag.recovered
 
         symptom = sym.Symptoms(health_index=[0.1, 0.2, 0.3, 0.4, 0.5])
 
         symptom.severity = 0.01
         symptom.tag = symptom.make_tag()
-        assert symptom.tag == SymptomTags.asymptomatic
+        assert symptom.tag == SymptomTag.asymptomatic
 
         symptom.severity = 0.4
         symptom.tag = symptom.make_tag()
-        assert symptom.tag == SymptomTags.hospitalised
+        assert symptom.tag == SymptomTag.hospitalised
 
         symptom.severity = 0.18
         symptom.tag = symptom.make_tag()
-        assert symptom.tag == SymptomTags.influenza
+        assert symptom.tag == SymptomTag.influenza
 
     def test__object_from_config(self):
 

@@ -15,8 +15,8 @@ class TestGroup:
     def test_ids(self):
         household_1 = Household()
         household_2 = Household()
-        care_home_1 = CareHome(None, None)
-        care_home_2 = CareHome(None, None)
+        care_home_1 = CareHome(None, None, None)
+        care_home_2 = CareHome(None, None, None)
 
         assert household_2.id == household_1.id + 1
         assert household_1.name == f"Household_{household_1.id:05d}"
