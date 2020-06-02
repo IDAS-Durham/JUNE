@@ -39,7 +39,7 @@ def test_full_run():
     world.pubs = Pubs.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
     selector    = InfectionSelector.from_file(selector_config)
-    interaction = inter.DefaultInteraction.from_file()
+    interaction = inter.ContactAveraging.from_file()
     interaction.selector = selector
     simulator   = Simulator.from_file(world, interaction, selector,
                                 config_filename = test_config)
