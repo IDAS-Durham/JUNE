@@ -22,8 +22,8 @@ import numpy as np
 
 @pytest.fixture(autouse=True)
 def set_random_seed():
-    random.seed(0)
-    np.random.seed(0)
+    random.seed(999)
+    np.random.seed(999)
 
 @pytest.fixture()
 def data(pytestconfig):
