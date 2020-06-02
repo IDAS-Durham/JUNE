@@ -16,7 +16,14 @@ from june.infection import transmission as trans
 from june.simulator import Simulator
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+# set seed
+import random
+import numpy as np
 
+@pytest.fixture(autouse=True)
+def set_random_seed():
+    random.seed(0)
+    np.random.seed(0)
 
 @pytest.fixture()
 def data(pytestconfig):
@@ -45,7 +52,7 @@ def create_symptoms_healthy():
 
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
-    return tmaker.TrajectoryMaker()
+    return tmaker.TrajectoryMakers.from_file()
 
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")

@@ -4,8 +4,8 @@ from enum import IntEnum, Enum
 import struct
 from recordclass import dataobject
 import numpy as np
-
 from june.infection.health_information import HealthInformation
+
 
 
 class Activities(dataobject):
@@ -42,9 +42,11 @@ class Person(dataobject):
     # rail travel
     # activities
     busy: bool = False
+
     subgroups: Activities = Activities(None, None, None, None, None, None)
+    health_information: HealthInformation = None
+>>>>>>> master
     # infection
-    health_information: HealthInformation = HealthInformation()
     susceptibility: float = 1.0
     dead: bool = False
 
@@ -78,11 +80,11 @@ class Person(dataobject):
 
     @property
     def susceptible(self):
-        return self.susceptibility <= 0 and not self.infected
+        return self.susceptibility == 1.0 and not self.infected and not self.dead
 
     @property
     def recovered(self):
-        return not (self.dead or self.susceptible)
+        return not (self.dead or self.susceptible or self.infected)
 
     @property
     def residence(self):
@@ -113,8 +115,21 @@ class Person(dataobject):
         return self.subgroups.box
 
     @property
-    def in_hospital(self):
-        if self.hospital is None:
+    def hospitalised(self):
+        if (
+            self.hospital is not None
+            and self.hospital.subgroup_type == self.hospital.group.SubgroupType.patients
+        ):
+            return True
+        return False
+
+    @property
+    def intensive_care(self):
+        if (
+            self.hospital is not None
+            and self.hospital.subgroup_type
+            == self.hospital.group.SubgroupType.icu_patients
+        ):
             return True
         return False
 
@@ -132,8 +147,8 @@ class Person(dataobject):
             return None
         guardian = random.choice(possible_guardians)
         if (
-            guardian.health_information.should_be_in_hospital
-            or guardian.health_information.dead
+            (guardian.health_information is not None and guardian.health_information.should_be_in_hospital)
+            or guardian.dead
         ):
             return None
         else:
