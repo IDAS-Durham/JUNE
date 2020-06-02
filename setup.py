@@ -33,8 +33,11 @@ setup(
                   'june.groups.group',
                   'june.groups.leisure',
                   'june.groups.commute',
+                  'june.groups.travel',
                   'june.interaction',
+                  'june.logger',
                   'june.box',
-                  'june.hdf5_savers',]
+                  'june.hdf5_savers',
+                  'june.visualization']
 )
 

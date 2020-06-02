@@ -1,4 +1,4 @@
-from june.infection.symptoms import SymptomTags
+from june.infection.symptoms import SymptomTag
 
 class HealthInformation:
     __slots__ = (
@@ -13,7 +13,6 @@ class HealthInformation:
         "maximal_symptoms_time",
         "maximal_symptoms_tag",
         "time_of_infection",
-        "group_type_of_infection",
         "length_of_infection",
         "infecter",
     )
@@ -30,7 +29,6 @@ class HealthInformation:
         self.maximal_symptoms_time = -1
         self.maximal_symptoms_tag = None
         self.time_of_infection = -1
-        self.group_type_of_infection = None
         self.length_of_infection = -1
         self.infecter = None
 
@@ -49,11 +47,11 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag in (SymptomTags.influenza, SymptomTags.pneumonia)
+        return self.tag in (SymptomTag.influenza, SymptomTag.pneumonia)
 
     @property
     def should_be_in_hospital(self) -> bool:
-        return self.tag in (SymptomTags.hospitalised, SymptomTags.intensive_care)
+        return self.tag in (SymptomTag.hospitalised, SymptomTag.intensive_care)
 
     @property
     def infected_at_home(self) -> bool:
@@ -61,14 +59,13 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == SymptomTags.dead
+        return self.tag == SymptomTag.dead
 
     def update_health_status(self, time, delta_time):
-        if self.infected:
-            if self.infection.symptoms.is_recovered():
-                self.recovered = True
-            else:
-                self.infection.update_at_time(time + delta_time)
+         self.infection.update_at_time(time + delta_time)
+         if self.infection.symptoms.is_recovered():
+            self.recovered = True
+
 
     def set_recovered(self, time):
         self.recovered = True
@@ -105,10 +102,10 @@ class HealthInformation:
             self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
             self.maximal_symptoms_time = time - self.time_of_infection
 
-    def update_infection_data(self, time, group_type=None, infecter=None):
+    def update_infection_data(self, time, group_type=None, infecter=None, logger=None):
         self.time_of_infection = time
-        if group_type is not None:
-            self.group_type_of_infection = group_type
+        if group_type is not None and logger is not None:
+            logger.accumulate_infection_location(group_type)
         if infecter is not None:
             self.infecter = infecter
 

@@ -293,9 +293,17 @@ def _load_age_and_sex_generators(
     ethnicity_structure_path: str,
     socioecon_structure_path: str,
     area_names: List[str],
-):
+)-> Dict[str, AgeSexGenerator]:
     """
-    A dictionary mapping area identifiers to a generator of age and sex.
+    A dictionary mapping area identifiers to a generator of age, sex, ethnicity,
+    and socio-economic index.
+
+    Returns
+    -------
+    ethnicity_structure_path
+        File containing ethnicity nr. per Area.
+        This approach chosen based on:
+        Davis, J. A., & Smith, T. W. (1999); Chicago: National Opinion Research Center
     """
     age_structure_df = pd.read_csv(age_structure_path, index_col=0)
     age_structure_df = age_structure_df.loc[area_names]
