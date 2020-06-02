@@ -98,7 +98,6 @@ class Subgroup:
         try:
             assert ret
         except:
-            print(person)
             raise ValueError
         self.size += 1
         self.people.append(person)

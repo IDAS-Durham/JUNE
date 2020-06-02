@@ -52,7 +52,6 @@ class Hospital(Group):
         n_icu_beds: int,
         super_area: str = None,
         coordinates: tuple = None,  # Optional[Tuple[float, float]] = None,
-        contact_matrices: dict = None,
     ):
         """
         Create a Hospital given its description.
@@ -73,12 +72,6 @@ class Hospital(Group):
         self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
-        self.contact_matrices = contact_matrices
-        if contact_matrices is not None:
-            self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
-            self.contact_matrices["proportion_physical"] = np.array(
-                self.contact_matrices["proportion_physical"]
-            )
 
     @property
     def full(self):
