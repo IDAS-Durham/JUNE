@@ -75,6 +75,7 @@ def test__activities_to_groups(sim):
         "hospitals",
         "commuteunits",
         "commutecityunits",
+        "travelunits",
         "schools",
         "companies",
         "pubs",
