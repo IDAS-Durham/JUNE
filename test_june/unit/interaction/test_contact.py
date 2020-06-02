@@ -40,7 +40,7 @@ def test__school_index_translation():
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
-    delta_time = 0.25
+    delta_time = 0.1
     days_to_infection = 0
     while not susceptible_person.infected and days_to_infection < 100:
         for person in people[:n_students]:
