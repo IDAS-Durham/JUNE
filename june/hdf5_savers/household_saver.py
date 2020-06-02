@@ -103,11 +103,11 @@ def save_households_to_hdf5(
                 households_dset["max_size"][idx1:idx2] = max_sizes
                 households_dset["contact_matrices_size"].resize(newshape[0], axis=0)
                 households_dset["contact_matrices_size"][idx1:idx2] = contact_matrices_size 
-                households_dset["contact_matrices_contacts"].resize(newshape)
+                households_dset["contact_matrices_contacts"].resize(newshape[0], axis=0)
                 households_dset["contact_matrices_contacts"][
                     idx1:idx2
                 ] = contact_matrices_contacts
-                households_dset["contact_matrices_physical"].resize(newshape)
+                households_dset["contact_matrices_physical"].resize(newshape[0], axis=0)
                 households_dset["contact_matrices_physical"][
                     idx1:idx2
                 ] = contact_matrices_physical

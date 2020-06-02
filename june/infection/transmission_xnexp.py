@@ -1,5 +1,10 @@
 from june.infection.transmission import Transmission
 import numpy as np
+import numba as nb
+
+@nb.jit(nopython=True)
+def f(t, n, alpha):
+    return t**n * np.exp(-t/alpha)
 
 class TransmissionXNExp(Transmission):
     def __init__(self,
@@ -12,15 +17,15 @@ class TransmissionXNExp(Transmission):
         self.N         = N
         self.alpha     = alpha
         max_time       = self.N * self.alpha * self.norm_time
-        self.norm      = self.max_probability/self.f(max_time/self.norm_time)  #/self.norm_time)
-        self.probability = 0
+        self.norm      = self.max_probability/f(max_time/ self.norm_time, self.N, self.alpha)   #self.f(max_time/self.norm_time)  #/self.norm_time)
+        self.probability = 0.0
         
     def update_probability_from_delta_time(self, delta_time):
         if delta_time<=self.incubation_time:
             self.probability = 0.
         else:
             delta_tau = (delta_time - self.incubation_time)/self.norm_time
-            self.probability = self.norm * self.f(delta_tau)
+            self.probability = self.norm * f(delta_tau, self.N, self.alpha) #self.f(delta_tau)
 
-    def f(self,t):
-        return t**self.N * np.exp(-t/self.alpha)
+    #def f(self,t):
+    #    return t**self.N * np.exp(-t/self.alpha)
