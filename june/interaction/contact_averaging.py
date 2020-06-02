@@ -118,6 +118,13 @@ class ContactAveraging(Interaction):
             for subgroup in group.subgroups
         ]
 
+    def assign_blame(self, infected, subgroup_transmission_probabilities):
+        norm = sum(subgroup_transmission_probabilities)
+        for person in infected:
+            person.health_information.infection.number_of_infected = (
+                person.health_information.infection.transmission.probability / norm
+            )
+
     def subgroup_to_subgroup_transmission(
         self,
         contact_matrix,
@@ -167,7 +174,7 @@ class ContactAveraging(Interaction):
             idx = school_years[idx - 1] + 1
         return idx
 
-    #@profile
+    # @profile
     def compute_effective_transmission(
         self,
         contact_matrix,
@@ -210,7 +217,7 @@ class ContactAveraging(Interaction):
             transmission_exponent=transmission_exponent,
         )
 
-    #@profile
+    # @profile
     def single_time_step_for_subgroup(
         self,
         contact_matrix,
@@ -219,6 +226,7 @@ class ContactAveraging(Interaction):
         group: "Group",
         time: float,
         delta_time: float,
+        logger: "Logger",
     ):
         """
         Run the interaction for a time step over a subgroup
@@ -248,8 +256,9 @@ class ContactAveraging(Interaction):
         for i, (recipient, luck) in enumerate(zip(susceptibles, should_be_infected)):
             if luck < transmission_probability[i]:
                 self.selector.infect_person_at_time(person=recipient, time=time)
-                recipient.health_information.update_infection_data(
-                    time=time, group_type=group.spec, infecter=None, logger=None
+                logger.accumulate_infection_location(group.spec)
+                self.assign_blame(
+                        group.infected, subgroup_transmission_probabilities
                 )
 
     # @profile
@@ -286,4 +295,5 @@ class ContactAveraging(Interaction):
                     group,
                     time,
                     delta_time,
+                    logger,
                 )
