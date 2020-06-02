@@ -8,6 +8,36 @@ from june import paths
 import pytest
 import numpy as np
 
+test_config = paths.configs_path / "tests/contact_interaction.yaml"
+def test__contact_matrices_from_default():
+    interaction = ContactAveraging.from_file(config_filename= test_config,
+            selector=None)
+    assert interaction.contact_matrices['pub'] == np.array([[1]])
+    xi = 0.3
+    contacts_school = interaction.contact_matrices['school']
+    for i in range(len(contacts_school)):
+        for j in range(len(contacts_school)):
+            if i == j:
+                if i == 0:
+                    assert contacts_school[i][j] == 25
+                else:
+                    assert contacts_school[i][j] == 2.5 
+            else:
+                if i == 0: 
+                    assert contacts_school[i][j] == 0.75 
+                elif j == 0:
+                    assert contacts_school[i][j] == 15
+                else:
+                    assert contacts_school[i][j] == xi**abs(i-j)*2.5
+
+def test__school_index_translation():
+    interaction = ContactAveraging.from_file(selector=None)
+    age_min = 3
+    age_max = 7
+    school_years = list(range(age_min, age_max+1))
+    interaction.translate_school_subgroup(1, school_years) == 4
+    interaction.translate_school_subgroup(5, school_years) == 8
+
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
     delta_time = 0.25
