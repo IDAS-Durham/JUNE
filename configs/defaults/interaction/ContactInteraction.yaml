@@ -18,8 +18,8 @@ contact_matrices:
   contacts: [[5.00, 1., 1.], [10., 0., 0.], [5., 0., 0.]]
   proportion_physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
  care_home:
-  contacts: [[5.00, 1., 1.], [10., 2.0, 1.]]
-  proportion_physical: [[0.05, 1.], [1.0, 0.4]]
+  contacts: [[5.00, 1., 1.], [10., 2.0, 1.], [1,1,1]]
+  proportion_physical: [[0.05, 1., 1.], [1.0, 0.4, 1.],[1.,1.,1.]]
  company:
   contacts: [[4.8]]
   proportion_physical: [[0.07]]
