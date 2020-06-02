@@ -10,7 +10,3 @@ sub_sector:
   doctor:
     sector_id: 2211    # NOMIS name convention
     nr_of_clients: 10
-contact_matrices:
- contacts: [[5.00, 1., 1.], [10., 0., 0.], [5., 0., 0.]]
- proportion_physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
-

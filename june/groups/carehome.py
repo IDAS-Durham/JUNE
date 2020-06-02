@@ -40,19 +40,12 @@ class CareHome(Group):
         residents = 1
         visitors = 2
 
-    def __init__(self, area: Area=None, n_residents: int=None, n_workers: int=None, contact_matrices: dict = None):
+    def __init__(self, area: Area=None, n_residents: int=None, n_workers: int=None):
         super().__init__()
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
         self.relatives = None
-        if contact_matrices is not None:
-            self.contact_matrices["contacts"] = np.array(contact_matrices["contacts"])
-            self.contact_matrices["proportion_physical"] = np.array(
-                contact_matrices["proportion_physical"]
-            )
-
-
 
     def add(
         self,
@@ -141,6 +134,6 @@ class CareHomes(Supergroup):
             n_residents = care_home_df.loc[area.name].values[0]
             n_worker = int(n_residents / config["sector"]["Q"]["nr_of_clients"])
             if n_residents != 0:
-                area.care_home = CareHome(area, n_residents, n_worker, config['contact_matrices'])
+                area.care_home = CareHome(area, n_residents, n_worker)
                 care_homes.append(area.care_home)
         return cls(care_homes)
