@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import datetime
 from june.demography.geography import SuperAreas
 from june.infection.infection import InfectionSelector
 from june import paths
@@ -18,6 +19,7 @@ class Seed:
         selector: InfectionSelector,
         n_cases_region: pd.DataFrame = None,
         msoa_region: pd.DataFrame = None,
+        dates: List["datetime"] = [],
     ):
         """
         Class to initialize the infection 
@@ -41,6 +43,9 @@ class Seed:
         self.super_area_names = [
             super_area.name for super_area in self.super_areas.members
         ]
+        self.dates = dates 
+        if self.dates:
+            self.max_date = max(self.dates)
 
     @classmethod
     def from_file(
@@ -73,12 +78,18 @@ class Seed:
         """
 
         n_cases_region = pd.read_csv(n_cases_region_filename)
+        dates = list(n_cases_region.columns[1:])
+        dates = [datetime.datetime(
+            *[int(value) for value in date.split(' ')[0].split("-")]
+        ) for date in dates]
+
         msoa_region = pd.read_csv(msoa_region_filename)[["msoa", "region"]]
         return Seed(
             super_areas,
             selector,
             n_cases_region,
             msoa_region.drop_duplicates(),
+            dates
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
@@ -111,12 +122,14 @@ class Seed:
         n_cases:
             number of cases to seed.
         """
+        available_super_areas = [super_area.name for super_area in super_areas]
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
         for super_area in super_areas:
-            n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
-            if n_cases_super_area >= 0:
-                self.infect_super_area(super_area, n_cases_super_area)
+            if super_area in available_super_areas:
+                n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
+                if n_cases_super_area >= 0:
+                    self.infect_super_area(super_area, n_cases_super_area)
 
     def infect_super_area(self, super_area: "SuperArea", n_cases: int):
         """
@@ -136,13 +149,13 @@ class Seed:
             person = list(super_area.people)[choice]
             self.selector.infect_person_at_time(person = person, time = 1.0)
 
-    def unleash_virus_per_region(self):
+    def unleash_virus_per_region(self, date):
         """
         Seed the infection per region, using data on number of infected people/region
 
         """
         for region, n_cases in zip(
-            self.n_cases_region["region"], self.n_cases_region["n_cases"]
+            self.n_cases_region["region"], self.n_cases_region[date]
         ):
             super_areas = self._filter_region(region=region)
             self.infect_super_areas(super_areas, n_cases)
