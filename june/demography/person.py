@@ -45,7 +45,7 @@ class Person(dataobject):
 
     subgroups: Activities = Activities(None, None, None, None, None, None)
     health_information: HealthInformation = None
->>>>>>> master
+
     # infection
     susceptibility: float = 1.0
     dead: bool = False
