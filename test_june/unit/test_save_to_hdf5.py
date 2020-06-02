@@ -37,7 +37,10 @@ from pytest import fixture
 
 @fixture(name="geography_h5", scope="module")
 def make_geography():
-    geography = Geography.from_file({"msoa": ["E02006764", "E02003999", "E02002559"]})
+    geography = Geography.from_file(
+        #{"msoa": ["E02006764", "E02003999", "E02002559", "E02006887", "E02003034"]}
+        {"msoa": ["E02003999", "E02002559", "E02006887", "E02003034"]}
+    )
     return geography
 
 
@@ -352,4 +355,4 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1 == person2
+                assert person1.id == person2
