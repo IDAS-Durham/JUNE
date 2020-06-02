@@ -28,20 +28,19 @@ def test_full_run():
     geography = Geography.from_file(
         {"msoa": ["E02002512", "E02001697"]}
     )
-    demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
-    world       = World(geography, demography, include_households=True, include_commute=True)
+    demography = Demography.for_geography(geography)
+    world = World(geography, demography, include_households=True, include_commute=True)
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
-    selector    = InfectionSelector.from_file(selector_config)
-    interaction = inter.ContactAveraging.from_file()
-    interaction.selector = selector
-    simulator   = Simulator.from_file(world, interaction, selector,
+    selector = InfectionSelector.from_file(selector_config)
+    interaction = inter.ContactAveraging.from_file(selector=selector)
+    simulator = Simulator.from_file(world, interaction, selector,
                                 config_filename = test_config)
     seed = Seed(simulator.world.super_areas, selector, )
     seed.unleash_virus(100)
