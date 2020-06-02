@@ -180,7 +180,7 @@ class Simulator:
             self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
 
     def distribute_commuters(self):
-        if hasattr(self, "travelunits"):
+        if hasattr(self, "travelunit_distributor"):
             self.travelunit_distirbutor.distribute_rail()
         if hasattr(self, "commute_unit_distributor"):
             self.commute_unit_distributor.distribute_people()

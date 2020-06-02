@@ -30,7 +30,7 @@ def create_simulator():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    world = World(geography, demography, include_households=True, include_commute=True, include_rail_travel=True)
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
