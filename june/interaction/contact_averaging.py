@@ -164,7 +164,7 @@ class ContactAveraging(Interaction):
             * subgroup_transmission_probabilities[infecters_idx]
         )
 
-    # @profile
+    @profile
     def compute_effective_transmission(
         self,
         contact_matrix,
@@ -207,7 +207,7 @@ class ContactAveraging(Interaction):
             transmission_exponent=transmission_exponent,
         )
 
-    # @profile
+    @profile
     def single_time_step_for_subgroup(
         self,
         contact_matrix,
