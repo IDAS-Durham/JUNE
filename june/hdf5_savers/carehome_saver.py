@@ -102,11 +102,11 @@ def save_care_homes_to_hdf5(
                 care_homes_dset["contact_matrices_size"][
                     idx1:idx2
                 ] = contact_matrices_size
-                care_homes_dset["contact_matrices_contacts"].resize(newshape)
+                care_homes_dset["contact_matrices_contacts"].resize(newshape[0], axis=0)
                 care_homes_dset["contact_matrices_contacts"][
                     idx1:idx2
                 ] = contact_matrices_contacts
-                care_homes_dset["contact_matrices_physical"].resize(newshape)
+                care_homes_dset["contact_matrices_physical"].resize(newshape[0], axis=0)
                 care_homes_dset["contact_matrices_physical"][
                     idx1:idx2
                 ] = contact_matrices_physical

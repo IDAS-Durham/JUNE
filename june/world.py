@@ -209,7 +209,7 @@ class World:
         self.travelunits = TravelUnits()
 
         
-    def to_hdf5(self, file_path: str, chunk_size=100000):
+    def to_hdf5(self, file_path: str, chunk_size=500000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
         are stored as groups. Class instances are substituted by ids of the 
