@@ -121,7 +121,7 @@ class ContactAveraging(Interaction):
     def assign_blame(self, infected, subgroup_transmission_probabilities):
         norm = sum(subgroup_transmission_probabilities)
         for person in infected:
-            person.health_information.infection.number_of_infected = (
+            person.health_information.number_of_infected = (
                 person.health_information.infection.transmission.probability / norm
             )
 
