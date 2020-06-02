@@ -84,7 +84,7 @@ def create_infection_healthy(transmission, symptoms_healthy):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    interaction = inter.DefaultInteraction.from_file()
+    interaction = inter.ContactAveraging.from_file()
     interaction.selector = infect.InfectionSelector.from_file(constant_config)
     return interaction
 
