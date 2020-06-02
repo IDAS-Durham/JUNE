@@ -38,7 +38,7 @@ class CareHomeDistributor:
         self.min_age_in_care_home = min_age_in_care_home
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        self.config = config
+        self.sector = list(config["sector"].keys())[0]
 
     def _create_people_dicts(self, area: Area):
         """
@@ -145,7 +145,8 @@ class CareHomeDistributor:
         carers = [
             person
             for idx, person in enumerate(area.super_area.workers)
-            if person.sector == list(self.config["sector"].keys())[0]
+            if person.sector == self.sector 
+            and person.primary_activity is None
         ]
         if len(carers) == 0:
             logger.info(

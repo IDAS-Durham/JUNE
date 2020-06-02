@@ -3,7 +3,10 @@ import pytest
 from june import paths
 from june.distributors.carehome_distributor import CareHomeDistributor, CareHomeError
 from june.demography import Person
-from june.groups.carehome import CareHome
+from june.groups.carehome import CareHome, CareHomes
+from june.demography.geography import Geography
+from june.demography import Demography
+from june.world import World
 
 default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 
@@ -64,3 +67,23 @@ def test__carehome_populated_correctly(module_config, carehome_distributor):
     assert len(area.care_home.residents) == 10
     assert len(area.care_home.workers) == 2
     assert len(area.care_home.visitors) == 0
+
+@pytest.fixture(name="world")
+def create_area():
+    g = Geography.from_file(
+        filter_key={"msoa" : ["E02003353"]},
+    )
+    dem = Demography.for_geography(g)
+    world = World(g, dem)
+    return world
+
+def test__carehome_for_geography(world, carehome_distributor):
+    carehomes = CareHomes.for_areas(world.areas)
+    carehome_distributor.populate_care_home_in_area(world.areas[0])
+    care_home = carehomes[0]
+    assert len(care_home.residents) > 0
+    assert len(care_home.workers) > 0
+    assert len(care_home.visitors) > 0
+
+
+
