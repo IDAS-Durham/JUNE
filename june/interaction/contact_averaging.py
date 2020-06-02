@@ -21,11 +21,14 @@ def get_contact_matrix(alpha, contacts, physical):
 
 
 class ContactAveraging(Interaction):
-    def __init__(self, alpha_physical, beta, contact_matrices, selector, inverted=False):
+    def __init__(
+        self, alpha_physical, beta, contact_matrices, selector, inverted=False
+    ):
         self.alpha_physical = alpha_physical
         self.beta = beta
-        self.contact_matrices = self.process_contact_matrices(groups=beta.keys(),
-                                                input_contact_matrices=contact_matrices)
+        self.contact_matrices = self.process_contact_matrices(
+            groups=beta.keys(), input_contact_matrices=contact_matrices
+        )
         self.selector = selector
         self.inverted = inverted
 
@@ -35,7 +38,7 @@ class ContactAveraging(Interaction):
     ) -> "ContactAveraging":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        contact_matrices=config['contact_matrices']
+        contact_matrices = config["contact_matrices"]
         return ContactAveraging(
             alpha_physical=config["alpha_physical"],
             beta=config["beta"],
@@ -52,41 +55,46 @@ class ContactAveraging(Interaction):
                 contacts = default_contacts
                 proportion_physical = default_proportion_physical
             else:
-                if group == 'school':
+                if group == "school":
                     contacts, proportion_physical = self.process_school_matrices(
-                            input_contact_matrices[group]
-                            )
+                        input_contact_matrices[group]
+                    )
                 else:
-                    contacts = input_contact_matrices[group]['contacts']
-                    proportion_physical = input_contact_matrices[group]['proportion_physical']
-            contact_matrices[group] = get_contact_matrix(self.alpha_physical,
-                        contacts,
-                        proportion_physical,
-                        )
+                    contacts = input_contact_matrices[group]["contacts"]
+                    proportion_physical = input_contact_matrices[group][
+                        "proportion_physical"
+                    ]
+            contact_matrices[group] = get_contact_matrix(
+                self.alpha_physical, contacts, proportion_physical,
+            )
         return contact_matrices
 
     def process_school_matrices(self, input_contact_matrices, age_min=0, age_max=20):
         contact_matrices = {}
         contact_matrices["contacts"] = self.adapt_contacts_to_schools(
-            input_contact_matrices["contacts"], input_contact_matrices['xi'],
-            age_min=age_min, age_max=age_max
+            input_contact_matrices["contacts"],
+            input_contact_matrices["xi"],
+            age_min=age_min,
+            age_max=age_max,
         )
         contact_matrices["proportion_physical"] = self.adapt_contacts_to_schools(
-            input_contact_matrices["proportion_physical"], input_contact_matrices['xi'],
-            age_min=age_min, age_max=age_max
+            input_contact_matrices["proportion_physical"],
+            input_contact_matrices["xi"],
+            age_min=age_min,
+            age_max=age_max,
         )
-        return contact_matrices['contacts'], contact_matrices['proportion_physical']
+        return contact_matrices["contacts"], contact_matrices["proportion_physical"]
 
     def adapt_contacts_to_schools(self, input_contact_matrix, xi, age_min, age_max):
-        n_subgroups_max = (age_max - age_min) + 2 # adding teachers
+        n_subgroups_max = (age_max - age_min) + 2  # adding teachers
         contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max))
-        contact_matrix[0,0] = input_contact_matrix[0][0]
-        contact_matrix[0,1:] = input_contact_matrix[0][1]
-        contact_matrix[1:,0] = input_contact_matrix[1][0]
+        contact_matrix[0, 0] = input_contact_matrix[0][0]
+        contact_matrix[0, 1:] = input_contact_matrix[0][1]
+        contact_matrix[1:, 0] = input_contact_matrix[1][0]
         age_differences = np.subtract.outer(
-            range(age_min, age_max+1), range(age_min, age_max+1)
+            range(age_min, age_max + 1), range(age_min, age_max + 1)
         )
-        contact_matrix[1:,1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
+        contact_matrix[1:, 1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
         return contact_matrix
 
     def get_sum_transmission_per_subgroup(self, group: "Group") -> List[float]:
@@ -141,14 +149,14 @@ class ContactAveraging(Interaction):
             subgroup_size -= 1
         susceptibles_idx = susceptibles_subgroup.subgroup_type
         infecters_idx = infecters_subgroup.subgroup_type
-        if susceptibles_subgroup.group.spec == 'school':
+        if susceptibles_subgroup.group.spec == "school":
             years = susceptibles_subgroup.group.years
             if susceptibles_idx > 0:
                 susceptibles_idx = years[susceptibles_idx] + 1
             elif infecters_idx > 0:
                 infecters_idx = years[infecters_idx] + 1
-        print('Susceptibles = ', susceptibles_idx)
-        print('Infecters = ', infecters_idx)
+        print("Susceptibles = ", susceptibles_idx)
+        print("Infecters = ", infecters_idx)
         n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
         return (
             n_contacts
@@ -241,7 +249,7 @@ class ContactAveraging(Interaction):
                     time=time, group_type=group.spec, infecter=None, logger=None
                 )
 
-    #@profile
+    # @profile
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",
     ):
