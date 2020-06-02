@@ -127,7 +127,6 @@ class Seed:
         n_cases:
             number of cases to seed.
         """
-        #available_super_areas = [super_area.name for super_area in super_areas]
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
         for super_area in super_areas:
@@ -159,14 +158,14 @@ class Seed:
         Seed the infection per region, using data on number of infected people/region
 
         """
-        date = date.strftime("%Y-%m-%d 00:00:00")
-        if date not in self.dates_seeded:
+        date_str = date.strftime("%Y-%m-%d 00:00:00")
+        if date.date() not in self.dates_seeded:
             for region, n_cases in zip(
-                self.n_cases_region["region"], self.n_cases_region[date]
+                self.n_cases_region["region"], self.n_cases_region[date_str]
             ):
                 super_areas = self._filter_region(region=region)
                 self.infect_super_areas(super_areas, n_cases)
-            self.dates_seeded.append(date)
+            self.dates_seeded.append(date.date())
 
     def unleash_virus(self, n_cases, box_mode=False):
         """
