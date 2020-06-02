@@ -4,16 +4,16 @@ time:
   total_days: 50 
   step_duration: 
       weekday:
-          1: 12 
-          2: 12
+          0: 12 
+          1: 12
       weekend:
-          1: 24
+          0: 24
   step_activities:
       weekday:
+          0: ['box'] # active groups during first time step
           1: ['box'] # active groups during first time step
-          2: ['box'] # active groups during first time step
       weekend:
-          1: ['box'] # active groups during first time step
+          0: ['box'] # active groups during first time step
 
 
 
