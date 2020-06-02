@@ -85,7 +85,6 @@ class HouseholdDistributor:
         max_age_to_be_parent=64,
         max_household_size=8,
         allowed_household_compositions: dict = None,
-        contact_matrices: dict = None,
     ):
         """
         Tool to populate areas with households and fill them with the correct
@@ -163,7 +162,6 @@ class HouseholdDistributor:
         )
         self._random_sex_rv = stats.rv_discrete(values=((0, 1), (0.5, 0.5)))
         self._refresh_random_numbers_list(number_of_random_numbers)
-        self.contact_matrices = contact_matrices
 
     @classmethod
     def from_file(
@@ -713,7 +711,7 @@ class HouseholdDistributor:
             Maximum number of people allowed in the household.
 
         """
-        household = Household(type=type, max_size=max_household_size, contact_matrices = self.contact_matrices)
+        household = Household(type=type, max_size=max_household_size)
         return household
 
     def _add_to_household(

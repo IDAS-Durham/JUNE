@@ -41,9 +41,6 @@ def save_companies_to_hdf5(
             companies_sorted = [
                 companies[i - first_company_idx] for i in np.sort(company_idx)
             ]
-            contact_matrices_sizes = []
-            contact_matrices_contacts = []
-            contact_matrices_physical = []
             for company in companies_sorted:
                 ids.append(company.id)
                 if company.super_area is None:
@@ -52,25 +49,11 @@ def save_companies_to_hdf5(
                     super_areas.append(company.super_area.id)
                 sectors.append(company.sector.encode("ascii", "ignore"))
                 n_workers_max.append(company.n_workers_max)
-                contact_matrices_sizes.append(company.contact_matrices["contacts"].shape)
-                contact_matrices_contacts.append(
-                    company.contact_matrices["contacts"]
-                )
-                contact_matrices_physical.append(
-                    company.contact_matrices["proportion_physical"]
-                )
 
             ids = np.array(ids, dtype=np.int)
             super_areas = np.array(super_areas, dtype=np.int)
             sectors = np.array(sectors, dtype="S10")
             n_workers_max = np.array(n_workers_max, dtype=np.float)
-            contact_matrices_size = np.array(contact_matrices_sizes, dtype=np.int)
-            contact_matrices_contacts = np.array(
-                contact_matrices_contacts
-            ).reshape(len(contact_matrices_contacts),)
-            contact_matrices_physical = np.array(
-                contact_matrices_physical
-            ).reshape(len(contact_matrices_physical),)
             if chunk == 0:
                 companies_dset.attrs["n_companies"] = n_companies
                 companies_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -80,21 +63,6 @@ def save_companies_to_hdf5(
                 companies_dset.create_dataset("sector", data=sectors, maxshape=(None,))
                 companies_dset.create_dataset(
                     "n_workers_max", data=n_workers_max, maxshape=(None,)
-                )
-                companies_dset.create_dataset(
-                    "contact_matrices_size",
-                    data=contact_matrices_size,
-                    maxshape=(None, 2),
-                ),
-                companies_dset.create_dataset(
-                    "contact_matrices_contacts",
-                    data=contact_matrices_contacts,
-                    maxshape=(None, ),
-                )
-                companies_dset.create_dataset(
-                    "contact_matrices_physical",
-                    data=contact_matrices_physical,
-                    maxshape=(None, ),
                 )
             else:
                 newshape = (companies_dset["id"].shape[0] + ids.shape[0],)
@@ -106,16 +74,6 @@ def save_companies_to_hdf5(
                 companies_dset["sector"][idx1:idx2] = sectors
                 companies_dset["n_workers_max"].resize(newshape)
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
-                companies_dset["contact_matrices_size"].resize(newshape[0], axis=0)
-                companies_dset["contact_matrices_size"][idx1:idx2] = contact_matrices_size 
-                companies_dset["contact_matrices_contacts"].resize(newshape)
-                companies_dset["contact_matrices_contacts"][
-                    idx1:idx2
-                ] = contact_matrices_contacts
-                companies_dset["contact_matrices_physical"].resize(newshape)
-                companies_dset["contact_matrices_physical"][
-                    idx1:idx2
-                ] = contact_matrices_physical
 
 
 def load_companies_from_hdf5(file_path: str, chunk_size=50000):
@@ -138,18 +96,11 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
             super_areas = companies["super_area"][idx1:idx2]
             sectors = companies["sector"][idx1:idx2]
             n_workers_maxs = companies["n_workers_max"][idx1:idx2]
-            contact_matrices_size = companies["contact_matrices_size"][idx1:idx2]
-            contact_matrices_contacts = companies["contact_matrices_contacts"][idx1:idx2]
-            contact_matrices_physical = companies["contact_matrices_physical"][idx1:idx2]
             for k in range(idx2 - idx1):
                 super_area = super_areas[k]
                 if super_area == nan_integer:
                     super_area = None
                 company = Company(super_area, n_workers_maxs[k], sectors[k].decode())
-                company.contact_matrices = {
-                    "contacts": contact_matrices_contacts[k].reshape(contact_matrices_size[k]),
-                    "proportion_physical": contact_matrices_physical[k].reshape(contact_matrices_size[k]),
-                }
                 company.id = ids[k]
                 companies_list.append(company)
     return Companies(companies_list)

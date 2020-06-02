@@ -35,9 +35,6 @@ def save_households_to_hdf5(
             areas = []
             types = []
             max_sizes = []
-            contact_matrices_sizes = []
-            contact_matrices_contacts = []
-            contact_matrices_physical = []
             for household in households[idx1:idx2]:
                 ids.append(household.id)
                 if household.area is None:
@@ -49,48 +46,17 @@ def save_households_to_hdf5(
                 else:
                     types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
-                contact_matrices_sizes.append(
-                    household.contact_matrices["contacts"].shape
-                )
-                contact_matrices_contacts.append(
-                    household.contact_matrices["contacts"].flatten()
-                )
-                contact_matrices_physical.append(
-                    household.contact_matrices["proportion_physical"].flatten()
-                )
 
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
             types = np.array(types, dtype="S15")
             max_sizes = np.array(max_sizes, dtype=np.float)
-            contact_matrices_size = np.array(contact_matrices_sizes, dtype=np.int)
-            contact_matrices_contacts = np.array(
-                contact_matrices_contacts, #dtype=vlen_type
-            )
-            contact_matrices_physical = np.array(
-                contact_matrices_physical, #dtype=vlen_type
-            )
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
                 households_dset.create_dataset("id", data=ids, maxshape=(None,))
                 households_dset.create_dataset("area", data=areas, maxshape=(None,))
                 households_dset.create_dataset("type", data=types, maxshape=(None,))
                 households_dset.create_dataset("max_size", data=max_sizes, maxshape=(None,))
-                households_dset.create_dataset(
-                    "contact_matrices_size",
-                    data=contact_matrices_size,
-                    maxshape=(None, contact_matrices_size.shape[1]),
-                ),
-                households_dset.create_dataset(
-                    "contact_matrices_contacts",
-                    data=contact_matrices_contacts,
-                    maxshape=(None, contact_matrices_contacts.shape[1]),
-                )
-                households_dset.create_dataset(
-                    "contact_matrices_physical",
-                    data=contact_matrices_physical,
-                    maxshape=(None, contact_matrices_physical.shape[1]),
-                )
             else:
                 newshape = (households_dset["id"].shape[0] + ids.shape[0],)
                 households_dset["id"].resize(newshape)
@@ -101,16 +67,6 @@ def save_households_to_hdf5(
                 households_dset["type"][idx1:idx2] = types
                 households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
-                households_dset["contact_matrices_size"].resize(newshape[0], axis=0)
-                households_dset["contact_matrices_size"][idx1:idx2] = contact_matrices_size 
-                households_dset["contact_matrices_contacts"].resize(newshape[0], axis=0)
-                households_dset["contact_matrices_contacts"][
-                    idx1:idx2
-                ] = contact_matrices_contacts
-                households_dset["contact_matrices_physical"].resize(newshape[0], axis=0)
-                households_dset["contact_matrices_physical"][
-                    idx1:idx2
-                ] = contact_matrices_physical
 
 def load_households_from_hdf5(file_path: str, chunk_size=50000):
     """
@@ -131,13 +87,6 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
             types = households["type"][idx1:idx2]
             areas = households["area"][idx1:idx2]
             max_sizes = households["max_size"][idx1:idx2]
-            contact_matrices_size = households["contact_matrices_size"][idx1:idx2]
-            contact_matrices_contacts = households["contact_matrices_contacts"][
-                idx1:idx2
-            ]
-            contact_matrices_physical = households["contact_matrices_physical"][
-                idx1:idx2
-            ]
             for k in range(idx2 - idx1):
                 area = areas[k]
                 if area == nan_integer:
@@ -150,14 +99,6 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 household = Household(
                     type=type, area=area, max_size=max_sizes[k]
                 )
-                household.contact_matrices = {
-                    "contacts": contact_matrices_contacts[k].reshape(
-                        contact_matrices_size[k]
-                    ),
-                    "proportion_physical": contact_matrices_physical[k].reshape(
-                        contact_matrices_size[k]
-                    ),
-                }
                 household.id = ids[k]
                 households_list.append(household)
     return Households(households_list)
