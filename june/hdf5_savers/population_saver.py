@@ -1,3 +1,5 @@
+from june.groups.commute import CommuteCity
+from june.commute import ModeOfTransport
 from june.demography import Population, Person
 import h5py
 import numpy as np
@@ -25,8 +27,6 @@ def save_population_to_hdf5(
         so keep the number below 1e6.
     """
     n_people = len(population.people)
-    dt = h5py.vlen_dtype(np.dtype("int32"))
-    #dt = tuple
     n_chunks = int(np.ceil(n_people / chunk_size))
     with h5py.File(file_path, "a") as f:
         people_dset = f.create_group("population")
@@ -42,28 +42,20 @@ def save_population_to_hdf5(
             group_ids = []
             group_specs = []
             subgroup_types = []
-            mode_of_transport = []
             home_city = []
+            mode_of_transport_description = []
+            mode_of_transport_is_public = []
 
             for person in population.people[idx1:idx2]:
                 ids.append(person.id)
                 ages.append(person.age)
                 sexes.append(person.sex.encode("ascii", "ignore"))
                 ethns.append(person.ethnicity.encode("ascii", "ignore"))
-                socioecon_indices.append(
-                    person.socioecon_index
-                )
+                socioecon_indices.append(person.socioecon_index)
                 if person.home_city is None:
-                    home_city.append(" ".encode("ascii", "ignore"))
+                    home_city.append(nan_integer)
                 else:
-                    home_city.append(person.home_city.encode("ascii", "ignore"))
-                if person.mode_of_transport is None:
-                    mode_of_transport.append(" ".encode("ascii", "ignore"))
-                else:
-                    mode_of_transport.append(
-                        person.mode_of_transport.encode("ascii", "ignore")
-                    )
-
+                    home_city.append(person.home_city.id)
                 if person.area is not None:
                     areas.append(person.area.id)
                 else:
@@ -83,18 +75,33 @@ def save_population_to_hdf5(
                 group_specs.append(np.array(specs, dtype="S10"))
                 group_ids.append(np.array(gids, dtype=np.int))
                 subgroup_types.append(np.array(stypes, dtype=np.int))
+                if person.mode_of_transport == None:
+                    mode_of_transport_description.append(" ".encode("ascii", "ignore"))
+                    mode_of_transport_is_public.append(False)
+                else:
+                    mode_of_transport_description.append(
+                        person.mode_of_transport.description.encode("ascii", "ignore")
+                    )
+                    mode_of_transport_is_public.append(
+                        person.mode_of_transport.is_public
+                    )
 
             ids = np.array(ids, dtype=np.int)
             ages = np.array(ages, dtype=np.int)
             sexes = np.array(sexes, dtype="S10")
             ethns = np.array(ethns, dtype="S10")
             socioecon_indices = np.array(socioecon_indices, dtype=np.int)
-            home_city = np.array(home_city, dtype="S15")
-            mode_of_transport = np.array(mode_of_transport, dtype="S15")
+            home_city = np.array(home_city, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S10")
+            mode_of_transport_description = np.array(
+                mode_of_transport_description, dtype="S100"
+            )
+            mode_of_transport_is_public = np.array(
+                mode_of_transport_is_public, dtype=np.bool
+            )
 
             if chunk == 0:
                 people_dset.attrs["n_people"] = n_people
@@ -106,9 +113,6 @@ def save_population_to_hdf5(
                 )
                 people_dset.create_dataset(
                     "home_city", data=home_city, maxshape=(None,)
-                )
-                people_dset.create_dataset(
-                    "mode_of_transport", data=mode_of_transport, maxshape=(None,),
                 )
                 people_dset.create_dataset("ethnicity", data=ethns, maxshape=(None,))
                 people_dset.create_dataset(
@@ -125,6 +129,16 @@ def save_population_to_hdf5(
                     maxshape=(None, subgroup_types.shape[1]),
                 )
                 people_dset.create_dataset("area", data=areas, maxshape=(None,))
+                people_dset.create_dataset(
+                    "mode_of_transport_description",
+                    data=mode_of_transport_description,
+                    maxshape=(None,),
+                )
+                people_dset.create_dataset(
+                    "mode_of_transport_is_public",
+                    data=mode_of_transport_is_public,
+                    maxshape=(None,),
+                )
             else:
                 newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                 people_dset["id"].resize(newshape)
@@ -139,8 +153,6 @@ def save_population_to_hdf5(
                 people_dset["socioecon_index"][idx1:idx2] = socioecon_indices
                 people_dset["home_city"].resize(newshape)
                 people_dset["home_city"][idx1:idx2] = home_city
-                people_dset["mode_of_transport"].resize(newshape)
-                people_dset["mode_of_transport"][idx1:idx2] = mode_of_transport
                 people_dset["area"].resize(newshape)
                 people_dset["area"][idx1:idx2] = areas
                 people_dset["group_ids"].resize(newshape[0], axis=0)
@@ -149,6 +161,14 @@ def save_population_to_hdf5(
                 people_dset["group_specs"][idx1:idx2] = group_specs
                 people_dset["subgroup_types"].resize(newshape[0], axis=0)
                 people_dset["subgroup_types"][idx1:idx2] = subgroup_types
+                people_dset["mode_of_transport_description"].resize(newshape)
+                people_dset["mode_of_transport_description"][
+                    idx1:idx2
+                ] = mode_of_transport_description
+                people_dset["mode_of_transport_is_public"].resize(newshape)
+                people_dset["mode_of_transport_is_public"][
+                    idx1:idx2
+                ] = mode_of_transport_is_public
 
 
 def load_population_from_hdf5(file_path: str, chunk_size=100000):
@@ -173,11 +193,16 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             sexes = population["sex"][idx1:idx2]
             ethns = population["ethnicity"][idx1:idx2]
             socioecon_indices = population["socioecon_index"][idx1:idx2]
-            mode_of_transport = population["mode_of_transport"][idx1:idx2]
             home_city = population["home_city"][idx1:idx2]
             group_ids = population["group_ids"][idx1:idx2]
             group_specs = population["group_specs"][idx1:idx2]
             subgroup_types = population["subgroup_types"][idx1:idx2]
+            mode_of_transport_is_public_list = population[
+                "mode_of_transport_is_public"
+            ][idx1:idx2]
+            mode_of_transport_description_list = population[
+                "mode_of_transport_description"
+            ][idx1:idx2]
             areas = population["area"][idx1:idx2]
             for k in range(idx2 - idx1):
                 person = Person.from_attributes(
@@ -187,16 +212,21 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     ethnicity=ethns[k].decode(),
                     socioecon_index=socioecon_indices[k],
                 )
-                hc = home_city[k].decode()
-                if hc == " ":
+                mode_of_transport_description = mode_of_transport_description_list[k]
+                mode_of_transport_is_public = mode_of_transport_is_public_list[k]
+                # mode of transport
+                if mode_of_transport_description.decode() == " ":
+                    person.mode_of_transport = None
+                else:
+                    person.mode_of_transport = ModeOfTransport(
+                        description=mode_of_transport_description.decode(),
+                        is_public=mode_of_transport_is_public,
+                    )
+                hc = home_city[k]
+                if hc == nan_integer:
                     person.home_city = None
                 else:
                     person.home_city = hc
-                mt = mode_of_transport[k].decode()
-                if mt == " ":
-                    person.mode_of_transport = None
-                else:
-                    person.mode_of_transport = mt
                 subgroups = []
                 for group_id, subgroup_type, group_spec in zip(
                     group_ids[k], subgroup_types[k], group_specs[k]
