@@ -64,10 +64,8 @@ def create_school(n_students, n_teachers):
         coordinates=(1.0,1.0),
         sector='primary_secondary',
     )
-    print(school.years)
     people = []
     # create students
-
     for student in range(n_students):
         person = Person.from_attributes(sex='f', age=6)
         school.add(person)
@@ -126,6 +124,7 @@ def test__average_time_to_infect(n_teachers, mode):
         n_days.append(days_to_infection(interaction, teacher, school, people, n_students))
     teacher_teacher = interaction.selector.transmission_probability * (n_teachers - 1)
     student_teacher = interaction.selector.transmission_probability / n_students
+    print(interaction.selector.transmission_probability)
     np.testing.assert_allclose(
         np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1,
     )
