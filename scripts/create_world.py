@@ -106,9 +106,9 @@ msoaslist = [
 t1 = time.time()
 
 # we have two options, we can take the list of areas above and select a few:
-geography = Geography.from_file({"msoa" : msoaslist[:10]})
+#geography = Geography.from_file({"msoa" : msoaslist[:10]})
 # or select an entire region:
-#geography = Geography.from_file({"region" : ["North East"]})
+geography = Geography.from_file({"region" : ["North East"]})
 
 # then this automatically creates the world and saves it to world.hdf5
 demography = Demography.for_geography(geography)
@@ -119,8 +119,28 @@ geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
 world = World(geography, demography, include_households=True, include_commute=True)
-t2 = time.time()
-print(f"Took {t2 -t1} seconds to run.")
-print("Saving hdf5...")
-world.to_hdf5("world.hdf5")
-print("Done :)")
+counter = 0
+empty = 0
+for care_home in world.care_homes:
+    counter += 1
+    if len(care_home.workers.people) == 0:
+        empty += 1
+print(f"{empty} care homes of {counter}")
+counter = 0
+empty = 0
+for school in world.schools:
+    counter += 1
+    if len(school.teachers.people) == 0:
+        empty += 1
+print(f"{empty} schools of {counter}")
+#for care_home in world.care_homes:
+#    print(care_home.area.name)
+#    print(care_home.residents.people)
+#    print(care_home.workers.people)
+#    assert len(care_home.workers.people) > 0
+#    assert len(care_home.residents.people) > 0
+#t2 = time.time()
+#print(f"Took {t2 -t1} seconds to run.")
+#print("Saving hdf5...")
+#world.to_hdf5("world.hdf5")
+#print("Done :)")

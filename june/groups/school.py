@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.demography.geography import Geography
+from june.demography.geography import Geography, Areas
 from june.groups.group import Group, Subgroup, Supergroup
 
 
@@ -161,10 +161,8 @@ class Schools(Supergroup):
         geography
             an instance of the geography class
         """
-        area_names = [area.name for area in geography.areas]
-        if len(area_names) == 0:
-            raise SchoolError("Empty geography!")
-        return cls.for_areas(area_names, data_file, config_file)
+        #area_names = [area.name for area in geography.areas]
+        return cls.for_areas(geography.areas, data_file, config_file)
 
     @classmethod
     def for_zone(
@@ -193,7 +191,7 @@ class Schools(Supergroup):
     @classmethod
     def for_areas(
         cls,
-        area_names: List[str],
+        areas: Areas,
         data_file: str = default_data_filename,
         config_file: str = default_config_filename,
     ) -> "Schools":
@@ -206,12 +204,12 @@ class Schools(Supergroup):
             The path to the data directory
         config
         """
-        return cls.from_file(area_names, data_file, config_file)
+        return cls.from_file(areas, data_file, config_file)
 
     @classmethod
     def from_file(
         cls,
-        area_names: Optional[List[str]] = None,
+        areas: Areas,
         data_file: str = default_data_filename,
         config_file: str = default_config_filename,
     ) -> "Schools":
@@ -230,6 +228,7 @@ class Schools(Supergroup):
         Schools instance
         """
         school_df = pd.read_csv(data_file, index_col=0)
+        area_names = [area.name for area in areas]
         if area_names is not None:
             # filter out schools that are in the area of interest
             school_df = school_df[school_df["oa"].isin(area_names)]
@@ -237,11 +236,12 @@ class Schools(Supergroup):
         logger.info(f"There are {len(school_df)} schools in this geography.")
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls.build_schools_for_areas(school_df, **config,)
+        return cls.build_schools_for_areas(areas, school_df, **config,)
 
     @classmethod
     def build_schools_for_areas(
         cls,
+        areas: Areas,
         school_df: pd.DataFrame,
         age_range: Tuple[int, int] = (0, 19),
         employee_per_clients: Dict[str, int] = None,
@@ -275,6 +275,8 @@ class Schools(Supergroup):
                 row["sector"],
             )
             schools.append(school)
+            area = areas.get_closest_areas(school.coordinates)[0]
+            area.schools.append(school)
 
         # link schools
         school_trees, agegroup_to_global_indices = Schools.init_trees(

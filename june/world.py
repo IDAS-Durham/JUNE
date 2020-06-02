@@ -80,18 +80,19 @@ class World:
         if demography is not None:
             self.people = _populate_areas(geography, demography)
 
-        if hasattr(geography, "care_homes"):
-            self.care_homes = geography.care_homes
-            self.distribute_people_to_care_homes()
-
-        if include_households:
-            self.distribute_people_to_households()
         if (
             hasattr(geography, "companies")
             or hasattr(geography, "hospitals")
             or hasattr(geography, "schools")
         ):
             self.distribute_workers_to_super_areas(geography)
+
+        if hasattr(geography, "care_homes"):
+            self.care_homes = geography.care_homes
+            self.distribute_people_to_care_homes()
+
+        if include_households:
+            self.distribute_people_to_households()
 
         if hasattr(geography, "schools"):
             self.schools = geography.schools

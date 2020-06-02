@@ -32,7 +32,8 @@ class SchoolDistributor:
     def __init__(
             self,
             schools: Schools,
-            education_sector_label: List[int] = [2314, 2315, 2316],
+            #education_sector_label: List[int] = [2314, 2315, 2316],
+            education_sector_label = "P",
             neighbour_schools: int = 35,
             age_range: Tuple[int, int] = (0, 19),
             mandatory_age_range: Tuple[int, int] = (5, 18),
@@ -232,38 +233,19 @@ class SchoolDistributor:
             2315: Primary and nursery education teaching professionals
             2316: Special needs education teaching professionals
         """
-        # find people working in education
-        # TODO add key-company-sector id to config.yaml
+        areas_in_msoa = [area for area in msoarea.areas if area.schools]
+        if len(areas_in_msoa) == 0:
+            return
         teachers = [
             person
             for idx, person in enumerate(msoarea.workers)
             if person.sector == self.education_sector_label
         ]
-
-        # equal chance to work in any school nearest to any area within msoa
-        # Note: doing it this way rather then putting them into the area which
-        # is currently chose in the for-loop in the world.py file ensure that
-        # teachers are equally distr., no over-crowding
-        areas_in_msoa = msoarea.areas
-        areas_rv = stats.rv_discrete(
-            values=(
-                np.arange(len(areas_in_msoa)),
-                np.array([1 / len(areas_in_msoa)] * len(areas_in_msoa)),
-            )
-        )
-        areas_rnd_arr = areas_rv.rvs(size=len(teachers))
-
+        areas_rnd_arr = np.random.choice(areas_in_msoa, size=len(teachers))
         for i, teacher in enumerate(teachers):
             if teacher.sub_sector != None:
-                area = areas_in_msoa[areas_rnd_arr[i]]
-
+                area = areas_rnd_arr[i]
                 for school in area.schools:
-                    if teacher.sub_sector in school.sector:
-                        # (school.n_teachers < school.n_teachers_max) and \
-                        school.add(teacher, school.SubgroupType.teacher)
-                        school.n_teachers += 1
-                    elif teacher.sub_sector == "special_needs":
-                        # everyone has special needs :-)
-                        # TODO fine better why for filtering
-                        school.add(teacher, school.SubgroupType.teacher)
-                        school.n_teachers += 1
+                    if len(school.teachers.people) >= school.n_teachers_max:
+                        continue
+                    school.add(teacher, school.SubgroupType.teachers)
