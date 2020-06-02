@@ -42,7 +42,6 @@ class School(Group):
         "age_max",
         "age_structure",
         "sector",
-        "contact_matrices"
     )
 
     class SubgroupType(IntEnum):
@@ -73,8 +72,6 @@ class School(Group):
             maximum age of the pupils
         sector:
             whether it is a "primary", "secondary" or both "primary_secondary"
-        contact_matrices:
-            dictionary containing the physical and conversational contact matrices
 
         number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
         0 - teachers
@@ -248,7 +245,6 @@ class Schools(Supergroup):
         school_df: pd.DataFrame,
         age_range: Tuple[int, int] = (0, 19),
         employee_per_clients: Dict[str, int] = None,
-        contact_matrices: Dict[str, List[float]] = None,
     ) -> "Schools":
         """
         Parameters
@@ -277,7 +273,6 @@ class Schools(Supergroup):
                 int(row["age_min"]),
                 int(row["age_max"]),
                 row["sector"],
-                contact_matrices,
             )
             schools.append(school)
 

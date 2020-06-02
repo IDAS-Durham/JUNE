@@ -75,6 +75,8 @@ def test__person_drags_household(leisure):
     household.add(person1)
     household.add(person2)
     household.add(person3)
+    person2.busy = False
+    person3.busy = False
     social_venue = leisure.leisure_distributors[1].social_venues[0]
     social_venue.add(person1)
     leisure.send_household_with_person_if_necessary(
