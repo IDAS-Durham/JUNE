@@ -103,11 +103,11 @@ def save_hospitals_to_hdf5(
                 hospitals_dset["coordinates"][idx1:idx2] = coordinates
                 hospitals_dset["contact_matrices_size"].resize(newshape[0], axis=0)
                 hospitals_dset["contact_matrices_size"][idx1:idx2] = contact_matrices_size 
-                hospitals_dset["contact_matrices_contacts"].resize(newshape)
+                hospitals_dset["contact_matrices_contacts"].resize(newshape[0], axis=0)
                 hospitals_dset["contact_matrices_contacts"][
                     idx1:idx2
                 ] = contact_matrices_contacts
-                hospitals_dset["contact_matrices_physical"].resize(newshape)
+                hospitals_dset["contact_matrices_physical"].resize(newshape[0], axis=0)
                 hospitals_dset["contact_matrices_physical"][
                     idx1:idx2
                 ] = contact_matrices_physical

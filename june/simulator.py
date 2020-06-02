@@ -441,7 +441,6 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
-    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.

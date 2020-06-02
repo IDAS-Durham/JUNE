@@ -106,9 +106,9 @@ msoaslist = [
 t1 = time.time()
 
 # we have two options, we can take the list of areas above and select a few:
-geography = Geography.from_file({"msoa" : msoaslist[:10]})
+#geography = Geography.from_file({"msoa" : msoaslist[:10]})
 # or select an entire region:
-#geography = Geography.from_file({"region" : ["North East"]})
+geography = Geography.from_file({"region" : ["London"]})
 
 # then this automatically creates the world and saves it to world.hdf5
 demography = Demography.for_geography(geography)
@@ -118,9 +118,9 @@ geography.schools = Schools.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
-world = World(geography, demography, include_households=True, include_commute=False)
+world = World(geography, demography, include_households=True, include_commute=True)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving hdf5...")
-world.to_hdf5("world.hdf5")
+world.to_hdf5("london_wcm.hdf5")
 print("Done :)")
