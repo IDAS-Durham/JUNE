@@ -121,7 +121,7 @@ class ContactAveraging(Interaction):
     def assign_blame(self, infected, subgroup_transmission_probabilities):
         norm = sum(subgroup_transmission_probabilities)
         for person in infected:
-            person.health_information.number_of_infected = (
+            person.health_information.number_of_infected += (
                 person.health_information.infection.transmission.probability / norm
             )
 
@@ -256,7 +256,10 @@ class ContactAveraging(Interaction):
         for i, (recipient, luck) in enumerate(zip(susceptibles, should_be_infected)):
             if luck < transmission_probability[i]:
                 self.selector.infect_person_at_time(person=recipient, time=time)
-                logger.accumulate_infection_location(group.spec)
+                try:
+                    logger.accumulate_infection_location(group.spec)
+                except:
+                    pass
                 self.assign_blame(
                         group.infected, subgroup_transmission_probabilities
                 )
