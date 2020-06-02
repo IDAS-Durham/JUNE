@@ -1,7 +1,0 @@
-alpha_physical: 1.
-contact_matrices:
-  test_group: 
-    beta: 1.
-    contacts: [[1]]
-    physical: [[0]]
- 
