@@ -127,11 +127,11 @@ class Seed:
         n_cases:
             number of cases to seed.
         """
-        available_super_areas = [super_area.name for super_area in super_areas]
+        #available_super_areas = [super_area.name for super_area in super_areas]
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
         for super_area in super_areas:
-            if super_area in available_super_areas:
+            if super_area in self.super_areas.members:
                 n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
                 if n_cases_super_area >= 0:
                     self.infect_super_area(super_area, n_cases_super_area)
@@ -165,7 +165,6 @@ class Seed:
                 self.n_cases_region["region"], self.n_cases_region[date]
             ):
                 super_areas = self._filter_region(region=region)
-                print("Super areas : ", super_areas)
                 self.infect_super_areas(super_areas, n_cases)
             self.dates_seeded.append(date)
 
