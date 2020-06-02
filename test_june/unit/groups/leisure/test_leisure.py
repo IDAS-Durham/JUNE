@@ -40,7 +40,7 @@ def make_leisure():
 
 
 def test__probability_of_leisure(leisure):
-    person = Person(sex="m", age=26)
+    person = Person.from_attributes(sex="m", age=26)
     estimated_time_for_activity = 1 / (0.5 + 0.2)
     delta_time = 0.01
     times = []
@@ -68,9 +68,9 @@ def test__probability_of_leisure(leisure):
 
 
 def test__person_drags_household(leisure):
-    person1 = Person(sex="m", age=26)
-    person2 = Person(sex="f", age=26)
-    person3 = Person(sex="m", age=27)
+    person1 = Person.from_attributes(sex="m", age=26)
+    person2 = Person.from_attributes(sex="f", age=26)
+    person3 = Person.from_attributes(sex="m", age=27)
     household = Household()
     household.add(person1)
     household.add(person2)

@@ -47,17 +47,11 @@ class Company(Group):
     class SubgroupType(IntEnum):
         workers = 0
 
-    def __init__(self, super_area=None, n_workers_max=np.inf, sector=None, contact_matrices=None):
+    def __init__(self, super_area=None, n_workers_max=np.inf, sector=None):
         super().__init__()
         self.super_area = super_area
         self.sector = sector
         self.n_workers_max = n_workers_max
-        self.contact_matrices = contact_matrices
-        if contact_matrices is not None:
-            self.contact_matrices["contacts"] = np.array(self.contact_matrices["contacts"])
-            self.contact_matrices["proportion_physical"] = np.array(
-                self.contact_matrices["proportion_physical"]
-            )
 
 
 

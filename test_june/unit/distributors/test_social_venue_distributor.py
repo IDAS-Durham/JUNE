@@ -35,9 +35,18 @@ def make_distributor(social_venues):
 
 def test__age_dict_parsing(social_venue_distributor):
     age_dict = {"40-60" : 0.4, "10-20" : 0.2}
-    bins, probs = social_venue_distributor._parse_age_probabilites(age_dict)
-    assert bins == [10, 20, 40, 60]
-    assert probs == [0.0, 0.2, 0.0,  0.4, 0.0]
+    probabilities_per_age = social_venue_distributor._parse_age_probabilites(age_dict)
+    for idx, prob in enumerate(probabilities_per_age):
+        if idx < 10:
+            assert prob == 0.0
+        elif idx < 20:
+            assert prob == 0.2
+        elif idx < 40:
+            assert prob == 0.0
+        elif idx < 60:
+            assert prob == 0.4
+        else:
+            assert prob == 0.0
 
 def get_days_until_pub(person, delta_time, is_weekend, distrib):
     days = []

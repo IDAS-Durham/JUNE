@@ -145,7 +145,6 @@ class Infection:
         self.symptoms = symptoms
         self.infection_probability = 0.0
 
-    @profile
     def update_at_time(self, time):
         if self.last_time_updated <= time:
             delta_time = time - self.start_time
