@@ -33,7 +33,7 @@ class TransmissionXNExp(Transmission):
         self.probability = 0.0
 
     def update_probability_from_delta_time(self, delta_time):
-        return update_probability(
+        self.probability = update_probability(
             delta_time,
             self.incubation_time,
             self.norm,

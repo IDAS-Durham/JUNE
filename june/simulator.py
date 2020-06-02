@@ -258,7 +258,7 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
-    #@profile
+    @profile
     def clear_world(self):
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
@@ -441,6 +441,7 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
+    @profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -477,8 +478,7 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
-
-    #@profile
+    @profile
     def do_timestep(self):
         """
         Perform a time step in the simulation
