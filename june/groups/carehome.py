@@ -134,6 +134,6 @@ class CareHomes(Supergroup):
             n_residents = care_home_df.loc[area.name].values[0]
             n_worker = int(n_residents / config["sector"]["Q"]["nr_of_clients"])
             if n_residents != 0:
-                area.care_home = CareHome(area, n_residents, n_worker, config['contact_matrices'])
+                area.care_home = CareHome(area, n_residents, n_worker)
                 care_homes.append(area.care_home)
         return cls(care_homes)
