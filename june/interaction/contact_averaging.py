@@ -60,10 +60,10 @@ class ContactAveraging(Interaction):
                         input_contact_matrices[group]
                     )
                 else:
-                    contacts = input_contact_matrices[group]["contacts"]
-                    proportion_physical = input_contact_matrices[group][
-                        "proportion_physical"
-                    ]
+                    contacts = np.array(input_contact_matrices[group]["contacts"])
+                    proportion_physical = np.array(
+                        input_contact_matrices[group]["proportion_physical"]
+                    )
             contact_matrices[group] = get_contact_matrix(
                 self.alpha_physical, contacts, proportion_physical,
             )
@@ -150,21 +150,24 @@ class ContactAveraging(Interaction):
         susceptibles_idx = susceptibles_subgroup.subgroup_type
         infecters_idx = infecters_subgroup.subgroup_type
         if susceptibles_subgroup.group.spec == "school":
-            years = susceptibles_subgroup.group.years
-            if susceptibles_idx > 0:
-                susceptibles_idx = years[susceptibles_idx] + 1
-            elif infecters_idx > 0:
-                infecters_idx = years[infecters_idx] + 1
-        print("Susceptibles = ", susceptibles_idx)
-        print("Infecters = ", infecters_idx)
-        n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
+            school_years = susceptibles_subgroup.group.years
+            n_contacts = contact_matrix[
+                self.translate_school_subgroup(susceptibles_idx, school_years)
+            ][self.translate_school_subgroup(infecters_idx, school_years)]
+        else:
+            n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
         return (
             n_contacts
             / subgroup_size
             * subgroup_transmission_probabilities[infecters_idx]
         )
 
-    @profile
+    def translate_school_subgroup(self, idx, school_years):
+        if idx > 0:
+            idx = school_years[idx - 1] + 1
+        return idx
+
+    # @profile
     def compute_effective_transmission(
         self,
         contact_matrix,
@@ -207,7 +210,7 @@ class ContactAveraging(Interaction):
             transmission_exponent=transmission_exponent,
         )
 
-    @profile
+    # @profile
     def single_time_step_for_subgroup(
         self,
         contact_matrix,
