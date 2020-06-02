@@ -42,7 +42,7 @@ class School(Group):
         "age_max",
         "age_structure",
         "sector",
-        "contact_matrices"
+        "years",
     )
 
     class SubgroupType(IntEnum):
@@ -94,33 +94,11 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.age_min = age_min
         self.age_max = age_max
+        #TODO: is age structure used?
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
-        if contact_matrices is not None:
-            self.contact_matrices = self.initialize_contacts(contact_matrices)
-
-    def initialize_contacts(self, input_contact_matrices):
-        contact_matrices = {}
-        contact_matrices["contacts"] = self.adapt_contacts_to_schools(
-            input_contact_matrices["contacts"], input_contact_matrices['xi']
-        )
-        contact_matrices["proportion_physical"] = self.adapt_contacts_to_schools(
-            input_contact_matrices["proportion_physical"], input_contact_matrices['xi']
-        )
-        return contact_matrices
-
-    def adapt_contacts_to_schools(self, input_contact_matrix, xi):
-        n_subgroups = len(self.subgroups)
-        contact_matrix = np.zeros((n_subgroups, n_subgroups))
-        contact_matrix[0,0] = input_contact_matrix[0][0]
-        contact_matrix[0,1:] = input_contact_matrix[0][1]
-        contact_matrix[1:,0] = input_contact_matrix[1][0]
-        age_differences = np.subtract.outer(
-            range(self.age_min, self.age_max+1), range(self.age_min, self.age_max+1)
-        )
-        contact_matrix[1:,1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
-        return contact_matrix
-
+        self.years = list(range(age_min, age_max+1))
+        
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
