@@ -87,7 +87,7 @@ class SocialVenueDistributor:
             probabilities_binned.append(prob)
         probabilities_binned.append(0.0)
         probabilities_per_age = []
-        for age in range(0, 100):
+        for age in range(100):
             idx = np.searchsorted(bins, age+1) # we do +1 to include the lower boundary
             probabilities_per_age.append(probabilities_binned[idx])
         return probabilities_per_age
