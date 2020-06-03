@@ -38,7 +38,7 @@ class CareHomeDistributor:
         self.min_age_in_care_home = min_age_in_care_home
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        self.config = config
+        self.sector = list(config["sector"].keys())[0]
 
     def _create_people_dicts(self, area: Area):
         """
@@ -59,11 +59,11 @@ class CareHomeDistributor:
         """
         Creates care homes in areas from dataframe.
         """
-        households_df = pd.read_csv(data_filename, index_col=0)
+        care_homes_df = pd.read_csv(data_filename, index_col=0)
         area_names = [area.name for area in areas]
-        households_df = households_df.loc[area_names]
+        care_homes_df = care_homes_df.loc[area_names]
         for area in areas:
-            care_home_residents_number = households_df.loc[area.name].values
+            care_home_residents_number = care_homes_df.loc[area.name].values
             if care_home_residents_number != 0:
                 self.populate_care_home_in_area(area)
 
@@ -145,7 +145,8 @@ class CareHomeDistributor:
         carers = [
             person
             for idx, person in enumerate(area.super_area.workers)
-            if person.sector == list(self.config["sector"].keys())[0]
+            if person.sector == self.sector 
+            and person.primary_activity is None
         ]
         if len(carers) == 0:
             logger.info(
