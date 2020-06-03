@@ -43,7 +43,7 @@ class SchoolDistributor:
         neighbour_schools: int = 35,
         age_range: Tuple[int, int] = (0, 19),
         mandatory_age_range: Tuple[int, int] = (5, 18),
-        students_teacher_ratio=30,
+        students_teacher_ratio=25,
     ):
         """
         Get closest schools to this output area, per age group
@@ -208,7 +208,7 @@ class SchoolDistributor:
                 if person.age not in is_school_full or is_school_full[person.age]:
                     continue
                 else:
-                    schools_full = 0
+                    find_school = False
                     for i in range(self.neighbour_schools):  # look for non full school
                         if i >= len(closest_schools_by_age[person.age]):
                             # TEST THIS
@@ -217,14 +217,14 @@ class SchoolDistributor:
                         # check number of students in that age group
                         yearindex = person.age - school.age_min + 1
                         n_pupils_age = len(school.subgroups[yearindex].people)
-                        if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
-                            school.n_pupils_max / (school.age_max - school.age_min)
+                        if (school.n_pupils < school.n_pupils_max) and (
+                            n_pupils_age
+                            < (school.n_pupils_max / (school.age_max - school.age_min))
                         ):
-                            schools_full += 1
-                        else:
+                            find_school = True
                             break
-                school.add(person, school.SubgroupType.students)
-                school.age_structure[person.age] += 1
+                    if find_school:
+                        school.add(person, school.SubgroupType.students)
 
     def distribute_teachers_to_schools_in_super_areas(
         self, super_areas: List[SuperArea]
@@ -234,18 +234,20 @@ class SchoolDistributor:
 
     def distribute_teachers_to_school(self, msoarea: SuperArea):
         """
-        Education sector = "P"
-        subsectors:
-            2311: Higher education teaching professional
-            2312: Further education teaching professionals
-            2314: Secondary education teaching professionals
-            2315: Primary and nursery education teaching professionals
-            2316: Special needs education teaching professionals
+        Assigns teachers to super area. The strategy is the following:
+        we loop over the schools to divide them into two subgroups,
+        primary schools and secondary schools. If a school is both, then
+        we assign it randomly to one of the two.
+        Then we loop over the workers in the super area to find the teachers,
+        which we also divide into two subgroups analogously to the schools.
+        We assign the teachers to the schools following a fix student to teacher ratio.
         """
         primary_schools = []
         secondary_schools = []
         for area in msoarea.areas:
             for school in area.schools:
+                if school.n_pupils == 0:
+                    continue
                 # note one school can be primary and secondary.
                 if type(school.sector) != str:
                     idx = np.random.randint(0, 2)
@@ -263,7 +265,7 @@ class SchoolDistributor:
                                 secondary_schools.append(school)
                         else:
                             primary_schools.append(school)
-                    if "secondary" in school.sector:
+                    elif "secondary" in school.sector:
                         secondary_schools.append(school)
                     else:
                         idx = np.random.randint(0, 2)
@@ -273,8 +275,6 @@ class SchoolDistributor:
                             secondary_schools.append(school)
         np.random.shuffle(primary_schools)
         np.random.shuffle(secondary_schools)
-        if len(secondary_schools) == 0 and len(primary_schools) == 0:
-            return
         all_teachers = [
             person
             for person in msoarea.workers
@@ -290,22 +290,15 @@ class SchoolDistributor:
                 secondary_teachers.append(teacher)
             else:
                 extra_teachers.append(teacher)
-
         np.random.shuffle(primary_teachers)
         np.random.shuffle(secondary_teachers)
         np.random.shuffle(extra_teachers)
-        if primary_schools:
-            primary_school_ratio = len(primary_teachers) / len(primary_schools)
-        if secondary_schools:
-            secondary_school_ratio = len(secondary_teachers) / len(secondary_schools)
-
         schools_without_teachers = []
         for primary_school in primary_schools:
-            n_students = len(primary_school.students.people)
+            n_students = len(primary_school.students)
             if n_students == 0:
                 continue
-            #n_teachers = max(int(np.floor(primary_school_ratio * n_students)), 1)
-            n_teachers = max(int(np.floor(self.students_teacher_ratio * n_students)), 1)
+            n_teachers = max(int(np.floor(n_students / self.students_teacher_ratio)), 1)
             for _ in range(n_teachers):
                 if primary_teachers:
                     teacher = primary_teachers.pop()
@@ -313,11 +306,14 @@ class SchoolDistributor:
                     teacher = extra_teachers.pop()
                 else:
                     schools_without_teachers.append(primary_school)
+                    break
                 primary_school.add(teacher, school.SubgroupType.teachers)
 
         for secondary_school in secondary_schools:
-            n_students = len(secondary_school.students.people)
-            n_teachers = max(int(np.floor(self.students_teacher_ratio * n_students)), 1)
+            n_students = len(secondary_school.students)
+            if n_students == 0:
+                continue
+            n_teachers = max(int(np.floor(n_students / self.students_teacher_ratio)), 1)
             for _ in range(n_teachers):
                 if secondary_teachers:
                     teacher = secondary_teachers.pop()
@@ -325,6 +321,7 @@ class SchoolDistributor:
                     teacher = extra_teachers.pop()
                 else:
                     schools_without_teachers.append(secondary_school)
+                    break
                 secondary_school.add(teacher, school.SubgroupType.teachers)
 
         remaining_teachers = primary_teachers + secondary_teachers + extra_teachers
@@ -332,6 +329,9 @@ class SchoolDistributor:
             for i in range(len(remaining_teachers)):
                 teacher = remaining_teachers[i]
                 school_idx = i % len(schools_without_teachers)
-                schools_without_teachers[school_idx].add(
+                school = schools_without_teachers[school_idx]
+                if school.n_pupils / school.n_teachers <= self.students_teacher_ratio:
+                    continue
+                school.add(
                     teacher, school.SubgroupType.teachers
                 )

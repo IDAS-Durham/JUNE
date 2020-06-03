@@ -3,3 +3,4 @@ mandatory_age_range: [5,18]
 neighbour_schools: 35 
 sector: 'P'            # NOMIS name convention
 sub_sector: ["teacher_secondary", "teacher_primary"]
+school_student_ratio: 25
