@@ -24,6 +24,7 @@ def save_hospitals_to_hdf5(
     """
     n_hospitals = len(hospitals)
     n_chunks = int(np.ceil(n_hospitals/ chunk_size))
+    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         hospitals_dset = f.create_group("hospitals")
         for chunk in range(n_chunks):
@@ -68,6 +69,7 @@ def save_hospitals_to_hdf5(
                 hospitals_dset["n_icu_beds"][idx1:idx2] = n_icu_beds
                 hospitals_dset["coordinates"].resize(newshape[0], axis=0)
                 hospitals_dset["coordinates"][idx1:idx2] = coordinates
+
 
 def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
     """

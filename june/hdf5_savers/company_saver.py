@@ -25,6 +25,7 @@ def save_companies_to_hdf5(
     """
     n_companies = len(companies)
     n_chunks = int(np.ceil(n_companies / chunk_size))
+    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         companies_dset = f.create_group("companies")
         first_company_idx = companies[0].id

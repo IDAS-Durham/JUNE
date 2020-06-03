@@ -207,4 +207,4 @@ def update_hospital_map(day_number):
     return dash_plotter.generate_hospital_map(day_number=day_number)
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)

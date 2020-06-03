@@ -161,7 +161,7 @@ class TestSaveCompanies:
                 assert company.super_area.id == company2.super_area
             else:
                 assert company2.super_area is None
-
+            
 
 class TestSaveHospitals:
     def test__save_hospitals(self, world_h5):
@@ -186,6 +186,7 @@ class TestSaveHospitals:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
+            
 
 
 class TestSaveSchools:
@@ -205,7 +206,6 @@ class TestSaveSchools:
             ]:
                 attribute = getattr(school, attribute_name)
                 attribute2 = getattr(school2, attribute_name)
-                print(attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
@@ -216,8 +216,7 @@ class TestSaveSchools:
                 assert school2.super_area is None
             assert school.coordinates[0] == school2.coordinates[0]
             assert school.coordinates[1] == school2.coordinates[1]
-
-
+            
 class TestSaveCarehomes:
     def test__save_carehomes(self, world_h5):
         carehomes = world_h5.care_homes
@@ -235,7 +234,7 @@ class TestSaveCarehomes:
                 assert carehome.area.id == carehome2.area
             else:
                 assert carehome2.area is None
-
+            
 
 class TestSaveGeography:
     def test__save_geography(self, world_h5):
@@ -356,4 +355,4 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1.id == person2
+                assert person1.id == person2.id
