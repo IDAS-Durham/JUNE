@@ -1,6 +1,4 @@
-from june.groups.group import Group, Supergroup
-from june.logger_creation import logger
-from enum import IntEnum
+from june.groups.group import Supergroup
 
 
 class Cemetery:
