@@ -39,6 +39,8 @@ def save_population_to_hdf5(
             ethns = []
             socioecon_indices = []
             areas = []
+            sectors = []
+            sub_sectors = []
             group_ids = []
             group_specs = []
             subgroup_types = []
@@ -60,6 +62,14 @@ def save_population_to_hdf5(
                     areas.append(person.area.id)
                 else:
                     areas.append(nan_integer)
+                if person.sector is None:
+                    sectors.append(" ".encode("ascii", "ignore"))
+                else:
+                    sectors.append(person.sector.encode("ascii", "ignore"))
+                if person.sub_sector is None:
+                    sub_sectors.append(" ".encode("ascii", "ignore"))
+                else:
+                    sub_sectors.append(person.sub_sector.encode("ascii", "ignore"))
                 gids = []
                 stypes = []
                 specs = []
@@ -96,6 +106,8 @@ def save_population_to_hdf5(
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
+            sectors = np.array(sectors, dtype="S30")
+            sub_sectors = np.array(sub_sectors, dtype="S30")
             mode_of_transport_description = np.array(
                 mode_of_transport_description, dtype="S100"
             )
@@ -108,6 +120,8 @@ def save_population_to_hdf5(
                 people_dset.create_dataset("id", data=ids, maxshape=(None,))
                 people_dset.create_dataset("age", data=ages, maxshape=(None,))
                 people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
+                people_dset.create_dataset("sector", data=sectors, maxshape=(None,))
+                people_dset.create_dataset("sub_sector", data=sub_sectors, maxshape=(None,))
                 people_dset.create_dataset(
                     "socioecon_index", data=socioecon_indices, maxshape=(None,)
                 )
@@ -149,6 +163,10 @@ def save_population_to_hdf5(
                 people_dset["sex"][idx1:idx2] = sexes
                 people_dset["ethnicity"].resize(newshape)
                 people_dset["ethnicity"][idx1:idx2] = ethns
+                people_dset["sector"].resize(newshape)
+                people_dset["sector"][idx1:idx2] = sectors
+                people_dset["sub_sector"].resize(newshape)
+                people_dset["sub_sector"][idx1:idx2] = sub_sectors
                 people_dset["socioecon_index"].resize(newshape)
                 people_dset["socioecon_index"][idx1:idx2] = socioecon_indices
                 people_dset["home_city"].resize(newshape)
@@ -197,6 +215,8 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             group_ids = population["group_ids"][idx1:idx2]
             group_specs = population["group_specs"][idx1:idx2]
             subgroup_types = population["subgroup_types"][idx1:idx2]
+            sectors = population["sector"][idx1:idx2]
+            sub_sectors = population["sub_sector"][idx1:idx2]
             mode_of_transport_is_public_list = population[
                 "mode_of_transport_is_public"
             ][idx1:idx2]
@@ -240,5 +260,13 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     subgroups.append([group_spec, group_id, subgroup_type])
                 person.subgroups = subgroups
                 person.area = areas[k]
+                if sectors[k].decode() == " ":
+                    person.sector = None
+                else:
+                    person.sector = sectors[k].decode()
+                if sub_sectors[k].decode() == " ":
+                    person.sub_sector = None
+                else:
+                    person.sub_sector = sub_sectors[k].decode()
                 people.append(person)
     return Population(people)
