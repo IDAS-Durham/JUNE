@@ -99,10 +99,10 @@ class CareHomes(Supergroup):
         """
         Initializes care homes from geography.
         """
-        area = [area for area in geography.areas]
-        if len(area) == 0:
+        areas = geography.areas
+        if len(areas) == 0:
             raise CareHomeError("Empty geography!")
-        return cls.for_areas(area, data_file, config_file)
+        return cls.for_areas(areas, data_file, config_file)
 
 
     @classmethod
