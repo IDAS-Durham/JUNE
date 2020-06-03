@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import numpy as np
 import pytest
 
 from june.demography.geography import Geography
@@ -39,7 +39,7 @@ class TestSchool:
             n_pupils_max=467,
             n_teachers_max=73,
             age_min=6,
-            age_max=19,
+            age_max=8,
             sector="primary_secondary",
         )
 
@@ -55,7 +55,6 @@ class TestSchool:
         person = Person(sex="f", age=7)
         school.add(person, School.SubgroupType.students)
         assert bool(school.subgroups[2].people) is True
-
 
 class TestSchools:
     def test__creating_schools_from_file(self, area_schools):
@@ -87,4 +86,5 @@ class TestSchools:
             schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
         ]
         assert closest_school == school
+
 

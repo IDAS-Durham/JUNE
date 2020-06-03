@@ -42,6 +42,7 @@ class School(Group):
         "age_max",
         "age_structure",
         "sector",
+        "years",
     )
 
     class SubgroupType(IntEnum):
@@ -90,9 +91,11 @@ class School(Group):
         self.n_teachers_max = n_teachers_max
         self.age_min = age_min
         self.age_max = age_max
+        #TODO: is age structure used?
         self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
-
+        self.years = list(range(age_min, age_max+1))
+        
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
@@ -364,4 +367,3 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
-
