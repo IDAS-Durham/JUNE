@@ -81,20 +81,20 @@ class World:
             self.people = _populate_areas(geography, demography)
 
         if (
-            hasattr(geography, "companies")
-            or hasattr(geography, "hospitals")
-            or hasattr(geography, "schools")
+            geography.companies is not None
+            or geography.hospitals is not None
+            or geography.schools is not None
         ):
             self.distribute_workers_to_super_areas(geography)
 
-        if hasattr(geography, "care_homes"):
+        if geography.care_homes is not None:
             self.care_homes = geography.care_homes
             self.distribute_people_to_care_homes()
 
         if include_households:
             self.distribute_people_to_households()
 
-        if hasattr(geography, "schools"):
+        if geography.schools is not None:
             self.schools = geography.schools
             self.distribute_kids_and_teachers_to_schools()
 
@@ -104,15 +104,15 @@ class World:
         if include_rail_travel:
             self.initialise_rail_travel()
 
-        if hasattr(geography, "hospitals"):
+        if geography.hospitals is not None:
             self.hospitals = geography.hospitals
             self.distribute_medics_to_hospitals()
 
-        if hasattr(geography, "cemeteries"):
+        if geography.cemeteries is not None:
             self.cemeteries = geography.cemeteries
 
         # Companies last because need hospital and school workers first
-        if hasattr(geography, "companies"):
+        if geography.companies is not None:
             self.companies = geography.companies
             self.distribute_workers_to_companies()
 
