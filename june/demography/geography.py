@@ -44,6 +44,7 @@ class Area:
         "coordinates",
         "super_area",
         "care_home",
+        "schools",
         "households"
     )
     _id = count()
@@ -60,6 +61,7 @@ class Area:
         self.coordinates = coordinates
         self.super_area = super_area
         self.people = list()
+        self.schools = list()
         self.households = list()
 
     def add(self, person: Person):
@@ -221,6 +223,15 @@ class Geography:
         """
         self.areas = areas
         self.super_areas = super_areas
+        # possible buildings
+        self.schools = None
+        self.hospitals = None
+        self.companies = None
+        self.care_homes = None
+        self.pubs = None
+        self.cinemas = None
+        self.groceries = None
+        self.cemeteries = None
 
     @classmethod
     def _create_areas(

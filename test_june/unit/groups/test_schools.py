@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import numpy as np
 import pytest
 
 from june.demography.geography import Geography
@@ -26,9 +26,10 @@ default_config = {
 }
 
 
-@pytest.fixture(name="area_schools")
+@pytest.fixture(name="geo_schools", scope="module")
 def area_name():
-    return "E00088544"
+    geography = Geography.from_file(filter_key={"msoa": ["E02004935"]})
+    return geography
 
 
 class TestSchool:
@@ -39,7 +40,7 @@ class TestSchool:
             n_pupils_max=467,
             n_teachers_max=73,
             age_min=6,
-            age_max=19,
+            age_max=8,
             sector="primary_secondary",
         )
 
@@ -56,25 +57,20 @@ class TestSchool:
         school.add(person, School.SubgroupType.students)
         assert bool(school.subgroups[2].people) is True
 
-
 class TestSchools:
-    def test__creating_schools_from_file(self, area_schools):
+    def test__creating_schools_from_file(self, geo_schools):
         schools = Schools.from_file(
-            area_names=[area_schools],
+            areas = geo_schools.areas,
             data_file=default_data_filename,
             config_file=default_config_filename,
         )
 
-    def test_creating_schools_for_areas(self, area_schools):
-        schools = Schools.for_areas([area_schools])
-
-    def test__creating_schools_for_zone(self, area_schools):
-        schools = Schools.for_zone({"oa": [area_schools]})
+    def test_creating_schools_for_areas(self, geo_schools):
+        schools = Schools.for_areas(geo_schools.areas)
 
     @pytest.fixture(name="schools", scope="module")
-    def test__creating_schools_for_geography(self):
-        geography = Geography.from_file(filter_key={"msoa": ["E02004935"]})
-        return Schools.for_geography(geography)
+    def test__creating_schools_for_geography(self, geo_schools):
+        return Schools.for_geography(geo_schools)
 
     def test__school_nr_for_geography(self, schools):
         assert len(schools) == 4
@@ -87,4 +83,5 @@ class TestSchools:
             schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
         ]
         assert closest_school == school
+
 

@@ -23,6 +23,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
     """
     n_schools = len(schools)
     n_chunks = int(np.ceil(n_schools / chunk_size))
+    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         schools_dset = f.create_group("schools")
         for chunk in range(n_chunks):
@@ -60,13 +61,23 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
-                schools_dset.create_dataset("n_teachers_max", data=n_teachers_max, maxshape=(None,))
-                schools_dset.create_dataset("n_pupils_max", data=n_pupils_max, maxshape=(None,))
-                schools_dset.create_dataset("n_teachers", data=n_teachers, maxshape=(None,))
+                schools_dset.create_dataset(
+                    "n_teachers_max", data=n_teachers_max, maxshape=(None,)
+                )
+                schools_dset.create_dataset(
+                    "n_pupils_max", data=n_pupils_max, maxshape=(None,)
+                )
+                schools_dset.create_dataset(
+                    "n_teachers", data=n_teachers, maxshape=(None,)
+                )
                 schools_dset.create_dataset("age_min", data=age_min, maxshape=(None,))
                 schools_dset.create_dataset("age_max", data=age_max, maxshape=(None,))
                 schools_dset.create_dataset("sector", data=sectors, maxshape=(None,))
-                schools_dset.create_dataset("coordinates", data=coordinates, maxshape=(None, coordinates.shape[1]))
+                schools_dset.create_dataset(
+                    "coordinates",
+                    data=coordinates,
+                    maxshape=(None, coordinates.shape[1]),
+                )
             else:
                 newshape = (schools_dset["id"].shape[0] + ids.shape[0],)
                 schools_dset["id"].resize(newshape)
@@ -85,6 +96,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["sector"][idx1:idx2] = sectors
                 schools_dset["coordinates"].resize(newshape[0], axis=0)
                 schools_dset["coordinates"][idx1:idx2] = coordinates
+
 
 def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
     """
