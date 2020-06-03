@@ -168,30 +168,6 @@ class Schools(Supergroup):
         return cls.for_areas(geography.areas, data_file, config_file)
 
     @classmethod
-    def for_zone(
-        cls,
-        filter_key: Dict[str, list],
-        areas_maps_path: str = default_areas_map_path,
-        data_file: str = default_data_filename,
-        config_file: str = default_config_filename,
-    ) -> "Schools":
-        """
-        
-        Example
-        -------
-            filter_key = {"region" : "North East"}
-            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
-        """
-        if len(filter_key.keys()) > 1:
-            raise NotImplementedError("Only one type of area filtering is supported.")
-        geo_hierarchy = pd.read_csv(areas_maps_path)
-        zone_type, zone_list = filter_key.popitem()
-        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["oa"]
-        if len(area_names) == 0:
-            raise SchoolError("Region returned empty area list.")
-        return cls.for_areas(area_names, data_file, config_file)
-
-    @classmethod
     def for_areas(
         cls,
         areas: Areas,

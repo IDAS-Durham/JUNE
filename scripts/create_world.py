@@ -123,5 +123,5 @@ world = World(geography, demography, include_households=True, include_commute=Tr
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving hdf5...")
-world.to_hdf5("world.hdf5")
+world.to_hdf5("ne_03062020.hdf5")
 print("Done :)")
