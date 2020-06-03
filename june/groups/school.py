@@ -37,7 +37,6 @@ class School(Group):
         "super_area",
         "n_pupils_max",
         "n_teachers_max",
-        "n_teachers",
         "age_min",
         "age_max",
         "age_structure",
@@ -86,13 +85,11 @@ class School(Group):
             self.subgroups.append(Subgroup(self, i))
         self.coordinates = coordinates
         self.super_area = None
-        self.n_teachers = 0
         self.n_pupils_max = n_pupils_max
         self.n_teachers_max = n_teachers_max
         self.age_min = age_min
         self.age_max = age_max
         #TODO: is age structure used?
-        self.age_structure = {a: 0 for a in range(age_min, age_max + 1)}
         self.sector = sector
         self.years = list(range(age_min, age_max+1))
         
@@ -114,7 +111,11 @@ class School(Group):
 
     @property
     def n_pupils(self):
-        return len(self.subgroups[self.SubgroupType.students])
+        return len(self.students)
+
+    @property
+    def n_teachers(self):
+        return len(self.teachers)
 
     @property
     def teachers(self):
@@ -122,7 +123,10 @@ class School(Group):
 
     @property
     def students(self):
-        return self.subgroups[self.SubgroupType.students]
+        ret = []
+        for subgroup in self.subgroups[1:]:
+            ret += subgroup.people
+        return ret
 
 
 class Schools(Supergroup):
