@@ -87,7 +87,7 @@ def test__care_home_visits_leisure_integration(world_visits, leisure):
     for area in world_visits.areas:
         if area.care_home is not None:
             break
-    person1.residence.group.relatives = [area.care_home.people[0]]
+    person1.residence.group.relatives = [area.care_home.residents[0]]
     assigned = False
     for _ in range(0, 100):
         subgroup = leisure.get_subgroup_for_person_and_housemates(
