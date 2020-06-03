@@ -46,6 +46,7 @@ class Seed:
         ]
         self.dates = dates
         if self.dates:
+            self.min_date = min(self.dates)
             self.max_date = max(self.dates)
         self.dates_seeded = []
 
@@ -132,6 +133,7 @@ class Seed:
         for super_area in super_areas:
             if super_area in self.super_areas.members:
                 n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
+                print("N cases super area = ", n_cases_super_area)
                 if n_cases_super_area >= 0:
                     self.infect_super_area(super_area, n_cases_super_area)
 
@@ -147,10 +149,12 @@ class Seed:
             number of cases to seed
         """
         # randomly select people to infect within the super area
-        choices = np.random.choice(len(super_area.people), n_cases, replace=False)
-
+        susceptible_in_area = [
+            person for person in super_area.people if person.susceptible
+        ]
+        choices = np.random.choice(len(susceptible_in_area), n_cases, replace=False)
         for choice in choices:
-            person = list(super_area.people)[choice]
+            person = list(susceptible_in_area)[choice]
             self.selector.infect_person_at_time(person=person, time=1.0)
 
     def unleash_virus_per_region(self, date):

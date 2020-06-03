@@ -553,7 +553,7 @@ class Simulator:
             if time > self.timer.final_date:
                 break
             if self.seed:
-                if time <= self.seed.max_date:
+                if (time >= seed.min_date) and (time <= seed.max_date):
                     self.seed.unleash_virus_per_region(time)
             self.do_timestep()
         # Save the world
