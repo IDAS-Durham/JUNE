@@ -1,7 +1,7 @@
 import logging
 import random
 from june import paths
-from typing import List
+from typing import List, Optional
 import datetime
 
 from itertools import chain
@@ -41,7 +41,7 @@ class Simulator:
         selector: InfectionSelector,
         activity_to_groups: dict,
         time_config: dict,
-        seed: "Seed" = None,
+        seed: Optional["Seed"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
         save_path: str = "results",
