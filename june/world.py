@@ -80,20 +80,21 @@ class World:
         if demography is not None:
             self.people = _populate_areas(geography, demography)
 
-        if hasattr(geography, "care_homes"):
+        if (
+            geography.companies is not None
+            or geography.hospitals is not None
+            or geography.schools is not None
+        ):
+            self.distribute_workers_to_super_areas(geography)
+
+        if geography.care_homes is not None:
             self.care_homes = geography.care_homes
             self.distribute_people_to_care_homes()
 
         if include_households:
             self.distribute_people_to_households()
-        if (
-            hasattr(geography, "companies")
-            or hasattr(geography, "hospitals")
-            or hasattr(geography, "schools")
-        ):
-            self.distribute_workers_to_super_areas(geography)
 
-        if hasattr(geography, "schools"):
+        if geography.schools is not None:
             self.schools = geography.schools
             self.distribute_kids_and_teachers_to_schools()
 
@@ -103,15 +104,15 @@ class World:
         if include_rail_travel:
             self.initialise_rail_travel()
 
-        if hasattr(geography, "hospitals"):
+        if geography.hospitals is not None:
             self.hospitals = geography.hospitals
             self.distribute_medics_to_hospitals()
 
-        if hasattr(geography, "cemeteries"):
+        if geography.cemeteries is not None:
             self.cemeteries = geography.cemeteries
 
         # Companies last because need hospital and school workers first
-        if hasattr(geography, "companies"):
+        if geography.companies is not None:
             self.companies = geography.companies
             self.distribute_workers_to_companies()
 
@@ -301,6 +302,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "school": "schools",
         "household": "households",
         "care_home": "care_homes",
+        "commute_hub" : "commutehubs",
     }
     # restore areas -> super_areas
     for area in world.areas:
@@ -349,14 +351,14 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
 
             commute_internal_people = []
             for i in range(0, len(city.commute_internal)):
-                commute_internal_people.append(world.people[
-                    city.commute_internal[i] - first_person_idx
-                ])
+                commute_internal_people.append(
+                    world.people[city.commute_internal[i] - first_person_idx]
+                )
             city.commute_internal = commute_internal_people
         for hub in world.commutehubs:
-            for i in range(len(hub.people)):
-                hub.add(world.people[
-                    hub.people[i] - first_person_idx
-                ], activity=None, subgroup_type=0)
+            hub_people_ids = [person_id for person_id in hub.people]
+            hub.clear()
+            for person_id in hub_people_ids:
+                hub.add(world.people[person_id - first_person_idx])
 
     return world

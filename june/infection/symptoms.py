@@ -33,7 +33,6 @@ class SymptomTag(IntEnum):
             f"{string} is not the name of a SymptomTag"
         )
 
-
 class Symptoms:
     def __init__(self, health_index=None):
         self.health_index = list() if health_index is None else health_index

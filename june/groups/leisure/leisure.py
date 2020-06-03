@@ -14,8 +14,25 @@ from june.groups.leisure import Pubs, Cinemas, Groceries
 
 
 @jit(nopython=True)
-def roll_poisson_dice(poisson_parameter, delta_time):
-    return np.random.rand() < (1.0 - np.exp(-poisson_parameter * delta_time))
+def random_choice_numba(arr, prob):
+    """
+    Fast implementation of np.random.choice
+    """
+    return arr[np.searchsorted(np.cumsum(prob), np.random.rand(), side="right")]
+
+
+@jit(nopython=True)
+def roll_activity_dice(poisson_parameters, delta_time, n_activities):
+    total_poisson_parameter = np.sum(poisson_parameters)
+    does_activity = np.random.rand() < (
+        1.0 - np.exp(-total_poisson_parameter * delta_time)
+    )
+    if does_activity:
+        poisson_parameters_normalized = poisson_parameters / total_poisson_parameter
+        return random_choice_numba(
+            np.arange(0, n_activities), poisson_parameters_normalized
+        )
+    return None
 
 
 def generate_leisure_for_world(list_of_leisure_groups, world):
@@ -62,6 +79,7 @@ class Leisure:
             List of social venue distributors.
         """
         self.leisure_distributors = leisure_distributors
+        self.n_activities = len(self.leisure_distributors)
 
     def get_leisure_distributor_for_person(
         self, person: Person, delta_time: float, is_weekend: bool = False
@@ -89,17 +107,13 @@ class Leisure:
             poisson_parameters.append(
                 distributor.get_poisson_parameter(person, is_weekend)
             )
-        total_poisson_parameter = np.sum(poisson_parameters)
-        does_activity = roll_poisson_dice(total_poisson_parameter, delta_time)
-        if does_activity is False:
+        activity = roll_activity_dice(
+            np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
+        )
+        if activity is None:
             return
-        poisson_parameters_normalized = np.array(poisson_parameters) / np.sum(
-            poisson_parameters
-        )
-        which_activity = np.random.choice(
-            np.arange(0, len(poisson_parameters)), p=poisson_parameters_normalized
-        )
-        return self.leisure_distributors[which_activity]
+        else:
+            return self.leisure_distributors[activity]
 
     def assign_social_venue_to_person(self, person, leisure_distributor):
         social_venue = leisure_distributor.get_social_venue_for_person(person)
@@ -114,7 +128,9 @@ class Leisure:
         then we ask X whether the person needs to drag the household with 
         him or her.
         """
-        if person.residence.group.spec == "care_home" or person.residence.group.type == "communal":
+        if (
+            person.residence.group.spec in ["care_home", "communal"]
+        ):
             return False
         if leisure_distributor.person_drags_household():
             for mate in person.residence.group.residents:

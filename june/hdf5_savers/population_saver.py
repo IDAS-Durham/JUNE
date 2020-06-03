@@ -72,7 +72,7 @@ def save_population_to_hdf5(
                         gids.append(subgroup.group.id)
                         stypes.append(subgroup.subgroup_type)
                         specs.append(subgroup.group.spec.encode("ascii", "ignore"))
-                group_specs.append(np.array(specs, dtype="S10"))
+                group_specs.append(np.array(specs, dtype="S20"))
                 group_ids.append(np.array(gids, dtype=np.int))
                 subgroup_types.append(np.array(stypes, dtype=np.int))
                 if person.mode_of_transport == None:
@@ -95,7 +95,7 @@ def save_population_to_hdf5(
             areas = np.array(areas, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
-            group_specs = np.array(group_specs, dtype="S10")
+            group_specs = np.array(group_specs, dtype="S20")
             mode_of_transport_description = np.array(
                 mode_of_transport_description, dtype="S100"
             )
