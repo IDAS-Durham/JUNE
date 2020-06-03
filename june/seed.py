@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import datetime
 from june.demography.geography import SuperAreas
 from june.infection.infection import InfectionSelector
 from june import paths
@@ -11,6 +12,7 @@ default_msoa_region_filename = (
     paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
 
+
 class Seed:
     def __init__(
         self,
@@ -18,6 +20,7 @@ class Seed:
         selector: InfectionSelector,
         n_cases_region: pd.DataFrame = None,
         msoa_region: pd.DataFrame = None,
+        dates: List["datetime"] = None,
     ):
         """
         Class to initialize the infection 
@@ -34,13 +37,17 @@ class Seed:
             mapping between super areas and regions.
         """
 
-        self.super_areas = super_areas 
-        self.selector    = selector
+        self.super_areas = super_areas
+        self.selector = selector
         self.n_cases_region = n_cases_region
         self.msoa_region = msoa_region
         self.super_area_names = [
             super_area.name for super_area in self.super_areas.members
         ]
+        self.dates = dates
+        self.min_date = min(self.dates) if self.dates else None
+        self.max_date = max(self.dates) if self.dates else None
+        self.dates_seeded = []
 
     @classmethod
     def from_file(
@@ -73,12 +80,15 @@ class Seed:
         """
 
         n_cases_region = pd.read_csv(n_cases_region_filename)
+        dates = list(n_cases_region.columns[1:])
+        dates = [
+            datetime.datetime(*[int(value) for value in date.split(" ")[0].split("-")])
+            for date in dates
+        ]
+
         msoa_region = pd.read_csv(msoa_region_filename)[["msoa", "region"]]
         return Seed(
-            super_areas,
-            selector,
-            n_cases_region,
-            msoa_region.drop_duplicates(),
+            super_areas, selector, n_cases_region, msoa_region.drop_duplicates(), dates
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
@@ -90,7 +100,13 @@ class Seed:
         region:
             name of the region
         """
-        msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
+        if "North East" in region:
+            msoa_region_filtered = self.msoa_region[
+                (self.msoa_region.region == "North East")
+                | (self.msoa_region.region == "Yorkshire and The Humber")
+            ]
+        else:
+            msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
         filter_region = list(
             map(
                 lambda x: x in msoa_region_filtered["msoa"].values,
@@ -114,9 +130,10 @@ class Seed:
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
         for super_area in super_areas:
-            n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
-            if n_cases_super_area >= 0:
-                self.infect_super_area(super_area, n_cases_super_area)
+            if super_area in self.super_areas.members:
+                n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
+                if n_cases_super_area >= 0:
+                    self.infect_super_area(super_area, n_cases_super_area)
 
     def infect_super_area(self, super_area: "SuperArea", n_cases: int):
         """
@@ -130,22 +147,27 @@ class Seed:
             number of cases to seed
         """
         # randomly select people to infect within the super area
-        choices = np.random.choice(len(super_area.people), n_cases, replace=False)
-
+        susceptible_in_area = [
+            person for person in super_area.people if person.susceptible
+        ]
+        choices = np.random.choice(len(susceptible_in_area), n_cases, replace=False)
         for choice in choices:
-            person = list(super_area.people)[choice]
-            self.selector.infect_person_at_time(person = person, time = 1.0)
+            person = list(susceptible_in_area)[choice]
+            self.selector.infect_person_at_time(person=person, time=1.0)
 
-    def unleash_virus_per_region(self):
+    def unleash_virus_per_region(self, date):
         """
         Seed the infection per region, using data on number of infected people/region
 
         """
-        for region, n_cases in zip(
-            self.n_cases_region["region"], self.n_cases_region["n_cases"]
-        ):
-            super_areas = self._filter_region(region=region)
-            self.infect_super_areas(super_areas, n_cases)
+        date_str = date.strftime("%Y-%m-%d 00:00:00")
+        if date.date() not in self.dates_seeded:
+            for region, n_cases in zip(
+                self.n_cases_region["region"], self.n_cases_region[date_str]
+            ):
+                super_areas = self._filter_region(region=region)
+                self.infect_super_areas(super_areas, n_cases)
+            self.dates_seeded.append(date.date())
 
     def unleash_virus(self, n_cases, box_mode=False):
         """
