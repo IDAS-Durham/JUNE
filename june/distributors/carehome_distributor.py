@@ -83,7 +83,6 @@ class CareHomeDistributor:
         n_residents = area.care_home.n_residents
         if n_residents == 0:
             raise CareHomeError("No care home residents in this area.")
-        print(f"number of residents {n_residents}")
         self.populate_care_home(area.care_home, men_by_age, women_by_age)
         self.assign_workers(area, area.care_home)
 
