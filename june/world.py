@@ -84,6 +84,7 @@ class World:
             geography.companies is not None
             or geography.hospitals is not None
             or geography.schools is not None
+            or geography.care_homes is not None
         ):
             self.distribute_workers_to_super_areas(geography)
 
