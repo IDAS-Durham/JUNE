@@ -144,9 +144,10 @@ class CareHomeDistributor:
         """
         carers = [
             person
-            for idx, person in enumerate(area.super_area.workers)
-            if person.sector == self.sector 
+            for person in area.super_area.workers
+            if (person.sector == self.sector 
             and person.primary_activity is None
+            and person.sub_sector is None)
         ]
         if len(carers) == 0:
             logger.info(
@@ -155,20 +156,15 @@ class CareHomeDistributor:
             return
         else:
             n_assigned = 0
-            for i, carer in enumerate(carers):
+            for carer in carers:
                 if n_assigned >= care_home.n_workers:
                     break
-                elif (
-                    carer.sub_sector is None
-                    and carer.subgroups.primary_activity  # because we have no sub_sector for carer
-                    is None
-                ):
-                    care_home.add(
-                        person=carer,
-                        subgroup_type=care_home.SubgroupType.workers,
-                        activity="primary_activity",
-                    )
-                    n_assigned += 1
+                care_home.add(
+                    person=carer,
+                    subgroup_type=care_home.SubgroupType.workers,
+                    activity="primary_activity",
+                )
+                n_assigned += 1
             if care_home.n_workers > n_assigned:
                 logger.info(
                     f"\n There are {care_home.n_workers - n_assigned} carers missing"

@@ -115,24 +115,21 @@ geography = Geography.from_file({"msoa" : msoaslist})
 demography = Demography.for_geography(geography)
 #geography.hospitals = Hospitals.for_geography(geography)
 #geography.companies = Companies.for_geography(geography)
-geography.schools = Schools.for_geography(geography)
-#geography.care_homes = CareHomes.for_geography(geography)
+#geography.schools = Schools.for_geography(geography)
+geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
 world = World(geography, demography, include_households=False, include_commute=False)
-for school in world.schools:
-    if school.n_pupils > 0:
-        assert len(school.teachers) > 0
 
-import matplotlib.pyplot as plt
 ratios = []
-for school in world.schools:
-    if school.n_pupils > 0:
-        ratios.append(school.n_pupils / len(school.teachers))
+for care_home in world.care_homes:
+    if care_home.n_residents == 0 or care_home.n_workers == 0:
+        print("fuck")
+        continue
+    ratios.append(care_home.n_residents / care_home.n_workers)
+import matplotlib.pyplot as plt
 plt.hist(ratios, bins=100)
 plt.show()
-
-
 
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
