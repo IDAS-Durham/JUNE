@@ -22,8 +22,8 @@ import numpy as np
 
 @pytest.fixture(autouse=True)
 def set_random_seed():
-    random.seed(0)
-    np.random.seed(0)
+    random.seed(999)
+    np.random.seed(999)
 
 @pytest.fixture()
 def data(pytestconfig):
@@ -84,7 +84,7 @@ def create_infection_healthy(transmission, symptoms_healthy):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    interaction = inter.DefaultInteraction.from_file()
+    interaction = inter.ContactAveraging.from_file()
     interaction.selector = infect.InfectionSelector.from_file(constant_config)
     return interaction
 

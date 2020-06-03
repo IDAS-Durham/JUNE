@@ -224,6 +224,7 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
+    #@profile
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
@@ -240,6 +241,7 @@ class Simulator:
         activities.sort(key=lambda x: self.activity_hierarchy.index(x))
         return activities
 
+    #@profile
     def activities_to_groups(self, activities: List[str]) -> List[str]:
         """
         Converts activities into Groups, the interaction will run over these Groups.
@@ -256,6 +258,7 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
+    #@profile
     def clear_world(self):
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
@@ -267,12 +270,12 @@ class Simulator:
                 continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
-                for subgroup in group.subgroups:
-                    subgroup._people.clear()
+                group.clear()
 
         for person in self.world.people.members:
             person.busy = False
 
+    #@profile
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
     ) -> "Subgroup":
@@ -290,7 +293,7 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-        activities = self.apply_activity_hierarchy(activities)
+    #    activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -357,6 +360,7 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
+        #activities = self.apply_activity_hierarchy(activities)
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -375,7 +379,7 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
-
+        activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
@@ -437,6 +441,7 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
+    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -473,7 +478,7 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
-
+    #@profile
     def do_timestep(self):
         """
         Perform a time step in the simulation
@@ -504,16 +509,11 @@ class Simulator:
                 n_people += len(cemetery.people)
         sim_logger.info(f"number of deaths =  {n_people}")
         for group_type in group_instances:
-            n_active_in_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now, self.timer.duration, group, self.logger,
                 )
-                n_active_in_group += group.size
                 n_people += group.size
-            sim_logger.info(
-                f"Number of people active in {group.spec} = {n_active_in_group}"
-            )
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "

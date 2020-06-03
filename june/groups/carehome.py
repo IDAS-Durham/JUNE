@@ -34,8 +34,7 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
-    __slots__ = "n_residents", "area", 'n_workers', 'relatives'
-
+    __slots__ = "n_residents", "area", 'n_workers', "relatives"
     class SubgroupType(IntEnum):
         workers = 0
         residents = 1
