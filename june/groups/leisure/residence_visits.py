@@ -130,17 +130,9 @@ class VisitsDistributor(SocialVenueDistributor):
         ):
             return 0
         if person.sex == "m":
-            if person.age < self.male_bins[0] or person.age > self.male_bins[-1]:
-                return 0
-            else:
-                idx = np.searchsorted(self.male_bins, person.age)
-                probability = self.male_probabilities[idx]
+            probability = self.male_probabilities[person.age]
         else:
-            if person.age < self.female_bins[0] or person.age > self.female_bins[-1]:
-                return 0
-            else:
-                idx = np.searchsorted(self.female_bins, person.age)
-                probability = self.female_probabilities[idx]
+            probability = self.female_probabilities[person.age]
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability

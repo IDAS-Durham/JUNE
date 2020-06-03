@@ -7,7 +7,7 @@ from june.groups.leisure import *
 from june import World
 from june.demography.geography import Geography
 from june.demography import Demography
-from june.interaction import DefaultInteraction
+from june.interaction import ContactAveraging, DefaultInteraction
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
@@ -43,7 +43,8 @@ print("commute OK")
 # select path to infection configuration
 #selector_config = "./config_infection.yaml"
 selector = InfectionSelector.from_file()
-interaction = DefaultInteraction.from_file(selector=selector)
+interaction = ContactAveraging.from_file(selector=selector)
+#interaction = DefaultInteraction.from_file(selector=selector)
 
 print("interaction OK")
 
@@ -63,7 +64,7 @@ n_cases = 2_000
 
 # 2. randomly distribute
 seed.unleash_virus(
-    50,
+    int(len(world.people)/10),
 )  # this will put 500 infected randomly
 
 print("seeding OK")
@@ -85,3 +86,4 @@ simulator.run()
 t2 = time.time()
 
 print(f" Simulation took {t2-t1} seconds")
+

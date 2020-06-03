@@ -1,6 +1,7 @@
 import logging
 import re
 import functools
+import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
@@ -14,7 +15,8 @@ from .subgroup import Subgroup
 logger = logging.getLogger(__name__)
 
 
-class Group(AbstractGroup):
+# class Group(AbstractGroup):
+class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
     all people in the group, the healthy ones and the infected ones (we may
@@ -43,7 +45,7 @@ class Group(AbstractGroup):
 
         default = 0
 
-    __slots__ = "id", "subgroups"
+    __slots__ = ("id", "subgroups", "spec", "size", "contact_matrices")
 
     __id_generators = defaultdict(count)
 
@@ -63,8 +65,14 @@ class Group(AbstractGroup):
         by converting the class name into snakecase.
         """
         self.id = self._next_id()
+        self.spec = self.get_spec()
+        self.size = 0
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
+        self.contact_matrices = {
+            "contacts": np.array([[1]]),
+            "proportion_physical": np.array([[0]]),
+        }
 
     @property
     def name(self) -> str:
@@ -74,8 +82,7 @@ class Group(AbstractGroup):
         """
         return f"{self.__class__.__name__}_{self.id:05d}"
 
-    @property
-    def spec(self) -> str:
+    def get_spec(self) -> str:
         """
         Returns the speciailization of the group.
         """
@@ -184,3 +191,20 @@ class Group(AbstractGroup):
     @property
     def must_timestep(self):
         return self.size > 1 and self.size_infected > 0 and self.size_susceptible > 0
+
+    @property
+    def size_infected(self):
+        return np.sum([subgroup.size_infected for subgroup in self.subgroups])
+
+    @property
+    def size_recovered(self):
+        return np.sum([subgroup.size_recovered for subgroup in self.subgroups])
+
+    @property
+    def size_susceptible(self):
+        return np.sum([subgroup.size_susceptible for subgroup in self.subgroups])
+
+    def clear(self):
+        for subgroup in self.subgroups:
+            subgroup.clear()
+        self.size = 0

@@ -9,6 +9,8 @@ class SymptomsTrajectory(Symptoms):
         super().__init__(health_index=health_index)
         self.trajectory = None
         self.update_trajectory()
+        self.stage = 0
+        self.tag = self.trajectory[self.stage][1]
 
     def update_trajectory(self):
         trajectory_maker = TrajectoryMakers.from_file()
@@ -20,9 +22,6 @@ class SymptomsTrajectory(Symptoms):
         return SymptomTag(index)
 
     def update_severity_from_delta_time(self, delta_time):
-        self.tag = SymptomTag.healthy
-        for stage in self.trajectory:
-            if delta_time > stage[0]:
-                self.tag = stage[1]
-            if delta_time < stage[0]:
-                break
+        if delta_time > self.trajectory[self.stage+1][0]:
+            self.stage += 1
+            self.tag = self.trajectory[self.stage][1]
