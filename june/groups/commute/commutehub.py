@@ -35,6 +35,9 @@ class CommuteHub(Group):
         #self.passengers = [] # passengers flowing through commute hub -> people in form Group inheritence
         self.commuteunits = []
 
+    def add(self, person):
+        super().add(person, activity="commute", subgroup_type=0)
+
 class CommuteHubs(Supergroup):
     """
     Initialises commute hubs given the location of the commute cities they are affiliated to

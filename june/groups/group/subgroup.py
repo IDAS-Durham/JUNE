@@ -67,10 +67,6 @@ class Subgroup:
         self.people = []
         self.size = 0
 
-    #@property
-    #def people(self):
-    #    return list(chain(*[self.infected, self.susceptible, self.recovered]))
-
     @property
     def contains_people(self) -> bool:
         """
@@ -82,23 +78,15 @@ class Subgroup:
         """
         Add a person to this group
         """
-        ret = False
         if person.infected:
             self.infected.append(person)
             self.size_infected += 1
-            ret = True
         elif person.susceptible:
             self.susceptible.append(person)
             self.size_susceptible += 1
-            ret = True
         else:
             self.recovered.append(person)
             self.size_recovered += 1
-            ret = True
-        try:
-            assert ret
-        except:
-            raise ValueError
         self.size += 1
         self.people.append(person)
         self.group.size += 1

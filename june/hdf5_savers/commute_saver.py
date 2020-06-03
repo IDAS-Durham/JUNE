@@ -172,7 +172,7 @@ def load_commute_hubs_from_hdf5(file_path: str):
                 cunit.id = unit_id
                 commute_hub.commuteunits.append(cunit)
             for person_id in people[k]:
-                commute_hub.add(person_id)
+                commute_hub.subgroups[0].people.append(person_id)
             commute_hubs_list.append(commute_hub)
     ch = CommuteHubs(None)
     ch.members = commute_hubs_list
