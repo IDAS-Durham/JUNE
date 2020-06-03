@@ -209,9 +209,9 @@ class WorkerDistributor:
         if MC_random < ratio:
             sub_sector_idx = stats.rv_discrete(
                 values=(np.arange(len(distr)), distr)
-            ).rvs(size=1)
+            ).rvs()
             person.sub_sector = self.sub_sector_distr[person.sector]["label"][
-                sub_sector_idx[0]
+                sub_sector_idx
             ]
 
     @classmethod
