@@ -27,13 +27,12 @@ def roll_activity_dice(poisson_parameters, delta_time, n_activities):
     does_activity = np.random.rand() < (
         1.0 - np.exp(-total_poisson_parameter * delta_time)
     )
-    if does_activity == False:
-        return None
-    else:
+    if does_activity:
         poisson_parameters_normalized = poisson_parameters / total_poisson_parameter
         return random_choice_numba(
             np.arange(0, n_activities), poisson_parameters_normalized
         )
+    return None
 
 
 def generate_leisure_for_world(list_of_leisure_groups, world):
@@ -130,8 +129,7 @@ class Leisure:
         him or her.
         """
         if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.type == "communal"
+            person.residence.group.spec in ["care_home", "communal"]
         ):
             return False
         if leisure_distributor.person_drags_household():

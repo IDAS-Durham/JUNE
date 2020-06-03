@@ -41,11 +41,3 @@ class TransmissionXNExp(Transmission):
             self.alpha,
             self.N,
         )
-        # if delta_time<=self.incubation_time:
-        #   self.probability = 0.
-        # else:
-        #   delta_tau = (delta_time - self.incubation_time)/self.norm_time
-        #   self.probability = self.norm * self.f(delta_tau)
-
-    # def f(self,t):
-    #    return t**self.N * np.exp(-t/self.alpha)
