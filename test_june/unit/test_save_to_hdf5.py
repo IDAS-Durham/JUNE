@@ -200,8 +200,6 @@ class TestSaveSchools:
             for attribute_name in [
                 "id",
                 "n_pupils_max",
-                "n_teachers",
-                "n_teachers_max",
                 "age_min",
                 "age_max",
                 "sector",

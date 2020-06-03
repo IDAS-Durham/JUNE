@@ -36,7 +36,6 @@ class School(Group):
         "coordinates",
         "super_area",
         "n_pupils_max",
-        "n_teachers_max",
         "age_min",
         "age_max",
         "age_structure",
@@ -52,7 +51,6 @@ class School(Group):
         self,
         coordinates: Tuple[float, float],
         n_pupils_max: int,
-        n_teachers_max: int,
         age_min: int,
         age_max: int,
         sector: str,
@@ -86,7 +84,6 @@ class School(Group):
         self.coordinates = coordinates
         self.super_area = None
         self.n_pupils_max = n_pupils_max
-        self.n_teachers_max = n_teachers_max
         self.age_min = age_min
         self.age_max = age_max
         #TODO: is age structure used?
@@ -248,11 +245,9 @@ class Schools(Supergroup):
             school_type = row["sector"]
             if school_type is np.nan:  # TODO double check dataframe
                 school_type = list(employee_per_clients.keys())[0]
-            n_teachers_max = int(n_pupils_max / employee_per_clients[school_type])
             school = School(
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
                 n_pupils_max,
-                n_teachers_max,
                 int(row["age_min"]),
                 int(row["age_max"]),
                 row["sector"],
