@@ -58,7 +58,6 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
 def create_school(n_students, n_teachers):
     school = School(
             n_pupils_max=n_students,
-            n_teachers_max=n_teachers,
             age_min=6,
             age_max=6,
         coordinates=(1.0,1.0),
@@ -113,7 +112,7 @@ def test__average_time_to_infect(n_teachers, mode):
             selector=selector,
         )
     n_days = []
-    for n in range(1000):
+    for _ in range(1000):
         people, school = create_school(n_students, n_teachers)
         for student in people[:n_students]:
             selector.infect_person_at_time(student, time=0)

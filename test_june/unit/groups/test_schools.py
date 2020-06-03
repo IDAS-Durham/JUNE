@@ -38,7 +38,6 @@ class TestSchool:
         return School(
             coordinates=(1.0, 1.0),
             n_pupils_max=467,
-            n_teachers_max=73,
             age_min=6,
             age_max=8,
             sector="primary_secondary",
@@ -49,8 +48,9 @@ class TestSchool:
         assert school.SubgroupType.students == 1
 
     def test__empty_school(self, school):
-        assert bool(school.subgroups[school.SubgroupType.teachers].people) is False
-        assert bool(school.subgroups[school.SubgroupType.students].people) is False
+        assert len(school.teachers.people) == 0
+        for subgroup in school.subgroups[1:]:
+            assert len(subgroup.people) == 0
 
     def test__filling_school(self, school):
         person = Person(sex="f", age=7)
