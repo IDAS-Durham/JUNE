@@ -302,6 +302,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "school": "schools",
         "household": "households",
         "care_home": "care_homes",
+        "commute_hub" : "commutehubs",
     }
     # restore areas -> super_areas
     for area in world.areas:
@@ -350,14 +351,14 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
 
             commute_internal_people = []
             for i in range(0, len(city.commute_internal)):
-                commute_internal_people.append(world.people[
-                    city.commute_internal[i] - first_person_idx
-                ])
+                commute_internal_people.append(
+                    world.people[city.commute_internal[i] - first_person_idx]
+                )
             city.commute_internal = commute_internal_people
         for hub in world.commutehubs:
-            for i in range(len(hub.people)):
-                hub.add(world.people[
-                    hub.people[i] - first_person_idx
-                ], activity=None, subgroup_type=0)
+            hub_people_ids = [person_id for person_id in hub.people]
+            hub.clear()
+            for person_id in hub_people_ids:
+                hub.add(world.people[person_id - first_person_idx])
 
     return world
