@@ -59,11 +59,11 @@ class CareHomeDistributor:
         """
         Creates care homes in areas from dataframe.
         """
-        households_df = pd.read_csv(data_filename, index_col=0)
+        care_homes_df = pd.read_csv(data_filename, index_col=0)
         area_names = [area.name for area in areas]
-        households_df = households_df.loc[area_names]
+        care_homes_df = care_homes_df.loc[area_names]
         for area in areas:
-            care_home_residents_number = households_df.loc[area.name].values
+            care_home_residents_number = care_homes_df.loc[area.name].values
             if care_home_residents_number != 0:
                 self.populate_care_home_in_area(area)
 
@@ -83,6 +83,7 @@ class CareHomeDistributor:
         n_residents = area.care_home.n_residents
         if n_residents == 0:
             raise CareHomeError("No care home residents in this area.")
+        print(f"number of residents {n_residents}")
         self.populate_care_home(area.care_home, men_by_age, women_by_age)
         self.assign_workers(area, area.care_home)
 

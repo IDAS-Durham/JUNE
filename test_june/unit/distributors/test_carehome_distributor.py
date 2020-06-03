@@ -6,6 +6,7 @@ from june.demography import Person
 from june.groups.carehome import CareHome, CareHomes
 from june.demography.geography import Geography
 from june.demography import Demography
+from june.demography.person import Person
 from june.world import World
 
 default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
@@ -78,12 +79,17 @@ def create_area():
     return world
 
 def test__carehome_for_geography(world, carehome_distributor):
-    carehomes = CareHomes.for_areas(world.areas)
-    carehome_distributor.populate_care_home_in_area(world.areas[0])
-    care_home = carehomes[0]
-    assert len(care_home.residents) > 0
-    assert len(care_home.workers) > 0
-    assert len(care_home.visitors) > 0
+    # add two workers atificially
+    world.care_homes = CareHomes.for_areas(world.areas)
+    p1 = Person.from_attributes()
+    p1.sector = "Q"
+    p2 = Person.from_attributes()
+    p2.sector = "Q"
+    world.super_areas[0].workers = [p1, p2]
+    carehome_distributor.populate_care_home_in_areas(world.areas)
+    care_home = world.care_homes[0]
+    assert len(care_home.residents) == 24
+    assert len(care_home.workers) == 2
 
 
 
