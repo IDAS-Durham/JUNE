@@ -44,7 +44,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name", "super_area"
 
     def __init__(
         self,
@@ -93,9 +93,7 @@ class Hospital(Group):
             self.SubgroupType.icu_patients,
         ]:
             super().add(
-                person,
-                activity="hospital",  
-                subgroup_type=subgroup_type,
+                person, activity="hospital", subgroup_type=subgroup_type,
             )
         else:
             super().add(
@@ -210,7 +208,7 @@ class Hospitals(Supergroup):
         icu_fraction = config["icu_fraction"]
         logger.info(f"There are {len(hospital_df)} hospitals in the world.")
         hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
-        return Hospitals(hospitals, max_distance)
+        return Hospitals(hospitals, max_distance,)
 
     @classmethod
     def for_geography(
@@ -235,13 +233,13 @@ class Hospitals(Supergroup):
                 hospitals_in_area = hospital_df.loc[super_area.name]
                 if isinstance(hospitals_in_area, pd.Series):
                     hospital = cls.create_hospital_from_df_row(
-                        super_area, hospitals_in_area, icu_fraction
+                        super_area, hospitals_in_area, icu_fraction, 
                     )
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
                         hospital = cls.create_hospital_from_df_row(
-                            super_area, row, icu_fraction
+                            super_area, row, icu_fraction, 
                         )
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
@@ -249,7 +247,9 @@ class Hospitals(Supergroup):
         return cls(hospitals, max_distance, False)
 
     @classmethod
-    def create_hospital_from_df_row(cls, super_area, row, icu_fraction):
+    def create_hospital_from_df_row(
+        cls, super_area, row, icu_fraction, 
+    ):
         coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
         n_beds = row["beds"]
         n_icu_beds = round(icu_fraction * n_beds)
@@ -263,7 +263,7 @@ class Hospitals(Supergroup):
         return hospital
 
     def init_hospitals(
-        self, hospital_df: pd.DataFrame, icu_fraction: float
+        self, hospital_df: pd.DataFrame, icu_fraction: float, 
     ) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics,
