@@ -199,7 +199,7 @@ class World:
 
         # TravelCity
         self.travelcities = TravelCities(self.commutecities)
-        self.init_cities()
+        self.travelcities.init_cities()
 
         # TravelCityDistributor
         self.travelcity_distributor = TravelCityDistributor(self.travelcities.members, self.super_areas.members)
