@@ -132,7 +132,7 @@ class CareHomes(Supergroup):
         logger.info(f"There are {len(care_home_df)} care_homes in this geography.")
         for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]
-            n_worker = int(n_residents / config["sector"]["Q"]["nr_of_clients"])
+            n_worker = max(int(n_residents / config["sector"]["Q"]["nr_of_clients"]), 1)
             if n_residents != 0:
                 area.care_home = CareHome(area, n_residents, n_worker)
                 care_homes.append(area.care_home)

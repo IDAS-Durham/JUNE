@@ -9,7 +9,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
     """
     Saves the schools object to hdf5 format file ``file_path``. Currently for each person,
     the following values are stored:
-    - id, n_pupils_max, n_teachers_max, n_teachers, age_min, age_max, sector, coordiantes
+    - id, n_pupils_max,  age_min, age_max, sector, coordiantes
 
     Parameters
     ----------
@@ -23,7 +23,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
     """
     n_schools = len(schools)
     n_chunks = int(np.ceil(n_schools / chunk_size))
-    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         schools_dset = f.create_group("schools")
         for chunk in range(n_chunks):
@@ -31,8 +30,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             idx2 = min((chunk + 1) * chunk_size, n_schools)
             ids = []
             n_pupils_max = []
-            n_teachers_max = []
-            n_teachers = []
             age_min = []
             age_max = []
             sectors = []
@@ -40,8 +37,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             for school in schools[idx1:idx2]:
                 ids.append(school.id)
                 n_pupils_max.append(school.n_pupils_max)
-                n_teachers_max.append(school.n_teachers_max)
-                n_teachers.append(school.n_teachers)
                 age_min.append(school.age_min)
                 age_max.append(school.age_max)
                 if type(school.sector) is float:
@@ -52,8 +47,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
             ids = np.array(ids, dtype=np.int)
             n_pupils_max = np.array(n_pupils_max, dtype=np.int)
-            n_teachers_max = np.array(n_teachers_max, dtype=np.int)
-            n_teachers = np.array(n_teachers, dtype=np.int)
             age_min = np.array(age_min, dtype=np.int)
             age_max = np.array(age_max, dtype=np.int)
             sectors = np.array(sectors, dtype="S20")
@@ -62,13 +55,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
                 schools_dset.create_dataset(
-                    "n_teachers_max", data=n_teachers_max, maxshape=(None,)
-                )
-                schools_dset.create_dataset(
                     "n_pupils_max", data=n_pupils_max, maxshape=(None,)
-                )
-                schools_dset.create_dataset(
-                    "n_teachers", data=n_teachers, maxshape=(None,)
                 )
                 schools_dset.create_dataset("age_min", data=age_min, maxshape=(None,))
                 schools_dset.create_dataset("age_max", data=age_max, maxshape=(None,))
@@ -82,12 +69,8 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 newshape = (schools_dset["id"].shape[0] + ids.shape[0],)
                 schools_dset["id"].resize(newshape)
                 schools_dset["id"][idx1:idx2] = ids
-                schools_dset["n_teachers_max"].resize(newshape)
-                schools_dset["n_teachers_max"][idx1:idx2] = n_teachers_max
                 schools_dset["n_pupils_max"].resize(newshape)
                 schools_dset["n_pupils_max"][idx1:idx2] = n_pupils_max
-                schools_dset["n_teachers"].resize(newshape)
-                schools_dset["n_teachers"][idx1:idx2] = n_teachers
                 schools_dset["age_min"].resize(newshape)
                 schools_dset["age_min"][idx1:idx2] = age_min
                 schools_dset["age_max"].resize(newshape)
@@ -114,8 +97,6 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
             ids = schools["id"][idx1:idx2]
-            n_teachers_max = schools["n_teachers_max"][idx1:idx2]
-            n_teachers = schools["n_teachers"][idx1:idx2]
             n_pupils_max = schools["n_pupils_max"][idx1:idx2]
             age_min = schools["age_min"][idx1:idx2]
             age_max = schools["age_max"][idx1:idx2]
@@ -128,14 +109,12 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
                 else:
                     sector = sector.decode()
                 school = School(
-                    coordinates[k],
-                    n_pupils_max[k],
-                    n_teachers_max[k],
-                    age_min[k],
-                    age_max[k],
-                    sector,
+                    coordinates=coordinates[k],
+                    n_pupils_max=n_pupils_max[k],
+                    age_min=age_min[k],
+                    age_max=age_max[k],
+                    sector=sector,
                 )
                 school.id = ids[k]
-                school.n_teachers = n_teachers[k]
                 schools_list.append(school)
     return Schools(schools_list)
