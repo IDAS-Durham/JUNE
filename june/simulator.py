@@ -172,16 +172,19 @@ class Simulator:
             self.commute_unit_distributor = CommuteUnitDistributor(
                 self.world.commutehubs.members
             )
-        elif "commutecityunits" in commute_options:
+        if "commutecityunits" in commute_options:
             self.commute_city_unit_distributor = CommuteCityUnitDistributor(
                 self.world.commutecities.members
             )
-        elif "travelunits" in commute_options:
-            self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, self.world.travelunits.members)
+        if "travelunits" in commute_options:
+            self.travelunit_distributor = TravelUnitDistributor(self.world.travelcities.members, 
+                    self.world.travelunits.members)
+            self.travelunit_distributor.from_file()
 
     def distribute_commuters(self):
         if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distirbutor.distribute_rail()
+            # distribute_rail didnt exist
+            self.travelunit_distributor.distribute_people()
         if hasattr(self, "commute_unit_distributor"):
             self.commute_unit_distributor.distribute_people()
         if hasattr(self, "commute_city_unit_distributor"):

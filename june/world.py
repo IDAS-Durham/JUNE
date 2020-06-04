@@ -23,6 +23,7 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
+
 def _populate_areas(geography, demography):
     people = Population()
     for area in geography.areas:
@@ -64,8 +65,8 @@ class World:
             whether to include households in the world or not (defualt = True)
         """
         if include_rail_travel and not include_commute:
-            raise ValueError('Rail travel depends on commute and so both must be true')
-        
+            raise ValueError("Rail travel depends on commute and so both must be true")
+
         self.box_mode = box_mode
         if self.box_mode:
             self.hospitals = Hospitals.for_box_mode()
@@ -115,13 +116,20 @@ class World:
             self.distribute_workers_to_companies()
 
     @classmethod
-    def from_geography(cls, geography: Geography, box_mode=False, include_households=True):
+    def from_geography(
+        cls, geography: Geography, box_mode=False, include_households=True
+    ):
         """
         Initializes the world given a geometry. The demography is calculated
         with the default settings for that geography.
         """
         demography = Demography.for_geography(geography)
-        return cls(geography, demography, box_mode=box_mode, include_households=include_households)
+        return cls(
+            geography,
+            demography,
+            box_mode=box_mode,
+            include_households=include_households,
+        )
 
     def distribute_people_to_households(self):
         household_distributor = HouseholdDistributor.from_file()
@@ -132,7 +140,6 @@ class World:
     def distribute_people_to_care_homes(self):
         carehome_distr = CareHomeDistributor()
         carehome_distr.populate_care_home_in_areas(self.areas)
-
 
     def distribute_workers_to_super_areas(self, geography):
         worker_distr = WorkerDistributor.for_geography(
@@ -190,7 +197,6 @@ class World:
         self.commuteunits = CommuteUnits(self.commutehubs.members)
         self.commuteunits.init_units()
 
-
         # CommuteCityUnit
         self.commutecityunits = CommuteCityUnits(self.commutecities.members)
         self.commutecityunits.init_units()
@@ -202,13 +208,14 @@ class World:
         self.travelcities.init_cities()
 
         # TravelCityDistributor
-        self.travelcity_distributor = TravelCityDistributor(self.travelcities.members, self.super_areas.members)
+        self.travelcity_distributor = TravelCityDistributor(
+            self.travelcities.members, self.super_areas.members
+        )
         self.travelcity_distributor.distribute_msoas()
 
         # TravelUnit
         self.travelunits = TravelUnits()
 
-        
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
@@ -256,7 +263,9 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     """
     geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World(geography, include_households=False)
-    super_areas_first_id = world.super_areas[0].id # in case some super areas were created before
+    super_areas_first_id = world.super_areas[
+        0
+    ].id  # in case some super areas were created before
     with h5py.File(file_path, "r") as f:
         f_keys = list(f.keys()).copy()
     if "population" in f_keys:
@@ -267,10 +276,12 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.schools = load_schools_from_hdf5(file_path, chunk_size)
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(file_path, chunk_size)
-        #first_idx = super_area_ids.index(world.companies[0].super_area, 0)
+        # first_idx = super_area_ids.index(world.companies[0].super_area, 0)
         for company in world.companies:
-            #idx = np.searchsorted(super_area_ids, company.super_area)
-            company.super_area = world.super_areas[company.super_area - super_areas_first_id]
+            # idx = np.searchsorted(super_area_ids, company.super_area)
+            company.super_area = world.super_areas[
+                company.super_area - super_areas_first_id
+            ]
     if "care_homes" in f_keys:
         world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
     if "households" in f_keys:
@@ -288,7 +299,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         super_area_id = area.super_area
         area.super_area = world.super_areas[super_area_id - super_areas_first_id]
         area.super_area.areas.append(area)
-
 
     activities = Activities.__fields__
 

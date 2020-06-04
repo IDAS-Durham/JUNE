@@ -203,7 +203,7 @@ class TravelUnitDistributor:
             self.travelunits.append(unit)
 
     
-    def distirbute_people(self):
+    def distribute_people(self):
 
         any_arrived = False
         for travelcity in self.travelcities:
