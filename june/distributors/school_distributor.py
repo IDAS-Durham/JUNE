@@ -38,7 +38,6 @@ class SchoolDistributor:
     def __init__(
         self,
         schools: Schools,
-        # education_sector_label: List[int] = [2314, 2315, 2316],
         education_sector_label="P",
         neighbour_schools: int = 35,
         age_range: Tuple[int, int] = (0, 19),
