@@ -7,6 +7,7 @@ beta:
  cinema: 0.1
  commute_unit: 1
  commute_city_unit: 1
+ travel_unit: 1
  hospital: 1
  care_home: 1
  company: 1
