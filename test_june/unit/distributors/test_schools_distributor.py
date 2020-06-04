@@ -107,7 +107,7 @@ def test__teacher_distribution(geography_school):
     for school in world.schools:
         students = len(school.students)
         teachers = len(school.teachers.people)
-        assert students / teachers < 26
+        assert students / teachers < 30
 
 
 
