@@ -5,6 +5,7 @@ import struct
 from recordclass import dataobject
 import numpy as np
 from june.infection.health_information import HealthInformation
+from june.commute import ModeOfTransport
 
 
 
@@ -38,7 +39,7 @@ class Person(dataobject):
     sub_sector: str = None
     # commute
     home_city: str = None
-    mode_of_transport: str = None
+    mode_of_transport: ModeOfTransport = None
     # rail travel
     # activities
     busy: bool = False
@@ -80,7 +81,7 @@ class Person(dataobject):
 
     @property
     def susceptible(self):
-        return self.susceptibility == 1.0 and not self.infected and not self.dead
+        return self.susceptibility > 0.0 and not self.infected and not self.dead
 
     @property
     def recovered(self):

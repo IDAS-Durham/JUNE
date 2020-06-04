@@ -5,7 +5,7 @@ import numpy as np
 from june.demography.geography import Geography
 from june.demography import Demography
 from june.world import World
-from june.interaction import DefaultInteraction
+from june.interaction import ContactAveraging
 from june.infection import InfectionSelector, Infection
 from june.infection import SymptomTag, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
@@ -55,7 +55,7 @@ def create_simulator():
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
-    interaction = DefaultInteraction.from_file()
+    interaction = ContactAveraging.from_file()
     interaction.selector = selector
     sim = Simulator.from_file(world, interaction, selector, config_filename=test_config)
     return sim
