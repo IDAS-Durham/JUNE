@@ -6,6 +6,12 @@ policies = Policies([school_policy, company_policy])
 
 # Simulator(policies)
 
+class Policy:
+    def __init__(self, name, tart_time, end_time):
+        self.name = name
+        self.start_time = start_time
+        self.end_time = end_time
+
 class Policies:
 
     def __init__(self, policies):
@@ -27,14 +33,43 @@ class Policies:
                 closed_groups.append(policy.group)
         return closed_groups
 
-    def social_distancing_policy(self,interaction, time):
+    def social_distancing_policy(self, interaction, time):
+        '''
+        Implement social distancing policy
+        
+        -----------
+        Parameters:
+        alphas: e.g. (float) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).alpha
+        betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
+
+        Assumptions:
+        - Currently we assume that social distancing is implemented first and this affects all
+          interactions and intensities globally
+        - Currently we assume that the changes are not group dependent
+
+
+        TODO:
+        - Implement structure for people to adhere to social distancing
+        '''
+        #TODO: should probably leave alpha value for households untouched! 
+
+        alpha = interaction.alpha
+        betas = interaction.betas
+        
+        if self.config_file is not None:
+            alpha /= 2
+        else:
+            alpha /= self.config_file['social distancing']['alpha factor']
+
+        for group in betas.keys():
+            if group != 'household': 
+                if not self.config_file:
+                    betas[group] /= 2
+                else:
+                    betas[group] /= self.config_file['social distancing']['beta factor']
+
         return interaction
 
-
-class Policy:
-    def __init__(self, start_time, end_time):
-        self.start_time = start_time
-        self.end_time = end_time
 
 class Closure(Policy):
     def __init__(self, 

@@ -64,7 +64,10 @@ def test__social_distancing(world, selector, interaction):
             break
         if day > start_date and day < end_date:
             for group in sim.interaction.betas.keys():
-                assert sim.interaction.betas[group] == initial_betas[group] / 2
+                if group != 'household':
+                    assert sim.interaction.betas[group] == initial_betas[group] / 2
+                else:
+                    assert sim.interaction.betas[group] == initial_betas[group]
         else:
             assert sim.interaction.betas == initial_betas
 
