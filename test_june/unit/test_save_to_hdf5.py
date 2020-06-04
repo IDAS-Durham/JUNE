@@ -69,6 +69,8 @@ class TestSavePeople:
                 "age",
                 "sex",
                 "ethnicity",
+                "sector",
+                "sub_sector"
             ]:
                 attribute = getattr(person, attribute_name)
                 attribute2 = getattr(person2, attribute_name)
@@ -198,8 +200,6 @@ class TestSaveSchools:
             for attribute_name in [
                 "id",
                 "n_pupils_max",
-                "n_teachers",
-                "n_teachers_max",
                 "age_min",
                 "age_max",
                 "sector",
