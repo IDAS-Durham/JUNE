@@ -3,9 +3,11 @@ trajectories:
   - stages:
       - symptom_tag: exposed
         completion_time:
-          type: constant
-          value: 5.1
-
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
 
       - symptom_tag: asymptomatic
         completion_time:
@@ -22,9 +24,11 @@ trajectories:
   - stages:
       - symptom_tag: exposed
         completion_time:
-          type: constant
-          value: 5.1
-
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
 
       - symptom_tag: influenza
         completion_time:
@@ -41,9 +45,11 @@ trajectories:
   - stages:
       - symptom_tag: exposed
         completion_time:
-          type: constant
-          value: 5.1
-
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
 
       - symptom_tag: influenza
         completion_time:
@@ -66,9 +72,11 @@ trajectories:
   - stages:
       - symptom_tag: exposed
         completion_time:
-          type: constant
-          value: 5.1
-
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
 
       - symptom_tag: influenza
         completion_time:
@@ -95,9 +103,11 @@ trajectories:
   - stages:
       - symptom_tag: exposed
         completion_time:
-          type: constant
-          value: 5.1
-
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
 
       - symptom_tag: influenza
         completion_time:
@@ -136,9 +146,11 @@ trajectories:
   - stages:
       - symptom_tag: exposed
         completion_time:
-          type: constant
-          value: 5.1
-
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
 
       - symptom_tag: influenza
         completion_time:
