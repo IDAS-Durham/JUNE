@@ -61,6 +61,7 @@ class HospitalDistributor:
             2217: Medical radiographers
             2231: Nurses
             2232: Midwives
+        We put a lower bound on the age of medics to be 25.
         """
         hospitals_in_super_area = self.get_hospitals_in_super_area(super_area)
         if len(hospitals_in_super_area) == 0:
