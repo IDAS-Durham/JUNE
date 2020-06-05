@@ -69,7 +69,7 @@ class HospitalDistributor:
             return
         medics = [
             person
-            for idx, person in enumerate(super_area.workers)
+            for idx, person in enumerate(super_area.workers) 
             if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age
         ]
         if len(medics) == 0:
