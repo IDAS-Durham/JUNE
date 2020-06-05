@@ -2,7 +2,7 @@ alpha_physical: 2.
 
 beta:
  box: 1
- pub: 1 
+ pub: 0.1 
  grocery: 0.1
  cinema: 0.1
  commute_unit: 1
@@ -24,7 +24,7 @@ contact_matrices:
   contacts: [[4.8]]
   proportion_physical: [[0.07]]
  school:
-  contacts: [[25, 0.75], [15, 2.5]]
+  contacts: [[5, 0.75], [15, 2.5]]
   proportion_physical: [[0.05, 0.08], [0.08, 0.15]]
   xi:       0.3
  household:
