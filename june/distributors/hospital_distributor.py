@@ -29,6 +29,7 @@ class HospitalDistributor:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         self.healthcare_sector_label = config["sector"]
+        self.medic_min_age = config["medic_min_age"]
         """
         if len(self.msoarea.hospitals) != 0:
             self.healthcare_sector_label = (
@@ -69,7 +70,7 @@ class HospitalDistributor:
         medics = [
             person
             for idx, person in enumerate(super_area.workers)
-            if person.sector == self.healthcare_sector_label and person.age > 25
+            if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age
         ]
         if len(medics) == 0:
             logger.info(f"\n The SuperArea {super_area.name} has no people that work in it!")
