@@ -62,9 +62,7 @@ seed = Seed.from_file(super_areas=world.super_areas,
 #seed.infect_super_area(super_area, 99) # seed 99 infections in seed_area
 
 # 2. randomly distribute
-seed.unleash_virus(
-    int(len(world.people)/10),
-)  # this will put 500 infected randomly
+# this will put 500 infected randomly
 
 print("seeding OK")
 
