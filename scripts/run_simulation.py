@@ -35,7 +35,7 @@ print("leisure good")
 world.cemeteries = Cemeteries()
 
 # commute
-#world.initialise_commuting()
+world.initialise_commuting()
 print("commute OK")
 ######
 
@@ -49,9 +49,8 @@ interaction = ContactAveraging.from_file(selector=selector)
 print("interaction OK")
 
 # initial infection seeding
-seed = Seed(world.super_areas, selector,)
-n_cases = 2_000
-
+seed = Seed.from_file(super_areas=world.super_areas, 
+        selector=selector,)
 # two options, randomly, or one specific area.
 
 # 1. specific area
@@ -76,6 +75,7 @@ simulator = Simulator.from_file(
     world,
     interaction,
     selector,
+    seed=seed,
     config_filename=CONFIG_PATH,
     save_path="results",
 )
