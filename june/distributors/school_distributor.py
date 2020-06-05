@@ -277,7 +277,7 @@ class SchoolDistributor:
         all_teachers = [
             person
             for person in msoarea.workers
-            if person.sector == self.education_sector_label
+            if person.sector == self.education_sector_label and person.age > 21
         ]
         primary_teachers = []
         secondary_teachers = []
