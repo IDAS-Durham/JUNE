@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 import datetime
-from june.demography.geography import SuperAreas
-from june.infection.infection import InfectionSelector
+from collections import Counter
 from june import paths
 from typing import List, Tuple
+from june.demography.geography import SuperAreas
+from june.infection.infection import InfectionSelector
 from june.infection.health_index import HealthIndexGenerator
 
 default_n_cases_region_filename = paths.data_path / "processed/seed/n_cases_region.csv"
@@ -129,10 +130,17 @@ class Seed:
         """
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
-        for super_area in super_areas:
+        weights = [len(super_area.people)/n_people_region for super_area in super_areas]
+        chosen_super_areas = np.random.choice(
+                super_areas, 
+                size =n_cases, 
+                replace=True, 
+                p=weights
+                )
+        n_cases_dict = Counter(chosen_super_areas)
+        for super_area, n_cases_super_area in n_cases_dict.items():
             if super_area in self.super_areas.members:
-                n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
-                if n_cases_super_area >= 0:
+                if n_cases_super_area > 0:
                     self.infect_super_area(super_area, n_cases_super_area)
 
     def infect_super_area(self, super_area: "SuperArea", n_cases: int):
@@ -166,7 +174,8 @@ class Seed:
                 self.n_cases_region["region"], self.n_cases_region[date_str]
             ):
                 super_areas = self._filter_region(region=region)
-                self.infect_super_areas(super_areas, n_cases)
+                if len(super_areas) > 0:
+                    self.infect_super_areas(super_areas, n_cases)
             self.dates_seeded.append(date.date())
 
     def unleash_virus(self, n_cases, box_mode=False):
