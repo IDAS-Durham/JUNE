@@ -174,7 +174,7 @@ class Simulator:
             self.commute_unit_distributor = CommuteUnitDistributor(
                 self.world.commutehubs.members
             )
-        elif "commutecityunits" in commute_options:
+        if "commutecityunits" in commute_options:
             self.commute_city_unit_distributor = CommuteCityUnitDistributor(
                 self.world.commutecities.members
             )
@@ -511,7 +511,7 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-        sim_logger.info(f"number of deaths =  {n_people}")
+        sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(
@@ -553,7 +553,7 @@ class Simulator:
             if time > self.timer.final_date:
                 break
             if self.seed:
-                if (time >= seed.min_date) and (time <= seed.max_date):
+                if (time >= self.seed.min_date) and (time <= self.seed.max_date):
                     self.seed.unleash_virus_per_region(time)
             self.do_timestep()
         # Save the world
