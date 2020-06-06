@@ -29,6 +29,7 @@ class HospitalDistributor:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         self.healthcare_sector_label = config["sector"]
+        self.medic_min_age = config["medic_min_age"]
         """
         if len(self.msoarea.hospitals) != 0:
             self.healthcare_sector_label = (
@@ -61,14 +62,15 @@ class HospitalDistributor:
             2217: Medical radiographers
             2231: Nurses
             2232: Midwives
+        We put a lower bound on the age of medics to be 25.
         """
         hospitals_in_super_area = self.get_hospitals_in_super_area(super_area)
         if len(hospitals_in_super_area) == 0:
             return
         medics = [
             person
-            for idx, person in enumerate(super_area.workers)
-            if person.sector == self.healthcare_sector_label
+            for idx, person in enumerate(super_area.workers) 
+            if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age and person.primary_activity is None
         ]
         if len(medics) == 0:
             logger.info(f"\n The SuperArea {super_area.name} has no people that work in it!")

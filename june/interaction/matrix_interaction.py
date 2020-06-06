@@ -32,7 +32,9 @@ class MatrixInteraction(Interaction):
             for infecter in group.get_infected():
                 contact_ages = self.prepare_interaction_ages(infecter, group)
                 for age in contact_ages:
-                    self.make_interactions(time=time, infecter=infecter, group=group, age=age)
+                    self.make_interactions(
+                        time=time, infecter=infecter, group=group, age=age
+                    )
 
         if group.spec == "hospital":
             print("must allow for infection of workers by patients")
@@ -41,12 +43,12 @@ class MatrixInteraction(Interaction):
         # randomly select someone with that age
         recipient = self.make_single_contact(infecter, group, age)
         if (
-                recipient
-                and not (recipient.is_infected())
-                and recipient.susceptibility > 0.0
+            recipient
+            and not (recipient.is_infected())
+            and recipient.susceptibility > 0.0
         ):
             if random.random() <= 1.0 - np.exp(
-                    -self.transmission_probability * recipient.susceptibility()
+                -self.transmission_probability * recipient.susceptibility()
             ):
                 infecter.infection.infect_person_at_time(person=recipient, time=time)
                 recipient.counter.update_infection_data(
@@ -70,10 +72,10 @@ class MatrixInteraction(Interaction):
                 # randomly select someone with that age
                 recipient = self.make_single_contact(infecter, group, contact_ages[i])
                 if recipient and (
-                        not (recipient.is_infected()) and recipient.susceptibility > 0.0
+                    not (recipient.is_infected()) and recipient.susceptibility > 0.0
                 ):
                     if random.random() <= 1.0 - np.exp(
-                            -self.transmission_probability * recipient.susceptibility()
+                        -self.transmission_probability * recipient.susceptibility()
                     ):
                         infecter.infection.infect_person_at_time(recipient)
                         recipient.counter.update_infection_data(
