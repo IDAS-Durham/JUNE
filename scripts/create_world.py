@@ -113,9 +113,9 @@ geography = Geography.from_file({"msoa" : msoaslist})
 
 # then this automatically creates the world and saves it to world.hdf5
 demography = Demography.for_geography(geography)
-#geography.hospitals = Hospitals.for_geography(geography)
-#geography.companies = Companies.for_geography(geography)
-#geography.schools = Schools.for_geography(geography)
+geography.hospitals = Hospitals.for_geography(geography)
+geography.companies = Companies.for_geography(geography)
+geography.schools = Schools.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
@@ -124,5 +124,5 @@ world = World(geography, demography, include_households=False, include_commute=F
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving hdf5...")
-world.to_hdf5("ne_03062020.hdf5")
+world.to_hdf5("world.hdf5")
 print("Done :)")
