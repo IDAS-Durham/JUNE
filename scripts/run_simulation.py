@@ -7,7 +7,7 @@ from june.groups.leisure import *
 from june import World
 from june.demography.geography import Geography
 from june.demography import Demography
-from june.interaction import ContactAveraging, DefaultInteraction
+from june.interaction import ContactAveraging
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
@@ -35,16 +35,14 @@ print("leisure good")
 world.cemeteries = Cemeteries()
 
 # commute
-#world.initialise_commuting()
+world.initialise_commuting()
 print("commute OK")
 ######
 
 # interaction
 # select path to infection configuration
-#selector_config = "./config_infection.yaml"
 selector = InfectionSelector.from_file()
 interaction = ContactAveraging.from_file(selector=selector)
-#interaction = DefaultInteraction.from_file(selector=selector)
 
 print("interaction OK")
 
