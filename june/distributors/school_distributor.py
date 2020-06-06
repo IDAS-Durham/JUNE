@@ -43,6 +43,7 @@ class SchoolDistributor:
         age_range: Tuple[int, int] = (0, 19),
         mandatory_age_range: Tuple[int, int] = (5, 18),
         students_teacher_ratio=25,
+        teacher_min_age=21,
     ):
         """
         Get closest schools to this output area, per age group
@@ -63,6 +64,7 @@ class SchoolDistributor:
         self.school_age_range = age_range
         self.mandatory_school_age_range = mandatory_age_range
         self.education_sector_label = education_sector_label
+        self.teacher_min_age = teacher_min_age
 
     @classmethod
     def from_file(
@@ -96,6 +98,7 @@ class SchoolDistributor:
             config["neighbour_schools"],
             config["age_range"],
             config["mandatory_age_range"],
+            config["teacher_min_age"]
         )
 
     @classmethod
@@ -240,6 +243,7 @@ class SchoolDistributor:
         Then we loop over the workers in the super area to find the teachers,
         which we also divide into two subgroups analogously to the schools.
         We assign the teachers to the schools following a fix student to teacher ratio.
+        We put a lower age limit to teachers at the age of 21.
         """
         primary_schools = []
         secondary_schools = []
@@ -277,7 +281,7 @@ class SchoolDistributor:
         all_teachers = [
             person
             for person in msoarea.workers
-            if person.sector == self.education_sector_label
+            if person.sector == self.education_sector_label and person.age > self.teacher_min_age and person.primary_activity is None
         ]
         primary_teachers = []
         secondary_teachers = []
