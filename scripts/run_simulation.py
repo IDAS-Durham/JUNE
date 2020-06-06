@@ -67,7 +67,7 @@ seed = Seed.from_file(super_areas=world.super_areas,
 print("seeding OK")
 
 # path to main simulation config file
-CONFIG_PATH = "./config_simulation.yaml"
+CONFIG_PATH = "../configs/config_example.yaml"
 
 simulator = Simulator.from_file(
     world,
