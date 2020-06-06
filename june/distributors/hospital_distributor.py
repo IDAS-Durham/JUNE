@@ -70,7 +70,7 @@ class HospitalDistributor:
         medics = [
             person
             for idx, person in enumerate(super_area.workers) 
-            if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age
+            if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age and person.primary_activity is None
         ]
         if len(medics) == 0:
             logger.info(f"\n The SuperArea {super_area.name} has no people that work in it!")
