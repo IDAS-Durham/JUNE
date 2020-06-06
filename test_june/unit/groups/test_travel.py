@@ -77,4 +77,29 @@ class TestTravel:
 
         assert people == arrive
 
+        # Test reset arrived list after travelling back
+        for travelcity in travelcities.members:
+            assert travelcity.arrived == 0
+
+        # Test overall distributor
+        travelunit_distributor.distribute_people()
+
+        people = 0
+        for i in travelunits.members:
+            no_pass = i.no_passengers
+            people += no_pass
+        
+        arrive = 0
+        for city in travelcities.members:
+            arrive += len(city.arrived)
+
+        assert people == arrive
+
+        travelunit_distributor.distribute_people()
+
+        for city in travelcities.members:
+            assert len(city.arrived) == 0
+        
+        
+
         
