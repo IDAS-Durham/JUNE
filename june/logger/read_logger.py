@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List
 
 from june.infection.symptoms import SymptomTag
+from june import paths
 
 
 class ReadLogger:
@@ -28,12 +29,15 @@ class ReadLogger:
         self.load_population_data()
         self.load_infected_data()
         self.load_infection_location()
+        self.start_date = min(self.infections_df.index)
+        self.end_date = max(self.infections_df.index)
+        self.load_real_time_series()
 
     def load_population_data(self):
         """
         Load data related to population (age, sex, ...)
         """
-        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             population = f["population"]
             self.n_people = population.attrs["n_people"]
             self.ids = population["id"][:]
@@ -45,7 +49,7 @@ class ReadLogger:
         """
         Load data on infected people over time and convert to a data frame ``self.infections_df``
         """
-        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             time_stamps = [
                 key
                 for key in f.keys()
@@ -100,7 +104,10 @@ class ReadLogger:
         ).cumsum()
         # get rid of those that just recovered or died
         df["infected"] = symptoms_df.apply(
-            lambda x: ((x.symptoms != SymptomTag.recovered) & (x.symptoms != SymptomTag.dead)).sum(), axis=1
+            lambda x: (
+                (x.symptoms != SymptomTag.recovered) & (x.symptoms != SymptomTag.dead)
+            ).sum(),
+            axis=1,
         )
         df["susceptible"] = n_people - df[["infected", "dead", "recovered"]].sum(axis=1)
         df["hospitalised"] = symptoms_df.apply(
@@ -228,7 +235,7 @@ class ReadLogger:
         -------
             data frame with infection locations, and average count of infections per group type
         """
-        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             locations = f["locations"]
             infection_location = []
             counts = []
@@ -251,11 +258,7 @@ class ReadLogger:
         )
         self.locations_df.set_index("time_stamp", inplace=True)
 
-    def get_locations_infections(
-        self,
-        start_date=None,
-        end_date=None,
-    ) -> pd.DataFrame:
+    def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
         Get a data frame with the number of infection happening at each type of place, within the given time
         period
@@ -292,7 +295,7 @@ class ReadLogger:
         -------
             data frame indexed by the hospital id
         """
-        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             hospitals = f["hospitals"]
             coordinates = hospitals["coordinates"][:]
             n_beds = hospitals["n_beds"][:]
@@ -316,7 +319,7 @@ class ReadLogger:
         -------
             data frame indexed by time stamp
         """
-        with h5py.File(self.file_path, "r", libver='latest', swmr=True) as f:
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             hospitals = f["hospitals"]
             hospital_ids = []
             n_patients = []
@@ -351,3 +354,37 @@ class ReadLogger:
             lambda x: np.mean(x.n_secondary_infections[x.symptoms > 1]), axis=1
         )
         return r_df
+
+    def load_real_time_series(self,):
+        self.load_real_deaths()
+        self.load_confirmed_cases()
+        self.load_estimated_cases()
+
+    def load_real_deaths(self,):
+        deaths_df = pd.read_csv(
+            paths.data_path / "processed/time_series/n_deaths_region.csv", index_col=0
+        )
+        deaths_df.index = pd.to_datetime(deaths_df.index)
+        mask = (deaths_df.index > self.start_date) & (deaths_df.index < self.end_date)
+        self.real_deaths_df = deaths_df[mask]
+
+    def load_confirmed_cases(self,):
+        confirmed_cases_df = pd.read_csv(
+            paths.data_path / "processed/time_series/n_confirmed_cases.csv", index_col=0
+        )
+        confirmed_cases_df.index = pd.to_datetime(confirmed_cases_df.index)
+        mask = (confirmed_cases_df.index > self.start_date) & (
+            confirmed_cases_df.index < self.end_date
+        )
+        self.confirmed_cases_df = confirmed_cases_df[mask]
+
+    def load_estimated_cases(self,):
+
+        estimated_cases_df = pd.read_csv(
+            paths.data_path / "processed/time_series/n_cases_region.csv", index_col=0
+        )
+        estimated_cases_df.index = pd.to_datetime(estimated_cases_df.index)
+        mask = (estimated_cases_df.index > self.start_date) & (
+            estimated_cases_df.index < self.end_date
+        )
+        self.estimated_cases_df = estimated_cases_df[mask]
