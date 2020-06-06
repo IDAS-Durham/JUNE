@@ -14,6 +14,13 @@ default_areas_map_path = (
     paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 )
 
+camps_data_path = paths.data_path / "processed"
+
+
+def parse_age_bin(age_bin: str):
+    pairs = list(map(int, age_bin.split("-")))
+    return pairs
+
 
 class DemographyError(BaseException):
     pass
@@ -25,10 +32,10 @@ class AgeSexGenerator:
         age_counts: list,
         sex_bins: list,
         female_fractions: list,
-        ethnicity_age_bins: list,
-        ethnicity_groups: list,
-        ethnicity_structure: list,
-        socioecon_index_value: int,
+        ethnicity_age_bins: list = None,
+        ethnicity_groups: list = None,
+        ethnicity_structure: list = None,
+        socioecon_index_value: int = None,
         max_age=99,
     ):
         """
@@ -71,23 +78,60 @@ class AgeSexGenerator:
             < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
-
-        ethnicity_age_counts, _ = np.histogram(
-            ages, bins=list(map(int, ethnicity_age_bins)) + [100]
-        )
-        ethnicities = list()
-        for age_ind, age_count in enumerate(ethnicity_age_counts):
-            ethnicities.extend(
-                np.random.choice(
-                    np.repeat(ethnicity_groups, ethnicity_structure[age_ind]), age_count
-                )
-            )
-
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
-        self.ethnicity_iterator = iter(ethnicities)
-        self.socioecon_index_value = socioecon_index_value
         self.max_age = max_age
+
+        if ethnicity_age_bins is not None:
+            ethnicity_age_counts, _ = np.histogram(
+                ages, bins=list(map(int, ethnicity_age_bins)) + [100]
+            )
+            ethnicities = list()
+            for age_ind, age_count in enumerate(ethnicity_age_counts):
+                ethnicities.extend(
+                    np.random.choice(
+                        np.repeat(ethnicity_groups, ethnicity_structure[age_ind]),
+                        age_count,
+                    )
+                )
+            self.ethnicity_iterator = iter(ethnicities)
+        if socioecon_index_value is not None:
+            self.socioecon_index_value = socioecon_index_value
+
+    @classmethod
+    def from_age_sex_bins(
+        cls, men_age_dict: dict, women_age_dict: dict, exponential_decay: int = 2
+    ):
+        """
+        Initializes age and sex generator (no ethnicity and socioecon_index for now) from
+        a dictionary containing age bins and counts for man and woman. An example of the input is
+        men_age_dict = {"0-2" : 10, "2-99": 50}. If the bin contains the 99 value at the end,
+        the age will be sampled with an exponential decay of the form e^(-x/exponential_decay).
+        """
+        age_counts = np.zeros(99, dtype=np.int)
+        sex_bins = []
+        female_fractions = []
+        for (key_man, value_man), (_, value_woman) in zip(
+            men_age_dict.items(), women_age_dict.items()
+        ):
+            age1, age2 = parse_age_bin(key_man)
+            total_people = value_man + value_woman
+            sex_bins.append(age1)
+            female_fractions.append(value_woman / total_people)
+            if age2 == 99:
+                exp_values = np.exp(-np.arange(0, age2 - age1 + 1) / exponential_decay)
+                p = exp_values / exp_values.sum()
+                age_dist = np.random.choice(
+                    np.arange(age1, age2 + 1), size=total_people, p=p
+                )
+                ages, counts = np.unique(age_dist, return_counts=True)
+                age_counts[ages] += counts
+            else:
+                age_dist = np.random.choice(np.arange(age1, age2 + 1), size=total_people)
+                ages, counts = np.unique(age_dist, return_counts=True)
+                age_counts[ages] += counts
+        return cls(age_counts, sex_bins, female_fractions)
+
 
     def age(self) -> int:
         try:
@@ -151,9 +195,7 @@ class Population:
 
     @property
     def susceptible(self):
-        return [
-            person for person in self.people if person.susceptible
-        ]
+        return [person for person in self.people if person.susceptible]
 
     @property
     def recovered(self):
@@ -293,7 +335,7 @@ def _load_age_and_sex_generators(
     ethnicity_structure_path: str,
     socioecon_structure_path: str,
     area_names: List[str],
-)-> Dict[str, AgeSexGenerator]:
+) -> Dict[str, AgeSexGenerator]:
     """
     A dictionary mapping area identifiers to a generator of age, sex, ethnicity,
     and socio-economic index.
