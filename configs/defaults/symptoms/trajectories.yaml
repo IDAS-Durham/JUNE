@@ -159,16 +159,16 @@ trajectories:
           scale: 4.12
 
 
-      - symptom_tag: hospitalised
-        completion_time:
-          type: constant
-          value: 2.
+      #- symptom_tag: hospitalised
+      #  completion_time:
+      #    type: constant
+      #    value: 2.
 
 
       - symptom_tag: intensive_care
         completion_time:
           type: constant
-          value: 10.
+          value: 5.
 
 
       - symptom_tag: dead
