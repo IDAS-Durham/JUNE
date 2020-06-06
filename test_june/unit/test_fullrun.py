@@ -26,7 +26,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 def test_full_run():
     geography = Geography.from_file(
-        {"msoa": ["E02002512", "E02001697"]}
+        {"msoa": ["E02002512", "E02001697", "E02001729"]}
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
@@ -34,7 +34,8 @@ def test_full_run():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    world = World(geography, demography, include_households=True, include_commute=True,
+            include_rail_travel=True)
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
