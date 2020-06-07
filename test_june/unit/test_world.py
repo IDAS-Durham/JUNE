@@ -1,11 +1,12 @@
 from june.demography.geography import Geography
 from june import World
+from june.world import generate_world_from_geography
 from june.groups import Schools, Hospitals, Companies, Households, Cemeteries, CareHomes
 
 
 def test__onearea_world(geography):
-    geography = Geography.from_file(filter_key={"oa": ["E00088544"]})
-    world = World.from_geography(geography)
+    geography = Geography.from_file(filter_key={"area": ["E00088544"]})
+    world = generate_world_from_geography(geography)
     assert hasattr(world, "households")
     assert isinstance(world.households, Households)
     assert len(world.areas) == 1

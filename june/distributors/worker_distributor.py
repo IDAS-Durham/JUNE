@@ -250,17 +250,17 @@ class WorkerDistributor:
         Example
         -------
             filter_key = {"region" : "North East"}
-            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
+            filter_key = {"super_area" : ["EXXXX", "EYYYY"]}
         """
         if len(filter_key.keys()) > 1:
             raise NotImplementedError("Only one type of area filtering is supported.")
         if "oa" in len(filter_key.keys()):
             raise NotImplementedError(
-                "Company data only for the SuperArea (MSOA) and above."
+                "Company data only for the SuperArea (super_area) and above."
             )
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
-        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["msoa"]
+        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["super_area"]
         if len(area_names) == 0:
             raise CompanyError("Region returned empty area list.")
         return cls.for_super_areas(
@@ -319,12 +319,12 @@ def load_workflow_df(
         delim_whitespace=False,
         skiprows=1,
         usecols=[0, 1, 3, 4],
-        names=["msoa", "work_msoa", "n_man", "n_woman"],
+        names=["super_area", "work_super_area", "n_man", "n_woman"],
     )
     if len(area_names) != 0:
-        wf_df = wf_df[wf_df["msoa"].isin(area_names)]
+        wf_df = wf_df[wf_df["super_area"].isin(area_names)]
     # convert into ratios
-    wf_df = wf_df.groupby(["msoa", "work_msoa"]).agg({"n_man": "sum", "n_woman": "sum"})
+    wf_df = wf_df.groupby(["super_area", "work_super_area"]).agg({"n_man": "sum", "n_woman": "sum"})
     wf_df["n_man"] = (
         wf_df.groupby(level=0)["n_man"].apply(lambda x: x / float(x.sum(axis=0))).values
     )
@@ -357,7 +357,7 @@ def load_sex_per_sector(
     
     if len(area_names) != 0:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
-        area_names = geo_hierarchy[geo_hierarchy["msoa"].isin(area_names)]["oa"]
+        area_names = geo_hierarchy[geo_hierarchy["super_area"].isin(area_names)]["area"]
         sector_by_sex_df = sector_by_sex_df.loc[area_names]
         if (np.sum(sector_by_sex_df["m Q"]) == 0) and (
             np.sum(sector_by_sex_df["f Q"]) == 0

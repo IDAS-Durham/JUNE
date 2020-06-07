@@ -13,7 +13,7 @@ default_data_filename = (
 )
 default_areas_map_path = (
     Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/geographical_data/oa_msoa_region.csv"
+    / "data/processed/geographical_data/oa_super_area_region.csv"
 )
 default_config_filename = (
     Path(os.path.abspath(__file__)).parent.parent.parent.parent
@@ -28,7 +28,7 @@ default_config = {
 
 @pytest.fixture(name="geo_schools", scope="module")
 def area_name():
-    geography = Geography.from_file(filter_key={"msoa": ["E02004935"]})
+    geography = Geography.from_file(filter_key={"super_area": ["E02004935"]})
     return geography
 
 

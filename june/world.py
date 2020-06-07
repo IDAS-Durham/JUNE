@@ -48,7 +48,18 @@ class World:
         a special group because they require a mix of both groups (we need to fix
         this later). 
         """
-        pass
+        self.areas = None
+        self.super_areas = None
+        self.people = None
+        self.households = None
+        self.care_homes = None
+        self.schools = None
+        self.companies = None
+        self.hospitals = None
+        self.pubs = None
+        self.groceries = None
+        self.cinemas = None
+        self.cemeteries = None
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
