@@ -11,13 +11,13 @@ from june import paths
 from june.demography.person import Person
 
 default_hierarchy_filename = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_area_coord_filename = (
-    paths.data_path / "processed/geographical_data/oa_coordinates.csv"
+    paths.data_path / "input/geography/area_coordinates.csv"
 )
 default_superarea_coord_filename = (
-    paths.data_path / "processed/geographical_data/msoa_coordinates.csv"
+    paths.data_path / "input/geography/super_area_coordinates.csv"
 )
 default_logging_config_filename = (
     paths.configs_path / "config_world_creation_logger.yaml"

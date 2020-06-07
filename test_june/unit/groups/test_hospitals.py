@@ -135,7 +135,7 @@ def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector)
 
 
 def test__initialize_hospitals_from_geography():
-    geography = Geography.from_file({"msoa": ["E02003999", "E02006764"]})
+    geography = Geography.from_file({"super_area": ["E02003999", "E02006764"]})
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
     assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 190

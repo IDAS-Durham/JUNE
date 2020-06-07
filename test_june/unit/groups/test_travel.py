@@ -21,7 +21,7 @@ class TestTravel:
     @pytest.fixture(name="geography_commute_nc")
     def create_geography_nc(self, super_area_commute_nc):
         geography = Geography.from_file(
-            {"msoa": super_area_commute_nc}
+            {"super_area": super_area_commute_nc}
         )
         return geography
 
@@ -48,7 +48,7 @@ class TestTravel:
         assert len(travelcities.members) == 11
 
         travelcity_distributor = TravelCityDistributor(travelcities.members, world_nc.super_areas.members)
-        travelcity_distributor.distribute_msoas()
+        travelcity_distributor.distribute_super_areas()
 
         travelunits = TravelUnits()
         travelunit_distributor = TravelUnitDistributor(travelcities.members, travelunits.members)

@@ -13,7 +13,7 @@ def super_area_name():
 
 @pytest.fixture(name="geography_commute", scope="module")
 def create_geography(super_area_companies):
-    return Geography.from_file(filter_key={"msoa" : [super_area_commute]})
+    return Geography.from_file(filter_key={"super_area" : [super_area_commute]})
 
 @pytest.fixture(name="person")
 def create_person():
@@ -24,7 +24,7 @@ class TestCommuteCity:
     def create_city(self, super_area_commute):
         return CommuteCity(
             city = 'Manchester',
-            metro_msoas = super_area_commute,
+            metro_super_areas = super_area_commute,
             metro_centroid = [-2,52.]
         )
 
@@ -84,7 +84,7 @@ class TestNewcastle:
     @pytest.fixture(name="geography_commute_nc")
     def create_geography_nc(self, super_area_commute_nc):
         geography = Geography.from_file(
-            {"msoa": super_area_commute_nc}
+            {"super_area": super_area_commute_nc}
         )
         return geography
 
@@ -97,7 +97,7 @@ class TestNewcastle:
         commute_generator = CommuteGenerator.from_file()
 
         for area in world.areas:
-            commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
+            commute_gen = commute_generator.regional_gen_from_super_arearea(area.name)
             for person in area.people:
                 person.mode_of_transport = commute_gen.weighted_random_choice()
 
