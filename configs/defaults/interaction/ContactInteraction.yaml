@@ -2,16 +2,16 @@ alpha_physical: 2.
 
 beta:
  box: 1
- pub: 1 
+ pub: 0.1 
  grocery: 0.1
  cinema: 0.1
- commute_unit: 1
- commute_city_unit: 1
- hospital: 1
- care_home: 1
- company: 1
- school: 1
- household: 1
+ commute_unit: 0.5 
+ commute_city_unit: 0.5 
+ hospital: 0.5 
+ care_home: 0.5 
+ company: 0.5 
+ school: 0.5 
+ household: 0.5 
 
 contact_matrices:
  hospital:
@@ -24,7 +24,7 @@ contact_matrices:
   contacts: [[4.8]]
   proportion_physical: [[0.07]]
  school:
-  contacts: [[25, 0.75], [15, 2.5]]
+  contacts: [[5, 0.75], [15, 2.5]]
   proportion_physical: [[0.05, 0.08], [0.08, 0.15]]
   xi:       0.3
  household:
