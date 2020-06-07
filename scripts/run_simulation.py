@@ -7,7 +7,7 @@ from june.groups.leisure import *
 from june import World
 from june.demography.geography import Geography
 from june.demography import Demography
-from june.interaction import DefaultInteraction
+from june.interaction import ContactAveraging
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
@@ -41,16 +41,14 @@ print("commute OK")
 
 # interaction
 # select path to infection configuration
-#selector_config = "./config_infection.yaml"
 selector = InfectionSelector.from_file()
-interaction = DefaultInteraction.from_file(selector=selector)
+interaction = ContactAveraging.from_file(selector=selector)
 
 print("interaction OK")
 
 # initial infection seeding
-seed = Seed(world.super_areas, selector,)
-n_cases = 2_000
-
+seed = Seed.from_file(super_areas=world.super_areas, 
+        selector=selector,)
 # two options, randomly, or one specific area.
 
 # 1. specific area
@@ -62,19 +60,18 @@ n_cases = 2_000
 #seed.infect_super_area(super_area, 99) # seed 99 infections in seed_area
 
 # 2. randomly distribute
-seed.unleash_virus(
-    50,
-)  # this will put 500 infected randomly
+# this will put 500 infected randomly
 
 print("seeding OK")
 
 # path to main simulation config file
-CONFIG_PATH = "./config_simulation.yaml"
+CONFIG_PATH = "../configs/config_example.yaml"
 
 simulator = Simulator.from_file(
     world,
     interaction,
     selector,
+    seed=seed,
     config_filename=CONFIG_PATH,
     save_path="results",
 )
@@ -85,3 +82,4 @@ simulator.run()
 t2 = time.time()
 
 print(f" Simulation took {t2-t1} seconds")
+
