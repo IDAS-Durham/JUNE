@@ -8,7 +8,7 @@ from june import paths
 
 default_config_filename = paths.configs_path / "defaults/commute.yaml"
 
-default_commute_file = paths.data_path / "processed/census_data/output_area/EnglandWales/commute.csv"
+default_commute_file = paths.data_path / "input/commute/commute_ew.csv"
 
 
 class ModeOfTransport:
