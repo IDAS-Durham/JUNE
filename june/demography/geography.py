@@ -44,7 +44,7 @@ class Area:
         "coordinates",
         "super_area",
         "care_home",
-        "households"
+        "households",
     )
     _id = count()
 
@@ -121,7 +121,15 @@ class SuperArea:
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies", "groceries"
+    __slots__ = (
+        "id",
+        "name",
+        "coordinates",
+        "workers",
+        "areas",
+        "companies",
+        "groceries",
+    )
     _id = count()
 
     def __init__(
@@ -266,13 +274,6 @@ class Geography:
             super_area = SuperArea(
                 areas=None, name=super_area_name, coordinates=row.values
             )
-            print(super_area_name)
-            indd = hierarchy.loc[super_area_name]
-            print(indd)
-            print("missing")
-            print(area_coordinates)
-            print(hierarchy.loc[super_area_name, "area"])
-            
             areas_df = area_coordinates.loc[hierarchy.loc[super_area_name, "area"]]
             areas_list = cls._create_areas(areas_df, super_area)
             super_area.areas = areas_list
@@ -328,7 +329,9 @@ class Geography:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
         areas_coord = areas_coord.loc[areas_coord.area.isin(geo_hierarchy.area)]
-        super_areas_coord = super_areas_coord.loc[super_areas_coord.super_area.isin(geo_hierarchy.super_area)].drop_duplicates()
+        super_areas_coord = super_areas_coord.loc[
+            super_areas_coord.super_area.isin(geo_hierarchy.super_area)
+        ].drop_duplicates()
         areas_coord.set_index("area", inplace=True)
         super_areas_coord.set_index("super_area", inplace=True)
         geo_hierarchy.set_index("super_area", inplace=True)

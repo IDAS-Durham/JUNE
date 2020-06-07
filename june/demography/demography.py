@@ -127,11 +127,12 @@ class AgeSexGenerator:
                 ages, counts = np.unique(age_dist, return_counts=True)
                 age_counts[ages] += counts
             else:
-                age_dist = np.random.choice(np.arange(age1, age2 + 1), size=total_people)
+                age_dist = np.random.choice(
+                    np.arange(age1, age2 + 1), size=total_people
+                )
                 ages, counts = np.unique(age_dist, return_counts=True)
                 age_counts[ages] += counts
         return cls(age_counts, sex_bins, female_fractions)
-
 
     def age(self) -> int:
         try:
@@ -216,7 +217,7 @@ class Demography:
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
 
-    def populate(self, area_name: str,) -> Population:
+    def populate(self, area_name: str, ethnicity=True, socioecon_index=True) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -233,11 +234,19 @@ class Demography:
         people = list()
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
+            if ethnicity:
+                ethnicity_value = age_and_sex_generator.ethnicity()
+            else:
+                ethnicity_value = None
+            if socioecon_index:
+                socioecon_index_value = age_and_sex_generator.socioecon_index()
+            else:
+                socioecon_index_value = None
             person = Person.from_attributes(
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
-                ethnicity=age_and_sex_generator.ethnicity(),
-                socioecon_index=age_and_sex_generator.socioecon_index(),
+                ethnicity=ethnicity_value,
+                socioecon_index=socioecon_index_value,
             )
             people.append(person)  # add person to population
         return Population(people=people)
@@ -390,4 +399,32 @@ def _load_age_and_sex_generators(
             socioecon_index,
         )
 
+    return ret
+
+
+def load_age_and_sex_generators_for_bins(
+    age_sex_bins_filename: str, by="super_area"
+) -> Dict[str, AgeSexGenerator]:
+    """
+    """
+    data = pd.read_csv(age_sex_bins_filename, index_col=0)
+    area_names = data[by].values
+    men = data.loc[:, data.columns.str.contains("M")].copy()
+    rename_dict = {}
+    for column in men.columns:
+        rename_dict[column] = column.split(" ")[1]
+    men.rename(columns=rename_dict, inplace=True)
+    women = data.loc[:, data.columns.str.contains("F")].copy()
+    rename_dict = {}
+    for column in women.columns:
+        rename_dict[column] = column.split(" ")[1]
+    women.rename(columns=rename_dict, inplace=True)
+    ret = {}
+    i = 0
+    for (area_name, men_row), (_, women_row) in zip(men.iterrows(), women.iterrows()):
+        generator = AgeSexGenerator.from_age_sex_bins(
+            men_row.to_dict(), women_row.to_dict()
+        )
+        ret[area_names[i]] = generator
+        i += 1
     return ret

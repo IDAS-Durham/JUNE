@@ -26,7 +26,7 @@ def save_population_to_hdf5(
     """
     n_people = len(population.people)
     dt = h5py.vlen_dtype(np.dtype("int32"))
-    #dt = tuple
+    # dt = tuple
     n_chunks = int(np.ceil(n_people / chunk_size))
     with h5py.File(file_path, "a") as f:
         people_dset = f.create_group("population")
@@ -49,10 +49,14 @@ def save_population_to_hdf5(
                 ids.append(person.id)
                 ages.append(person.age)
                 sexes.append(person.sex.encode("ascii", "ignore"))
-                ethns.append(person.ethnicity.encode("ascii", "ignore"))
-                socioecon_indices.append(
-                    person.socioecon_index
-                )
+                if person.ethnicity is None:
+                    ethns.append(" ".encode("ascii", "ignore"))
+                else:
+                    ethns.append(person.ethnicity.encode("ascii", "ignore"))
+                if person.socioecon_index is None:
+                    socioecon_indices.append(nan_integer)
+                else:
+                    socioecon_indices.append(person.socioecon_index)
                 if person.home_city is None:
                     home_city.append(" ".encode("ascii", "ignore"))
                 else:
@@ -180,12 +184,20 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             subgroup_types = population["subgroup_types"][idx1:idx2]
             areas = population["area"][idx1:idx2]
             for k in range(idx2 - idx1):
+                if ethns[k].decode() == " ":
+                    ethnicity = None
+                else:
+                    ethnicity = ethns[k].decode()
+                if socioecon_indices[k] == nan_integer:
+                    socioecon_index = None
+                else:
+                    socioecon_index = socioecon_indices[k]
                 person = Person.from_attributes(
                     id=ids[k],
                     age=ages[k],
                     sex=sexes[k].decode(),
-                    ethnicity=ethns[k].decode(),
-                    socioecon_index=socioecon_indices[k],
+                    ethnicity=ethnicity,
+                    socioecon_index=socioecon_index,
                 )
                 hc = home_city[k].decode()
                 if hc == " ":
