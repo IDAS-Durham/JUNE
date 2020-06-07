@@ -10,7 +10,7 @@ from june.demography.geography import Geography
 from june.demography.geography import Area, Areas
 
 default_pub_coordinates_filename = (
-    data_path / "geographical_data/pubs_uk24727_latlong.txt"
+    data_path / "input/leisure/pubs.txt"
 )
 default_config_filename = configs_path / "defaults/groups/leisure/pubs.yaml"
 

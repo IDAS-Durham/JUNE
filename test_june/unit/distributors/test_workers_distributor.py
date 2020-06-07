@@ -12,10 +12,6 @@ from june import paths
 from june.distributors import WorkerDistributor, load_workflow_df, load_sex_per_sector
 
 default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent
-default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
-default_sex_per_sector_per_superarea_file = paths.data_path / \
-        "processed/census_data/company_data/industry_by_sex_ew.csv"
-default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
 default_config_file = default_base_path / \
                       "configs/defaults/distributors/worker_distributor.yaml"
 
@@ -34,7 +30,7 @@ def use_super_areas():
 
 @pytest.fixture(name="worker_geography", scope="module")
 def create_geography(worker_super_areas):
-    return Geography.from_file(filter_key={"msoa": worker_super_areas})
+    return Geography.from_file(filter_key={"super_area": worker_super_areas})
 
 
 @pytest.fixture(name="worker_demography", scope="module")
@@ -57,7 +53,6 @@ def create_population(worker_geography, worker_demography):
 
 def test__load_workflow_df(worker_super_areas):
     wf_df = load_workflow_df(
-        workflow_file = default_workflow_file,
         area_names = worker_super_areas,
     )
     assert wf_df["n_man"].sum() == len(worker_super_areas)
@@ -66,7 +61,6 @@ def test__load_workflow_df(worker_super_areas):
 
 def test__load_sex_per_sector(worker_super_areas):
     sector_by_sex_df = load_sex_per_sector(
-        sector_by_sex_file = default_sex_per_sector_per_superarea_file,
         area_names = worker_super_areas,
     )
     m_columns = [col for col in sector_by_sex_df.columns.values if "m " in col]
