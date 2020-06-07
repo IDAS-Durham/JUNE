@@ -9,9 +9,10 @@ from june import paths
 from june.demography import Person
 from june.demography.geography import Geography
 
-default_data_path = paths.data_path / "processed/census_data/output_area/EnglandWales"
+default_data_path = paths.data_path / "input/demography"
+
 default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
 camps_data_path = paths.data_path / "processed"
@@ -287,13 +288,13 @@ class Demography:
         Example
         -------
             filter_key = {"region" : "North East"}
-            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
+            filter_key = {"super_area" : ["EXXXX", "EYYYY"]}
         """
         if len(filter_key.keys()) > 1:
             raise NotImplementedError("Only one type of area filtering is supported.")
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
-        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["oa"]
+        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["area"]
         if len(area_names) == 0:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)

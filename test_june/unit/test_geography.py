@@ -37,7 +37,7 @@ def test__super_area_attributes(geography_example):
     assert "E00003595" in [area.name for area in super_area.areas]
 
 def test__create_single_area():
-    geography = g.Geography.from_file(filter_key={"oa" : ["E00120481"]})
+    geography = g.Geography.from_file(filter_key={"area" : ["E00120481"]})
     assert len(geography.areas) == 1
 
 def test_create_ball_tree_for_super_areas():

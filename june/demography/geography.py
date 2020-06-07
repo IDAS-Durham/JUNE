@@ -13,9 +13,7 @@ from june.demography.person import Person
 default_hierarchy_filename = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
-default_area_coord_filename = (
-    paths.data_path / "input/geography/area_coordinates.csv"
-)
+default_area_coord_filename = paths.data_path / "input/geography/area_coordinates.csv"
 default_superarea_coord_filename = (
     paths.data_path / "input/geography/super_area_coordinates.csv"
 )
@@ -45,7 +43,7 @@ class Area:
         "super_area",
         "care_home",
         "schools",
-        "households"
+        "households",
     )
     _id = count()
 
@@ -53,7 +51,7 @@ class Area:
         self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
     ):
         """
-        Coordinate is given in the format Y, X where X is longitude and Y is latitude.
+        Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.
         """
         self.id = next(self._id)
         self.name = name
@@ -263,7 +261,15 @@ class Geography:
         else:
             areas = []
             for name, coordinates in area_coords.iterrows():
-                areas.append(Area(name, super_area, coordinates.values))
+                areas.append(
+                    Area(
+                        name,
+                        super_area,
+                        coordinates=np.array(
+                            [coordinates.latitude, coordinates.longitude]
+                        ),
+                    )
+                )
         return areas
 
     @classmethod
@@ -283,7 +289,9 @@ class Geography:
         super_areas_list = []
         for super_area_name, row in super_area_coordinates.iterrows():
             super_area = SuperArea(
-                areas=None, name=super_area_name, coordinates=row.values
+                areas=None,
+                name=super_area_name,
+                coordinates=np.array([row.latitude, row.longitude]),
             )
             areas_df = area_coordinates.loc[hierarchy.loc[super_area_name, "area"]]
             areas_list = cls._create_areas(areas_df, super_area)
