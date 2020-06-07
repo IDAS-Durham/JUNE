@@ -9,10 +9,6 @@ from june.demography.geography import Geography
 from june.groups.school import Schools
 from june.distributors.school_distributor import SchoolDistributor
 
-default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data/processed/school_data/england_schools_data.csv"
-default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data/processed/geographical_data/oa_super_area_region.csv"
 default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "configs/defaults/distributors/school_distributor.yaml"
 

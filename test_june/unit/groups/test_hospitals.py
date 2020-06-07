@@ -9,30 +9,21 @@ from june.groups import *
 from june.demography import Person
 from june.infection import SymptomTag
 from june.infection import InfectionSelector, Infection
-
-default_data_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/hospital_data/england_hospitals.csv"
-)
-default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "configs/defaults/groups/hospitals.yaml"
-)
+from june.paths import data_path
 
 from pathlib import Path
 path_pwd = Path(__file__)
 dir_pwd  = path_pwd.parent
-constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 
 @pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
     data_directory = Path(__file__).parent.parent.parent.parent
-    return Hospitals.from_file(default_data_filename, default_config_filename)
+    return Hospitals.from_file()
 
 
 @pytest.fixture(name="hospitals_df", scope="module")
 def create_hospitals_df():
-    return pd.read_csv(default_data_filename)
+    return pd.read_csv(data_path / "input/hospitals/england_hospitals.csv")
 
 
 def test__total_number_hospitals_is_correct(hospitals, hospitals_df):
@@ -44,7 +35,7 @@ def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index)
 
     r_max = 150.0
     distances, closest_idx = hospitals.get_closest_hospitals(
-        hospitals_df[["Latitude", "Longitude"]].iloc[index].values, r_max,
+        hospitals_df[["latitude", "longitude"]].iloc[index].values, r_max,
     )
 
     # All distances are actually smaller than r_max
@@ -61,7 +52,7 @@ class MockHealthInformation:
 
 @pytest.fixture(name='selector', scope='module')
 def create_selector():
-    selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file()
     selector.recovery_rate            = 0.05
     selector.transmission_probability = 0.7
     return selector

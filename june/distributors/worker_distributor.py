@@ -11,12 +11,12 @@ from june import paths
 from june.demography import Person, Population
 from june.demography.geography import Geography, Areas, SuperAreas
 
-default_workflow_file = paths.data_path / "processed/flow_in_msoa_wu01ew_2011.csv"
+default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (
-    paths.data_path / "processed/census_data/company_data/industry_by_sex_ew.csv"
+    paths.data_path / "input/work/industry_by_sex_ew.csv"
 )
 default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_config_file = (
     paths.configs_path / "defaults/distributors/worker_distributor.yaml"
@@ -254,7 +254,7 @@ class WorkerDistributor:
         """
         if len(filter_key.keys()) > 1:
             raise NotImplementedError("Only one type of area filtering is supported.")
-        if "oa" in len(filter_key.keys()):
+        if "area" in len(filter_key.keys()):
             raise NotImplementedError(
                 "Company data only for the SuperArea (super_area) and above."
             )
@@ -310,7 +310,7 @@ class WorkerDistributor:
 
 
 def load_workflow_df(
-        workflow_file: str,
+        workflow_file: str = default_workflow_file,
         area_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     wf_df = pd.read_csv(
@@ -338,7 +338,7 @@ def load_workflow_df(
 
 
 def load_sex_per_sector(
-        sector_by_sex_file: str,
+        sector_by_sex_file: str = default_sex_per_sector_per_superarea_file,
         area_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     sector_by_sex_df = pd.read_csv(sector_by_sex_file, index_col=0)

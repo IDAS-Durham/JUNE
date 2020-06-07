@@ -38,7 +38,6 @@ from pytest import fixture
 @fixture(name="geography_h5", scope="module")
 def make_geography():
     geography = Geography.from_file(
-        #{"super_area": ["E02006764", "E02003999", "E02002559", "E02006887", "E02003034"]}
         {"super_area": ["E02003999", "E02002559", "E02006887", "E02003034"]}
     )
     return geography
