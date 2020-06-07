@@ -90,7 +90,7 @@ class SocialVenues(Supergroup):
         elif venues_per_capita is not None:
             for area in areas:
                 area_population = len(area.people)
-                for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
+                for _ in range(int(np.ceil(venues_per_capita * area_population))):
                     sv = SocialVenue()
                     sv.area = area
                     social_venues.append(sv)
@@ -126,7 +126,7 @@ class SocialVenues(Supergroup):
         elif venues_per_capita is not None:
             for area in super_areas:
                 area_population = len(area.people)
-                for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
+                for _ in range(int(np.ceil(venues_per_capita * area_population))):
                     sv = SocialVenue()
                     sv.area = area
                     social_venues.append(sv)

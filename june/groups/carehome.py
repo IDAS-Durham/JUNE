@@ -34,8 +34,7 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
-    __slots__ = "n_residents", "area", 'n_workers', 'relatives'
-
+    __slots__ = "n_residents", "area", 'n_workers', "relatives"
     class SubgroupType(IntEnum):
         workers = 0
         residents = 1
@@ -100,10 +99,10 @@ class CareHomes(Supergroup):
         """
         Initializes care homes from geography.
         """
-        area = [area for area in geography.areas]
-        if len(area) == 0:
+        areas = geography.areas
+        if len(areas) == 0:
             raise CareHomeError("Empty geography!")
-        return cls.for_areas(area, data_file, config_file)
+        return cls.for_areas(areas, data_file, config_file)
 
 
     @classmethod
@@ -133,7 +132,7 @@ class CareHomes(Supergroup):
         logger.info(f"There are {len(care_home_df)} care_homes in this geography.")
         for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]
-            n_worker = int(n_residents / config["sector"]["Q"]["nr_of_clients"])
+            n_worker = max(int(n_residents / config["sector"]["Q"]["nr_of_clients"]), 1)
             if n_residents != 0:
                 area.care_home = CareHome(area, n_residents, n_worker)
                 care_homes.append(area.care_home)

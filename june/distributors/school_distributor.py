@@ -9,9 +9,15 @@ from june import paths
 from june.demography.geography import Area, SuperArea, Geography
 from june.groups.school import Schools
 
-default_data_filename = paths.data_path / "processed/school_data/england_schools_data.csv"
-default_areas_map_path = paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
-default_config_filename = paths.configs_path / "defaults/distributors/school_distributor.yaml"
+default_data_filename = (
+    paths.data_path / "processed/school_data/england_schools_data.csv"
+)
+default_areas_map_path = (
+    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+)
+default_config_filename = (
+    paths.configs_path / "defaults/distributors/school_distributor.yaml"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +36,14 @@ class SchoolDistributor:
     """
 
     def __init__(
-            self,
-            schools: Schools,
-            education_sector_label: List[int] = [2314, 2315, 2316],
-            neighbour_schools: int = 35,
-            age_range: Tuple[int, int] = (0, 19),
-            mandatory_age_range: Tuple[int, int] = (5, 18),
+        self,
+        schools: Schools,
+        education_sector_label="P",
+        neighbour_schools: int = 35,
+        age_range: Tuple[int, int] = (0, 19),
+        mandatory_age_range: Tuple[int, int] = (5, 18),
+        students_teacher_ratio=25,
+        teacher_min_age=21,
     ):
         """
         Get closest schools to this output area, per age group
@@ -51,17 +59,19 @@ class SchoolDistributor:
             config dictionary.
         """
         self.schools = schools
+        self.students_teacher_ratio = students_teacher_ratio
         self.neighbour_schools = neighbour_schools
         self.school_age_range = age_range
         self.mandatory_school_age_range = mandatory_age_range
         self.education_sector_label = education_sector_label
+        self.teacher_min_age = teacher_min_age
 
     @classmethod
     def from_file(
-            cls,
-            schools: "Schools",
-            config_filename: str = default_config_filename,
-            # mandatory_age_range: Tuple[int, int] = (5, 18),#part of config ?
+        cls,
+        schools: "Schools",
+        config_filename: str = default_config_filename,
+        # mandatory_age_range: Tuple[int, int] = (5, 18),#part of config ?
     ) -> "SchoolDistributor":
         """
         Initialize SchoolDistributor from path to its config file 
@@ -88,11 +98,12 @@ class SchoolDistributor:
             config["neighbour_schools"],
             config["age_range"],
             config["mandatory_age_range"],
+            config["teacher_min_age"]
         )
 
     @classmethod
     def from_geography(
-            cls, geography: Geography, config_filename: str = default_config_filename
+        cls, geography: Geography, config_filename: str = default_config_filename
     ):
         return cls.from_file(geography.schools, config_filename)
 
@@ -132,7 +143,7 @@ class SchoolDistributor:
             )
 
     def distribute_mandatory_kids_to_school(
-            self, area: Area, is_school_full: dict, closest_schools_by_age: dict
+        self, area: Area, is_school_full: dict, closest_schools_by_age: dict
     ):
         """
         Send kids to the nearest school among the self.neighbour_schools,
@@ -141,8 +152,8 @@ class SchoolDistributor:
         """
         for person in area.people:
             if (
-                    person.age <= self.mandatory_school_age_range[1]
-                    and person.age >= self.mandatory_school_age_range[0]
+                person.age <= self.mandatory_school_age_range[1]
+                and person.age >= self.mandatory_school_age_range[0]
             ):
                 if person.age not in is_school_full:
                     continue
@@ -180,7 +191,7 @@ class SchoolDistributor:
                 school.add(person, school.SubgroupType.students)
 
     def distribute_non_mandatory_kids_to_school(
-            self, area: Area, is_school_full: dict, closest_schools_by_age: dict
+        self, area: Area, is_school_full: dict, closest_schools_by_age: dict
     ):
         """
         For kids in age ranges that might go to school, but it is not mandatory
@@ -189,17 +200,17 @@ class SchoolDistributor:
         """
         for person in area.people:
             if (
-                    self.school_age_range[0]
-                    < person.age
-                    < self.mandatory_school_age_range[0]
-                    or self.mandatory_school_age_range[1]
-                    < person.age
-                    < self.school_age_range[1]
+                self.school_age_range[0]
+                < person.age
+                < self.mandatory_school_age_range[0]
+                or self.mandatory_school_age_range[1]
+                < person.age
+                < self.school_age_range[1]
             ):
                 if person.age not in is_school_full or is_school_full[person.age]:
                     continue
                 else:
-                    schools_full = 0
+                    find_school = False
                     for i in range(self.neighbour_schools):  # look for non full school
                         if i >= len(closest_schools_by_age[person.age]):
                             # TEST THIS
@@ -208,62 +219,122 @@ class SchoolDistributor:
                         # check number of students in that age group
                         yearindex = person.age - school.age_min + 1
                         n_pupils_age = len(school.subgroups[yearindex].people)
-                        if school.n_pupils >= school.n_pupils_max or n_pupils_age >= (
-                                school.n_pupils_max / (school.age_max - school.age_min)
+                        if (school.n_pupils < school.n_pupils_max) and (
+                            n_pupils_age
+                            < (school.n_pupils_max / (school.age_max - school.age_min))
                         ):
-                            schools_full += 1
-                        else:
+                            find_school = True
                             break
-                school.add(person, school.SubgroupType.students)
-                school.age_structure[person.age] += 1
+                    if find_school:
+                        school.add(person, school.SubgroupType.students)
 
     def distribute_teachers_to_schools_in_super_areas(
-            self, super_areas: List[SuperArea]
+        self, super_areas: List[SuperArea]
     ):
         for msoarea in super_areas:
             self.distribute_teachers_to_school(msoarea)
 
     def distribute_teachers_to_school(self, msoarea: SuperArea):
         """
-        Education sector
-            2311: Higher education teaching professional
-            2312: Further education teaching professionals
-            2314: Secondary education teaching professionals
-            2315: Primary and nursery education teaching professionals
-            2316: Special needs education teaching professionals
+        Assigns teachers to super area. The strategy is the following:
+        we loop over the schools to divide them into two subgroups,
+        primary schools and secondary schools. If a school is both, then
+        we assign it randomly to one of the two.
+        Then we loop over the workers in the super area to find the teachers,
+        which we also divide into two subgroups analogously to the schools.
+        We assign the teachers to the schools following a fix student to teacher ratio.
+        We put a lower age limit to teachers at the age of 21.
         """
-        # find people working in education
-        # TODO add key-company-sector id to config.yaml
-        teachers = [
+        primary_schools = []
+        secondary_schools = []
+        for area in msoarea.areas:
+            for school in area.schools:
+                if school.n_pupils == 0:
+                    continue
+                # note one school can be primary and secondary.
+                if type(school.sector) != str:
+                    idx = np.random.randint(0, 2)
+                    if idx == 0:
+                        primary_schools.append(school)
+                    else:
+                        secondary_schools.append(school)
+                else:
+                    if "primary" in school.sector:
+                        if "secondary" in school.sector:
+                            idx = np.random.randint(0, 2)
+                            if idx == 0:
+                                primary_schools.append(school)
+                            else:
+                                secondary_schools.append(school)
+                        else:
+                            primary_schools.append(school)
+                    elif "secondary" in school.sector:
+                        secondary_schools.append(school)
+                    else:
+                        idx = np.random.randint(0, 2)
+                        if idx == 0:
+                            primary_schools.append(school)
+                        else:
+                            secondary_schools.append(school)
+        np.random.shuffle(primary_schools)
+        np.random.shuffle(secondary_schools)
+        all_teachers = [
             person
-            for idx, person in enumerate(msoarea.workers)
-            if person.sector == self.education_sector_label
+            for person in msoarea.workers
+            if person.sector == self.education_sector_label and person.age > self.teacher_min_age and person.primary_activity is None
         ]
+        primary_teachers = []
+        secondary_teachers = []
+        extra_teachers = []
+        for teacher in all_teachers:
+            if teacher.sub_sector == "teacher_primary":
+                primary_teachers.append(teacher)
+            elif teacher.sub_sector == "teacher_secondary":
+                secondary_teachers.append(teacher)
+            else:
+                extra_teachers.append(teacher)
+        np.random.shuffle(primary_teachers)
+        np.random.shuffle(secondary_teachers)
+        np.random.shuffle(extra_teachers)
+        schools_without_teachers = []
+        for primary_school in primary_schools:
+            n_students = len(primary_school.students)
+            if n_students == 0:
+                continue
+            n_teachers = max(int(np.floor(n_students / self.students_teacher_ratio)), 1)
+            for _ in range(n_teachers):
+                if primary_teachers:
+                    teacher = primary_teachers.pop()
+                elif extra_teachers:
+                    teacher = extra_teachers.pop()
+                else:
+                    schools_without_teachers.append(primary_school)
+                    break
+                primary_school.add(teacher, school.SubgroupType.teachers)
 
-        # equal chance to work in any school nearest to any area within msoa
-        # Note: doing it this way rather then putting them into the area which
-        # is currently chose in the for-loop in the world.py file ensure that
-        # teachers are equally distr., no over-crowding
-        areas_in_msoa = msoarea.areas
-        areas_rv = stats.rv_discrete(
-            values=(
-                np.arange(len(areas_in_msoa)),
-                np.array([1 / len(areas_in_msoa)] * len(areas_in_msoa)),
-            )
-        )
-        areas_rnd_arr = areas_rv.rvs(size=len(teachers))
+        for secondary_school in secondary_schools:
+            n_students = len(secondary_school.students)
+            if n_students == 0:
+                continue
+            n_teachers = max(int(np.floor(n_students / self.students_teacher_ratio)), 1)
+            for _ in range(n_teachers):
+                if secondary_teachers:
+                    teacher = secondary_teachers.pop()
+                elif extra_teachers:
+                    teacher = extra_teachers.pop()
+                else:
+                    schools_without_teachers.append(secondary_school)
+                    break
+                secondary_school.add(teacher, school.SubgroupType.teachers)
 
-        for i, teacher in enumerate(teachers):
-            if teacher.sub_sector != None:
-                area = areas_in_msoa[areas_rnd_arr[i]]
-
-                for school in area.schools:
-                    if teacher.sub_sector in school.sector:
-                        # (school.n_teachers < school.n_teachers_max) and \
-                        school.add(teacher, school.SubgroupType.teacher)
-                        school.n_teachers += 1
-                    elif teacher.sub_sector == "special_needs":
-                        # everyone has special needs :-)
-                        # TODO fine better why for filtering
-                        school.add(teacher, school.SubgroupType.teacher)
-                        school.n_teachers += 1
+        remaining_teachers = primary_teachers + secondary_teachers + extra_teachers
+        if schools_without_teachers:
+            for i in range(len(remaining_teachers)):
+                teacher = remaining_teachers[i]
+                school_idx = i % len(schools_without_teachers)
+                school = schools_without_teachers[school_idx]
+                if school.n_pupils / school.n_teachers <= self.students_teacher_ratio:
+                    continue
+                school.add(
+                    teacher, school.SubgroupType.teachers
+                )

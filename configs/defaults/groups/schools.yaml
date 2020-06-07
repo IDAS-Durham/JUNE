@@ -3,3 +3,4 @@ employee_per_clients:
   primary: 30
   secondary: 30   # how many this job gives service to
   primary_secondary: 30
+
