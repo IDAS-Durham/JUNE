@@ -7,13 +7,14 @@ from pytest import fixture
 from june import World
 from june.groups.leisure import generate_leisure_for_world
 from june.groups import Household, CareHome
+from june.world import generate_world_from_geography
 
 
 @fixture(name="world_visits", scope="module")
 def make_super_areas():
     geo = Geography.from_file({"super_area": ["E02003353"]})
     geo.care_homes = CareHomes.for_geography(geo)
-    world = World.from_geography(geo, include_households=True)
+    world = generate_world_from_geography(geography=geo, include_households=True)
     return world
 
 
