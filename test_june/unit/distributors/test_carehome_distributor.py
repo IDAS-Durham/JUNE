@@ -72,7 +72,7 @@ def test__carehome_populated_correctly(module_config, carehome_distributor):
 @pytest.fixture(name="world")
 def create_area():
     g = Geography.from_file(
-        filter_key={"msoa" : ["E02003353"]},
+        filter_key={"super_area" : ["E02003353"]},
     )
     dem = Demography.for_geography(g)
     world = World(g, dem)

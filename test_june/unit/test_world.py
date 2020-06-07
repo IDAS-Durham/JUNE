@@ -4,7 +4,7 @@ from june.groups import Schools, Hospitals, Companies, Households, Cemeteries, C
 
 
 def test__onearea_world(geography):
-    geography = Geography.from_file(filter_key={"oa": ["E00088544"]})
+    geography = Geography.from_file(filter_key={"area": ["E00088544"]})
     world = World.from_geography(geography)
     assert hasattr(world, "households")
     assert isinstance(world.households, Households)

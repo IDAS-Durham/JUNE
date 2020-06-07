@@ -18,7 +18,7 @@ from june.infection.symptoms import SymptomTag
 logger = logging.getLogger(__name__)
 
 default_data_filename = (
-    paths.data_path / "processed/hospital_data/england_hospitals.csv"
+    paths.data_path / "input/hospitals/england_hospitals.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
 
@@ -250,7 +250,7 @@ class Hospitals(Supergroup):
     def create_hospital_from_df_row(
         cls, super_area, row, icu_fraction, 
     ):
-        coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
+        coordinates = row[["latitude", "longitude"]].values.astype(np.float)
         n_beds = row["beds"]
         n_icu_beds = round(icu_fraction * n_beds)
         n_beds -= n_icu_beds
@@ -280,7 +280,7 @@ class Hospitals(Supergroup):
             n_icu_beds = round(icu_fraction * n_beds)
             n_beds -= n_icu_beds
             # msoa_name = row["MSOA"]
-            coordinates = row[["Latitude", "Longitude"]].values.astype(np.float)
+            coordinates = row[["latitude", "longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
                 # super_area=,

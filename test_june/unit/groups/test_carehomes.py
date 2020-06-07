@@ -11,7 +11,7 @@ default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 @pytest.fixture(name="module_area", scope="module")
 def create_area():
     g = Geography.from_file(
-        filter_key={"oa" : ["E00081795"]},
+        filter_key={"area" : ["E00081795"]},
     )
     return g.areas.members[0]
 
@@ -70,7 +70,7 @@ class TestCareHomes:
     @pytest.fixture(name="module_carehomes", scope="module")
     def test__creating_carehomes_for_geography(self):
         geography = Geography.from_file(
-            filter_key={"oa": ["E00081795", "E00082111"]}
+            filter_key={"area": ["E00081795", "E00082111"]}
         )
         return CareHomes.for_geography(geography)
 

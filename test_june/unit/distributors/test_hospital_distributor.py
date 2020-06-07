@@ -14,7 +14,7 @@ def make_medic():
 
 @pytest.fixture(name="geography_hospital")
 def make_geography(medic):
-    geography = Geography.from_file({"msoa": ["E02003999", "E02006764"]})
+    geography = Geography.from_file({"super_area": ["E02003999", "E02006764"]})
     geography.super_areas.members[0].add_worker(medic)
     return geography
 
