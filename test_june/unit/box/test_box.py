@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture(name="population_box")
 def make_population():
-    geography = Geography.from_file({"oa": ["E00062194"]})
+    geography = Geography.from_file({"area": ["E00062194"]})
     demography = Demography.for_geography(geography)
     population = Population() 
     for area in geography.areas:

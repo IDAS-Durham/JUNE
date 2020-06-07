@@ -12,11 +12,10 @@ import pandas as pd
 from june.demography.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
-default_data_path = paths.data_path / "processed/census_data/company_data/"
-default_size_nr_file = default_data_path / "companysize_msoa11cd_2019.csv"
-default_sector_nr_per_msoa_file = default_data_path / "companysector_msoa11cd_2011.csv"
+default_size_nr_file = paths.data_path / "input/companies/company_size_2019.csv"
+default_sector_nr_per_msoa_file = paths.data_path / "input/companies/company_sector_2011.csv"
 default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/companies.yaml"
 
