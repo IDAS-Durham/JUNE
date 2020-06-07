@@ -84,7 +84,7 @@ class World:
             or self.schools is not None
         ):
             worker_distr = WorkerDistributor.for_super_areas(
-                self.super_areas
+                area_names=[super_area.name for super_area in self.super_areas]
             )  # atm only for_geography()
             worker_distr.distribute(
                 areas=self.areas, super_areas=self.super_areas, population=self.people
@@ -106,8 +106,6 @@ class World:
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor(self.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
-
-        self.cemeteries = self.cemeteries
 
         # Companies last because need hospital and school workers first
         if self.companies is not None:
@@ -218,13 +216,14 @@ def generate_world_from_geography(
         with the default settings for that geography.
         """
     world = World()
+    world.box_mode = box_mode
     if demography is None:
         demography = Demography.for_geography(geography)
     if include_rail_travel and not include_commute:
         raise ValueError("Rail travel depends on commute and so both must be true")
     if box_mode:
         world.hospitals = Hospitals.for_box_mode()
-        world.people = _populate_areas(geography, demography)
+        world.people = _populate_areas(geography.areas, demography)
         world.boxes = Boxes([Box()])
         world.boxes.members[0].set_population(world.people)
         return world
@@ -240,6 +239,7 @@ def generate_world_from_geography(
         include_commute=include_commute,
         include_rail_travel=include_rail_travel,
     )
+    world.cemeteries = Cemeteries()
     return world
 
 

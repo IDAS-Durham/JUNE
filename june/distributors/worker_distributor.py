@@ -78,7 +78,7 @@ class WorkerDistributor:
         self.n_boundary_workers = 0
 
     def distribute(
-            self, areas: Areas, super_areas:SuperAreas, population: Population,
+            self, areas: Areas, super_areas: SuperAreas, population: Population,
     ):
         """
         Assign any person within the eligible working age range a location
@@ -92,7 +92,7 @@ class WorkerDistributor:
         self.super_areas = super_areas
         for i, area in enumerate(
             iter(self.areas)
-        ):  # TODO a.t.m. only for_geography() supported
+        ):  
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
             for idx, person in enumerate(area.people):
@@ -256,7 +256,7 @@ class WorkerDistributor:
             raise NotImplementedError("Only one type of area filtering is supported.")
         if "area" in len(filter_key.keys()):
             raise NotImplementedError(
-                "Company data only for the SuperArea (super_area) and above."
+                "Company data only for the SuperArea (MSOA) and above."
             )
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
@@ -284,7 +284,7 @@ class WorkerDistributor:
     @classmethod
     def from_file(
         cls,
-        area_names: Optional[List[str]] = [],
+        area_names: Optional[List[str]] = None, 
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
@@ -301,6 +301,8 @@ class WorkerDistributor:
         education_sector_file
         healthcare_sector_file
         """
+        if area_names is None:
+            area_names = []
         workflow_df = load_workflow_df(workflow_file, area_names)
         sex_per_sector_df = load_sex_per_sector(sex_per_sector_file, area_names)
         with open(config_file) as f:
