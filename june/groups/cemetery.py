@@ -1,23 +1,12 @@
-from june.groups.group import Group, Supergroup
-from june.logger_creation import logger
-from enum import IntEnum
+from june.groups.group import Supergroup
 
 
-class Cemetery(Group):
-    class GroupType(IntEnum):
-        default = 0
-
-    def must_timestep(self):
-        return False
-
-    def update_status_lists(self, time=1, delta_time=1):
-        pass
-
-    def set_active_members(self):
-        pass
+class Cemetery:
+    def __init__(self):
+        self.people = []
 
     def add(self, person):
-        self.subgroups[0]._people.append(person)
+        self.people.append(person)
 
 
 class Cemeteries(Supergroup):
