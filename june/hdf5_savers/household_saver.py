@@ -25,6 +25,7 @@ def save_households_to_hdf5(
     """
     n_households = len(households)
     n_chunks = int(np.ceil(n_households / chunk_size))
+    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         households_dset = f.create_group("households")
         for chunk in range(n_chunks):
@@ -45,6 +46,7 @@ def save_households_to_hdf5(
                 else:
                     types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
+
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
             types = np.array(types, dtype="S15")
@@ -97,7 +99,6 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 household = Household(
                     type=type, area=area, max_size=max_sizes[k]
                 )
-
                 household.id = ids[k]
                 households_list.append(household)
     return Households(households_list)
