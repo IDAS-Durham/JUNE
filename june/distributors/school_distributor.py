@@ -9,12 +9,6 @@ from june import paths
 from june.demography.geography import Area, SuperArea, Geography
 from june.groups.school import Schools
 
-default_data_filename = (
-    paths.data_path / "processed/school_data/england_schools_data.csv"
-)
-default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
-)
 default_config_filename = (
     paths.configs_path / "defaults/distributors/school_distributor.yaml"
 )

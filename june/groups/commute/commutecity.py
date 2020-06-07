@@ -12,13 +12,13 @@ from june import paths
 
 default_data_path = paths.data_path
 
-default_uk_pcs_coordinates = default_data_path / "geographical_data/ukpostcodes_coordinates.csv"
+default_uk_pcs_coordinates = default_data_path / "input/geography/postcodes_coordinates.csv"
 
-default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
+default_msoa_coordinates = default_data_path / "input/geography/super_area_coordinates.csv"
 
-default_non_london_stat_pcs = default_data_path / "travel/non_London_station_coordinates.csv"
+default_non_london_stat_pcs = default_data_path / "input/travel/non_London_station_coordinates.csv"
 
-default_london_stat_pcs = default_data_path / "travel/London_station_coordinates.csv"
+default_london_stat_pcs = default_data_path / "input/travel/London_station_coordinates.csv"
 
 class CommuteCity(Group):
     """
@@ -90,9 +90,9 @@ class CommuteCities(Supergroup):
     def _get_msoa_lat_lon(self):
         'Return all MSOA lat/lons as a 2D array'
        
-        self.lat_msoas = np.array(self.msoa_coordinates['Y'])
-        self.lon_msoas = np.array(self.msoa_coordinates['X'])
-        self.msoas = np.array(self.msoa_coordinates['MSOA11CD'])
+        self.lat_msoas = np.array(self.msoa_coordinates['latitude'])
+        self.lon_msoas = np.array(self.msoa_coordinates['longitude'])
+        self.msoas = np.array(self.msoa_coordinates['super_area'])
         
         lat_lon_msoas = np.zeros(len(self.lat_msoas)*2).reshape(len(self.lat_msoas),2)
         lat_lon_msoas[:,0] = self.lat_msoas

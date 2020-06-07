@@ -15,9 +15,9 @@ default_config_filename = paths.configs_path / "defaults/rail_travel.yaml"
 
 default_data_path = paths.data_path
 
-default_to_distirbute = default_data_path / "travel/rail_travel_no_commute.csv"
+default_to_distirbute = default_data_path / "input/travel/rail_travel_no_commute.csv"
 
-default_distribution = default_data_path / "travel/rail_travel_distribution.csv"
+default_distribution = default_data_path / "input/travel/rail_travel_distribution.csv"
 
 
 

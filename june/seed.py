@@ -7,9 +7,9 @@ from june import paths
 from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
 
-default_n_cases_region_filename = paths.data_path / "processed/seed/n_cases_region.csv"
+default_n_cases_region_filename = paths.data_path / "input/seed/n_cases_region.csv"
 default_msoa_region_filename = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
 
@@ -86,7 +86,7 @@ class Seed:
             for date in dates
         ]
 
-        msoa_region = pd.read_csv(msoa_region_filename)[["msoa", "region"]]
+        msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
         return Seed(
             super_areas, selector, n_cases_region, msoa_region.drop_duplicates(), dates
         )
@@ -109,7 +109,7 @@ class Seed:
             msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
         filter_region = list(
             map(
-                lambda x: x in msoa_region_filtered["msoa"].values,
+                lambda x: x in msoa_region_filtered["super_area"].values,
                 self.super_area_names,
             )
         )
