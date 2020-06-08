@@ -14,7 +14,7 @@ class Policy:
 
 class Policies:
 
-    def __init__(self, policies, config_file=None):
+    def __init__(self, policies = [], config_file=None):
         self.config_file = config_file
         self.policies = policies
         self.full_closure_policies = 1# filter out closure ones
