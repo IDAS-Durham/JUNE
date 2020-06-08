@@ -39,6 +39,7 @@ class HealthIndexGenerator:
     def __init__(self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict):
         """
         Parameters:
+        Hola
         - poli_hosp,poli_icu,poli_deaths:
           Each of this arrays contains 2 lists of 4 elements. 
           The first element of the list correpdons to males and the second to females.
