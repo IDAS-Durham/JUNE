@@ -26,7 +26,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 def test_full_run():
     geography = Geography.from_file(
-        {"msoa": ["E02002512", "E02001697"]}
+        {"super_area": ["E02002512", "E02001697"]}
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
