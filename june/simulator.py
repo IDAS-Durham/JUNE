@@ -270,7 +270,7 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
-            if group_name == "residence_visits":
+            if group_name in ["care_home_visits", "household_visits"]:
                 continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
