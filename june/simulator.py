@@ -534,14 +534,14 @@ class Simulator:
                 n_people += len(cemetery.people)
         sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
         
-        if self.policies.social_distancing and self.policies.social_distancing_start < self.timer.now < self.policies.social_distancing_end:
+        if self.policies.social_distancing and self.policies.social_distancing_start < self.timer.date < self.policies.social_distancing_end:
             self.interaction.alpha_physical, self.interaction.beta = self.policies.social_distancing_policy(self.alpha_copy, self.beta_copy, self.timer.now)
         else:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
 
-        print ("Using alpha_physical = {}".format(self.interaction.alpha_physical))
-        print ("Using betas = {}".format(self.interaction.beta))
+        #print ("Using alpha_physical = {}".format(self.interaction.alpha_physical))
+        #print ("Using betas = {}".format(self.interaction.beta))
         
         for group_type in group_instances:
             for group in group_type.members:

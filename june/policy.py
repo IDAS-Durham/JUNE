@@ -64,6 +64,7 @@ class Policies:
 
         betas_new = betas.copy()
         
+        
         if self.config_file is None:
             alpha_new = alpha/2
         else:

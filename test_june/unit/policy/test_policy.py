@@ -72,80 +72,80 @@ def test__social_distancing(world, selector, interaction):
             assert sim.interaction.betas == initial_betas
 
 
-def test__close_schools_years(world, selector, interaction):
-    start_date = 3
-    end_date = 6
-    school_closure = Policy(
-        policy="close_schools", start_date=start_date, end_date=end_date, years = [5,6,7],
-    )
-    policies = Policies([school_closure])
+# def test__close_schools_years(world, selector, interaction):
+#     start_date = 3
+#     end_date = 6
+#     school_closure = Policy(
+#         policy="close_schools", start_date=start_date, end_date=end_date, years = [5,6,7],
+#     )
+#     policies = Policies([school_closure])
 
-    sim = Simulator.from_file(
-        world, interaction, selector, policies, config_filename=test_config
-    )
+#     sim = Simulator.from_file(
+#         world, interaction, selector, policies, config_filename=test_config
+#     )
 
-    activities = ['primary_activity']
-    for day in sim.timer:
-        sim.move_people_to_active_subgroups(activities)
-        if day > sim.timer.total_days:
-            break
-        for school in world.schools.members:
-            school_age_range = np.arange(school.age_min, school.age_max+1)
-            school_years = dict(zip(school_age_range, np.arange(1,len(school.subgroups)+1)))
-            for year in years:
-                year_subgroup_idx = school.get(year, None)
-                if year_subgroup_idx is not None:
-                    if day > start_date and day < end_date:
-                        assert len(school.subgroup[year_subgroup_idx].people == 0)
+#     activities = ['primary_activity']
+#     for day in sim.timer:
+#         sim.move_people_to_active_subgroups(activities)
+#         if day > sim.timer.total_days:
+#             break
+#         for school in world.schools.members:
+#             school_age_range = np.arange(school.age_min, school.age_max+1)
+#             school_years = dict(zip(school_age_range, np.arange(1,len(school.subgroups)+1)))
+#             for year in years:
+#                 year_subgroup_idx = school.get(year, None)
+#                 if year_subgroup_idx is not None:
+#                     if day > start_date and day < end_date:
+#                         assert len(school.subgroup[year_subgroup_idx].people == 0)
 
-        sim.clear_world()
+#         sim.clear_world()
 
 
 
-def test__close_sectors(world, selector, interaction):
-    #TODO: test that if sector is closed, person does not commute
-    start_date = 3
-    end_date = 6
-    sector_closure = Policy(
-        policy="close_companies", start_date=start_date, end_date=end_date, sectors = ['A', 'B'],
-    )
-    policies = Policies([sector_closure])
+# def test__close_sectors(world, selector, interaction):
+#     #TODO: test that if sector is closed, person does not commute
+#     start_date = 3
+#     end_date = 6
+#     sector_closure = Policy(
+#         policy="close_companies", start_date=start_date, end_date=end_date, sectors = ['A', 'B'],
+#     )
+#     policies = Policies([sector_closure])
 
-    sim = Simulator.from_file(
-        world, interaction, selector, policies, config_filename=test_config
-    )
+#     sim = Simulator.from_file(
+#         world, interaction, selector, policies, config_filename=test_config
+#     )
 
-    activities = ['primary_activity']
-    for day in sim.timer:
-        sim.move_people_to_active_subgroups(activities)
-        if day > sim.timer.total_days:
-            break
-        for company in world.companies.members:
-            if company.sector == sector:
-                if day > start_date and day < end_date:
-                    assert len(company.people == 0)
+#     activities = ['primary_activity']
+#     for day in sim.timer:
+#         sim.move_people_to_active_subgroups(activities)
+#         if day > sim.timer.total_days:
+#             break
+#         for company in world.companies.members:
+#             if company.sector == sector:
+#                 if day > start_date and day < end_date:
+#                     assert len(company.people == 0)
 
-        sim.clear_world()
+#         sim.clear_world()
 
-def test__close_pubs(world, selector, interaction):
-    start_date = 3
-    end_date = 6
-    sector_closure = Policy(
-        policy="close", groups='pubs', start_date=start_date, end_date=end_date,
-    )
-    policies = Policies([sector_closure])
+# def test__close_pubs(world, selector, interaction):
+#     start_date = 3
+#     end_date = 6
+#     sector_closure = Policy(
+#         policy="close", groups='pubs', start_date=start_date, end_date=end_date,
+#     )
+#     policies = Policies([sector_closure])
 
-    sim = Simulator.from_file(
-        world, interaction, selector, policies, config_filename=test_config
-    )
+#     sim = Simulator.from_file(
+#         world, interaction, selector, policies, config_filename=test_config
+#     )
 
-    activities = ['leisure']
-    for day in sim.timer:
-        sim.move_people_to_active_subgroups(activities)
-        if day > sim.timer.total_days:
-            break
-        for pub in world.pubs.members:
-            if day > start_date and day < end_date:
-                assert len(pub.people == 0)
+#     activities = ['leisure']
+#     for day in sim.timer:
+#         sim.move_people_to_active_subgroups(activities)
+#         if day > sim.timer.total_days:
+#             break
+#         for pub in world.pubs.members:
+#             if day > start_date and day < end_date:
+#                 assert len(pub.people == 0)
 
-        sim.clear_world()
+#         sim.clear_world()
