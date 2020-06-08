@@ -539,6 +539,9 @@ class Simulator:
         else:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
+
+        print ("Using alpha_physical = {}".format(self.interaction.alpha_physical))
+        print ("Using betas = {}".format(self.interaction.beta))
         
         for group_type in group_instances:
             for group in group_type.members:
