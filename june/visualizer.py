@@ -194,7 +194,7 @@ def render_content(tab):
                             value=dash_plotter.regions[0],
                         ),
                         dcc.Graph(
-                            figure=dash_plotter.generate_deaths_region(
+                            figure=dash_plotter.generate_data_comparison(
                                 region = dash_plotter.regions[0]
                             ),
                             id="deaths_region",
@@ -251,7 +251,7 @@ def update_hospital_map(day_number):
     [dash.dependencies.Input("region_dropdown", "value"),],
 )
 def update_deaths_region(region):
-    return dash_plotter.generate_deaths_region(region)
+    return dash_plotter.generate_data_comparison(region)
 
 if __name__ == "__main__":
     app.run_server(debug=False)
