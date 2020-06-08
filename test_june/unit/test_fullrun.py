@@ -3,21 +3,45 @@ This is a quick test that makes sure the box model can be run. It does not check
 but at least we can use it in the meantime to make sure the code runs before pusing it to master.
 """
 
-import os
-
-from june import World
-from june.infection.health_index import HealthIndexGenerator
-from june.interaction import DefaultInteraction 
-from june.infection import Infection
-from june.infection.symptoms import SymptomsConstant
-from june.infection.transmission import TransmissionConstant
+from pathlib import Path
 from june.simulator import Simulator
+from june import world
+from june.time import Timer
+from june.demography.geography import Geography
+from june.demography import Demography
+import june.interaction as inter
+from june.infection import InfectionSelector
+from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
+from june.groups.leisure import Cinemas, Pubs, Groceries
+from june.infection import transmission as trans
+from june.infection import symptoms as sym
 from june import World
+from june.seed import Seed
+from june import paths
 
+from pathlib import Path
 
-def test_full_run(simulator):
-    for household in simulator.world.households.members[:20]:
-        simulator.seed(household, n_infections=1)
+selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+test_config = paths.configs_path / "tests/test_simulator.yaml"
+
+def test_full_run():
+    geography = Geography.from_file(
+        {"super_area": ["E02002512", "E02001697"]}
+    )
+    geography.hospitals = Hospitals.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.schools = Schools.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
+    geography.cemeteries = Cemeteries()
+    demography = Demography.for_geography(geography)
+    world = World(geography, demography, include_households=True, include_commute=True)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.pubs = Pubs.for_geography(geography)
+    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+    selector = InfectionSelector.from_file(selector_config)
+    interaction = inter.ContactAveraging.from_file(selector=selector)
+    simulator = Simulator.from_file(world, interaction, selector,
+                                config_filename = test_config)
+    seed = Seed(simulator.world.super_areas, selector, )
+    seed.unleash_virus(100)
     simulator.run()
-    simulator.logger.plot_infection_curves_per_day()
-

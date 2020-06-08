@@ -1,12 +1,10 @@
-import pytest
-from june.geography import Geography
-from june.demography import Demography
+from june.demography.geography import Geography
 from june import World
 from june.groups import Schools, Hospitals, Companies, Households, Cemeteries, CareHomes
 
 
 def test__onearea_world(geography):
-    geography = Geography.from_file(filter_key={"oa": ["E00088544"]})
+    geography = Geography.from_file(filter_key={"area": ["E00088544"]})
     world = World.from_geography(geography)
     assert hasattr(world, "households")
     assert isinstance(world.households, Households)
@@ -23,4 +21,13 @@ def test__world_has_everything(world):
     assert isinstance(world.companies, Companies)
     assert isinstance(world.households, Households)
     assert isinstance(world.hospitals, Hospitals)
-    assert isinstance(world.carehomes, CareHomes)
+    assert isinstance(world.care_homes, CareHomes)
+    assert isinstance(world.companies, Companies)
+
+def test__people_in_world_right_subgroups(world):
+    dummy_people = world.people.members[:40]
+
+    for dummy_person in dummy_people:
+        for subgroup in dummy_person.subgroups.iter():
+            if subgroup is not None:
+                assert dummy_person in subgroup.people

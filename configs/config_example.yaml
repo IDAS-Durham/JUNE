@@ -1,38 +1,27 @@
 title: Covid configuration example
 
-logger:
-  save_path: results
-
-world:
-  zone: test # NorthEast # available are all UK regions, and EnglandWales together.
+activity_to_groups:
+  primary_activity: ['schools', 'companies']
+  leisure: ['pubs', 'cinemas', 'groceries'] 
+  residence: ['households', 'care_homes']
+  commute: ['commuteunits', 'commutecityunits']
 
 time:
-  total_days: 20
+  total_days: 120
   step_duration: 
       weekday:
-          1: 8
-          2: 2
-          3: 14
+          0: 10 
+          1: 2
+          2: 12
       weekend:
-          1: 24
-  step_active_groups:
+          0: 12 
+          1: 12 
+  step_activities:
       weekday:
-          1: ['schools', 'companies', 'carehomes', 'households'] # active groups during first time step
-          #2: ['pubs', 'carehomes', 'households'] 
-          2: ['carehomes', 'households'] 
-          3: ['carehomes', 'households']
+          0: ['hospital', 'primary_activity', 'residence'] 
+          1: ['hospital', 'commute', 'residence'] 
+          2: ['hospital', 'residence']
       weekend:
-          1: ['carehomes', 'households']
-          #2: ['pubs', 'households'] 
-          2: ['households'] 
+          0: ['hospital', 'leisure', 'residence']
+          1: ['hospital', 'residence']
 
-interaction:
-  type: default
-
-infection:
-  type: constant
-  asymptomatic_ratio: 0.4
-  transmission:
-    type: constant
-    parameters:
-      probability: 0.2

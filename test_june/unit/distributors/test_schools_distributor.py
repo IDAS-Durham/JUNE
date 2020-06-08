@@ -2,20 +2,13 @@ import os
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
-from june.geography import Geography
-from june.geography import Area
-from june.groups import *
-from june.geography import Geography
-from june.groups.school import Schools, School
+from june.world import World
+from june.demography.geography import Geography
+from june.groups.school import Schools
 from june.distributors.school_distributor import SchoolDistributor
 
-default_data_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data/processed/school_data/england_schools_data.csv"
-default_areas_map_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "data/processed/geographical_data/oa_msoa_region.csv"
 default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
     "configs/defaults/distributors/school_distributor.yaml"
 
@@ -28,7 +21,7 @@ default_mandatory_age_range = (5, 18)
 
 @pytest.fixture(name="geography_school", scope="module")
 def create_geography():
-    geography = Geography.from_file({"msoa" : ["E02004935", "E02004935", "E02004935"]})
+    geography = Geography.from_file({"super_area" : ["E02004935", "E02004935", "E02004935"]})
     return geography
 
 @pytest.fixture(name="schools", scope="module")
@@ -103,3 +96,17 @@ def test__non_mandatory_dont_go_if_school_full(schools):
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
+
+def test__teacher_distribution(geography_school):
+    geography_school.schools = Schools.for_geography(geography_school)
+    world = World.from_geography(geography_school)
+    for school in world.schools:
+        students = len(school.students)
+        teachers = len(school.teachers.people)
+        ratio = students / teachers
+        assert ratio < 40
+
+
+
+
+

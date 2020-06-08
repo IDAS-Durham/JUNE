@@ -1,23 +1,18 @@
-import os
 import logging
-import yaml
-from pathlib import Path
-from random import uniform
-from itertools import count
-from typing import List, Dict, Optional
-from june.groups import Hospitals
-from june.geography import Geography, SuperAreas
 
 import numpy as np
+import yaml
 from scipy import stats
 
-from june.logger_creation import logger
+from june import paths
+from june.demography.geography import SuperAreas, SuperArea
+from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
 
 default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "configs/defaults/distributors/hospital_distributor.yaml"
+        paths.configs_path
+        / "defaults/distributors/hospital_distributor.yaml"
 )
 
 
@@ -27,13 +22,14 @@ class HospitalDistributor:
     """
 
     def __init__(
-        self, hospitals: Hospitals, config_filename: str = default_config_filename
+            self, hospitals: Hospitals, config_filename: str = default_config_filename
     ):
         # check if this msoarea has hospitals
         self.hospitals = hospitals
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         self.healthcare_sector_label = config["sector"]
+        self.medic_min_age = config["medic_min_age"]
         """
         if len(self.msoarea.hospitals) != 0:
             self.healthcare_sector_label = (
@@ -46,37 +42,38 @@ class HospitalDistributor:
         """
 
     def distribute_medics_to_super_areas(self, super_areas: SuperAreas):
-        for msoa in super_areas:
-            self.distribute_medics_to_hospitals_in_msoa(msoa)
+        for super_area in super_areas:
+            self.distribute_medics_to_hospitals(super_area)
 
-    def hospitals_in_msoa(self, msoa):
+    def get_hospitals_in_super_area(self, super_area: SuperArea):
         """
         """
-        hospitals_in_msoa = [
+        hospitals_in_super_area = [
             hospital
             for hospital in self.hospitals.members
-            if hospital.super_area == msoa
+            if hospital.super_area == super_area
         ]
-        return hospitals_in_msoa
+        return hospitals_in_super_area
 
-    def distribute_medics_to_hospitals_in_msoa(self, msoa):
+    def distribute_medics_to_hospitals(self, super_area):
         """
         Healthcares sector
             2211: Medical practitioners
             2217: Medical radiographers
             2231: Nurses
             2232: Midwives
+        We put a lower bound on the age of medics to be 25.
         """
-        hospitals_in_msoa = self.hospitals_in_msoa(msoa)
-        if len(hospitals_in_msoa) == 0:
+        hospitals_in_super_area = self.get_hospitals_in_super_area(super_area)
+        if len(hospitals_in_super_area) == 0:
             return
         medics = [
             person
-            for idx, person in enumerate(msoa.workers)
-            if person.sector == self.healthcare_sector_label
+            for idx, person in enumerate(super_area.workers) 
+            if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age and person.primary_activity is None
         ]
         if len(medics) == 0:
-            logger.info(f"\n The MSOArea {msoa.name} has no people that work in it!")
+            logger.info(f"\n The SuperArea {super_area.name} has no people that work in it!")
             return
         else:
             # equal chance to work in any hospital nearest to any area within msoa
@@ -85,14 +82,14 @@ class HospitalDistributor:
             # medics are equally distr., no over-crowding
             areas_rv = stats.rv_discrete(
                 values=(
-                    np.arange(len(hospitals_in_msoa)),
-                    np.array([1 / len(hospitals_in_msoa)] * len(hospitals_in_msoa)),
+                    np.arange(len(hospitals_in_super_area)),
+                    np.array([1 / len(hospitals_in_super_area)] * len(hospitals_in_super_area)),
                 )
             )
             hospitals_rnd_arr = areas_rv.rvs(size=len(medics))
 
             for i, medic in enumerate(medics):
                 if medic.sub_sector is not None:
-                    hospital = hospitals_in_msoa[hospitals_rnd_arr[i]]
+                    hospital = hospitals_in_super_area[hospitals_rnd_arr[i]]
                     # if (hospital.n_medics < hospital.n_medics_max):# and \
-                    hospital.add(medic, hospital.GroupType.workers)
+                    hospital.add(medic, hospital.SubgroupType.workers)

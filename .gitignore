@@ -17,3 +17,7 @@ cookie
 data.zip
 __MACOSX
 *.log
+*.hdf5
+box_results/
+build/
+dist/

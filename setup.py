@@ -18,13 +18,26 @@ with open(join(this_dir, "requirements.txt")) as f:
 setup(
         name="june",
         version="0.1.0",
-        description="The most amazing june simulation",
+        description="The most amazing covid simulation",
         url="https://github.com/idas-durham/june",
         long_description=long_description,
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
         license="MIT license",
-        packages=find_packages(exclude=("test_june", "docs")),
-        install_requires=requirements
+        install_requires=requirements,
+        packages=['june',
+                  'june.infection',
+                  'june.demography',
+                  'june.distributors',
+                  'june.groups',
+                  'june.groups.group',
+                  'june.groups.leisure',
+                  'june.groups.commute',
+                  'june.groups.travel',
+                  'june.interaction',
+                  'june.logger',
+                  'june.box',
+                  'june.hdf5_savers',
+                  'june.visualization']
 )
 

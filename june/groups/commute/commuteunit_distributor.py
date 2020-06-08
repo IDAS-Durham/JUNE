@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class CommuteUnitDistributor:
     """
@@ -17,25 +18,36 @@ class CommuteUnitDistributor:
     def distribute_people(self):
 
         for hub in self.commutehubs:
+            if len(hub.people) > 0:
+                possible_units = hub.commuteunits
+                commuting_people = hub.people
+                indices = list(range(len(commuting_people)))
+                random.shuffle(indices)
+                people_per_unit = len(commuting_people)//len(possible_units)
+                # clear units
+                for unit in possible_units:
+                    unit.no_passengers = 0
 
-            possible_units = hub.commuteunits
-            to_commute = hub.passengers
-
-            # loop over all passengers who need to commute
-            for passenger in to_commute:
-
-                # assign passengers to commute units
-                assigned = False
-                while assigned == False:
-                
-                    unit_choice = np.random.randint(len(possible_units))
-                    unit = possible_units[unit_choice]
-                    
-                    if unit.no_passengers < unit.max_passengers:
-                        unit.passengers.append(passenger)
+                for unit in possible_units:
+                    while unit.no_passengers < people_per_unit:
+                        passenger_id = indices.pop()
+                        passenger = commuting_people[passenger_id]
+                        unit.add(passenger,
+                            activity="commute",
+                            subgroup_type=unit.SubgroupType.default,
+                            dynamic=True
+                            )
                         unit.no_passengers += 1
-                        assigned = True
-                        # make this more efficient by stopping looking at things already filled
-                    else:
-                        pass
-        
+
+                while indices:
+                    passenger_id = indices.pop()
+                    passenger = commuting_people[passenger_id]
+                    unit.add(passenger,
+                            activity= "commute",
+                            subgroup_type=unit.SubgroupType.default,
+                            dynamic=True
+                            )
+                    unit.no_passengers += 1
+
+
+

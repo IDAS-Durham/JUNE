@@ -1,0 +1,177 @@
+trajectories:
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
+
+      - symptom_tag: asymptomatic
+        completion_time:
+          type: constant
+          value: 14.
+
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
+
+      - symptom_tag: influenza
+        completion_time:
+          type: constant
+          value: 20.
+
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
+
+      - symptom_tag: influenza
+        completion_time:
+          type: constant
+          value: 5.
+
+
+      - symptom_tag: pneumonia
+        completion_time:
+          type: constant
+          value: 20.
+
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
+
+      - symptom_tag: influenza
+        completion_time:
+          type: exponential
+          loc: 1
+          scale: 4.12
+
+
+      - symptom_tag: hospitalised
+        completion_time:
+          type: beta
+          a: 6.56
+          b: 61.22
+          loc: -4.0
+          scale: 273
+
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
+
+      - symptom_tag: influenza
+        completion_time:
+          type: exponential
+          loc: 1
+          scale: 4.12
+
+
+      - symptom_tag: hospitalised
+        completion_time:
+          type: constant
+          value: 2.
+
+
+      - symptom_tag: intensive_care
+        completion_time:
+          type: constant
+          value: 20.
+
+
+      - symptom_tag: hospitalised
+        completion_time:
+          type: beta
+          a: 6.56
+          b: 61.22
+          loc: -4.0
+          scale: 273
+
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.39
+          b: 25.40
+          loc: -0.0028
+          scale: 50.1 
+
+      - symptom_tag: influenza
+        completion_time:
+          type: exponential
+          loc: 1
+          scale: 4.12
+
+
+      #- symptom_tag: hospitalised
+      #  completion_time:
+      #    type: constant
+      #    value: 2.
+
+
+      - symptom_tag: intensive_care
+        completion_time:
+          type: constant
+          value: 5.
+
+
+      - symptom_tag: dead
+        completion_time:
+          type: constant
+          value: 0.

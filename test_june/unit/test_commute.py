@@ -1,17 +1,9 @@
-import os
-
 import pytest
 
 from june import commute as c
+from june import paths
 
-test_data_filename = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "..",
-    "..",
-    "data",
-    "census_data",
-    "commute.csv"
-)
+test_data_filename = paths.data_path / "census_data/commute.csv"
 
 
 class TestModeOfTransport:
@@ -152,47 +144,3 @@ class TestRegionalGenerator:
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
         assert regional_gen.weighted_random_choice() == "bus"
-
-
-class TestCommuteGenerator:
-    # def test__region_gen_from_commute_gen__via_msoarea(self):
-    #     regional_gen_0 = c.RegionalGenerator(
-    #         msoarea="test_area", weighted_modes=[(2, c.ModeOfTransport("car"))]
-    #     )
-
-    #     commute_gen = c.CommuteGenerator(regional_generators={"north": regional_gen_0})
-
-    #     regional_gen = commute_gen.regional_gen_from_msoarea(super_area="north")
-
-    #     assert regional_gen == regional_gen_0
-
-    #     regional_gen_1 = c.RegionalGenerator(
-    #         msoarea="test_area",
-    #         weighted_modes=[
-    #             (2, c.ModeOfTransport("car")),
-    #             (4, c.ModeOfTransport("bus")),
-    #             (1, c.ModeOfTransport("magic_carpet")),
-    #         ],
-    #     )
-
-    #     commute_gen = c.CommuteGenerator(
-    #         regional_generators={
-    #             "north": regional_gen_0, "south": regional_gen_1
-    #         }
-    #     )
-
-    #     regional_gen = commute_gen.regional_gen_from_msoarea(super_area="north")
-
-    #     assert regional_gen == regional_gen_0
-
-    #     regional_gen = commute_gen.regional_gen_from_msoarea(super_area="south")
-
-    #     assert regional_gen == regional_gen_1
-
-    def test__load_from_file__uses_correct_values_from_configs(self):
-        commute_gen = c.CommuteGenerator.from_file(test_data_filename)
-
-        assert isinstance(commute_gen, c.CommuteGenerator)
-
-        regional_generators = commute_gen.regional_generators
-        assert len(regional_generators) == 8802
