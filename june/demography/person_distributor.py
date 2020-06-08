@@ -5,7 +5,6 @@ import numpy as np
 from scipy import stats
 
 from june.demography import Person
-from june.logger_creation import logger
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +16,17 @@ class PersonDistributor:
     """
 
     def __init__(
-        self,
-        world,
-        people,
-        areas,
-        area,
-        msoareas,
-        compsec_by_sex_df,
-        workflow_df,
-        key_compsec_ratio_by_sex_df,
-        key_compsec_distr_by_sex_df,
-        commute_gen,
+            self,
+            world,
+            people,
+            areas,
+            area,
+            msoareas,
+            compsec_by_sex_df,
+            workflow_df,
+            key_compsec_ratio_by_sex_df,
+            key_compsec_distr_by_sex_df,
+            commute_gen,
     ):
         """
         """
@@ -288,7 +287,7 @@ class PersonDistributor:
                 sex=sex_random,
                 econ_index=0,
                 mode_of_transport=self.commute_gen.weighted_random_choice(),
-                area = self.area
+                area=self.area
             )  # self.area.regional_commute_generator.weighted_random_choice())
             # assign person to an industry TODO: implement unemployment
             if is_working_age:
