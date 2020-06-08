@@ -484,7 +484,7 @@ class Simulator:
                                 self.hospitalise_the_sick(person, previous_tag)
                         elif health_information.is_dead and not self.world.box_mode:
                                 self.bury_the_dead(person, time)
-                if self.logger and not self.light_logger:
+                if self.logger: 
                         self.logger.log_infected(
                                 self.timer.date, ids, symptoms, n_secondary_infections
                         )
@@ -529,10 +529,11 @@ class Simulator:
                                 f"Number of people active {n_people} does not match "
                                 f"the total people number {len(self.world.people.members)}"
                         )
-                self.update_health_status(self.timer.now, self.timer.duration)
+                if self.timer.previos_date.day != self.timer.day:
+                    self.update_health_status(self.timer.now, 24)
                 if self.logger:
-                        self.logger.log_infection_location(self.timer.date)
-                        self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+                    self.logger.log_infection_location(self.timer.date)
+                    self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
                 self.clear_world()
 
         def run(self, save=False):
