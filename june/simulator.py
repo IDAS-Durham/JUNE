@@ -529,8 +529,9 @@ class Simulator:
                                 f"Number of people active {n_people} does not match "
                                 f"the total people number {len(self.world.people.members)}"
                         )
-                if self.timer.previos_date.day != self.timer.day:
-                    self.update_health_status(self.timer.now, 24)
+                if self.timer.previous_date.day != self.timer.date.day:
+                    print('updating at = ', self.timer.now)
+                    self.update_health_status(self.timer.now, 1)
                 if self.logger:
                     self.logger.log_infection_location(self.timer.date)
                     self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
