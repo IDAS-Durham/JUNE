@@ -1,0 +1,27 @@
+title: Covid configuration example
+
+activity_to_groups:
+  primary_activity: ['schools', 'companies']
+  leisure: ['pubs', 'cinemas', 'groceries', 'residence_visits'] 
+  residence: ['households', 'care_homes']
+  commute: ['commuteunits', 'commutecityunits']
+
+time:
+  total_days: 30
+  step_duration: 
+      weekday:
+          0: 9
+          1: 4
+          2: 11
+      weekend:
+          0: 12
+          1: 12
+  step_activities:
+      weekday:
+          0: ['hospital', 'primary_activity', 'residence'] 
+          1: ['hospital', 'leisure', 'residence'] 
+          2: ['hospital', 'residence']
+      weekend:
+          0: ['hospital', 'leisure', 'residence']
+          1: ['hospital', 'residence']
+

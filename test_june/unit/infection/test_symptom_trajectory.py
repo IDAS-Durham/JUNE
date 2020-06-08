@@ -136,7 +136,9 @@ class TestTrajectoryMaker:
         ]
         infected = influenza_trajectory.stages[0]
         assert infected.symptoms_tag == sym.SymptomTag.exposed
-        assert infected.completion_time.value == 5.1
+        assert infected.completion_time.a == 2.39
+        assert infected.completion_time.b == 25.40
+        assert infected.completion_time.scale  == 50.1
 
         recovered = influenza_trajectory.stages[-1]
         assert recovered.symptoms_tag == sym.SymptomTag.recovered
@@ -173,16 +175,16 @@ class TestSymptomsTrajectory:
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
             (0.0, sym.SymptomTag.exposed),
-            (5.1, sym.SymptomTag.influenza),
-            (pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(12, rel=0.5), sym.SymptomTag.intensive_care),
-            (pytest.approx(30, rel=0.5), sym.SymptomTag.dead)
+            (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
+            #(pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
+            (pytest.approx(8, rel=0.5), sym.SymptomTag.intensive_care),
+            (pytest.approx(15, rel=0.5), sym.SymptomTag.dead)
         ]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
             (0.0, sym.SymptomTag.exposed),
-            (5.1, sym.SymptomTag.influenza),
+            (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
             (pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
             (pytest.approx(12, rel=0.5), sym.SymptomTag.intensive_care),
             (pytest.approx(30, rel=0.5), sym.SymptomTag.hospitalised),
@@ -200,7 +202,7 @@ class TestSymptomsTrajectory:
         infection.symptoms.trajectory = selector.trajectory_maker[max_tag]
         assert infection.symptoms.trajectory == [
             (0.0, sym.SymptomTag.exposed),
-            (5.1, sym.SymptomTag.influenza),
+            (pytest.approx(5, 2.5), sym.SymptomTag.influenza),
             (pytest.approx(20, rel=5), sym.SymptomTag.hospitalised),
             (pytest.approx(30, rel=5), sym.SymptomTag.recovered)
         ]
@@ -208,7 +210,7 @@ class TestSymptomsTrajectory:
 
         infection.update_at_time(float(1.))
         assert infection.symptoms.tag == sym.SymptomTag.exposed
-        infection.update_at_time(float(5.))
+        infection.update_at_time(float(1.))
         assert infection.symptoms.tag == sym.SymptomTag.exposed
         infection.update_at_time(float(6.))
         assert infection.symptoms.tag == sym.SymptomTag.influenza
