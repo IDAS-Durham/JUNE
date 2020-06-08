@@ -41,7 +41,7 @@ class Policies:
                 closed_groups.append(policy.group)
         return closed_groups
 
-    def social_distancing_policy(self, interaction, time):
+    def social_distancing_policy(self, alpha, betas, time):
         '''
         Implement social distancing policy
         
@@ -62,23 +62,21 @@ class Policies:
         '''
         #TODO: should probably leave alpha value for households untouched!
 
-        if self.social_distancing_start < time < self.social_distancing_end:
-            alpha = interaction.alpha_physical
-            betas = interaction.beta
+        betas_new = betas.copy()
+        
+        if self.config_file is not None:
+            alpha_new = alpha/2
+        else:
+            alpha_new = alpha / self.config_file['social distancing']['alpha factor']
 
-            if self.config_file is not None:
-                alpha /= 2
-            else:
-                alpha /= self.config_file['social distancing']['alpha factor']
+        for group in betas.keys():
+            if group != 'household': 
+                if not self.config_file:
+                    betas_new[group] = betas_new[group] / 2
+                else:
+                    betas_new[group] = betas_new[group]/ self.config_file['social distancing']['beta factor']
 
-            for group in betas.keys():
-                if group != 'household': 
-                    if not self.config_file:
-                        betas[group] /= 2
-                    else:
-                        betas[group] /= self.config_file['social distancing']['beta factor']
-
-        return interaction
+        return alpha_alpha, betas_new
 
 
 class Closure(Policy):
