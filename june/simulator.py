@@ -132,6 +132,7 @@ class Simulator:
         selector: "InfectionSelector",
         seed: "Seed" = None,
         config_filename: str = default_config_filename,
+        policies: list = [],
         save_path: str = "results",
     ) -> "Simulator":
 
@@ -160,6 +161,7 @@ class Simulator:
             selector,
             activity_to_groups,
             time_config,
+            policies = policies,
             seed=seed,
             save_path=save_path,
         )
