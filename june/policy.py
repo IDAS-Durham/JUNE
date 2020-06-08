@@ -6,6 +6,11 @@
 
 # Simulator(policies)
 
+from june import paths
+import yaml
+
+default_config_filename = paths.configs_path / "defaults/policy.yaml"
+
 class Policy:
     def __init__(self, policy, start_time, end_time):
         self.name = policy
@@ -14,8 +19,8 @@ class Policy:
 
 class Policies:
 
-    def __init__(self, policies = [], config_file=None):
-        self.config_file = config_file
+    def __init__(self, policies = [], config=None):
+        self.config = config
         self.policies = policies
         self.full_closure_policies = 1# filter out closure ones
         self.partial_closure_policies = 1# filter out closure ones
@@ -26,6 +31,18 @@ class Policies:
                 self.social_distancing = True
                 self.social_distancing_start = policy.start_time
                 self.social_distancing_end = policy.end_time
+
+    @classmethod
+    def from_file(
+            cls,
+            policies: list = [],
+            config_file = default_config_filename,
+    ):
+
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+            
+        return Policies(policies, config)
         
     def get_fully_closed_groups(self, time):
         closed_groups = []
@@ -65,17 +82,17 @@ class Policies:
         betas_new = betas.copy()
         
         
-        if self.config_file is None:
+        if self.config is None:
             alpha_new = alpha/2
         else:
-            alpha_new = alpha / self.config_file['social distancing']['alpha factor']
+            alpha_new = alpha / self.config['social distancing']['alpha factor']
 
         for group in betas.keys():
             if group != 'household': 
                 if self.config_file is None:
                     betas_new[group] = betas_new[group] / 2
                 else:
-                    betas_new[group] = betas_new[group]/ self.config_file['social distancing']['beta factor']
+                    betas_new[group] = betas_new[group]/ self.config['social distancing']['beta factor']
 
         return alpha_new, betas_new
 
