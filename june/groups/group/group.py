@@ -1,9 +1,11 @@
 import logging
 import re
+import functools
+import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
-from typing import Set
+from typing import List
 
 from june.demography.person import Person
 from june.exc import GroupException
@@ -13,7 +15,8 @@ from .subgroup import Subgroup
 logger = logging.getLogger(__name__)
 
 
-class Group(AbstractGroup):
+# class Group(AbstractGroup):
+class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
     all people in the group, the healthy ones and the infected ones (we may
@@ -35,43 +38,16 @@ class Group(AbstractGroup):
     default intensities (maybe mean+width with a pre-described range?).
     """
 
-    allowed_groups = [
-        "area",
-        "box",
-        "boundary",
-        "carehome",
-        "commute_Public",
-        "commute_Private",
-        "cemetery",
-        "company",
-        "household",
-        "hospital",
-        "leisure_Outdoor",
-        "leisure_Indoor",
-        "mock_group",
-        "pub",
-        "random",
-        "test_group",
-        "referenceGroup",
-        "shopping",
-        "school",
-        "super_area",
-        "testGroup",
-        "work_Outdoor",
-        "work_Indoor",
-    ]
-
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         """
         Defines the indices of subgroups within the subgroups array
         """
+
         default = 0
 
-    __slots__ = "id", "spec", "subgroups"
+    __slots__ = ("id", "subgroups", "spec", "size", "contact_matrices")
 
-    __id_generators = defaultdict(
-        count
-    )
+    __id_generators = defaultdict(count)
 
     @classmethod
     def _next_id(cls) -> int:
@@ -79,9 +55,7 @@ class Group(AbstractGroup):
         Iterate an id for this class. Each group class has its own id iterator
         starting at 0
         """
-        return next(
-            cls.__id_generators[cls]
-        )
+        return next(cls.__id_generators[cls])
 
     def __init__(self):
         """
@@ -90,26 +64,15 @@ class Group(AbstractGroup):
         If a spec attribute is not defined in the child class then it is generated
         by converting the class name into snakecase.
         """
-        if not hasattr(
-                self,
-                "spec"
-        ):
-            self.spec = re.sub(
-                r'(?<!^)(?=[A-Z])', '_',
-                self.__class__.__name__
-            ).lower()
-        if self.spec not in self.allowed_groups:
-            raise GroupException(f"{self.spec} is not an allowed group type")
-
         self.id = self._next_id()
+        self.spec = self.get_spec()
+        self.size = 0
         # noinspection PyTypeChecker
-        self.subgroups = [
-            Subgroup()
-            for _
-            in range(len(
-                self.GroupType
-            ))
-        ]
+        self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
+        self.contact_matrices = {
+            "contacts": np.array([[1]]),
+            "proportion_physical": np.array([[0]]),
+        }
 
     @property
     def name(self) -> str:
@@ -118,6 +81,12 @@ class Group(AbstractGroup):
         the name fo the class with the id of the instance.
         """
         return f"{self.__class__.__name__}_{self.id:05d}"
+
+    def get_spec(self) -> str:
+        """
+        Returns the speciailization of the group.
+        """
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
 
     def remove_person(self, person: Person):
         """
@@ -133,16 +102,18 @@ class Group(AbstractGroup):
             if person in grouping:
                 grouping.remove(person)
 
-    def __getitem__(self, item: GroupType) -> "Subgroup":
+    def __getitem__(self, item: SubgroupType) -> "Subgroup":
         """
         A subgroup with a given index
         """
         return self.subgroups[item]
 
     def add(
-            self,
-            person: Person,
-            qualifier=GroupType.default
+        self,
+        person: Person,
+        activity: str,
+        subgroup_type: SubgroupType,
+        dynamic: bool = False,
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -152,25 +123,20 @@ class Group(AbstractGroup):
         ----------
         person
             A person
-        qualifier
-            An enumerated so the student can be added to a given group
+        group_type
+            
         """
-        self[qualifier].append(person)
-        person.groups.append(self)
-
-    def set_active_members(self):
-        for person in self.people:
-            if person.active_group is None:
-                person.active_group = self.spec
+        if not dynamic:
+            self[subgroup_type].append(person)
+        if activity is not None:
+            setattr(person.subgroups, activity, self[subgroup_type])
 
     @property
-    def people(self) -> Set[Person]:
+    def people(self) -> List[Person]:
         """
         All the people in this group
         """
-        return self._collate_from_subgroups(
-            "people"
-        )
+        return self._collate_from_subgroups("people")
 
     @property
     def contains_people(self) -> bool:
@@ -184,10 +150,7 @@ class Group(AbstractGroup):
 
         return False
 
-    def _collate_from_subgroups(
-            self,
-            attribute: str
-    ) -> Set[Person]:
+    def _collate_from_subgroups(self, attribute: str) -> List[Person]:
         """
         Return a set of all of the people in the subgroups with a particular health status
 
@@ -200,55 +163,48 @@ class Group(AbstractGroup):
         -------
         The union of all the sets with the given attribute name in all of the sub groups.
         """
-        collection = set()
+        collection = list()
         for grouping in self.subgroups:
-            collection.update(
-                getattr(grouping, attribute)
-            )
+            collection.extend(getattr(grouping, attribute))
         return collection
 
     @property
     def susceptible(self):
-        return self._collate_from_subgroups(
-            "susceptible"
-        )
+        return self._collate_from_subgroups("susceptible")
 
     @property
     def infected(self):
-        return self._collate_from_subgroups(
-            "infected"
-        )
+        return self._collate_from_subgroups("infected")
 
     @property
     def recovered(self):
-        return self._collate_from_subgroups(
-            "recovered"
-        )
+        return self._collate_from_subgroups("recovered")
 
     @property
     def in_hospital(self):
-        return self._collate_from_subgroups(
-            "in_hospital"
-        )
+        return self._collate_from_subgroups("in_hospital")
 
     @property
     def dead(self):
-        return self._collate_from_subgroups(
-            "dead"
-        )
+        return self._collate_from_subgroups("dead")
 
     @property
     def must_timestep(self):
-        return (self.size > 1 and
-                self.size_infected > 0 and
-                self.size_susceptible > 0)
+        return self.size > 1 and self.size_infected > 0 and self.size_susceptible > 0
 
     @property
-    def size_active(self):
-        n_active = 0
-        for person in self.people:
-            if person.active_group == self.spec:
-                n_active += 1
-        return n_active
+    def size_infected(self):
+        return np.sum([subgroup.size_infected for subgroup in self.subgroups])
 
+    @property
+    def size_recovered(self):
+        return np.sum([subgroup.size_recovered for subgroup in self.subgroups])
 
+    @property
+    def size_susceptible(self):
+        return np.sum([subgroup.size_susceptible for subgroup in self.subgroups])
+
+    def clear(self):
+        for subgroup in self.subgroups:
+            subgroup.clear()
+        self.size = 0

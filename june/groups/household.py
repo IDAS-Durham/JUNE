@@ -1,11 +1,15 @@
 from enum import IntEnum
 
+
 import numpy as np
 import random
+import h5py
+import time
 
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
+from recordclass import dataobject
 
 
 class Household(Group):
@@ -19,57 +23,53 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = "area", "household_composition", "communal", "max_size"
+    __slots__ = ("area", "type", "max_size", "n_residents", "residents", "relatives")
 
-    class GroupType(IntEnum):
+    class SubgroupType(IntEnum):
         kids = 0
         young_adults = 1
         adults = 2
         old_adults = 3
 
-    def __init__(self, composition=None, communal=False, area=None, max_size=np.inf):
+    def __init__(self, type=None, area=None, max_size=np.inf):
+        """
+        Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
+        Relatives is a list of people that are related to the family living in the household
+        """
         super().__init__()
         self.area = area
-        self.household_composition = composition
-        self.communal = communal
+        self.type = type
+        self.residents = tuple()
         self.max_size = max_size
-        self.must_supervise_age = 14
-        self.stay_at_home_complacency = 0.95
+        self.n_residents = 0
+        self.relatives = None
 
-    def add(self, person, qualifier=GroupType.adults):
-        super().add(person, qualifier)
-        person.household = self
+    def add(self, person, subgroup_type=SubgroupType.adults):
+        self[subgroup_type].append(person)
+        self.residents = tuple((*self.residents, person))
+        person.subgroups.residence = self[subgroup_type]
 
-    def select_random_parent(self):
-        parents = [
-            person
-            for person in self.people
-            if person not in list(self.subgroups[self.GroupType.kids].people)
-        ]
-        return random.choice(parents)
+    @property
+    def kids(self):
+        return self.subgroups[self.SubgroupType.kids]
 
-    def set_active_members(self):
-        for person in self.people:
-            if person.active_group is None:
-                if person.health_information.dead:
-                    continue
-                person.active_group = "household"
-            elif person.health_information.must_stay_at_home:
-                if person.age <= self.must_supervise_age:
-                    person.active_group = "household"
-                    random_parent = self.select_random_parent()
-                    random_parent.active_group = "household"
-                else:
-                    if random.random() <= self.stay_at_home_complacency:
-                        person.active_group = "household"
+    @property
+    def young_adults(self):
+        return self.subgroups[self.SubgroupType.young_adults]
+
+    @property
+    def adults(self):
+        return self.subgroups[self.SubgroupType.adults]
+
+    @property
+    def old_adults(self):
+        return self.subgroups[self.SubgroupType.old_adults]
 
 
 class Households(Supergroup):
     """
     Contains all households for the given area, and information about them.
     """
-
-    __slots__ = "members"
 
     def __init__(self, households: List[Household]):
         super().__init__()
@@ -87,3 +87,4 @@ class Households(Supergroup):
         """
         self.members += households.members
         return self
+

@@ -1,23 +1,18 @@
-import os
-import csv
-from pathlib import Path
-from random import randint
 from typing import List, Dict, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import h5py
+import time
 
-from june.geography import Geography, Area
+from june import paths
 from june.demography import Person
+from june.demography.geography import Geography
 
-default_data_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/census_data/output_area/EnglandWales"
-)
+default_data_path = paths.data_path / "input/demography"
 
 default_areas_map_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent
-    / "data/processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
 
@@ -26,17 +21,38 @@ class DemographyError(BaseException):
 
 
 class AgeSexGenerator:
-    def __init__(self, age_counts: list, sex_bins: list, female_fractions: list, max_age=99):
+    def __init__(
+        self,
+        age_counts: list,
+        sex_bins: list,
+        female_fractions: list,
+        ethnicity_age_bins: list,
+        ethnicity_groups: list,
+        ethnicity_structure: list,
+        socioecon_index_value: int,
+        max_age=99,
+    ):
         """
         age_counts is an array where the index in the array indicates the age,
         and the value indicates the number of counts in that age.
         sex_bins are the lower edges of each sex bin where we have a fraction of females from
         census data, and female_fractions are those fractions.
+        ethnicity_age_bins are the lower edges of the age bins that ethnicity data is in
+        ethnicity_groups are the labels of the ethnicities which we have data for.
+        ethnicity_structure are (integer) ratios of the ethnicities, for each age bin. the sum
+        of this strucutre need NOT be the total number of people returned by the generator.
         Example:
             age_counts = [1, 2, 3] means 1 person of age 0, 2 people of age 1 and 3 people of age 2.
             sex_bins = [1, 3] defines two bins: (0,1) and (3, infinity)
             female_fractions = [0.3, 0.5] means that between the ages 0 and 1 there are 30% females,
                                           and there are 50% females in the bin 3+ years
+            ethnicity_age_bins - see sex_bins
+            ethnicity_groups = ['A','B','C'] - there are three types of ethnicities that we are
+                                          assigning here.
+            ethnicity_structure = [[0,5,3],[2,3,0],...] in the first age bin, we assign people
+                                          ethnicities A:B:C with probability 0:5:3, and so on.
+            socioecon_index = 6 means this area belongs to the 6th decile in the index
+                                of multiple deprivation.
         Given this information we initialize two generators for age and sex, that can be accessed
         through gen = AgeSexGenerator().age() and AgeSexGenerator().sex().
 
@@ -56,8 +72,22 @@ class AgeSexGenerator:
             < np.array(female_fractions)[female_fraction_bins]
         ).astype(int)
         sexes = map(lambda x: ["m", "f"][x], sexes)
+
+        ethnicity_age_counts, _ = np.histogram(
+            ages, bins=list(map(int, ethnicity_age_bins)) + [100]
+        )
+        ethnicities = list()
+        for age_ind, age_count in enumerate(ethnicity_age_counts):
+            ethnicities.extend(
+                np.random.choice(
+                    np.repeat(ethnicity_groups, ethnicity_structure[age_ind]), age_count
+                )
+            )
+
         self.age_iterator = iter(ages)
         self.sex_iterator = iter(sexes)
+        self.ethnicity_iterator = iter(ethnicities)
+        self.socioecon_index_value = socioecon_index_value
         self.max_age = max_age
 
     def age(self) -> int:
@@ -72,9 +102,18 @@ class AgeSexGenerator:
         except StopIteration:
             raise DemographyError("No more people living here!")
 
+    def ethnicity(self) -> str:
+        try:
+            return next(self.ethnicity_iterator)
+        except StopIteration:
+            raise DemographyError("No more people living here!")
+
+    def socioecon_index(self) -> int:
+        return self.socioecon_index_value
+
 
 class Population:
-    def __init__(self, people: List[Person]):
+    def __init__(self, people: Optional[List[Person]] = None):
         """
         A population of people.
 
@@ -85,13 +124,19 @@ class Population:
         people
             A list of people generated to match census data for that area
         """
-        self.people = people
+        self.people = people or list()
 
     def __len__(self):
         return len(self.people)
 
     def __iter__(self):
         return iter(self.people)
+
+    def __getitem__(self, index):
+        return self.people[index]
+
+    def extend(self, people):
+        self.people.extend(people)
 
     @property
     def members(self):
@@ -101,41 +146,23 @@ class Population:
     def total_people(self):
         return len(self.members)
 
-
     @property
     def infected(self):
-        return [
-            person for person in self.people
-            if person.health_information.infected and not 
-                    person.health_information.dead
-            
-        ]
+        return [person for person in self.people if person.infected]
 
     @property
     def susceptible(self):
         return [
-            person for person in self.people
-            if person.health_information.susceptible 
-            
+            person for person in self.people if person.susceptible
         ]
 
     @property
     def recovered(self):
-        return [
-            person for person in self.people
-            if person.health_information.recovered
-            
-        ]
+        return [person for person in self.people if person.recovered]
 
 
 class Demography:
-    def __init__(
-        self,
-        area_names,
-        age_sex_generators: Dict[str, AgeSexGenerator],
-        ethnicity_generators: Dict[str, "EthnicityGenerator"] = None,
-        economic_index_generators: Dict[str, "EconomicIndexGenerator"] = None,
-    ):
+    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator]):
         """
         Tool to generate population for a certain geographical regin.
 
@@ -144,60 +171,42 @@ class Demography:
         age_sex_generators
             A dictionary mapping area identifiers to functions that generate
             age and sex for individuals.
-        ethnicity_generators
-            A dictionary mapping area identifiers to functions that allocate
-            individuals to ethnic groups.
-       economic_index_generators: 
-            A dictionary mapping area identifiers to functions that allocate
-            individuals to socioeconomic classes.
         """
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
-        # not implemented yet:
-        self.ethnicity_generators = ethnicity_generators
-        self.economic_index_generators = economic_index_generators
 
-
-    def populate(
-            self,
-            areas: Optional[List[Area]] = None,
-    ) -> Population:
+    def populate(self, area_name: str,) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
 
         Parameters
         ----------
-        areas
-            List of areas for which to create populations.
-            default: all areas for which demographic generator was created
+        area_name
+            The name of an area a population should be generated for
 
         Returns
         -------
         A population of people
         """
         people = list()
-        for area in areas:
-            # TODO: this could be make faster with map()
-            age_and_sex_generator = self.age_sex_generators[area.name]
-            for _ in range(age_and_sex_generator.n_residents):
-                person = Person(
-                    age=age_and_sex_generator.age(),
-                    sex=age_and_sex_generator.sex(),
-                    # TODO ethnicity_generators.ethnicity()
-                    # TODO socioeconomic_generators.socioeconomic_index()
-                )
-                people.append(person)   # add person to population
-                area.add(person)        # link area <-> person
+        age_and_sex_generator = self.age_sex_generators[area_name]
+        for _ in range(age_and_sex_generator.n_residents):
+            person = Person.from_attributes(
+                age=age_and_sex_generator.age(),
+                sex=age_and_sex_generator.sex(),
+                ethnicity=age_and_sex_generator.ethnicity(),
+                socioecon_index=age_and_sex_generator.socioecon_index(),
+            )
+            people.append(person)  # add person to population
         return Population(people=people)
-
 
     @classmethod
     def for_geography(
-            cls,
-            geography: Geography,
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
+        cls,
+        geography: Geography,
+        data_path: str = default_data_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Initializes demography from an existing geography.
@@ -207,19 +216,18 @@ class Demography:
         geography
             an instance of the geography class
         """
-        area_names = [area.name for area in geography.areas]
-        if len(area_names) == 0:
+        if len(geography.areas) == 0:
             raise DemographyError("Empty geography!")
+        area_names = [area.name for area in geography.areas]
         return cls.for_areas(area_names, data_path, config)
-    
 
     @classmethod
     def for_zone(
-            cls,
-            filter_key: Dict[str, list],
-            data_path: str = default_data_path,
-            areas_maps_path: str = default_areas_map_path,
-            config: Optional[dict] = None,
+        cls,
+        filter_key: Dict[str, list],
+        data_path: str = default_data_path,
+        areas_maps_path: str = default_areas_map_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Initializes a geography for a specific list of zones. The zones are
@@ -229,24 +237,23 @@ class Demography:
         Example
         -------
             filter_key = {"region" : "North East"}
-            filter_key = {"msoa" : ["EXXXX", "EYYYY"]}
+            filter_key = {"super_area" : ["EXXXX", "EYYYY"]}
         """
         if len(filter_key.keys()) > 1:
             raise NotImplementedError("Only one type of area filtering is supported.")
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
-        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["oa"]
+        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["area"]
         if len(area_names) == 0:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)
-   
 
     @classmethod
     def for_areas(
-                cls,
-            area_names: List[str],
-            data_path: str = default_data_path,
-            config: Optional[dict] = None,
+        cls,
+        area_names: List[str],
+        data_path: str = default_data_path,
+        config: Optional[dict] = None,
     ) -> "Demography":
         """
         Load data from files and construct classes capable of generating demographic
@@ -269,27 +276,77 @@ class Demography:
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
+        ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
+        socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
         age_sex_generators = _load_age_and_sex_generators(
-            age_structure_path, female_fraction_path, area_names
+            age_structure_path,
+            female_fraction_path,
+            ethnicity_structure_path,
+            socioecon_structure_path,
+            area_names,
         )
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
 
 
 def _load_age_and_sex_generators(
-    age_structure_path: str, female_ratios_path: str, area_names: List[str]
-):
+    age_structure_path: str,
+    female_ratios_path: str,
+    ethnicity_structure_path: str,
+    socioecon_structure_path: str,
+    area_names: List[str],
+)-> Dict[str, AgeSexGenerator]:
     """
-    A dictionary mapping area identifiers to a generator of age and sex.
+    A dictionary mapping area identifiers to a generator of age, sex, ethnicity,
+    and socio-economic index.
+
+    Returns
+    -------
+    ethnicity_structure_path
+        File containing ethnicity nr. per Area.
+        This approach chosen based on:
+        Davis, J. A., & Smith, T. W. (1999); Chicago: National Opinion Research Center
     """
     age_structure_df = pd.read_csv(age_structure_path, index_col=0)
     age_structure_df = age_structure_df.loc[area_names]
+    age_structure_df.sort_index(inplace=True)
+
     female_ratios_df = pd.read_csv(female_ratios_path, index_col=0)
     female_ratios_df = female_ratios_df.loc[area_names]
+    female_ratios_df.sort_index(inplace=True)
+
+    ethnicity_structure_df = pd.read_csv(
+        ethnicity_structure_path, index_col=[0, 1]
+    )  # pd MultiIndex!!!
+    ethnicity_structure_df = ethnicity_structure_df.loc[pd.IndexSlice[area_names]]
+    ethnicity_structure_df.sort_index(level=0, inplace=True)
+    ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
+    ## it preserves original order, and ignoring "repeat slices".
+
+    socioecon_structure_df = pd.read_csv(socioecon_structure_path, index_col=0)
+    socioecon_structure_df = socioecon_structure_df.loc[area_names]
+    socioecon_structure_df.sort_index(inplace=True)
+
     ret = {}
-    for (_, age_structre), (index, female_ratios) in zip(
-        age_structure_df.iterrows(), female_ratios_df.iterrows()
+    for (
+        (_, age_structure),
+        (index, female_ratios),
+        (_, ethnicity_df),
+        socioecon_index,
+    ) in zip(
+        age_structure_df.iterrows(),
+        female_ratios_df.iterrows(),
+        ethnicity_structure_df.groupby(level=0),
+        socioecon_structure_df["iomd_decile"],
     ):
+        ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(
-            age_structre.values, female_ratios.index.values, female_ratios.values
+            age_structure.values,
+            female_ratios.index.values,
+            female_ratios.values,
+            ethnicity_df.columns,
+            ethnicity_df.index.get_level_values(1),
+            ethnicity_structure,
+            socioecon_index,
         )
+
     return ret

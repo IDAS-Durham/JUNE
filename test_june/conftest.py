@@ -1,12 +1,7 @@
 from glob import glob
 from os import remove
-from pathlib import Path
 
 import pytest
-
-directory = Path(
-    __file__
-).parent
 
 
 @pytest.fixture(
