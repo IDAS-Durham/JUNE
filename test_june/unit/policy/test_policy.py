@@ -3,6 +3,7 @@ import random
 from pathlib import Path
 from june import paths
 from datetime import datetime
+import copy
 
 from june.demography.geography import Geography
 from june.demography import Demography
@@ -70,7 +71,7 @@ def test__social_distancing(world, selector, interaction):
     sim = Simulator.from_file(
         world, interaction, selector, policies, config_filename=test_config
     )
-    initial_betas = sim.interaction.betas.copy()
+    initial_betas = copy.deepcopy(sim.interaction.beta)
     for day in sim.timer:
         if day > sim.timer.total_days:
             break
