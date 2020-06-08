@@ -1,109 +1,96 @@
 from june.demography.person import Person
 from .abstract import AbstractGroup
-from typing import Set
+from typing import Set, List
+from itertools import chain
 
 
-class Subgroup(AbstractGroup):
-    __slots__ = "_people", "_susceptible", "_infected", "_recovered", "_in_hospital", "_dead"
+class Subgroup:
+    __slots__ = (
+        "group",
+        "subgroup_type",
+        "people",
+        "size",
+        "size_infected",
+        "size_recovered",
+        "size_susceptible",
+        "infected",
+        "susceptible",
+        "recovered",
+    )
 
-    def __init__(self):
+    def __init__(self, group, subgroup_type: int):
         """
         A group within a group. For example, children in a household.
         """
-        self._people = set()
-        self._susceptible = set()
-        self._infected = set()
-        self._recovered = set()
-        self._in_hospital = set()
-        self._dead = set()
+        self.group = group
+        self.subgroup_type = subgroup_type
+        self.infected = []
+        self.susceptible = []
+        self.recovered = []
+        self.people = []
+        self.size_infected = 0
+        self.size_recovered = 0
+        self.size_susceptible = 0
+        self.size = 0
 
-    def _collate(
-            self,
-            attribute: str
-        ) -> Set[Person]:
-        collection = set()
+    def _collate(self, attribute: str) -> List[Person]:
+        collection = list()
         for person in self.people:
-            if getattr(person.health_information, attribute):
-                collection.add(
-                    person
-                    )
+            if getattr(person, attribute):
+                collection.append(person)
         return collection
-
-    def _collate_active(
-            self, 
-            set_of_people,
-            active_group
-            ):
-        collection = set()
-        for person in set_of_people:
-            if person.active_group == active_group:
-                collection.add(
-                    person
-                    )
-        return collection
-
-
-    @property
-    def susceptible(self):
-        return self._collate('susceptible')
-
-    def susceptible_active(self, active_group):
-        return self._collate_active(self.susceptible, active_group)
-
-    @property
-    def infected(self):
-        return self._collate('infected')
-
-    def infected_active(self, active_group):
-        return self._collate_active(self.infected, active_group)
-
-    @property
-    def recovered(self):
-        return self._collate('recovered')
-
-    def infected_recovered(self, active_group):
-        return self._collate_active(self.recovered, active_group)
-
-
-    @property
-    def in_hospital(self):
-        return self._in_hospital
 
     @property
     def dead(self):
-        return self._dead
-
-    def __contains__(self, item):
-        return item in self._people
-
-    def __iter__(self):
-        return iter(self._people)
-
-    def clear(self):
-        self._people = set()
+        return self._collate("dead")
 
     @property
-    def people(self):
-        return self._people
+    def in_hospital(self):
+        return self._collate("in_hospital")
+
+    def __contains__(self, item):
+        return item in self.people
+
+    def __iter__(self):
+        return iter(self.people)
+
+    def __len__(self):
+        return len(self.people)
+
+    def clear(self):
+        self.recovered = []
+        self.size_recovered = 0
+        self.susceptible = []
+        self.size_susceptible = 0
+        self.infected = []
+        self.size_infected = 0
+        self.people = []
+        self.size = 0
 
     @property
     def contains_people(self) -> bool:
         """
         Whether or not the group contains people.
         """
-        return len(self._people) > 0
+        return len(self.people) > 0
 
     def append(self, person: Person):
         """
         Add a person to this group
         """
-        self._people.add(person)
-
-    def remove(self, person: Person):
-        """
-        Remove a person from this group
-        """
-        self._people.remove(person)
+        if person.infected:
+            self.infected.append(person)
+            self.size_infected += 1
+        elif person.susceptible:
+            self.susceptible.append(person)
+            self.size_susceptible += 1
+        else:
+            self.recovered.append(person)
+            self.size_recovered += 1
+        self.size += 1
+        self.people.append(person)
+        self.group.size += 1
+        person.busy = True
 
     def __getitem__(self, item):
-        return list(self._people)[item]
+        return list(self.people)[item]

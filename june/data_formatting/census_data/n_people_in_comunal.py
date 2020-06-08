@@ -1,17 +1,9 @@
 import pandas as pd
-import numpy as np
-from pathlib import Path
-import os
 
-raw_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/census_data/output_area/"
-)
-processed_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/census_data/output_area/"
-)
+from june import paths
 
+raw_path = f"{paths.data_path}/census_data/output_area/"
+processed_path = f"{paths.data_path}/processed/census_data/output_area/"
 
 comunal = pd.read_csv(raw_path / "communal_people.csv")
 
@@ -21,9 +13,8 @@ carehome_df = comunal[[col for col in comunal.columns if "Care home" in col]]
 carehome_df = carehome_df.sum(axis=1)
 comunal = all_comunal_df[all_comunal_df.columns[0]] - carehome_df
 
-
 assert (
-    comunal.sum() + carehome_df.sum() == all_comunal_df[all_comunal_df.columns[0]].sum()
+        comunal.sum() + carehome_df.sum() == all_comunal_df[all_comunal_df.columns[0]].sum()
 )
 
 # comunal = comunal.rename(
