@@ -12,7 +12,7 @@ from june.groups import CareHome
 logger = logging.getLogger(__name__)
 
 default_data_path = (
-    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
+    paths.data_path / "input/care_homes/care_homes_ew.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 

@@ -12,7 +12,7 @@ def area_name():
 
 @pytest.fixture(name="geography_demography_test", scope="module")
 def create_geography():
-    return Geography.from_file(filter_key={"msoa": ["E02004935"]})
+    return Geography.from_file(filter_key={"super_area": ["E02004935"]})
 
 
 def test__age_sex_generator():
@@ -81,7 +81,7 @@ def test__age_sex_generator():
 
 class TestDemography:
     def test__demography_for_areas(self):
-        geography = Geography.from_file({"oa": ["E00088544"]})
+        geography = Geography.from_file({"area": ["E00088544"]})
         area = list(geography.areas)[0]
         demography = d.Demography.for_areas(area_names=[area.name])
         area.populate(demography)
@@ -113,7 +113,7 @@ class TestDemography:
         assert max(people_ages_dict.keys()) == 90
 
     def test__demography_for_super_areas(self):
-        demography = d.Demography.for_zone(filter_key={"msoa": ["E02004935"]})
+        demography = d.Demography.for_zone(filter_key={"super_area": ["E02004935"]})
         assert len(demography.age_sex_generators) == 26
 
     def test__demography_for_geography(self, geography_demography_test):

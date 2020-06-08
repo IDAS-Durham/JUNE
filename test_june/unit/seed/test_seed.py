@@ -30,7 +30,7 @@ REGION_LIST = (len(SUPER_AREA_LIST) - 1) * ["East of England"] + ["Yorkshire"]
 @pytest.fixture(name="geography")
 def get_geography():
 
-    geography = Geography.from_file(filter_key={"msoa": SUPER_AREA_LIST})
+    geography = Geography.from_file(filter_key={"super_area": SUPER_AREA_LIST})
     return geography
 
 
@@ -53,7 +53,7 @@ def create_selector():
 @pytest.fixture(name="seed")
 def get_seed(geography, selector, demography):
     super_area_to_region = pd.DataFrame(
-        {"msoa": SUPER_AREA_LIST, "region": REGION_LIST}
+        {"super_area": SUPER_AREA_LIST, "region": REGION_LIST}
     )
     return Seed(geography.super_areas, selector, None, super_area_to_region)
 
@@ -91,7 +91,7 @@ def test__n_infected_total(seed):
 
 def test__n_infected_total_region_seeds_only_once_per_day(selector,):
     geography = Geography.from_file(
-        filter_key={"msoa": ["E02004940", "E02004935", "E02004936",]}
+        filter_key={"super_area": ["E02004940", "E02004935", "E02004936",]}
     )
     demography = Demography.for_geography(geography)
     for area in geography.areas:
