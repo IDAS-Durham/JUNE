@@ -8,7 +8,7 @@ from june.demography import geography as g
 @pytest.fixture()
 def geography_example():
     return g.Geography.from_file(
-        filter_key={"msoa": ["E02000140"]}
+        filter_key={"super_area": ["E02000140"]}
     )
 
 
@@ -37,12 +37,12 @@ def test__super_area_attributes(geography_example):
     assert "E00003595" in [area.name for area in super_area.areas]
 
 def test__create_single_area():
-    geography = g.Geography.from_file(filter_key={"oa" : ["E00120481"]})
+    geography = g.Geography.from_file(filter_key={"area" : ["E00120481"]})
     assert len(geography.areas) == 1
 
 def test_create_ball_tree_for_super_areas():
     geo = g.Geography.from_file(
-        filter_key={"msoa": ["E02004935", "E02000140"]}
+        filter_key={"super_area": ["E02004935", "E02000140"]}
     )
     super_area = geo.super_areas.get_closest_super_areas(coordinates = [51.752179, -0.334667 ])[0]
     assert super_area.name == "E02004935"

@@ -13,7 +13,7 @@ def super_area_name():
 
 @pytest.fixture(name="geography_commute", scope="module")
 def create_geography(super_area_companies):
-    return Geography.from_file(filter_key={"msoa" : [super_area_commute]})
+    return Geography.from_file(filter_key={"super_area" : [super_area_commute]})
 
 @pytest.fixture(name="person")
 def create_person():
@@ -84,7 +84,7 @@ class TestNewcastle:
     @pytest.fixture(name="geography_commute_nc")
     def create_geography_nc(self, super_area_commute_nc):
         geography = Geography.from_file(
-            {"msoa": super_area_commute_nc}
+            {"super_area": super_area_commute_nc}
         )
         return geography
 

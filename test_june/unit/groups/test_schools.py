@@ -7,28 +7,9 @@ from june.demography.geography import Geography
 from june.demography import Person
 from june.groups import School, Schools
 
-default_data_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/school_data/england_schools_data.csv"
-)
-default_areas_map_path = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "data/processed/geographical_data/oa_msoa_region.csv"
-)
-default_config_filename = (
-    Path(os.path.abspath(__file__)).parent.parent.parent.parent
-    / "configs/defaults/groups/schools.yaml"
-)
-
-default_config = {
-    "age_range": (0, 19),
-    "employee_per_clients": {"primary": 30, "secondary": 30},
-}
-
-
 @pytest.fixture(name="geo_schools", scope="module")
 def area_name():
-    geography = Geography.from_file(filter_key={"msoa": ["E02004935"]})
+    geography = Geography.from_file(filter_key={"super_area": ["E02004935"]})
     return geography
 
 
@@ -61,8 +42,6 @@ class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
         schools = Schools.from_file(
             areas = geo_schools.areas,
-            data_file=default_data_filename,
-            config_file=default_config_filename,
         )
 
     def test_creating_schools_for_areas(self, geo_schools):

@@ -12,7 +12,7 @@ from june import paths
 
 default_data_path = paths.data_path
 
-default_msoa_coordinates = default_data_path / "geographical_data/msoa_coordinates_englandwales.csv"
+default_msoa_coordinates = default_data_path / "input/geography/super_area_coordinates.csv"
 
 class CommuteHub(Group):
     """
@@ -68,8 +68,8 @@ class CommuteHubs(Supergroup):
     def _get_msoa_lat_lon(self, msoa):
         'Given an MSOA, get the lat/lon'
 
-        msoa_lat = float(self.msoa_coordinates['Y'][self.msoa_coordinates['MSOA11CD'] == msoa])
-        msoa_lon = float(self.msoa_coordinates['X'][self.msoa_coordinates['MSOA11CD'] == msoa])
+        msoa_lat = float(self.msoa_coordinates['latitude'][self.msoa_coordinates['super_area'] == msoa])
+        msoa_lon = float(self.msoa_coordinates['longitude'][self.msoa_coordinates['super_area'] == msoa])
 
         return [msoa_lat, msoa_lon]
 
