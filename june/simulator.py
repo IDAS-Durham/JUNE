@@ -46,7 +46,7 @@ class Simulator:
         seed: Optional["Seed"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies: Policies = None,
+        policies = Policies(),
         save_path: str = "results",
     ):
         """
@@ -134,7 +134,7 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
-        policies: "Policies",
+        policies = Policies(),
         seed: "Seed" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
