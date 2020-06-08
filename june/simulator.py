@@ -3,6 +3,7 @@ import random
 from june import paths
 from typing import List, Optional
 import datetime
+import copy
 
 from itertools import chain
 import numpy as np
@@ -74,6 +75,8 @@ class Simulator:
         """
         self.world = world
         self.interaction = interaction
+        self.beta_copy = copy.deepcopy(self.interaction.beta)
+        self.alpha_copy = copy.copy(self.interaction.alpha_physical)
         self.seed = seed
         self.selector = selector
         self.policies = policies
@@ -530,9 +533,12 @@ class Simulator:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
         sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
-
-        if self.policies.social_distance:
-            self.interaction = self.policies.social_distance_policy(self.interaction, self.timer.now)
+        
+        if self.policies.social_distancing and self.policies.social_distancing_start < self.timer.now < self.policies.social_distancing_end:
+            self.interaction.alpha, self.interaction.beta = self.policies.social_distance_policy(self.alpha_copy, self.beta_copy, self.timer.now)
+        else:
+            self.interaction.alpha_physical = self.alpha_copy
+            self.interaction.beta = self.beta_copy
         
         for group_type in group_instances:
             for group in group_type.members:
