@@ -34,6 +34,7 @@ setup(
                   'june.groups.leisure',
                   'june.groups.commute',
                   'june.groups.travel',
+                  'june.policy',
                   'june.interaction',
                   'june.logger',
                   'june.box',
