@@ -19,20 +19,25 @@ logger = logging.getLogger(__name__)
 default_config_filename = (
     paths.configs_path / "defaults/distributors/household_distributor.yaml"
 )
-default_age_difference_files_folder = paths.data_path / "processed/age_difference"
 
 default_household_composition_filename = (
-    paths.data_path
-    / "processed/census_data/output_area/EnglandWales/minimum_household_composition.csv"
+    paths.data_path / "input/households/household_composition_ew.csv"
 )
 
 default_number_students_filename = (
-    paths.data_path / "processed/census_data/output_area/EnglandWales/n_students.csv"
+    paths.data_path / "input/households/n_students_ew.csv"
 )
 
 default_number_communal_filename = (
-    paths.data_path
-    / "processed/census_data/output_area/EnglandWales/n_people_in_communal.csv"
+    paths.data_path / "input/households/n_communal_ew.csv"
+)
+
+default_couples_age_difference_filename = (
+    paths.data_path / "input/households/couples_age_difference.csv"
+)
+
+default_parent_kid_age_difference_filename = (
+    paths.data_path / "input/households/parent_kid_age_difference.csv"
 )
 
 default_logging_config_filename = (
@@ -166,8 +171,8 @@ class HouseholdDistributor:
     @classmethod
     def from_file(
         cls,
-        husband_wife_filename: str = None,
-        parent_child_filename: str = None,
+        husband_wife_filename: str = default_couples_age_difference_filename,
+        parent_child_filename: str = default_parent_kid_age_difference_filename,
         config_filename: str = default_config_filename,
         number_of_random_numbers=int(1e3),
     ) -> "HouseholdDistributor":
@@ -194,18 +199,8 @@ class HouseholdDistributor:
 
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        if husband_wife_filename is None:
-            husband_wife_df = pd.read_csv(
-                default_age_difference_files_folder / "husband_wife.csv", index_col=0
-            )
-        else:
-            husband_wife_df = pd.read_csv(husband_wife_filename, index_col=0)
-        if parent_child_filename is None:
-            parent_child_df = pd.read_csv(
-                default_age_difference_files_folder / "parent_child.csv", index_col=0
-            )
-        else:
-            parent_child_df = pd.read_csv(parent_child_filename, index_col=0)
+        husband_wife_df = pd.read_csv(husband_wife_filename, index_col=0)
+        parent_child_df = pd.read_csv(parent_child_filename, index_col=0)
         return cls.from_df(
             husband_wife_df,
             parent_child_df,
@@ -697,7 +692,7 @@ class HouseholdDistributor:
         return all_households
 
     def _create_household(
-            self, area: Area, type= None, max_household_size: int = np.inf
+        self, area: Area, type=None, max_household_size: int = np.inf
     ) -> Household:
         """Creates household in the area.
 
@@ -1157,7 +1152,9 @@ class HouseholdDistributor:
                     max_age=self.young_adult_max_age,
                 )
                 if first_kid is not None:
-                    self._add_to_household(household, first_kid, subgroup="young_adults")
+                    self._add_to_household(
+                        household, first_kid, subgroup="young_adults"
+                    )
                 else:
                     for array in extra_people_lists:
                         array.append(household)
@@ -1212,7 +1209,9 @@ class HouseholdDistributor:
                         max_age=self.young_adult_max_age,
                     )
                     if second_kid is not None:
-                        self._add_to_household(household, second_kid, subgroup="young_adults")
+                        self._add_to_household(
+                            household, second_kid, subgroup="young_adults"
+                        )
         return households
 
     def fill_nokids_households(
@@ -1429,7 +1428,9 @@ class HouseholdDistributor:
         while people_left > 0:
             if len(communal_houses) == 0:
                 # this extreme case happens in area E00174453 (only case in England!!!)
-                person = self._get_random_person_in_age_bracket(men_by_age, women_by_age, min_age=15)
+                person = self._get_random_person_in_age_bracket(
+                    men_by_age, women_by_age, min_age=15
+                )
                 household = self._create_household(area, type="communal")
                 communal_houses.append(household)
                 self._add_to_household(household, person, subgroup="default")
