@@ -10,11 +10,12 @@ from june.paths import data_path
 
 sa_to_county_filename = data_path / "processed/geographical_data/oa_msoa_lad.csv"
 county_shapes_filename = (
-    data_path / "processed/geographical_data/lad_boundaries.geojson"
+    data_path / "input/geography/lad_boundaries.geojson"
 )
 super_area_coordinates_filename = (
-    data_path / "processed/geographical_data/msoa_coordinates.csv"
+    data_path / "input/geography/super_area_coordinates.csv"
 )
+deaths_region_data = data_path / "covid_real_data/n_cases_region.csv"
 
 mapbox_access_token = "pk.eyJ1IjoiYXN0cm9ieXRlIiwiYSI6ImNrYWwxeHNxZTA3cXMyeG15dGlsbzd1aHAifQ.XvkJbn9mEZ2cuctaX1UwTw"
 px.set_mapbox_access_token(mapbox_access_token)
@@ -37,6 +38,9 @@ class DashPlotter:
             self.hospital_data["time_stamp"]
         )
         self.hospital_data.set_index("time_stamp", inplace=True)
+        self.deaths_region_data = pd.read_csv(deaths_region_data, index_col=0)
+        self.deaths_region_data.index = pd.to_datetime(self.deaths_region_data.index)
+        self.regions = self.deaths_region_data.columns
         self.ages_data = self.logger_reader.age_summary(
             [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         )
@@ -263,6 +267,18 @@ class DashPlotter:
             ),
             xaxis_title="Date",
             yaxis_title="Symptoms",
+        )
+        return fig
+
+    def generate_deaths_region(self, region):
+        data = self.deaths_region_data[region]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=data.index.date, y=data.values))
+        fig.update_layout(
+            template="simple_white",
+            title=f"Deaths in {region}",
+            xaxis_title="Date",
+            yaxis_title="Deaths",
         )
         return fig
 
