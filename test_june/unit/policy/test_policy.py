@@ -1,15 +1,20 @@
 import pytest
 import random
 from pathlib import Path
+from june import paths
+from datetime import datetime
 
-from june.geography import Geography
+from june.demography.geography import Geography
 from june.demography import Demography
 from june.world import World
-from june.interaction import DefaultInteraction
-from june.infection import InfectionSelector, Infection
-from june.infection import Symptom_Tags, SymptomsConstant
+from june.interaction import ContactAveraging
+from june.infection import Infection
+from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
+from june.infection.infection import InfectionSelector
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups.leisure import Cinemas, Pubs, Groceries
+from june.policy import Policy, Policies
 from june.simulator import Simulator
 
 
@@ -18,7 +23,7 @@ dir_pwd = path_pwd.parent
 constant_config = (
     dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 )
-test_config = Path(__file__).parent.parent.parent / "test_simulator.yaml"
+test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
 @pytest.fixture(name="world", scope="module")
@@ -31,6 +36,13 @@ def create_world():
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=True, include_commute=True)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.pubs = Pubs.for_geography(geography)
+    world.groceries = Groceries.for_super_areas(world.super_areas,venues_per_capita=1/500)
+    world.initialise_commuting()
+    world.cemeteries = Cemeteries()
+    
+    return world
 
 
 @pytest.fixture(name="selector", scope="module")
@@ -38,20 +50,20 @@ def create_selector():
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
-
+    return selector
 
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction(selector):
-    interaction = DefaultInteraction.from_file()
-    interaction.selector = selector
-
+    interaction = ContactAveraging.from_file(selector=selector)
+    #interaction.selector = selector
+    return interaction
 
 def test__social_distancing(world, selector, interaction):
 
-    start_date = 3
-    end_date = 6
+    start_date = datetime(2020, 3, 10)
+    end_date = datetime(2020, 3, 12)
     social_distance = Policy(
-        policy="social_distance", start_date=start_date, end_date=end_date
+        policy="social_distance", start_time=start_date, end_time=end_date
     )
     policies = Policies([social_distance])
 
@@ -65,9 +77,9 @@ def test__social_distancing(world, selector, interaction):
         if day > start_date and day < end_date:
             for group in sim.interaction.betas.keys():
                 if group != 'household':
-                    assert sim.interaction.betas[group] == initial_betas[group] / 2
+                    assert sim.interaction.beta[group] == initial_betas[group] / 2
                 else:
-                    assert sim.interaction.betas[group] == initial_betas[group]
+                    assert sim.interaction.beta[group] == initial_betas[group]
         else:
             assert sim.interaction.betas == initial_betas
 
