@@ -28,7 +28,8 @@ app.layout = html.Div(
                 dcc.Tab(label="County data", value="tab-1"),
                 dcc.Tab(label="Animated global map", value="tab-2"),
                 dcc.Tab(label="Hospitals", value="tab-3"),
-                dcc.Tab(label="Other", value="tab-4"),
+                dcc.Tab(label="Infection details", value="tab-4"),
+                dcc.Tab(label="Data comparison", value="tab-5"),
             ],
         ),
         html.Div(id="tabs-example-content"),
@@ -196,10 +197,15 @@ def render_content(tab):
                             figure=dash_plotter.generate_deaths_region(
                                 region = dash_plotter.regions[0]
                             ),
-                            id="crossfilter-indicator-map",
+                            id="deaths_region",
                         ),
                     ],
-                    style={"display": "inline-block", "width": "50%", "height": "50%"},
+                    style={
+                        "width": "100%",
+                        "display": "inline-block",
+                            },
+
+                    #style={"display": "inline-block", "width": "50%", "height": "50%"},
                 ),
                 # html.Div(
                 #    dcc.Graph(figure=dash_plotter.()),
@@ -210,7 +216,6 @@ def render_content(tab):
                 #    style = {"display": "inline-block", "width" : "50%", "height" : "50%"},
                 # ),
             ],
-            style={"display": "inline-block"},
         )
 
 

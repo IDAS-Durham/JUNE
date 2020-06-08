@@ -8,7 +8,8 @@ from datetime import timedelta
 from june.logger.read_logger import ReadLogger
 from june.paths import data_path
 
-sa_to_county_filename = data_path / "processed/geographical_data/oa_msoa_lad.csv"
+sa_to_county_filename = data_path / "not_used_in_code/processed/geographical_data/oa_msoa_lad.csv"
+area_super_area_region_filename = data_path / "input/geography/area_super_area_region.csv"
 county_shapes_filename = (
     data_path / "input/geography/lad_boundaries.geojson"
 )
@@ -29,6 +30,8 @@ class DashPlotter:
         self.super_area_coordinates = pd.read_csv(super_area_coordinates_filename)
         self.world_data = self.logger_reader.world_summary()
         self.area_data = self.logger_reader.super_area_summary()
+        self.area_super_area_region = pd.read_csv(area_super_area_region_filename)
+        self.area_super_area_region.set_index("super_area", inplace=True)
         self.county_data = self.group_data_by_counties(self.area_data.copy())
         self.hospital_characteristics = (
             self.logger_reader.load_hospital_characteristics()
@@ -271,9 +274,9 @@ class DashPlotter:
         return fig
 
     def generate_deaths_region(self, region):
-        data = self.deaths_region_data[region]
+        real_data = self.deaths_region_data[region]
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=data.index.date, y=data.values))
+        fig.add_trace(go.Scatter(x=real_data.index.date, y=real_data.values))
         fig.update_layout(
             template="simple_white",
             title=f"Deaths in {region}",
