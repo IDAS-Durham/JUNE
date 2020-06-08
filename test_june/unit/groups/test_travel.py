@@ -21,7 +21,7 @@ class TestTravel:
     @pytest.fixture(name="geography_commute_nc")
     def create_geography_nc(self, super_area_commute_nc):
         geography = Geography.from_file(
-            {"msoa": super_area_commute_nc}
+            {"super_area": super_area_commute_nc}
         )
         return geography
 
