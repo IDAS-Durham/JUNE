@@ -127,17 +127,29 @@ class HealthIndexGenerator:
 
     def make_list(self):
         """
-        Computes the probability of having all 8 posible outcomes for all ages between 0 and 120. 
+        Computes the probability of having all 7 posible outcomes for all ages between 0 and 120. 
         And for male and female 
         
         Retruns:
-             3D matrix of dimensions 2 X 120 X 8. With all the probabilities of all 6 
+             3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 6 
              outcomes for 120 ages and the 2 sex.
              
-             For each gender and Age there are 8 numbers defined
+             For each gender and Age there are 7 numbers define: [N_1,N_2,N3,N4,N_5,N_6,N_7], 
+             the idea is to select a random number r between 0 and 1. depending on how this random 
+             number compares with our 7 numbers differents outcomes will happen
+             - if  0<r<N_1  Asymptomatic
+             - if  N_1<r<N_2 Mild symptoms
+             - if N_2<r<N_3  Stays at home with pneoumonia symptoms and survives.
+             - if N_3<r<N_4  Goes to the Hospital but not to ICU and survives.
+             - if N_4<r<N_5  Goes to ICU ans survives.
+             - if N_5<r<N_6  Stays at home with pneumonia and dies.
+             - if N_6<r<N_7  Goes to the Hospital but not to ICU ans dies.
+             - if N_7<r<1    Goes to ICU ans dies.
+              
+
         """
         ages=np.arange(0,121,1)#from 0 to 120
-        self.Prob_lists=np.zeros([2,121,8])
+        self.Prob_lists=np.zeros([2,121,7])
         self.Prob_lists[:,:,0]=self.Asimpto_ratio
         #Hosp,ICU,Death ratios
         
@@ -180,8 +192,8 @@ class HealthIndexGenerator:
         ICU_deaths_female=ratio_ICU_female*(1-Survival_ICU)
         ICU_deaths_male=ratio_ICU_male*(1-Survival_ICU)
         
-        self.Prob_lists[0,:,7]=ICU_deaths_female
-        self.Prob_lists[1,:,7]=ICU_deaths_male
+        #self.Prob_lists[0,:,7]=ICU_deaths_female
+        #self.Prob_lists[1,:,7]=ICU_deaths_male
         
         #provavility of Survinving  Hospital
  
@@ -230,11 +242,11 @@ class HealthIndexGenerator:
 
     def __call__(self, person):
         """
-        Computes the probability of having all 6 posible outcomes for all ages between 0 and 120. 
+        Computes the probability of having all 8 posible outcomes for all ages between 0 and 120. 
         And for male and female 
         
         Retruns:
-             3D matrix of dimensions 2 X 120 X 6. With all the probabilities of all 6 
+             3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 6 
              outcomes for 120 ages and the 2 sex.
         """
         
