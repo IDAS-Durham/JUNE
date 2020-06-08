@@ -131,3 +131,10 @@ def create_simulator_box(request, world_box, interaction, infection_healthy):
     return Simulator.from_file(
         world_box, interaction, selector, config_filename=config_file
     )
+
+@pytest.fixture(name="world_visits", scope="session")
+def make_super_areas():
+    geo = Geography.from_file({"super_area": ["E02003353"]})
+    geo.care_homes = CareHomes.for_geography(geo)
+    world = World.from_geography(geo, include_households=True)
+    return world
