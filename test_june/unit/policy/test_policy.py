@@ -72,17 +72,17 @@ def test__social_distancing(world, selector, interaction):
         world, interaction, selector, policies, config_filename=test_config
     )
     initial_betas = copy.deepcopy(sim.interaction.beta)
-    for day in sim.timer:
-        if day > sim.timer.total_days:
+    for time in sim.timer:
+        if time > sim.timer.final_date:
             break
-        if day > start_date and day < end_date:
+        if sim.timer.date > start_date and sim.timer.date < sim.timer.date:
             for group in sim.interaction.betas.keys():
                 if group != 'household':
                     assert sim.interaction.beta[group] == initial_betas[group] / 2
                 else:
                     assert sim.interaction.beta[group] == initial_betas[group]
         else:
-            assert sim.interaction.betas == initial_betas
+            assert sim.interaction.beta == initial_betas
 
 
 # def test__close_schools_years(world, selector, interaction):
