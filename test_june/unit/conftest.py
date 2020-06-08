@@ -92,7 +92,7 @@ def create_interaction():
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
     geography = Geography.from_file(
-        {"msoa": ["E02002512", "E02001697"]}
+        {"super_area": ["E02002512", "E02001697"]}
     )
     return geography
 
@@ -118,7 +118,7 @@ def create_simulator(world, interaction, infection_constant):
 @pytest.fixture(name="world_box", scope="session")
 def create_box_world():
     geography = Geography.from_file(
-        {"msoa": ["E02001697"]}
+        {"super_area": ["E02001697"]}
     )
     return World.from_geography(geography, box_mode=True)
 

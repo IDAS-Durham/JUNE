@@ -12,10 +12,10 @@ from june.demography.geography import Geography, Area
 from june.groups.group import Group, Supergroup
 
 default_data_filename = (
-    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
+    paths.data_path / "input/care_homes/care_homes_ew.csv"
 )
 default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 logger = logging.getLogger(__name__)
