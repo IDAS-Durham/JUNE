@@ -11,13 +11,11 @@ from june import paths
 from june.demography.person import Person
 
 default_hierarchy_filename = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
-default_area_coord_filename = (
-    paths.data_path / "processed/geographical_data/oa_coordinates.csv"
-)
+default_area_coord_filename = paths.data_path / "input/geography/area_coordinates.csv"
 default_superarea_coord_filename = (
-    paths.data_path / "processed/geographical_data/msoa_coordinates.csv"
+    paths.data_path / "input/geography/super_area_coordinates.csv"
 )
 default_logging_config_filename = (
     paths.configs_path / "config_world_creation_logger.yaml"
@@ -45,7 +43,7 @@ class Area:
         "super_area",
         "care_home",
         "schools",
-        "households"
+        "households",
     )
     _id = count()
 
@@ -53,7 +51,7 @@ class Area:
         self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
     ):
         """
-        Coordinate is given in the format Y, X where X is longitude and Y is latitude.
+        Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.
         """
         self.id = next(self._id)
         self.name = name
@@ -123,7 +121,15 @@ class SuperArea:
     Coarse geographical resolution.
     """
 
-    __slots__ = "id", "name", "coordinates", "workers", "areas", "companies", "groceries"
+    __slots__ = (
+        "id",
+        "name",
+        "coordinates",
+        "workers",
+        "areas",
+        "companies",
+        "groceries",
+    )
     _id = count()
 
     def __init__(
@@ -255,7 +261,15 @@ class Geography:
         else:
             areas = []
             for name, coordinates in area_coords.iterrows():
-                areas.append(Area(name, super_area, coordinates.values))
+                areas.append(
+                    Area(
+                        name,
+                        super_area,
+                        coordinates=np.array(
+                            [coordinates.latitude, coordinates.longitude]
+                        ),
+                    )
+                )
         return areas
 
     @classmethod
@@ -273,11 +287,13 @@ class Geography:
         """
         total_areas_list = []
         super_areas_list = []
-        for superarea_name, row in super_area_coordinates.iterrows():
+        for super_area_name, row in super_area_coordinates.iterrows():
             super_area = SuperArea(
-                areas=None, name=superarea_name, coordinates=row.values
+                areas=None,
+                name=super_area_name,
+                coordinates=np.array([row.latitude, row.longitude]),
             )
-            areas_df = area_coordinates.loc[hierarchy.loc[row.name, "oa"]]
+            areas_df = area_coordinates.loc[hierarchy.loc[super_area_name, "area"]]
             areas_list = cls._create_areas(areas_df, super_area)
             super_area.areas = areas_list
             total_areas_list += list(areas_list)
@@ -298,7 +314,6 @@ class Geography:
         hierarchy_filename: str = default_hierarchy_filename,
         area_coordinates_filename: str = default_area_coord_filename,
         super_area_coordinates_filename: str = default_superarea_coord_filename,
-        logging_config_filename: str = default_logging_config_filename,
     ) -> "Geography":
         """
         Load data from files and construct classes capable of generating
@@ -308,13 +323,13 @@ class Geography:
         -------------
             ```
             geography = Geography.from_file(filter_key={"region" : "North East"})
-            geography = Geography.from_file(filter_key={"msoa" : ["E02005728"]})
+            geography = Geography.from_file(filter_key={"super_area" : ["E02005728"]})
             ```
         Parameters
         ----------
         filter_key
             Filter out geo-units which should enter the world.
-            At the moment this can only be one of [oa, msoa, region]
+            At the moment this can only be one of [area, super_area, region]
         hierarchy_filename
             Pandas df file containing the relationships between the different
             geographical units.
@@ -326,19 +341,19 @@ class Geography:
             file path of the logger configuration
         """
         geo_hierarchy = pd.read_csv(hierarchy_filename)
-        areas_coord = pd.read_csv(area_coordinates_filename, index_col=0)
-        super_areas_coord = pd.read_csv(super_area_coordinates_filename, index_col=0)
+        areas_coord = pd.read_csv(area_coordinates_filename)
+        super_areas_coord = pd.read_csv(super_area_coordinates_filename)
 
         if filter_key is not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
 
-        areas_coord = areas_coord.loc[geo_hierarchy["oa"]].loc[:, ["Y", "X"]]
-        super_areas_coord = (
-            super_areas_coord.loc[geo_hierarchy["msoa"]]
-            .loc[:, ["Y", "X"]]
-            .drop_duplicates()
-        )
-        geo_hierarchy.set_index("msoa", inplace=True)
+        areas_coord = areas_coord.loc[areas_coord.area.isin(geo_hierarchy.area)]
+        super_areas_coord = super_areas_coord.loc[
+            super_areas_coord.super_area.isin(geo_hierarchy.super_area)
+        ].drop_duplicates()
+        areas_coord.set_index("area", inplace=True)
+        super_areas_coord.set_index("super_area", inplace=True)
+        geo_hierarchy.set_index("super_area", inplace=True)
         areas, super_areas = cls.create_geographical_units(
             geo_hierarchy, areas_coord, super_areas_coord
         )

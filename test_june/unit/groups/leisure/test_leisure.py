@@ -21,7 +21,7 @@ from june import World
 
 @fixture(name="geography")
 def make_geography():
-    geography = Geography.from_file({"msoa": ["E02000140"]})
+    geography = Geography.from_file({"super_area": ["E02000140"]})
     return geography
 
 
@@ -91,7 +91,7 @@ def test__person_drags_household(leisure):
 
 
 def test__generate_leisure_from_world():
-    geography = Geography.from_file({"msoa": ["E02000140"]})
+    geography = Geography.from_file({"super_area": ["E02000140"]})
     demography = Demography.for_geography(geography)
     world = World(geography, demography, include_households=False)
     world.pubs = Pubs.for_geography(geography)

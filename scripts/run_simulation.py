@@ -47,9 +47,8 @@ interaction = ContactAveraging.from_file(selector=selector)
 print("interaction OK")
 
 # initial infection seeding
-seed = Seed(world.super_areas, selector,)
-n_cases = 2_000
-
+seed = Seed.from_file(super_areas=world.super_areas, 
+        selector=selector,)
 # two options, randomly, or one specific area.
 
 # 1. specific area
@@ -61,19 +60,18 @@ n_cases = 2_000
 #seed.infect_super_area(super_area, 99) # seed 99 infections in seed_area
 
 # 2. randomly distribute
-seed.unleash_virus(
-    int(len(world.people)/10),
-)  # this will put 500 infected randomly
+# this will put 500 infected randomly
 
 print("seeding OK")
 
 # path to main simulation config file
-CONFIG_PATH = "./config_simulation.yaml"
+CONFIG_PATH = "../configs/config_example.yaml"
 
 simulator = Simulator.from_file(
     world,
     interaction,
     selector,
+    seed=seed,
     config_filename=CONFIG_PATH,
     save_path="results",
 )
