@@ -110,7 +110,6 @@ class Leisure:
                 )
                 activity = roll_activity_dice(
                     np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
-                    >>>>>>> master
                 )
                 if activity is None:
                     return
@@ -143,7 +142,7 @@ class Leisure:
             return True
 
     def get_subgroup_for_person_and_housemates(
-        self, person: Person, delta_time: float, is_weekend: bool
+            self, person: Person, delta_time: float, is_weekend: bool, closed_groups=[]
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
