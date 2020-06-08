@@ -14,7 +14,7 @@ from june.groups.leisure import Pub, Pubs
 
 @pytest.fixture(name="geography")
 def make_geography():
-    geography = Geography.from_file({"msoa": ["E02000140"]})
+    geography = Geography.from_file({"super_area": ["E02000140"]})
     return geography
 
 
