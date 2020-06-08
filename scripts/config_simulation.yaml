@@ -7,21 +7,27 @@ activity_to_groups:
   commute: ['commuteunits', 'commutecityunits']
 
 time:
-  total_days: 2 
+  total_days: 30 
   step_duration: 
       weekday:
-          0: 9
-          1: 4
-          2: 11
+          0: 1
+          1: 8
+          2: 1
+          3: 14
       weekend:
-          0: 12
-          1: 12
+          0: 15
+          1: 3
+          2: 3
+          3: 3
   step_activities:
       weekday:
-          0: ['hospital', 'primary_activity', 'residence'] 
-          1: ['hospital', 'leisure', 'residence'] 
-          2: ['hospital', 'residence']
+          0: ['hospital', 'commute', 'residence'] 
+          1: ['hospital', 'primary_activity', 'residence'] 
+          2: ['hospital', 'commute', 'leisure', 'residence']
+          3: ['hospital', 'residence']
       weekend:
-          0: ['hospital', 'leisure', 'residence']
-          1: ['hospital', 'residence']
+          0: ['hospital', 'residence']
+          1: ['hospital', 'leisure', 'residence']
+          2: ['hospital', 'leisure', 'residence']
+          3: ['hospital', 'leisure', 'residence']
 
