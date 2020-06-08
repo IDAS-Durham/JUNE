@@ -49,12 +49,13 @@ class Policies:
 
 
         TODO:
-        - Implement structure for people to adhere to social distancing
+        - Implement structure for people to adhere to social distancing with a certain compliance
+        - Check per group in config file
         '''
         #TODO: should probably leave alpha value for households untouched! 
 
-        alpha = interaction.alpha
-        betas = interaction.betas
+        alpha = interaction.alpha_physical
+        betas = interaction.beta
         
         if self.config_file is not None:
             alpha /= 2
