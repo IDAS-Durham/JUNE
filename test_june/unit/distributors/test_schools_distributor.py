@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from june.world import World
 from june.demography.geography import Geography
 from june.groups.school import Schools
 from june.distributors.school_distributor import SchoolDistributor
@@ -99,3 +100,17 @@ def test__non_mandatory_dont_go_if_school_full(schools):
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
+
+def test__teacher_distribution(geography_school):
+    geography_school.schools = Schools.for_geography(geography_school)
+    world = World.from_geography(geography_school)
+    for school in world.schools:
+        students = len(school.students)
+        teachers = len(school.teachers.people)
+        ratio = students / teachers
+        assert ratio < 40
+
+
+
+
+
