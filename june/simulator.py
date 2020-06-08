@@ -16,6 +16,7 @@ from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
+from june.policy import Policies
 
 from june.logger.logger import Logger
 from june.time import Timer
@@ -44,7 +45,7 @@ class Simulator:
         seed: Optional["Seed"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies: list = [],
+        policies: Policies = None,
         save_path: str = "results",
     ):
         """
@@ -130,9 +131,9 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
+        policies: "Policies",
         seed: "Seed" = None,
         config_filename: str = default_config_filename,
-        policies: list = [],
         save_path: str = "results",
     ) -> "Simulator":
 
