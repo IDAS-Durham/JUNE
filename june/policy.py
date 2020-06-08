@@ -64,19 +64,19 @@ class Policies:
 
         betas_new = betas.copy()
         
-        if self.config_file is not None:
+        if self.config_file is None:
             alpha_new = alpha/2
         else:
             alpha_new = alpha / self.config_file['social distancing']['alpha factor']
 
         for group in betas.keys():
             if group != 'household': 
-                if not self.config_file:
+                if self.config_file is None:
                     betas_new[group] = betas_new[group] / 2
                 else:
                     betas_new[group] = betas_new[group]/ self.config_file['social distancing']['beta factor']
 
-        return alpha_alpha, betas_new
+        return alpha_new, betas_new
 
 
 class Closure(Policy):
