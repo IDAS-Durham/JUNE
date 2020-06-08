@@ -45,7 +45,8 @@ class Simulator:
                 min_age_home_alone: int = 15,
                 stay_at_home_complacency: float = 0.95,
                 save_path: str = "results",
-                light_logger: bool = True,
+                output_filename: str = "logger.hdf5",
+                light_logger: bool = False,
                 ):
                 """
                 Class to run an epidemic spread simulation on the world
@@ -93,7 +94,8 @@ class Simulator:
                 )
                 self.light_logger = light_logger
                 if not self.world.box_mode:
-                    self.logger = Logger(save_path=save_path)
+                    self.logger = Logger(save_path=save_path, 
+                            file_name=output_filename)
                 else:
                     self.logger = None
                 self.all_activities = self.get_all_activities(time_config)
@@ -131,6 +133,7 @@ class Simulator:
                 seed: "Seed" = None,
                 config_filename: str = default_config_filename,
                 save_path: str = "results",
+                output_filename: str = "logger.hdf5"
         ) -> "Simulator":
 
                 """
@@ -160,6 +163,7 @@ class Simulator:
                         time_config,
                         seed=seed,
                         save_path=save_path,
+                        output_filename=output_filename
                 )
 
         def get_all_activities(self, time_config):
@@ -549,8 +553,7 @@ class Simulator:
                 )
                 self.clear_world()
                 if self.logger:
-                    if not self.light_logger:
-                        self.logger.log_population(self.world.people)
+                    self.logger.log_population(self.world.people, light_logger=self.light_logger)
                     self.logger.log_hospital_characteristics(self.world.hospitals)
                 for time in self.timer:
                         if time > self.timer.final_date:
