@@ -8,249 +8,339 @@ from pathlib import Path
 
 
 class Logger:
-    def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
-        """
-        Logger used by the simulator to store the relevant information.
+	def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
+		"""
+		Logger used by the simulator to store the relevant information.
 
-        Parameters
-        ----------
-        save_path: 
-            path to save file
-        file_name:
-            name of output hdf5 file
-        """
-        self.save_path = Path(save_path)
-        self.save_path.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.save_path / file_name
-        self.infection_location = []
-        # Remove if exists
-        try:
-            os.remove(self.file_path)
-        except OSError:
-            pass
+		Parameters
+		----------
+		save_path: 
+			path to save file
+		file_name:
+			name of output hdf5 file
+		"""
+		self.save_path = Path(save_path)
+		self.save_path.mkdir(parents=True, exist_ok=True)
+		self.file_path = self.save_path / file_name
+		self.infection_location = []
+		# Remove if exists
+		try:
+			os.remove(self.file_path)
+		except OSError:
+			pass
 
-    def log_population(self, population: Population, chunk_size: int = 100000):
-        """
-        Saves the Population object to hdf5 format file ``self.save_path``. Currently for each person,
-        the following values are stored:
-        - id, age, sex, super_area
+	def log_population(self, population: Population, chunk_size: int = 100000):
+		"""
+		Saves the Population object to hdf5 format file ``self.save_path``. Currently for each person,
+		the following values are stored:
+		- id, age, sex, super_area
 
-        Parameters
-        ----------
-        population:
-            population object
-        chunk_size:
-            number of people to save at a time. Note that they have to be copied to be saved,
-            so keep the number below 1e6.
-        """
-        n_people = len(population.people)
-        dt = h5py.vlen_dtype(np.dtype("int32"))
-        # dt = tuple
-        n_chunks = int(np.ceil(n_people / chunk_size))
-        with h5py.File(self.file_path, "a", libver='latest') as f:
-            people_dset = f.create_group("population")
-            for chunk in range(n_chunks):
-                idx1 = chunk * chunk_size
-                idx2 = min((chunk + 1) * chunk_size, n_people)
-                ids = []
-                ages = []
-                sexes = []
-                super_areas = []
+		Parameters
+		----------
+		population:
+			population object
+		chunk_size:
+			number of people to save at a time. Note that they have to be copied to be saved,
+			so keep the number below 1e6.
+		"""
+		n_people = len(population.people)
+		dt = h5py.vlen_dtype(np.dtype("int32"))
+		# dt = tuple
+		n_chunks = int(np.ceil(n_people / chunk_size))
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			people_dset = f.create_group("population")
+			for chunk in range(n_chunks):
+				idx1 = chunk * chunk_size
+				idx2 = min((chunk + 1) * chunk_size, n_people)
+				ids = []
+				ages = []
+				sexes = []
+				super_areas = []
 
-                for person in population.people[idx1:idx2]:
-                    ids.append(person.id)
-                    ages.append(person.age)
-                    sexes.append(person.sex.encode("ascii", "ignore"))
-                    if person.area.super_area is not None:
-                        super_areas.append(person.area.super_area.name)
-                    else:
-                        super_areas.append(nan_integer)
+				for person in population.people[idx1:idx2]:
+					ids.append(person.id)
+					ages.append(person.age)
+					sexes.append(person.sex.encode("ascii", "ignore"))
+					if person.area.super_area is not None:
+						super_areas.append(person.area.super_area.name)
+					else:
+						super_areas.append(nan_integer)
 
-                ids = np.array(ids, dtype=np.int)
-                ages = np.array(ages, dtype=np.int)
-                sexes = np.array(sexes, dtype="S10")
-                super_areas = np.array(super_areas, dtype="S10")
+				ids = np.array(ids, dtype=np.int)
+				ages = np.array(ages, dtype=np.int)
+				sexes = np.array(sexes, dtype="S10")
+				super_areas = np.array(super_areas, dtype="S10")
 
-                if chunk == 0:
-                    people_dset.attrs["n_people"] = n_people
-                    people_dset.create_dataset("id", data=ids, maxshape=(None,))
-                    people_dset.create_dataset("age", data=ages, maxshape=(None,))
-                    people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
-                    people_dset.create_dataset(
-                        "super_area", data=super_areas, maxshape=(None,)
-                    )
-                else:
-                    newshape = (people_dset["id"].shape[0] + ids.shape[0],)
-                    people_dset["id"].resize(newshape)
-                    people_dset["id"][idx1:idx2] = ids
-                    people_dset["age"].resize(newshape)
-                    people_dset["age"][idx1:idx2] = ages
-                    people_dset["sex"].resize(newshape)
-                    people_dset["sex"][idx1:idx2] = sexes
-                    people_dset["super_area"].resize(newshape)
-                    people_dset["super_area"][idx1:idx2] = super_areas
+				if chunk == 0:
+					people_dset.attrs["n_people"] = n_people
+					people_dset.create_dataset("id", data=ids, maxshape=(None,))
+					people_dset.create_dataset("age", data=ages, maxshape=(None,))
+					people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
+					people_dset.create_dataset(
+						"super_area", data=super_areas, maxshape=(None,)
+					)
+				else:
+					newshape = (people_dset["id"].shape[0] + ids.shape[0],)
+					people_dset["id"].resize(newshape)
+					people_dset["id"][idx1:idx2] = ids
+					people_dset["age"].resize(newshape)
+					people_dset["age"][idx1:idx2] = ages
+					people_dset["sex"].resize(newshape)
+					people_dset["sex"][idx1:idx2] = sexes
+					people_dset["super_area"].resize(newshape)
+					people_dset["super_area"][idx1:idx2] = super_areas
 
-    def log_infected(
-        self,
-        date: "datetime",
-        infected_ids: List[int],
-        symptoms: List[int],
-        n_secondary_infections: List[int],
-    ):
-        """
-        Log relevant information of infected people per time step.
+	def log_infected(
+		self,
+		date: "datetime",
+		infected_ids: List[int],
+		symptoms: List[int],
+		n_secondary_infections: List[int],
+	):
+		"""
+		Log relevant information of infected people per time step.
 
-        Parameters
-        ----------
-        date:
-            datetime of time step to log
-        infected_ids:
-            list of IDs of everyone infected 
-        symptoms:
-            list of symptoms of everyone infected
-        n_secondary_infections:
-            list of number of secondary infections for everyone infected
-        """
-        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        with h5py.File(self.file_path, "a", libver='latest') as f:
-            infected_dset = f.create_group(time_stamp)
-            ids = np.array(infected_ids, dtype=np.int)
-            symptoms = np.array(symptoms, dtype=np.int)
-            n_secondary_infections = np.array(n_secondary_infections, dtype=np.int)
-            infected_dset["id"] = ids
-            infected_dset["symptoms"] = symptoms
-            infected_dset["n_secondary_infections"] = n_secondary_infections
+		Parameters
+		----------
+		date:
+			datetime of time step to log
+		infected_ids:
+			list of IDs of everyone infected 
+		symptoms:
+			list of symptoms of everyone infected
+		n_secondary_infections:
+			list of number of secondary infections for everyone infected
+		"""
+		time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			infected_dset = f.create_group(time_stamp)
+			ids = np.array(infected_ids, dtype=np.int)
+			symptoms = np.array(symptoms, dtype=np.int)
+			n_secondary_infections = np.array(n_secondary_infections, dtype=np.int)
+			infected_dset["id"] = ids
+			infected_dset["symptoms"] = symptoms
+			infected_dset["n_secondary_infections"] = n_secondary_infections
 
-    def log_hospital_characteristics(self, hospitals: "Hospitals"):
-        """
-        Log hospital's coordinates and number of beds per hospital
-        
-        Parameters
-        ----------
-        hospitals:
-            hospitals to log
-        """
-        coordinates = []
-        n_beds = []
-        n_icu_beds = []
-        for hospital in hospitals:
-            coordinates.append(hospital.coordinates)
-            n_beds.append(hospital.n_beds)
-            n_icu_beds.append(hospital.n_icu_beds)
-        coordinates = np.array(coordinates, dtype=np.float)
-        n_beds = np.array(n_beds, dtype=np.int)
-        n_icu_beds = np.array(n_icu_beds, dtype=np.int)
-        with h5py.File(self.file_path, "a", libver='latest') as f:
-            hospital_dset = f.require_group("hospitals")
-            hospital_dset.create_dataset("coordinates", data=coordinates)
-            hospital_dset.create_dataset("n_beds", data=n_beds)
-            hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
+	def log_hospital_characteristics(self, hospitals: "Hospitals"):
+		"""
+		Log hospital's coordinates and number of beds per hospital
+		
+		Parameters
+		----------
+		hospitals:
+			hospitals to log
+		"""
+		coordinates = []
+		n_beds = []
+		n_icu_beds = []
+		for hospital in hospitals:
+			coordinates.append(hospital.coordinates)
+			n_beds.append(hospital.n_beds)
+			n_icu_beds.append(hospital.n_icu_beds)
+		coordinates = np.array(coordinates, dtype=np.float)
+		n_beds = np.array(n_beds, dtype=np.int)
+		n_icu_beds = np.array(n_icu_beds, dtype=np.int)
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			hospital_dset = f.require_group("hospitals")
+			hospital_dset.create_dataset("coordinates", data=coordinates)
+			hospital_dset.create_dataset("n_beds", data=n_beds)
+			hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
 
-    def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
-        """
-        Log the variation of number of patients in hospitals over time
-    
-        Parameters
-        ----------
-        date:
-            date to log
-        hospitals:
-            hospitals to log
-        """
-        time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        hospital_ids = []
-        n_patients = []
-        n_patients_icu = []
-        for hospital in hospitals:
-            hospital_ids.append(hospital.id)
-            n_patients.append(
-                len(hospital.subgroups[hospital.SubgroupType.patients].people)
-            )
-            n_patients_icu.append(
-                len(hospital.subgroups[hospital.SubgroupType.icu_patients].people)
-            )
-        # save to hdf5
-        hospitals_ids = np.array(hospital_ids, dtype=np.int)
-        n_patients = np.array(n_patients, dtype=np.int)
-        n_patients_icu = np.array(n_patients_icu, dtype=np.int)
-        with h5py.File(self.file_path, "a", libver='latest') as f:
-            hospital_dset = f.require_group("hospitals")
-            time_dset = hospital_dset.create_group(time_stamp)
-            time_dset.create_dataset("hospital_id", data=hospital_ids)
-            time_dset.create_dataset("n_patients", data=n_patients)
-            time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
+	def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
+		"""
+		Log the variation of number of patients in hospitals over time
+	
+		Parameters
+		----------
+		date:
+			date to log
+		hospitals:
+			hospitals to log
+		"""
+		time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
+		hospital_ids = []
+		n_patients = []
+		n_patients_icu = []
+		for hospital in hospitals:
+			hospital_ids.append(hospital.id)
+			n_patients.append(
+				len(hospital.subgroups[hospital.SubgroupType.patients].people)
+			)
+			n_patients_icu.append(
+				len(hospital.subgroups[hospital.SubgroupType.icu_patients].people)
+			)
+		# save to hdf5
+		hospitals_ids = np.array(hospital_ids, dtype=np.int)
+		n_patients = np.array(n_patients, dtype=np.int)
+		n_patients_icu = np.array(n_patients_icu, dtype=np.int)
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			hospital_dset = f.require_group("hospitals")
+			time_dset = hospital_dset.create_group(time_stamp)
+			time_dset.create_dataset("hospital_id", data=hospital_ids)
+			time_dset.create_dataset("n_patients", data=n_patients)
+			time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
 
-    def get_number_group_instances(self, world: "World", location: str):
-        """
-        Given the world and a location, find the number of instances of that location that exist in the world
+	def get_number_group_instances(self, world: "World", location: str):
+		"""
+		Given the world and a location, find the number of instances of that location that exist in the world
 
-        Parameters
-        ----------
-        world:
-            world instance
-        location:
-            location type
-        """
-        plural = location + "s"
-        if location == "grocery":
-            plural = "groceries"
-        elif location == "company":
-            plural = "companies"
-        elif location == "commute_unit":
-            plural = "commuteunits"
-        elif location == "commutecity_unit":
-            plural = "commutecityunits"
-        return len(getattr(world, plural).members)
+		Parameters
+		----------
+		world:
+			world instance
+		location:
+			location type
+		"""
+		plural = location + "s"
+		if location == "grocery":
+			plural = "groceries"
+		elif location == "company":
+			plural = "companies"
+		elif location == "commute_unit":
+			plural = "commuteunits"
+		elif location == "commutecity_unit":
+			plural = "commutecityunits"
+		return len(getattr(world, plural).members)
 
-    def accumulate_infection_location(self, location):
-        """
-        Store where infections happend in a time step
-        
-        Parameters
-        ----------
-        location:
-            group type of the group in which the infection took place
-        """
-        self.infection_location.append(location)
+	def accumulate_infection_location(self, location):
+		"""
+		Store where infections happend in a time step
+		
+		Parameters
+		----------
+		location:
+			group type of the group in which the infection took place
+		"""
+		self.infection_location.append(location)
 
-    def log_infection_location(self, time):
-        """
-        Log where did all infections in a time step happened, as a number count
+	def log_infection_location(self, time):
+		"""
+		Log where did all infections in a time step happened, as a number count
 
-        Parameters
-        ----------
-        time:
-            datetime to log
-        """
-        time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        unique_locations, counts = np.unique(
-            np.array(self.infection_location), return_counts=True
-        )
-        unique_locations = np.array(unique_locations, dtype="S10")
-        with h5py.File(self.file_path, "a", libver='latest') as f:
-            locations_dset = f.require_group("locations")
-            time_dset = locations_dset.create_group(time_stamp)
-            time_dset.create_dataset("infection_location", data=unique_locations)
-            time_dset.create_dataset("infection_counts", data=counts)
-        self.infection_location = []
+		Parameters
+		----------
+		time:
+			datetime to log
+		"""
+		time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+		unique_locations, counts = np.unique(
+			np.array(self.infection_location), return_counts=True
+		)
+		unique_locations = np.array(unique_locations, dtype="S10")
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			locations_dset = f.require_group("locations")
+			time_dset = locations_dset.create_group(time_stamp)
+			time_dset.create_dataset("infection_location", data=unique_locations)
+			time_dset.create_dataset("infection_counts", data=counts)
+		self.infection_location = []
 
-    def log_number_of_locations(self, world: "World"):
-        """
-        Log relevant information on where did people get infected
+	def log_number_of_locations(self, world: "World"):
+		"""
+		Log relevant information on where did people get infected
 
-        Parameters
-        ----------
-        world:
-            world instance
-        """
-        # TODO : might want to log this over time, once the policies are in place could be interestingi,
-        # might be better to combine it with infections information
-        group_sizes = []
-        for group in unique_locations:
-            group_sizes.append(self.get_number_group_instances(world, group))
-        unique_locations = np.array(unique_locations, dtype="S10")
-        group_sizes = np.array(group_sizes, dtype=np.int)
-        counts = np.array(counts, dtype=np.int)
-        with h5py.File(self.file_path, "a", libver='latest') as f:
-            locations_dset = f.create_group("locations")
-            locations_dset.create_dataset("n_locations", data=group_sizes)
+		Parameters
+		----------
+		world:
+			world instance
+		"""
+		# TODO : might want to log this over time, once the policies are in place could be interestingi,
+		# might be better to combine it with infections information
+		group_sizes = []
+		for group in unique_locations:
+			group_sizes.append(self.get_number_group_instances(world, group))
+		unique_locations = np.array(unique_locations, dtype="S10")
+		group_sizes = np.array(group_sizes, dtype=np.int)
+		counts = np.array(counts, dtype=np.int)
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			locations_dset = f.create_group("locations")
+			locations_dset.create_dataset("n_locations", data=group_sizes)
+
+
+class LightLogger(Logger):
+	def __init__(self, save_path: str = "results", file_name: str = "light_logger.hdf5",
+						age_range =[0,5,15,25,65,100],
+						infection_keys = [
+								"infected", "recovered", "susceptible", 
+								"hospitalised", "intensive_care", "dead"
+						]
+
+ ):
+		"""
+		Logger used by the simulator to store the relevant information.
+
+		Parameters
+		----------
+		save_path: 
+			path to save file
+		file_name:
+			name of output hdf5 file
+		"""
+		super().__init__(save_path = save_path, file_name = file_name,)
+		self.age_range = age_range		
+		self.infection_keys = infection_keys 
+
+	def initialize_logging_dict(self):
+		return dict.fromkeys(self.infection_keys, 0)
+
+	def initialize_age_dict(self):
+		age_dict = {
+			"{}-{}".format(
+				self.age_range[i], self.age_range[i + 1] - 1
+			): self.initialize_logging_dict()
+			for i, age in enumerate(self.age_range[:-1])
+		}
+		self.age_keys = list(age_dict.keys())
+		return age_dict
+
+	def initialize_area_dict(self, super_areas):
+		area_dict = {}
+		for super_area in super_areas:
+			area_dict[super_area.name] = {
+				"f": self.initialize_age_dict(),
+				"m": self.initialize_age_dict(),
+			}
+		return area_dict
+
+	def log_timestep(self, time_stamp, super_areas):
+		time_stamp = time_stamp.strftime("%Y-%m-%dT%H:%M:%S.%f")
+		output_dict = self.initialize_area_dict(super_areas,)
+		for super_area in super_areas.members:
+			self.log_area(
+				super_area, output_dict[super_area.name],
+			)
+		self.save_timestep(time_stamp, output_dict)
+
+	def save_timestep(self, time_stamp, output_dict):
+		with h5py.File(self.file_path, "a", libver='latest') as f:
+			time_step_group = f.create_group(time_stamp)
+			self.recursively_save_dict_contents_to_group(f, time_stamp + '/', output_dict)
+
+	def recursively_save_dict_contents_to_group(self, hdf5_file, group, output_dict):
+		for key, item in output_dict.items():
+			if isinstance(item, (np.ndarray, np.int64, np.float64, int, str, bytes)):
+				hdf5_file[group + key] = item
+			elif isinstance(item, dict):
+				self.recursively_save_dict_contents_to_group(hdf5_file, group + key + '/', item)
+			else:
+				raise ValueError('Cannot save %s type'%type(item))
+
+	def log_area(self, super_area, area_dict):
+		for person in super_area.people:
+			self.log_person(person, area_dict)
+
+	def log_person(self, person, area_dict):
+		age_key = self.get_age_key(person.age)
+		personal_infection_keys = self.get_infection_key(person)
+		for infection_key in personal_infection_keys:
+			area_dict[person.sex][age_key][infection_key] += 1
+
+	def get_age_key(self, age):
+		age_bin = np.digitize(age, self.age_range) - 1
+		return self.age_keys[age_bin]
+
+	def get_infection_key(self, person):
+		personal_keys = []
+		for key in self.infection_keys:
+			if getattr(person, key):
+				personal_keys.append(key)
+		return personal_keys 
