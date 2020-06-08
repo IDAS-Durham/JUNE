@@ -7,15 +7,15 @@
 # Simulator(policies)
 
 class Policy:
-    def __init__(self, name, start_time, end_time):
-        self.name = name
+    def __init__(self, policy, start_time, end_time):
+        self.name = policy
         self.start_time = start_time
         self.end_time = end_time
 
 class Policies:
 
     def __init__(self, policies, config_file=None):
-        self.config_file = config
+        self.config_file = config_file
         self.policies = policies
         self.full_closure_policies = 1# filter out closure ones
         self.partial_closure_policies = 1# filter out closure ones
