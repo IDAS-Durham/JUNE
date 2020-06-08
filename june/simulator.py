@@ -44,6 +44,7 @@ class Simulator:
         seed: Optional["Seed"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
+        policies: list = [],
         save_path: str = "results",
     ):
         """
@@ -65,6 +66,8 @@ class Simulator:
             minimum age of a child to be left alone at home when ill
         stay_at_home_complacency:
             probability that an ill person will not stay at home
+        policies:
+            policies to be implemented at different time steps
         save_path:
             path to save logger results
         """
@@ -72,6 +75,7 @@ class Simulator:
         self.interaction = interaction
         self.seed = seed
         self.selector = selector
+        self.policies = policies
         self.activity_hierarchy = [
             "box",
             "hospital",
@@ -523,6 +527,10 @@ class Simulator:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
         sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
+
+        if self.policies.social_distance:
+            self.interaction = self.policies.social_distance_policy(self.interaction, self.timer.now)
+        
         for group_type in group_instances:
             for group in group_type.members:
                 self.interaction.time_step(
