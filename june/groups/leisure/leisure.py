@@ -108,15 +108,13 @@ class Leisure:
                 poisson_parameters.append(
                     distributor.get_poisson_parameter(person, is_weekend)
                 )
-                activity = roll_activity_dice(
-                    np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
-                )
-                if activity is None:
-                    return
-                else:
-                    return self.leisure_distributors[activity]
-            else:
-                return None
+        activity = roll_activity_dice(
+            np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
+        )
+        if activity is None:
+            return
+        else:
+            return self.leisure_distributors[activity]
 
     def assign_social_venue_to_person(self, person, leisure_distributor):
         social_venue = leisure_distributor.get_social_venue_for_person(person)
