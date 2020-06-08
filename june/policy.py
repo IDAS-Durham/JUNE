@@ -24,7 +24,9 @@ class Policies:
         self.policies = policies
         self.full_closure_policies = 1# filter out closure ones
         self.partial_closure_policies = 1# filter out closure ones
-        self.social_distance = False
+        self.social_distancing = False
+        self.social_distancing_start = 0
+        self.social_distancing_end = 0
         
         for policy in self.policies:
             if policy.name == "social_distance":
