@@ -29,7 +29,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 @pytest.fixture(name="world", scope="module")
 def create_world():
-    geography = Geography.from_file({"msoa": ["E00088544", "E02002560", "E02002559"]})
+    geography = Geography.from_file({"super_area": ["E00088544", "E02002560", "E02002559"]})
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
@@ -76,7 +76,7 @@ def test__social_distancing(world, selector, interaction):
         if time > sim.timer.final_date:
             break
         if sim.timer.date > start_date and sim.timer.date < sim.timer.date:
-            for group in sim.interaction.betas.keys():
+            for group in sim.interaction.betas:
                 if group != 'household':
                     assert sim.interaction.beta[group] == initial_betas[group] / 2
                 else:
