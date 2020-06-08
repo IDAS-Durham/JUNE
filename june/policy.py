@@ -89,7 +89,7 @@ class Policies:
         else:
             alpha_new = alpha / self.config['social distancing']['alpha factor']
 
-        for group in betas.keys():
+        for group in betas:
             if group != 'household': 
                 if self.config_file is None:
                     betas_new[group] = betas_new[group] / 2
@@ -112,9 +112,7 @@ class Closure(Policy):
 
     def is_fully_closed(self, time):
         if self.partial is None:
-            if self.start_time < time < self.end_time:
-                return True
-            return False
+            return self.start_time < time < self.end_time
      
     def is_partially_closed(self, person, time):
         # TODO: need to use mapping between activities and groups
