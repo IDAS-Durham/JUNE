@@ -1,7 +1,0 @@
-interaction:
-  type: collective
-
-people:
-  adult_threshold: 6 # 18 yo
-  student_age_group: 7
-  old_threshold: 12 # 12 corresponds to +65 yo
