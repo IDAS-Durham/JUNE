@@ -3,6 +3,7 @@ import random
 from june import paths
 from typing import List, Optional
 import datetime
+import copy
 
 from itertools import chain
 import numpy as np
@@ -16,6 +17,7 @@ from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
+from june.policy import Policies
 
 from june.logger.logger import Logger
 from june.time import Timer
@@ -44,7 +46,10 @@ class Simulator:
         seed: Optional["Seed"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
+        policies = Policies(),
         save_path: str = "results",
+        output_filename: str = "logger.hdf5",
+        light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -65,13 +70,19 @@ class Simulator:
             minimum age of a child to be left alone at home when ill
         stay_at_home_complacency:
             probability that an ill person will not stay at home
+        policies:
+            policies to be implemented at different time steps
         save_path:
             path to save logger results
         """
         self.world = world
         self.interaction = interaction
+        self.beta_copy = copy.deepcopy(self.interaction.beta)
+        self.alpha_copy = copy.copy(self.interaction.alpha_physical)
         self.seed = seed
         self.selector = selector
+        self.policies = policies
+        self.light_logger = light_logger
         self.activity_hierarchy = [
             "box",
             "hospital",
@@ -91,7 +102,8 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path)
+            self.logger = Logger(save_path=save_path,
+                    file_name = output_filename)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -126,6 +138,7 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
+        policies = Policies(),
         seed: "Seed" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
@@ -156,6 +169,7 @@ class Simulator:
             selector,
             activity_to_groups,
             time_config,
+            policies = policies,
             seed=seed,
             save_path=save_path,
         )
@@ -228,7 +242,6 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
-    #@profile
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
@@ -245,7 +258,6 @@ class Simulator:
         activities.sort(key=lambda x: self.activity_hierarchy.index(x))
         return activities
 
-    #@profile
     def activities_to_groups(self, activities: List[str]) -> List[str]:
         """
         Converts activities into Groups, the interaction will run over these Groups.
@@ -262,7 +274,6 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
-    #@profile
     def clear_world(self):
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
@@ -270,7 +281,7 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
-            if group_name == "residence_visits":
+            if group_name in ["care_home_visits", "household_visits"]:
                 continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
@@ -279,7 +290,6 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
 
-    #@profile
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
     ) -> "Subgroup":
@@ -297,15 +307,27 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-    #    activities = self.apply_activity_hierarchy(activities)
+
+        activities = self.apply_activity_hierarchy(activities)
+        #personal_closed_groups = self.policies.get_fully_closed_groups(
+        #    time=self.timer.now
+        #) + self.policies.get_partially_closed_groups(
+        #    person=person, time=self.timer.now
+        #)
+
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person, self.timer.duration, self.timer.is_weekend
+                    person,
+                    self.timer.duration,
+                    self.timer.is_weekend,
+                    closed_groups=[]#personal_closed_groups,
                 )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
+                #if subgroup.group.spec in personal_closed_groups:
+                #    continue
                 return subgroup
 
     def kid_drags_guardian(
@@ -364,7 +386,6 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
-        #activities = self.apply_activity_hierarchy(activities)
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -445,7 +466,6 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
-    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -482,7 +502,7 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
-    #@profile
+
     def do_timestep(self):
         """
         Perform a time step in the simulation
@@ -505,25 +525,34 @@ class Simulator:
         group_instances = [
             getattr(self.world, group)
             for group in active_groups
-            if group != "residence_visits"
+            if group not in ["household_visits", "care_home_visits"]
         ]
         n_people = 0
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
         sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
+        
+        if self.policies.social_distancing and self.policies.social_distancing_start < self.timer.date < self.policies.social_distancing_end:
+            self.interaction.alpha_physical, self.interaction.beta = self.policies.social_distancing_policy(self.alpha_copy, self.beta_copy, self.timer.now)
+        else:
+            self.interaction.alpha_physical = self.alpha_copy
+            self.interaction.beta = self.beta_copy
+
         for group_type in group_instances:
+            n_people_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now, self.timer.duration, group, self.logger,
                 )
                 n_people += group.size
+                n_people_group += group.size
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-        self.update_health_status(self.timer.now, self.timer.duration)
+        self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
@@ -547,7 +576,7 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people)
+            self.logger.log_population(self.world.people, light_logger=self.light_logger)
             self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:

@@ -8,7 +8,8 @@ from june.groups.leisure import (
     PubDistributor,
     GroceryDistributor,
     CinemaDistributor,
-    VisitsDistributor,
+    HouseholdVisitsDistributor,
+    CareHomeVisitsDistributor
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 
@@ -57,11 +58,16 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "groceries"):
             raise ValueError("Your world does not have groceries.")
         leisure_distributors.append(GroceryDistributor.from_config(world.groceries))
-
+    if "care_home_visits" in list_of_leisure_groups:
+        if not hasattr(world, "care_homes"):
+            raise ValueError("Your world does not have care homes.")
+        leisure_distributors.append(CareHomeVisitsDistributor.from_config(world.super_areas))
+    if "household_visits" in list_of_leisure_groups:
+        if not hasattr(world, "households"):
+            raise ValueError("Your world does not have households.")
+        leisure_distributors.append(HouseholdVisitsDistributor.from_config(world.super_areas))
     if "residence_visits" in list_of_leisure_groups:
-        if not hasattr(world, "households") or not hasattr(world, "care_homes"):
-            raise ValueError("Your world does not have households or care homes.")
-        leisure_distributors.append(VisitsDistributor.from_config(world.super_areas))
+        raise NotImplementedError
 
     return Leisure(leisure_distributors)
 
@@ -82,7 +88,7 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
 
     def get_leisure_distributor_for_person(
-        self, person: Person, delta_time: float, is_weekend: bool = False
+        self, person: Person, delta_time: float, is_weekend: bool = False, closed_groups = [],
     ):
         """
         Given a person, reads its characteristics, and the amount of free time it has,
@@ -104,9 +110,10 @@ class Leisure:
         """
         poisson_parameters = []
         for distributor in self.leisure_distributors:
-            poisson_parameters.append(
-                distributor.get_poisson_parameter(person, is_weekend)
-            )
+            if distributor.spec not in closed_groups:
+                poisson_parameters.append(
+                    distributor.get_poisson_parameter(person, is_weekend)
+                )
         activity = roll_activity_dice(
             np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
         )
@@ -129,7 +136,8 @@ class Leisure:
         him or her.
         """
         if (
-            person.residence.group.spec in ["care_home", "communal"]
+            person.residence.group.spec == "care_home"
+            or person.residence.group.type in ["communal", "other", "student"]
         ):
             return False
         if leisure_distributor.person_drags_household():
@@ -139,7 +147,7 @@ class Leisure:
             return True
 
     def get_subgroup_for_person_and_housemates(
-        self, person: Person, delta_time: float, is_weekend: bool
+            self, person: Person, delta_time: float, is_weekend: bool, closed_groups=[]
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
@@ -164,7 +172,7 @@ class Leisure:
             whether it is a weekend or not
         """
         social_venue_distributor = self.get_leisure_distributor_for_person(
-            person, delta_time, is_weekend
+            person, delta_time, is_weekend, closed_groups
         )
         if social_venue_distributor is None:
             return None

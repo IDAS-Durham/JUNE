@@ -12,7 +12,7 @@ from june import paths
 
 class ReadLogger:
     def __init__(
-        self, output_path: str = "results", output_file_name: str = "logger.hdf5"
+            self, output_path: str = "results", output_file_name: str = "logger.hdf5", light_logger: bool =False, load_real=True
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -26,24 +26,27 @@ class ReadLogger:
         """
         self.output_path = output_path
         self.file_path = Path(self.output_path) / output_file_name
-        self.load_population_data()
+        self.light_logger = light_logger
+        self.load_population_data(self.light_logger)
         self.load_infected_data()
         self.load_infection_location()
         self.start_date = min(self.infections_df.index)
         self.end_date = max(self.infections_df.index)
-        self.load_real_time_series()
+        if load_real:
+            self.load_real_time_series()
 
-    def load_population_data(self):
+    def load_population_data(self, light_logger):
         """
         Load data related to population (age, sex, ...)
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             population = f["population"]
             self.n_people = population.attrs["n_people"]
-            self.ids = population["id"][:]
-            self.ages = population["age"][:]
-            self.sexes = population["sex"][:]
-            self.super_areas = population["super_area"][:].astype("U13")
+            if not light_logger:
+                self.ids = population["id"][:]
+                self.ages = population["age"][:]
+                self.sexes = population["sex"][:]
+                self.super_areas = population["super_area"][:].astype("U13")
 
     def load_infected_data(self,):
         """
@@ -362,7 +365,7 @@ class ReadLogger:
 
     def load_real_deaths(self,):
         deaths_df = pd.read_csv(
-            paths.data_path / "processed/time_series/n_deaths_region.csv", index_col=0
+            paths.data_path / "covid_real_data/n_deaths_region.csv", index_col=0
         )
         deaths_df.index = pd.to_datetime(deaths_df.index)
         mask = (deaths_df.index > self.start_date) & (deaths_df.index < self.end_date)
@@ -370,7 +373,7 @@ class ReadLogger:
 
     def load_confirmed_cases(self,):
         confirmed_cases_df = pd.read_csv(
-            paths.data_path / "processed/time_series/n_confirmed_cases.csv", index_col=0
+            paths.data_path / "covid_real_data/n_confirmed_cases.csv", index_col=0
         )
         confirmed_cases_df.index = pd.to_datetime(confirmed_cases_df.index)
         mask = (confirmed_cases_df.index > self.start_date) & (
@@ -381,7 +384,7 @@ class ReadLogger:
     def load_estimated_cases(self,):
 
         estimated_cases_df = pd.read_csv(
-            paths.data_path / "processed/time_series/n_cases_region.csv", index_col=0
+            paths.data_path / "covid_real_data/n_cases_region.csv", index_col=0
         )
         estimated_cases_df.index = pd.to_datetime(estimated_cases_df.index)
         mask = (estimated_cases_df.index > self.start_date) & (
