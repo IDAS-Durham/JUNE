@@ -505,7 +505,7 @@ class Simulator:
         group_instances = [
             getattr(self.world, group)
             for group in active_groups
-            if group != "residence_visits"
+            if group not in ["household_visits", "care_home_visits"]
         ]
         n_people = 0
         if not self.world.box_mode:
