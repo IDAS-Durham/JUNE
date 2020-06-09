@@ -146,7 +146,8 @@ class HealthIndexGenerator:
 
         Boolean_icu_male = (
             self.prob_lists[0, :, 3] > self.prob_lists[0, :, 4]
-        )  # If the DEath ratio is larger that the ICU ratio
+        )  
+        # If the DEath ratio is larger that the ICU ratio
         Boolean_icu_female = (self.prob_lists[1, :, 3] > self.prob_lists[1, :, 4])
 
         self.prob_lists[0, :, 3][Boolean_icu_male] = self.prob_lists[0, :, 4][

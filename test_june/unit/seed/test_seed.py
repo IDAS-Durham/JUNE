@@ -85,7 +85,7 @@ def test__n_infected_total(seed):
 
     n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
     np.testing.assert_allclose(
-        n_cases / n_people_region * len(super_areas[1].people), n_infected, rtol=0.05
+        n_cases / n_people_region * len(super_areas[1].people), n_infected, atol=5, rtol=0
     )
 
 
