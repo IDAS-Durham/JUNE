@@ -49,16 +49,12 @@ class Household(Group):
         if activity == "leisure":
             if person.age < 18:
                 subgroup = self.SubgroupType.kids
-                self[subgroup].append(person)
             elif person.age <= 35:
                 subgroup = self.SubgroupType.young_adults
-                self[subgroup].append(person)
             elif person.age < 65:
                 subgroup = self.SubgroupType.adults
-                self[subgroup].append(person)
             else:
                 subgroup = self.SubgroupType.old_adults
-                self[subgroup].append(person)
             person.subgroups.leisure = self[subgroup]
         elif activity == "residence":
             self[subgroup_type].append(person)

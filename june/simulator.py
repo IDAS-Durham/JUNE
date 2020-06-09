@@ -297,7 +297,6 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-    #    activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -364,7 +363,6 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
-        #activities = self.apply_activity_hierarchy(activities)
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -445,7 +443,6 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
-    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -482,7 +479,7 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
-    #@profile
+
     def do_timestep(self):
         """
         Perform a time step in the simulation
@@ -513,11 +510,16 @@ class Simulator:
                 n_people += len(cemetery.people)
         sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
         for group_type in group_instances:
+            n_people_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now, self.timer.duration, group, self.logger,
                 )
                 n_people += group.size
+                n_people_group += group.size
+            print(group_type)
+            print(n_people)
+            print(n_people_group)
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
