@@ -298,7 +298,6 @@ class Geography:
             super_area.areas = areas_list
             total_areas_list += list(areas_list)
             super_areas_list.append(super_area)
-
         areas = Areas(total_areas_list)
         super_areas = SuperAreas(super_areas_list)
         logger.info(

@@ -62,23 +62,38 @@ for super_area in world.super_areas:
     population_super_area = len(population)
     total_residents_in_super_area = 0
     n_residents_area = []
+    adults = [person for person in population if person.age >= 17]
+    kids = [person for person in population if person.age < 17]
     for area in super_area.areas:
         n_residents = area_residents_families_df.loc[area.name, "residents"]
         n_residents_area.append(n_residents)
         total_residents_in_super_area += n_residents
     for i, area in enumerate(super_area.areas):
-        n_residents = min(
+        population_ratio = n_residents_area[i] / total_residents_in_super_area
+        n_adults = min(
             int(
                 np.round(
                     n_residents_area[i]
                     / total_residents_in_super_area
-                    * population_super_area
+                    * len(adults) 
                 )
             ),
             len(population),
         )
-        for _ in range(n_residents):
-            area.add(population.people.pop())
+        n_kids = min(
+            int(
+                np.round(
+                    n_residents_area[i]
+                    / total_residents_in_super_area
+                    * len(kids) 
+                )
+            ),
+            len(population),
+        )
+        for _ in range(n_adults):
+            area.add(adults.pop())
+        for _ in range(n_kids):
+            area.add(kids.pop())
     if population.people:
         areas = np.random.choice(super_area.areas, size=len(population.people))
         for area in areas:
@@ -87,6 +102,10 @@ for super_area in world.super_areas:
 
 # household population
 household_distributor = HouseholdDistributor.from_file()
+household_distributor.kid_max_age = 16
+household_distributor.young_adult_min_age = 17
+household_distributor.adult_min_age = 17
+household_distributor.ignore_orphans=True
 households_total = []
 for area in world.areas:
     men_by_age, women_by_age = household_distributor._create_people_dicts(area)
@@ -94,8 +113,7 @@ for area in world.areas:
     families = area_data["families"]
     residents = area_data["residents"]
     number_households = {
-        "1 0 >=0 1 0": int(families), #int(families // 2),
-        #">=2 0 >=0 2 0": int(families - families // 2),
+        ">=1 0 >=0 >=1 0": int(families), #int(families // 2),
     }
     area.households = household_distributor.distribute_people_to_households(
         men_by_age=men_by_age,
@@ -109,4 +127,4 @@ for area in world.areas:
 world.households = Households(households_total)
 world.to_hdf5("camp.hdf5")
 
-world = generate_world_from_hdf5("camp.hdf5")
+#world = generate_world_from_hdf5("camp.hdf5")
