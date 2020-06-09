@@ -12,7 +12,7 @@ from june import paths
 
 class ReadLogger:
     def __init__(
-            self, output_path: str = "results", output_file_name: str = "logger.hdf5", light_logger: bool =True
+            self, output_path: str = "results", output_file_name: str = "logger.hdf5", light_logger: bool =False, load_real=True
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -32,7 +32,8 @@ class ReadLogger:
         self.load_infection_location()
         self.start_date = min(self.infections_df.index)
         self.end_date = max(self.infections_df.index)
-        self.load_real_time_series()
+        if load_real:
+            self.load_real_time_series()
 
     def load_population_data(self, light_logger):
         """
