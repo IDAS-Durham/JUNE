@@ -136,9 +136,9 @@ class TestTrajectoryMaker:
         ]
         infected = influenza_trajectory.stages[0]
         assert infected.symptoms_tag == sym.SymptomTag.exposed
-        assert infected.completion_time.a == 2.39
-        assert infected.completion_time.b == 25.40
-        assert infected.completion_time.scale  == 50.1
+        assert infected.completion_time.a == 2.29
+        assert infected.completion_time.b == 19.05
+        assert infected.completion_time.scale  == 39.8
 
         recovered = influenza_trajectory.stages[-1]
         assert recovered.symptoms_tag == sym.SymptomTag.recovered
@@ -185,10 +185,10 @@ class TestSymptomsTrajectory:
         assert symptoms_trajectories.trajectory == [
             (0.0, sym.SymptomTag.exposed),
             (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
-            (pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(12, rel=0.5), sym.SymptomTag.intensive_care),
-            (pytest.approx(30, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(50, rel=0.5), sym.SymptomTag.recovered)
+            (pytest.approx(15, rel=0.5), sym.SymptomTag.hospitalised),
+            (pytest.approx(17, rel=0.5), sym.SymptomTag.intensive_care),
+            (pytest.approx(35, rel=0.5), sym.SymptomTag.hospitalised),
+            (pytest.approx(55, rel=0.5), sym.SymptomTag.recovered)
         ]
 
     def test__symptoms__progression(self):
