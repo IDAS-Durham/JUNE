@@ -2,22 +2,39 @@ import pandas as pd
 import json
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import numpy as np
 from datetime import timedelta
+from itertools import chain
 
 from june.logger.read_logger import ReadLogger
 from june.paths import data_path
 
-sa_to_county_filename = data_path / "processed/geographical_data/oa_msoa_lad.csv"
-county_shapes_filename = (
-    data_path / "processed/geographical_data/lad_boundaries.geojson"
+sa_to_county_filename = (
+    data_path / "not_used_in_code/processed/geographical_data/oa_msoa_lad.csv"
 )
+area_super_area_region_filename = (
+    data_path / "input/geography/area_super_area_region.csv"
+)
+county_shapes_filename = data_path / "input/geography/lad_boundaries.geojson"
 super_area_coordinates_filename = (
-    data_path / "processed/geographical_data/msoa_coordinates.csv"
+    data_path / "input/geography/super_area_coordinates.csv"
 )
+deaths_region_data = data_path / "covid_real_data/n_deaths_region.csv"
+cases_region_data = data_path / "covid_real_data/n_cases_region.csv"
 
 mapbox_access_token = "pk.eyJ1IjoiYXN0cm9ieXRlIiwiYSI6ImNrYWwxeHNxZTA3cXMyeG15dGlsbzd1aHAifQ.XvkJbn9mEZ2cuctaX1UwTw"
 px.set_mapbox_access_token(mapbox_access_token)
+
+regions_dictionary = {
+    "East Of England": ["East of England"],
+    "Midlands": ["East Midlands", "West Midlands"],
+    "London": ["London"],
+    "South West": ["South West"],
+    "South East": ["South East"],
+    "North East And Yorkshire": ["North East", "Yorkshire and The Humber"],
+    "Wales": ["Wales"],
+}
 
 
 class DashPlotter:
@@ -28,6 +45,8 @@ class DashPlotter:
         self.super_area_coordinates = pd.read_csv(super_area_coordinates_filename)
         self.world_data = self.logger_reader.world_summary()
         self.area_data = self.logger_reader.super_area_summary()
+        self.area_super_area_region = pd.read_csv(area_super_area_region_filename)
+        self.area_super_area_region.set_index("super_area", inplace=True)
         self.county_data = self.group_data_by_counties(self.area_data.copy())
         self.hospital_characteristics = (
             self.logger_reader.load_hospital_characteristics()
@@ -37,6 +56,11 @@ class DashPlotter:
             self.hospital_data["time_stamp"]
         )
         self.hospital_data.set_index("time_stamp", inplace=True)
+        self.deaths_region_data = pd.read_csv(deaths_region_data, index_col=0)
+        self.deaths_region_data.index = pd.to_datetime(self.deaths_region_data.index)
+        self.cases_region_data = pd.read_csv(cases_region_data, index_col=0)
+        self.cases_region_data.index = pd.to_datetime(self.cases_region_data.index)
+        self.regions = self.deaths_region_data.columns
         self.ages_data = self.logger_reader.age_summary(
             [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         )
@@ -264,6 +288,41 @@ class DashPlotter:
             xaxis_title="Date",
             yaxis_title="Symptoms",
         )
+        return fig
+
+    def generate_data_comparison(self, region):
+        region_names = regions_dictionary[region]
+        deaths_real_data = self.deaths_region_data[region]
+        super_areas = self.area_super_area_region[
+            self.area_super_area_region.region.isin(region_names)
+        ].index.values
+        june_data = self.area_data.loc[self.area_data.super_area.isin(super_areas)]
+        june_data = june_data.groupby(june_data.index).sum()
+        fig = make_subplots(rows=1, cols=1)
+        fig.add_trace(
+            go.Scatter(
+                x=deaths_real_data.index.date,
+                y=deaths_real_data.values.cumsum(),
+                name="data",
+                line=dict(color="rgb(231,107,243)", width=4, dash="dash"),
+            ),
+            row=1,
+            col=1,
+        )
+        if len(june_data) != 0:
+            fig.add_trace(
+                go.Scatter(
+                    x=june_data.index.date,
+                    y=june_data["dead"].values.cumsum(),
+                    name="prediction",
+                    line=dict(color="royalblue", width=4),
+                ),
+                row=1,
+                col=1,
+            )
+        fig.update_layout(template="simple_white",)
+        fig.update_xaxes(title_text="Date", row=1, col=1)
+        fig.update_yaxes(title_text="Deaths", row=1, col=1)
         return fig
 
     @property
