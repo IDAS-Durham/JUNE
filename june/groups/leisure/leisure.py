@@ -8,7 +8,8 @@ from june.groups.leisure import (
     PubDistributor,
     GroceryDistributor,
     CinemaDistributor,
-    VisitsDistributor,
+    HouseholdVisitsDistributor,
+    CareHomeVisitsDistributor
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 
@@ -57,11 +58,16 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "groceries"):
             raise ValueError("Your world does not have groceries.")
         leisure_distributors.append(GroceryDistributor.from_config(world.groceries))
-
+    if "care_home_visits" in list_of_leisure_groups:
+        if not hasattr(world, "care_homes"):
+            raise ValueError("Your world does not have care homes.")
+        leisure_distributors.append(CareHomeVisitsDistributor.from_config(world.super_areas))
+    if "household_visits" in list_of_leisure_groups:
+        if not hasattr(world, "households"):
+            raise ValueError("Your world does not have households.")
+        leisure_distributors.append(HouseholdVisitsDistributor.from_config(world.super_areas))
     if "residence_visits" in list_of_leisure_groups:
-        if not hasattr(world, "households") or not hasattr(world, "care_homes"):
-            raise ValueError("Your world does not have households or care homes.")
-        leisure_distributors.append(VisitsDistributor.from_config(world.super_areas))
+        raise NotImplementedError
 
     return Leisure(leisure_distributors)
 
@@ -130,7 +136,8 @@ class Leisure:
         him or her.
         """
         if (
-            person.residence.group.spec in ["care_home", "communal"]
+            person.residence.group.spec == "care_home"
+            or person.residence.group.type in ["communal", "other", "student"]
         ):
             return False
         if leisure_distributor.person_drags_household():
