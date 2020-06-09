@@ -1169,6 +1169,8 @@ class HouseholdDistributor:
             first_parent = self._get_matching_parent(
                 first_kid, men_by_age, women_by_age
             )
+            #print(men_by_age)
+            #print(women_by_age)
             if first_parent is None:
                 raise HouseholdError(
                     "Orphan kid. Check household configuration and population."

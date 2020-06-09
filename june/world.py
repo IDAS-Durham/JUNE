@@ -59,6 +59,8 @@ class World:
         self.pubs = None
         self.groceries = None
         self.cinemas = None
+        self.commutecities = None
+        self.commutehubs = None
         self.cemeteries = None
 
     def distribute_people(
@@ -187,19 +189,19 @@ class World:
         geo = Geography(self.areas, self.super_areas)
         save_geography_to_hdf5(geo, file_path)
         save_population_to_hdf5(self.people, file_path, chunk_size)
-        if hasattr(self, "hospitals"):
+        if self.hospitals is not None:
             save_hospitals_to_hdf5(self.hospitals, file_path, chunk_size)
-        if hasattr(self, "schools"):
+        if self.schools is not None:
             save_schools_to_hdf5(self.schools, file_path, chunk_size)
-        if hasattr(self, "companies"):
+        if self.companies is not None:
             save_companies_to_hdf5(self.companies, file_path, chunk_size)
-        if hasattr(self, "households"):
+        if self.households is not None:
             save_households_to_hdf5(self.households, file_path, chunk_size)
-        if hasattr(self, "care_homes"):
+        if self.care_homes is not None:
             save_care_homes_to_hdf5(self.care_homes, file_path, chunk_size)
-        if hasattr(self, "commutecities"):
+        if self.commutecities is not None:
             save_commute_cities_to_hdf5(self.commutecities, file_path)
-        if hasattr(self, "commutehubs"):
+        if self.commutehubs is not None:
             save_commute_hubs_to_hdf5(self.commutehubs, file_path)
 
 
@@ -264,6 +266,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     ].id  # in case some super areas were created before
     with h5py.File(file_path, "r") as f:
         f_keys = list(f.keys()).copy()
+    print(f_keys)
     if "population" in f_keys:
         world.people = load_population_from_hdf5(file_path, chunk_size)
     if "hospitals" in f_keys:
@@ -330,7 +333,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             super_area.people.extend(area.people)
 
     # commute
-    if hasattr(world, "commutehubs") and hasattr(world, "commutecities"):
+    if world.commutehubs is not None and world.commutecities is not None:
         first_hub_idx = world.commutehubs[0].id
         first_person_idx = world.people[0].id
         for city in world.commutecities:
