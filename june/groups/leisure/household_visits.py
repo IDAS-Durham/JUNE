@@ -44,8 +44,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
 
     def link_households_to_households(self, super_areas):
         """
-        Links people between households. Strategy: We pair each person with another person in the super
-        area. The household of the former then has a probability of visiting the household of the later 
+        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later 
         at every time step.
 
         Parameters
