@@ -558,7 +558,6 @@ class Simulator:
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-        # update health status only once at night
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
