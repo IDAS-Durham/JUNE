@@ -45,7 +45,6 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
-        self.relatives = None
 
     def add(
         self,
