@@ -266,7 +266,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     ].id  # in case some super areas were created before
     with h5py.File(file_path, "r") as f:
         f_keys = list(f.keys()).copy()
-    print(f_keys)
     if "population" in f_keys:
         world.people = load_population_from_hdf5(file_path, chunk_size)
     if "hospitals" in f_keys:
@@ -324,6 +323,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             group = supergroup.members[group_id - first_group_id]
             assert group_id == group.id
             subgroup = group[subgroup_type]
+            subgroup.append(person)
             setattr(subgroups_instances, activities[i], subgroup)
         person.subgroups = subgroups_instances
 
@@ -331,6 +331,13 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     for super_area in world.super_areas:
         for area in super_area.areas:
             super_area.people.extend(area.people)
+
+    # households in areas
+    if world.households is not None:
+        for household in world.households:
+            area = world.areas[household.area - first_area_id]
+            household.area = area
+            area.households.append(household)
 
     # commute
     if world.commutehubs is not None and world.commutecities is not None:

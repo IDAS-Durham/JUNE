@@ -90,6 +90,7 @@ class HouseholdDistributor:
         max_age_to_be_parent=64,
         max_household_size=8,
         allowed_household_compositions: dict = None,
+        ignore_orphans:bool  = False,
     ):
         """
         Tool to populate areas with households and fill them with the correct
@@ -126,6 +127,7 @@ class HouseholdDistributor:
         self.young_adult_max_age = young_adult_max_age
         self.max_age_to_be_parent = max_age_to_be_parent
         self.max_household_size = max_household_size
+        self.ignore_orphans = ignore_orphans
         self.allowed_household_compositions = allowed_household_compositions
         if self.allowed_household_compositions is None:
             self.allowed_household_compositions = [
@@ -137,6 +139,7 @@ class HouseholdDistributor:
                 ">=2 0 >=0 2 0",
                 "0 0 >=1 2 0",
                 "1 0 >=0 1 0",
+                ">=1 0 >=0 1 0",
                 ">=2 0 >=0 1 0",
                 "0 0 >=1 1 0",
                 "1 0 >=0 >=1 >=0",
@@ -252,7 +255,7 @@ class HouseholdDistributor:
         self._second_kid_parent_age_diff_list = list(
             self._second_kid_parent_age_diff_rv.rvs(size=n)
         )
-        self._random_sex_list = list(self._random_sex_rv.rvs(size=n))
+        self._random_sex_list = list(self._random_sex_rv.rvs(size=2*n))
 
     def _create_people_dicts(self, area: Area):
         """
@@ -499,6 +502,28 @@ class HouseholdDistributor:
                     ),
                 )
 
+
+        key = ">=1 0 >=0 >=1 >=0"
+        if key in number_households_per_composition:
+            house_number = number_households_per_composition[key]
+            if house_number > 0:
+                all_households += self.fill_families_households(
+                    men_by_age=men_by_age,
+                    women_by_age=women_by_age,
+                    n_households=house_number,
+                    kids_per_house=1,
+                    parents_per_house=1,
+                    old_per_house=0,
+                    area=area,
+                    extra_people_lists=(
+                        households_with_extra_kids,
+                        households_with_kids,
+                        households_with_extra_youngadults,
+                        households_with_extra_adults,
+                        households_with_extra_oldpeople,
+                    ),
+                )
+
         ### one kid and one parent for sure, possibly extra young adults.
         key = "1 0 >=0 1 0"
         if key in number_households_per_composition:
@@ -706,7 +731,7 @@ class HouseholdDistributor:
             Maximum number of people allowed in the household.
 
         """
-        household = Household(type=type, max_size=max_household_size)
+        household = Household(type=type, max_size=max_household_size, area =area)
         return household
 
     def _add_to_household(
@@ -1169,13 +1194,29 @@ class HouseholdDistributor:
             first_parent = self._get_matching_parent(
                 first_kid, men_by_age, women_by_age
             )
-            #print(men_by_age)
-            #print(women_by_age)
-            if first_parent is None:
+            if first_parent is None and not self.ignore_orphans:
+#                import matplotlib.pyplot as plt
+#                ages = [person.age for person in area.people]
+#                plt.hist(ages, bins=np.arange(0,100))
+#                plt.show()
+#
                 raise HouseholdError(
                     "Orphan kid. Check household configuration and population."
                 )
-            self._add_to_household(household, first_parent, subgroup="adults")
+            if first_parent is not None:
+                self._add_to_household(household, first_parent, subgroup="adults")
+            else:
+                for array in extra_people_lists:
+                    array.append(household)
+                for _ in range(i + 1, n_households):
+                    household = self._create_household(
+                        area, max_household_size=max_household_size, type="family"
+                    )
+                    households.append(household)
+                    for array in extra_people_lists:
+                        array.append(household)
+                return households
+
             for array in extra_people_lists:
                 array.append(household)
             if old_per_house > 0:
