@@ -31,6 +31,7 @@ from june.hdf5_savers import (
     load_commute_cities_from_hdf5,
     load_commute_hubs_from_hdf5,
 )
+from june import paths
 
 from pytest import fixture
 
@@ -49,7 +50,9 @@ def create_world(geography_h5):
         pass  # reset file
     geography = geography_h5
     demography = Demography.for_geography(geography)
-    geography.hospitals = Hospitals.for_geography(geography)
+    geography.hospitals= Hospitals.from_file(
+    filename=paths.camp_data_path / 'input/hospitals/hospitals.csv'
+    )
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)

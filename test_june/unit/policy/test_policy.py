@@ -7,7 +7,7 @@ import copy
 
 from june.demography.geography import Geography
 from june.demography import Demography
-from june.world import World
+from june.world import World, generate_world_from_geography
 from june.interaction import ContactAveraging
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
@@ -29,22 +29,26 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 @pytest.fixture(name="world", scope="module")
 def create_world():
-    geography = Geography.from_file({"super_area": ["E00088544", "E02002560", "E02002559"]})
+    geography = Geography.from_file(
+        {"super_area": ["E00088544", "E02002560", "E02002559"]}
+    )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
-    demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    world = generate_world_from_geography(
+        geography, include_households=True, include_commute=True
+    )
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(world.super_areas,venues_per_capita=1/500)
+    world.groceries = Groceries.for_super_areas(
+        world.super_areas, venues_per_capita=1 / 500
+    )
     world.initialise_commuting()
     world.cemeteries = Cemeteries()
-    
-    return world
 
+    return world
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
