@@ -29,7 +29,12 @@ class Logger:
         except OSError:
             pass
 
-    def log_population(self, population: Population, light_logger: bool = True, chunk_size: int = 100000):
+    def log_population(
+        self,
+        population: Population,
+        light_logger: bool = True,
+        chunk_size: int = 100000,
+    ):
         """
         Saves the Population object to hdf5 format file ``self.save_path``. Currently for each person,
         the following values are stored:
@@ -47,7 +52,7 @@ class Logger:
         dt = h5py.vlen_dtype(np.dtype("int32"))
         # dt = tuple
         n_chunks = int(np.ceil(n_people / chunk_size))
-        with h5py.File(self.file_path, "a", libver='latest') as f:
+        with h5py.File(self.file_path, "a", libver="latest") as f:
             people_dset = f.create_group("population")
             people_dset.attrs["n_people"] = n_people
             if not light_logger:
@@ -74,11 +79,20 @@ class Logger:
                     super_areas = np.array(super_areas, dtype="S10")
 
                     if chunk == 0:
-                        people_dset.create_dataset("id", data=ids, maxshape=(None,))
-                        people_dset.create_dataset("age", data=ages, maxshape=(None,))
-                        people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
                         people_dset.create_dataset(
-                            "super_area", data=super_areas, maxshape=(None,)
+                            "id", data=ids, maxshape=(None,), compression="gzip"
+                        )
+                        people_dset.create_dataset(
+                            "age", data=ages, maxshape=(None,), compression="gzip"
+                        )
+                        people_dset.create_dataset(
+                            "sex", data=sexes, maxshape=(None,), compression="gzip"
+                        )
+                        people_dset.create_dataset(
+                            "super_area",
+                            data=super_areas,
+                            maxshape=(None,),
+                            compression="gzip",
                         )
                     else:
                         newshape = (people_dset["id"].shape[0] + ids.shape[0],)
@@ -113,14 +127,18 @@ class Logger:
             list of number of secondary infections for everyone infected
         """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        with h5py.File(self.file_path, "a", libver='latest') as f:
+        with h5py.File(self.file_path, "a", libver="latest") as f:
             infected_dset = f.create_group(time_stamp)
             ids = np.array(infected_ids, dtype=np.int16)
             symptoms = np.array(symptoms, dtype=np.int16)
             n_secondary_infections = np.array(n_secondary_infections, dtype=np.int16)
-            infected_dset["id"] = ids
-            infected_dset["symptoms"] = symptoms
-            infected_dset["n_secondary_infections"] = n_secondary_infections
+            infected_dset.create_dataset("id", compression="gzip", data=ids)
+            infected_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
+            infected_dset.create_dataset(
+                "n_secondary_infections",
+                compression="gzip",
+                data=n_secondary_infections,
+            )
 
     def log_hospital_characteristics(self, hospitals: "Hospitals"):
         """
@@ -141,7 +159,7 @@ class Logger:
         coordinates = np.array(coordinates, dtype=np.float16)
         n_beds = np.array(n_beds, dtype=np.int16)
         n_icu_beds = np.array(n_icu_beds, dtype=np.int16)
-        with h5py.File(self.file_path, "a", libver='latest') as f:
+        with h5py.File(self.file_path, "a", libver="latest") as f:
             hospital_dset = f.require_group("hospitals")
             hospital_dset.create_dataset("coordinates", data=coordinates)
             hospital_dset.create_dataset("n_beds", data=n_beds)
@@ -174,7 +192,7 @@ class Logger:
         hospitals_ids = np.array(hospital_ids, dtype=np.int16)
         n_patients = np.array(n_patients, dtype=np.int16)
         n_patients_icu = np.array(n_patients_icu, dtype=np.int16)
-        with h5py.File(self.file_path, "a", libver='latest') as f:
+        with h5py.File(self.file_path, "a", libver="latest") as f:
             hospital_dset = f.require_group("hospitals")
             time_dset = hospital_dset.create_group(time_stamp)
             time_dset.create_dataset("hospital_id", data=hospital_ids)
@@ -228,7 +246,7 @@ class Logger:
             np.array(self.infection_location), return_counts=True
         )
         unique_locations = np.array(unique_locations, dtype="S10")
-        with h5py.File(self.file_path, "a", libver='latest') as f:
+        with h5py.File(self.file_path, "a", libver="latest") as f:
             locations_dset = f.require_group("locations")
             time_dset = locations_dset.create_group(time_stamp)
             time_dset.create_dataset("infection_location", data=unique_locations)
@@ -252,9 +270,6 @@ class Logger:
         unique_locations = np.array(unique_locations, dtype="S10")
         group_sizes = np.array(group_sizes, dtype=np.int16)
         counts = np.array(counts, dtype=np.int16)
-        with h5py.File(self.file_path, "a", libver='latest') as f:
+        with h5py.File(self.file_path, "a", libver="latest") as f:
             locations_dset = f.create_group("locations")
             locations_dset.create_dataset("n_locations", data=group_sizes)
-
-
-
