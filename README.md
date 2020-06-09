@@ -85,7 +85,7 @@ To **add** data files:
 
 1. Run: `git lfs track "[file]"` and remember the quotation marks
 
-2. As normal: `git add [file]`
+2. As normal: `git add "[file]"`
 
 3. As normal:
 ```

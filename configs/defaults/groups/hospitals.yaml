@@ -3,10 +3,4 @@
 icu_fraction:  0.042
 max_distance: 100.     # maximum distance person - hospital
 age_range: [8,13]      # numbers correspond to age groups defined by NOMIS dataset.
-sub_sector:
-  nurse:
-    sector_id: 2231    # NOMIS name convention
-    nr_of_clients: 10
-  doctor:
-    sector_id: 2211    # NOMIS name convention
-    nr_of_clients: 10
+

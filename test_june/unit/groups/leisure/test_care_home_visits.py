@@ -1,5 +1,5 @@
 from june.demography.person import Person
-from june.groups.leisure import VisitsDistributor
+from june.groups.leisure import CareHomeVisitsDistributor
 from june.demography.geography import Geography
 from june.groups import CareHomes
 import numpy as np
@@ -10,17 +10,9 @@ from june.groups import Household, CareHome
 from june.world import generate_world_from_geography
 
 
-@fixture(name="world_visits", scope="module")
-def make_super_areas():
-    geo = Geography.from_file({"super_area": ["E02003353"]})
-    geo.care_homes = CareHomes.for_geography(geo)
-    world = generate_world_from_geography(geography=geo, include_households=True)
-    return world
-
-
 @fixture(name="visits_distributor")
 def make_dist(world_visits):
-    visits_distributor = VisitsDistributor(
+    visits_distributor = CareHomeVisitsDistributor(
         world_visits.super_areas,
         male_age_probabilities={"0-99": 1.0},
         female_age_probabilities={"0-99": 1.0},
@@ -41,13 +33,18 @@ def test__every_household_has_up_to_2_links(world_visits, visits_distributor):
                     "other",
                     "communal",
                 ]:
-                    assert household.relatives is None
+                    assert household.relatives_in_care_homes is None
                 elif household.type in ["family", "ya_parents", "nokids"]:
-                    assert household.relatives is None or len(household.relatives) <= 2
-                    if household.relatives is not None:
+                    assert (
+                        household.relatives_in_care_homes is None
+                        or len(household.relatives_in_care_homes) <= 2
+                    )
+                    if household.relatives_in_care_homes is not None:
                         # for now we only allow household -> care_home
-                        for link in household.relatives:
-                            assert link.residence.subgroup_type == 1 # link is a resident
+                        for link in household.relatives_in_care_homes:
+                            assert (
+                                link.residence.subgroup_type == 1
+                            )  # link is a resident
                             assert link.residence.group.spec == "care_home"
                 else:
                     raise ValueError
@@ -59,7 +56,7 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
     for super_area in super_areas:
         for area in super_area.areas:
             for household in area.households:
-                if household.relatives is not None:
+                if household.relatives_in_care_homes is not None:
                     person = household.people[0]
                     found_person = True
                     break
@@ -73,7 +70,7 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
 
 @fixture(name="leisure")
 def make_leisure(world_visits):
-    leisure = generate_leisure_for_world(["residence_visits"], world_visits)
+    leisure = generate_leisure_for_world(["care_home_visits"], world_visits)
     return leisure
 
 
@@ -88,7 +85,7 @@ def test__care_home_visits_leisure_integration(world_visits, leisure):
     for area in world_visits.areas:
         if area.care_home is not None:
             break
-    person1.residence.group.relatives = [area.care_home.residents[0]]
+    person1.residence.group.relatives_in_care_homes = [area.care_home.residents[0]]
     assigned = False
     for _ in range(0, 100):
         subgroup = leisure.get_subgroup_for_person_and_housemates(
@@ -103,7 +100,8 @@ def test__care_home_visits_leisure_integration(world_visits, leisure):
             assert subgroup.group == area.care_home
     assert assigned
 
-def test__do_not_visit_old_people(world_visits, leisure):
+
+def test__do_not_visit_dead_people(world_visits, leisure):
     # look for a person in carehome
     found = False
     for area in world_visits.areas:
@@ -115,9 +113,8 @@ def test__do_not_visit_old_people(world_visits, leisure):
     person2 = Person.from_attributes()
     household = Household(type="family")
     household.add(person2)
-    household.relatives = [person]
+    household.relatives_in_care_homes = [person]
     person.dead = True
-    for _ in range(0,100):
+    for _ in range(0, 100):
         care_home = leisure.get_subgroup_for_person_and_housemates(person2, 0.1, True)
         assert care_home is None
-

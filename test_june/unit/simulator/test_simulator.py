@@ -82,7 +82,8 @@ def test__activities_to_groups(sim):
         "pubs",
         "cinemas",
         "groceries",
-        "residence_visits",
+        "household_visits",
+        "care_home_visits",
         "households",
         "care_homes",
     ]
@@ -91,7 +92,7 @@ def test__activities_to_groups(sim):
 def test__clear_world(sim):
     sim.clear_world()
     for group_name in sim.activities_to_groups(sim.all_activities):
-        if group_name == "residence_visits":
+        if group_name in ["household_visits", "care_home_visits"]:
             continue
         grouptype = getattr(sim.world, group_name)
         for group in grouptype.members:
