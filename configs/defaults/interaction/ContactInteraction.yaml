@@ -15,11 +15,13 @@ beta:
 
 contact_matrices:
  hospital:
-  contacts: [[5.00, 1., 1.], [10., 0., 0.], [5., 0., 0.]]
+  # number 10 comes from the fact that on average there are 10 medics per patient
+  # for ICU that should be lower, but it isn't reflected in hospital distributor yet
+  contacts: [[5.00, 10., 10.], [1., 0., 0.], [1., 0., 0.]]
   proportion_physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
  care_home:
-  contacts: [[5.00, 1., 1.], [10., 2.0, 1.], [1,1,1]]
-  proportion_physical: [[0.05, 1., 1.], [1.0, 0.4, 1.],[1.,1.,1.]]
+  contacts: [[5.00, 10., 1.], [1., 0, 2.], [0.25,1,0]]
+  proportion_physical: [[0.05, 1., 0.], [1.0, 0.4, 1.],[0.,0.5,0.]]
  company:
   contacts: [[4.8]]
   proportion_physical: [[0.07]]
