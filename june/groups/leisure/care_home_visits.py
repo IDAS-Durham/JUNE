@@ -9,10 +9,10 @@ from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 
-default_config_filename = configs_path / "defaults/groups/leisure/residence_visits.yaml"
+default_config_filename = configs_path / "defaults/groups/leisure/care_home_visits.yaml"
 
 
-class VisitsDistributor(SocialVenueDistributor):
+class CareHomeVisitsDistributor(SocialVenueDistributor):
     def __init__(
         self,
         super_areas: SuperAreas,
@@ -64,26 +64,25 @@ class VisitsDistributor(SocialVenueDistributor):
                 np.random.shuffle(households_super_area)
             for area in super_area.areas:
                 if area.care_home is not None:
-                    people_in_care_home = [person for person in area.care_home.residents]
+                    people_in_care_home = [
+                        person for person in area.care_home.residents
+                    ]
                     for i, person in enumerate(people_in_care_home):
-                        if households_super_area[i].relatives is None:
-                            households_super_area[i].relatives = (person,)
+                        if households_super_area[i].relatives_in_care_homes is None:
+                            households_super_area[i].relatives_in_care_homes = (person,)
                         else:
-                            households_super_area[i].relatives = tuple(
-                                (*households_super_area[i].relatives, person,)
+                            households_super_area[i].relatives_in_care_homes = tuple(
+                                (
+                                    *households_super_area[i].relatives_in_care_homes,
+                                    person,
+                                )
                             )
 
     def get_social_venue_for_person(self, person):
-        relatives = person.residence.group.relatives
+        relatives = person.residence.group.relatives_in_care_homes
         if relatives is None:
-            return
-        if len([person for person in relatives if person.dead is False]) == 0:
-            return
-        elif len(relatives) == 1:
-            return relatives[0].residence.group
-        else:
-            relative = np.random.choice(relatives)
-            return relative.residence.group
+            return None
+        return relatives[np.random.randint(0, len(relatives))].residence.group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
@@ -99,14 +98,18 @@ class VisitsDistributor(SocialVenueDistributor):
         is_weekend
             whether it is a weekend or not
         """
-        if person.residence.group.relatives is None:
+
+        if (
+            person.residence.group.spec == "care_home"
+            or person.residence.group.relatives_in_care_homes is None
+        ):
             return 0
         # do not visit dead people
         if (
             len(
                 [
                     person
-                    for person in person.residence.group.relatives
+                    for person in person.residence.group.relatives_in_care_homes
                     if person.dead is False
                 ]
             )

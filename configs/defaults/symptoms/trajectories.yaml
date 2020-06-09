@@ -4,10 +4,10 @@ trajectories:
       - symptom_tag: exposed
         completion_time:
           type: beta
-          a: 2.39
-          b: 25.40
-          loc: -0.0028
-          scale: 50.1 
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8 
 
       - symptom_tag: asymptomatic
         completion_time:
@@ -25,10 +25,10 @@ trajectories:
       - symptom_tag: exposed
         completion_time:
           type: beta
-          a: 2.39
-          b: 25.40
-          loc: -0.0028
-          scale: 50.1 
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
 
       - symptom_tag: influenza
         completion_time:
@@ -46,10 +46,11 @@ trajectories:
       - symptom_tag: exposed
         completion_time:
           type: beta
-          a: 2.39
-          b: 25.40
-          loc: -0.0028
-          scale: 50.1 
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
+ 
 
       - symptom_tag: influenza
         completion_time:
@@ -70,13 +71,14 @@ trajectories:
 
 
   - stages:
+      
       - symptom_tag: exposed
         completion_time:
           type: beta
-          a: 2.39
-          b: 25.40
-          loc: -0.0028
-          scale: 50.1 
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
 
       - symptom_tag: influenza
         completion_time:
@@ -101,13 +103,14 @@ trajectories:
 
 
   - stages:
+      
       - symptom_tag: exposed
         completion_time:
           type: beta
-          a: 2.39
-          b: 25.40
-          loc: -0.0028
-          scale: 50.1 
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
 
       - symptom_tag: influenza
         completion_time:
@@ -124,8 +127,11 @@ trajectories:
 
       - symptom_tag: intensive_care
         completion_time:
-          type: constant
-          value: 20.
+          type: beta
+          a: 2.41
+          b: 5.94
+          loc: 0.0
+          scale: 15
 
 
       - symptom_tag: hospitalised
@@ -147,29 +153,22 @@ trajectories:
       - symptom_tag: exposed
         completion_time:
           type: beta
-          a: 2.39
-          b: 25.40
-          loc: -0.0028
-          scale: 50.1 
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
 
       - symptom_tag: influenza
         completion_time:
           type: exponential
           loc: 1
           scale: 4.12
-
-
-      #- symptom_tag: hospitalised
-      #  completion_time:
-      #    type: constant
-      #    value: 2.
-
-
+      
       - symptom_tag: intensive_care
         completion_time:
-          type: constant
-          value: 5.
-
+          type: exponential
+          loc: 1
+          scale: 8.854
 
       - symptom_tag: dead
         completion_time:
