@@ -67,12 +67,8 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             raise ValueError("Your world does not have households.")
         leisure_distributors.append(HouseholdVisitsDistributor.from_config(world.super_areas))
     if "residence_visits" in list_of_leisure_groups:
-        if not hasattr(world, "care_homes"):
-            raise ValueError("Your world does not have care homes.")
-        leisure_distributors.append(CareHomeVisitsDistributor.from_config(world.super_areas))
-        if not hasattr(world, "households"):
-            raise ValueError("Your world does not have households.")
-        leisure_distributors.append(HouseholdVisitsDistributor.from_config(world.super_areas))
+        raise NotImplementedError
+
     return Leisure(leisure_distributors)
 
 
