@@ -85,16 +85,15 @@ class Policies:
         
         
         if self.config is None:
-            alpha_new = alpha/2
+            alpha_new = alpha * 1.0
         else:
-            alpha_new = alpha / self.config['social distancing']['alpha factor']
+            alpha_new = alpha * self.config['social distancing']['alpha factor']
 
         for group in betas:
-            if group != 'household': 
-                if self.config is None:
-                    betas_new[group] = betas_new[group] / 2
-                else:
-                    betas_new[group] = betas_new[group]/ self.config['social distancing']['beta factor']
+            if self.config is None:
+                betas_new[group] = betas_new[group] * 0.5
+            else:
+                betas_new[group] = betas_new[group] * self.config['social distancing']['beta factor'][group]
 
         return alpha_new, betas_new
 
