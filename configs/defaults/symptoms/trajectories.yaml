@@ -125,10 +125,18 @@ trajectories:
           value: 2.
 
 
+      #- symptom_tag: intensive_care
+      #  completion_time:
+       #   type: constant
+        #  value: 20.
+      
       - symptom_tag: intensive_care
         completion_time:
-          type: constant
-          value: 20.
+          type: beta
+          a: 2.41
+          b: 5.94
+          loc: 0.0
+          scale: 15
 
 
       - symptom_tag: hospitalised
