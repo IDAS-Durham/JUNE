@@ -3,7 +3,7 @@ import numpy as np
 from june import paths
 
 default_polinom_filename = (
-        paths.configs_path / "defaults/Model_ratio_England.txt"
+        paths.configs_path / "defaults/health_index_ratios.txt"
 )
 
 RKIdata = [
@@ -75,7 +75,7 @@ class HealthIndexGenerator:
         self.poli_hosp = poli_hosp
         self.poli_icu = poli_icu
         self.poli_deaths = poli_deaths
-        self.asimpto_ratio = Asimpto_ratio
+        self.Asimpto_ratio = Asimpto_ratio
         self.make_list()
 
     @classmethod
