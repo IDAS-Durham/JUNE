@@ -48,6 +48,8 @@ class Simulator:
         stay_at_home_complacency: float = 0.95,
         policies = Policies(),
         save_path: str = "results",
+        output_filename: str = "logger.hdf5",
+        light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -80,6 +82,7 @@ class Simulator:
         self.seed = seed
         self.selector = selector
         self.policies = policies
+        self.light_logger = light_logger
         self.activity_hierarchy = [
             "box",
             "hospital",
@@ -99,7 +102,8 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path)
+            self.logger = Logger(save_path=save_path,
+                    file_name = output_filename)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -554,7 +558,7 @@ class Simulator:
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-        self.update_health_status(self.timer.now, self.timer.duration)
+        self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
@@ -578,7 +582,7 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people)
+            self.logger.log_population(self.world.people, light_logger=self.light_logger)
             self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
