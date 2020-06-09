@@ -29,7 +29,7 @@ class Logger:
         except OSError:
             pass
 
-    def log_population(self, population: Population, light_logger: bool = True,chunk_size: int = 100000):
+    def log_population(self, population: Population, light_logger: bool = True, chunk_size: int = 100000):
         """
         Saves the Population object to hdf5 format file ``self.save_path``. Currently for each person,
         the following values are stored:
