@@ -2,6 +2,7 @@ import pytest
 
 import june.interaction as inter
 from june import World
+from june.world import generate_world_from_geography
 from june import paths
 from june.demography import Demography
 from june.demography.geography import Geography
@@ -99,14 +100,13 @@ def make_geography():
 
 @pytest.fixture(name="world", scope="session")
 def create_world(geography):
-    demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.companies = Companies.for_geography(geography)
-    world = World(geography, demography, include_households=True)
+    world = generate_world_from_geography(geography, include_households=True)
     return world
 
 
@@ -120,7 +120,7 @@ def create_box_world():
     geography = Geography.from_file(
         {"super_area": ["E02001697"]}
     )
-    return World.from_geography(geography, box_mode=True)
+    return generate_world_from_geography(geography, box_mode=True)
 
 
 @pytest.fixture(name="simulator_box", scope="session")

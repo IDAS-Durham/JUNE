@@ -7,7 +7,7 @@ from june.demography.geography import Geography, Area, SuperArea
 from june.groups import Households, Companies, Hospitals, Schools, CareHomes, Group
 from june.distributors import HouseholdDistributor
 from june import World
-from june.world import generate_world_from_hdf5
+from june.world import generate_world_from_hdf5, generate_world_from_geography
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -53,7 +53,7 @@ def create_world(geography_h5):
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    world = generate_world_from_geography(geography=geography, include_households=True, include_commute=True)
     return world
 
 
