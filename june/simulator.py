@@ -539,9 +539,6 @@ class Simulator:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
 
-        #print ("Using alpha_physical = {}".format(self.interaction.alpha_physical))
-        #print ("Using betas = {}".format(self.interaction.beta))
-        
         for group_type in group_instances:
             n_people_group = 0
             for group in group_type.members:
@@ -550,9 +547,6 @@ class Simulator:
                 )
                 n_people += group.size
                 n_people_group += group.size
-            print(group_type)
-            print(n_people)
-            print(n_people_group)
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
