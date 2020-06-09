@@ -139,7 +139,6 @@ class HouseholdDistributor:
                 ">=2 0 >=0 2 0",
                 "0 0 >=1 2 0",
                 "1 0 >=0 1 0",
-                ">=1 0 >=0 1 0",
                 ">=2 0 >=0 1 0",
                 "0 0 >=1 1 0",
                 "1 0 >=0 >=1 >=0",
@@ -502,27 +501,6 @@ class HouseholdDistributor:
                     ),
                 )
 
-
-        key = ">=1 0 >=0 >=1 >=0"
-        if key in number_households_per_composition:
-            house_number = number_households_per_composition[key]
-            if house_number > 0:
-                all_households += self.fill_families_households(
-                    men_by_age=men_by_age,
-                    women_by_age=women_by_age,
-                    n_households=house_number,
-                    kids_per_house=1,
-                    parents_per_house=1,
-                    old_per_house=0,
-                    area=area,
-                    extra_people_lists=(
-                        households_with_extra_kids,
-                        households_with_kids,
-                        households_with_extra_youngadults,
-                        households_with_extra_adults,
-                        households_with_extra_oldpeople,
-                    ),
-                )
 
         ### one kid and one parent for sure, possibly extra young adults.
         key = "1 0 >=0 1 0"
