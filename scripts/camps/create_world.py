@@ -34,7 +34,7 @@ area_residents_families_df.set_index("area", inplace=True)
 
 
 geography = Geography.from_file(
-    #filter_key={"region": ["CXB-219"]},
+    filter_key=None,#{"region": ["CXB-219"]},
     hierarchy_filename=area_mapping_filename,
     area_coordinates_filename=area_coordinates_filename,
     super_area_coordinates_filename=super_area_coordinates_filename,
