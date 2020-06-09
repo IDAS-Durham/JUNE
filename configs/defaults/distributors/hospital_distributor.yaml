@@ -1,6 +1,2 @@
-# taken from https://www.kingsfund.org.uk/publications/nhs-hospital-bed-numbers
-icu_fraction:  0.042 # 5900./141000. fraction of beds thar are ICU
-max_distance: 100.   # maximum distance person - hospital
-sector: 'Q'          # NOMIS name convention
-sub_sector: ["nurse", "doctor"]
 medic_min_age: 25
+patients_per_medic: 10
