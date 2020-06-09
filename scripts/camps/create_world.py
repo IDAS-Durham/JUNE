@@ -10,7 +10,7 @@ from june.demography.demography import (
 from june.paths import data_path, camp_data_path
 from june import World
 from june.world import generate_world_from_hdf5
-from june.distributors import HouseholdDistributor
+from june.distributors.camp_household_distributor import CampHouseholdDistributor
 from june.groups import Households
 
 
@@ -34,7 +34,8 @@ area_residents_families_df.set_index("area", inplace=True)
 
 
 geography = Geography.from_file(
-    filter_key=None,#{"region": ["CXB-219"]},
+    #filter_key={"region": ["CXB-210"]},
+    filter_key=None,  # {"region": ["CXB-219"]},
     hierarchy_filename=area_mapping_filename,
     area_coordinates_filename=area_coordinates_filename,
     super_area_coordinates_filename=super_area_coordinates_filename,
@@ -59,72 +60,58 @@ for super_area in world.super_areas:
     )
     np.random.shuffle(population.people)
     world.people.extend(population)
-    population_super_area = len(population)
-    total_residents_in_super_area = 0
-    n_residents_area = []
+    total_residents_in_super_area = len(population)
+    # create two lists to distribute even among areas
     adults = [person for person in population if person.age >= 17]
     kids = [person for person in population if person.age < 17]
+    n_kids = len(kids)
+    n_adults = len(adults)
+    residents_data = {}
+    total_residents = 0
+    # note: the data that has age distributions and the data that has n_families does not match
+    # so we need to do some rescaling
     for area in super_area.areas:
-        n_residents = area_residents_families_df.loc[area.name, "residents"]
-        n_residents_area.append(n_residents)
-        total_residents_in_super_area += n_residents
-    for i, area in enumerate(super_area.areas):
-        population_ratio = n_residents_area[i] / total_residents_in_super_area
-        n_adults = min(
-            int(
-                np.round(
-                    n_residents_area[i]
-                    / total_residents_in_super_area
-                    * len(adults) 
-                )
-            ),
-            len(population),
+        residents_data[area.name] = area_residents_families_df.loc[area.name, "residents"]
+        total_residents += residents_data[area.name]
+    for area in super_area.areas:
+        n_residents_data = residents_data[area.name]
+        population_ratio = n_residents_data / total_residents 
+        n_adults_area = int(
+            np.round(population_ratio * n_adults)
         )
-        n_kids = min(
-            int(
-                np.round(
-                    n_residents_area[i]
-                    / total_residents_in_super_area
-                    * len(kids) 
-                )
-            ),
-            len(population),
+        n_kids_area = int(
+            np.round(population_ratio * n_kids)
         )
-        for _ in range(n_adults):
+        for _ in range(n_adults_area):
+            if not adults:
+                break
             area.add(adults.pop())
-        for _ in range(n_kids):
+        for _ in range(n_kids_area):
+            if not kids:
+                break
             area.add(kids.pop())
-    if population.people:
-        areas = np.random.choice(super_area.areas, size=len(population.people))
+    people_left = adults + kids
+    if people_left:
+        areas = np.random.choice(super_area.areas, size=len(people_left))
         for area in areas:
-            area.add(population.people.pop())
+            area.add(people_left.pop())
+    assert len([person for area in super_area.areas for person in area.people]) == total_residents_in_super_area
 
 
 # household population
-household_distributor = HouseholdDistributor.from_file()
-household_distributor.kid_max_age = 16
-household_distributor.young_adult_min_age = 17
-household_distributor.adult_min_age = 17
-household_distributor.ignore_orphans=True
+household_distributor = CampHouseholdDistributor(max_household_size=12)
 households_total = []
 for area in world.areas:
-    men_by_age, women_by_age = household_distributor._create_people_dicts(area)
     area_data = area_residents_families_df.loc[area.name]
-    families = area_data["families"]
-    residents = area_data["residents"]
-    number_households = {
-        ">=1 0 >=0 >=1 0": int(families), #int(families // 2),
-    }
+    n_families = int(area_data["families"])
+    n_residents = int(area_data["residents"])
+    n_families_adapted = int(np.round(len(area.people) / n_residents * n_families))
     area.households = household_distributor.distribute_people_to_households(
-        men_by_age=men_by_age,
-        women_by_age=women_by_age,
-        area=area,
-        number_households_per_composition=number_households,
-        n_students=0,
-        n_people_in_communal=0,
+        area=area, n_families=n_families_adapted,
     )
     households_total += area.households
 world.households = Households(households_total)
-world.to_hdf5("camp.hdf5")
 
-#world = generate_world_from_hdf5("camp.hdf5")
+
+
+world.to_hdf5("camp.hdf5")
