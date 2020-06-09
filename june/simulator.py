@@ -559,8 +559,7 @@ class Simulator:
                 f"the total people number {len(self.world.people.members)}"
             )
         # update health status only once at night
-        if self.timer.previous_date.day != self.timer.date.day:
-            self.update_health_status(time=self.timer.now, duration=1.)
+        self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
