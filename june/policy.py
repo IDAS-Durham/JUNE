@@ -91,7 +91,8 @@ class Policies:
 
         for group in betas:
             if self.config is None:
-                betas_new[group] = betas_new[group] * 0.5
+                if group != 'household':
+                    betas_new[group] = betas_new[group] * 0.5
             else:
                 betas_new[group] = betas_new[group] * self.config['social distancing']['beta factor'][group]
 
