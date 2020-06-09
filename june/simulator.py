@@ -48,6 +48,8 @@ class Simulator:
         stay_at_home_complacency: float = 0.95,
         policies = Policies(),
         save_path: str = "results",
+        output_filename: str = "logger.hdf5",
+        light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -80,6 +82,7 @@ class Simulator:
         self.seed = seed
         self.selector = selector
         self.policies = policies
+        self.light_logger = light_logger
         self.activity_hierarchy = [
             "box",
             "hospital",
@@ -99,7 +102,8 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path)
+            self.logger = Logger(save_path=save_path,
+                    file_name = output_filename)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -238,7 +242,6 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
-    #@profile
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
@@ -255,7 +258,6 @@ class Simulator:
         activities.sort(key=lambda x: self.activity_hierarchy.index(x))
         return activities
 
-    #@profile
     def activities_to_groups(self, activities: List[str]) -> List[str]:
         """
         Converts activities into Groups, the interaction will run over these Groups.
@@ -272,7 +274,6 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
-    #@profile
     def clear_world(self):
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
@@ -280,7 +281,7 @@ class Simulator:
 
         """
         for group_name in self.activities_to_groups(self.all_activities):
-            if group_name == "residence_visits":
+            if group_name in ["care_home_visits", "household_visits"]:
                 continue
             grouptype = getattr(self.world, group_name)
             for group in grouptype.members:
@@ -289,7 +290,6 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
 
-    #@profile
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
     ) -> "Subgroup":
@@ -307,6 +307,7 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
+
         activities = self.apply_activity_hierarchy(activities)
         #personal_closed_groups = self.policies.get_fully_closed_groups(
         #    time=self.timer.now
@@ -385,7 +386,6 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
-        #activities = self.apply_activity_hierarchy(activities)
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -466,7 +466,6 @@ class Simulator:
         person.susceptibility = 0.0
         person.health_information = None
 
-    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -503,7 +502,7 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
-    #@profile
+
     def do_timestep(self):
         """
         Perform a time step in the simulation
@@ -526,7 +525,7 @@ class Simulator:
         group_instances = [
             getattr(self.world, group)
             for group in active_groups
-            if group != "residence_visits"
+            if group not in ["household_visits", "care_home_visits"]
         ]
         n_people = 0
         if not self.world.box_mode:
@@ -540,21 +539,20 @@ class Simulator:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
 
-        #print ("Using alpha_physical = {}".format(self.interaction.alpha_physical))
-        #print ("Using betas = {}".format(self.interaction.beta))
-        
         for group_type in group_instances:
+            n_people_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
                     self.timer.now, self.timer.duration, group, self.logger,
                 )
                 n_people += group.size
+                n_people_group += group.size
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-        self.update_health_status(self.timer.now, self.timer.duration)
+        self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
@@ -578,7 +576,7 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people)
+            self.logger.log_population(self.world.people, light_logger=self.light_logger)
             self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:

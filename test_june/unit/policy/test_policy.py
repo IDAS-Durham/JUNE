@@ -78,7 +78,7 @@ def test__social_distancing(world, selector, interaction):
         if sim.timer.date > start_date and sim.timer.date < sim.timer.date:
             for group in sim.interaction.betas:
                 if group != 'household':
-                    assert sim.interaction.beta[group] == initial_betas[group] / 2
+                    assert sim.interaction.beta[group] == initial_betas[group] * 0.5
                 else:
                     assert sim.interaction.beta[group] == initial_betas[group]
         else:
