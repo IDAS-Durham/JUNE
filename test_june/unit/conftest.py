@@ -1,6 +1,7 @@
 import pytest
 
 import june.interaction as inter
+import numba as nb
 from june import World
 from june import paths
 from june.demography import Demography
@@ -21,9 +22,17 @@ import random
 import numpy as np
 
 @pytest.fixture(autouse=True)
-def set_random_seed():
-    random.seed(999)
-    np.random.seed(999)
+def set_random_seed(seed=999):
+    """
+    Sets global seeds for testing in numpy, random, and numbaized numpy.
+    """
+    @nb.njit( cache=True)
+    def set_seed_numba(seed):
+        return np.random.seed(seed)
+    np.random.seed(seed)
+    set_seed_numba(seed)
+    random.seed(seed) 
+    return
 
 @pytest.fixture()
 def data(pytestconfig):
@@ -131,3 +140,10 @@ def create_simulator_box(request, world_box, interaction, infection_healthy):
     return Simulator.from_file(
         world_box, interaction, selector, config_filename=config_file
     )
+
+@pytest.fixture(name="world_visits", scope="session")
+def make_super_areas():
+    geo = Geography.from_file({"super_area": ["E02003353"]})
+    geo.care_homes = CareHomes.for_geography(geo)
+    world = World.from_geography(geo, include_households=True)
+    return world
