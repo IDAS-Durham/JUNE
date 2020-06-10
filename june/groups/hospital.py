@@ -152,7 +152,7 @@ class Hospitals(Supergroup):
     def __init__(
         self,
         hospitals: List["Hospital"],
-        max_distance: float = 100,
+        neighbour_hospitals: int = 5, 
         box_mode: bool = False,
     ):
         """
@@ -166,8 +166,8 @@ class Hospitals(Supergroup):
         """
         super().__init__()
         self.box_mode = box_mode
-        self.max_distance = max_distance
         self.members = hospitals
+        self.neighbour_hospitals = neighbour_hospitals
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
             self.init_trees(coordinates)
@@ -177,7 +177,7 @@ class Hospitals(Supergroup):
         hospitals = []
         hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
         hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
-        return cls(hospitals, box_mode=True)
+        return cls(hospitals, neighbour_hospitals=None, box_mode=True)
 
     @classmethod
     def from_file(
@@ -204,11 +204,11 @@ class Hospitals(Supergroup):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
+        neighbour_hospitals = config["neighbour_hospitals"]
         logger.info(f"There are {len(hospital_df)} hospitals in the world.")
         hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
-        return Hospitals(hospitals, max_distance,)
+        return Hospitals(hospitals, neighbour_hospitals)
 
     @classmethod
     def for_geography(
@@ -220,8 +220,8 @@ class Hospitals(Supergroup):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
-        max_distance = config["max_distance"]
         icu_fraction = config["icu_fraction"]
+        neighbour_hospitals = config["neighbour_hospitals"]
         hospital_df = pd.read_csv(filename, index_col=0)
         super_area_names = [super_area.name for super_area in geography.super_areas]
         hospital_df = hospital_df.loc[hospital_df.index.isin(super_area_names)]
@@ -244,7 +244,7 @@ class Hospitals(Supergroup):
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break
-        return cls(hospitals, max_distance, False)
+        return cls(hospitals, neighbour_hospitals, False)
 
     @classmethod
     def create_hospital_from_df_row(
@@ -336,57 +336,50 @@ class Hospitals(Supergroup):
         else:
             hospital = None
             # find hospitals  within radius of max distance
-            distances, hospitals_idx = self.get_closest_hospitals(
-                person.area.coordinates, self.max_distance
+            hospitals_idx = self.get_closest_hospitals(
+                coordinates=person.area.coordinates, k=self.neighbour_hospitals
             )
-            for distance, hospital_id in zip(distances, hospitals_idx):
+            closest_hospitals = []
+            for hospital_id in hospitals_idx:
                 hospital = self.members[hospital_id]
-                if distance > self.max_distance:
-                    break
-                if (assign_icu and not hospital.full) or (
-                    assign_patient and not hospital.full_ICU
+                closest_hospitals.append(hospital)
+                if (assign_patient and not hospital.full) or (
+                    assign_icu and not hospital.full_ICU
                 ):
-                    break
-            if hospital is not None:
-
-                logger.debug(
-                    f"Receiving hospital for patient with "
-                    + f"{person.health_information.tag} at distance = {distance} km"
-                )
-                hospital.add_as_patient(person)
-            else:
-                logger.info(
-                    f"no hospital found for patient with "
-                    + f"{person.health_information.tag} in distance "
-                    + f"< {self.max_distance} km."
-                )
+                    break 
+            if hospital is None:
+                random_number = np.random.randint(
+                        0, min(len(closest_hospitals), len(self.members))
+                        )
+                hospital = closest_hospitals[random_number]
+            hospital.add_as_patient(person)
 
     def get_closest_hospitals(
-        self, coordinates: Tuple[float, float], r_max: float
+        self, coordinates: Tuple[float, float], k: int 
     ) -> Tuple[float, float]:
         """
-        Get the closest hospitals to a given coordinate within r_max
+        Get the k-th closest hospital to a given coordinate, that accepts pupils
+        aged age
 
         Parameters
-        ----------
+        ---------
+        age:
+            age of the pupil
         coordinates: 
             latitude and longitude
-        r_max:
-            maximum distance to hospital
+        k:
+            k-th neighbour
 
         Returns
         -------
-        Distance to the closest hospitals, in km 
-        ID of the hospitals within r_max, ordered by distance
+        ID of the k-th closest hospital, within hospital trees for 
+        a given age group
 
         """
-        earth_radius = 6371.0  # km
-        r_max /= earth_radius
-        idx, distances = self.hospital_trees.query_radius(
+        k = min(k, len(list(self.hospital_trees.data)))
+        distances, neighbours = self.hospital_trees.query(
             np.deg2rad(coordinates.reshape(1, -1)),
-            r=r_max,
-            return_distance=True,
+            k = k,
             sort_results=True,
         )
-        distances = np.array(distances[0]) * earth_radius
-        return distances, idx[0]
+        return neighbours[0]
