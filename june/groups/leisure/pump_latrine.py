@@ -12,8 +12,8 @@ default_config_filename = configs_path / "defaults/groups/leisure/pumplatrines.y
 
 class PumpLatrine(SocialVenue):
     def __init__(self, max_size=10):
-        self.max_size = maz_size
-        super.__init__()
+        self.max_size = max_size
+        super().__init__()
 
 class PumpLatrines(SocialVenues):
     def __init__(self, pumplatrines: List[PumpLatrine]):
@@ -55,7 +55,7 @@ class PumpLatrineDistributor(SocialVenueDistributor):
 
     def get_social_venue_for_person(self, person):
         """
-        We select a random grocery shop from the person super area.
+        We select a random pump or latrine from the person area.
         """
-        venue = np.random.choice(person.area.groceries) 
+        venue = np.random.choice(person.area.pumplatrines)
         return venue

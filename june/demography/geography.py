@@ -43,7 +43,7 @@ class Area:
         "super_area",
         "care_home",
         "schools",
-        "households"
+        "households",
         "pumplatrines",
     )
     _id = count()
