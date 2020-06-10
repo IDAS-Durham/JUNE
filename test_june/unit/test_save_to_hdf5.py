@@ -49,7 +49,6 @@ def create_world(geography_h5):
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
     geography = geography_h5
-    demography = Demography.for_geography(geography)
     geography.hospitals= Hospitals.from_file(
     filename=paths.camp_data_path / 'input/hospitals/hospitals.csv'
     )
@@ -357,4 +356,4 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1.id == person2.id
+                assert person1.id == person2

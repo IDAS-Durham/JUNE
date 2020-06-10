@@ -1,31 +1,41 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 from june.demography.geography import Geography
-from june.demography.demography import load_age_and_sex_generators_for_bins, Demography, Population
-from june.paths import data_path
+from june.demography.demography import (
+    load_age_and_sex_generators_for_bins,
+    Demography,
+    Population,
+)
+from june.paths import data_path, camp_data_path
 from june import World
 from june.world import generate_world_from_hdf5
-
+from june.distributors.camp_household_distributor import CampHouseholdDistributor
+from june.groups import Households
 
 
 # area coding example CXB-219-056
 # super area coding example CXB-219-C
 # region coding example CXB-219
 
-area_mapping_filename = data_path / "input/geography/area_super_area_region.csv"
-area_coordinates_filename = data_path / "input/geography/area_coordinates.csv"
+area_mapping_filename = camp_data_path / "input/geography/area_super_area_region.csv"
+area_coordinates_filename = camp_data_path / "input/geography/area_coordinates.csv"
 super_area_coordinates_filename = (
-    data_path / "input/geography/super_area_coordinates.csv"
+    camp_data_path / "input/geography/super_area_coordinates.csv"
 )
-age_structure_filename = data_path / "input/demography/age_structure_super_area.csv"
-area_residents_families = data_path / "input/demography/area_residents_families.csv"
+age_structure_filename = (
+    camp_data_path / "input/demography/age_structure_super_area.csv"
+)
+area_residents_families = (
+    camp_data_path / "input/demography/area_residents_families.csv"
+)
 area_residents_families_df = pd.read_csv(area_residents_families)
 area_residents_families_df.set_index("area", inplace=True)
 
 
 geography = Geography.from_file(
-    filter_key={"region": ["CXB-219"]},
+    #filter_key={"region": ["CXB-210"]},
+    filter_key=None,  # {"region": ["CXB-219"]},
     hierarchy_filename=area_mapping_filename,
     area_coordinates_filename=area_coordinates_filename,
     super_area_coordinates_filename=super_area_coordinates_filename,
@@ -50,23 +60,58 @@ for super_area in world.super_areas:
     )
     np.random.shuffle(population.people)
     world.people.extend(population)
-    population_super_area = len(population)
-    total_residents_in_super_area = 0
-    n_residents_area = []
+    total_residents_in_super_area = len(population)
+    # create two lists to distribute even among areas
+    adults = [person for person in population if person.age >= 17]
+    kids = [person for person in population if person.age < 17]
+    n_kids = len(kids)
+    n_adults = len(adults)
+    residents_data = {}
+    total_residents = 0
+    # note: the data that has age distributions and the data that has n_families does not match
+    # so we need to do some rescaling
     for area in super_area.areas:
-        n_residents = area_residents_families_df.loc[area.name, "residents"]
-        n_residents_area.append(n_residents)
-        total_residents_in_super_area += n_residents
-    for i, area in enumerate(super_area.areas):
-        n_residents = min(int(np.round(n_residents_area[i] / total_residents_in_super_area * population_super_area)), len(population))
-        for _ in range(n_residents):
-            area.add(population.people.pop())
-    if population.people:
-        areas = np.random.choice(super_area.areas, size=len(population.people))
+        residents_data[area.name] = area_residents_families_df.loc[area.name, "residents"]
+        total_residents += residents_data[area.name]
+    for area in super_area.areas:
+        n_residents_data = residents_data[area.name]
+        population_ratio = n_residents_data / total_residents 
+        n_adults_area = int(
+            np.round(population_ratio * n_adults)
+        )
+        n_kids_area = int(
+            np.round(population_ratio * n_kids)
+        )
+        for _ in range(n_adults_area):
+            if not adults:
+                break
+            area.add(adults.pop())
+        for _ in range(n_kids_area):
+            if not kids:
+                break
+            area.add(kids.pop())
+    people_left = adults + kids
+    if people_left:
+        areas = np.random.choice(super_area.areas, size=len(people_left))
         for area in areas:
-            area.add(population.people.pop())
+            area.add(people_left.pop())
+    assert len([person for area in super_area.areas for person in area.people]) == total_residents_in_super_area
+
+
+# household population
+household_distributor = CampHouseholdDistributor(max_household_size=12)
+households_total = []
+for area in world.areas:
+    area_data = area_residents_families_df.loc[area.name]
+    n_families = int(area_data["families"])
+    n_residents = int(area_data["residents"])
+    n_families_adapted = int(np.round(len(area.people) / n_residents * n_families))
+    area.households = household_distributor.distribute_people_to_households(
+        area=area, n_families=n_families_adapted,
+    )
+    households_total += area.households
+world.households = Households(households_total)
 
 
 
 world.to_hdf5("camp.hdf5")
-world = generate_world_from_hdf5("camp.hdf5")

@@ -27,3 +27,4 @@ allowed_household_compositions : [
     "0 0 >=0 >=0 >=0",
     ">=0 >=0 >=0 >=0 >=0",
 ]
+ignore_orphans: False
