@@ -1,2 +1,3 @@
 medic_min_age: 25
 patients_per_medic: 10
+healthcare_sector_label: "Q"
