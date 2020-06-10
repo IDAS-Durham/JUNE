@@ -9,7 +9,7 @@ from june.groups import *
 from june.demography import Person
 from june.infection import SymptomTag
 from june.infection import InfectionSelector, Infection
-from june.paths import data_path, camp_data_path
+from june.paths import data_path 
 
 from pathlib import Path
 path_pwd = Path(__file__)
@@ -17,27 +17,28 @@ dir_pwd  = path_pwd.parent
 
 @pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
-    return Hospitals.from_file(filename=camp_data_path / 'input/hospitals/hospitals.csv')
+    return Hospitals.from_file(filename=data_path / 'input/hospitals/england_hospitals.csv')
 
 
 @pytest.fixture(name="hospitals_df", scope="module")
 def create_hospitals_df():
-    return pd.read_csv(camp_data_path / "input/hospitals/hospitals.csv")
+    return pd.read_csv(data_path / "input/hospitals/england_hospitals.csv")
 
 
 def test__total_number_hospitals_is_correct(hospitals, hospitals_df):
     assert len(hospitals.members) == len(hospitals_df)
 
 
-@pytest.mark.parametrize("index", [2, 4])
+@pytest.mark.parametrize("index", [2, 3])
 def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index):
 
     closest_idx = hospitals.get_closest_hospitals(
-        hospitals_df[["latitude", "longitude"]].iloc[index].values, k=10,
+        hospitals_df[["latitude", "longitude"]].iloc[index].values, k=10
     )
 
-    # All distances are actually smaller than r_max
+    print(closest_idx)
     closest_hospital_idx = closest_idx[0]
+    print(index)
     assert hospitals.members[closest_hospital_idx] == hospitals.members[index]
 
 
@@ -128,4 +129,4 @@ def test__initialize_hospitals_from_geography():
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
     assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 190
-    assert hospitals.members[0].super_area.name in ["E02003999", "E02006764"]
+    assert hospitals.members[0].super_area in ["E02003999", "E02006764"]
