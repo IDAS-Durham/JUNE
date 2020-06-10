@@ -49,9 +49,8 @@ def create_world(geography_h5):
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
     geography = geography_h5
-    geography.hospitals= Hospitals.from_file(
-    filename=paths.camp_data_path / 'input/hospitals/hospitals.csv'
-    )
+    demography = Demography.for_geography(geography)
+    geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
@@ -184,7 +183,7 @@ class TestSaveHospitals:
                 else:
                     assert attribute == attribute2
             if hospital.super_area is not None:
-                assert hospital.super_area.id == hospital2.super_area
+                assert hospital.super_area == hospital2.super_area
             else:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
