@@ -47,7 +47,6 @@ def create_world():
     )
     world.initialise_commuting()
     world.cemeteries = Cemeteries()
-
     return world
 
 @pytest.fixture(name="selector", scope="module")
@@ -57,11 +56,13 @@ def create_selector():
     selector.transmission_probability = 0.7
     return selector
 
+
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction(selector):
     interaction = ContactAveraging.from_file(selector=selector)
-    #interaction.selector = selector
+    # interaction.selector = selector
     return interaction
+
 
 def test__social_distancing(world, selector, interaction):
 
@@ -81,7 +82,7 @@ def test__social_distancing(world, selector, interaction):
             break
         if sim.timer.date > start_date and sim.timer.date < sim.timer.date:
             for group in sim.interaction.betas:
-                if group != 'household':
+                if group != "household":
                     assert sim.interaction.beta[group] == initial_betas[group] * 0.5
                 else:
                     assert sim.interaction.beta[group] == initial_betas[group]
@@ -116,7 +117,6 @@ def test__social_distancing(world, selector, interaction):
 #                         assert len(school.subgroup[year_subgroup_idx].people == 0)
 
 #         sim.clear_world()
-
 
 
 # def test__close_sectors(world, selector, interaction):
