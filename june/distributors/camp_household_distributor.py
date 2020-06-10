@@ -178,7 +178,7 @@ class CampHouseholdDistributor:
             if person is None:
                 break
             household.add(person, subgroup_type=household.SubgroupType.adults)
-            if household.size >= household.max_size:
+            if household.size == household.max_size:
                 households_with_space.remove(household)
             households_with_adults.append(household)
 
@@ -195,7 +195,7 @@ class CampHouseholdDistributor:
                 household = households[index]
             kid = kids.pop()
             household.add(kid, subgroup_type=household.SubgroupType.kids)
-            if household.size >= household.max_size:
+            if household.size == household.max_size:
                 households_with_space.remove(household)
             counter += 1
 
