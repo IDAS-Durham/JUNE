@@ -355,4 +355,4 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1.id == person2.id
+                assert person1.id == person2
