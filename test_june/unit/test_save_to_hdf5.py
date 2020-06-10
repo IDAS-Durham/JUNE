@@ -183,7 +183,7 @@ class TestSaveHospitals:
                 else:
                     assert attribute == attribute2
             if hospital.super_area is not None:
-                assert hospital.super_area.id == hospital2.super_area
+                assert hospital.super_area == hospital2.super_area
             else:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]

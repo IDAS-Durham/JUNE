@@ -105,7 +105,7 @@ class World:
 
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)
-            hospital_distributor.distribute_medics(self.people)
+            hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
 
         # Companies last because need hospital and school workers first
         if self.companies is not None:
