@@ -47,9 +47,7 @@ def create_world():
     )
     world.initialise_commuting()
     world.cemeteries = Cemeteries()
-
     return world
-
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():

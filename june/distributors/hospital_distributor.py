@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import random
 import yaml
 from scipy import stats
 
@@ -22,24 +23,34 @@ class HospitalDistributor:
     """
 
     def __init__(
-            self, hospitals: Hospitals, config_filename: str = default_config_filename
+            self, hospitals: Hospitals, medic_min_age: int, patients_per_medic: int 
     ):
         # check if this msoarea has hospitals
         self.hospitals = hospitals
+        self.medic_min_age = medic_min_age
+        self.patients_per_medic = patients_per_medic
+
+    @classmethod
+    def from_file(
+            cls,
+            hospitals,
+            config_filename=default_config_filename,
+            ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        self.healthcare_sector_label = config["sector"]
-        self.medic_min_age = config["medic_min_age"]
-        """
-        if len(self.msoarea.hospitals) != 0:
-            self.healthcare_sector_label = (
-                self.world.config["companies"]["key_sector"]["hospitals"]
-            )
-            patience_nr_per_nurse =  self.world.config["hospitals"]["patience_nr_per_nurse"]
-            patience_nr_per_doctor =  self.world.config["hospitals"]["patience_nr_per_doctor"]
-            self.hospitals_in_msoa(hospitals)
-            self.distribute_medics_to_hospitals()
-        """
+        return HospitalDistributor(hospitals,
+                config['medic_min_age'], 
+                config['patients_per_medic']) 
+
+    def distribute_medics(self, people):
+        eligible_medics = [person for person in people if person.age >= self.medic_min_age]
+        indices = list(range(len(eligible_medics)))
+        random.shuffle(indices)
+        for hospital in self.hospitals:
+            n_medics = int((hospital.n_beds + hospital.n_icu_beds)/self.patients_per_medic)
+            while len(hospital.subgroups[hospital.SubgroupType.workers]) < n_medics:
+                medic = eligible_medics[indices.pop()]
+                hospital.add(medic, hospital.SubgroupType.workers)
 
     def distribute_medics_to_super_areas(self, super_areas: SuperAreas):
         for super_area in super_areas:
