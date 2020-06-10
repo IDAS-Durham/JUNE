@@ -50,9 +50,7 @@ def create_world(geography_h5):
         pass  # reset file
     geography = geography_h5
     demography = Demography.for_geography(geography)
-    geography.hospitals= Hospitals.from_file(
-    filename=paths.camp_data_path / 'input/hospitals/hospitals.csv'
-    )
+    geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
