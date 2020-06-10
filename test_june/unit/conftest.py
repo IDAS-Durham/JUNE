@@ -145,5 +145,5 @@ def create_simulator_box(request, world_box, interaction, infection_healthy):
 def make_super_areas():
     geo = Geography.from_file({"super_area": ["E02003353"]})
     geo.care_homes = CareHomes.for_geography(geo)
-    world = World.from_geography(geo, include_households=True)
+    world = generate_world_from_geography(geo, include_households=True)
     return world

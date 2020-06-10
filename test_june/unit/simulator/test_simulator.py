@@ -24,7 +24,9 @@ def create_simulator():
     geography = Geography.from_file(
         {"super_area": ["E02001720", "E00088544", "E02002560", "E02002559"]}
     )
-    geography.hospitals = Hospitals.for_geography(geography)
+    geography.hospitals= Hospitals.from_file(
+            filename=paths.camp_data_path / 'input/hospitals/hospitals.csv'
+    )
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
