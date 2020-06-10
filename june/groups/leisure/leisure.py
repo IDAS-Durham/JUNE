@@ -66,6 +66,12 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     if "pumplatrines" in list_of_leisure_groups:
         if not hasattr(world, "pumplatrines"):
             raise ValueError("Your world does note have pumps and latrines")
+    if "distribution_centers" in list_of_leisure_groups:
+        if not hasattr(world, "distribution_centers"):
+            raise ValueError("Your world does note have distribution centers")
+    if "communal" in list_of_leisure_groups:
+        if not hasattr(world, "communal"):
+            raise ValueError("Your world does note have communal spaces")
     if "household_visits" in list_of_leisure_groups:
         if not hasattr(world, "households"):
             raise ValueError("Your world does not have households.")
