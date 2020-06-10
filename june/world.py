@@ -62,6 +62,9 @@ class World:
         self.commutecities = None
         self.commutehubs = None
         self.cemeteries = None
+        self.pumplatrines = None
+        self.distribution_centers = None
+        self.communal = None
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
@@ -107,7 +110,7 @@ class World:
 
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)
-            hospital_distributor.distribute_medics(self.people)
+            hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
 
         # Companies last because need hospital and school workers first
         if self.companies is not None:

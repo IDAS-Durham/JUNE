@@ -3,7 +3,7 @@ import logging
 import os
 from enum import IntEnum
 from june import paths
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -28,11 +28,6 @@ class Hospital(Group):
     The Hospital class represents a hospital and contains information about
     its patients and workers - the latter being the usual "people".
 
-    TODO: we have to figure out the inheritance structure; I think it will
-    be an admixture of household and company.
-    I will also assume that the patients cannot infect anybody - this may
-    become a real problem as it is manifestly not correct.
-
     We currently use three subgroups: 
     0 - workers (i.e. nurses, doctors, etc.),
     1 - patients
@@ -51,7 +46,7 @@ class Hospital(Group):
         n_beds: int,
         n_icu_beds: int,
         super_area: str = None,
-        coordinates: tuple = None,  # Optional[Tuple[float, float]] = None,
+        coordinates: Optional[Tuple[float, float]] = None,
     ):
         """
         Create a Hospital given its description.
@@ -62,10 +57,10 @@ class Hospital(Group):
             total number of regular beds in the hospital
         n_icu_beds:
             total number of ICU beds in the hospital
+        super_area:
+            name of the super area the hospital belongs to
         coordinates:
             latitude and longitude 
-        msoa_name:
-            name of the msoa area the hospital belongs to
         """
         super().__init__()
         self.super_area = super_area
@@ -157,10 +152,17 @@ class Hospitals(Supergroup):
     ):
         """
         Create a group of hospitals, and provide functionality to locate patients
-        to a nearby hospital.
+        to a nearby hospital. It will check in order the first ```neighbour_hospitals```,
+        when one has space available the patient is allocated to it. If none of the closest
+        ones has beds available it will pick one of them at random and that hospital will
+        overflow
 
         Parameters
         ----------
+        hospitals:
+            list of hospitals to aggrupate
+        neighbour_hospitals:
+            number of closest hospitals to look for
         box_mode:
             whether to run in single box mode, or full simulation
         """
@@ -255,7 +257,7 @@ class Hospitals(Supergroup):
         n_icu_beds = round(icu_fraction * n_beds)
         n_beds -= n_icu_beds
         hospital = Hospital(
-            super_area=super_area,
+            super_area=super_area.name,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
@@ -283,7 +285,6 @@ class Hospitals(Supergroup):
             coordinates = row[["latitude", "longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
-                # super_area=,
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,
@@ -358,13 +359,10 @@ class Hospitals(Supergroup):
         self, coordinates: Tuple[float, float], k: int 
     ) -> Tuple[float, float]:
         """
-        Get the k-th closest hospital to a given coordinate, that accepts pupils
-        aged age
+        Get the k-th closest hospital to a given coordinate
 
         Parameters
         ---------
-        age:
-            age of the pupil
         coordinates: 
             latitude and longitude
         k:
@@ -372,8 +370,7 @@ class Hospitals(Supergroup):
 
         Returns
         -------
-        ID of the k-th closest hospital, within hospital trees for 
-        a given age group
+        ID of the k-th closest hospital
 
         """
         k = min(k, len(list(self.hospital_trees.data)))
