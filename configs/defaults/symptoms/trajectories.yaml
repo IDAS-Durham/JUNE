@@ -34,8 +34,10 @@ trajectories:
 
       - symptom_tag: influenza
         completion_time:
-          type: constant
-          value: 20.
+          type: lognormal
+          s: 0.24
+          loc: 0.0
+          scale: 7.76
 
 
       - symptom_tag: recovered
