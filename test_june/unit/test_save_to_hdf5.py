@@ -49,7 +49,6 @@ def create_world(geography_h5):
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
     geography = geography_h5
-    demography = Demography.for_geography(geography)
     geography.hospitals= Hospitals.from_file(
     filename=paths.camp_data_path / 'input/hospitals/hospitals.csv'
     )
