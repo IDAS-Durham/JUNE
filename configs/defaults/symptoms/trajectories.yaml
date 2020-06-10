@@ -11,8 +11,10 @@ trajectories:
 
       - symptom_tag: asymptomatic
         completion_time:
-          type: constant
-          value: 14.
+          type: lognormal
+          s: 0.24
+          loc: 0.0
+          scale: 7.76
 
 
       - symptom_tag: recovered
