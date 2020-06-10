@@ -24,9 +24,9 @@ class Communals(SocialVenues):
             self.make_tree()
 
     @classmethod
-    def for_geography(
+    def for_areas(
         cls,
-        geography,
+        areas: Areas,
         coordinates_filename: str = default_communals_coordinates_filename,
         max_distance_to_area=5,
         max_size=50,
@@ -36,7 +36,23 @@ class Communals(SocialVenues):
         return cls.from_coordinates(
             coordinates,
             max_size,
-            geography.areas,
+            areas,
+            max_distance_to_area=max_distance_to_area,
+
+        )
+    
+    @classmethod
+    def for_geography(
+        cls,
+        geography,
+        coordinates_filename: str = default_communals_coordinates_filename,
+        max_distance_to_area=5,
+        max_size=50,
+    ):
+        return cls.for_areas(
+            coordinates_filename=coordinates_filename,
+            max_size=max_size,
+            areas =geography.areas,
             max_distance_to_area=max_distance_to_area,
         )
 

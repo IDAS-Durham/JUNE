@@ -24,6 +24,24 @@ class FemaleCommunals(SocialVenues):
             self.make_tree()
 
     @classmethod
+    def for_areas(
+        cls,
+        areas: Areas,
+        coordinates_filename: str = default_female_communals_coordinates_filename,
+        max_distance_to_area=5,
+        max_size=50,
+    ):
+        female_communals_df = pd.read_csv(coordinates_filename)
+        coordinates = female_communals_df.loc[:, ["latitude", "longitude"]].values
+        return cls.from_coordinates(
+            coordinates,
+            max_size,
+            areas,
+            max_distance_to_area=max_distance_to_area,
+
+        )
+
+    @classmethod
     def for_geography(
         cls,
         geography,
