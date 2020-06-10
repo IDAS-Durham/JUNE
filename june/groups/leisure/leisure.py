@@ -74,11 +74,11 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     if "communal" in list_of_leisure_groups:
         if not hasattr(world, "communal"):
             raise ValueError("Your world does note have communal spaces")
-        leisure_distributors.append(GroceryDistributor.from_config(world.communal))
+        leisure_distributors.append(GroceryDistributor.from_config(world.communals))
     if "female_communal" in list_of_leisure_groups:
         if not hasattr(world, "female_communal"):
             raise ValueError("Your world does note have female friendly communal spaces")
-        leisure_distributors.append(GroceryDistributor.from_config(world.female_communal))
+        leisure_distributors.append(GroceryDistributor.from_config(world.female_communals))
     if "household_visits" in list_of_leisure_groups:
         if not hasattr(world, "households"):
             raise ValueError("Your world does not have households.")
