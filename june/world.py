@@ -62,6 +62,8 @@ class World:
         self.commutecities = None
         self.commutehubs = None
         self.cemeteries = None
+        self.pumplatrines = None
+        self.distribution_centers = None
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
