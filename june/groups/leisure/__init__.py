@@ -4,6 +4,7 @@ from .pub import Pub, Pubs, PubDistributor
 from .cinema import Cinema, Cinemas, CinemaDistributor
 from .grocery import Groceries, Grocery, GroceryDistributor
 from .pump_latrine import PumpLatrine, PumpLatrines, PumpLatrineDistributor
+from .distirbution_center import DistributionCenter, DistributionCenters, DistributionCenterDistributor
 from .care_home_visits import CareHomeVisitsDistributor
 from .household_visits import HouseholdVisitsDistributor 
 from .leisure import Leisure, generate_leisure_for_world
