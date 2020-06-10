@@ -4,6 +4,7 @@ import numpy as np
 import random
 import yaml
 from scipy import stats
+from typing import List, Optional
 
 from june import paths
 from june.demography.geography import SuperAreas, SuperArea
@@ -12,95 +13,144 @@ from june.groups import Hospitals
 logger = logging.getLogger(__name__)
 
 default_config_filename = (
-        paths.configs_path
-        / "defaults/distributors/hospital_distributor.yaml"
+    paths.configs_path / "defaults/distributors/hospital_distributor.yaml"
 )
 
 
 class HospitalDistributor:
     """
-    Distributes people working in health-care to hospitals
+    Distributes people to work as health care workers in hospitals
+        
+        #TODO: sub sectors of doctors and nurses should be found
+        Healthcares sector
+        2211: Medical practitioners
+        2217: Medical radiographers
+        2231: Nurses
+        2232: Midwives
     """
 
     def __init__(
-            self, hospitals: Hospitals, medic_min_age: int, patients_per_medic: int 
+        self,
+        hospitals: Hospitals,
+        medic_min_age: int,
+        patients_per_medic: int,
+        healthcare_sector_label: Optional[str] = None,
     ):
+        '''
+        
+        Parameters
+        ----------
+        hospitals:
+            hospitals to populate with workers
+        medic_min_age:
+            minimum age to qualify as a worker
+        patients_per_medic:
+            ratio of patients per medic
+        healthcare_sector_label:
+            string that characterizes the helathcare workers
+        '''
         # check if this msoarea has hospitals
         self.hospitals = hospitals
         self.medic_min_age = medic_min_age
         self.patients_per_medic = patients_per_medic
+        self.healthcare_sector_label = healthcare_sector_label
 
     @classmethod
     def from_file(
-            cls,
-            hospitals,
-            config_filename=default_config_filename,
-            ):
+        cls, hospitals, config_filename=default_config_filename,
+    ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return HospitalDistributor(hospitals,
-                config['medic_min_age'], 
-                config['patients_per_medic']) 
+        return HospitalDistributor(
+            hospitals=hospitals,
+            medic_min_age=config["medic_min_age"],
+            patients_per_medic=config["patients_per_medic"],
+            healthcare_sector_label=config["healthcare_sector_label"],
+        )
 
-    def distribute_medics(self, people):
-        eligible_medics = [person for person in people if person.age >= self.medic_min_age]
-        indices = list(range(len(eligible_medics)))
-        random.shuffle(indices)
+    def distribute_medics_from_world(self, people: List["Person"]):
+        '''
+        Randomly distribute people from the world to work as medics for hospitals,
+        useful if we don't have data on where do people work. It will still
+        match the patients to medic ratio and the minimum age to be a medic.
+
+        Parameters
+        ----------
+        people:
+            list of Persons in the world
+        '''
+        medics = [
+            person for person in people if person.age >= self.medic_min_age
+        ]
+        np.random.shuffle(medics)
         for hospital in self.hospitals:
-            n_medics = int((hospital.n_beds + hospital.n_icu_beds)/self.patients_per_medic)
-            while len(hospital.subgroups[hospital.SubgroupType.workers]) < n_medics:
-                medic = eligible_medics[indices.pop()]
+            max_capacity = hospital.n_beds + hospital.n_icu_beds
+            if max_capacity == 0:
+                continue
+            n_medics = max(int(np.floor(max_capacity / self.patients_per_medic)), 1)
+            for _ in range(n_medics):
+                medic = medics.pop()
                 hospital.add(medic, hospital.SubgroupType.workers)
 
     def distribute_medics_to_super_areas(self, super_areas: SuperAreas):
+        '''
+        Distribute medics to super areas, flow data is necessary to find medics in the 
+        super area according to their sector.
+
+        Parameters
+        ----------
+        super_areas:
+            object containing all the super areas to distribute medics
+        '''
         for super_area in super_areas:
             self.distribute_medics_to_hospitals(super_area)
 
-    def get_hospitals_in_super_area(self, super_area: SuperArea):
+    def get_hospitals_in_super_area(self, super_area: SuperArea)->List["Hospital"]:
         """
+        From all hospitals, filter the ones placed in a given super_area
+        
+        Parameters
+        ----------
+        super_area:
+            super area 
         """
         hospitals_in_super_area = [
             hospital
             for hospital in self.hospitals.members
-            if hospital.super_area == super_area
+            if hospital.super_area == super_area.name
         ]
         return hospitals_in_super_area
 
-    def distribute_medics_to_hospitals(self, super_area):
+    def distribute_medics_to_hospitals(self, super_area: SuperArea):
         """
-        Healthcares sector
-            2211: Medical practitioners
-            2217: Medical radiographers
-            2231: Nurses
-            2232: Midwives
-        We put a lower bound on the age of medics to be 25.
+        Distribute medics to hospitals within a super area
+        Parameters
+        ----------
+        super_area:
+            super area to distribute medics
         """
         hospitals_in_super_area = self.get_hospitals_in_super_area(super_area)
         if len(hospitals_in_super_area) == 0:
             return
         medics = [
             person
-            for idx, person in enumerate(super_area.workers) 
-            if person.sector == self.healthcare_sector_label and person.age > self.medic_min_age and person.primary_activity is None
+            for idx, person in enumerate(super_area.workers)
+            if person.sector == self.healthcare_sector_label
+            and person.age > self.medic_min_age
+            and person.primary_activity is None
         ]
         if len(medics) == 0:
-            logger.info(f"\n The SuperArea {super_area.name} has no people that work in it!")
+            logger.info(
+                f"\n The SuperArea {super_area.name} has no people that work in it!"
+            )
             return
         else:
-            # equal chance to work in any hospital nearest to any area within msoa
-            # Note: doing it this way rather then putting them into the area which
-            # is currently chose in the for-loop in the world.py file ensure that
-            # medics are equally distr., no over-crowding
-            areas_rv = stats.rv_discrete(
-                values=(
-                    np.arange(len(hospitals_in_super_area)),
-                    np.array([1 / len(hospitals_in_super_area)] * len(hospitals_in_super_area)),
-                )
-            )
-            hospitals_rnd_arr = areas_rv.rvs(size=len(medics))
-
-            for i, medic in enumerate(medics):
-                if medic.sub_sector is not None:
-                    hospital = hospitals_in_super_area[hospitals_rnd_arr[i]]
-                    # if (hospital.n_medics < hospital.n_medics_max):# and \
+            np.random.shuffle(medics)
+            for hospital in hospitals_in_super_area:
+                max_capacity = hospital.n_beds + hospital.n_icu_beds
+                if max_capacity == 0:
+                    continue
+                n_medics = max(int(np.floor(max_capacity / self.patients_per_medic)), 1)
+                for _ in range(n_medics):
+                    medic = medics.pop()
                     hospital.add(medic, hospital.SubgroupType.workers)

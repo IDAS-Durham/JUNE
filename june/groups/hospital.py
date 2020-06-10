@@ -255,7 +255,7 @@ class Hospitals(Supergroup):
         n_icu_beds = round(icu_fraction * n_beds)
         n_beds -= n_icu_beds
         hospital = Hospital(
-            super_area=super_area,
+            super_area=super_area.name,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
@@ -283,7 +283,6 @@ class Hospitals(Supergroup):
             coordinates = row[["latitude", "longitude"]].values.astype(np.float)
             # create hospital
             hospital = Hospital(
-                # super_area=,
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,
