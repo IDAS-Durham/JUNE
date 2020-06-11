@@ -15,6 +15,8 @@ Please create a new brach and, when done, submit a pull request and assign a rev
 
 With new code additions and alterations, please write tests to ensure future consistency.
 
+All contributions to the codebase which are specific to camps should be in the ``camps/`` folder to make it easier to merge with the main repository. Changes that concern general functionality that can be applied to other countries, can be added to the ``june/`` source code folder.
+
 In all possible instances, code should be added to the original codebase and not overwritten. E.g. if the default for the code is a file used for the UK, manually pass the camp file rather than altering the default. If writing a new file, feel free to customise it to the camp setting!
 
 # Tests
