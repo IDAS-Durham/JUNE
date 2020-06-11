@@ -4,3 +4,4 @@ from .company_distributor import CompanyDistributor
 from .household_distributor import HouseholdDistributor
 from .hospital_distributor import HospitalDistributor
 from .school_distributor import SchoolDistributor
+from .university_distributor import UniversityDistributor
