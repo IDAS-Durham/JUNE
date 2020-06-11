@@ -211,6 +211,8 @@ class World:
             save_commute_cities_to_hdf5(self.commutecities, file_path)
         if self.commutehubs is not None:
             save_commute_hubs_to_hdf5(self.commutehubs, file_path)
+        if self.universities is not None:
+            save_universities_to_hdf5(self.universities, file_path)
 
 
 def generate_world_from_geography(
@@ -290,6 +292,9 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
     if "households" in f_keys:
         world.households = load_households_from_hdf5(file_path, chunk_size)
+    if "universities" in f_keys:
+        print("loading unis")
+        world.universities = load_universities_from_hdf5(file_path, chunk_size)
     if "commute_cities" in f_keys:
         world.commutecities = load_commute_cities_from_hdf5(file_path)
         world.commutecityunits = CommuteCityUnits(world.commutecities.members)
@@ -304,6 +309,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "household": "households",
         "care_home": "care_homes",
         "commute_hub" : "commutehubs",
+        "university" : "universities"
     }
     # restore areas -> super_areas
     for area in world.areas:
@@ -326,6 +332,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             spec, group_id, subgroup_type = subgroup_info
             if spec is None:
                 continue
+            print(spec, group_id, subgroup_type)
             supergroup = getattr(world, spec_mapper[spec])
             first_group_id = supergroup.members[0].id
             group = supergroup.members[group_id - first_group_id]
