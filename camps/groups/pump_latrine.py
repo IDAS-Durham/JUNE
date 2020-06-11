@@ -3,12 +3,12 @@ import pandas as pd
 import yaml
 from typing import List
 
-from .social_venue import SocialVenue, SocialVenues, SocialVenueError
-from .social_venue_distributor import SocialVenueDistributor
-from june.paths import data_path, configs_path
+from june.groups.leisure.social_venue import SocialVenue, SocialVenues, SocialVenueError
+from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
+from camps.paths import camp_configs_path
 from june.demography.geography import SuperArea, Area
 
-default_config_filename = configs_path / "defaults/groups/leisure/pumplatrines.yaml"
+default_config_filename = camp_configs_path / "defaults/groups/leisure/pumplatrines.yaml"
 
 class PumpLatrine(SocialVenue):
     def __init__(self, max_size=10):

@@ -8,10 +8,11 @@ from june.demography.demography import (
     Demography,
     Population,
 )
-from june.paths import data_path, camp_data_path
+from june.paths import data_path
+from camps.paths import camp_data_path
 from june import World
 from june.world import generate_world_from_hdf5
-from june.distributors.camp_household_distributor import CampHouseholdDistributor
+from camps.distributors import CampHouseholdDistributor
 from june.groups import Households
 
 

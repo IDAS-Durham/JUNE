@@ -10,12 +10,8 @@ from june.groups.leisure import (
     CinemaDistributor,
     HouseholdVisitsDistributor,
     CareHomeVisitsDistributor,
-    PumpLatrineDistributor,
-    DistributionCenterDistributor,
-    CommunalDistributor,
-    FemaleCommunalDistributor,
 )
-from june.groups.leisure import Pubs, Cinemas, Groceries, PumpLatrines, DistributionCenters, Communals, FemaleCommunals
+from june.groups.leisure import Pubs, Cinemas, Groceries
 
 
 @jit(nopython=True)
