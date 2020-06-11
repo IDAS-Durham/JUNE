@@ -83,14 +83,12 @@ class Universities(Supergroup):
         latitudes = universities_df["latitude"].values
         coordinates = np.array(list(zip(latitudes, longitudes)))
         n_students = universities_df["n_students"].values
-        ukprn_list = universities_df["UKPRN"].values
         super_areas, distances = super_areas.get_closest_super_areas(
             coordinates, k=1, return_distance=True
         )
         distances_close = distances < max_distance_to_super_area
         coordinates = coordinates[distances_close]
         n_students = n_students[distances_close]
-        ukprn_list = ukprn_list[distances_close]
         universities = list()
         for coord, n_stud in zip(
             coordinates, n_students
