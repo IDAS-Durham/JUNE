@@ -7,7 +7,7 @@ from june.groups import Group, Subgroup, Supergroup
 from june.demography.geography import SuperAreas, Areas
 from june.paths import data_path
 
-age_to_years = {19: 1, 20: 2, 21: 3, 22: 4}
+age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23 : 5}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
@@ -17,16 +17,13 @@ class University(Group):
         self,
         coordinates=None,
         n_students_max=None,
-        super_area: str = None,
-        number_of_years=4,
-        ukprn=None,
+        n_years=5,
     ):
         self.coordinates = coordinates
         self.n_students_max = n_students_max
-        self.super_area = super_area
+        self.n_years = n_years
         super().__init__()
-        self.subgroups = [Subgroup(self, i) for i in range(number_of_years + 1)]
-        self.ukprn = ukprn
+        self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
 
     @property
     def students(self):
@@ -95,14 +92,12 @@ class Universities(Supergroup):
         n_students = n_students[distances_close]
         ukprn_list = ukprn_list[distances_close]
         universities = list()
-        for coord, n_stud, super_area, ukprn in zip(
-            coordinates, n_students, super_areas, ukprn_list
+        for coord, n_stud in zip(
+            coordinates, n_students
         ):
             university = University(
                 coordinates=coord,
                 n_students_max=n_stud,
-                super_area=super_area,
-                ukprn=ukprn,
             )
             universities.append(university)
         return cls(universities)
