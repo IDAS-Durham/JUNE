@@ -62,22 +62,6 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "care_homes"):
             raise ValueError("Your world does not have care homes.")
         leisure_distributors.append(CareHomeVisitsDistributor.from_config(world.super_areas))
-    if "pump_latrines" in list_of_leisure_groups:
-        if not hasattr(world, "pump_latrines"):
-            raise ValueError("Your world does note have pumps and latrines")
-        leisure_distributors.append(PumpLatrineDistributor.from_config(world.pump_latrines))
-    if "distribution_centers" in list_of_leisure_groups:
-        if not hasattr(world, "distribution_centers"):
-            raise ValueError("Your world does note have distribution centers")
-        leisure_distributors.append(DistributionCenterDistributor.from_config(world.distribution_centers))
-    if "communal" in list_of_leisure_groups:
-        if not hasattr(world, "communal"):
-            raise ValueError("Your world does note have communal spaces")
-        leisure_distributors.append(CommunalDistributor.from_config(world.communals))
-    if "female_communal" in list_of_leisure_groups:
-        if not hasattr(world, "female_communal"):
-            raise ValueError("Your world does note have female friendly communal spaces")
-        leisure_distributors.append(FemaleCommunalDistributor.from_config(world.female_communals))
     if "household_visits" in list_of_leisure_groups:
         if not hasattr(world, "households"):
             raise ValueError("Your world does not have households.")

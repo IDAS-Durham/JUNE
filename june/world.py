@@ -360,10 +360,5 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                     world.people[city.commute_internal[i] - first_person_idx]
                 )
             city.commute_internal = commute_internal_people
-        #for hub in world.commutehubs:
-        #    hub_people_ids = [person_id for person_id in hub.people]
-        #    hub.clear()
-        #    for person_id in hub_people_ids:
-        #        hub.add(world.people[person_id - first_person_idx])
 
     return world

@@ -1172,15 +1172,6 @@ class HouseholdDistributor:
             first_parent = self._get_matching_parent(
                 first_kid, men_by_age, women_by_age
             )
-            if first_parent is None and not self.ignore_orphans:
-#                import matplotlib.pyplot as plt
-#                ages = [person.age for person in area.people]
-#                plt.hist(ages, bins=np.arange(0,100))
-#                plt.show()
-#
-                raise HouseholdError(
-                    "Orphan kid. Check household configuration and population."
-                )
             if first_parent is not None:
                 self._add_to_household(household, first_parent, subgroup="adults")
             else:
