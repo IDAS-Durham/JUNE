@@ -9,7 +9,7 @@ from june.groups.leisure import (
     GroceryDistributor,
     CinemaDistributor,
     HouseholdVisitsDistributor,
-    CareHomeVisitsDistributor
+    CareHomeVisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 
