@@ -4,13 +4,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from june.world import World
+from june.world import World, generate_world_from_geography
 from june.demography.geography import Geography
 from june.groups.school import Schools
 from june.distributors.school_distributor import SchoolDistributor
 
-default_config_filename = Path(os.path.abspath(__file__)).parent.parent.parent.parent / \
-    "configs/defaults/distributors/school_distributor.yaml"
+default_config_filename = (
+    Path(os.path.abspath(__file__)).parent.parent.parent.parent
+    / "configs/defaults/distributors/school_distributor.yaml"
+)
 
 default_config = {
     "age_range": (0, 19),
@@ -19,10 +21,14 @@ default_config = {
 
 default_mandatory_age_range = (5, 18)
 
+
 @pytest.fixture(name="geography_school", scope="module")
 def create_geography():
-    geography = Geography.from_file({"super_area" : ["E02004935", "E02004935", "E02004935"]})
+    geography = Geography.from_file(
+        {"super_area": ["E02004935", "E02004935", "E02004935"]}
+    )
     return geography
+
 
 @pytest.fixture(name="schools", scope="module")
 def make_and_populate_schools(geography_school):
@@ -30,6 +36,7 @@ def make_and_populate_schools(geography_school):
     school_distributor = SchoolDistributor(schools)
     school_distributor.distribute_kids_to_school(geography_school.areas)
     return schools
+
 
 def test__all_kids_mandatory_school(schools, geography_school):
     """
@@ -40,9 +47,7 @@ def test__all_kids_mandatory_school(schools, geography_school):
     lost_kids = 0
     for area in geography_school.areas.members:
         for person in area.people:
-            if (person.age >= KIDS_LOW) and (
-                    person.age <= KIDS_UP
-            ):
+            if (person.age >= KIDS_LOW) and (person.age <= KIDS_UP):
                 if person.school is None:
                     lost_kids += 1
     assert lost_kids == 0
@@ -81,32 +86,26 @@ def test__non_mandatory_dont_go_if_school_full(schools):
     for school in schools.members:
         if school.n_pupils > school.n_pupils_max:
             ages = np.array(
-                [person.age for person in list(sorted(
-                    school.people,
-                    key=lambda person: person.age
-                ))[int(school.n_pupils_max):]]
+                [
+                    person.age
+                    for person in list(
+                        sorted(school.people, key=lambda person: person.age)
+                    )[int(school.n_pupils_max) :]
+                ]
             )
-            older_kids_when_full = np.sum(
-                ages > mandatory_age_range[1]
-            )
-            younger_kids_when_full = np.sum(
-                ages < mandatory_age_range[0]
-            )
+            older_kids_when_full = np.sum(ages > mandatory_age_range[1])
+            younger_kids_when_full = np.sum(ages < mandatory_age_range[0])
             if older_kids_when_full > 0 or younger_kids_when_full > 0:
                 non_mandatory_added += 1
 
     assert non_mandatory_added == 0
 
+
 def test__teacher_distribution(geography_school):
     geography_school.schools = Schools.for_geography(geography_school)
-    world = World.from_geography(geography_school)
+    world = generate_world_from_geography(geography_school, include_households=False)
     for school in world.schools:
         students = len(school.students)
         teachers = len(school.teachers.people)
         ratio = students / teachers
         assert ratio < 40
-
-
-
-
-

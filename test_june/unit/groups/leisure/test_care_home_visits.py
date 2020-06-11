@@ -7,6 +7,7 @@ from pytest import fixture
 from june import World
 from june.groups.leisure import generate_leisure_for_world
 from june.groups import Household, CareHome
+from june.world import generate_world_from_geography
 
 
 @fixture(name="visits_distributor")

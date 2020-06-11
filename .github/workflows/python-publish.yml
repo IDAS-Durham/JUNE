@@ -28,10 +28,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Get data
+    - name: Get JUNE data
       run: bash get_data.sh
-
+      
     - name: Install simulation
       run: python setup.py install
 
@@ -39,10 +38,8 @@ jobs:
       run: |
         cd test_june
         pytest
-
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         env_vars: OS,PYTHON
         token: 453a1f8a-d0fd-4f4d-b812-5649b3f7ae93
-
