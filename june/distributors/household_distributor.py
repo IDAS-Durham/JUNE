@@ -90,7 +90,6 @@ class HouseholdDistributor:
         max_age_to_be_parent=64,
         max_household_size=8,
         allowed_household_compositions: dict = None,
-        ignore_orphans:bool  = False,
     ):
         """
         Tool to populate areas with households and fill them with the correct
@@ -127,7 +126,6 @@ class HouseholdDistributor:
         self.young_adult_max_age = young_adult_max_age
         self.max_age_to_be_parent = max_age_to_be_parent
         self.max_household_size = max_household_size
-        self.ignore_orphans = ignore_orphans
         self.allowed_household_compositions = allowed_household_compositions
         if self.allowed_household_compositions is None:
             self.allowed_household_compositions = [
