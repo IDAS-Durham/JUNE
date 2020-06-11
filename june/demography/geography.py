@@ -199,15 +199,24 @@ class SuperAreas:
             coordinates = coordinates.reshape(1, -1)
         if return_distance:
             distances, indcs = self.ball_tree.query(
-                np.deg2rad(coordinates), return_distance=return_distance, k=k
+                np.deg2rad(coordinates),
+                return_distance=return_distance,
+                k=k,
+                sort_results=True,
             )
-            super_areas = [self[idx] for idx in indcs[:, 0]]
-            return super_areas, distances[:, 0] * earth_radius
+            indcs = list(chain(*indcs))
+            super_areas = [self[idx] for idx in indcs]
+            distances = np.array(list(chain(*distances)))
+            return super_areas, distances * earth_radius
         else:
             indcs = self.ball_tree.query(
-                np.deg2rad(coordinates), return_distance=return_distance, k=k
+                np.deg2rad(coordinates),
+                return_distance=return_distance,
+                k=k,
+                sort_results=True,
             )
-            super_areas = [self[idx] for idx in indcs[:, 0]]
+            indcs = list(chain(*indcs))
+            super_areas = [self[idx] for idx in indcs]
             return super_areas
 
 
