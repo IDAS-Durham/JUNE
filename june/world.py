@@ -332,7 +332,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             spec, group_id, subgroup_type = subgroup_info
             if spec is None:
                 continue
-            print(spec, group_id, subgroup_type)
             supergroup = getattr(world, spec_mapper[spec])
             first_group_id = supergroup.members[0].id
             group = supergroup.members[group_id - first_group_id]
