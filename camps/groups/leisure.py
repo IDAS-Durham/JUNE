@@ -55,12 +55,12 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         leisure_distributors.append(
             DistributionCenterDistributor.from_config(world.distribution_centers)
         )
-    if "communal" in list_of_leisure_groups:
-        if not hasattr(world, "communal"):
+    if "communals" in list_of_leisure_groups:
+        if not hasattr(world, "communals"):
             raise ValueError("Your world does note have communal spaces")
         leisure_distributors.append(CommunalDistributor.from_config(world.communals))
-    if "female_communal" in list_of_leisure_groups:
-        if not hasattr(world, "female_communal"):
+    if "female_communals" in list_of_leisure_groups:
+        if not hasattr(world, "female_communals"):
             raise ValueError(
                 "Your world does note have female friendly communal spaces"
             )
