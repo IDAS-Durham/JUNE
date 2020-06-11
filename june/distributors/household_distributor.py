@@ -252,7 +252,7 @@ class HouseholdDistributor:
         self._second_kid_parent_age_diff_list = list(
             self._second_kid_parent_age_diff_rv.rvs(size=n)
         )
-        self._random_sex_list = list(self._random_sex_rv.rvs(size=2*n))
+        self._random_sex_list = list(self._random_sex_rv.rvs(size=n))
 
     def _create_people_dicts(self, area: Area):
         """
@@ -320,7 +320,6 @@ class HouseholdDistributor:
             counter += 1
             if counter % 5000 == 0:
                 logger.info(f"filled {counter} areas of {len(area_names)}")
-        logger.info(f"filled {counter} areas of {len(area_names)}")
         return Households(households_total)
 
     def distribute_people_to_households(
@@ -499,7 +498,6 @@ class HouseholdDistributor:
                         households_with_extra_adults,
                     ),
                 )
-
 
         ### one kid and one parent for sure, possibly extra young adults.
         key = "1 0 >=0 1 0"
@@ -708,7 +706,7 @@ class HouseholdDistributor:
             Maximum number of people allowed in the household.
 
         """
-        household = Household(type=type, max_size=max_household_size, area =area)
+        household = Household(type=type, max_size=max_household_size, area=area)
         return household
 
     def _add_to_household(
@@ -1171,20 +1169,11 @@ class HouseholdDistributor:
             first_parent = self._get_matching_parent(
                 first_kid, men_by_age, women_by_age
             )
-            if first_parent is not None:
-                self._add_to_household(household, first_parent, subgroup="adults")
-            else:
-                for array in extra_people_lists:
-                    array.append(household)
-                for _ in range(i + 1, n_households):
-                    household = self._create_household(
-                        area, max_household_size=max_household_size, type="family"
-                    )
-                    households.append(household)
-                    for array in extra_people_lists:
-                        array.append(household)
-                return households
-
+            if first_parent is None:
+                raise HouseholdError(
+                    "Orphan kid. Check household configuration and population."
+                )
+            self._add_to_household(household, first_parent, subgroup="adults")
             for array in extra_people_lists:
                 array.append(household)
             if old_per_house > 0:
