@@ -114,7 +114,7 @@ msoaslist = [
 t1 = time.time()
 
 # we have two options, we can take the list of areas above and select a few:
-geography = Geography.from_file({"super_area": msoaslist})
+geography = Geography.from_file({"super_area": msoaslist[:20]})
 # or select an entire region:
 #geography = Geography.from_file({"region" : ["North East"]})
 # geography = Geography.from_file({"region" : ["London"]})
@@ -132,6 +132,10 @@ world = generate_world_from_geography(
     geography, include_households=True, include_commute=False
 )
 
+empty_households = 0
+for household in world.households:
+    if len(household.people) == 0:
+        empty_households+= 1
 
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
