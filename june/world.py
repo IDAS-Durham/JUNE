@@ -64,6 +64,7 @@ class World:
         self.commutehubs = None
         self.cemeteries = None
         self.universities = None
+        self.box_mode = False
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
@@ -293,7 +294,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if "households" in f_keys:
         world.households = load_households_from_hdf5(file_path, chunk_size)
     if "universities" in f_keys:
-        print("loading unis")
         world.universities = load_universities_from_hdf5(file_path, chunk_size)
     if "commute_cities" in f_keys:
         world.commutecities = load_commute_cities_from_hdf5(file_path)
