@@ -16,6 +16,7 @@ from june.distributors import (
     CareHomeDistributor,
     WorkerDistributor,
     CompanyDistributor,
+    UniversityDistributor
 )
 from june.demography.geography import Geography, Areas
 from june.groups import *
@@ -23,7 +24,7 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
-possible_groups = ["schools", "hospitals", "companies", "care_homes"]
+possible_groups = ["schools", "hospitals", "companies", "care_homes", "universities"]
 
 
 def _populate_areas(areas: Areas, demography):
@@ -62,6 +63,7 @@ class World:
         self.commutecities = None
         self.commutehubs = None
         self.cemeteries = None
+        self.universities = None
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
@@ -69,10 +71,6 @@ class World:
         """
         Distributes people to buildings assuming default configurations.
         """
-
-        if self.care_homes is not None:
-            carehome_distr = CareHomeDistributor()
-            carehome_distr.populate_care_home_in_areas(self.areas)
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
@@ -84,6 +82,7 @@ class World:
             self.companies is not None
             or self.hospitals is not None
             or self.schools is not None
+            or self.care_homes is not None
         ):
             worker_distr = WorkerDistributor.for_super_areas(
                 area_names=[super_area.name for super_area in self.super_areas]
@@ -92,12 +91,21 @@ class World:
                 areas=self.areas, super_areas=self.super_areas, population=self.people
             )
 
+        if self.care_homes is not None:
+            carehome_distr = CareHomeDistributor()
+            carehome_distr.populate_care_home_in_areas(self.areas)
+
+
         if self.schools is not None:
             school_distributor = SchoolDistributor(self.schools)
             school_distributor.distribute_kids_to_school(self.areas)
             school_distributor.distribute_teachers_to_schools_in_super_areas(
                 self.super_areas
             )
+
+        if self.universities is not None:
+            uni_distributor = UniversityDistributor(self.universities)
+            uni_distributor.distribute_students_to_universities(self.super_areas)
 
         if include_commute:
             self.initialise_commuting()

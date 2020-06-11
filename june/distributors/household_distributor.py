@@ -320,6 +320,7 @@ class HouseholdDistributor:
             counter += 1
             if counter % 5000 == 0:
                 logger.info(f"filled {counter} areas of {len(area_names)}")
+        logger.info(f"filled {counter} areas of {len(area_names)}")
         return Households(households_total)
 
     def distribute_people_to_households(
