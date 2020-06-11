@@ -120,12 +120,14 @@ def distribute_people_to_households(world: World):
     world.households = Households(households_total)
 
 
-
-if __name__ == "__main__":
-    # area coding example CXB-219-056
-    # super area coding example CXB-219-C
-    # region coding example CXB-219
-    world = generate_empty_world(filter_key={"super_area" : ["CXB-219-C"]})
+def example_run(filter_key=None):
+    world = generate_empty_world(filter_key=filter_key)
     populate_world(world)
     distribute_people_to_households(world)
     world.to_hdf5("camp.hdf5")
+
+if __name__ == "__main__":
+    example_run(filter_key = {"super_area" : ["CXB-219-C"]})
+    # area coding example CXB-219-056
+    # super area coding example CXB-219-C
+    # region coding example CXB-219
