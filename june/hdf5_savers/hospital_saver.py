@@ -40,13 +40,13 @@ def save_hospitals_to_hdf5(
                 if hospital.super_area is None:
                     super_areas.append(nan_integer)
                 else:
-                    super_areas.append(hospital.super_area.id)
+                    super_areas.append(hospital.super_area)
                 n_beds.append(hospital.n_beds)
                 n_icu_beds.append(hospital.n_icu_beds)
                 coordinates.append(np.array(hospital.coordinates))
 
             ids = np.array(ids, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
+            super_areas = np.array(super_areas, dtype="S20")
             n_beds = np.array(n_beds, dtype=np.int)
             n_icu_beds = np.array(n_icu_beds, dtype=np.int)
             coordinates = np.array(coordinates, dtype=np.float)
@@ -94,8 +94,10 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
             coordinates = hospitals["coordinates"][idx1:idx2]
             for k in range(idx2 - idx1):
                 super_area = super_areas[k]
-                if super_area == nan_integer:
+                if super_area.decode() == " ":
                     super_area = None
+                else:
+                    super_area = super_area.decode()
                 hospital = Hospital(
                     n_beds_list[k], n_icu_beds_list[k], super_area, coordinates[k]
                 )

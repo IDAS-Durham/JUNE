@@ -7,7 +7,7 @@ from june.demography.geography import Geography, Area, SuperArea
 from june.groups import Households, Companies, Hospitals, Schools, CareHomes, Group
 from june.distributors import HouseholdDistributor
 from june import World
-from june.world import generate_world_from_hdf5
+from june.world import generate_world_from_hdf5, generate_world_from_geography
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -31,6 +31,7 @@ from june.hdf5_savers import (
     load_commute_cities_from_hdf5,
     load_commute_hubs_from_hdf5,
 )
+from june import paths
 
 from pytest import fixture
 
@@ -53,7 +54,7 @@ def create_world(geography_h5):
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    world = generate_world_from_geography(geography=geography, include_households=True, include_commute=True)
     return world
 
 
@@ -182,7 +183,7 @@ class TestSaveHospitals:
                 else:
                     assert attribute == attribute2
             if hospital.super_area is not None:
-                assert hospital.super_area.id == hospital2.super_area
+                assert hospital.super_area == hospital2.super_area
             else:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
@@ -354,4 +355,4 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1.id == person2.id
+                assert person1.id == person2
