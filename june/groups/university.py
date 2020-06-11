@@ -19,12 +19,14 @@ class University(Group):
         n_students_max=None,
         super_area: str = None,
         number_of_years=4,
+        ukprn=None,
     ):
         self.coordinates = coordinates
         self.n_students_max = n_students_max
         self.super_area = super_area
         super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(number_of_years + 1)]
+        self.ukprn = ukprn
 
     @property
     def students(self):
@@ -45,8 +47,10 @@ class University(Group):
             else:
                 year = age_to_years[person.age]
             self.subgroups[year].append(person)
+            person.subgroups.primary_activity = self.subgroups[year]
         elif subgroup == "professors":
             self.subgroups[0].append(person)
+            person.subgroups.primary_activity = self.subgroups[0]
 
     @property
     def is_full(self):
@@ -82,16 +86,23 @@ class Universities(Supergroup):
         latitudes = universities_df["latitude"].values
         coordinates = np.array(list(zip(latitudes, longitudes)))
         n_students = universities_df["n_students"].values
+        ukprn_list = universities_df["UKPRN"].values
         super_areas, distances = super_areas.get_closest_super_areas(
             coordinates, k=1, return_distance=True
         )
         distances_close = distances < max_distance_to_super_area
         coordinates = coordinates[distances_close]
         n_students = n_students[distances_close]
+        ukprn_list = ukprn_list[distances_close]
         universities = list()
-        for coord, n_stud, super_area in zip(coordinates, n_students, super_areas):
+        for coord, n_stud, super_area, ukprn in zip(
+            coordinates, n_students, super_areas, ukprn_list
+        ):
             university = University(
-                coordinates=coord, n_students_max=n_stud, super_area=super_area
+                coordinates=coord,
+                n_students_max=n_stud,
+                super_area=super_area,
+                ukprn=ukprn,
             )
             universities.append(university)
         return cls(universities)
