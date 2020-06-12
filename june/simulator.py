@@ -2,7 +2,7 @@ import logging
 import random
 from june import paths
 from typing import List, Optional
-import datetime
+from datetime import datetime
 import copy
 
 from itertools import chain
@@ -384,7 +384,7 @@ class Simulator:
             subgroup = self.get_subgroup_active(activities, person)
             subgroup.append(person)
 
-    def move_people_to_active_subgroups(self, activities: List[str]):
+    def move_people_to_active_subgroups(self, activities: List[str], date: datetime = datetime(2020,2,2)):
         """
         Sends every person to one subgroup. If a person has a mild illness,
         they stay at home with a certain probability given by stay_at_home_complacency
@@ -398,7 +398,7 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            if self.policies.must_stay_at_home(person, self.timer.date, activities):
+            if self.policies.must_stay_at_home(person, date, activities):
                 self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
