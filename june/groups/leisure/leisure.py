@@ -9,7 +9,7 @@ from june.groups.leisure import (
     GroceryDistributor,
     CinemaDistributor,
     HouseholdVisitsDistributor,
-    CareHomeVisitsDistributor
+    CareHomeVisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 
@@ -88,7 +88,7 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
 
     def get_leisure_distributor_for_person(
-        self, person: Person, delta_time: float, is_weekend: bool = False, closed_groups = [],
+        self, person: Person, delta_time: float, is_weekend: bool = False, closed_groups = None,
     ):
         """
         Given a person, reads its characteristics, and the amount of free time it has,
@@ -114,6 +114,8 @@ class Leisure:
                 poisson_parameters.append(
                     distributor.get_poisson_parameter(person, is_weekend)
                 )
+        if not poisson_parameters:
+            return
         activity = roll_activity_dice(
             np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
         )
@@ -147,7 +149,7 @@ class Leisure:
             return True
 
     def get_subgroup_for_person_and_housemates(
-            self, person: Person, delta_time: float, is_weekend: bool, closed_groups=[]
+            self, person: Person, delta_time: float, is_weekend: bool, closed_groups = None
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,

@@ -4,10 +4,18 @@ from collections import defaultdict
 from itertools import count
 from june.demography import Demography, Person, Population
 from june.demography.geography import Geography, Area, SuperArea
-from june.groups import Households, Companies, Hospitals, Schools, CareHomes, Group
+from june.groups import (
+    Households,
+    Companies,
+    Hospitals,
+    Schools,
+    CareHomes,
+    Group,
+    Universities,
+)
 from june.distributors import HouseholdDistributor
 from june import World
-from june.world import generate_world_from_hdf5
+from june.world import generate_world_from_hdf5, generate_world_from_geography
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -18,6 +26,7 @@ from june.hdf5_savers import (
     save_companies_to_hdf5,
     save_commute_cities_to_hdf5,
     save_commute_hubs_to_hdf5,
+    save_universities_to_hdf5,
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -30,7 +39,9 @@ from june.hdf5_savers import (
     load_hospitals_from_hdf5,
     load_commute_cities_from_hdf5,
     load_commute_hubs_from_hdf5,
+    load_universities_from_hdf5,
 )
+from june import paths
 
 from pytest import fixture
 
@@ -48,12 +59,14 @@ def create_world(geography_h5):
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
     geography = geography_h5
-    demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
+    world = generate_world_from_geography(
+        geography=geography, include_households=True, include_commute=True
+    )
     return world
 
 
@@ -69,7 +82,7 @@ class TestSavePeople:
                 "sex",
                 "ethnicity",
                 "sector",
-                "sub_sector"
+                "sub_sector",
             ]:
                 attribute = getattr(person, attribute_name)
                 attribute2 = getattr(person2, attribute_name)
@@ -162,7 +175,7 @@ class TestSaveCompanies:
                 assert company.super_area.id == company2.super_area
             else:
                 assert company2.super_area is None
-            
+
 
 class TestSaveHospitals:
     def test__save_hospitals(self, world_h5):
@@ -182,12 +195,11 @@ class TestSaveHospitals:
                 else:
                     assert attribute == attribute2
             if hospital.super_area is not None:
-                assert hospital.super_area.id == hospital2.super_area
+                assert hospital.super_area == hospital2.super_area
             else:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
-            
 
 
 class TestSaveSchools:
@@ -215,7 +227,8 @@ class TestSaveSchools:
                 assert school2.super_area is None
             assert school.coordinates[0] == school2.coordinates[0]
             assert school.coordinates[1] == school2.coordinates[1]
-            
+
+
 class TestSaveCarehomes:
     def test__save_carehomes(self, world_h5):
         carehomes = world_h5.care_homes
@@ -233,7 +246,7 @@ class TestSaveCarehomes:
                 assert carehome.area.id == carehome2.area
             else:
                 assert carehome2.area is None
-            
+
 
 class TestSaveGeography:
     def test__save_geography(self, world_h5):
@@ -308,6 +321,27 @@ class TestSaveCommute:
                 assert unit1.city == unit2.city
 
 
+class TestSaveUniversities:
+    def test__save_universities(self, world_h5):
+        universities = world_h5.universities
+        save_universities_to_hdf5(universities, "test.hdf5")
+        universities_recovered = load_universities_from_hdf5("test.hdf5")
+        for uni, uni2 in zip(universities, universities_recovered):
+            for attribute_name in [
+                "id",
+                "n_students_max",
+                "n_years",
+            ]:
+                attribute = getattr(uni, attribute_name)
+                attribute2 = getattr(uni2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+            assert uni.coordinates[0] == uni2.coordinates[0]
+            assert uni.coordinates[1] == uni2.coordinates[1]
+
+
 class TestSaveWorld:
     @fixture(name="world_h5_loaded", scope="module")
     def reaload_world(self, world_h5):
@@ -354,4 +388,4 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1.id == person2.id
+                assert person1.id == person2

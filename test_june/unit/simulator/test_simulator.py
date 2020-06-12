@@ -4,7 +4,7 @@ import numpy as np
 
 from june.demography.geography import Geography
 from june.demography import Demography
-from june.world import World
+from june.world import World, generate_world_from_geography
 from june.interaction import ContactAveraging
 from june.infection import InfectionSelector, Infection
 from june.infection import SymptomTag, SymptomsConstant
@@ -30,19 +30,21 @@ def create_simulator():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
+    world = generate_world_from_geography(
+        geography=geography, include_commute=True, include_households=True
+    )
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
-    
+    world.groceries = Groceries.for_super_areas(
+        geography.super_areas, venues_per_capita=1 / 500
+    )
+
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
-    sim = Simulator.from_file(
-        world, interaction, selector, config_filename=test_config
-    )
+    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config)
     return sim
 
 
@@ -115,6 +117,7 @@ def test__move_people_to_residence(sim):
         assert person in person.residence.people
     sim.clear_world()
 
+
 def test__move_people_to_leisure(sim):
     sim.clear_world()
     sim.move_people_to_active_subgroups(["leisure", "residence"])
@@ -126,14 +129,14 @@ def test__move_people_to_leisure(sim):
         if person.leisure is not None:
             n_leisure += 1
             if person.leisure.group.spec == "care_home":
-                assert person.leisure.subgroup_type == 2 # visitors
+                assert person.leisure.subgroup_type == 2  # visitors
             elif person.leisure.group.spec == "cinema":
                 n_cinemas += 1
             elif person.leisure.group.spec == "pub":
                 n_pubs += 1
             elif person.leisure.group.spec == "grocery":
                 n_groceries += 1
-            #print(f'There are {len(person.leisure.people)} in this group')
+            # print(f'There are {len(person.leisure.people)} in this group')
             assert person in person.leisure.people
     assert n_leisure > 0
     assert n_cinemas > 0
@@ -163,6 +166,33 @@ def test__move_people_to_commute(sim):
     sim.clear_world()
 
 
+<<<<<<< HEAD
+=======
+def test__kid_at_home_is_supervised(sim, health_index):
+
+    kids_at_school = []
+    for person in sim.world.people.members:
+        if person.primary_activity is not None and person.age < sim.min_age_home_alone:
+            kids_at_school.append(person)
+
+    for kid in kids_at_school:
+        sim.selector.infect_person_at_time(kid, 0.0)
+        kid.health_information.infection.symptoms.tag = SymptomTag.influenza
+        assert kid.health_information.must_stay_at_home
+
+    sim.move_people_to_active_subgroups(["primary_activity", "residence"])
+
+    for kid in kids_at_school:
+        assert kid in kid.residence.people
+        guardians_at_home = [
+            person for person in kid.residence.group.people if person.age >= 18
+        ]
+        assert len(guardians_at_home) != 0
+
+    sim.clear_world()
+
+
+>>>>>>> master
 def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]
     sim.selector.infect_person_at_time(dummy_person, 0.0)
@@ -178,7 +208,7 @@ def test__hospitalise_the_sick(sim):
 def test__move_people_from_hospital_to_icu(sim):
     dummy_person = sim.world.people.members[0]
     dummy_person.health_information.infection.symptoms.tag = SymptomTag.intensive_care
-    sim.hospitalise_the_sick(dummy_person, 'hospitalised')
+    sim.hospitalise_the_sick(dummy_person, "hospitalised")
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
     assert dummy_person in hospital[hospital.SubgroupType.icu_patients]
@@ -188,7 +218,7 @@ def test__move_people_from_hospital_to_icu(sim):
 def test__move_people_from_icu_to_hospital(sim):
     dummy_person = sim.world.people.members[0]
     dummy_person.health_information.infection.symptoms.tag = SymptomTag.hospitalised
-    sim.hospitalise_the_sick(dummy_person, 'intensive care')
+    sim.hospitalise_the_sick(dummy_person, "intensive care")
     hospital = dummy_person.hospital.group
     sim.move_people_to_active_subgroups(["hospital", "residence"])
     assert dummy_person in hospital[hospital.SubgroupType.patients]
