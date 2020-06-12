@@ -1,8 +1,16 @@
 from june.world import World
 from june.demography.geography import Geography
 from june.demography import Demography
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
-from june.world import generate_world_from_hdf5
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    CareHomes,
+    Cemeteries,
+    Universities,
+)
+from june.world import generate_world_from_hdf5, generate_world_from_geography
 import pickle
 import sys
 import time
@@ -106,20 +114,28 @@ msoaslist = [
 t1 = time.time()
 
 # we have two options, we can take the list of areas above and select a few:
-geography = Geography.from_file({"super_area" : msoaslist[:15]})
+geography = Geography.from_file({"super_area": msoaslist[:20]})
 # or select an entire region:
 #geography = Geography.from_file({"region" : ["North East"]})
-#geography = Geography.from_file({"region" : ["London"]})
+# geography = Geography.from_file({"region" : ["London"]})
 
 demography = Demography.for_geography(geography)
 # then this automatically creates the world and saves it to world.hdf5
 geography.hospitals = Hospitals.for_geography(geography)
 geography.companies = Companies.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
+geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
-world = World(geography, demography, include_households=False, include_commute=False)
+world = generate_world_from_geography(
+    geography, include_households=True, include_commute=False
+)
+
+empty_households = 0
+for household in world.households:
+    if len(household.people) == 0:
+        empty_households+= 1
 
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")

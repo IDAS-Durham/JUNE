@@ -1,12 +1,8 @@
 import time
 
-## important, remove
 from june.world import generate_world_from_hdf5
 from june.hdf5_savers import load_geography_from_hdf5
-from june.groups.leisure import *
-from june import World
 from june.demography.geography import Geography
-from june.demography import Demography
 from june.interaction import ContactAveraging
 from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
@@ -18,7 +14,6 @@ from june.seed import Seed
 from june import paths
 from june.infection.infection import InfectionSelector
 from june.groups.commute import *
-from june.commute import *
 
 world_file = "world.hdf5"
 
