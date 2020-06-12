@@ -52,8 +52,14 @@ def save_population_to_hdf5(
                 ids.append(person.id)
                 ages.append(person.age)
                 sexes.append(person.sex.encode("ascii", "ignore"))
-                ethns.append(person.ethnicity.encode("ascii", "ignore"))
-                socioecon_indices.append(person.socioecon_index)
+                if person.ethnicity is None:
+                    ethns.append(" ".encode("ascii", "ignore"))
+                else:
+                    ethns.append(person.ethnicity.encode("ascii", "ignore"))
+                if person.socioecon_index is None:
+                    socioecon_indices.append(nan_integer)
+                else:
+                    socioecon_indices.append(person.socioecon_index)
                 if person.home_city is None:
                     home_city.append(nan_integer)
                 else:
@@ -225,12 +231,20 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             ][idx1:idx2]
             areas = population["area"][idx1:idx2]
             for k in range(idx2 - idx1):
+                if ethns[k].decode() == " ":
+                    ethnicity = None
+                else:
+                    ethnicity = ethns[k].decode()
+                if socioecon_indices[k] == nan_integer:
+                    socioecon_index = None
+                else:
+                    socioecon_index = socioecon_indices[k]
                 person = Person.from_attributes(
                     id=ids[k],
                     age=ages[k],
                     sex=sexes[k].decode(),
-                    ethnicity=ethns[k].decode(),
-                    socioecon_index=socioecon_indices[k],
+                    ethnicity=ethnicity,
+                    socioecon_index=socioecon_index,
                 )
                 mode_of_transport_description = mode_of_transport_description_list[k]
                 mode_of_transport_is_public = mode_of_transport_is_public_list[k]

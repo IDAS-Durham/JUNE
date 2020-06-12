@@ -3,6 +3,7 @@ import pytest
 import june.interaction as inter
 import numba as nb
 from june import World
+from june.world import generate_world_from_geography
 from june import paths
 from june.demography import Demography
 from june.demography.geography import Geography
@@ -108,14 +109,13 @@ def make_geography():
 
 @pytest.fixture(name="world", scope="session")
 def create_world(geography):
-    demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.companies = Companies.for_geography(geography)
-    world = World(geography, demography, include_households=True)
+    world = generate_world_from_geography(geography, include_households=True)
     return world
 
 
@@ -129,7 +129,7 @@ def create_box_world():
     geography = Geography.from_file(
         {"super_area": ["E02001697"]}
     )
-    return World.from_geography(geography, box_mode=True)
+    return generate_world_from_geography(geography, box_mode=True)
 
 
 @pytest.fixture(name="simulator_box", scope="session")
@@ -145,5 +145,5 @@ def create_simulator_box(request, world_box, interaction, infection_healthy):
 def make_super_areas():
     geo = Geography.from_file({"super_area": ["E02003353"]})
     geo.care_homes = CareHomes.for_geography(geo)
-    world = World.from_geography(geo, include_households=True)
+    world = generate_world_from_geography(geo, include_households=True)
     return world

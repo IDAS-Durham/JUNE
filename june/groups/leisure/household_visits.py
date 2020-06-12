@@ -70,12 +70,16 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                 ]
                 np.random.shuffle(households_super_area)
             for household in households_super_area:
+                if household.size == 0:
+                    continue
                 households_to_link_n = np.random.randint(0, 3)
                 relatives_to_visit = []
                 for _ in range(households_to_link_n):
                     house_idx = np.random.randint(0, len(households_super_area))
                     house = households_super_area[house_idx]
-                    person_idx = np.random.randint(0, len(house.people))
+                    if len(house.people) == 0:
+                        continue
+                    person_idx = np.random.randint(len(house.people))
                     relatives_to_visit.append(house.people[person_idx])
                 household.relatives_in_households = tuple(relatives_to_visit)
 

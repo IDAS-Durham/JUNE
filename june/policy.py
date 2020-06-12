@@ -1,4 +1,5 @@
 from june import paths
+import re
 from datetime import datetime
 import yaml
 
@@ -6,28 +7,35 @@ default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
 
 class Policy:
-    def __init__(self, policy="default", start_time=None, end_time=None):
-        self.name = policy
+    def __init__(self, start_time=None, end_time=None):
+        self.spec = self.get_spec()
         if start_time is None and end_time is None:
             self.always_active = True
         else:
+            self.always_active = False
             self.start_time = start_time
             self.end_time = end_time
 
-    @property
+    def get_spec(self) -> str:
+        """
+        Returns the speciailization of the group.
+        """
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+
     def is_active(self, date):
         if self.always_active:
             return True
-        elif date > self.start_time and date < self.end_time:
+        elif date >= self.start_time and date <= self.end_time:
             return True
         return False
 
-    def must_stay_at_home(self, person: "Person", timer, activities):
+class PermanentPolicy(Policy):
+
+    def must_stay_at_home(self, person: "Person", time, activities):
         return (
             person.health_information is not None
             and person.health_information.must_stay_at_home
         )
-
 
 class Quarentine(Policy):
     def __init__(
@@ -37,7 +45,7 @@ class Quarentine(Policy):
         n_days: int,
         n_days_household: int,
     ):
-        super().__init__("quarantine", start_time, end_time)
+        super().__init__(start_time, end_time)
         self.n_days = n_days
         self.n_days_household = n_days_household
 
@@ -54,7 +62,7 @@ class CloseSchools(Policy):
         end_time: "datetime",
         years_to_close=[5, 6, 7, 8, 9, 10, 11, 12],
     ):
-        super().__init__("quarantine", start_time, end_time)
+        super().__init__(start_time, end_time)
         self.years_to_close = years_to_close
 
     def must_stay_at_home(self, person: "Person", days: float, activities):
@@ -90,11 +98,13 @@ class Policies:
         self.social_distancing_start = 0
         self.social_distancing_end = 0
 
+        '''
         for policy in self.policies:
             if policy.name == "social_distance":
                 self.social_distancing = True
                 self.social_distancing_start = policy.start_time
                 self.social_distancing_end = policy.end_time
+        '''
 
     @classmethod
     def from_file(
@@ -106,10 +116,10 @@ class Policies:
 
         return Policies(policies, config)
 
-    def must_stay_at_home(self, person, timer, activities):
+    def must_stay_at_home(self, person, date, activities):
         for policy in self.policies:
-            if hasattr(policy, "must_stay_at_home") and policy.active(timer.date):
-                if policy.must_stay_at_home(person, timer.now, activities):
+            if hasattr(policy, "must_stay_at_home") and policy.is_active(date):
+                if policy.must_stay_at_home(person, date, activities):
                     return True
         return False
 

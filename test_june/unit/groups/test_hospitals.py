@@ -9,7 +9,7 @@ from june.groups import *
 from june.demography import Person
 from june.infection import SymptomTag
 from june.infection import InfectionSelector, Infection
-from june.paths import data_path
+from june.paths import data_path 
 
 from pathlib import Path
 path_pwd = Path(__file__)
@@ -17,8 +17,7 @@ dir_pwd  = path_pwd.parent
 
 @pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
-    data_directory = Path(__file__).parent.parent.parent.parent
-    return Hospitals.from_file()
+    return Hospitals.from_file(filename=data_path / 'input/hospitals/england_hospitals.csv')
 
 
 @pytest.fixture(name="hospitals_df", scope="module")
@@ -30,20 +29,17 @@ def test__total_number_hospitals_is_correct(hospitals, hospitals_df):
     assert len(hospitals.members) == len(hospitals_df)
 
 
-@pytest.mark.parametrize("index", [5, 20])
+@pytest.mark.parametrize("index", [2, 3])
 def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index):
 
-    r_max = 150.0
-    distances, closest_idx = hospitals.get_closest_hospitals(
-        hospitals_df[["latitude", "longitude"]].iloc[index].values, r_max,
+    closest_idx = hospitals.get_closest_hospitals(
+        hospitals_df[["latitude", "longitude"]].iloc[index].values, k=10
     )
 
-    # All distances are actually smaller than r_max
-    assert np.sum(distances > r_max) == 0
-
+    print(closest_idx)
     closest_hospital_idx = closest_idx[0]
-
-    assert hospitals.members[closest_hospital_idx].name == hospitals.members[index].name
+    print(index)
+    assert hospitals.members[closest_hospital_idx] == hospitals.members[index]
 
 
 class MockHealthInformation:
@@ -63,7 +59,6 @@ def test__add_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
-    print('symptoms = ', dummy_person.health_information.infection.symptoms.tag)
     assert dummy_person.hospital is None
     hospitals.members[0].add_as_patient(dummy_person)
     if health_info == "hospitalised":
@@ -87,18 +82,18 @@ class MockArea:
 def test__allocate_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
-    dummy_person.area = MockArea(hospitals.members[0].coordinates)
+    dummy_person.area = MockArea(hospitals.members[-1].coordinates)
     assert dummy_person.hospital is None
     dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
     hospitals.allocate_patient(dummy_person)
     if health_info == "hospitalised":
         assert (
-            dummy_person in hospitals.members[0][Hospital.SubgroupType.patients].people
+            dummy_person in hospitals.members[-1][Hospital.SubgroupType.patients].people
         )
     elif health_info == "intensive_care":
         assert (
             dummy_person
-            in hospitals.members[0][Hospital.SubgroupType.icu_patients].people
+            in hospitals.members[-1][Hospital.SubgroupType.icu_patients].people
         )
     selected_hospital = dummy_person.hospital
     assert dummy_person.hospital is not None
@@ -115,13 +110,17 @@ def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector)
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
 
     for hospital in hospitals.members:
-        for _ in range(hospital.n_beds):
+        for _ in range(int(hospital.n_beds)):
             hospital.add_as_patient(dummy_person)
 
-    assert hospitals.allocate_patient(dummy_person) == None
+    hospitals.allocate_patient(dummy_person) 
+    if health_info == 'hospitalised':
+        assert len(dummy_person.hospital.people) > dummy_person.hospital.group.n_beds
+    elif health_info == 'intensive_care':
+        assert len(dummy_person.hospital.people) > dummy_person.hospital.group.n_icu_beds
 
     for hospital in hospitals.members:
-        for _ in range(hospital.n_beds):
+        for _ in range(int(hospital.n_beds)):
             hospital.release_as_patient(dummy_person)
 
 
@@ -130,4 +129,4 @@ def test__initialize_hospitals_from_geography():
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
     assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 190
-    assert hospitals.members[0].super_area.name in ["E02003999", "E02006764"]
+    assert hospitals.members[0].super_area in ["E02003999", "E02006764"]
