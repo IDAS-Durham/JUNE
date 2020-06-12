@@ -8,7 +8,6 @@ from june.infection.health_information import HealthInformation
 from june.commute import ModeOfTransport
 
 
-
 class Activities(dataobject):
     residence: None
     primary_activity: None
@@ -51,7 +50,7 @@ class Person(dataobject):
 
     @classmethod
     def from_attributes(
-        cls, sex=27, age="f", ethnicity=None, socioecon_index=None, id=None
+        cls, sex="f", age=27, ethnicity=None, socioecon_index=None, id=None
     ):
         if id is None:
             id = next(Person._id)
@@ -145,9 +144,9 @@ class Person(dataobject):
             return None
         guardian = random.choice(possible_guardians)
         if (
-            (guardian.health_information is not None and guardian.health_information.should_be_in_hospital)
-            or guardian.dead
-        ):
+            guardian.health_information is not None
+            and guardian.health_information.should_be_in_hospital
+        ) or guardian.dead:
             return None
         else:
             return guardian
