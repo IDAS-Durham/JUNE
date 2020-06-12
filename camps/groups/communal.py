@@ -9,7 +9,7 @@ from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_data_path, camp_configs_path
 
 default_communals_coordinates_filename = camp_data_path / "input/activities/communal.csv"
-default_config_filename = camp_configs_path / "defaults/groups/leisure/communal.yaml"
+default_config_filename = camp_configs_path / "defaults/groups/communal.yaml"
 
 class Communal(SocialVenue):
     def __init__(self, max_size=np.inf):

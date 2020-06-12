@@ -44,7 +44,7 @@ class Area:
         "care_home",
         "schools",
         "households",
-        "pumplatrines",
+        "pump_latrines",
     )
     _id = count()
 
@@ -62,7 +62,7 @@ class Area:
         self.people = list()
         self.schools = list()
         self.households = list()
-        self.pumplatrines = list()
+        self.pump_latrines = list()
 
     def add(self, person: Person):
         self.people.append(person)
