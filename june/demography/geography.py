@@ -247,6 +247,7 @@ class Geography:
         self.cinemas = None
         self.groceries = None
         self.cemeteries = None
+        self.universities = None
 
     @classmethod
     def _create_areas(

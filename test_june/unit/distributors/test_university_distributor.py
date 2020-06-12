@@ -29,9 +29,4 @@ def test__students_go_to_uni(world):
     durham = universities[0]
     university_distributor = UniversityDistributor(universities)
     university_distributor.distribute_students_to_universities(world.super_areas)
-    n_students = 0
-    for area in world.areas:
-        for household in area.households:
-            if household.type == "student":
-                n_students += len(household.people)
-    assert n_students == durham.n_students
+    assert durham.n_students > 10000

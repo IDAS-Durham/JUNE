@@ -12,7 +12,7 @@ beta:
  company: 0.5 
  school: 0.5 
  household: 0.5 
- university: 0.5
+ university: 0.05
 
 contact_matrices:
  hospital:

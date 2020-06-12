@@ -18,10 +18,12 @@ class University(Group):
         coordinates=None,
         n_students_max=None,
         n_years=5,
+        ukprn=None,
     ):
         self.coordinates = coordinates
         self.n_students_max = n_students_max
         self.n_years = n_years
+        self.ukprn = ukprn
         super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
 
@@ -83,19 +85,22 @@ class Universities(Supergroup):
         latitudes = universities_df["latitude"].values
         coordinates = np.array(list(zip(latitudes, longitudes)))
         n_students = universities_df["n_students"].values
+        ukprn_values = universities_df["UKPRN"].values
         super_areas, distances = super_areas.get_closest_super_areas(
             coordinates, k=1, return_distance=True
         )
         distances_close = distances < max_distance_to_super_area
         coordinates = coordinates[distances_close]
         n_students = n_students[distances_close]
+        ukprn_values = ukprn_values[distances_close]
         universities = list()
-        for coord, n_stud in zip(
-            coordinates, n_students
+        for coord, n_stud, ukprn in zip(
+            coordinates, n_students, ukprn_values
         ):
             university = University(
                 coordinates=coord,
                 n_students_max=n_stud,
+                ukprn =ukprn
             )
             universities.append(university)
         return cls(universities)

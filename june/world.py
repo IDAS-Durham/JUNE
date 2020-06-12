@@ -73,12 +73,6 @@ class World:
         Distributes people to buildings assuming default configurations.
         """
 
-        if include_households:
-            household_distributor = HouseholdDistributor.from_file()
-            self.households = household_distributor.distribute_people_and_households_to_areas(
-                self.areas
-            )
-
         if (
             self.companies is not None
             or self.hospitals is not None
@@ -95,6 +89,12 @@ class World:
         if self.care_homes is not None:
             carehome_distr = CareHomeDistributor()
             carehome_distr.populate_care_home_in_areas(self.areas)
+
+        if include_households:
+            household_distributor = HouseholdDistributor.from_file()
+            self.households = household_distributor.distribute_people_and_households_to_areas(
+                self.areas
+            )
 
 
         if self.schools is not None:
