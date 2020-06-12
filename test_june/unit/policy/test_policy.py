@@ -308,8 +308,8 @@ class TestQuarantine:
         pass
 
 """
-def test__social_distancing(world, selector, interaction):
-
+def test__social_distancing(super_area, selector, interaction):
+    pupil, worker, world = make_dummy_world(super_area)
     start_date = datetime(2020, 3, 10)
     end_date = datetime(2020, 3, 12)
     social_distance = SocialDistancing(
