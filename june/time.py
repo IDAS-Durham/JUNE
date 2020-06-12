@@ -70,6 +70,14 @@ class Timer:
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
         self.previous_date = self.initial_date
 
+    def reset_to_new_date(self, date):
+        self.date = date
+        self.shift = 0
+        self.delta_time = datetime.timedelta(hours=self.shift_duration)
+        self.previous_date = self.initial_date
+
+
+
     def __iter__(self):
         return self
 

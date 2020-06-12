@@ -2,11 +2,12 @@ from june import paths
 import re
 from datetime import datetime
 import yaml
+from abc import ABC, abstractmethod
 
 default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
 
-class Policy:
+class Policy(ABC):
     def __init__(self, start_time=None, end_time=None):
         self.spec = self.get_spec()
         if start_time is None and end_time is None:
@@ -29,21 +30,22 @@ class Policy:
             return True
         return False
 
-class PermanentPolicy(Policy):
 
+class PermanentPolicy(Policy):
     def must_stay_at_home(self, person: "Person", time, activities):
         return (
             person.health_information is not None
             and person.health_information.must_stay_at_home
         )
 
-class Quarentine(Policy):
+
+class Quarantine(Policy):
     def __init__(
         self,
         start_time: "datetime",
         end_time: "datetime",
-        n_days: int,
-        n_days_household: int,
+        n_days: int = 7,
+        n_days_household: int = 14,
     ):
         super().__init__(start_time, end_time)
         self.n_days = n_days
@@ -52,42 +54,60 @@ class Quarentine(Policy):
     def must_stay_at_home(self, person: "Person", days: float):
         return person.symptom_onset is not None and (
             days < person.symptoms_onset + self.n_days
-        ) and person.hospital is None
+        )
+
+
+class Shielding(Policy):
+    def __init__(
+        self, start_time: "datetime", end_time: "datetime", min_age: int,
+    ):
+        super().__init__(start_time, end_time)
+        self.min_age = min_age
+
+    def must_stay_at_home(self, person: "Person", days, activities):
+        return person.age >= self.min_age
 
 
 class CloseSchools(Policy):
     def __init__(
-        self,
-        start_time: "datetime",
-        end_time: "datetime",
-        years_to_close=[5, 6, 7, 8, 9, 10, 11, 12],
+        self, start_time: "datetime", end_time: "datetime", years_to_close='all'
     ):
         super().__init__(start_time, end_time)
         self.years_to_close = years_to_close
 
     def must_stay_at_home(self, person: "Person", days: float, activities):
-        return (
-            person.hospital is None and 
-            "primary_activity" in activities
-            and person.primary_activity.group.spec == "school"
-            and person.age in self.years_to_close
-        )
+        if self.years_to_close == 'all':
+            return (
+                "primary_activity" in activities
+                and person.primary_activity.group.spec == "school"
+            )
+        else:
+            return (
+                "primary_activity" in activities
+                and person.primary_activity.group.spec == "school"
+                and person.age in self.years_to_close
+            )
 
 
 class CloseCompanies(Policy):
     def __init__(
-        self, start_time: "datetime", end_time: "datetime", sectors=["P", "Q"]
+        self, start_time: "datetime", end_time: "datetime", sectors_to_close=["P", "Q"]
     ):
-        super().__init__("quarantine", start_time, end_time)
-        self.sectors = sectors
+        super().__init__(start_time, end_time)
+        self.sectors_to_close = sectors_to_close
 
     def must_stay_at_home(self, person: "Person", days: float, activities):
         return (
-            person.hospital is None and 
             "primary_activity" in activities
             and person.primary_activity.group.spec == "company"
-            and person.sector in self.sectors
+            and person.sector in self.sectors_to_close
         )
+
+#TODO: the action of the class should be here, also its parameters (like beta factors ...)
+class SocialDistancing(Policy):
+    def __init__(self, name, start_time: "datetime", end_time: "datetime"):
+        super().__init__(start_time, end_time)
+        self.name = name
 
 
 class Policies:
@@ -98,13 +118,11 @@ class Policies:
         self.social_distancing_start = 0
         self.social_distancing_end = 0
 
-        '''
         for policy in self.policies:
-            if policy.name == "social_distance":
+            if hasattr(policy, 'name') and policy.name == "social_distance":
                 self.social_distancing = True
                 self.social_distancing_start = policy.start_time
                 self.social_distancing_end = policy.end_time
-        '''
 
     @classmethod
     def from_file(
@@ -117,10 +135,11 @@ class Policies:
         return Policies(policies, config)
 
     def must_stay_at_home(self, person, date, activities):
-        for policy in self.policies:
-            if hasattr(policy, "must_stay_at_home") and policy.is_active(date):
-                if policy.must_stay_at_home(person, date, activities):
-                    return True
+        if person.hospital is None:
+            for policy in self.policies:
+                if policy.is_active(date) and hasattr(policy, "must_stay_at_home"):
+                    if policy.must_stay_at_home(person, date, activities):
+                        return True
         return False
 
     def social_distancing_policy(self, alpha, betas, time):
