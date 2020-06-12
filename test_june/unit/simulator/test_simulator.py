@@ -163,31 +163,6 @@ def test__move_people_to_commute(sim):
     sim.clear_world()
 
 
-
-def test__kid_at_home_is_supervised(sim, health_index):
-
-    kids_at_school = []
-    for person in sim.world.people.members:
-        if person.primary_activity is not None and person.age < sim.min_age_home_alone:
-            kids_at_school.append(person)
-
-    for kid in kids_at_school:
-        sim.selector.infect_person_at_time(kid, 0.0)
-        kid.health_information.infection.symptoms.tag = SymptomTag.influenza
-        assert kid.health_information.must_stay_at_home
-
-    sim.move_people_to_active_subgroups(["primary_activity", "residence"])
-
-    for kid in kids_at_school:
-        assert kid in kid.residence.people
-        guardians_at_home = [
-            person for person in kid.residence.group.people if person.age >= 18
-        ]
-        assert len(guardians_at_home) != 0
-
-    sim.clear_world()
-
-
 def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]
     sim.selector.infect_person_at_time(dummy_person, 0.0)

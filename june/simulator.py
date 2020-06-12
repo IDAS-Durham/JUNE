@@ -308,26 +308,16 @@ class Simulator:
         Subgroup to which person has to go, given the hierarchy of activities
         """
 
-        activities = self.apply_activity_hierarchy(activities)
-        #personal_closed_groups = self.policies.get_fully_closed_groups(
-        #    time=self.timer.now
-        #) + self.policies.get_partially_closed_groups(
-        #    person=person, time=self.timer.now
-        #)
-
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person,
                     self.timer.duration,
                     self.timer.is_weekend,
-                    closed_groups=[]#personal_closed_groups,
                 )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                #if subgroup.group.spec in personal_closed_groups:
-                #    continue
                 return subgroup
 
     def kid_drags_guardian(
@@ -408,10 +398,7 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            if (
-                person.health_information is not None
-                and person.health_information.must_stay_at_home
-            ):
+            if self.policies.must_stay_at_home(person, self.timer.now, activities):
                 self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
