@@ -13,13 +13,6 @@ class Supergroup:
     """
 
     def __init__(self):
-        """
-        Parameters
-        ----------
-        references_to_people
-            a list of attributes that contain references to people. This is
-            used to erase circular information before using pickle.
-        """
         self.members = []
         self.group_type = self.__class__.__name__
 

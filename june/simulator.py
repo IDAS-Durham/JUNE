@@ -398,7 +398,7 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            if self.policies.must_stay_at_home(person, self.timer.now, activities):
+            if self.policies.must_stay_at_home(person, self.timer.date, activities):
                 self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)

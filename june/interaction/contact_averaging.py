@@ -264,7 +264,6 @@ class ContactAveraging(Interaction):
                         group.infected, subgroup_transmission_probabilities
                 )
 
-    # @profile
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",
     ):
