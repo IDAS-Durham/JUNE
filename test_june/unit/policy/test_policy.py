@@ -6,14 +6,13 @@ from datetime import datetime
 import copy
 
 from june.demography.geography import Geography
-from june.demography import Demography
+from june.demography import Person 
 from june.world import World
 from june.interaction import ContactAveraging
 from june.infection import Infection
-from june.infection.symptoms import SymptomsConstant
-from june.infection.transmission import TransmissionConstant
 from june.infection.infection import InfectionSelector
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups import Hospital, School, Company, Household
+from june.groups import Hospitals, Schools, Companies, Households
 from june.groups.leisure import Cinemas, Pubs, Groceries
 from june.policy import Policy, Policies
 from june.simulator import Simulator
@@ -27,25 +26,6 @@ constant_config = (
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
-@pytest.fixture(name="world", scope="module")
-def create_world():
-    geography = Geography.from_file({"super_area": ["E00088544", "E02002560", "E02002559"]})
-    geography.hospitals = Hospitals.for_geography(geography)
-    geography.cemeteries = Cemeteries()
-    geography.care_homes = CareHomes.for_geography(geography)
-    geography.schools = Schools.for_geography(geography)
-    geography.companies = Companies.for_geography(geography)
-    demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=True, include_commute=True)
-    world.cinemas = Cinemas.for_geography(geography)
-    world.pubs = Pubs.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(world.super_areas,venues_per_capita=1/500)
-    world.initialise_commuting()
-    world.cemeteries = Cemeteries()
-    
-    return world
-
-
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
     selector = InfectionSelector.from_file(constant_config)
@@ -56,8 +36,128 @@ def create_selector():
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction(selector):
     interaction = ContactAveraging.from_file(selector=selector)
-    #interaction.selector = selector
     return interaction
+
+@pytest.fixture(name="super_area", scope="module")
+def create_geography():
+    g = Geography.from_file(filter_key={"super_area" : ["E02002559"]})
+    return g.super_areas.members[0]
+
+@pytest.fixture(name='company', scope='module')
+def make_company(super_area):
+    return Company(
+            super_area = super_area,
+            n_workers_max=100,
+            sector='Q'
+            )
+
+@pytest.fixture(name='school', scope='module')
+def make_school(super_area):
+    return School(
+            coordinates=super_area.coordinates,
+            n_pupils_max=100,
+            age_min=4,
+            age_max=10,
+            sector='primary'
+            )
+
+@pytest.fixture(name='household', scope='module')
+def make_household():
+    return Household()
+
+@pytest.fixture(name='hospital', scope='module')
+def make_hospital(super_area):
+    return Hospital(n_beds=40, n_icu_beds=5, super_area = super_area.name, coordinates=super_area.coordinates)
+
+def make_worker(company, household):
+    worker = Person.from_attributes(age=40)
+    household.add(worker, subgroup_type=household.SubgroupType.adults)
+    worker.sector = 'Q'
+    company.add(worker)
+    return worker
+
+def make_pupil(school, household):
+    pupil = Person.from_attributes(age=6)
+    household.add(pupil, subgroup_type=household.SubgroupType.kids)
+    school.add(pupil)
+    return pupil 
+
+
+def make_dummy_world(school, company, hospital, household):
+    world = World()
+    world.schools = Schools([school])
+    world.hospitals = Hospitals([hospital])
+    world.households = Households([household])
+    return world
+
+def infect_person(person, selector, symptom_tag='influenza'):
+    sim.selector.infect_person_at_time(person, 0.0)
+    person.health_information.infection.symptoms.tag = getattr(SymptomTag,symptom_tag)
+    sim.update_health_status(0.0, 0.0)
+
+
+class TestDefaultPolicy():
+    def test__default_policy_adults(self, school, company, hospital, household, selector, interaction):
+        # Adult ill stays at home
+        pupil = make_pupil(school, household)
+        worker = make_worker(company, household)
+        world = make_dummy_world(school, company, hospital, household)
+        default_policy = Policy()
+        policies = Policies([default_policy])
+        sim = Simulator.from_file(
+            world, interaction, selector, policies, config_filename=test_config
+        )
+        sim.clear_world()
+        sim.move_people_to_active_subgroups(['primary_activity', 'residence'])
+        assert worker in  worker.primary_activity.people
+        assert pupil in  pupil.primary_activity.people
+        sim.clear_world()
+        infect_person(worker, selector, 'influenza')
+        assert policies.must_stay_at_home(worker, None, None)
+        # Adult ill  in hospital goes to hospital
+
+'''
+def test__default_policy_kids(world, selector, interaction):
+    default_policy = Policy()
+    # kid ill stays at home
+    # kid ill drags parent
+    # kid goes to hospital if needs to
+    policies = Policies([default_policy])
+    sim = Simulator.from_file(
+        world, interaction, selector, policies, config_filename=test_config
+    )
+    for time in sim.timer():
+        if time > sim.timer.final_date:
+            break
+
+
+        
+
+def test__kid_at_home_is_supervised(world, selector, interaction, health_index):
+
+    kids_at_school = []
+    for person in sim.world.people.members:
+        if person.primary_activity is not None and person.age < sim.min_age_home_alone:
+            kids_at_school.append(person)
+
+    for kid in kids_at_school:
+        sim.selector.infect_person_at_time(kid, 0.0)
+        kid.health_information.infection.symptoms.tag = SymptomTag.influenza
+        assert kid.health_information.must_stay_at_home
+
+    sim.move_people_to_active_subgroups(["primary_activity", "residence"])
+
+    for kid in kids_at_school:
+        assert kid in kid.residence.people
+        guardians_at_home = [
+            person for person in kid.residence.group.people if person.age >= 18
+        ]
+        assert len(guardians_at_home) != 0
+
+    sim.clear_world()
+
+
+ 
 
 def test__social_distancing(world, selector, interaction):
 
@@ -83,7 +183,7 @@ def test__social_distancing(world, selector, interaction):
                     assert sim.interaction.beta[group] == initial_betas[group]
         else:
             assert sim.interaction.beta == initial_betas
-
+'''
 
 # def test__close_schools_years(world, selector, interaction):
 #     start_date = 3
