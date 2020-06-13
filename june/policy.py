@@ -38,7 +38,6 @@ class PermanentPolicy(Policy):
             and person.health_information.must_stay_at_home
         )
 
-
 class Quarantine(Policy):
     def __init__(
         self,
@@ -76,34 +75,46 @@ class CloseSchools(Policy):
         self.years_to_close = years_to_close
 
     def must_stay_at_home(self, person: "Person", days: float, activities):
-        if self.years_to_close == 'all':
-            return (
-                "primary_activity" in activities
-                and person.primary_activity.group.spec == "school"
-            )
-        else:
-            return (
-                "primary_activity" in activities
-                and person.primary_activity.group.spec == "school"
-                and person.age in self.years_to_close
-            )
+        if person.primary_activity is not None:
+            if self.years_to_close == 'all':
+                return (
+                    "primary_activity" in activities
+                    and person.primary_activity.group.spec == "school"
+                )
+            else:
+                return (
+                    "primary_activity" in activities
+                    and person.primary_activity.group.spec == "school"
+                    and person.age in self.years_to_close
+                )
+        return 
 
 
 class CloseCompanies(Policy):
     def __init__(
-        self, start_time: "datetime", end_time: "datetime", sectors_to_close=["P", "Q"]
+        self, start_time: "datetime", end_time: "datetime", sectors_to_close='all'
     ):
         super().__init__(start_time, end_time)
         self.sectors_to_close = sectors_to_close
 
     def must_stay_at_home(self, person: "Person", days: float, activities):
-        return (
-            "primary_activity" in activities
-            and person.primary_activity.group.spec == "company"
-            and person.sector in self.sectors_to_close
-        )
+        if person.primary_activity is not None:
+            if self.sectors_to_close == 'all':
+                return (
+                    "primary_activity" in activities
+                    and person.primary_activity.group.spec == "company"
+                )
+            else:
+                return (
+                    "primary_activity" in activities
+                    and person.primary_activity.group.spec == "company"
+                    and person.sector in self.sectors_to_close
+                )
+        return 
 
-#TODO: the action of the class should be here, also its parameters (like beta factors ...)
+
+
+#TODO: we should unify this policy, the action of the class should be here, also its parameters (like beta factors ...)
 class SocialDistancing(Policy):
     def __init__(self, name, start_time: "datetime", end_time: "datetime"):
         super().__init__(start_time, end_time)

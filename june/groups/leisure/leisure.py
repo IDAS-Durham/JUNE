@@ -110,7 +110,7 @@ class Leisure:
         """
         poisson_parameters = []
         for distributor in self.leisure_distributors:
-            if distributor.spec not in closed_groups:
+            if closed_groups and distributor.spec not in closed_groups:
                 poisson_parameters.append(
                     distributor.get_poisson_parameter(person, is_weekend)
                 )

@@ -507,7 +507,7 @@ class Simulator:
             self.distribute_rail_out()
         if "rail_travel_back" in activities:
             self.distribute_rail_back()
-        self.move_people_to_active_subgroups(activities)
+        self.move_people_to_active_subgroups(activities, self.timer.date)
         active_groups = self.activities_to_groups(activities)
         group_instances = [
             getattr(self.world, group)
