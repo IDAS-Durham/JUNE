@@ -278,9 +278,8 @@ class TestShielding:
         sim.clear_world()
 
 
-""" 
 class TestQuarantine:
-    def test__symptomatic_stays_for_one_week(self):
+    def test__symptomatic_stays_for_one_week(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
             start_time=datetime(2020, 1, 1),
@@ -307,7 +306,6 @@ class TestQuarantine:
     def test__housemates_stay_for_two_weeks():
         pass
 
-"""
 def test__social_distancing(super_area, selector, interaction):
     pupil, worker, world = make_dummy_world(super_area)
     start_date = datetime(2020, 3, 10)
