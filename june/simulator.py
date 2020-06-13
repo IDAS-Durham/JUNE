@@ -46,7 +46,7 @@ class Simulator:
         seed: Optional["Seed"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies = Policies(),
+        policies=Policies(),
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
         light_logger: bool = False,
@@ -102,8 +102,7 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path,
-                    file_name = output_filename)
+            self.logger = Logger(save_path=save_path, file_name=output_filename)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -138,7 +137,7 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
-        policies = Policies(),
+        policies=Policies(),
         seed: "Seed" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
@@ -169,7 +168,7 @@ class Simulator:
             selector,
             activity_to_groups,
             time_config,
-            policies = policies,
+            policies=policies,
             seed=seed,
             save_path=save_path,
         )
@@ -311,9 +310,7 @@ class Simulator:
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person,
-                    self.timer.duration,
-                    self.timer.is_weekend,
+                    person, self.timer.duration, self.timer.is_weekend,
                 )
             else:
                 subgroup = getattr(person, activity)
@@ -384,7 +381,12 @@ class Simulator:
             subgroup = self.get_subgroup_active(activities, person)
             subgroup.append(person)
 
-    def move_people_to_active_subgroups(self, activities: List[str], date: datetime = datetime(2020,2,2)):
+    def move_people_to_active_subgroups(
+        self,
+        activities: List[str],
+        date: datetime = datetime(2020, 2, 2),
+        days_from_start=0.0,
+    ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
         they stay at home with a certain probability given by stay_at_home_complacency
@@ -398,10 +400,11 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            if self.policies.must_stay_at_home(person, date, activities):
-                self.move_mild_ill_to_household(person, activities)
+            allowed_activities = self.policies.apply_activity_ban(person, date, activities)
+            if self.policies.must_stay_at_home(person, date, days_from_start):
+                self.move_mild_ill_to_household(person, allowed_activities)
             else:
-                subgroup = self.get_subgroup_active(activities, person)
+                subgroup = self.get_subgroup_active(allowed_activities, person)
                 subgroup.append(person)
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
@@ -518,10 +521,22 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-        sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
-        
-        if self.policies.social_distancing and self.policies.social_distancing_start < self.timer.date < self.policies.social_distancing_end:
-            self.interaction.alpha_physical, self.interaction.beta = self.policies.social_distancing_policy(self.alpha_copy, self.beta_copy, self.timer.now)
+        sim_logger.info(
+            f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
+        )
+
+        if (
+            self.policies.social_distancing
+            and self.policies.social_distancing_start
+            < self.timer.date
+            < self.policies.social_distancing_end
+        ):
+            (
+                self.interaction.alpha_physical,
+                self.interaction.beta,
+            ) = self.policies.social_distancing_policy(
+                self.alpha_copy, self.beta_copy, self.timer.now
+            )
         else:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
@@ -563,7 +578,9 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people, light_logger=self.light_logger)
+            self.logger.log_population(
+                self.world.people, light_logger=self.light_logger
+            )
             self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
