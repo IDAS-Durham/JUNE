@@ -42,6 +42,8 @@ class HealthInformation:
         if infection.symptoms.time_symptoms_onset():
             self.time_of_symptoms_onset = self.time_of_infection + infection.symptoms.time_symptoms_onset()
 
+        else:
+            self.time_of_symptoms_onset = None
     @property
     def tag(self):
         if self.infection is not None:
