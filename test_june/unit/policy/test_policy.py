@@ -22,7 +22,7 @@ from june.simulator import Simulator
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
@@ -86,13 +86,10 @@ def make_dummy_world(super_area):
 def infect_person(person, selector, symptom_tag="influenza"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
+    person.health_information.time_of_symptoms_onset = 5.3
 
 
 class TestPolicy:
-    def test__always_active(self):
-        permanent_policy = PermanentPolicy()
-        assert permanent_policy.is_active(datetime(2500, 1, 1))
-
     def test__is_active(self):
         policy = Policy(start_time=datetime(2020, 5, 6), end_time=datetime(2020, 6, 6))
         assert policy.is_active(datetime(2020, 6, 6))
@@ -109,12 +106,13 @@ class TestDefaultPolicy:
         )
         sim.clear_world()
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         infect_person(worker, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
-        assert policies.must_stay_at_home(worker, None, None)
+        assert policies.must_stay_at_home(worker, date, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
@@ -156,12 +154,13 @@ class TestDefaultPolicy:
         )
         sim.clear_world()
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         infect_person(pupil, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
-        assert policies.must_stay_at_home(pupil, None, None)
+        assert policies.must_stay_at_home(pupil, date, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
         assert worker in worker.residence.people
         assert pupil in pupil.residence.people
@@ -184,21 +183,17 @@ class TestClosure:
         sim.clear_world()
         activities = ["primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
-        assert not policies.must_stay_at_home(
-            person=pupil, date=time_before_policy, activities=activities
-        )
         sim.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.must_stay_at_home(pupil, time_during_policy, activities)
+        assert policies.apply_activity_ban(pupil, time_during_policy, activities) == ['residence']
         sim.move_people_to_active_subgroups(activities, time_during_policy)
-        assert worker in worker.residence.people
         assert pupil in pupil.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert not policies.must_stay_at_home(pupil, time_after_policy, activities)
+        assert policies.apply_activity_ban(pupil, time_after_policy, activities) == ['primary_activity', 'residence']
         sim.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
@@ -218,21 +213,18 @@ class TestClosure:
         sim.clear_world()
         activities = ["primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
-        assert not policies.must_stay_at_home(
-            person=worker, date=time_before_policy, activities=activities
-        )
         sim.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.must_stay_at_home(worker, time_during_policy, activities)
+        assert policies.apply_activity_ban(worker, time_during_policy, activities) == ['residence']
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert not policies.must_stay_at_home(worker, time_after_policy, activities)
+        assert policies.apply_activity_ban(worker, time_after_policy, activities) == ['primary_activity', 'residence']
         sim.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
@@ -252,7 +244,7 @@ class TestClosure:
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert not policies.must_stay_at_home(worker, time_during_policy, activities)
+        assert policies.apply_activity_ban(worker, time_during_policy, activities) == ['primary_activity', 'residence']
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.primary_activity.people
         sim.clear_world()
@@ -283,7 +275,7 @@ class TestQuarantine:
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
             start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 30, 1),
+            end_time=datetime(2020, 1, 30),
             n_days=7,
             n_days_household=14
         )
@@ -295,23 +287,48 @@ class TestQuarantine:
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
-        time_during_policy = datetime(2020, 2, 1)
-        assert policies.must_stay_at_home(worker, time_during_policy, activities)
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        time_during_policy = datetime(2020, 1, 2)
+        assert policies.must_stay_at_home(worker, time_during_policy, 6.)
+        sim.move_people_to_active_subgroups(activities, time_during_policy, 6.)
         assert worker in worker.residence.people
         worker.health_information = None
         sim.clear_world()
 
 
-    def test__housemates_stay_for_two_weeks():
-        pass
+    def test__housemates_stay_for_two_weeks(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        quarantine = Quarantine(
+            start_time=datetime(2020, 1, 1),
+            end_time=datetime(2020, 1, 30),
+            n_days=7,
+            n_days_household=14
+        )
+        policies = Policies([quarantine])
+        sim = Simulator.from_file(
+            world, interaction, selector, policies, config_filename=test_config
+        )
+        infect_person(worker, selector, "influenza")
+        sim.update_health_status(0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        # before symptoms onset
+        assert not policies.must_stay_at_home(pupil, time_during_policy, 4.)
+        # after symptoms onset
+        assert policies.must_stay_at_home(pupil, time_during_policy, 8.)
+        sim.move_people_to_active_subgroups(activities, time_during_policy, 8.)
+        assert pupil in pupil.residence.people
+        # more thatn two weeks after symptoms onset
+        assert not policies.must_stay_at_home(pupil, time_during_policy, 25.)
+        worker.health_information = None
+        sim.clear_world()
 
 def test__social_distancing(super_area, selector, interaction):
     pupil, worker, world = make_dummy_world(super_area)
     start_date = datetime(2020, 3, 10)
     end_date = datetime(2020, 3, 12)
     social_distance = SocialDistancing(
-        name ="social_distance", start_time=start_date, end_time=end_date
+        start_time=start_date, end_time=end_date
     )
     policies = Policies([social_distance])
 
