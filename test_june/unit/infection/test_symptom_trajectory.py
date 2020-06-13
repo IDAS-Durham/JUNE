@@ -180,6 +180,7 @@ class TestSymptomsTrajectory:
             (pytest.approx(8, rel=0.5), sym.SymptomTag.intensive_care),
             (pytest.approx(15, rel=0.5), sym.SymptomTag.dead)
         ]
+        assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
@@ -190,6 +191,7 @@ class TestSymptomsTrajectory:
             (pytest.approx(35, rel=0.5), sym.SymptomTag.hospitalised),
             (pytest.approx(55, rel=0.5), sym.SymptomTag.recovered)
         ]
+        assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
 
     def test__symptoms__progression(self):
         selector = infect.InfectionSelector()

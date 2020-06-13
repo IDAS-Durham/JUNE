@@ -12,6 +12,14 @@ class SymptomsTrajectory(Symptoms):
         self.stage = 0
         self.tag = self.trajectory[self.stage][1]
 
+    def time_symptoms_onset(self):
+        symptoms_onset = 0
+        for completion_time, tag in self.trajectory:
+            if tag == SymptomTag.influenza:
+                break
+            symptoms_onset += completion_time
+        return symptoms_onset
+
     def update_trajectory(self):
         trajectory_maker = TrajectoryMakers.from_file()
         maxtag = self.max_tag()

@@ -57,6 +57,9 @@ class Quarantine(Policy):
             days < person.symptoms_onset + self.n_days
         )
 
+    def must_stay_at_home_because_of_housemates(self, person: "Person", days: float):
+        pass
+
 
 class Shielding(Policy):
     def __init__(
