@@ -13,6 +13,7 @@ class HealthInformation:
         "maximal_symptoms_time",
         "maximal_symptoms_tag",
         "time_of_infection",
+        "time_of_symptoms_onset",
         "length_of_infection",
         "infecter",
     )
@@ -38,6 +39,8 @@ class HealthInformation:
         self.susceptible = False
         self.susceptibility = 0.0
         self.time_of_infection = infection.start_time
+        if infection.symptoms.time_symptoms_onset():
+            self.time_of_symptoms_onset = self.time_of_infection + infection.symptoms.time_symptoms_onset()
 
     @property
     def tag(self):

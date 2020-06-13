@@ -39,7 +39,6 @@ class PermanentPolicy(Policy):
         )
 
 
-# TODO: not working yet, need to keep track of symptom_onset even for recovered/dead people
 class Quarantine(Policy):
     def __init__(
         self,
@@ -52,10 +51,13 @@ class Quarantine(Policy):
         self.n_days = n_days
         self.n_days_household = n_days_household
 
+    #TODO: if someone recovers or dies it will stop checking !
+    #TODO; translate date to days, need timer ? 
     def must_stay_at_home(self, person: "Person", days: float):
-        return person.symptom_onset is not None and (
-            days < person.symptoms_onset + self.n_days
-        )
+        return person.health_information is not None 
+            and  person.health_information.time_of_symptoms_onset is not None
+            and days < person.health_information.time_of_symptoms_onset + self.n_days
+        
 
     def must_stay_at_home_because_of_housemates(self, person: "Person", days: float):
         pass
