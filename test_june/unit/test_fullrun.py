@@ -12,7 +12,7 @@ from june.demography import Demography
 import june.interaction as inter
 from june.infection import InfectionSelector
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
-from june.groups.leisure import Cinemas, Pubs, Groceries
+from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.infection import transmission as trans
 from june.infection import symptoms as sym
 from june import World
@@ -41,10 +41,13 @@ def test_full_run():
     world.groceries = Groceries.for_super_areas(
         geography.super_areas, venues_per_capita=1 / 500
     )
+    leisure_instance = leisure.generate_leisure_for_config(
+        world=world, config_filename = test_config 
+    )
     selector = InfectionSelector.from_file(selector_config)
     interaction = inter.ContactAveraging.from_file(selector=selector)
     simulator = Simulator.from_file(
-        world, interaction, selector, config_filename=test_config
+        world, interaction, selector, config_filename=test_config, leisure=leisure_instance
     )
     seed = Seed(simulator.world.super_areas, selector,)
     seed.unleash_virus(100)
