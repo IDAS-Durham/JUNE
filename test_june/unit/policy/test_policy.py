@@ -15,7 +15,7 @@ from june.infection.infection import InfectionSelector
 from june.groups import Hospital, School, Company, Household
 from june.groups import Hospitals, Schools, Companies, Households
 from june.groups.leisure import Cinemas, Pubs, Groceries
-from june.policy import Policy, PermanentPolicy, CloseSchools, CloseCompanies, Quarantine, Shielding, Policies, SocialDistancing
+from june.policy import Policy, PermanentPolicy, CloseSchools, CloseCompanies, Quarantine, Shielding, Policies, SocialDistancing, CloseLeisureVenue
 from june.simulator import Simulator
 
 
@@ -321,6 +321,24 @@ class TestQuarantine:
         # more thatn two weeks after symptoms onset
         assert not policies.must_stay_at_home(pupil, time_during_policy, 25.)
         worker.health_information = None
+        sim.clear_world()
+
+class TestCloseLeisure:
+    def test__symptomatic_stays_for_one_week(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        close_venues = CloseLeisureVenue(
+            start_time=datetime(2020, 1, 1),
+            end_time=datetime(2020, 1, 30),
+            venues_to_close=['cinemas', 'groceries']
+        )
+        policies = Policies([close_venues])
+        sim = Simulator.from_file(
+            world, interaction, selector, policies, config_filename=test_config
+        )
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        closed_venues = policies.find_closed_venues(date=time_during_policy)
+        assert list(closed_venues) == ['cinemas', 'groceries']
         sim.clear_world()
 
 def test__social_distancing(super_area, selector, interaction):
