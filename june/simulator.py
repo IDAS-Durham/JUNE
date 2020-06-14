@@ -44,6 +44,7 @@ class Simulator:
         activity_to_groups: dict,
         time_config: dict,
         seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
         policies=Policies(),
@@ -124,7 +125,7 @@ class Simulator:
         if "commute" in self.all_activities:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
-            self.initialize_leisure(activity_to_groups["leisure"])
+            self.leisure = leisure
         if (
             "rail_travel_out" in self.all_activities
             or "rail_travel_back" in self.all_activities
@@ -139,6 +140,7 @@ class Simulator:
         selector: "InfectionSelector",
         policies=Policies(),
         seed: "Seed" = None,
+        leisure: "Leisure" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ) -> "Simulator":
@@ -170,6 +172,7 @@ class Simulator:
             time_config,
             policies=policies,
             seed=seed,
+            leisure=leisure,
             save_path=save_path,
         )
 
@@ -211,11 +214,6 @@ class Simulator:
     def distribute_rail_back(self):
         if hasattr(self, "travelunit_distributor"):
             self.travelunit_distributor.distribute_people_back()
-
-    def initialize_leisure(self, leisure_options):
-        self.leisure = leisure.generate_leisure_for_world(
-            list_of_leisure_groups=leisure_options, world=self.world
-        )
 
     def check_inputs(self, time_config: dict):
         """
@@ -288,9 +286,10 @@ class Simulator:
 
         for person in self.world.people.members:
             person.busy = False
+            person.subgroups.leisure = None
 
     def get_subgroup_active(
-        self, activities: List[str], person: "Person"
+        self, activities: List[str], person: "Person", date, duration, is_weekend
     ) -> "Subgroup":
         """
         Given the hierarchy of activities and a person, decide what subgroup  
@@ -309,11 +308,13 @@ class Simulator:
 
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
+                print('duration = ', duration) 
+                print('is_Weekend = ', is_weekend) 
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person,
-                    self.timer.duration,
-                    self.timer.is_weekend,
-                    closed_venues=self.policies.find_closed_venues(self.timer.date),
+                    person=person,
+                    delta_time=duration,
+                    is_weekend=is_weekend,
+                    closed_venues=self.policies.find_closed_venues(date),
                 )
             else:
                 subgroup = getattr(person, activity)
@@ -321,7 +322,7 @@ class Simulator:
                 return subgroup
 
     def kid_drags_guardian(
-        self, kid: "Person", guardian: "Person", activities: List[str]
+        self, kid: "Person", guardian: "Person", activities: List[str], date, duration, is_weekend
     ):
         """
         A kid makes their guardian go home.
@@ -338,11 +339,11 @@ class Simulator:
 
         if guardian is not None:
             if guardian.busy:
-                guardian_subgroup = self.get_subgroup_active(activities, guardian)
+                guardian_subgroup = self.get_subgroup_active(activities, guardian, date, duration, is_weekend)
                 guardian_subgroup.remove(guardian)
             guardian.residence.append(guardian)
 
-    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
+    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str], date, duration, is_weekend):
         """
         Move  a kid and their guardian to the household, so no kid is left
         home alone.
@@ -359,10 +360,10 @@ class Simulator:
         ]
         if len(possible_guardians) == 0:
             guardian = kid.find_guardian()
-            self.kid_drags_guardian(kid, guardian, activities)
+            self.kid_drags_guardian(kid, guardian, activities, date, duration, is_weekend)
         kid.residence.append(kid)
 
-    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str], date, duration, is_weekend):
         """
         Move person with a mild illness to their households. For kids that will
         always happen, and if they are left alone at home they will also drag one
@@ -377,11 +378,11 @@ class Simulator:
             list of activities that take place at a given time step
         """
         if person.age < self.min_age_home_alone:
-            self.move_mild_kid_guardian_to_household(person, activities)
+            self.move_mild_kid_guardian_to_household(person, activities, date, duration, is_weekend)
         elif random.random() <= self.stay_at_home_complacency:
             person.residence.append(person)
         else:
-            subgroup = self.get_subgroup_active(activities, person)
+            subgroup = self.get_subgroup_active(activities, person, date, duration, is_weekend)
             subgroup.append(person)
 
     def move_people_to_active_subgroups(
@@ -389,6 +390,8 @@ class Simulator:
         activities: List[str],
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0.0,
+        duration = 0.,
+        is_weekend=True,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -405,9 +408,9 @@ class Simulator:
                 continue
             allowed_activities = self.policies.apply_activity_ban(person, date, activities)
             if self.policies.must_stay_at_home(person, date, days_from_start):
-                self.move_mild_ill_to_household(person, allowed_activities)
+                self.move_mild_ill_to_household(person, allowed_activities, date, duration, is_weekend)
             else:
-                subgroup = self.get_subgroup_active(allowed_activities, person)
+                subgroup = self.get_subgroup_active(allowed_activities, person, date, duration, is_weekend)
                 subgroup.append(person)
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
@@ -513,7 +516,8 @@ class Simulator:
             self.distribute_rail_out()
         if "rail_travel_back" in activities:
             self.distribute_rail_back()
-        self.move_people_to_active_subgroups(activities, self.timer.date)
+        self.move_people_to_active_subgroups(activities, self.timer.date, self.timer.days, 
+                duration=self.timer.duration, is_weekend=self.timer.is_weekend)
         active_groups = self.activities_to_groups(activities)
         group_instances = [
             getattr(self.world, group)
