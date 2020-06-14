@@ -88,7 +88,7 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
 
     def get_leisure_distributor_for_person(
-        self, person: Person, delta_time: float, is_weekend: bool = False, closed_groups = None,
+        self, person: Person, delta_time: float, is_weekend: bool = False, closed_venues = None,
     ):
         """
         Given a person, reads its characteristics, and the amount of free time it has,
@@ -110,7 +110,7 @@ class Leisure:
         """
         poisson_parameters = []
         for distributor in self.leisure_distributors:
-            if closed_groups and distributor.spec not in closed_groups:
+            if closed_venues and distributor.spec not in closed_venues:
                 poisson_parameters.append(
                     distributor.get_poisson_parameter(person, is_weekend)
                 )
@@ -149,7 +149,7 @@ class Leisure:
             return True
 
     def get_subgroup_for_person_and_housemates(
-            self, person: Person, delta_time: float, is_weekend: bool, closed_groups = None
+            self, person: Person, delta_time: float, is_weekend: bool, closed_venues = None
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
@@ -174,7 +174,7 @@ class Leisure:
             whether it is a weekend or not
         """
         social_venue_distributor = self.get_leisure_distributor_for_person(
-            person, delta_time, is_weekend, closed_groups
+            person, delta_time, is_weekend, closed_venues
         )
         if social_venue_distributor is None:
             return None
