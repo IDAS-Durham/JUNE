@@ -709,7 +709,11 @@ class HouseholdDistributor:
             Maximum number of people allowed in the household.
 
         """
+<<<<<<< HEAD
         household = Household(type=type, max_size=max_household_size, area =area)
+=======
+        household = Household(type=type, max_size=max_household_size, area=area)
+>>>>>>> e77de8bf0b310a05c92c2cf6a97f74f59c0f70d9
         return household
 
     def _add_to_household(
