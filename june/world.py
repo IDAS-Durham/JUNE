@@ -16,6 +16,7 @@ from june.distributors import (
     CareHomeDistributor,
     WorkerDistributor,
     CompanyDistributor,
+    UniversityDistributor
 )
 from june.demography.geography import Geography, Areas
 from june.groups import *
@@ -23,7 +24,7 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
-possible_groups = ["schools", "hospitals", "companies", "care_homes"]
+possible_groups = ["schools", "hospitals", "companies", "care_homes", "universities"]
 
 
 def _populate_areas(areas: Areas, demography):
@@ -62,10 +63,8 @@ class World:
         self.commutecities = None
         self.commutehubs = None
         self.cemeteries = None
-        self.pump_latrines = None
-        self.distribution_centers = None
-        self.communals = None
-        self.female_communals = None
+        self.universities = None
+        self.box_mode = False
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
@@ -73,7 +72,18 @@ class World:
         """
         Distributes people to buildings assuming default configurations.
         """
-
+        if (
+            self.companies is not None
+            or self.hospitals is not None
+            or self.schools is not None
+            or self.care_homes is not None
+        ):
+            worker_distr = WorkerDistributor.for_super_areas(
+                area_names=[super_area.name for super_area in self.super_areas]
+            )  # atm only for_geography()
+            worker_distr.distribute(
+                areas=self.areas, super_areas=self.super_areas, population=self.people
+            )
         if self.care_homes is not None:
             carehome_distr = CareHomeDistributor()
             carehome_distr.populate_care_home_in_areas(self.areas)
@@ -84,24 +94,16 @@ class World:
                 self.areas
             )
 
-        if (
-            self.companies is not None
-            or self.hospitals is not None
-            or self.schools is not None
-        ):
-            worker_distr = WorkerDistributor.for_super_areas(
-                area_names=[super_area.name for super_area in self.super_areas]
-            )  # atm only for_geography()
-            worker_distr.distribute(
-                areas=self.areas, super_areas=self.super_areas, population=self.people
-            )
-
         if self.schools is not None:
             school_distributor = SchoolDistributor(self.schools)
             school_distributor.distribute_kids_to_school(self.areas)
             school_distributor.distribute_teachers_to_schools_in_super_areas(
                 self.super_areas
             )
+
+        if self.universities is not None:
+            uni_distributor = UniversityDistributor(self.universities)
+            uni_distributor.distribute_students_to_universities(self.super_areas)
 
         if include_commute:
             self.initialise_commuting()
@@ -207,6 +209,8 @@ class World:
             save_commute_cities_to_hdf5(self.commutecities, file_path)
         if self.commutehubs is not None:
             save_commute_hubs_to_hdf5(self.commutehubs, file_path)
+        if self.universities is not None:
+            save_universities_to_hdf5(self.universities, file_path)
 
 
 def generate_world_from_geography(
@@ -248,7 +252,6 @@ def generate_world_from_geography(
     world.cemeteries = Cemeteries()
     return world
 
-
 def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
@@ -286,6 +289,8 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.care_homes = load_care_homes_from_hdf5(file_path, chunk_size)
     if "households" in f_keys:
         world.households = load_households_from_hdf5(file_path, chunk_size)
+    if "universities" in f_keys:
+        world.universities = load_universities_from_hdf5(file_path, chunk_size)
     if "commute_cities" in f_keys:
         world.commutecities = load_commute_cities_from_hdf5(file_path)
         world.commutecityunits = CommuteCityUnits(world.commutecities.members)
@@ -300,6 +305,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "household": "households",
         "care_home": "care_homes",
         "commute_hub" : "commutehubs",
+        "university" : "universities"
     }
     # restore areas -> super_areas
     for area in world.areas:
@@ -360,10 +366,4 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                     world.people[city.commute_internal[i] - first_person_idx]
                 )
             city.commute_internal = commute_internal_people
-        #for hub in world.commutehubs:
-        #    hub_people_ids = [person_id for person_id in hub.people]
-        #    hub.clear()
-        #    for person_id in hub_people_ids:
-        #        hub.add(world.people[person_id - first_person_idx])
-
     return world
