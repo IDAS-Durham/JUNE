@@ -38,6 +38,10 @@ setup(
                   'june.logger',
                   'june.box',
                   'june.hdf5_savers',
-                  'june.visualization']
+                  'june.visualization',
+                  'camps',
+                  'camps.groups',
+                  'camps.distributors'
+        ]
 )
 
