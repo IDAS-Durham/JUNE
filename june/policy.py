@@ -72,7 +72,6 @@ class PermanentPolicy(StayHome):
             and person.health_information.must_stay_at_home
         )
 
-
 class Quarantine(StayHome):
     def __init__(
         self,
