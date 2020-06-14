@@ -63,14 +63,10 @@ def create_world(geography_h5):
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-<<<<<<< HEAD
-    world = generate_world_from_geography(geography=geography, include_households=True, include_commute=True)
-=======
     geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
         geography=geography, include_households=True, include_commute=True
     )
->>>>>>> e77de8bf0b310a05c92c2cf6a97f74f59c0f70d9
     return world
 
 
