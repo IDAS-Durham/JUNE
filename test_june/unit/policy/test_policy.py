@@ -324,7 +324,7 @@ class TestQuarantine:
         sim.clear_world()
 
 class TestCloseLeisure:
-    def test__symptomatic_stays_for_one_week(self, super_area, selector, interaction):
+    def test__close_leisure_venues(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         close_venues = CloseLeisureVenue(
             start_time=datetime(2020, 1, 1),
@@ -335,10 +335,19 @@ class TestCloseLeisure:
         sim = Simulator.from_file(
             world, interaction, selector, policies, config_filename=test_config
         )
+        sim.leisure.leisure_distributors[0].weekend_boost = 5000
+        sim.clear_world()
+        time_before_policy = datetime(2019, 2, 1)
+        activities = ["leisure", "residence"]
+        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        #cinema probablity = 100%
+        assert worker in worker.leisure.people
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
         closed_venues = policies.find_closed_venues(date=time_during_policy)
         assert list(closed_venues) == ['cinemas', 'groceries']
+        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        assert (worker in worker.leisure.people and worker.leisure.group.spec == 'pub') or worker in worker.residence.people
         sim.clear_world()
 
 def test__social_distancing(super_area, selector, interaction):
