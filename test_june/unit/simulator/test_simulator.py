@@ -10,7 +10,7 @@ from june.infection import InfectionSelector, Infection
 from june.infection import SymptomTag, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
-from june.groups.leisure import Cinemas, Pubs, Groceries
+from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.simulator import Simulator
 from june import paths
 
@@ -38,13 +38,16 @@ def create_simulator():
     world.groceries = Groceries.for_super_areas(
         geography.super_areas, venues_per_capita=1 / 500
     )
-
+    leisure_instance = leisure.generate_leisure_for_config(
+        world=world, config_filename = test_config 
+    )
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
-    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config)
+    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
+            leisure=leisure_instance)
     return sim
 
 
