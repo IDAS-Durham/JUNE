@@ -310,7 +310,10 @@ class Simulator:
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person, self.timer.duration, self.timer.is_weekend,
+                    person,
+                    self.timer.duration,
+                    self.timer.is_weekend,
+                    closed_venues=self.policies.find_closed_venues(self.timer.date),
                 )
             else:
                 subgroup = getattr(person, activity)

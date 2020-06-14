@@ -54,6 +54,16 @@ class StayHome(Policy):
     def must_stay_at_home(self, person, days_from_start):
         pass
 
+class CloseLeisureVenue(Policy):
+    def __init__(
+        self,
+        start_time=datetime(1900, 1, 1),
+        end_time=datetime(2100, 1, 1),
+        venues_to_close=["cinemas", "groceries"],
+    ):
+        super().__init__(start_time, end_time)
+        self.policy_type = "close_leisure_venue"
+        self.venues_to_close = venues_to_close
 
 class PermanentPolicy(StayHome):
     def must_stay_at_home(self, person: "Person", days_from_start):
@@ -201,6 +211,11 @@ class Policies:
             policy_type="social_distancing", date=date
         )
 
+    def close_venues_policies(self, date):
+        return self.get_active_policies_for_type(
+            policy_type="close_leisure_venue", date=date
+        )
+
     def must_stay_at_home(self, person, date, days_from_start):
         if person.hospital is None:
             for policy in self.stay_home_policies(date):
@@ -212,6 +227,12 @@ class Policies:
         for policy in self.skip_activity_policies(date):
             activities = policy.skip_activity(person, activities)
         return activities
+
+    def find_closed_venues(self, date):
+        closed_venues = set()
+        for policy in self.close_venues_policies(date):
+            closed_venues.update(policy.venues_to_close)
+        return closed_venues
 
     def social_distancing_policy(self, alpha, betas, time):
         """
