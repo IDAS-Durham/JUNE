@@ -1,5 +1,6 @@
 from june import paths
 import re
+import sys
 from datetime import datetime
 import yaml
 from abc import ABC, abstractmethod
@@ -27,8 +28,14 @@ class Policy(ABC):
 
 # TODO: we should unify this policy, the action of the class should be here, also its parameters (like beta factors ...)
 class SocialDistancing(Policy):
-    def __init__(self, start_time=datetime(1900, 1, 1), end_time=datetime(2100, 1, 1)):
+    def __init__(self, start_time=datetime(1900, 1, 1), end_time=datetime(2100, 1, 1),
+            alpha_factor=1., beta_factor = None):
         super().__init__(start_time, end_time)
+        self.alpha_factor =  alpha_factor
+        if beta_factor is None:
+            self.beta_factor = {}
+        else:
+            self.beta_factor = beta_factor
         self.policy_type = "social_distancing"
 
 
@@ -145,6 +152,22 @@ class CloseSchools(SkipActivity):
                 return self.remove_activity(activities, "primary_activity")
         return activities
 
+class CloseUniversities(SkipActivity):
+    def __init__(
+        self,
+        start_time: "datetime",
+        end_time: "datetime",
+    ):
+        super().__init__(start_time, end_time)
+
+    def skip_activity(self, person: "Person", activities):
+        if (
+            person.primary_activity is not None
+            and person.primary_activity.group.spec == "university"
+        ):
+            return self.remove_activity(activities, "primary_activity")
+        return activities
+
 
 class CloseCompanies(SkipActivity):
     def __init__(
@@ -169,9 +192,12 @@ class CloseCompanies(SkipActivity):
 
 
 class Policies:
-    def __init__(self, policies=[], config=None):
-        self.config = config
-        self.policies = policies
+    def __init__(self, policies, config_filename=None):
+        if policies is None and config_filename is not None:
+            self.from_file(config_filename=config_filename)
+        elif policies is not None:
+            self.policies = policies
+
         self.social_distancing = False
         self.social_distancing_start = 0
         self.social_distancing_end = 0
@@ -184,13 +210,15 @@ class Policies:
 
     @classmethod
     def from_file(
-        cls, policies: list = [], config_file=default_config_filename,
+        cls, config_file=default_config_filename,
     ):
-
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
-        return Policies(policies, config)
+        policies = []
+        for key, value in config.items():
+            camel_case_key =  ''.join(x.capitalize() or '_' for x in key.split('_'))
+            policies.append(str_to_class(camel_case_key)(**value))
+        return Policies(policies)
 
     def get_active_policies_for_type(self, policy_type, date):
         return [
@@ -253,22 +281,16 @@ class Policies:
         - Check per group in config file
         """
         # TODO: should probably leave alpha value for households untouched!
-
         betas_new = betas.copy()
-
-        if self.config is None:
-            alpha_new = alpha * 1.0
-        else:
-            alpha_new = alpha * self.config["social distancing"]["alpha factor"]
-
+        alpha_new = alpha * self.alpha_factor         
         for group in betas:
-            if self.config is None:
-                if group != "household":
-                    betas_new[group] = betas_new[group] * 0.5
-            else:
-                betas_new[group] = (
+            betas_new[group] = (
                     betas_new[group]
-                    * self.config["social distancing"]["beta factor"][group]
+                    * self.beta_factor.get(group,0.5)
                 )
-
         return alpha_new, betas_new
+
+def str_to_class(classname):
+    return getattr(sys.modules['__main__'], classname)
+
+

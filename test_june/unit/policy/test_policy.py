@@ -12,17 +12,29 @@ from june.interaction import ContactAveraging
 from june.infection import Infection
 from june.infection import SymptomTag
 from june.infection.infection import InfectionSelector
-from june.groups import Hospital, School, Company, Household
-from june.groups import Hospitals, Schools, Companies, Households
+from june.groups import Hospital, School, Company, Household, University
+from june.groups import Hospitals, Schools, Companies, Households, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries, Cinema, Pub, Grocery
-from june.policy import Policy, PermanentPolicy, CloseSchools, CloseCompanies, Quarantine, Shielding, Policies, SocialDistancing, CloseLeisureVenue
+from june.policy import (
+    Policy,
+    PermanentPolicy,
+    CloseSchools,
+    CloseCompanies,
+    CloseUniversities,
+    Quarantine,
+    Shielding,
+    Policies,
+    SocialDistancing,
+    CloseLeisureVenue,
+)
 from june.simulator import Simulator
 
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
+    dir_pwd.parent.parent.parent
+    / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
@@ -78,6 +90,7 @@ def make_dummy_world(super_area):
     world.schools = Schools([school])
     world.hospitals = Hospitals([hospital])
     world.households = Households([household])
+    world.universities = Universities([])
     world.companies = Companies([company])
     world.people = Population([worker, pupil])
     cinema = Cinema()
@@ -87,6 +100,47 @@ def make_dummy_world(super_area):
     pub.coordinates = super_area.coordinates
     world.pubs = Pubs([pub])
     return pupil, worker, world
+
+def make_dummy_world_with_university(super_area):
+    university = University(coordinates=super_area.coordinates, n_students_max=100,)
+    school = School(
+        coordinates=super_area.coordinates,
+        n_pupils_max=100,
+        age_min=4,
+        age_max=10,
+        sector="primary",
+    )
+    household = Household()
+    hospital = Hospital(
+        n_beds=40,
+        n_icu_beds=5,
+        super_area=super_area.name,
+        coordinates=super_area.coordinates,
+    )
+    student = Person.from_attributes(age=21)
+    household.add(student, subgroup_type=household.SubgroupType.adults)
+    university.add(student)
+
+    pupil = Person.from_attributes(age=6)
+    pupil.area = super_area
+    household.add(pupil, subgroup_type=household.SubgroupType.kids)
+    school.add(pupil)
+
+    world = World()
+    world.schools = Schools([school])
+    world.hospitals = Hospitals([hospital])
+    world.households = Households([household])
+    world.universities = Universities([university])
+    world.companies = Companies([])
+    world.people = Population([student, pupil])
+    cinema = Cinema()
+    cinema.coordinates = super_area.coordinates
+    world.cinemas = Cinemas([cinema])
+    pub = Pub()
+    pub.coordinates = super_area.coordinates
+    world.pubs = Pubs([pub])
+    return pupil, student, world
+
 
 
 def infect_person(person, selector, symptom_tag="influenza"):
@@ -108,13 +162,15 @@ class TestDefaultPolicy:
         permanent_policy = PermanentPolicy()
         policies = Policies([permanent_policy])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         sim.clear_world()
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
@@ -138,13 +194,15 @@ class TestDefaultPolicy:
         permanent_policy = PermanentPolicy()
         policies = Policies([permanent_policy])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         sim.clear_world()
         sim.move_people_to_active_subgroups(
@@ -168,13 +226,15 @@ class TestDefaultPolicy:
         permanent_policy = PermanentPolicy()
         policies = Policies([permanent_policy])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         sim.clear_world()
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
@@ -202,13 +262,15 @@ class TestClosure:
         )
         policies = Policies([school_closure])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         sim.clear_world()
         activities = ["primary_activity", "residence"]
@@ -218,33 +280,83 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(pupil, time_during_policy, activities) == ['residence']
+        assert policies.apply_activity_ban(pupil, time_during_policy, activities) == [
+            "residence"
+        ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert pupil in pupil.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.apply_activity_ban(pupil, time_after_policy, activities) == ['primary_activity', 'residence']
+        assert policies.apply_activity_ban(pupil, time_after_policy, activities) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
+
+    def test__close_universities(self, super_area, selector, interaction):
+        pupil, student, world = make_dummy_world_with_university(super_area)
+        university_closure = CloseUniversities(
+            start_time=datetime(2020, 1, 1),
+            end_time=datetime(2020, 10, 1),
+        )
+        policies = Policies([university_closure])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        sim.clear_world()
+        activities = ["primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        assert student in student.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        assert policies.apply_activity_ban(student, time_during_policy, activities) == [
+            "residence"
+        ]
+        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        assert student in student.residence.people
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        assert policies.apply_activity_ban(student, time_after_policy, activities) == [
+            "primary_activity",
+            "residence",
+        ]
+        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        assert pupil in pupil.primary_activity.people
+        assert student in student.primary_activity.people
+        sim.clear_world()
+
 
     def test__close_companies(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
             start_time=datetime(2020, 1, 1),
             end_time=datetime(2020, 10, 1),
-            sectors_to_close = ['Q']
+            sectors_to_close=["Q"],
         )
         policies = Policies([company_closure])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         sim.clear_world()
         activities = ["primary_activity", "residence"]
@@ -254,13 +366,18 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(worker, time_during_policy, activities) == ['residence']
+        assert policies.apply_activity_ban(worker, time_during_policy, activities) == [
+            "residence"
+        ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.apply_activity_ban(worker, time_after_policy, activities) == ['primary_activity', 'residence']
+        assert policies.apply_activity_ban(worker, time_after_policy, activities) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
@@ -271,42 +388,49 @@ class TestClosure:
         company_closure = CloseCompanies(
             start_time=datetime(2020, 1, 1),
             end_time=datetime(2020, 10, 1),
-            sectors_to_close = ['R']
+            sectors_to_close=["R"],
         )
         policies = Policies([company_closure])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(worker, time_during_policy, activities) == ['primary_activity', 'residence']
+        assert policies.apply_activity_ban(worker, time_during_policy, activities) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.primary_activity.people
         sim.clear_world()
+
 
 class TestShielding:
     def test__old_people_shield(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         shielding = Shielding(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 10, 1),
-            min_age=30)
+            start_time=datetime(2020, 1, 1), end_time=datetime(2020, 10, 1), min_age=30
+        )
         policies = Policies([shielding])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         activities = ["primary_activity", "residence"]
         sim.clear_world()
@@ -325,29 +449,30 @@ class TestQuarantine:
             start_time=datetime(2020, 1, 1),
             end_time=datetime(2020, 1, 30),
             n_days=7,
-            n_days_household=14
+            n_days_household=14,
         )
         policies = Policies([quarantine])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         infect_person(worker, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
-        assert policies.must_stay_at_home(worker, time_during_policy, 6.)
-        sim.move_people_to_active_subgroups(activities, time_during_policy, 6.)
+        assert policies.must_stay_at_home(worker, time_during_policy, 6.0)
+        sim.move_people_to_active_subgroups(activities, time_during_policy, 6.0)
         assert worker in worker.residence.people
         worker.health_information = None
         sim.clear_world()
-
 
     def test__housemates_stay_for_two_weeks(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
@@ -355,17 +480,19 @@ class TestQuarantine:
             start_time=datetime(2020, 1, 1),
             end_time=datetime(2020, 1, 30),
             n_days=7,
-            n_days_household=14
+            n_days_household=14,
         )
         policies = Policies([quarantine])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         infect_person(worker, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
@@ -373,15 +500,16 @@ class TestQuarantine:
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
         # before symptoms onset
-        assert not policies.must_stay_at_home(pupil, time_during_policy, 4.)
+        assert not policies.must_stay_at_home(pupil, time_during_policy, 4.0)
         # after symptoms onset
-        assert policies.must_stay_at_home(pupil, time_during_policy, 8.)
-        sim.move_people_to_active_subgroups(activities, time_during_policy, 8.)
+        assert policies.must_stay_at_home(pupil, time_during_policy, 8.0)
+        sim.move_people_to_active_subgroups(activities, time_during_policy, 8.0)
         assert pupil in pupil.residence.people
         # more thatn two weeks after symptoms onset
-        assert not policies.must_stay_at_home(pupil, time_during_policy, 25.)
+        assert not policies.must_stay_at_home(pupil, time_during_policy, 25.0)
         worker.health_information = None
         sim.clear_world()
+
 
 class TestCloseLeisure:
     def test__close_leisure_venues(self, super_area, selector, interaction):
@@ -389,49 +517,58 @@ class TestCloseLeisure:
         close_venues = CloseLeisureVenue(
             start_time=datetime(2020, 3, 1),
             end_time=datetime(2020, 3, 30),
-            venues_to_close=['pub']
+            venues_to_close=["pub"],
         )
         policies = Policies([close_venues])
         leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+            world=world, config_filename=test_config
         )
         sim = Simulator.from_file(
-             world, interaction, selector, 
-            config_filename = test_config,
-            policies = policies,
-            leisure = leisure_instance
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
         )
         sim.leisure.leisure_distributors[0].weekend_boost = 5000
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
-        sim.move_people_to_active_subgroups(activities, time_before_policy, 0., duration=10000, is_weekend=True)
+        sim.move_people_to_active_subgroups(
+            activities, time_before_policy, 0.0, duration=10000, is_weekend=True
+        )
         assert worker in worker.leisure.people
         sim.clear_world()
-        time_during_policy = datetime(2020, 3, 14)         
+        time_during_policy = datetime(2020, 3, 14)
         closed_venues = policies.find_closed_venues(date=time_during_policy)
-        assert list(closed_venues) == ['pub']
-        sim.move_people_to_active_subgroups(activities, time_during_policy, 0., 24, is_weekend=True)
+        assert list(closed_venues) == ["pub"]
+        sim.move_people_to_active_subgroups(
+            activities, time_during_policy, 0.0, 24, is_weekend=True
+        )
         print(worker.leisure.group.spec)
-        assert (worker in worker.leisure.people and worker.leisure.group.spec == 'cinema') or worker in worker.residence.people
+        assert (
+            worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
+        ) or worker in worker.residence.people
         sim.clear_world()
+
 
 def test__social_distancing(super_area, selector, interaction):
     pupil, worker, world = make_dummy_world(super_area)
     start_date = datetime(2020, 3, 10)
     end_date = datetime(2020, 3, 12)
-    social_distance = SocialDistancing(
-        start_time=start_date, end_time=end_date
-    )
+    social_distance = SocialDistancing(start_time=start_date, end_time=end_date)
     policies = Policies([social_distance])
     leisure_instance = leisure.generate_leisure_for_config(
-    world=world, config_filename = test_config 
+        world=world, config_filename=test_config
     )
     sim = Simulator.from_file(
-         world, interaction, selector, 
-        config_filename = test_config,
-        policies = policies,
-        leisure = leisure_instance
+        world,
+        interaction,
+        selector,
+        config_filename=test_config,
+        policies=policies,
+        leisure=leisure_instance,
     )
     initial_betas = copy.deepcopy(sim.interaction.beta)
     for time in sim.timer:
