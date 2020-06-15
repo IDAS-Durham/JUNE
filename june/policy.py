@@ -4,10 +4,10 @@ import sys
 import datetime
 import yaml
 from abc import ABC, abstractmethod
+# TODO: reduce leisure attendance
 
 default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
-# TODO: finish closure of leisure buildings + reduce leisure attendance
 class Policy(ABC):
     def __init__(self, start_time='1900-01-01', end_time='2100-01-01'):
         self.spec = self.get_spec()
@@ -29,7 +29,7 @@ class Policy(ABC):
         return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
 
     def is_active(self, date):
-        if date >= self.start_time and date <= self.end_time:
+        if self.start_time <= date <= self.end_time: 
             return True
         return False
 
@@ -220,7 +220,7 @@ class Policies:
         cls, config_file=default_config_filename,
     ):
         with open(config_file) as f:
-            config = yaml.load(f)#, Loader=yaml.FullLoader)
+            config = yaml.load(f, Loader=yaml.FullLoader)
         policies = []
         for key, value in config.items():
             camel_case_key =  ''.join(x.capitalize() or '_' for x in key.split('_'))
@@ -267,6 +267,14 @@ class Policies:
         for policy in self.close_venues_policies(date):
             closed_venues.update(policy.venues_to_close)
         return closed_venues
+
+    def combine_social_distancing(self, time):
+        for policy in self.social_distancing_policies(date, sorted=True):
+            policy.
+
+    def apply_social_distancing(self, time):
+        if self.combine_social_distancing(time):
+            self.get_social_distancing()
 
     def social_distancing_policy(self, alpha, betas, time):
         """
