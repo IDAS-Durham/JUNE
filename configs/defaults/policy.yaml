@@ -1,15 +1,43 @@
-social distancing:
-  alpha factor: 1.0
-  beta factor:
-    box: 0.5
-    pub: 0.5
-    grocery: 0.5
-    cinema: 0.5
-    commute_unit: 0.5
-    commute_city_unit: 0.5
-    hospital: 0.5
-    care_home: 0.5
-    company: 0.5
-    school: 0.5
-    household: 1.0
-    university: 0.5
+quarantine:
+        n_days: 7 # for the symptomatic person
+        n_days_household: 14 # for the housemates
+        start_time: 2020-03-16 
+        end_time: 2021-03-16 
+
+close_companies:
+        start_time: 2020-03-16
+        end_time: 2020-03-30 #TODO: Until when really?
+        full_closure: True #TODO: sectors or percent of companies to open? 
+
+social_distancing:
+        start_time: 2020-03-16
+        end_time: 2021-03-16 #TODO: end time?
+        alpha factor: 1.0
+        beta factor:
+                box: 0.5
+                pub: 0.5
+                grocery: 0.5
+                cinema: 0.5
+                commute_unit: 0.5
+                commute_city_unit: 0.5
+                hospital: 0.5
+                care_home: 0.5
+                company: 0.5
+                school: 0.5
+                household: 1.0
+                university: 0.5
+
+close_leisure_venue:
+        start_time: 2020-03-21
+        end_time: 2020-07-01 #TODO: end time ?
+        venues_to_close: ['pubs', 'cinemas', 'groceries', 'care_home_visits'] 
+        #TODO: household_visits?
+
+close_schools:
+        start_time: 2020-03-20
+        end_time: 2020-09-01 #TODO: end time?
+        full_closure: True
+
+close_universities:
+        start_time: 2020-03-20
+        end_time: 2020-09-01
