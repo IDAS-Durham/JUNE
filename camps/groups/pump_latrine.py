@@ -8,7 +8,7 @@ from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_configs_path
 from june.demography.geography import SuperArea, Area
 
-default_config_filename = camp_configs_path / "defaults/groups/leisure/pumplatrines.yaml"
+default_config_filename = camp_configs_path / "defaults/groups/pumplatrines.yaml"
 
 class PumpLatrine(SocialVenue):
     def __init__(self, max_size=10):
@@ -16,31 +16,31 @@ class PumpLatrine(SocialVenue):
         super().__init__()
 
 class PumpLatrines(SocialVenues):
-    def __init__(self, pumplatrines: List[PumpLatrine]):
-        super().__init__(pumplatrines)
+    def __init__(self, pump_latrines: List[PumpLatrine]):
+        super().__init__(pump_latrines)
 
     @classmethod
     def for_areas(cls, areas: List[Area], venues_per_capita=1/(100+35/2), max_size=10):
-        pumplatrines = []
+        pump_latrines = []
         for area in areas:
             area_population = len(area.people)
             for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
-                pumplatrine = PumpLatrine(max_size)
-                area.pumplatrines.append(pumplatrine)
-                pumplatrines.append(pumplatrine)
-        return cls(pumplatrines)
+                pump_latrine = PumpLatrine(max_size)
+                area.pump_latrines.append(pump_latrine)
+                pump_latrines.append(pump_latrine)
+        return cls(pump_latrines)
 
 class PumpLatrineDistributor(SocialVenueDistributor):
     def __init__(
             self,
-            pumplatrines: PumpLatrines,
+            pump_latrines: PumpLatrines,
             male_age_probabilities: dict = None,
             female_age_probabilities: dict = None,
             weekend_boost: float = 1.0,
             drags_household_probability = 0.
     ):
         super().__init__(
-            social_venues=pumplatrines,
+            social_venues=pump_latrines,
             male_age_probabilities=male_age_probabilities,
             female_age_probabilities=female_age_probabilities,
             weekend_boost=weekend_boost,
@@ -48,14 +48,14 @@ class PumpLatrineDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(cls, pumplatrines, config_filename: str = default_config_filename):
+    def from_config(cls, pump_latrines, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(pumplatrines, **config)
+        return cls(pump_latrines, **config)
 
     def get_social_venue_for_person(self, person):
         """
         We select a random pump or latrine from the person area.
         """
-        venue = np.random.choice(person.area.pumplatrines)
+        venue = np.random.choice(person.area.pump_latrines)
         return venue

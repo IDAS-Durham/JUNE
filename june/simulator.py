@@ -12,7 +12,7 @@ import time
 
 from june.demography import Person
 from june.groups import Group
-from june.groups.leisure import leisure
+import camps.groups.leisure as leisure
 from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
@@ -44,6 +44,7 @@ class Simulator:
         activity_to_groups: dict,
         time_config: dict,
         seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
         policies = Policies(),
@@ -125,7 +126,7 @@ class Simulator:
         if "commute" in self.all_activities:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
-            self.initialize_leisure(activity_to_groups["leisure"])
+            self.leisure = leisure
         if (
             "rail_travel_out" in self.all_activities
             or "rail_travel_back" in self.all_activities
@@ -140,6 +141,7 @@ class Simulator:
         selector: "InfectionSelector",
         policies = Policies(),
         seed: "Seed" = None,
+        leisure: "Leisure" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ) -> "Simulator":
@@ -171,6 +173,7 @@ class Simulator:
             time_config,
             policies = policies,
             seed=seed,
+            leisure=leisure,
             save_path=save_path,
         )
 
@@ -212,11 +215,6 @@ class Simulator:
     def distribute_rail_back(self):
         if hasattr(self, "travelunit_distributor"):
             self.travelunit_distributor.distribute_people_back()
-
-    def initialize_leisure(self, leisure_options):
-        self.leisure = leisure.generate_leisure_for_world(
-            list_of_leisure_groups=leisure_options, world=self.world
-        )
 
     def check_inputs(self, time_config: dict):
         """
