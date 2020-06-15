@@ -530,13 +530,12 @@ class Simulator:
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
 
-        self.policies.apply_social_distancing(self.timer.date)
-
         for group_type in group_instances:
             n_people_group = 0
             for group in group_type.members:
                 self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group, self.logger,
+                    self.timer.now, self.timer.duration, group, 
+                    self.logger, 
                 )
                 n_people += group.size
                 n_people_group += group.size
