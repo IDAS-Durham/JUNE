@@ -9,10 +9,10 @@ default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
 # TODO: finish closure of leisure buildings + reduce leisure attendance
 class Policy(ABC):
-    def __init__(self, start_time=datetime(1900, 1, 1), end_time=datetime(2100, 1, 1)):
+    def __init__(self, start_time='1900-01-01', end_time='2100-01-01'):
         self.spec = self.get_spec()
-        self.start_time = start_time
-        self.end_time = end_time
+        self.start_time = datetime.strptime(start_time, '%Y-%m-%d')
+        self.end_time = datetime.strptime(end_time, '%Y-%m-%d')
 
     def get_spec(self) -> str:
         """
@@ -28,7 +28,7 @@ class Policy(ABC):
 
 # TODO: we should unify this policy, the action of the class should be here, also its parameters (like beta factors ...)
 class SocialDistancing(Policy):
-    def __init__(self, start_time=datetime(1900, 1, 1), end_time=datetime(2100, 1, 1),
+    def __init__(self, start_time='1900-01-01', end_time='2100-01-01',
             alpha_factor=1., beta_factor = None):
         super().__init__(start_time, end_time)
         self.alpha_factor =  alpha_factor
@@ -40,7 +40,7 @@ class SocialDistancing(Policy):
 
 
 class SkipActivity(Policy):
-    def __init__(self, start_time=datetime(1900, 1, 1), end_time=datetime(2100, 1, 1)):
+    def __init__(self, start_time='1900-01-01', end_time='2100-01-01'):
         super().__init__(start_time, end_time)
         self.policy_type = "skip_activity"
 
@@ -53,7 +53,7 @@ class SkipActivity(Policy):
 
 
 class StayHome(Policy):
-    def __init__(self, start_time=datetime(1900, 1, 1), end_time=datetime(2100, 1, 1)):
+    def __init__(self, start_time='1900-01-01', end_time='2100-01-01'):
         super().__init__(start_time, end_time)
         self.policy_type = "stay_home"
 
@@ -64,8 +64,8 @@ class StayHome(Policy):
 class CloseLeisureVenue(Policy):
     def __init__(
         self,
-        start_time=datetime(1900, 1, 1),
-        end_time=datetime(2100, 1, 1),
+        start_time='1900-01-01', 
+        end_time='2100-01-01',
         venues_to_close=["cinemas", "groceries"],
     ):
         super().__init__(start_time, end_time)
@@ -82,8 +82,8 @@ class PermanentPolicy(StayHome):
 class Quarantine(StayHome):
     def __init__(
         self,
-        start_time: "datetime",
-        end_time: "datetime",
+        start_time='1900-01-01', 
+        end_time='2100-01-01',
         n_days: int = 7,
         n_days_household: int = 14,
     ):
@@ -121,7 +121,7 @@ class Quarantine(StayHome):
 
 class Shielding(StayHome):
     def __init__(
-        self, start_time: "datetime", end_time: "datetime", min_age: int,
+            self, start_time: str, end_time: str, min_age: int,
     ):
         super().__init__(start_time, end_time)
         self.min_age = min_age
@@ -134,8 +134,8 @@ class Shielding(StayHome):
 class CloseSchools(SkipActivity):
     def __init__(
         self,
-        start_time: "datetime",
-        end_time: "datetime",
+        start_time: str,
+        end_time: str,
         years_to_close=None,
         full_closure=None,
     ):
@@ -155,8 +155,8 @@ class CloseSchools(SkipActivity):
 class CloseUniversities(SkipActivity):
     def __init__(
         self,
-        start_time: "datetime",
-        end_time: "datetime",
+        start_time: str,
+        end_time: str,
     ):
         super().__init__(start_time, end_time)
 
@@ -172,8 +172,8 @@ class CloseUniversities(SkipActivity):
 class CloseCompanies(SkipActivity):
     def __init__(
         self,
-        start_time: "datetime",
-        end_time: "datetime",
+        start_time: str,
+        end_time: str,
         sectors_to_close=None,
         full_closure=None,
     ):
@@ -192,12 +192,11 @@ class CloseCompanies(SkipActivity):
 
 
 class Policies:
-    def __init__(self, policies, config_filename=None):
-        if policies is None and config_filename is not None:
-            self.from_file(config_filename=config_filename)
-        elif policies is not None:
-            self.policies = policies
-
+    def __init__(self, policies=None):
+        if policies is None:
+            self.policies = [PermanentPolicy()]
+        else:
+            self.policies = [PermanentPolicy()] + policies
         self.social_distancing = False
         self.social_distancing_start = 0
         self.social_distancing_end = 0
@@ -218,7 +217,7 @@ class Policies:
         for key, value in config.items():
             camel_case_key =  ''.join(x.capitalize() or '_' for x in key.split('_'))
             policies.append(str_to_class(camel_case_key)(**value))
-        return Policies(policies)
+        return Policies(policies=policies)
 
     def get_active_policies_for_type(self, policy_type, date):
         return [
@@ -291,6 +290,6 @@ class Policies:
         return alpha_new, betas_new
 
 def str_to_class(classname):
-    return getattr(sys.modules['__main__'], classname)
+    return getattr(sys.modules['june.policy'], classname)
 
 
