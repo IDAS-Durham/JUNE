@@ -1,5 +1,6 @@
 import numpy as np
 from numba import jit
+import yaml
 from typing import List
 from june.demography import Person
 from june.demography.geography import Geography
@@ -12,7 +13,9 @@ from june.groups.leisure import (
     CareHomeVisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
+from june import paths
 
+default_config_filename = paths.configs_path / "config_example.yaml"
 
 @jit(nopython=True)
 def random_choice_numba(arr, prob):
@@ -87,6 +90,19 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
 
     return Leisure(leisure_distributors)
 
+def generate_leisure_for_config(world, config_filename=default_config_filename):
+    """
+    Generates an instance of the leisure class for the specified geography and leisure groups.
+    Parameters
+    ----------
+    list_of_leisure_groups
+        list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
+    """
+    with open(config_filename) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    list_of_leisure_groups = config['activity_to_groups']['leisure']
+    leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
+    return leisure_instance
 
 class Leisure:
     """
