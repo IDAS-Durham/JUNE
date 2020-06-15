@@ -546,7 +546,6 @@ class TestCloseLeisure:
         sim.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0, 24, is_weekend=True
         )
-        print(worker.leisure.group.spec)
         assert (
             worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
         ) or worker in worker.residence.people
