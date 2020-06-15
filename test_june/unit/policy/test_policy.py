@@ -151,7 +151,7 @@ def infect_person(person, selector, symptom_tag="influenza"):
 
 class TestPolicy:
     def test__is_active(self):
-        policy = Policy(start_time=datetime(2020, 5, 6), end_time=datetime(2020, 6, 6))
+        policy = Policy(start_time='2020-5-6', end_time='2020-6-6')
         assert policy.is_active(datetime(2020, 6, 6))
         assert not policy.is_active(datetime(2020, 6, 7))
 
@@ -256,8 +256,8 @@ class TestClosure:
     def test__close_schools(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         school_closure = CloseSchools(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 10, 1),
+            start_time='2020-1-1',
+            end_time='2020-10-1',
             years_to_close=[6],
         )
         policies = Policies([school_closure])
@@ -299,8 +299,8 @@ class TestClosure:
     def test__close_universities(self, super_area, selector, interaction):
         pupil, student, world = make_dummy_world_with_university(super_area)
         university_closure = CloseUniversities(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 10, 1),
+            start_time='2020-1-1',
+            end_time='2020-10-1',
         )
         policies = Policies([university_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -342,8 +342,8 @@ class TestClosure:
     def test__close_companies(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 10, 1),
+            start_time='2020-1-1',
+            end_time='2020-10-1',
             sectors_to_close=["Q"],
         )
         policies = Policies([company_closure])
@@ -386,8 +386,8 @@ class TestClosure:
     def test__close_companies_other_sector(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 10, 1),
+            start_time='2020-1-1',
+            end_time='2020-10-1',
             sectors_to_close=["R"],
         )
         policies = Policies([company_closure])
@@ -418,7 +418,7 @@ class TestShielding:
     def test__old_people_shield(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         shielding = Shielding(
-            start_time=datetime(2020, 1, 1), end_time=datetime(2020, 10, 1), min_age=30
+            start_time='2020-1-1', end_time='2020-10-1', min_age=30
         )
         policies = Policies([shielding])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -446,8 +446,8 @@ class TestQuarantine:
     def test__symptomatic_stays_for_one_week(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 1, 30),
+            start_time='2020-1-1',
+            end_time='2020-1-30',
             n_days=7,
             n_days_household=14,
         )
@@ -477,8 +477,8 @@ class TestQuarantine:
     def test__housemates_stay_for_two_weeks(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
-            start_time=datetime(2020, 1, 1),
-            end_time=datetime(2020, 1, 30),
+            start_time='2020-1-1',
+            end_time='2020-1-30',
             n_days=7,
             n_days_household=14,
         )
@@ -515,8 +515,8 @@ class TestCloseLeisure:
     def test__close_leisure_venues(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         close_venues = CloseLeisureVenue(
-            start_time=datetime(2020, 3, 1),
-            end_time=datetime(2020, 3, 30),
+            start_time='2020-3-1',
+            end_time='2020-3-30',
             venues_to_close=["pub"],
         )
         policies = Policies([close_venues])
@@ -557,7 +557,7 @@ def test__social_distancing(super_area, selector, interaction):
     pupil, worker, world = make_dummy_world(super_area)
     start_date = datetime(2020, 3, 10)
     end_date = datetime(2020, 3, 12)
-    social_distance = SocialDistancing(start_time=start_date, end_time=end_date)
+    social_distance = SocialDistancing(start_time='2020-03-10', end_time='2020-03-12')
     policies = Policies([social_distance])
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
