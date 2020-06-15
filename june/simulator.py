@@ -47,7 +47,7 @@ class Simulator:
         leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies=Policies(),
+        policies: Optional["Policies"] = None,
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
         light_logger: bool = False,
@@ -79,7 +79,7 @@ class Simulator:
         self.world = world
         self.interaction = interaction
         self.beta_copy = copy.deepcopy(self.interaction.beta)
-        self.alpha_copy = copy.copy(self.interaction.alpha_physical)
+        self.alpha_copy = copy.deepcopy(self.interaction.alpha_physical)
         self.seed = seed
         self.selector = selector
         self.policies = policies
@@ -138,9 +138,9 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
-        policies=Policies(),
-        seed: "Seed" = None,
-        leisure: "Leisure" = None,
+        policies: Optional["Policies"] = None,
+        seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ) -> "Simulator":
