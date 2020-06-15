@@ -1,7 +1,7 @@
 from june import paths
 import re
 import sys
-from datetime import datetime
+import datetime
 import yaml
 from abc import ABC, abstractmethod
 
@@ -11,8 +11,16 @@ default_config_filename = paths.configs_path / "defaults/policy.yaml"
 class Policy(ABC):
     def __init__(self, start_time='1900-01-01', end_time='2100-01-01'):
         self.spec = self.get_spec()
-        self.start_time = datetime.strptime(start_time, '%Y-%m-%d')
-        self.end_time = datetime.strptime(end_time, '%Y-%m-%d')
+        self.start_time = self.read_date(start_time)
+        self.end_time = self.read_date(end_time)
+
+    def read_date(self, date):
+        if type(date) is str:
+            return datetime.datetime.strptime(date, '%Y-%m-%d')
+        elif isinstance(date, datetime.date):
+            return datetime.datetime.combine(date, datetime.datetime.min.time())
+        else:
+            raise TypeError("date must be a string or a datetime.date object")
 
     def get_spec(self) -> str:
         """
@@ -212,7 +220,7 @@ class Policies:
         cls, config_file=default_config_filename,
     ):
         with open(config_file) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+            config = yaml.load(f)#, Loader=yaml.FullLoader)
         policies = []
         for key, value in config.items():
             camel_case_key =  ''.join(x.capitalize() or '_' for x in key.split('_'))
