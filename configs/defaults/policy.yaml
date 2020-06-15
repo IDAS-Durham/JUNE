@@ -30,7 +30,7 @@ social_distancing:
 close_leisure_venue:
         start_time: 2020-03-21
         end_time: 2020-07-01 #TODO: end time ?
-        venues_to_close: ['pubs', 'cinemas', 'groceries', 'care_home_visits'] 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
         #TODO: household_visits?
 
 close_schools:
