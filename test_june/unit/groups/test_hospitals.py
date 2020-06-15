@@ -17,12 +17,12 @@ dir_pwd  = path_pwd.parent
 
 @pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
-    return Hospitals.from_file(filename=data_path / 'input/hospitals/england_hospitals.csv')
+    return Hospitals.from_file(filename=data_path / 'input/hospitals/trusts.csv')
 
 
 @pytest.fixture(name="hospitals_df", scope="module")
 def create_hospitals_df():
-    return pd.read_csv(data_path / "input/hospitals/england_hospitals.csv")
+    return pd.read_csv(data_path / "input/hospitals/trusts.csv")
 
 
 def test__total_number_hospitals_is_correct(hospitals, hospitals_df):
@@ -125,8 +125,9 @@ def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector)
 
 
 def test__initialize_hospitals_from_geography():
-    geography = Geography.from_file({"super_area": ["E02003999", "E02006764"]})
+    geography = Geography.from_file({"super_area": ["E02003282", "E02005560"]})
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
-    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 190
-    assert hospitals.members[0].super_area in ["E02003999", "E02006764"]
+    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 468 + 41 
+    assert hospitals.members[0].super_area == 'E02005560' 
+    assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 2115 + 296 
