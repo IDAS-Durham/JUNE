@@ -18,7 +18,7 @@ from june.infection.symptoms import SymptomTag
 logger = logging.getLogger(__name__)
 
 default_data_filename = (
-    paths.data_path / "input/hospitals/england_hospitals.csv"
+    paths.data_path / "input/hospitals/trusts.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
 
@@ -39,7 +39,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name", "super_area"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name", "super_area", "trust_code"
 
     def __init__(
         self,
@@ -47,6 +47,7 @@ class Hospital(Group):
         n_icu_beds: int,
         super_area: str = None,
         coordinates: Optional[Tuple[float, float]] = None,
+        trust_code: str = None,
     ):
         """
         Create a Hospital given its description.
@@ -67,6 +68,7 @@ class Hospital(Group):
         self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
+        self.trust_code = trust_code
 
     @property
     def full(self):
@@ -205,11 +207,9 @@ class Hospitals(Supergroup):
         hospital_df = pd.read_csv(filename)
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
-        icu_fraction = config["icu_fraction"]
         neighbour_hospitals = config["neighbour_hospitals"]
         logger.info(f"There are {len(hospital_df)} hospitals in the world.")
-        hospitals = cls.init_hospitals(cls, hospital_df, icu_fraction)
+        hospitals = cls.init_hospitals(cls, hospital_df)
         return Hospitals(hospitals, neighbour_hospitals)
 
     @classmethod
@@ -221,8 +221,6 @@ class Hospitals(Supergroup):
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
-        icu_fraction = config["icu_fraction"]
         neighbour_hospitals = config["neighbour_hospitals"]
         hospital_df = pd.read_csv(filename, index_col=0)
         super_area_names = [super_area.name for super_area in geography.super_areas]
@@ -235,13 +233,13 @@ class Hospitals(Supergroup):
                 hospitals_in_area = hospital_df.loc[super_area.name]
                 if isinstance(hospitals_in_area, pd.Series):
                     hospital = cls.create_hospital_from_df_row(
-                        super_area, hospitals_in_area, icu_fraction, 
+                        super_area, hospitals_in_area, 
                     )
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
                         hospital = cls.create_hospital_from_df_row(
-                            super_area, row, icu_fraction, 
+                            super_area, row,  
                         )
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
@@ -250,22 +248,23 @@ class Hospitals(Supergroup):
 
     @classmethod
     def create_hospital_from_df_row(
-        cls, super_area, row, icu_fraction, 
+        cls, super_area, row,  
     ):
         coordinates = row[["latitude", "longitude"]].values.astype(np.float)
         n_beds = row["beds"]
-        n_icu_beds = round(icu_fraction * n_beds)
-        n_beds -= n_icu_beds
+        n_icu_beds = row["icu_beds"] #round(icu_fraction * n_beds)
+        trust_code = row["code"]
         hospital = Hospital(
             super_area=super_area.name,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
+            trust_code=trust_code,
         )
         return hospital
 
     def init_hospitals(
-        self, hospital_df: pd.DataFrame, icu_fraction: float, 
+        self, hospital_df: pd.DataFrame, 
     ) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics,
@@ -279,15 +278,14 @@ class Hospitals(Supergroup):
         hospitals = []
         for index, row in hospital_df.iterrows():
             n_beds = row["beds"]
-            n_icu_beds = round(icu_fraction * n_beds)
-            n_beds -= n_icu_beds
-            # msoa_name = row["MSOA"]
+            n_icu_beds = row["icu_beds"] #round(icu_fraction * n_beds)
+            trust_code = row["code"]
             coordinates = row[["latitude", "longitude"]].values.astype(np.float)
-            # create hospital
             hospital = Hospital(
                 coordinates=coordinates,
                 n_beds=n_beds,
                 n_icu_beds=n_icu_beds,
+                trust_code=trust_code,
             )
             hospitals.append(hospital)
         return hospitals
