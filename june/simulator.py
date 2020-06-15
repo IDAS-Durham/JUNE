@@ -308,8 +308,6 @@ class Simulator:
 
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
-                print('duration = ', duration) 
-                print('is_Weekend = ', is_weekend) 
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
                     delta_time=duration,
