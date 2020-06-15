@@ -80,7 +80,7 @@ def test__social_distancing(world, selector, interaction):
     for time in sim.timer:
         if time > sim.timer.final_date:
             break
-        if sim.timer.date > start_date and end_date < sim.timer.date:
+        if sim.timer.date > start_date and sim.timer.date < end_date:
             for group in sim.interaction.beta:
                 if group != "household":
                     assert sim.interaction.beta[group] == initial_betas[group] * 0.5
