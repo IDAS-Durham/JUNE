@@ -287,6 +287,7 @@ class Simulator:
 
         for person in self.world.people.members:
             person.busy = False
+            person.subgroups.leisure = None
 
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
