@@ -39,7 +39,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "msoa_name", "super_area", "trust_code"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area", "trust_code"
 
     def __init__(
         self,
@@ -252,7 +252,7 @@ class Hospitals(Supergroup):
     ):
         coordinates = row[["latitude", "longitude"]].values.astype(np.float)
         n_beds = row["beds"]
-        n_icu_beds = row["icu_beds"] #round(icu_fraction * n_beds)
+        n_icu_beds = row["icu_beds"] 
         trust_code = row["code"]
         hospital = Hospital(
             super_area=super_area.name,
@@ -278,7 +278,7 @@ class Hospitals(Supergroup):
         hospitals = []
         for index, row in hospital_df.iterrows():
             n_beds = row["beds"]
-            n_icu_beds = row["icu_beds"] #round(icu_fraction * n_beds)
+            n_icu_beds = row["icu_beds"] 
             trust_code = row["code"]
             coordinates = row[["latitude", "longitude"]].values.astype(np.float)
             hospital = Hospital(
@@ -334,7 +334,6 @@ class Hospitals(Supergroup):
                     return hospital
         else:
             hospital = None
-            # find hospitals  within radius of max distance
             hospitals_idx = self.get_closest_hospitals(
                 coordinates=person.area.coordinates, k=self.neighbour_hospitals
             )
