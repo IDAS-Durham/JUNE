@@ -2,16 +2,16 @@ alpha_physical: 2.
 
 beta:
  box: 1
- pub: 0.1 
- grocery: 0.1
- cinema: 0.1
+ pub: 1 
+ grocery: 1
+ cinema: 1
  commute_unit: 0.5 
  commute_city_unit: 0.5 
  hospital: 0.5 
- care_home: 0.5 
- company: 0.5 
- school: 0.5 
- household: 0.5 
+ care_home: 1.0
+ company: 1.0
+ school: 0.1 
+ household: 1.0 
  university: 0.05
 
 contact_matrices:

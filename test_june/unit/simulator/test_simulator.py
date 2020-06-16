@@ -9,7 +9,15 @@ from june.interaction import ContactAveraging
 from june.infection import InfectionSelector, Infection
 from june.infection import SymptomTag, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    CareHomes,
+    Cemeteries,
+    Universities,
+)
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.simulator import Simulator
 from june import paths
@@ -22,14 +30,23 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
     geography = Geography.from_file(
-        {"super_area": ["E02003282", "E02001720", "E00088544", "E02002560", "E02002559"]}
+        {
+            "super_area": [
+                "E02003282",
+                "E02001720",
+                "E00088544",
+                "E02002560",
+                "E02002559",
+                "E02004314",
+            ]
+        }
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
     geography.companies = Companies.for_geography(geography)
-    demography = Demography.for_geography(geography)
     world = generate_world_from_geography(
         geography=geography, include_commute=True, include_households=True
     )
@@ -39,15 +56,20 @@ def create_simulator():
         geography.super_areas, venues_per_capita=1 / 500
     )
     leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+        world=world, config_filename=test_config
     )
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
-    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
-            leisure=leisure_instance)
+    sim = Simulator.from_file(
+        world,
+        interaction,
+        selector,
+        config_filename=test_config,
+        leisure=leisure_instance,
+    )
     return sim
 
 
@@ -82,6 +104,7 @@ def test__activities_to_groups(sim):
         "commutecityunits",
         "schools",
         "companies",
+        "universities",
         "pubs",
         "cinemas",
         "groceries",
