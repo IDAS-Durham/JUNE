@@ -152,18 +152,22 @@ class Logger:
         coordinates = []
         n_beds = []
         n_icu_beds = []
+        trust_code = []
         for hospital in hospitals:
             coordinates.append(hospital.coordinates)
             n_beds.append(hospital.n_beds)
             n_icu_beds.append(hospital.n_icu_beds)
+            trust_code.append(hospital.trust_code)
         coordinates = np.array(coordinates, dtype=np.float16)
         n_beds = np.array(n_beds, dtype=np.int16)
         n_icu_beds = np.array(n_icu_beds, dtype=np.int16)
+        trust_code = np.array(trust_code, dtype="S10")
         with h5py.File(self.file_path, "a", libver="latest") as f:
             hospital_dset = f.require_group("hospitals")
             hospital_dset.create_dataset("coordinates", data=coordinates)
             hospital_dset.create_dataset("n_beds", data=n_beds)
             hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
+            hospital_dset.create_dataset("trust_code", data=trust_code)
 
     def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
         """
