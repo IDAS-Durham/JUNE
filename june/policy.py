@@ -8,6 +8,7 @@
 
 from june import paths
 import yaml
+import copy
 
 default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
@@ -81,7 +82,7 @@ class Policies:
         '''
         #TODO: should probably leave alpha value for households untouched!
 
-        betas_new = betas.copy()
+        betas_new = copy.deepcopy(betas)
         
         
         if self.config is None:
