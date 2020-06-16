@@ -14,9 +14,10 @@ from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.infection.infection import InfectionSelector
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
-from june.groups.leisure import Cinemas, Pubs, Groceries
+from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.policy import Policy, Policies
 from june.simulator import Simulator
+from june.seed import Seed
 
 
 path_pwd = Path(__file__)
@@ -71,23 +72,39 @@ def test__social_distancing(world, selector, interaction):
     social_distance = Policy(
         policy="social_distance", start_time=start_date, end_time=end_date
     )
-    policies = Policies([social_distance])
+    policies = Policies.from_file([social_distance])
+    interaction = ContactAveraging.from_file(selector=selector)
 
-    sim = Simulator.from_file(
-        world, interaction, selector, policies, config_filename=test_config
+    seed = Seed(world.super_areas, selector,)
+    n_cases = 10
+    seed.unleash_virus(n_cases) # play around with the initial number of cases
+    leisure_instance = leisure.generate_leisure_for_config(
+        world=world, config_filename = test_config
     )
-    initial_betas = copy.deepcopy(sim.interaction.beta)
-    for time in sim.timer:
-        if time > sim.timer.final_date:
+    
+    simulator = Simulator.from_file(
+    world, interaction, selector, policies, config_filename=test_config, leisure = leisure_instance,
+    )    
+    simulator.timer.reset()
+    initial_betas = copy.deepcopy(simulator.interaction.beta)
+
+    simulator.clear_world()
+    for time in simulator.timer:
+        if time > simulator.timer.final_date:
             break
-        if sim.timer.date > start_date and sim.timer.date < end_date:
-            for group in sim.interaction.beta:
+        if simulator.seed:
+            if (time >= simulator.seed.min_date) and (time <= simulator.seed.max_date):
+                simulator.seed.unleash_virus_per_region(time)
+        simulator.do_timestep()
+        if simulator.timer.date >= start_date and simulator.timer.date < end_date:
+            for group in simulator.interaction.beta:
+                print (group)
                 if group != "household":
-                    assert sim.interaction.beta[group] == initial_betas[group] * 0.5
+                    assert simulator.interaction.beta[group] == initial_betas[group] * 0.5
                 else:
-                    assert sim.interaction.beta[group] == initial_betas[group]
+                    assert simulator.interaction.beta[group] == initial_betas[group]
         else:
-            assert sim.interaction.beta == initial_betas
+            assert simulator.interaction.beta == initial_betas
 
 
 # def test__close_schools_years(world, selector, interaction):
