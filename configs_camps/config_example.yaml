@@ -9,13 +9,12 @@ time:
   total_days: 70
   step_duration: 
       weekday:
-          0: 1 
-          1: 8
+          0: 2 
+          1: 2
           2: 2
           3: 2
           4: 2
-          5: 2
-          6: 7
+          5: 14
       weekend:
           0: 3
           1: 2 
@@ -26,12 +25,11 @@ time:
   step_activities:
       weekday:
           0: ['hospital', 'residence']
-          1: ['hospital', 'residence'] # need to add schools here
-          2: ['hospital', 'leisure', 'residence']
-          3: ['hospital', 'leisure', 'residence']
-          4: ['hospital', 'leisure', 'residence']
-          5: ['hospital', 'leisure', 'residence']
-          6: ['hospital', 'residence']
+          1: ['hospital', 'leisure', 'residence'] # school
+          2: ['hospital', 'leisure', 'residence'] # school
+          3: ['hospital', 'leisure', 'residence'] # school
+          4: ['hospital', 'leisure', 'residence'] # school
+          5: ['hospital', 'residence']
       weekend:
           0: ['hospital', 'residence']
           1: ['hospital', 'leisure', 'residence']
