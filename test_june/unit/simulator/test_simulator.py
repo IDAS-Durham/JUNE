@@ -11,6 +11,7 @@ from june.infection import SymptomTag, SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.policy import Policies
 from june.simulator import Simulator
 from june import paths
 
@@ -46,8 +47,9 @@ def create_simulator():
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
+    policies = Policies.from_file()
     sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
-            leisure=leisure_instance)
+            leisure=leisure_instance, policies=policies)
     return sim
 
 
