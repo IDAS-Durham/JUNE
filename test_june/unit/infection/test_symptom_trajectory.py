@@ -1,17 +1,16 @@
-import numpy as np
 import pytest
 
 from june.demography.person import Person
 from june.infection import infection as infect
 from june.infection import symptoms as sym
-from june.infection.health_index import HealthIndexGenerator
-from june.infection.symptoms import SymptomsStep, SymptomTag
+from june.infection.symptoms import SymptomTag
 from june.infection.trajectory_maker import (
     Stage, CompletionTime, ConstantCompletionTime, ExponentialCompletionTime,
     TrajectoryMaker,
     TrajectoryMakers,
     BetaCompletionTime
 )
+
 
 @pytest.fixture(
     name="constant_completion_dict"
@@ -138,7 +137,7 @@ class TestTrajectoryMaker:
         assert infected.symptoms_tag == sym.SymptomTag.exposed
         assert infected.completion_time.a == 2.29
         assert infected.completion_time.b == 19.05
-        assert infected.completion_time.scale  == 39.8
+        assert infected.completion_time.scale == 39.8
 
         recovered = influenza_trajectory.stages[-1]
         assert recovered.symptoms_tag == sym.SymptomTag.recovered
@@ -150,33 +149,13 @@ class TestTrajectoryMaker:
 
 
 class TestSymptomsTrajectory:
-    def test__right_frequency_in_health_index(self):
-        N_samples = 1000
-        health_index = HealthIndexGenerator.from_file()(Person())
-        frequencies = np.zeros(len(sym.SymptomTag))
-        for i in range(N_samples):
-            symptoms = SymptomsStep(health_index=health_index, time_offset=0.)
-            symptoms.update_severity_from_delta_time(0.01)
-            # check their symptoms matches the frequency in health index 
-            if symptoms.tag != sym.SymptomTag.healthy:
-                frequencies[symptoms.tag] += 1
-        np.testing.assert_allclose(frequencies[0] / N_samples, health_index[0], atol=0.05)
-        np.testing.assert_allclose(frequencies[1] / N_samples, health_index[1] - health_index[0],
-                                   atol=0.05)
-        np.testing.assert_allclose(frequencies[2] / N_samples, health_index[2] - health_index[1],
-                                   atol=0.05)
-        np.testing.assert_allclose(frequencies[3] / N_samples, health_index[3] - health_index[2],
-                                   atol=0.05)
-        np.testing.assert_allclose(frequencies[4] / N_samples, health_index[4] - health_index[3],
-                                   atol=0.05)
-
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
             (0.0, sym.SymptomTag.exposed),
             (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
-            #(pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
+            # (pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
             (pytest.approx(8, rel=0.5), sym.SymptomTag.intensive_care),
             (pytest.approx(15, rel=0.5), sym.SymptomTag.dead)
         ]
