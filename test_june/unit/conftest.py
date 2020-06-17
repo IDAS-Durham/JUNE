@@ -15,7 +15,7 @@ from june.infection import symptoms as sym
 from june.infection import symptoms_trajectory as strans
 from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
-from june.simulator import Simulator
+from june.simulator import Simulator, SimulatorBox
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 # set seed
@@ -137,7 +137,7 @@ def create_simulator_box(request, world_box, interaction, infection_healthy):
     selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
     config_file = paths.configs_path / "config_boxmode_example.yaml"
     selector = InfectionSelector.from_file(selector_file)
-    return Simulator.from_file(
+    return SimulatorBox.from_file(
         world_box, interaction, selector, config_filename=config_file
     )
 
