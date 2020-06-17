@@ -49,7 +49,7 @@ from pytest import fixture
 @fixture(name="geography_h5", scope="module")
 def make_geography():
     geography = Geography.from_file(
-        {"super_area": ["E02003999", "E02002559", "E02006887", "E02003034"]}
+        {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
     )
     return geography
 
@@ -200,6 +200,7 @@ class TestSaveHospitals:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
+            assert hospital.trust_code == hospital2.trust_code.decode('ascii')
 
 
 class TestSaveSchools:

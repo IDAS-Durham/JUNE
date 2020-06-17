@@ -22,7 +22,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
     geography = Geography.from_file(
-        {"super_area": ["E02001720", "E00088544", "E02002560", "E02002559"]}
+        {"super_area": ["E02003282", "E02001720", "E00088544", "E02002560", "E02002559"]}
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
@@ -168,9 +168,6 @@ def test__move_people_to_commute(sim):
     assert n_commuters > 0
     sim.clear_world()
 
-
-<<<<<<< HEAD
-=======
 def test__kid_at_home_is_supervised(sim, health_index):
 
     kids_at_school = []
@@ -194,8 +191,6 @@ def test__kid_at_home_is_supervised(sim, health_index):
 
     sim.clear_world()
 
-
->>>>>>> master
 def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]
     sim.selector.infect_person_at_time(dummy_person, 0.0)
