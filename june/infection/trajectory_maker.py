@@ -5,7 +5,7 @@ import yaml
 from scipy import stats
 
 from june import paths
-from june.infection.symptoms import SymptomTag
+from june.infection.symptom_tag import SymptomTag
 
 default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 
