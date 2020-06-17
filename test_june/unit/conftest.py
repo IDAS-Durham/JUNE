@@ -13,11 +13,9 @@ from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june.infection import Infection
 from june.infection import InfectionSelector
 from june.infection import infection as infect
-from june.infection import symptoms as sym
-from june.infection import symptoms_trajectory as strans
 from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
-from june.simulator import Simulator
+from june.simulator import Simulator, SimulatorBox
 from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
@@ -126,7 +124,7 @@ def create_simulator_box(world_box, interaction):
     selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
     config_file = paths.configs_path / "config_boxmode_example.yaml"
     selector = InfectionSelector.from_file(selector_file)
-    return Simulator.from_file(
+    return SimulatorBox.from_file(
         world_box, interaction, selector, config_filename=config_file
     )
 
