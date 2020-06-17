@@ -90,23 +90,9 @@ class SocialDistancing(Policy):
 
 
 class SkipActivity(Policy):
-    def __init__(
-            self,
-            start_time: Union[str, datetime.datetime] = "1900-01-01",
-            end_time: Union[str, datetime.datetime] = "2100-01-01",
-    ):
-        """
-        Template for policies that will ban an activity for a person
-
-        Parameters
-        ----------
-        start_time:
-            date at which to start applying the policy
-        end_time:
-            date from which the policy won't apply
-        """
-        super().__init__(start_time, end_time)
-
+    """
+    Template for policies that will ban an activity for a person
+    """
     @abstractmethod
     def skip_activity(self, person: "Person", activities: List[str]) -> bool:
         """
@@ -131,22 +117,9 @@ class SkipActivity(Policy):
 
 
 class StayHome(Policy):
-    def __init__(
-            self,
-            start_time: Union[str, datetime.datetime] = "1900-01-01",
-            end_time: Union[str, datetime.datetime] = "2100-01-01",
-    ):
-        """
-        Template for policies that will force someone to stay at home
-
-        Parameters
-        ----------
-        start_time:
-            date at which to start applying the policy
-        end_time:
-            date from which the policy won't apply
-        """
-        super().__init__(start_time, end_time)
+    """
+    Template for policies that will force someone to stay at home
+    """
 
     @abstractmethod
     def must_stay_at_home(self, person: "Person", days_from_start: float):
@@ -239,16 +212,15 @@ class Quarantine(StayHome):
             person, days_from_start, self.n_days_household
         ) or self.must_stay_at_home_symptoms(person, days_from_start, self.n_days)
 
+    @staticmethod
     def must_stay_at_home_symptoms(
-            self, person: "Person", days_from_start: float, n_days_at_home
+            person: "Person", days_from_start: float, n_days_at_home
     ):
-        return (
-                person.health_information is not None
-                and person.health_information.time_of_symptoms_onset is not None
-                and days_from_start
-                < person.health_information.time_of_symptoms_onset + n_days_at_home
-                and days_from_start > person.health_information.time_of_symptoms_onset
-        )
+        try:
+            release_day = person.health_information.time_of_symptoms_onset + n_days_at_home
+            return release_day > days_from_start > person.health_information.time_of_symptoms_onset
+        except AttributeError:
+            return False
 
     def must_stay_at_home_housemates(
             self, person: "Person", days_from_start: float, n_days_at_home
@@ -326,10 +298,7 @@ class CloseCompanies(SkipActivity):
 
 class Policies:
     def __init__(self, policies=None):
-        if policies is None:
-            self.policies = [PermanentPolicy()]
-        else:
-            self.policies = [PermanentPolicy()] + policies
+        self.policies = [PermanentPolicy()] + (policies or list())
         self.social_distancing = False
         self.social_distancing_start = 0
         self.social_distancing_end = 0
