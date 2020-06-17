@@ -3,6 +3,7 @@ import re
 import sys
 import datetime
 import yaml
+import copy
 from typing import Union, Optional, List
 from abc import ABC, abstractmethod
 
@@ -337,6 +338,7 @@ class Policies:
 
         for policy in self.policies:
             if policy.policy_type == "social_distancing":
+                self.social_distancing_policy = policy
                 self.social_distancing = True
                 self.social_distancing_start = policy.start_time
                 self.social_distancing_end = policy.end_time
@@ -382,7 +384,31 @@ class Policies:
                 if policy.must_stay_at_home(person, days_from_start):
                     return True
         return False
+            
+    def apply_social_distancing_policy(self,  betas, time):
+        '''
+        Implement social distancing policy
+        
+        -----------
+        Parameters:
+        betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
 
+        Assumptions:
+        - Currently we assume that social distancing is implemented first and this affects all
+          interactions and intensities globally
+        - Currently we assume that the changes are not group dependent
+
+
+        TODO:
+        - Implement structure for people to adhere to social distancing with a certain compliance
+        - Check per group in config file
+        '''
+        betas_new = copy.deepcopy(betas)
+        print(betas)
+        for group in betas:
+            betas_new[group] = self.social_distancing_policy.beta_factor[group]*betas_new[group]
+        return betas_new
+        
     def apply_activity_ban(self, person, date, activities):
         for policy in self.skip_activity_policies(date):
             activities = policy.skip_activity(person, activities)

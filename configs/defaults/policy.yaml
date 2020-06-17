@@ -12,7 +12,6 @@ close_companies:
 social_distancing:
         start_time: 2020-03-16
         end_time: 2021-03-16 #TODO: end time?
-        alpha_factor: 1.0
         beta_factor:
                 box: 0.5
                 pub: 0.5
