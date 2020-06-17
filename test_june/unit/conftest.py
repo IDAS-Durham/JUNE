@@ -80,11 +80,6 @@ def create_infection_constant(transmission, symptoms_constant):
     return Infection(transmission, symptoms_constant)
 
 
-@pytest.fixture(name="infection_healthy", scope="session")
-def create_infection_healthy(transmission, symptoms_healthy):
-    return Infection(transmission, symptoms_healthy)
-
-
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
     interaction = inter.ContactAveraging.from_file()
@@ -126,7 +121,7 @@ def create_box_world():
 
 
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(request, world_box, interaction, infection_healthy):
+def create_simulator_box(world_box, interaction):
     selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
     config_file = paths.configs_path / "config_boxmode_example.yaml"
     selector = InfectionSelector.from_file(selector_file)
