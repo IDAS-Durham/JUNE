@@ -3,7 +3,7 @@ import numpy as np
 from june import paths
 
 default_polinom_filename = (
-        paths.configs_path / "defaults/Model_ratio_England.txt"
+        paths.configs_path / "defaults/health_index_ratios.txt"
 )
 
 RKIdata = [
@@ -72,10 +72,10 @@ class HealthIndexGenerator:
           Vo et al 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
           
         """
-        self.poli_hosp = poli_hosp
-        self.poli_icu = poli_icu
-        self.poli_deaths = poli_deaths
-        self.asimpto_ratio = Asimpto_ratio
+        self.Poli_Hosp = poli_hosp
+        self.Poli_ICU = poli_icu
+        self.Poli_Deaths = poli_deaths
+        self.Asimpto_ratio = Asimpto_ratio
         self.make_list()
 
     @classmethod
@@ -143,8 +143,8 @@ class HealthIndexGenerator:
              - if N_3<r<N_4  Goes to the Hospital but not to ICU and survives.
              - if N_4<r<N_5  Goes to ICU ans survives.
              - if N_5<r<N_6  Stays at home with pneumonia and dies.
-             - if N_6<r<N_7  Goes to the Hospital but not to ICU ans dies.
-             - if N_7<r<1    Goes to ICU ans dies.
+             - if N_6<r<N_7  Goes to the Hospital but not to ICU and dies.
+             - if N_7<r<1    Goes to ICU and dies.
               
 
         """
@@ -254,4 +254,4 @@ class HealthIndexGenerator:
         if person.sex == "m":
             sex = 0
         roundage = int(round(person.age))
-        return np.cumsum(self.prob_lists[sex][roundage])
+        return np.cumsum(self.Prob_lists[sex][roundage])
