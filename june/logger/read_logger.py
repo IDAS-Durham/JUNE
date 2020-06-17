@@ -303,14 +303,17 @@ class ReadLogger:
             coordinates = hospitals["coordinates"][:]
             n_beds = hospitals["n_beds"][:]
             n_icu_beds = hospitals["n_icu_beds"][:]
+            trust_code = hospitals["trust_code"][:]
         hospitals_df = pd.DataFrame(
             {
                 "longitude": coordinates[:, 1],
                 "latitude": coordinates[:, 0],
                 "n_beds": n_beds,
                 "n_icu_beds": n_icu_beds,
+                "trust_code": trust_code,
             }
         )
+        hospitals_df['trust_code'] = hospitals_df['trust_code'].str.decode("utf-8")
         hospitals_df.index.rename("hospital_id")
         return hospitals_df
 
@@ -329,7 +332,7 @@ class ReadLogger:
             n_patients_icu = []
             time_stamps = []
             for time_stamp in hospitals.keys():
-                if time_stamp not in ("coordinates", "n_beds", "n_icu_beds"):
+                if time_stamp not in ("coordinates", "n_beds", "n_icu_beds", "trust_code"):
                     hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
                     n_patients.append(hospitals[time_stamp]["n_patients"][:])
                     n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])

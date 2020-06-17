@@ -529,6 +529,12 @@ class Simulator:
         sim_logger.info(
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
+        
+        if self.policies.social_distancing and self.policies.social_distancing_start <= self.timer.date < self.policies.social_distancing_end:
+            self.interaction.beta = self.policies.apply_social_distancing_policy(self.beta_copy, self.timer.now)
+        else:
+            self.interaction.alpha_physical = self.alpha_copy
+            self.interaction.beta = self.beta_copy
 
         for group_type in group_instances:
             n_people_group = 0
