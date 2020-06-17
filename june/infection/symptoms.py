@@ -3,7 +3,6 @@ import sys
 from enum import IntEnum
 
 import autofit as af
-import numpy as np
 
 
 class SymptomTag(IntEnum):
@@ -39,27 +38,12 @@ class Symptoms:
         self.health_index = list() if health_index is None else health_index
         self.tag = SymptomTag.exposed
         self.max_severity = random.random()
-        self._severity = 0.0
 
     def update_severity_from_delta_time(self, time):
         raise NotImplementedError()
 
     def is_recovered(self):
         return self.tag == SymptomTag.recovered
-
-    def make_tag(self):
-        if self.severity <= 0.0 or len(self.health_index) == 0:
-            return SymptomTag.recovered
-        index = np.searchsorted(self.health_index, self.severity)
-        return SymptomTag(index)
-
-    @property
-    def severity(self):
-        return self._severity
-
-    @severity.setter
-    def severity(self, severity):
-        self._severity = severity
 
     @classmethod
     def object_from_config(cls):

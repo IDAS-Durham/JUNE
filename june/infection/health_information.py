@@ -1,5 +1,6 @@
 from june.infection.symptoms import SymptomTag
 
+
 class HealthInformation:
     __slots__ = (
         "susceptibility",
@@ -62,10 +63,9 @@ class HealthInformation:
         return self.tag == SymptomTag.dead
 
     def update_health_status(self, time, delta_time):
-         self.infection.update_at_time(time + delta_time)
-         if self.infection.symptoms.is_recovered():
+        self.infection.update_at_time(time + delta_time)
+        if self.infection.symptoms.is_recovered():
             self.recovered = True
-
 
     def set_recovered(self, time):
         self.recovered = True
@@ -83,9 +83,6 @@ class HealthInformation:
         self.set_length_of_infection(time)
         self.infection = None
 
-    def get_symptoms_tag(self, symptoms):
-        return self.infection.symptoms.tag
-
     def transmission_probability(self, time):
         if self.infection is not None:
             return 0.0
@@ -96,12 +93,5 @@ class HealthInformation:
             return 0.0
         return self.infection.symptom_severity(severity)
 
-    def update_symptoms(self, time):  # , symptoms, time):
-        if self.infection.symptoms.severity > self.maximal_symptoms:
-            self.maximal_symptoms = self.infection.symptoms.severity
-            self.maximal_symptoms_tag = self.get_symptoms_tag(self.infection.symptoms)
-            self.maximal_symptoms_time = time - self.time_of_infection
-
     def set_length_of_infection(self, time):
         self.length_of_infection = time - self.time_of_infection
-

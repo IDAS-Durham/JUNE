@@ -43,10 +43,8 @@ class TestInfection:
                               transmission=transmission,
                               symptoms=symptoms)
 
-        severity_before_update = infection.symptoms.severity
         infection.update_at_time(time=20.0)
         assert infection.last_time_updated == 20.0
-        assert infection.symptoms.severity != severity_before_update
         assert infection.infection_probability == transmission.probability
 
 
