@@ -586,3 +586,75 @@ class Simulator:
         # Save the world
         if save:
             self.world.to_pickle("final_world.pickle")
+
+class SimulatorBox(Simulator):
+    def __init__(
+        self,
+        world: World,
+        interaction: Interaction,
+        selector: InfectionSelector,
+        activity_to_groups: dict,
+        time_config: dict,
+        seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
+        min_age_home_alone: int = 15,
+        stay_at_home_complacency: float = 0.95,
+        policies = Policies(),
+        save_path: str = "results",
+        output_filename: str = "logger.hdf5",
+        light_logger: bool = False,
+    ):
+        """
+        Class to run an epidemic spread simulation on the world
+
+        Parameters
+        ----------
+        world: 
+            instance of World class
+        interaction:
+            instance of Interaction class 
+        infection:
+            instance of Infection class
+        activity_to_groups:
+            mapping between an activity and its corresponding groups
+        time_config:
+            dictionary with temporal configuration to set up the simulation
+        min_age_home_alone:
+            minimum age of a child to be left alone at home when ill
+        stay_at_home_complacency:
+            probability that an ill person will not stay at home
+        policies:
+            policies to be implemented at different time steps
+        save_path:
+            path to save logger results
+        """
+        super().__init__(
+            self,
+            world,
+            interaction,
+            selector,
+            activity_to_groups,
+            time_config,
+            seed,
+            leisure,
+            min_age_home_alone,
+            stay_at_home_complacency,
+            policies,
+            save_path,
+            output_filename,
+            light_logger,
+            )
+        
+    def kid_drags_guardian(
+        self, kid: "Person", guardian: "Person", activities: List[str]
+    ):
+        # not available in box
+        pass
+
+    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
+        # not available in box
+        pass
+
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
+        # not available in box
+        pass
