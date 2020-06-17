@@ -1,7 +1,7 @@
 title: SI model 
 
 time:
-  total_days: 50 
+  total_days: 7
   step_duration: 
       weekday:
           0: 12 
