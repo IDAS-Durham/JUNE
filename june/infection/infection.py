@@ -6,7 +6,7 @@ import yaml
 from june import paths
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.health_information import HealthInformation
-from june.infection.symptoms_trajectory import SymptomsTrajectory
+from june.infection.symptoms import Symptoms
 from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
@@ -102,7 +102,7 @@ class InfectionSelector:
 
     def select_symptoms(self, person):
         health_index = self.health_index_generator(person)
-        return SymptomsTrajectory(health_index=health_index)
+        return Symptoms(health_index=health_index)
 
 
 class Infection:
