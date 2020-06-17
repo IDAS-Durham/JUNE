@@ -48,11 +48,6 @@ def configs(pytestconfig):
     return pytestconfig.getoption("configs")
 
 
-@pytest.fixture(name="symptoms_healthy", scope="session")
-def create_symptoms_healthy():
-    return sym.SymptomsHealthy()
-
-
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
     return tmaker.TrajectoryMakers.from_file()
