@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from june.demography import person
-from june.infection import Infection, InfectionSelector, SymptomsType, TransmissionType
+from june.infection import Infection, InfectionSelector, TransmissionType
 from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission_xnexp as transxnexp
 from june.infection.health_information import HealthInformation
@@ -44,8 +44,8 @@ class TestInfection:
                               symptoms=symptoms)
 
         severity_before_update = infection.symptoms.severity
-        infection.update_at_time(time=0.2)
-        assert infection.last_time_updated == 0.2
+        infection.update_at_time(time=20.0)
+        assert infection.last_time_updated == 20.0
         assert infection.symptoms.severity != severity_before_update
         assert infection.infection_probability == transmission.probability
 
@@ -53,7 +53,6 @@ class TestInfection:
 class TestInfectionSelector:
     def test__defaults_when_no_filename_is_given(self):
         selector = InfectionSelector.from_file()
-        assert selector.stype == SymptomsType.trajectories
         assert selector.ttype == TransmissionType.xnexp
         assert selector.incubation_time == 2.6
         assert selector.transmission_N == 1.
@@ -62,9 +61,7 @@ class TestInfectionSelector:
 
     def test__constant_filename(self):
         selector = InfectionSelector.from_file(constant_config)
-        assert selector.stype == SymptomsType.constant
         assert selector.ttype == TransmissionType.constant
-        assert selector.recovery_rate == 0.2
         assert selector.transmission_probability == 0.3
 
     def test__lognormal_in_maxprob(self):

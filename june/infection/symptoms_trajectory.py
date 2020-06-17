@@ -5,6 +5,10 @@ from june.infection.trajectory_maker import TrajectoryMakers
 
 
 class SymptomsTrajectory(Symptoms):
+    @property
+    def severity(self):
+        return self.trajectory[self.stage][1]
+
     def __init__(self, health_index=None):
         super().__init__(health_index=health_index)
         self.trajectory = None
@@ -22,6 +26,8 @@ class SymptomsTrajectory(Symptoms):
         return SymptomTag(index)
 
     def update_severity_from_delta_time(self, delta_time):
+        print(self.trajectory)
+        print(self.stage)
         if delta_time > self.trajectory[self.stage+1][0]:
             self.stage += 1
             self.tag = self.trajectory[self.stage][1]
