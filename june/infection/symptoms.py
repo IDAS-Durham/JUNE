@@ -1,36 +1,9 @@
 import random
-import sys
-from enum import IntEnum
 
-import autofit as af
+import numpy as np
 
-
-class SymptomTag(IntEnum):
-    """
-    A tag for the symptoms exhibited by a person.
-
-    Higher numbers are more severe.
-    0 - 5 correspond to indices in the health index array.
-    """
-
-    recovered = -3
-    healthy = -2
-    exposed = -1
-    asymptomatic = 0
-    influenza = 1
-    pneumonia = 2
-    hospitalised = 3
-    intensive_care = 4
-    dead = 5
-
-    @classmethod
-    def from_string(cls, string: str) -> "SymptomTag":
-        for item in SymptomTag:
-            if item.name == string:
-                return item
-        raise AssertionError(
-            f"{string} is not the name of a SymptomTag"
-        )
+from june.infection.symptom_tag import SymptomTag
+from june.infection.trajectory_maker import TrajectoryMakers
 
 
 class Symptoms:
@@ -38,19 +11,24 @@ class Symptoms:
         self.health_index = list() if health_index is None else health_index
         self.tag = SymptomTag.exposed
         self.max_severity = random.random()
-
-    def update_severity_from_delta_time(self, time):
-        raise NotImplementedError()
+        self.trajectory = None
+        self.update_trajectory()
+        self.stage = 0
+        self.tag = self.trajectory[self.stage][1]
 
     def is_recovered(self):
         return self.tag == SymptomTag.recovered
 
-    @classmethod
-    def object_from_config(cls):
-        """
-        Loads the default Symptoms class from the general.ini config file and returns the class 
-        as object (not as an instance). This is used to set up the epidemiology model in world.py 
-        via configs if an input is not provided.
-        """
-        classname_str = af.conf.instance.general.get("epidemiology", "symptoms_class", str)
-        return getattr(sys.modules[__name__], classname_str)
+    def update_trajectory(self):
+        trajectory_maker = TrajectoryMakers.from_file()
+        maxtag = self.max_tag()
+        self.trajectory = trajectory_maker[maxtag]
+
+    def max_tag(self):
+        index = np.searchsorted(self.health_index, self.max_severity)
+        return SymptomTag(index)
+
+    def update_severity_from_delta_time(self, delta_time):
+        if delta_time > self.trajectory[self.stage + 1][0]:
+            self.stage += 1
+            self.tag = self.trajectory[self.stage][1]

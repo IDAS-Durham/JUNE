@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+import june.infection.symptoms
 from june.demography import person
 from june.infection import Infection, InfectionSelector, TransmissionType
 from june.infection import symptoms_trajectory as symtraj
@@ -23,7 +24,7 @@ class TestInfection:
 
         assert victim.health_information.infection.start_time == 0.2
         assert isinstance(victim.health_information.infection.symptoms,
-                          symtraj.SymptomsTrajectory)
+                          june.infection.symptoms.Symptoms)
         # assert person.health_information.infection.symptoms.recovery_rate == 0.2
         assert isinstance(victim.health_information.infection.transmission,
                           transxnexp.TransmissionXNExp)

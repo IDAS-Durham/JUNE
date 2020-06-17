@@ -5,6 +5,7 @@ import numba as nb
 import numpy as np
 import pytest
 
+import june.infection.symptoms
 import june.interaction as inter
 from june import paths
 from june.demography.geography import Geography
@@ -60,7 +61,7 @@ def create_symptoms(symptoms_trajectories):
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")
 def create_symptoms_trajectories():
-    return strans.SymptomsTrajectory(
+    return june.infection.symptoms.Symptoms(
         health_index=[0.1, 0.2, 0.3, 0.4, 0.5]
     )
 

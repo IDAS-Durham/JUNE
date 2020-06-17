@@ -1,4 +1,4 @@
-from june.infection.symptoms import SymptomTag
+from june.infection.symptom_tag import SymptomTag
 
 
 class HealthInformation:

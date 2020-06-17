@@ -7,8 +7,7 @@ from june.demography import Demography
 from june.demography.geography import Geography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
-from june.infection import InfectionSelector
-from june.infection import SymptomTag
+from june.infection import InfectionSelector, SymptomTag
 from june.interaction import ContactAveraging
 from june.simulator import Simulator
 from june.world import generate_world_from_geography
