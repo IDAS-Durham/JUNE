@@ -31,7 +31,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 @pytest.fixture(name="world", scope="module")
 def create_world():
     geography = Geography.from_file(
-        {"super_area": ["E00088544", "E02002560", "E02002559"]}
+        {"super_area": ["E02003282", "E02002560", "E02002559"]}
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
