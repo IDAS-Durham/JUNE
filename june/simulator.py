@@ -493,7 +493,7 @@ class Simulator:
                 self.recover(person, time)
             elif health_information.should_be_in_hospital:
                 self.hospitalise_the_sick(person, previous_tag)
-            elif health_information.is_dead and not self.world.box_mode:
+            elif health_information.is_dead:
                 self.bury_the_dead(person, time)
         if self.logger:
             self.logger.log_infected(
