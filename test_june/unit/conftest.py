@@ -1,39 +1,41 @@
+# set seed
+import random
+
+import numba as nb
+import numpy as np
 import pytest
 
+import june.infection.symptoms
 import june.interaction as inter
-import numba as nb
-from june import World
-from june.world import generate_world_from_geography
 from june import paths
-from june.demography import Demography
 from june.demography.geography import Geography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
 from june.infection import Infection
 from june.infection import InfectionSelector
 from june.infection import infection as infect
-from june.infection import symptoms as sym
-from june.infection import symptoms_trajectory as strans
 from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
-from june.simulator import Simulator
+from june.simulator import Simulator, SimulatorBox
+from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
-# set seed
-import random
-import numpy as np
+
 
 @pytest.fixture(autouse=True)
 def set_random_seed(seed=999):
     """
     Sets global seeds for testing in numpy, random, and numbaized numpy.
     """
-    @nb.njit( cache=True)
+
+    @nb.njit(cache=True)
     def set_seed_numba(seed):
         return np.random.seed(seed)
+
     np.random.seed(seed)
     set_seed_numba(seed)
-    random.seed(seed) 
+    random.seed(seed)
     return
+
 
 @pytest.fixture()
 def data(pytestconfig):
@@ -45,29 +47,19 @@ def configs(pytestconfig):
     return pytestconfig.getoption("configs")
 
 
-@pytest.fixture(name="symptoms", scope="session")
-def create_symptoms():
-    return sym.SymptomsGaussian(health_index=[], mean_time=1.0, sigma_time=3.0)
-
-
-@pytest.fixture(name="symptoms_constant", scope="session")
-def create_symptoms_constant():
-    return sym.SymptomsConstant()
-
-
-@pytest.fixture(name="symptoms_healthy", scope="session")
-def create_symptoms_healthy():
-    return sym.SymptomsHealthy()
-
-
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
     return tmaker.TrajectoryMakers.from_file()
 
 
+@pytest.fixture(name="symptoms", scope="session")
+def create_symptoms(symptoms_trajectories):
+    return symptoms_trajectories
+
+
 @pytest.fixture(name="symptoms_trajectories", scope="session")
 def create_symptoms_trajectories():
-    return strans.SymptomsTrajectory(
+    return june.infection.symptoms.Symptoms(
         health_index=[0.1, 0.2, 0.3, 0.4, 0.5]
     )
 
@@ -85,11 +77,6 @@ def create_infection(transmission, symptoms):
 @pytest.fixture(name="infection_constant", scope="session")
 def create_infection_constant(transmission, symptoms_constant):
     return Infection(transmission, symptoms_constant)
-
-
-@pytest.fixture(name="infection_healthy", scope="session")
-def create_infection_healthy(transmission, symptoms_healthy):
-    return Infection(transmission, symptoms_healthy)
 
 
 @pytest.fixture(name="interaction", scope="session")
@@ -133,13 +120,14 @@ def create_box_world():
 
 
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(request, world_box, interaction, infection_healthy):
+def create_simulator_box(world_box, interaction):
     selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
     config_file = paths.configs_path / "config_boxmode_example.yaml"
     selector = InfectionSelector.from_file(selector_file)
-    return Simulator.from_file(
+    return SimulatorBox.from_file(
         world_box, interaction, selector, config_filename=config_file
     )
+
 
 @pytest.fixture(name="world_visits", scope="session")
 def make_super_areas():
