@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 import time
 
-from june.demography import Person
+from june.demography import Person, Activities
 from june.groups import Group
 from june.groups.leisure import leisure
 from june.infection.infection import InfectionSelector
@@ -447,6 +447,7 @@ class Simulator:
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
+        person.subgroups = Activities(None, None, None, None, None, None, None)
 
     def recover(self, person: "Person", time: float):
         """
