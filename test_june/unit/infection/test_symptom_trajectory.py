@@ -1,9 +1,9 @@
 import pytest
 
+import june.infection.symptom_tag
 from june.demography.person import Person
-from june.infection import infection as infect
+from june.infection import infection as infect, SymptomTag
 from june.infection import symptoms as sym
-from june.infection.symptoms import SymptomTag
 from june.infection.trajectory_maker import (
     Stage, CompletionTime, ConstantCompletionTime, ExponentialCompletionTime,
     TrajectoryMaker,
@@ -134,13 +134,13 @@ class TestTrajectoryMaker:
             SymptomTag.influenza
         ]
         infected = influenza_trajectory.stages[0]
-        assert infected.symptoms_tag == sym.SymptomTag.exposed
+        assert infected.symptoms_tag == june.infection.symptom_tag.SymptomTag.exposed
         assert infected.completion_time.a == 2.29
         assert infected.completion_time.b == 19.05
         assert infected.completion_time.scale == 39.8
 
         recovered = influenza_trajectory.stages[-1]
-        assert recovered.symptoms_tag == sym.SymptomTag.recovered
+        assert recovered.symptoms_tag == june.infection.symptom_tag.SymptomTag.recovered
         assert recovered.completion_time.value == 0.0
 
     def test_most_severe_symptoms(self, trajectories):
@@ -148,26 +148,26 @@ class TestTrajectoryMaker:
             assert symptom_tag == trajectory.most_severe_symptoms
 
 
-class TestSymptomsTrajectory:
+class TestSymptoms:
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
-            (0.0, sym.SymptomTag.exposed),
-            (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
+            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
+            (pytest.approx(5.1, rel=2.), june.infection.symptom_tag.SymptomTag.influenza),
             # (pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(8, rel=0.5), sym.SymptomTag.intensive_care),
-            (pytest.approx(15, rel=0.5), sym.SymptomTag.dead)
+            (pytest.approx(8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(15, rel=0.5), june.infection.symptom_tag.SymptomTag.dead)
         ]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
-            (0.0, sym.SymptomTag.exposed),
-            (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
-            (pytest.approx(15, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(17, rel=0.5), sym.SymptomTag.intensive_care),
-            (pytest.approx(35, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(55, rel=0.5), sym.SymptomTag.recovered)
+            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
+            (pytest.approx(5.1, rel=2.), june.infection.symptom_tag.SymptomTag.influenza),
+            (pytest.approx(15, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(17, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(35, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(55, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
 
     def test__symptoms__progression(self):
@@ -177,23 +177,23 @@ class TestSymptomsTrajectory:
         fixed_severity = 0.8
         infection.symptoms.max_severity = fixed_severity
         max_tag = infection.symptoms.max_tag()
-        assert max_tag == sym.SymptomTag.hospitalised
+        assert max_tag == june.infection.symptom_tag.SymptomTag.hospitalised
         infection.symptoms.trajectory = selector.trajectory_maker[max_tag]
         assert infection.symptoms.trajectory == [
-            (0.0, sym.SymptomTag.exposed),
-            (pytest.approx(5, 2.5), sym.SymptomTag.influenza),
-            (pytest.approx(20, rel=5), sym.SymptomTag.hospitalised),
-            (pytest.approx(30, rel=5), sym.SymptomTag.recovered)
+            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
+            (pytest.approx(5, 2.5), june.infection.symptom_tag.SymptomTag.influenza),
+            (pytest.approx(20, rel=5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(30, rel=5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
         hospitalised_time = infection.symptoms.trajectory[2][0]
 
         infection.update_at_time(float(1.))
-        assert infection.symptoms.tag == sym.SymptomTag.exposed
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
         infection.update_at_time(float(1.))
-        assert infection.symptoms.tag == sym.SymptomTag.exposed
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
         infection.update_at_time(float(6.))
-        assert infection.symptoms.tag == sym.SymptomTag.influenza
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.influenza
         infection.update_at_time(hospitalised_time + 6)
-        assert infection.symptoms.tag == sym.SymptomTag.hospitalised
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.hospitalised
         infection.update_at_time(float(50.))
-        assert infection.symptoms.tag == sym.SymptomTag.recovered
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.recovered
