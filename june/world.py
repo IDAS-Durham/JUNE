@@ -357,21 +357,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if world.commutehubs is not None and world.commutecities is not None:
         first_hub_idx = world.commutehubs[0].id
         first_person_idx = world.people[0].id
-        # for hub in world.commutehubs:
-        #    people_in_hub = [
-        #        world.people[person_id - first_person_idx] for person_id in hub.people
-        #    ]
-        #    hub.subgroups[0].people = people_in_hub
         for city in world.commutecities:
             commute_hubs = [
                 world.commutehubs[idx - first_hub_idx] for idx in city.commutehubs
             ]
             city.commutehubs = commute_hubs
-            #            for hub in city.commutehubs:
-            #                people_in_hub = [world.people[idx-first_person_idx] for idx in hub.people]
-            #                for person in people_in_hub:
-            #                    hub.add(person)
-            #
             commute_internal_people = [
                 world.people[idx - first_person_idx] for idx in city.commute_internal
             ]
