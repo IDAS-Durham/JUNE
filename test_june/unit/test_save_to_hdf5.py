@@ -201,7 +201,7 @@ class TestSaveHospitals:
                 assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
-            assert hospital.trust_code == hospital2.trust_code.decode('ascii')
+            assert hospital.trust_code == hospital2.trust_code
 
 
 class TestSaveSchools:
