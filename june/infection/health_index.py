@@ -192,8 +192,8 @@ class HealthIndexGenerator:
         ICU_deaths_female=ratio_ICU_female*(1-Survival_ICU)
         ICU_deaths_male=ratio_ICU_male*(1-Survival_ICU)
         
-        self.Prob_lists[0,:,7]=ICU_deaths_female
-        self.Prob_lists[1,:,7]=ICU_deaths_male
+        #self.Prob_lists[0,:,7]=ICU_deaths_female
+        #self.Prob_lists[1,:,7]=ICU_deaths_male
         
         #provavility of Survinving  Hospital
  
