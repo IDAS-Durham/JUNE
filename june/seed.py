@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 from collections import Counter
 from june import paths
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from june.demography.geography import SuperAreas
 from june.infection.infection import InfectionSelector
 from june.infection.health_index import HealthIndexGenerator
@@ -19,9 +19,10 @@ class Seed:
         self,
         super_areas: SuperAreas,
         selector: InfectionSelector,
-        n_cases_region: pd.DataFrame = None,
-        msoa_region: pd.DataFrame = None,
-        dates: List["datetime"] = None,
+        n_cases_region: Optional[pd.DataFrame] = None,
+        msoa_region: Optional[pd.DataFrame] = None,
+        dates: Optional[List["datetime"]] = None,
+        seed_strength: float = 1.,
     ):
         """
         Class to initialize the infection 
@@ -48,6 +49,7 @@ class Seed:
         self.dates = dates
         self.min_date = min(self.dates) if self.dates else None
         self.max_date = max(self.dates) if self.dates else None
+        self.seed_strength = seed_strength
         self.dates_seeded = []
 
     @classmethod
@@ -57,6 +59,7 @@ class Seed:
         selector: "InfectionSelector",
         n_cases_region_filename: str = default_n_cases_region_filename,
         msoa_region_filename: str = default_msoa_region_filename,
+        seed_strength: float = 1.
     ) -> "Seed":
         """
         Initialize Seed from file containing the number of cases per region, and mapping
@@ -74,6 +77,8 @@ class Seed:
             path to csv file with n cases per region.
         msoa_region:
             path to csv file containing mapping between super areas and regions.
+        seed_strengh:
+            seed only a ```seed_strength``` percent of the original cases
         
         Returns
         -------
@@ -89,7 +94,8 @@ class Seed:
 
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
         return Seed(
-            super_areas, selector, n_cases_region, msoa_region.drop_duplicates(), dates
+            super_areas, selector, n_cases_region, msoa_region.drop_duplicates(), dates,
+            seed_strength=seed_strength
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
@@ -175,7 +181,7 @@ class Seed:
             ):
                 super_areas = self._filter_region(region=region)
                 if len(super_areas) > 0:
-                    self.infect_super_areas(super_areas, n_cases)
+                    self.infect_super_areas(super_areas, int(self.seed_strength*n_cases))
             self.dates_seeded.append(date.date())
 
     def unleash_virus(self, n_cases, box_mode=False):
@@ -186,4 +192,4 @@ class Seed:
         if box_mode:
             self.infect_super_area(self.super_areas.members[0], n_cases)
         else:
-            self.infect_super_areas(self.super_areas.members, n_cases)
+            self.infect_super_areas(self.super_areas.members, self.seed_strength*n_cases)
