@@ -50,6 +50,7 @@ from pytest import fixture
 def make_geography():
     geography = Geography.from_file(
         {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
+        #{"super_area": ["E02003282", "E02002559"]}
     )
     return geography
 
@@ -296,6 +297,7 @@ class TestSaveCommute:
                 city.commutehubs, city_recovered.commutehubs
             ):
                 assert commute_hub.id == commute_hub_recovered
+
             for commute_internal, commute_internal_recovered in zip(
                 city.commute_internal, city_recovered.commute_internal
             ):
@@ -387,6 +389,16 @@ class TestSaveWorld:
             assert company1.super_area.id == company2.super_area.id
 
     def test__commute(self, world_h5, world_h5_loaded):
+        for city1, city2 in zip(world_h5.commutecities, world_h5_loaded.commutecities):
+            assert city1.city == city2.city
+            for hub1, hub2 in zip(city1.commutehubs, city2.commutehubs):
+                assert hub1.id == hub2.id
+
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
-            for person1, person2 in zip(hub1.people, hub2.people):
-                assert person1.id == person2
+            people_in_hub1 = [person.id for person in hub1.people]
+            people_in_hub2 = [person.id for person in hub2.people]
+            if len(people_in_hub1) == 0 or len(people_in_hub2) == 0:
+                assert len(people_in_hub2) == 0
+                assert len(people_in_hub1) == 0
+            else:
+                assert (np.sort(people_in_hub1) == np.sort(people_in_hub2)).all()
