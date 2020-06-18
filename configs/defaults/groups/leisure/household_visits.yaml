@@ -1,9 +1,9 @@
 male_age_probabilities:
-  0-64: 1.2
-  65-100: 0.24
+  0-64: 0.54
+  65-100: 0.27
 female_age_probabilities:
-  0-64: 1.2
-  65-100: 0.24
+  0-64: 0.54
+  65-100: 0.27
 weekend_boost: 1
 drags_household_probability: 0.5
 # source
@@ -13,3 +13,6 @@ drags_household_probability: 0.5
 # we assume that each person with a relative in a households has
 # a 7% probability of visiting a relative there.
 # This gives a weekly probability of 38% and 89% monthly
+# assuming 3 hours of leisure a day, we have
+# 1 - exp(-lambda * 3 hours * 7 days a week) = 0.38
+# -> lambda = 1/21 * - log(1-0.38) = 0.0227 / hour -> 0.54 / day
