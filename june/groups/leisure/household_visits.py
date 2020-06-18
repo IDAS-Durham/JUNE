@@ -77,6 +77,8 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                 for _ in range(households_to_link_n):
                     house_idx = np.random.randint(0, len(households_super_area))
                     house = households_super_area[house_idx]
+                    if house.id == household.id:
+                        continue
                     if len(house.people) == 0:
                         continue
                     person_idx = np.random.randint(len(house.people))
@@ -87,7 +89,8 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         relatives = person.residence.group.relatives_in_households
         if relatives is None:
             return None
-        return relatives[np.random.randint(0, len(relatives))].residence.group
+        alive_relatives = [relative for relative in relatives if relative.dead is False]
+        return alive_relatives[np.random.randint(0, len(alive_relatives))].residence.group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
