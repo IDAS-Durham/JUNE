@@ -13,7 +13,7 @@ from june.infection import Infection
 from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.infection.infection import InfectionSelector
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.policy import Policy, Policies
 from june.simulator import Simulator
@@ -38,6 +38,7 @@ def create_world():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
+    geography.univeristies = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
         geography, include_households=True, include_commute=True
     )
@@ -46,7 +47,6 @@ def create_world():
     world.groceries = Groceries.for_super_areas(
         world.super_areas, venues_per_capita=1 / 500
     )
-    world.initialise_commuting()
     world.cemeteries = Cemeteries()
     return world
 

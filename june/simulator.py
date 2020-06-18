@@ -531,8 +531,6 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-                print("cemetery")
-                print(len(cemetery.people))
         sim_logger.info(
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
@@ -561,9 +559,6 @@ class Simulator:
                 )
                 n_people += group.size
                 n_people_group += group.size
-            print(group_type)
-            print(n_people)
-        different_groups = []
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
