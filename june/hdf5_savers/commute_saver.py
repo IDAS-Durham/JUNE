@@ -128,16 +128,11 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         commute_hubs_dset = f.create_group("commute_hubs")
         ids = []
         cities = []
-        #people_list = []
         commute_units_list = []
         for hub in commute_hubs:
             ids.append(hub.id)
             cities.append(hub.city)
             commute_units = []
-            #people = []
-            #for person in hub.people:
-            #    people.append(person.id)
-            #people_list.append(np.array(people, dtype=np.int))
             for commute_unit in hub.commuteunits:
                 commute_units.append(commute_unit.id)
             commute_units_list.append(np.array(commute_units, dtype=np.int))
@@ -145,10 +140,8 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         ids = np.array(ids, dtype=np.int)
         cities = np.array(cities, dtype="S20")
         commute_units_list = np.array(commute_units_list, dtype=dt)
-        #people_list = np.array(people_list, dtype=dt)
         commute_hubs_dset.attrs["n_commute_hubs"] = n_hubs
         commute_hubs_dset.create_dataset("id", data=ids)
-        #commute_hubs_dset.create_dataset("people", data=people_list)
         commute_hubs_dset.create_dataset("city_names", data=cities)
         commute_hubs_dset.create_dataset("commute_units", data=commute_units_list)
 
@@ -165,7 +158,6 @@ def load_commute_hubs_from_hdf5(file_path: str):
         commute_hubs_list = list()
         n_commute_hubs = commute_hubs.attrs["n_commute_hubs"]
         ids = commute_hubs["id"]
-        #people = commute_hubs["people"]
         city_names = commute_hubs["city_names"]
         commute_units = commute_hubs["commute_units"]
         commute_units_list = []
@@ -182,8 +174,6 @@ def load_commute_hubs_from_hdf5(file_path: str):
                 cunit.id = unit_id
                 commute_units_list.append(cunit)
                 commute_hub.commuteunits.append(cunit)
-            #for person_id in people[k]:
-            #    commute_hub.subgroups[0].people.append(person_id)
             commute_hubs_list.append(commute_hub)
     ch = CommuteHubs(None)
     ch.members = commute_hubs_list
