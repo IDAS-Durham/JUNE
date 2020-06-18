@@ -120,7 +120,7 @@ class HealthIndexGenerator:
              The probability P for all ages in the array "age".
         """
         C, C1, C2, C3 = poli
-        age[age > 85.0] = 85.0
+        age[age > 80.0] = 80.0
         return 10 ** (
                 C + C1 * age + C2 * age ** 2 + C3 * age ** 3
         )  # The coefficients are a fit to the logarithmic model
@@ -157,9 +157,9 @@ class HealthIndexGenerator:
         ratio_ICU_female=self.model(ages,self.Poli_ICU[0])#Going to ICU
         ratio_Death_female=self.model(ages,self.Poli_Deaths[0])#Dying in Hospital (ICU+Hosp)
         
-        ratio_Hosp_male=self.model(ages,self.Poli_Hosp[0])#Going to the Hospital but not to ICU
-        ratio_ICU_male=self.model(ages,self.Poli_ICU[0])#Going to ICU
-        ratio_Death_male=self.model(ages,self.Poli_Deaths[0])#Dying in Hospital (ICU+Hosp)
+        ratio_Hosp_male=self.model(ages,self.Poli_Hosp[1])#Going to the Hospital but not to ICU
+        ratio_ICU_male=self.model(ages,self.Poli_ICU[1])#Going to ICU
+        ratio_Death_male=self.model(ages,self.Poli_Deaths[1])#Dying in Hospital (ICU+Hosp)
         
         #Probability of being simptomatic but not going to hospital
         No_Hosp_female=1.0-self.Asimpto_ratio-ratio_Hosp_female-ratio_ICU_female
@@ -192,8 +192,8 @@ class HealthIndexGenerator:
         ICU_deaths_female=ratio_ICU_female*(1-Survival_ICU)
         ICU_deaths_male=ratio_ICU_male*(1-Survival_ICU)
         
-        #self.Prob_lists[0,:,7]=ICU_deaths_female
-        #self.Prob_lists[1,:,7]=ICU_deaths_male
+        self.Prob_lists[0,:,7]=ICU_deaths_female
+        self.Prob_lists[1,:,7]=ICU_deaths_male
         
         #provavility of Survinving  Hospital
  
@@ -223,11 +223,12 @@ class HealthIndexGenerator:
                Exces_Death_female[Boolean]=Exces_Deaths[Exces_Deaths_index][1]
                Exces_Death_male[Boolean]=Exces_Deaths[Exces_Deaths_index][2]
         
-        Exces_Death_female[np.arange(0,121,1)>=80]=Exces_Deaths[len(Exces_Deaths)-1][1]
-        Exces_Death_male[np.arange(0,121,1)>=80]=Exces_Deaths[len(Exces_Deaths)-1][2] 
         
-        Deaths_at_home_female=ratio_Death_female*Exces_Death_female
-        Deaths_at_home_male=ratio_Death_male*Exces_Death_male
+        Exces_Death_female[ages>Exces_Deaths[-1][0]]=Exces_Deaths[-1][1]
+        Exces_Death_male[ages>Exces_Deaths[-1][0]]=Exces_Deaths[-1][2] 
+        
+        Deaths_at_home_female=ratio_Death_female*(1-Exces_Death_female)
+        Deaths_at_home_male=ratio_Death_male*(1-Exces_Death_male)
         
         self.Prob_lists[0,:,5]=Deaths_at_home_female
         self.Prob_lists[1,:,5]=Deaths_at_home_male
