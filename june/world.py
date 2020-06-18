@@ -16,7 +16,7 @@ from june.distributors import (
     CareHomeDistributor,
     WorkerDistributor,
     CompanyDistributor,
-    UniversityDistributor
+    UniversityDistributor,
 )
 from june.demography.geography import Geography, Areas
 from june.groups import *
@@ -95,7 +95,6 @@ class World:
             self.households = household_distributor.distribute_people_and_households_to_areas(
                 self.areas
             )
-
 
         if self.schools is not None:
             school_distributor = SchoolDistributor(self.schools)
@@ -308,8 +307,8 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "school": "schools",
         "household": "households",
         "care_home": "care_homes",
-        "commute_hub" : "commutehubs",
-        "university" : "universities"
+        "commute_hub": "commutehubs",
+        "university": "universities",
     }
     # restore areas -> super_areas
     for area in world.areas:
@@ -357,18 +356,21 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if world.commutehubs is not None and world.commutecities is not None:
         first_hub_idx = world.commutehubs[0].id
         first_person_idx = world.people[0].id
+        # for hub in world.commutehubs:
+        #    people_in_hub = [
+        #        world.people[person_id - first_person_idx] for person_id in hub.people
+        #    ]
+        #    hub.subgroups[0].people = people_in_hub
         for city in world.commutecities:
-            city.commutehubs = list(city.commutehubs)
-            for i in range(0, len(city.commutehubs)):
-                city.commutehubs[i] = world.commutehubs[
-                    city.commutehubs[i] - first_hub_idx
-                ]
-
-            commute_internal_people = []
-            for i in range(0, len(city.commute_internal)):
-                commute_internal_people.append(
-                    world.people[city.commute_internal[i] - first_person_idx]
-                )
+            commute_hubs = [world.commutehubs[idx-first_hub_idx] for idx in city.commutehubs]
+            city.commutehubs = commute_hubs
+            #            for hub in city.commutehubs:
+            #                people_in_hub = [world.people[idx-first_person_idx] for idx in hub.people]
+            #                for person in people_in_hub:
+            #                    hub.add(person)
+            #
+            commute_internal_people = [
+                world.people[idx - first_person_idx] for idx in city.commute_internal
+            ]
             city.commute_internal = commute_internal_people
-
     return world
