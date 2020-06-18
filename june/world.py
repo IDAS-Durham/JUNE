@@ -295,11 +295,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if "universities" in f_keys:
         world.universities = load_universities_from_hdf5(file_path, chunk_size)
     if "commute_cities" in f_keys:
-        world.commutecities = load_commute_cities_from_hdf5(file_path)
-        world.commutecityunits = CommuteCityUnits(world.commutecities.members)
+        world.commutecities, world.commutecityunits = load_commute_cities_from_hdf5(
+            file_path
+        )
     if "commute_hubs" in f_keys:
-        world.commutehubs = load_commute_hubs_from_hdf5(file_path)
-        world.commuteunits = CommuteUnits(world.commutehubs.members)
+        world.commutehubs, world.commuteunits = load_commute_hubs_from_hdf5(file_path)
 
     spec_mapper = {
         "hospital": "hospitals",
@@ -362,7 +362,9 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         #    ]
         #    hub.subgroups[0].people = people_in_hub
         for city in world.commutecities:
-            commute_hubs = [world.commutehubs[idx-first_hub_idx] for idx in city.commutehubs]
+            commute_hubs = [
+                world.commutehubs[idx - first_hub_idx] for idx in city.commutehubs
+            ]
             city.commutehubs = commute_hubs
             #            for hub in city.commutehubs:
             #                people_in_hub = [world.people[idx-first_person_idx] for idx in hub.people]
