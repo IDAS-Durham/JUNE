@@ -47,7 +47,7 @@ class Simulator:
         leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies = Policies(),
+        policies=Policies(),
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
         light_logger: bool = False,
@@ -103,8 +103,7 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path,
-                    file_name = output_filename)
+            self.logger = Logger(save_path=save_path, file_name=output_filename)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -139,7 +138,7 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
-        policies = Policies(),
+        policies=Policies(),
         seed: "Seed" = None,
         leisure: "Leisure" = None,
         config_filename: str = default_config_filename,
@@ -171,7 +170,7 @@ class Simulator:
             selector,
             activity_to_groups,
             time_config,
-            policies = policies,
+            policies=policies,
             seed=seed,
             leisure=leisure,
             save_path=save_path,
@@ -306,28 +305,29 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-
         activities = self.apply_activity_hierarchy(activities)
-        #personal_closed_groups = self.policies.get_fully_closed_groups(
+        # personal_closed_groups = self.policies.get_fully_closed_groups(
         #    time=self.timer.now
-        #) + self.policies.get_partially_closed_groups(
+        # ) + self.policies.get_partially_closed_groups(
         #    person=person, time=self.timer.now
-        #)
-
+        # )
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person,
                     self.timer.duration,
                     self.timer.is_weekend,
-                    closed_groups=[]#personal_closed_groups,
+                    closed_groups=[],  # personal_closed_groups,
                 )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                #if subgroup.group.spec in personal_closed_groups:
+                # if subgroup.group.spec in personal_closed_groups:
                 #    continue
                 return subgroup
+        raise SimulatorError(
+            "Attention! Some people do not have an activity in this timestep."
+        )
 
     def kid_drags_guardian(
         self, kid: "Person", guardian: "Person", activities: List[str]
@@ -531,10 +531,24 @@ class Simulator:
         if not self.world.box_mode:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
-        sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
-        
-        if self.policies.social_distancing and self.policies.social_distancing_start <= self.timer.date < self.policies.social_distancing_end:
-            self.interaction.alpha_physical, self.interaction.beta = self.policies.social_distancing_policy(self.alpha_copy, self.beta_copy, self.timer.now)
+                print("cemetery")
+                print(len(cemetery.people))
+        sim_logger.info(
+            f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
+        )
+
+        if (
+            self.policies.social_distancing
+            and self.policies.social_distancing_start
+            <= self.timer.date
+            < self.policies.social_distancing_end
+        ):
+            (
+                self.interaction.alpha_physical,
+                self.interaction.beta,
+            ) = self.policies.social_distancing_policy(
+                self.alpha_copy, self.beta_copy, self.timer.now
+            )
         else:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
@@ -547,6 +561,9 @@ class Simulator:
                 )
                 n_people += group.size
                 n_people_group += group.size
+            print(group_type)
+            print(n_people)
+        different_groups = []
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -558,7 +575,7 @@ class Simulator:
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
-    def run(self, save=False):
+    def run(self):
         """
         Run simulation with n_seed initial infections
 
@@ -576,7 +593,9 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people, light_logger=self.light_logger)
+            self.logger.log_population(
+                self.world.people, light_logger=self.light_logger
+            )
             self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
@@ -585,6 +604,3 @@ class Simulator:
                 if (time >= self.seed.min_date) and (time <= self.seed.max_date):
                     self.seed.unleash_virus_per_region(time)
             self.do_timestep()
-        # Save the world
-        if save:
-            self.world.to_pickle("final_world.pickle")

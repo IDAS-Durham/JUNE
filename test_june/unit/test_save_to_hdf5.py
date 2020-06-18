@@ -50,7 +50,7 @@ from pytest import fixture
 def make_geography():
     geography = Geography.from_file(
         {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
-        #{"super_area": ["E02003282", "E02002559"]}
+        # {"super_area": ["E02003282", "E02002559"]}
     )
     return geography
 
@@ -289,8 +289,12 @@ class TestSaveGeography:
 class TestSaveCommute:
     def test__save_cities(self, world_h5):
         commute_cities = world_h5.commutecities
+        commute_city_units = world_h5.commutecityunits
         save_commute_cities_to_hdf5(commute_cities, "test.hdf5")
-        commute_cities_recovered = load_commute_cities_from_hdf5("test.hdf5")
+        (
+            commute_cities_recovered,
+            commute_city_units_recovered,
+        ) = load_commute_cities_from_hdf5("test.hdf5")
         for city, city_recovered in zip(commute_cities, commute_cities_recovered):
             assert city.id == city_recovered.id
             for commute_hub, commute_hub_recovered in zip(
@@ -308,11 +312,14 @@ class TestSaveCommute:
                 assert commute_city_unit.id == commute_city_unit_recovered.id
                 assert commute_city_unit.city == commute_city_unit_recovered.city
                 assert commute_city_unit.is_peak == commute_city_unit_recovered.is_peak
+        for ccu1, ccu2 in zip(commute_city_units, commute_city_units_recovered):
+            assert ccu1.id == ccu2.id
 
     def test__save_hubs(self, world_h5):
         commute_hubs = world_h5.commutehubs
+        commute_units = world_h5.commuteunits
         save_commute_hubs_to_hdf5(commute_hubs, "test.hdf5")
-        commute_hubs_recovered = load_commute_hubs_from_hdf5("test.hdf5")
+        commute_hubs_recovered, commute_units_recovered = load_commute_hubs_from_hdf5("test.hdf5")
         for hub, hub_recovered in zip(commute_hubs, commute_hubs_recovered):
             assert hub.id == hub_recovered.id
             assert hub.city == hub_recovered.city
@@ -322,6 +329,8 @@ class TestSaveCommute:
                 assert unit1.id == unit2.id
                 assert unit1.commutehub_id == unit2.commutehub_id
                 assert unit1.city == unit2.city
+        for cu1, cu2 in zip(commute_units, commute_units_recovered):
+            assert cu1.id == cu2.id
 
 
 class TestSaveUniversities:
