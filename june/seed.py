@@ -22,7 +22,7 @@ class Seed:
         n_cases_region: Optional[pd.DataFrame] = None,
         msoa_region: Optional[pd.DataFrame] = None,
         dates: Optional[List["datetime"]] = None,
-        seed_strength: float = 1.,
+        seed_strength: float = 1.0,
     ):
         """
         Class to initialize the infection 
@@ -59,7 +59,7 @@ class Seed:
         selector: "InfectionSelector",
         n_cases_region_filename: str = default_n_cases_region_filename,
         msoa_region_filename: str = default_msoa_region_filename,
-        seed_strength: float = 1.
+        seed_strength: float = 1.0,
     ) -> "Seed":
         """
         Initialize Seed from file containing the number of cases per region, and mapping
@@ -94,8 +94,12 @@ class Seed:
 
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
         return Seed(
-            super_areas, selector, n_cases_region, msoa_region.drop_duplicates(), dates,
-            seed_strength=seed_strength
+            super_areas,
+            selector,
+            n_cases_region,
+            msoa_region.drop_duplicates(),
+            dates,
+            seed_strength=seed_strength,
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
@@ -136,13 +140,12 @@ class Seed:
         """
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
-        weights = [len(super_area.people)/n_people_region for super_area in super_areas]
+        weights = [
+            len(super_area.people) / n_people_region for super_area in super_areas
+        ]
         chosen_super_areas = np.random.choice(
-                super_areas, 
-                size =n_cases, 
-                replace=True, 
-                p=weights
-                )
+            super_areas, size=n_cases, replace=True, p=weights
+        )
         n_cases_dict = Counter(chosen_super_areas)
         for super_area, n_cases_super_area in n_cases_dict.items():
             if super_area in self.super_areas.members:
@@ -181,7 +184,9 @@ class Seed:
             ):
                 super_areas = self._filter_region(region=region)
                 if len(super_areas) > 0:
-                    self.infect_super_areas(super_areas, int(self.seed_strength*n_cases))
+                    self.infect_super_areas(
+                        super_areas, int(self.seed_strength * n_cases)
+                    )
             self.dates_seeded.append(date.date())
 
     def unleash_virus(self, n_cases, box_mode=False):
@@ -192,4 +197,6 @@ class Seed:
         if box_mode:
             self.infect_super_area(self.super_areas.members[0], n_cases)
         else:
-            self.infect_super_areas(self.super_areas.members, self.seed_strength*n_cases)
+            self.infect_super_areas(
+                self.super_areas.members, self.seed_strength * n_cases
+            )

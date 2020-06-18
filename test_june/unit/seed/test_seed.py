@@ -85,7 +85,10 @@ def test__n_infected_total(seed):
 
     n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
     np.testing.assert_allclose(
-        n_cases / n_people_region * len(super_areas[1].people), n_infected, atol=5, rtol=0
+        n_cases / n_people_region * len(super_areas[1].people),
+        n_infected,
+        atol=5,
+        rtol=0,
     )
 
 
@@ -117,6 +120,7 @@ def test__n_infected_total_region_seeds_only_once_per_day(selector,):
     )
     np.testing.assert_allclose(n_cases, n_infected, rtol=0.05)
 
+
 def test__seed_strength(selector,):
     geography = Geography.from_file(
         filter_key={"super_area": ["E02004940", "E02004935", "E02004936",]}
@@ -125,7 +129,9 @@ def test__seed_strength(selector,):
     for area in geography.areas:
         area.populate(demography)
 
-    seed = Seed.from_file(super_areas=geography.super_areas, selector=selector, seed_strength=0.2)
+    seed = Seed.from_file(
+        super_areas=geography.super_areas, selector=selector, seed_strength=0.2
+    )
     timer = Timer(initial_day="2020-03-01", total_days=15,)
     for time in timer:
         if time > timer.final_date:
@@ -143,4 +149,4 @@ def test__seed_strength(selector,):
         .sum(axis=1)
         .loc[0]
     )
-    np.testing.assert_allclose(0.2*n_cases, n_infected, rtol=0.05)
+    np.testing.assert_allclose(0.2 * n_cases, n_infected, rtol=0.05)
