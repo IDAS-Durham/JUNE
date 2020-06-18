@@ -1,27 +1,16 @@
-import pytest
 import random
-import numpy as np
 
-from june.demography.geography import Geography
-from june.demography import Demography
-from june.world import World, generate_world_from_geography
-from june.interaction import ContactAveraging
-from june.infection import InfectionSelector, Infection
-from june.infection import SymptomTag, SymptomsConstant
-from june.infection.transmission import TransmissionConstant
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    CareHomes,
-    Cemeteries,
-    Universities,
-)
-from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
-from june.simulator import Simulator
+import pytest
+
 from june import paths
-
+from june.demography import Demography
+from june.demography.geography import Geography
+from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Universities
+from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.infection import InfectionSelector, SymptomTag
+from june.interaction import ContactAveraging
+from june.simulator import Simulator
+from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
@@ -137,7 +126,6 @@ def test__get_subgroup_active(sim):
 
 
 def test__move_people_to_residence(sim):
-
     sim.move_people_to_active_subgroups(["residence"])
     for person in sim.world.people.members:
         assert person in person.residence.people
@@ -172,7 +160,6 @@ def test__move_people_to_leisure(sim):
 
 
 def test__move_people_to_primary_activity(sim):
-
     sim.move_people_to_active_subgroups(["primary_activity", "residence"])
     for person in sim.world.people.members:
         if person.primary_activity is not None:
@@ -193,7 +180,6 @@ def test__move_people_to_commute(sim):
 
 
 def test__kid_at_home_is_supervised(sim, health_index):
-
     kids_at_school = []
     for person in sim.world.people.members:
         if person.primary_activity is not None and person.age < sim.min_age_home_alone:
