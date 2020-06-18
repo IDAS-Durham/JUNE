@@ -6,7 +6,21 @@ import pytest
 
 from june import paths
 from june.demography.geography import Geography
-from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
+from june.demography import Demography
+from june.world import World, generate_world_from_geography
+from june.interaction import ContactAveraging
+from june.infection import Infection
+from june.infection.transmission import TransmissionConstant
+from june.infection.infection import InfectionSelector
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    CareHomes,
+    Cemeteries,
+    Universities,
+)
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.infection.infection import InfectionSelector
 from june.interaction import ContactAveraging
@@ -18,7 +32,7 @@ from june.world import generate_world_from_geography
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-        dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
@@ -33,6 +47,7 @@ def create_world():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
         geography, include_households=True, include_commute=True
     )
@@ -41,7 +56,6 @@ def create_world():
     world.groceries = Groceries.for_super_areas(
         world.super_areas, venues_per_capita=1 / 500
     )
-    world.initialise_commuting()
     world.cemeteries = Cemeteries()
     return world
 
@@ -70,7 +84,7 @@ def test__social_distancing(world, selector, interaction):
     policies = Policies.from_file([social_distance])
     interaction = ContactAveraging.from_file(selector=selector)
 
-    seed = Seed(world.super_areas, selector, )
+    seed = Seed(world.super_areas, selector,)
     n_cases = 10
     seed.unleash_virus(n_cases)  # play around with the initial number of cases
     leisure_instance = leisure.generate_leisure_for_config(
@@ -78,7 +92,12 @@ def test__social_distancing(world, selector, interaction):
     )
 
     simulator = Simulator.from_file(
-        world, interaction, selector, policies, config_filename=test_config, leisure=leisure_instance,
+        world,
+        interaction,
+        selector,
+        policies,
+        config_filename=test_config,
+        leisure=leisure_instance,
     )
     simulator.timer.reset()
     initial_betas = copy.deepcopy(simulator.interaction.beta)
@@ -95,11 +114,14 @@ def test__social_distancing(world, selector, interaction):
             for group in simulator.interaction.beta:
                 print(group)
                 if group != "household":
-                    assert simulator.interaction.beta[group] == initial_betas[group] * 0.5
+                    assert (
+                        simulator.interaction.beta[group] == initial_betas[group] * 0.5
+                    )
                 else:
                     assert simulator.interaction.beta[group] == initial_betas[group]
         else:
             assert simulator.interaction.beta == initial_betas
+
 
 # def test__close_schools_years(world, selector, interaction):
 #     start_date = 3

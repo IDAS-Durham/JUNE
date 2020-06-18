@@ -81,15 +81,3 @@ class Timer:
             self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
         return self.date
-
-
-if __name__ == "__main__":
-    time = Timer()
-    for i in range(8):
-        print(time.date)
-        print(time.now)
-        print(time.is_weekend)
-        print(time.day_of_week)
-        print(time.activities)
-        next(time)
-

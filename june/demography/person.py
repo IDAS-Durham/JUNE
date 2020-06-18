@@ -150,3 +150,17 @@ class Person(dataobject):
             return None
         else:
             return guardian
+
+    @property
+    def infection(self):
+        if self.health_information is None:
+            return None
+        else:
+            return self.health_information.infection
+
+    @property
+    def symptoms(self):
+        if self.health_information is None:
+            return None
+        else:
+            return self.health_information.infection.symptoms

@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 import time
 
-from june.demography import Person
+from june.demography import Person, Activities
 from june.groups import Group
 from june.groups.leisure import leisure
 from june.infection.infection import InfectionSelector
@@ -286,6 +286,7 @@ class Simulator:
 
         for person in self.world.people.members:
             person.busy = False
+            person.subgroups.leisure = None
 
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
@@ -304,14 +305,12 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-
         activities = self.apply_activity_hierarchy(activities)
         # personal_closed_groups = self.policies.get_fully_closed_groups(
         #    time=self.timer.now
         # ) + self.policies.get_partially_closed_groups(
         #    person=person, time=self.timer.now
         # )
-
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -326,6 +325,9 @@ class Simulator:
                 # if subgroup.group.spec in personal_closed_groups:
                 #    continue
                 return subgroup
+        raise SimulatorError(
+            "Attention! Some people do not have an activity in this timestep."
+        )
 
     def kid_drags_guardian(
         self, kid: "Person", guardian: "Person", activities: List[str]
@@ -445,6 +447,7 @@ class Simulator:
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
+        person.subgroups = Activities(None, None, None, None, None, None, None)
 
     def recover(self, person: "Person", time: float):
         """
@@ -525,7 +528,6 @@ class Simulator:
             if group not in ["household_visits", "care_home_visits"]
         ]
         n_people = 0
-        #if not self.world.box_mode:
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
         sim_logger.info(
@@ -568,7 +570,7 @@ class Simulator:
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
-    def run(self, save=False):
+    def run(self):
         """
         Run simulation with n_seed initial infections
 
@@ -597,9 +599,6 @@ class Simulator:
                 if (time >= self.seed.min_date) and (time <= self.seed.max_date):
                     self.seed.unleash_virus_per_region(time)
             self.do_timestep()
-        # Save the world
-        if save:
-            self.world.to_pickle("final_world.pickle")
 
 
 class SimulatorBox(Simulator):
