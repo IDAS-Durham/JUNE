@@ -116,3 +116,31 @@ def test__n_infected_total_region_seeds_only_once_per_day(selector,):
         .loc[0]
     )
     np.testing.assert_allclose(n_cases, n_infected, rtol=0.05)
+
+def test__seed_strength(selector,):
+    geography = Geography.from_file(
+        filter_key={"super_area": ["E02004940", "E02004935", "E02004936",]}
+    )
+    demography = Demography.for_geography(geography)
+    for area in geography.areas:
+        area.populate(demography)
+
+    seed = Seed.from_file(super_areas=geography.super_areas, selector=selector, seed_strength=0.2)
+    timer = Timer(initial_day="2020-03-01", total_days=15,)
+    for time in timer:
+        if time > timer.final_date:
+            break
+        if (time >= seed.min_date) and (time <= seed.max_date):
+            seed.unleash_virus_per_region(time)
+
+    n_infected = 0
+    for super_area in geography.super_areas:
+        for person in super_area.people:
+            if person.infected:
+                n_infected += 1
+    n_cases = (
+        seed.n_cases_region[seed.n_cases_region["region"] == "East of England"]
+        .sum(axis=1)
+        .loc[0]
+    )
+    np.testing.assert_allclose(0.2*n_cases, n_infected, rtol=0.05)
