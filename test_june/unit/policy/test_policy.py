@@ -1,24 +1,33 @@
-import pytest
-import random
-from pathlib import Path
-from june import paths
-from datetime import datetime
 import copy
+from datetime import datetime
+from pathlib import Path
 
+import pytest
+
+from june import paths
 from june.demography.geography import Geography
 from june.demography import Demography
 from june.world import World, generate_world_from_geography
 from june.interaction import ContactAveraging
 from june.infection import Infection
-from june.infection.symptoms import SymptomsConstant
 from june.infection.transmission import TransmissionConstant
 from june.infection.infection import InfectionSelector
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries, Universities
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    CareHomes,
+    Cemeteries,
+    Universities,
+)
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.infection.infection import InfectionSelector
+from june.interaction import ContactAveraging
 from june.policy import Policy, Policies
-from june.simulator import Simulator
 from june.seed import Seed
-
+from june.simulator import Simulator
+from june.world import generate_world_from_geography
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -50,6 +59,7 @@ def create_world():
     world.cemeteries = Cemeteries()
     return world
 
+
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
     selector = InfectionSelector.from_file(constant_config)
@@ -66,7 +76,6 @@ def create_interaction(selector):
 
 
 def test__social_distancing(world, selector, interaction):
-
     start_date = datetime(2020, 3, 10)
     end_date = datetime(2020, 3, 12)
     social_distance = Policy(
@@ -77,14 +86,19 @@ def test__social_distancing(world, selector, interaction):
 
     seed = Seed(world.super_areas, selector,)
     n_cases = 10
-    seed.unleash_virus(n_cases) # play around with the initial number of cases
+    seed.unleash_virus(n_cases)  # play around with the initial number of cases
     leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config
+        world=world, config_filename=test_config
     )
-    
+
     simulator = Simulator.from_file(
-    world, interaction, selector, policies, config_filename=test_config, leisure = leisure_instance,
-    )    
+        world,
+        interaction,
+        selector,
+        policies,
+        config_filename=test_config,
+        leisure=leisure_instance,
+    )
     simulator.timer.reset()
     initial_betas = copy.deepcopy(simulator.interaction.beta)
 
@@ -98,9 +112,11 @@ def test__social_distancing(world, selector, interaction):
         simulator.do_timestep()
         if simulator.timer.date >= start_date and simulator.timer.date < end_date:
             for group in simulator.interaction.beta:
-                print (group)
+                print(group)
                 if group != "household":
-                    assert simulator.interaction.beta[group] == initial_betas[group] * 0.5
+                    assert (
+                        simulator.interaction.beta[group] == initial_betas[group] * 0.5
+                    )
                 else:
                     assert simulator.interaction.beta[group] == initial_betas[group]
         else:

@@ -237,6 +237,7 @@ def generate_world_from_geography(
         world.hospitals = Hospitals.for_box_mode()
         world.people = _populate_areas(geography.areas, demography)
         world.boxes = Boxes([Box()])
+        world.cemeteries = Cemeteries()
         world.boxes.members[0].set_population(world.people)
         return world
     world.areas = geography.areas
