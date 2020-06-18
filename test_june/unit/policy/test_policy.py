@@ -38,7 +38,7 @@ def create_world():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
-    geography.univeristies = Universities.for_super_areas(geography.super_areas)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
         geography, include_households=True, include_commute=True
     )
