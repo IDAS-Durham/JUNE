@@ -189,7 +189,7 @@ class HealthIndexGenerator:
         """
         
         sex = 1
-        if person.sex == "m":
+        if person.sex == "f":
             sex = 0
         roundage = int(round(person.age))
         return self.prob_lists[sex][roundage]
