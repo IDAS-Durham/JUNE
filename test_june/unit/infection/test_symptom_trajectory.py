@@ -161,20 +161,19 @@ class TestSymptoms:
         ]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
+        print(symptoms_trajectories.trajectory)
         assert symptoms_trajectories.trajectory == [
             (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(5.1, rel=2.), june.infection.symptom_tag.SymptomTag.influenza),
-            (pytest.approx(15, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
-            (pytest.approx(17, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(35, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
-            (pytest.approx(55, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
+            (pytest.approx(5.1, rel=0.25), june.infection.symptom_tag.SymptomTag.influenza),
+            (pytest.approx(8, rel=0.25), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(11, rel=0.25), june.infection.symptom_tag.SymptomTag.recovered)
         ]
 
     def test__symptoms__progression(self):
         selector = infect.InfectionSelector()
         dummy = Person(sex='m', age=65)
         infection = selector.make_infection(person=dummy, time=0.1)
-        fixed_severity = 0.8
+        fixed_severity = 0.97
         infection.symptoms.max_severity = fixed_severity
         max_tag = infection.symptoms.max_tag()
         assert max_tag == june.infection.symptom_tag.SymptomTag.hospitalised
@@ -182,7 +181,7 @@ class TestSymptoms:
         assert infection.symptoms.trajectory == [
             (0.0, june.infection.symptom_tag.SymptomTag.exposed),
             (pytest.approx(5, 2.5), june.infection.symptom_tag.SymptomTag.influenza),
-            (pytest.approx(20, rel=5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(5, rel=5), june.infection.symptom_tag.SymptomTag.hospitalised),
             (pytest.approx(30, rel=5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
         hospitalised_time = infection.symptoms.trajectory[2][0]

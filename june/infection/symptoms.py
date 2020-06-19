@@ -1,7 +1,6 @@
 import random
 
 import numpy as np
-
 from june.infection.symptom_tag import SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
 
