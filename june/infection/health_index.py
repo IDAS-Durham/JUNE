@@ -121,41 +121,41 @@ class HealthIndexGenerator:
         self.prob_lists = np.zeros([2, 121, 5])
 
         self.prob_lists[:, :, 0] = self.asimpto_ratio
+        hosp_ratio_female =  self.model(ages, self.poli_hosp[0])
+        hosp_ratio_male =  self.model(ages, self.poli_hosp[1])
 
-        self.prob_lists[0, :, 2] = 1 - self.model(ages, self.poli_hosp[0])
-        self.prob_lists[1, :, 2] = 1 - self.model(ages, self.poli_hosp[1])
+        icu_ratio_female = self.model(ages, self.poli_icu[0])
+        icu_ratio_male = self.model(ages, self.poli_icu[1])
 
-        self.prob_lists[0, :, 3] = 1 - self.model(ages, self.poli_icu[0])
-        self.prob_lists[1, :, 3] = 1 - self.model(ages, self.poli_icu[1])
+        death_ratio_female = self.model(ages, self.poli_deaths[0])
+        death_ratio_male = self.model(ages, self.poli_deaths[1])
 
-        self.prob_lists[0, :, 4] = 1 - self.model(ages, self.poli_deaths[0])
-        self.prob_lists[1, :, 4] = 1 - self.model(ages, self.poli_deaths[1])
+        # This makes sure that the ICU<deaths
+        Boolean_icu_female = (death_ratio_female > icu_ratio_female)  # If the DEath ratio is larger that the ICU ratio
+        Boolean_icu_male = (death_ratio_male > icu_ratio_male)
 
-        # This makes sure that the Hospital<ICU<deaths
-        Boolean_hosp_male = (
-            self.prob_lists[0, :, 2] > self.prob_lists[0, :, 3]
-        )  # If the DEath ratio is larger that the ICU ratio
-        Boolean_hosp_female = (self.prob_lists[1, :, 2] > self.prob_lists[1, :, 3])
+        icu_ratio_female[Boolean_icu_female] = death_ratio_female[Boolean_icu_female]
+        icu_ratio_male[Boolean_icu_male] = death_ratio_male[Boolean_icu_male]        
+           
+        # This makes sure that HOsp<ICU
+ 
+        Boolean_hosp_female = (icu_ratio_female > hosp_ratio_female)  # If the DEath ratio is larger that the ICU ratio
+        Boolean_hosp_male = (icu_ratio_male > hosp_ratio_male)
 
-        self.prob_lists[0, :, 2][Boolean_hosp_male] = self.prob_lists[0, :, 3][
-            Boolean_hosp_male
-        ]
-        self.prob_lists[1, :, 2][Boolean_hosp_female] = self.prob_lists[1, :, 3][
-            Boolean_hosp_female
-        ]
+        hosp_ratio_female[Boolean_hosp_female] = icu_ratio_female[Boolean_hosp_female]
+        hosp_ratio_male[Boolean_hosp_male] = icu_ratio_male[Boolean_hosp_male]
 
-        Boolean_icu_male = (
-            self.prob_lists[0, :, 3] > self.prob_lists[0, :, 4]
-        )  
-        # If the DEath ratio is larger that the ICU ratio
-        Boolean_icu_female = (self.prob_lists[1, :, 3] > self.prob_lists[1, :, 4])
 
-        self.prob_lists[0, :, 3][Boolean_icu_male] = self.prob_lists[0, :, 4][
-            Boolean_icu_male
-        ]
-        self.prob_lists[1, :, 3][Boolean_icu_female] = self.prob_lists[1, :, 4][
-            Boolean_icu_female
-        ]
+
+        self.prob_lists[0, :, 2] = 1 - hosp_ratio_female
+        self.prob_lists[1, :, 2] = 1 - hosp_ratio_male
+
+        self.prob_lists[0, :, 3] = 1 - icu_ratio_female
+        self.prob_lists[1, :, 3] = 1 - icu_ratio_male
+
+        self.prob_lists[0, :, 4] = 1 - death_ratio_female
+        self.prob_lists[1, :, 4] = 1 - death_ratio_male
+
 
         No_hosp_prov = np.array(
             [
