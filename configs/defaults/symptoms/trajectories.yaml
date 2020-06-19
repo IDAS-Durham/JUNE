@@ -90,10 +90,10 @@ trajectories:
       - symptom_tag: hospitalised
         completion_time:
           type: beta
-          a: 6.56
-          b: 61.22
-          loc: -4.0
-          scale: 273
+          a: 1.35
+          b: 3.68
+          loc: 0.05
+          scale: 27.1
 
 
       - symptom_tag: recovered
@@ -122,25 +122,22 @@ trajectories:
       - symptom_tag: hospitalised
         completion_time:
           type: constant
-          value: 2.
+          value: 0.0
 
 
       - symptom_tag: intensive_care
         completion_time:
           type: beta
-          a: 2.41
-          b: 5.94
-          loc: 0.0
-          scale: 15
+          a: 1.35
+          b: 3.68
+          loc: 0.05
+          scale: 27.1
 
 
       - symptom_tag: hospitalised
         completion_time:
-          type: beta
-          a: 6.56
-          b: 61.22
-          loc: -4.0
-          scale: 273
+          type: constant
+          value: 0.0
 
 
       - symptom_tag: recovered
@@ -166,9 +163,11 @@ trajectories:
       
       - symptom_tag: intensive_care
         completion_time:
-          type: exponential
-          loc: 1
-          scale: 8.854
+          type: beta
+          a: 1.21
+          b: 1.97
+          loc: 0.08
+          scale: 22.9
 
       - symptom_tag: dead
         completion_time:
