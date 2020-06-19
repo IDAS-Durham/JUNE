@@ -50,16 +50,16 @@ contact_matrices:
     characteristic_time: 13
   
   pub:
-    contacts: [[3]]
-    proportion_physical: [[0.5]]
+    contacts: [[1]]
+    proportion_physical: [[0.0]]
     characteristic_time: 3
 
   grocery:
-    contacts: [[2]]
-    proportion_physical: [[0.5]]
+    contacts: [[1]]
+    proportion_physical: [[0.0]]
     characteristic_time: 3
 
   cinema:
-    contacts: [[3]]
-    proportion_physical: [[0.33]]
+    contacts: [[1]]
+    proportion_physical: [[0.0]]
     characteristic_time: 3

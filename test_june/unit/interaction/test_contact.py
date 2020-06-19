@@ -97,9 +97,9 @@ def create_school(n_students, n_teachers):
     [
         [2, "average"],
         # [2, "sampling"],
-        #[4, "average"],
+        [4, "average"],
         ## [4, "sampling"],
-        #[6, "average"],
+        [6, "average"],
         ## [6, "sampling"],
     ],
 )
