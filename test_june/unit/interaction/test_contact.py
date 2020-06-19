@@ -13,7 +13,11 @@ test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml
 
 def test__contact_matrices_from_default():
     interaction = ContactAveraging.from_file(config_filename=test_config, selector=None)
-    assert interaction.contact_matrices["pub"] == np.array([[1 * 24/3]])
+    np.testing.assert_allclose(
+        interaction.contact_matrices["pub"],
+        np.array([[3 * (1 + 0.12) * 24 / 3]]),
+        rtol=0.05,
+    )
     xi = 0.3
     contacts_school = interaction.contact_matrices["school"]
     for i in range(len(contacts_school)):
@@ -25,10 +29,10 @@ def test__contact_matrices_from_default():
                     assert contacts_school[i][j] == 2.875 * 3
             else:
                 if i == 0:
-                    assert contacts_school[i][j] == 0.81 * 3
+                    assert np.isclose(contacts_school[i][j], 16.2 * 3, rtol=1e-6)
                 elif j == 0:
                     assert np.isclose(
-                        contacts_school[i][j], 16.2 * 3, atol=0, rtol=1e-6
+                        contacts_school[i][j], 0.81 * 3, atol=0, rtol=1e-6
                     )
                 else:
                     assert np.isclose(
@@ -38,6 +42,7 @@ def test__contact_matrices_from_default():
                         rtol=1e-6,
                     )
 
+
 def test__school_index_translation():
     interaction = ContactAveraging.from_file(selector=None)
     age_min = 3
@@ -45,6 +50,39 @@ def test__school_index_translation():
     school_years = list(range(age_min, age_max + 1))
     interaction.translate_school_subgroup(1, school_years) == 4
     interaction.translate_school_subgroup(5, school_years) == 8
+
+
+def test__school_contact_matrices():
+    interaction = ContactAveraging.from_file(selector=None)
+    xi = 0.3
+    age_min = 3
+    age_max = 7
+    school_years = list(range(age_min, age_max + 1))
+    contact_matrix = interaction.contact_matrices["school"]
+    n_contacts_same_year = interaction.get_contacts_in_school(
+        contact_matrix, school_years, 4, 4
+    )
+    assert n_contacts_same_year == 2.875*3
+
+    n_contacts_year_above = interaction.get_contacts_in_school(
+        contact_matrix, school_years, 4, 5
+    )
+    assert n_contacts_year_above == xi*2.875 * 3
+
+    n_contacts_teacher_teacher = interaction.get_contacts_in_school(
+        contact_matrix, school_years, 0, 0
+    )
+    assert n_contacts_teacher_teacher == 5.25*3
+
+    n_contacts_teacher_student = interaction.get_contacts_in_school(
+        contact_matrix, school_years, 0, 4
+    )
+    np.isclose(n_contacts_teacher_student, (16.2*3 / len(school_years)), rtol=1e-6)
+
+    n_contacts_student_teacher = interaction.get_contacts_in_school(
+        contact_matrix, school_years, 4, 0
+    )
+    assert n_contacts_student_teacher == 0.81*3
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
@@ -108,7 +146,7 @@ def test__average_time_to_infect(n_teachers, mode):
         "contacts": [[n_teachers - 1, 1], [1, 0]],
         "proportion_physical": [[0, 0,], [0, 0]],
         "xi": 1.0,
-        "characteristic_time" : 24,
+        "characteristic_time": 24,
     }
     if mode == "average":
         interaction = ContactAveraging(
