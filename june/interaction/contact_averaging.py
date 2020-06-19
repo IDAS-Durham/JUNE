@@ -12,6 +12,7 @@ default_config_filename = (
 
 @nb.jit(nopython=True)
 def poisson_probability(delta_time, susceptibilities, beta, transmission_exponent):
+    #print(delta_time * transmission_exponent)
     return 1.0 - np.exp(-delta_time * susceptibilities * beta * transmission_exponent)
 
 
@@ -49,14 +50,16 @@ class ContactAveraging(Interaction):
     def process_contact_matrices(self, groups, input_contact_matrices):
         contact_matrices = {}
         default_contacts = np.array([[1]])
+        default_characteristic_time = 8
         default_proportion_physical = np.array([[0]])
         for group in groups:
             if group not in input_contact_matrices.keys():
                 contacts = default_contacts
                 proportion_physical = default_proportion_physical
+                characteristic_time = default_characteristic_time
             else:
                 if group == "school":
-                    contacts, proportion_physical = self.process_school_matrices(
+                    contacts, proportion_physical, characteristic_time = self.process_school_matrices(
                         input_contact_matrices[group]
                     )
                 else:
@@ -64,9 +67,13 @@ class ContactAveraging(Interaction):
                     proportion_physical = np.array(
                         input_contact_matrices[group]["proportion_physical"]
                     )
+                    characteristic_time = input_contact_matrices[group][
+                        "characteristic_time"
+                    ]
             contact_matrices[group] = get_contact_matrix(
                 self.alpha_physical, contacts, proportion_physical,
             )
+            contact_matrices[group] *= 24 / characteristic_time
         return contact_matrices
 
     def process_school_matrices(self, input_contact_matrices, age_min=0, age_max=20):
@@ -76,16 +83,22 @@ class ContactAveraging(Interaction):
             input_contact_matrices["xi"],
             age_min=age_min,
             age_max=age_max,
+            physical=False
         )
         contact_matrices["proportion_physical"] = self.adapt_contacts_to_schools(
             input_contact_matrices["proportion_physical"],
             input_contact_matrices["xi"],
             age_min=age_min,
             age_max=age_max,
+            physical=True
         )
-        return contact_matrices["contacts"], contact_matrices["proportion_physical"]
+        return (
+            contact_matrices["contacts"],
+            contact_matrices["proportion_physical"],
+            input_contact_matrices["characteristic_time"],
+        )
 
-    def adapt_contacts_to_schools(self, input_contact_matrix, xi, age_min, age_max):
+    def adapt_contacts_to_schools(self, input_contact_matrix, xi, age_min, age_max, physical=False):
         n_subgroups_max = (age_max - age_min) + 2  # adding teachers
         contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max))
         contact_matrix[0, 0] = input_contact_matrix[0][0]
@@ -94,7 +107,10 @@ class ContactAveraging(Interaction):
         age_differences = np.subtract.outer(
             range(age_min, age_max + 1), range(age_min, age_max + 1)
         )
-        contact_matrix[1:, 1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
+        if physical:
+            contact_matrix[1:, 1:] = input_contact_matrix[1][1]
+        else:
+            contact_matrix[1:, 1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
         return contact_matrix
 
     def get_sum_transmission_per_subgroup(self, group: "Group") -> List[float]:
@@ -260,9 +276,7 @@ class ContactAveraging(Interaction):
                     logger.accumulate_infection_location(group.spec)
                 except:
                     pass
-                self.assign_blame(
-                        group.infected, subgroup_transmission_probabilities
-                )
+                self.assign_blame(group.infected, subgroup_transmission_probabilities)
 
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",

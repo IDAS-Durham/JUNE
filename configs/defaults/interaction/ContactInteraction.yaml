@@ -15,25 +15,51 @@ beta:
  university: 1.00
 
 contact_matrices:
- hospital:
   # number 10 comes from the fact that on average there are 10 medics per patient
   # for ICU that should be lower, but it isn't reflected in hospital distributor yet
-  contacts: [[5.00, 10., 10.], [1., 0., 0.], [1., 0., 0.]]
-  proportion_physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
- care_home:
-  contacts: [[5.00, 10., 1.], [1., 0, 2.], [0.25,1,0]]
-  proportion_physical: [[0.05, 1., 0.], [1.0, 0.4, 1.],[0.,0.5,0.]]
- company:
-  contacts: [[4.8]]
-  proportion_physical: [[0.07]]
- university:
-  contacts: [[5, 1, 1, 1, 1, 1], [1, 5, 1, 1, 1, 1], [1, 1, 5, 1, 1, 1], [1, 1, 1, 5, 1, 1], [1, 1, 1, 1, 5, 1], [1, 1, 1, 1, 1, 5]]
-  proportion_physical: [[0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25]]
- school:
-  contacts: [[5, 0.75], [15, 2.5]]
-  proportion_physical: [[0.05, 0.08], [0.08, 0.15]]
-  xi:       0.3
- household:
-  contacts: [[1.20, 1.69, 1.69, 1.69], [1.27, 1.34, 1.47, 1.47], [1.27, 1.30, 1.34, 1.34], [1.27, 1.30, 1.34, 2.00]]
-  proportion_physical: [[0.79, 0.7, 0.7, 0.7], [0.7, 0.34, 0.4, 0.62], [0.7, 0.4, 0.62, 0.62], [0.7, 0.4, 0.62, 0.45]]
+  hospital:
+    contacts: [[5.00, 10., 10.], [1., 0., 0.], [1., 0., 0.]]
+    proportion_physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
+    characteristic_time: 8 # in hours
+  
+  care_home:
+    # note, visitors contacts are multiplied by ~4 because they only stay 1/4th of the characteristic time.
+    contacts: [[5.00, 10., 4.], [1., 0, 8.], [0.25, 1, 0]]
+    proportion_physical: [[0.05, 1., 0.], [1.0, 0.4, 1.],[0., 0.5, 0.]]
+    characteristic_time: 13
+  
+  company:
+    contacts: [[4.8]]
+    proportion_physical: [[0.07]]
+    characteristic_time: 8
+  
+  university:
+    contacts: [[5, 1, 1, 1, 1, 1], [1, 5, 1, 1, 1, 1], [1, 1, 5, 1, 1, 1], [1, 1, 1, 5, 1, 1], [1, 1, 1, 1, 5, 1], [1, 1, 1, 1, 1, 5]]
+    proportion_physical: [[0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25, 0.25, 0.25]]
+    characteristic_time: 8
+  
+  school:
+    contacts: [[5, 0.75], [15, 2.5]]
+    proportion_physical: [[0.05, 0.08], [0.08, 0.15]]
+    xi:       0.3
+    characteristic_time: 8
+   
+  household:
+    contacts: [[1.20, 1.69, 1.69, 1.69], [1.27, 1.34, 1.47, 1.47], [1.27, 1.30, 1.34, 1.34], [1.27, 1.30, 1.34, 2.00]]
+    proportion_physical: [[0.79, 0.7, 0.7, 0.7], [0.7, 0.34, 0.4, 0.62], [0.7, 0.4, 0.62, 0.62], [0.7, 0.4, 0.62, 0.45]]
+    characteristic_time: 13
+  
+  pub:
+    contacts: [[3]]
+    proportion_physical: [[0.5]]
+    characteristic_time: 3
 
+  grocery:
+    contacts: [[2]]
+    proportion_physical: [[0.5]]
+    characteristic_time: 3
+
+  cinema:
+    contacts: [[3]]
+    proportion_physical: [[0.33]]
+    characteristic_time: 3
