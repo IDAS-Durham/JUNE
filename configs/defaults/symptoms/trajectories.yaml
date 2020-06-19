@@ -119,10 +119,6 @@ trajectories:
           scale: 4.12
 
 
-      - symptom_tag: hospitalised
-        completion_time:
-          type: constant
-          value: 0.0
 
 
       - symptom_tag: intensive_care
@@ -134,10 +130,6 @@ trajectories:
           scale: 27.1
 
 
-      - symptom_tag: hospitalised
-        completion_time:
-          type: constant
-          value: 0.0
 
 
       - symptom_tag: recovered
