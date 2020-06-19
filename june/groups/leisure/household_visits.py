@@ -90,7 +90,9 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         if relatives is None:
             return None
         alive_relatives = [relative for relative in relatives if relative.dead is False]
-        return alive_relatives[np.random.randint(0, len(alive_relatives))].residence.group
+        return alive_relatives[
+            np.random.randint(0, len(alive_relatives))
+        ].residence.group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
