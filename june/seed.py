@@ -198,5 +198,5 @@ class Seed:
             self.infect_super_area(self.super_areas.members[0], n_cases)
         else:
             self.infect_super_areas(
-                self.super_areas.members, self.seed_strength * n_cases
+                self.super_areas.members, int(self.seed_strength * n_cases)
             )
