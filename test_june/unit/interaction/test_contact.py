@@ -8,13 +8,12 @@ from june import paths
 import pytest
 import numpy as np
 
-# test_config = paths.configs_path / "tests/contact_interaction.yaml"
 test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
 
 
 def test__contact_matrices_from_default():
     interaction = ContactAveraging.from_file(config_filename=test_config, selector=None)
-    assert interaction.contact_matrices["pub"] == np.array([[36]])
+    assert interaction.contact_matrices["pub"] == np.array([[1 * 24/3]])
     xi = 0.3
     contacts_school = interaction.contact_matrices["school"]
     for i in range(len(contacts_school)):
@@ -32,8 +31,6 @@ def test__contact_matrices_from_default():
                         contacts_school[i][j], 16.2 * 3, atol=0, rtol=1e-6
                     )
                 else:
-                    print(contacts_school[i][j])
-                    print(xi ** abs(i - j) * 2.875 * 3)
                     assert np.isclose(
                         contacts_school[i][j],
                         xi ** abs(i - j) * 2.875 * 3,
