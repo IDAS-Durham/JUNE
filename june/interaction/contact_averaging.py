@@ -58,9 +58,11 @@ class ContactAveraging(Interaction):
                 characteristic_time = default_characteristic_time
             else:
                 if group == "school":
-                    contacts, proportion_physical, characteristic_time = self.process_school_matrices(
-                        input_contact_matrices[group]
-                    )
+                    (
+                        contacts,
+                        proportion_physical,
+                        characteristic_time,
+                    ) = self.process_school_matrices(input_contact_matrices[group])
                 else:
                     contacts = np.array(input_contact_matrices[group]["contacts"])
                     proportion_physical = np.array(
@@ -82,14 +84,14 @@ class ContactAveraging(Interaction):
             input_contact_matrices["xi"],
             age_min=age_min,
             age_max=age_max,
-            physical=False
+            physical=False,
         )
         contact_matrices["proportion_physical"] = self.adapt_contacts_to_schools(
             input_contact_matrices["proportion_physical"],
             input_contact_matrices["xi"],
             age_min=age_min,
             age_max=age_max,
-            physical=True
+            physical=True,
         )
         return (
             contact_matrices["contacts"],
@@ -97,7 +99,9 @@ class ContactAveraging(Interaction):
             input_contact_matrices["characteristic_time"],
         )
 
-    def adapt_contacts_to_schools(self, input_contact_matrix, xi, age_min, age_max, physical=False):
+    def adapt_contacts_to_schools(
+        self, input_contact_matrix, xi, age_min, age_max, physical=False
+    ):
         n_subgroups_max = (age_max - age_min) + 2  # adding teachers
         contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max))
         contact_matrix[0, 0] = input_contact_matrix[0][0]
@@ -109,7 +113,9 @@ class ContactAveraging(Interaction):
         if physical:
             contact_matrix[1:, 1:] = input_contact_matrix[1][1]
         else:
-            contact_matrix[1:, 1:] = xi ** abs(age_differences) * input_contact_matrix[1][1]
+            contact_matrix[1:, 1:] = (
+                xi ** abs(age_differences) * input_contact_matrix[1][1]
+            )
         return contact_matrix
 
     def get_sum_transmission_per_subgroup(self, group: "Group") -> List[float]:
@@ -139,6 +145,17 @@ class ContactAveraging(Interaction):
             person.health_information.number_of_infected += (
                 person.health_information.infection.transmission.probability / norm
             )
+
+    def get_contacts_in_school(
+        self, contact_matrix, school_years, susceptibles_idx, infecters_idx
+    ):
+        n_contacts = contact_matrix[
+            self.translate_school_subgroup(susceptibles_idx, school_years)
+        ][self.translate_school_subgroup(infecters_idx, school_years)]
+        # teacher's contacts with students spread out among class rooms
+        if susceptibles_idx == 0 and infecters_idx > 0:
+            n_contacts /= len(school_years)
+        return n_contacts
 
     def subgroup_to_subgroup_transmission(
         self,
@@ -172,10 +189,12 @@ class ContactAveraging(Interaction):
         susceptibles_idx = susceptibles_subgroup.subgroup_type
         infecters_idx = infecters_subgroup.subgroup_type
         if susceptibles_subgroup.group.spec == "school":
-            school_years = susceptibles_subgroup.group.years
-            n_contacts = contact_matrix[
-                self.translate_school_subgroup(susceptibles_idx, school_years)
-            ][self.translate_school_subgroup(infecters_idx, school_years)]
+            n_contacts = self.get_contacts_in_school(
+                contact_matrix,
+                susceptibles_subgroup.group.years,
+                susceptibles_idx,
+                infecters_idx,
+            )
         else:
             n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
         return (
