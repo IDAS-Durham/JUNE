@@ -12,7 +12,6 @@ default_config_filename = (
 
 @nb.jit(nopython=True)
 def poisson_probability(delta_time, susceptibilities, beta, transmission_exponent):
-    #print(delta_time * transmission_exponent)
     return 1.0 - np.exp(-delta_time * susceptibilities * beta * transmission_exponent)
 
 

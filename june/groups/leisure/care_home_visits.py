@@ -82,7 +82,10 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
         relatives = person.residence.group.relatives_in_care_homes
         if relatives is None:
             return None
-        return relatives[np.random.randint(0, len(relatives))].residence.group
+        alive_relatives = [relative for relative in relatives if relative.dead is False]
+        return alive_relatives[
+            np.random.randint(0, len(alive_relatives))
+        ].residence.group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
