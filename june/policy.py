@@ -371,10 +371,12 @@ class Policies:
         - Check per group in config file
         '''
         betas_new = copy.deepcopy(betas)
-        print(betas)
         for group in betas:
             betas_new[group] = self.social_distancing_policy.beta_factor[group] * betas_new[group]
         return betas_new
+
+    def get_beta_factors(self, group):
+        pass
 
     def apply_activity_ban(self, person, date, activities):
         for policy in self.skip_activity_policies(date):
