@@ -49,7 +49,7 @@ def create_selector():
 
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction(selector):
-    interaction = ContactAveraging.from_file(selector=selector)
+    interaction = ContActAveraging.from_file(selector=selector)
     return interaction
 
 
@@ -552,56 +552,31 @@ class TestCloseLeisure:
         sim.clear_world()
 
 
-def test__social_distancing(super_area, selector, interaction):
-    pupil, worker, world = make_dummy_world(super_area)
-    world.cemeteries = Cemeteries()
-    start_date = datetime(2020, 3, 10)
-    end_date = datetime(2020, 3, 12)
-    beta_factor = {
-                'box': 0.5,
-                'pub': 0.5,
-                'grocery': 0.5,
-                'cinema': 0.5,
-                'commute_unit': 0.5,
-                'commute_city_unit': 0.5,
-                'hospital': 0.5,
-                'care_home': 0.5,
-                'company': 0.5,
-                'school': 0.5,
-                'household': 1.0,
-                'university': 0.5,
-            }
-
-
-    social_distance = SocialDistancing(start_time='2020-03-10', end_time='2020-03-12',
+class TestSocialDistancing:
+    def test__social_distancing(self):
+        beta_factor = {
+                    'box': 0.5,
+                    'pub': 0.5,
+                    'grocery': 0.5,
+                    'cinema': 0.5,
+                    'commute_unit': 0.5,
+                    'commute_city_unit': 0.5,
+                    'hospital': 0.5,
+                    'care_home': 0.5,
+                    'company': 0.5,
+                    'school': 0.5,
+                    'university': 0.5,
+                }
+        social_distance = SocialDistancing(start_time='2020-03-10', end_time='2020-03-12',
             beta_factor = beta_factor)
-    policies = Policies([social_distance])
-    leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename=test_config
-    )
-    sim = Simulator.from_file(
-        world,
-        interaction,
-        selector,
-        config_filename=test_config,
-        policies=policies,
-        leisure=leisure_instance,
-        )
-   
-    sim.timer.reset()
-    
-    initial_betas = copy.deepcopy(sim.interaction.beta)
-    sim.clear_world()
-    for time in sim.timer:
-        if time > sim.timer.final_date:
-            break
-        sim.do_timestep()
-        if sim.timer.date >= start_date and sim.timer.date < end_date:
-            for group in sim.interaction.beta:
-                if group != "household":
-                    assert sim.interaction.beta[group] == initial_betas[group] * 0.5
-                else:
-                    assert sim.interaction.beta[group] == initial_betas[group]
-        else:
-            assert sim.interaction.beta == initial_betas
+        interaction = ContActAveraging.from_file(selector=selector,
+                policies=Policies([social_distance]))
+        initial_betas = interaction.beta
+        for group in interaction.beta.keys():
+            if group in social_distance.beta_factor.keys(): 
+                assert interaction.beta[group]*interaction.policies.get_beta_factors(group) == initial_betas[group] * 0.5
+            else:
+                assert interaction.beta[group]*interaction.policies.social_distance_beta_factor(group) == initial_betas[group]
+
+
 
