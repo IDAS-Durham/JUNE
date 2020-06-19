@@ -129,18 +129,13 @@ trajectories:
           value: 2.
 
 
-      #- symptom_tag: intensive_care
-      #  completion_time:
-       #   type: constant
-        #  value: 20.
       
       - symptom_tag: intensive_care
         completion_time:
-          type: beta
-          a: 2.41
-          b: 5.94
+          type: lognormal
+          s: 0.619
           loc: 0.0
-          scale: 15
+          scale: 10.73
 
 
       - symptom_tag: hospitalised
@@ -156,6 +151,34 @@ trajectories:
         completion_time:
           type: constant
           value: 0.0
+
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
+
+      - symptom_tag: influenza
+        completion_time:
+          type: exponential
+          loc: 1
+          scale: 4.12
+
+      - symptom_tag: pneumonia
+        completion_time:
+          type: constant
+          value: 3.0
+
+      - symptom_tag: dead
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+
 
 
   - stages:
@@ -173,26 +196,47 @@ trajectories:
           loc: 1
           scale: 4.12
       
-      - symptom_tag: intensive_care
+      - symptom_tag: hospitalised
         completion_time:
           type: exponential
           loc: 1
           scale: 8.854
 
+      - symptom_tag: dead
+        completion_time:
+          type: constant
+          value: 0.
+  - stages:
 
-      #- symptom_tag: hospitalised
-      #  completion_time:
-      #    type: constant
-      #    value: 2.
+      - symptom_tag: exposed
+        completion_time:
+          type: beta
+          a: 2.29
+          b: 19.05
+          loc: 0.39
+          scale: 39.8
+
+      - symptom_tag: influenza
+        completion_time:
+          type: exponential
+          loc: 1
+          scale: 4.12
 
 
-      #- symptom_tag: intensive_care
-      #  completion_time:
-      #    type: constant
-      #    value: 5.
+      - symptom_tag: hospitalised
+        completion_time:
+          type: constant
+          value: 2.
 
+      - symptom_tag: intensive_care
+        completion_time:
+          type: lognormal
+          s: 0.619
+          loc: 0.0
+          scale: 7.15
 
       - symptom_tag: dead
         completion_time:
           type: constant
           value: 0.
+
