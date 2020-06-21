@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 import time
 
-from june.demography import Person
+from june.demography import Person, Activities
 from june.groups import Group
 from june.groups.leisure import Leisure 
 from june.infection.infection import InfectionSelector
@@ -47,7 +47,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies = Policies(),
+        policies=Policies(),
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
         light_logger: bool = False,
@@ -103,8 +103,7 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
         if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path,
-                    file_name = output_filename)
+            self.logger = Logger(save_path=save_path, file_name=output_filename)
         else:
             self.logger = None
         self.all_activities = self.get_all_activities(time_config)
@@ -139,7 +138,7 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
-        policies = Policies(),
+        policies=Policies(),
         seed: "Seed" = None,
         leisure: Leisure = None,
         config_filename: str = default_config_filename,
@@ -165,13 +164,13 @@ class Simulator:
         else:
             activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
-        return Simulator(
+        return cls(
             world,
             interaction,
             selector,
             activity_to_groups,
             time_config,
-            policies = policies,
+            policies=policies,
             seed=seed,
             leisure=leisure,
             save_path=save_path,
@@ -287,6 +286,7 @@ class Simulator:
 
         for person in self.world.people.members:
             person.busy = False
+            person.subgroups.leisure = None
 
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
@@ -305,28 +305,29 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-
         activities = self.apply_activity_hierarchy(activities)
-        #personal_closed_groups = self.policies.get_fully_closed_groups(
+        # personal_closed_groups = self.policies.get_fully_closed_groups(
         #    time=self.timer.now
-        #) + self.policies.get_partially_closed_groups(
+        # ) + self.policies.get_partially_closed_groups(
         #    person=person, time=self.timer.now
-        #)
-
+        # )
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person,
                     self.timer.duration,
                     self.timer.is_weekend,
-                    closed_groups=[]#personal_closed_groups,
+                    closed_groups=[],  # personal_closed_groups,
                 )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                #if subgroup.group.spec in personal_closed_groups:
+                # if subgroup.group.spec in personal_closed_groups:
                 #    continue
                 return subgroup
+        raise SimulatorError(
+            "Attention! Some people do not have an activity in this timestep."
+        )
 
     def kid_drags_guardian(
         self, kid: "Person", guardian: "Person", activities: List[str]
@@ -446,6 +447,7 @@ class Simulator:
         cemetery = self.world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
+        person.subgroups = Activities(None, None, None, None, None, None, None)
 
     def recover(self, person: "Person", time: float):
         """
@@ -494,7 +496,7 @@ class Simulator:
                 self.recover(person, time)
             elif health_information.should_be_in_hospital:
                 self.hospitalise_the_sick(person, previous_tag)
-            elif health_information.is_dead and not self.world.box_mode:
+            elif health_information.is_dead:
                 self.bury_the_dead(person, time)
         if self.logger:
             self.logger.log_infected(
@@ -526,13 +528,24 @@ class Simulator:
             if group not in ["household_visits", "care_home_visits"]
         ]
         n_people = 0
-        if not self.world.box_mode:
-            for cemetery in self.world.cemeteries.members:
-                n_people += len(cemetery.people)
-        sim_logger.info(f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}")
-        
-        if self.policies.social_distancing and self.policies.social_distancing_start <= self.timer.date < self.policies.social_distancing_end:
-            self.interaction.alpha_physical, self.interaction.beta = self.policies.social_distancing_policy(self.alpha_copy, self.beta_copy, self.timer.now)
+        for cemetery in self.world.cemeteries.members:
+            n_people += len(cemetery.people)
+        sim_logger.info(
+            f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
+        )
+
+        if (
+            self.policies.social_distancing
+            and self.policies.social_distancing_start
+            <= self.timer.date
+            < self.policies.social_distancing_end
+        ):
+            (
+                self.interaction.alpha_physical,
+                self.interaction.beta,
+            ) = self.policies.social_distancing_policy(
+                self.alpha_copy, self.beta_copy, self.timer.now
+            )
         else:
             self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
@@ -545,6 +558,7 @@ class Simulator:
                 )
                 n_people += group.size
                 n_people_group += group.size
+            
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -556,7 +570,7 @@ class Simulator:
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
-    def run(self, save=False):
+    def run(self):
         """
         Run simulation with n_seed initial infections
 
@@ -574,7 +588,9 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people, light_logger=self.light_logger)
+            self.logger.log_population(
+                self.world.people, light_logger=self.light_logger
+            )
             self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
@@ -583,6 +599,95 @@ class Simulator:
                 if (time >= self.seed.min_date) and (time <= self.seed.max_date):
                     self.seed.unleash_virus_per_region(time)
             self.do_timestep()
-        # Save the world
-        if save:
-            self.world.to_pickle("final_world.pickle")
+
+
+class SimulatorBox(Simulator):
+    def __init__(
+        self,
+        world: World,
+        interaction: Interaction,
+        selector: InfectionSelector,
+        activity_to_groups: dict,
+        time_config: dict,
+        seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
+        min_age_home_alone: int = 15,
+        stay_at_home_complacency: float = 0.95,
+        policies=Policies(),
+        save_path: str = "results",
+        output_filename: str = "logger.hdf5",
+        light_logger: bool = False,
+    ):
+        """
+        Class to run an epidemic spread simulation on a box. It is 
+        basically a wrapper around the Simualtor class, disabling
+        the options that are not available in box mode, like
+        moving ill people to households.
+
+        Parameters
+        ----------
+        world: 
+            instance of World class
+        interaction:
+            instance of Interaction class 
+        infection:
+            instance of Infection class
+        activity_to_groups:
+            mapping between an activity and its corresponding groups
+        time_config:
+            dictionary with temporal configuration to set up the simulation
+        min_age_home_alone:
+            minimum age of a child to be left alone at home when ill
+        stay_at_home_complacency:
+            probability that an ill person will not stay at home
+        policies:
+            policies to be implemented at different time steps
+        save_path:
+            path to save logger results
+        """
+        super().__init__(
+            world,
+            interaction,
+            selector,
+            activity_to_groups,
+            time_config,
+            seed,
+            leisure,
+            min_age_home_alone,
+            stay_at_home_complacency,
+            policies,
+            save_path,
+            output_filename,
+            light_logger,
+        )
+
+    def kid_drags_guardian(
+        self, kid: "Person", guardian: "Person", activities: List[str]
+    ):
+        # not available in box
+        pass
+
+    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
+        # not available in box
+        pass
+
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
+        # not available in box
+        pass
+
+    def move_people_to_active_subgroups(self, activities: List[str]):
+        """
+        Sends every person to one subgroup. If a person has a mild illness,
+        they stay at home with a certain probability given by stay_at_home_complacency
+
+        Parameters
+        ----------
+        active_groups:
+            list of groups that are active at a time step
+        """
+        activities = self.apply_activity_hierarchy(activities)
+        for person in self.world.people.members:
+            if person.dead or person.busy:
+                continue
+            subgroup = self.get_subgroup_active(activities, person)
+            subgroup.append(person)

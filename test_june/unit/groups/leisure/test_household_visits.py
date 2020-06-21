@@ -58,12 +58,13 @@ def test__household_home_visits_leisure_integration(leisure):
     counter = 0
     for _ in range(100):
         subgroup = leisure.get_subgroup_for_person_and_housemates(
-            person1, delta_time=1, is_weekend=False
+            person1, delta_time=0.1, is_weekend=False
         )
         if subgroup is not None:
             counter += 1
             assert subgroup == person2.residence
-    assert np.isclose(counter, 15, atol=5)
+
+    assert np.isclose(counter, np.random.poisson(0.54 * 0.1 * 100), atol=5)
 
 
 def test__do_not_visit_dead_people(leisure):
