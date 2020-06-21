@@ -129,7 +129,7 @@ class Logger:
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         with h5py.File(self.file_path, "a", libver="latest") as f:
             infected_dset = f.create_group(time_stamp)
-            ids = np.array(infected_ids, dtype=np.int16)
+            ids = np.array(infected_ids, dtype=np.int64)
             symptoms = np.array(symptoms, dtype=np.int16)
             n_secondary_infections = np.array(n_secondary_infections, dtype=np.int16)
             infected_dset.create_dataset("id", compression="gzip", data=ids)

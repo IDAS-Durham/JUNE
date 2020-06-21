@@ -97,16 +97,21 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
             super_areas = hospitals["super_area"][idx1:idx2]
             n_beds_list = hospitals["n_beds"][idx1:idx2]
             n_icu_beds_list = hospitals["n_icu_beds"][idx1:idx2]
-            trust_code = hospitals["trust_code"][idx1:idx2]
+            trust_codes = hospitals["trust_code"][idx1:idx2]
             coordinates = hospitals["coordinates"][idx1:idx2]
             for k in range(idx2 - idx1):
                 super_area = super_areas[k]
+                trust_code = trust_codes[k]
                 if super_area.decode() == " ":
                     super_area = None
                 else:
                     super_area = super_area.decode()
+                if trust_code.decode() == " ":
+                    trust_code = None
+                else:
+                    trust_code  = trust_code.decode()
                 hospital = Hospital(
-                    n_beds_list[k], n_icu_beds_list[k], super_area, coordinates[k], trust_code=trust_code[k]
+                    n_beds_list[k], n_icu_beds_list[k], super_area, coordinates[k], trust_code=trust_code
                 )
                 hospital.id = ids[k]
                 hospitals_list.append(hospital)
