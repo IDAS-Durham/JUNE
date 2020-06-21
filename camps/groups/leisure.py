@@ -1,4 +1,5 @@
 from june.groups.leisure import Leisure
+import yaml
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
@@ -77,3 +78,17 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         raise NotImplementedError
 
     return Leisure(leisure_distributors)
+
+def generate_leisure_for_config(world, config_filename):
+    """
+    Generates an instance of the leisure class for the specified geography and leisure groups.
+    Parameters
+    ----------
+    list_of_leisure_groups
+        list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
+    """
+    with open(config_filename) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    list_of_leisure_groups = config['activity_to_groups']['leisure']
+    leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
+    return leisure_instance

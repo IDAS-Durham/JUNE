@@ -2,6 +2,7 @@ import numpy as np
 from enum import IntEnum
 
 from june.groups import Group, Supergroup, Households, Household
+from june.demography.geography import Areas
 
 
 class Shelter(Group):
@@ -57,6 +58,16 @@ class Shelters(Supergroup):
         shelters = [Shelter() for _ in range(n_shelters)]
         return cls(shelters)
 
+    @classmethod
+    def for_areas(cls, areas: Areas, sharing_shelter_ratio=0.75):
+        shelters = []
+        for area in areas:
+            n_families_area = len(area.households)
+            n_shelters_multi = int(np.floor(sharing_shelter_ratio * n_families_area/ 2))
+            n_shelters = n_families_area - n_shelters_multi
+            area.shelters = [Shelter() for _ in range(n_shelters)]
+            shelters += area.shelters
+        return cls(shelters)
 
 class ShelterDistributor:
     def __init__(self, sharing_shelter_ratio=0.75):
