@@ -3,7 +3,7 @@ title: Covid configuration example
 activity_to_groups:
   #primary_activity: ['schools']
   leisure: ['distribution_centers', 'communals', 'female_communals', 'pump_latrines', 'household_visits'] 
-  residence: ['households']
+  residence: ['shelters']
 
 time:
   total_days: 70
