@@ -12,7 +12,7 @@ import time
 
 from june.demography import Person
 from june.groups import Group
-import camps.groups.leisure as leisure
+from june.groups.leisure import Leisure 
 from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
@@ -44,7 +44,7 @@ class Simulator:
         activity_to_groups: dict,
         time_config: dict,
         seed: Optional["Seed"] = None,
-        leisure: Optional["Leisure"] = None,
+        leisure: Optional[Leisure] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
         policies = Policies(),
@@ -141,7 +141,7 @@ class Simulator:
         selector: "InfectionSelector",
         policies = Policies(),
         seed: "Seed" = None,
-        leisure: "Leisure" = None,
+        leisure: Leisure = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ) -> "Simulator":
