@@ -1,17 +1,16 @@
-import numpy as np
 import pytest
 
+import june.infection.symptom_tag
 from june.demography.person import Person
-from june.infection import infection as infect
+from june.infection import infection as infect, SymptomTag
 from june.infection import symptoms as sym
-from june.infection.health_index import HealthIndexGenerator
-from june.infection.symptoms import SymptomsStep, SymptomTag
 from june.infection.trajectory_maker import (
     Stage, CompletionTime, ConstantCompletionTime, ExponentialCompletionTime,
     TrajectoryMaker,
     TrajectoryMakers,
     BetaCompletionTime
 )
+
 
 @pytest.fixture(
     name="constant_completion_dict"
@@ -135,13 +134,13 @@ class TestTrajectoryMaker:
             SymptomTag.influenza
         ]
         infected = influenza_trajectory.stages[0]
-        assert infected.symptoms_tag == sym.SymptomTag.exposed
+        assert infected.symptoms_tag == june.infection.symptom_tag.SymptomTag.exposed
         assert infected.completion_time.a == 2.29
         assert infected.completion_time.b == 19.05
-        assert infected.completion_time.scale  == 39.8
+        assert infected.completion_time.scale == 39.8
 
         recovered = influenza_trajectory.stages[-1]
-        assert recovered.symptoms_tag == sym.SymptomTag.recovered
+        assert recovered.symptoms_tag == june.infection.symptom_tag.SymptomTag.recovered
         assert recovered.completion_time.value == 0.0
 
     def test_most_severe_symptoms(self, trajectories):
@@ -149,72 +148,51 @@ class TestTrajectoryMaker:
             assert symptom_tag == trajectory.most_severe_symptoms
 
 
-class TestSymptomsTrajectory:
-    def test__right_frequency_in_health_index(self):
-        N_samples = 1000
-        health_index = HealthIndexGenerator.from_file()(Person())
-        frequencies = np.zeros(len(sym.SymptomTag))
-        for i in range(N_samples):
-            symptoms = SymptomsStep(health_index=health_index, time_offset=0.)
-            symptoms.update_severity_from_delta_time(0.01)
-            # check their symptoms matches the frequency in health index 
-            if symptoms.tag != sym.SymptomTag.healthy:
-                frequencies[symptoms.tag] += 1
-        np.testing.assert_allclose(frequencies[0] / N_samples, health_index[0], atol=0.05)
-        np.testing.assert_allclose(frequencies[1] / N_samples, health_index[1] - health_index[0],
-                                   atol=0.05)
-        np.testing.assert_allclose(frequencies[2] / N_samples, health_index[2] - health_index[1],
-                                   atol=0.05)
-        np.testing.assert_allclose(frequencies[3] / N_samples, health_index[3] - health_index[2],
-                                   atol=0.05)
-        np.testing.assert_allclose(frequencies[4] / N_samples, health_index[4] - health_index[3],
-                                   atol=0.05)
-
+class TestSymptoms:
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
-            (0.0, sym.SymptomTag.exposed),
-            (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
-            #(pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(8, rel=0.5), sym.SymptomTag.intensive_care),
-            (pytest.approx(15, rel=0.5), sym.SymptomTag.dead)
+            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
+            (pytest.approx(5.1, rel=2.), june.infection.symptom_tag.SymptomTag.influenza),
+            # (pytest.approx(10, rel=0.5), sym.SymptomTag.hospitalised),
+            (pytest.approx(8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(15, rel=0.5), june.infection.symptom_tag.SymptomTag.dead)
         ]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
+        print(symptoms_trajectories.trajectory)
         assert symptoms_trajectories.trajectory == [
-            (0.0, sym.SymptomTag.exposed),
-            (pytest.approx(5.1, rel=2.), sym.SymptomTag.influenza),
-            (pytest.approx(15, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(17, rel=0.5), sym.SymptomTag.intensive_care),
-            (pytest.approx(35, rel=0.5), sym.SymptomTag.hospitalised),
-            (pytest.approx(55, rel=0.5), sym.SymptomTag.recovered)
+            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
+            (pytest.approx(5.1, rel=0.25), june.infection.symptom_tag.SymptomTag.influenza),
+            (pytest.approx(8, rel=0.25), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(11, rel=0.25), june.infection.symptom_tag.SymptomTag.recovered)
         ]
 
     def test__symptoms__progression(self):
         selector = infect.InfectionSelector()
         dummy = Person(sex='m', age=65)
         infection = selector.make_infection(person=dummy, time=0.1)
-        fixed_severity = 0.8
+        fixed_severity = 0.97
         infection.symptoms.max_severity = fixed_severity
         max_tag = infection.symptoms.max_tag()
-        assert max_tag == sym.SymptomTag.hospitalised
+        assert max_tag == june.infection.symptom_tag.SymptomTag.hospitalised
         infection.symptoms.trajectory = selector.trajectory_maker[max_tag]
         assert infection.symptoms.trajectory == [
-            (0.0, sym.SymptomTag.exposed),
-            (pytest.approx(5, 2.5), sym.SymptomTag.influenza),
-            (pytest.approx(20, rel=5), sym.SymptomTag.hospitalised),
-            (pytest.approx(30, rel=5), sym.SymptomTag.recovered)
+            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
+            (pytest.approx(5, 2.5), june.infection.symptom_tag.SymptomTag.influenza),
+            (pytest.approx(5, rel=5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(30, rel=5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
         hospitalised_time = infection.symptoms.trajectory[2][0]
 
         infection.update_at_time(float(1.))
-        assert infection.symptoms.tag == sym.SymptomTag.exposed
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
         infection.update_at_time(float(1.))
-        assert infection.symptoms.tag == sym.SymptomTag.exposed
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
         infection.update_at_time(float(6.))
-        assert infection.symptoms.tag == sym.SymptomTag.influenza
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.influenza
         infection.update_at_time(hospitalised_time + 6)
-        assert infection.symptoms.tag == sym.SymptomTag.hospitalised
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.hospitalised
         infection.update_at_time(float(50.))
-        assert infection.symptoms.tag == sym.SymptomTag.recovered
+        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.recovered
