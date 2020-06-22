@@ -84,6 +84,23 @@ class ReadLogger:
             )
             self.infections_df.set_index("time_stamp", inplace=True)
 
+    def subtract_previous(self, row, hospitalised_id, prev_hospitalised_id):
+        try:
+            return len(set(hospitalised_id.loc[row.name]) - set(prev_hospitalised_id.loc[row.name]))   
+        except:
+            return len(set(hospitalised_id.loc[row.name]))
+
+    def get_daily_updates(self, symptoms_df, symptoms_tag):
+        # Admissions
+        symptoms_id = symptoms_df.apply(
+                lambda x: x.infected_id[x.symptoms==symptoms_tag],
+                axis=1
+        )
+        previous_symptoms_id = symptoms_id.shift(1)
+        return symptoms_df.apply(self.subtract_previous, 
+                args=(symptoms_id, previous_symptoms_id), axis=1
+                )
+
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
     ) -> pd.DataFrame:
@@ -137,7 +154,12 @@ class ReadLogger:
         df["intensive_care"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
+        df['hospital_admissions'] = self.get_daily_updates(symptoms_df, SymptomTag.hospitalised) 
+        df['intensive_care_admissions'] = self.get_daily_updates(symptoms_df, SymptomTag.intensive_care) 
+
+        df['new_dead'] = self.get_daily_updates(symptoms_df, SymptomTag.dead) 
         return df
+
 
     def world_summary(self) -> pd.DataFrame:
         """
@@ -169,6 +191,9 @@ class ReadLogger:
             n_people_in_area = np.sum(self.super_areas == area)
             area_df["symptoms"] = self.infections_df.apply(
                 lambda x: x.symptoms[x.super_areas == area], axis=1
+            )
+            area_df["infected_id"] = self.infections_df.apply(
+                lambda x: x.infected_id[x.super_areas == area], axis=1
             )
             area_df = self.process_symptoms(area_df, n_people_in_area)
             area_df["super_area"] = area
@@ -206,6 +231,13 @@ class ReadLogger:
                 ],
                 axis=1,
             )
+            age_df["infected_id"] = self.infections_df.apply(
+                lambda x: x.infected_id[
+                    (x.age >= age_ranges[i]) & (x.age < age_ranges[i + 1])
+                ],
+                axis=1,
+            )
+ 
             age_df = self.process_symptoms(age_df, n_age)
             age_df["age_range"] = f"{age_ranges[i]}_{age_ranges[i+1]-1}"
             ages_df.append(age_df)
