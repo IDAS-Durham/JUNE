@@ -8,7 +8,7 @@ from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_configs_path
 from june.demography.geography import SuperArea, Area
 
-default_config_filename = camp_configs_path / "defaults/groups/pumplatrines.yaml"
+default_config_filename = camp_configs_path / "defaults/groups/pump_latrine.yaml"
 
 class PumpLatrine(SocialVenue):
     def __init__(self, max_size=10):
