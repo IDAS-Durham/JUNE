@@ -27,4 +27,5 @@ class CampWorld(World):
         self.distribution_centers = None
         self.communals = None
         self.female_communals = None
+        self.religiouss = None
         self.shelters = None
