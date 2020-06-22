@@ -60,7 +60,7 @@ class Communals(SocialVenues):
     def from_coordinates(
         cls,
         coordinates: List[np.array],
-        max_size = 10,
+        max_size = np.inf,
         areas: Optional[Areas] = None,
         max_distance_to_area=5,
         **kwargs
