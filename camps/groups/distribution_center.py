@@ -8,8 +8,8 @@ from june.groups.leisure.social_venue import SocialVenue, SocialVenues, SocialVe
 from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_data_path, camp_configs_path
 
-default_distribution_centers_coordinates_filename = camp_data_path / "input/activities/distribution_centers.csv"
-default_config_filename = camp_configs_path / "defaults/groups/distribution_centers.yaml"
+default_distribution_centers_coordinates_filename = camp_data_path / "input/activities/distribution_center.csv"
+default_config_filename = camp_configs_path / "defaults/groups/distribution_center.yaml"
 
 class DistributionCenter(SocialVenue):
     def __init__(self, max_size=np.inf):
