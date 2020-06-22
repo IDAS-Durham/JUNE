@@ -2,18 +2,20 @@ import numpy as np
 import pandas as pd
 from typing import Optional
 import matplotlib.pyplot as plt
-from june.demography.geography import Geography
+
 from june.demography.demography import (
     load_age_and_sex_generators_for_bins,
     Demography,
     Population,
 )
 from june.paths import data_path
-from camps.paths import camp_data_path
-from june import World
 from june.world import generate_world_from_hdf5
-from camps.distributors import CampHouseholdDistributor
 from june.groups import Households
+
+from camps.distributors import CampHouseholdDistributor
+from camps.geography import CampGeography
+from camps.paths import camp_data_path
+from camps.world import CampWorld
 
 
 # area coding example CXB-219-056
@@ -36,19 +38,19 @@ area_residents_families_df.set_index("area", inplace=True)
 
 
 def generate_empty_world(filter_key: Optional[dict]=None):
-    geo = Geography.from_file(
+    geo = CampGeography.from_file(
         filter_key=filter_key,
         hierarchy_filename=area_mapping_filename,
         area_coordinates_filename=area_coordinates_filename,
         super_area_coordinates_filename=super_area_coordinates_filename,
     )
-    world = World()
+    world = CampWorld()
     world.areas = geo.areas
     world.super_areas = geo.super_areas
     world.people = Population()
     return world
 
-def populate_world(world: World):
+def populate_world(world: CampWorld):
     """
     Populates the world. For each super area, we initialize a population
     following the data's age and sex distribution. We then split the population
@@ -102,7 +104,7 @@ def populate_world(world: World):
                 area.add(people_left.pop())
     
 
-def distribute_people_to_households(world: World):
+def distribute_people_to_households(world: CampWorld):
     """
     Distributes the people in the world to households by using the CampHouseholdDistributor.
     """
