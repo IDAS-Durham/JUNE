@@ -120,7 +120,7 @@ class HealthIndexGenerator:
              The probability P for all ages in the array "age".
         """
         C, C1, C2, C3 = poli
-        age[age > 80.0] = 80.0
+        age[age > 85.0] = 85.0
         return 10 ** (
                 C + C1 * age + C2 * age ** 2 + C3 * age ** 3
         )  # The coefficients are a fit to the logarithmic model
