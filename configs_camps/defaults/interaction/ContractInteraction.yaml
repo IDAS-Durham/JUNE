@@ -5,10 +5,12 @@ beta:
   communal: 0.5
   pump_latrine: 0.1
   distribution_center: 0.25
-  household: 0.5
+  household: 1.0
   hospital: 0.5
 
 contact_matrices:
+  communal:
+    [[2.14]]
   hospital:
     # number 10 comes from the fact that on average there are 10 medics per patient
     # for ICU that should be lower, but it isn't reflected in hospital distributor yet
