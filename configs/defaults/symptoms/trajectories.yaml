@@ -11,10 +11,8 @@ trajectories:
 
       - symptom_tag: asymptomatic
         completion_time:
-          type: lognormal
-          s: 0.24
-          loc: 0.0
-          scale: 7.76
+          type: constant
+          value: 14
 
 
       - symptom_tag: recovered
@@ -34,10 +32,8 @@ trajectories:
 
       - symptom_tag: influenza
         completion_time:
-          type: lognormal
-          s: 0.24
-          loc: 0.0
-          scale: 7.76
+          type: constant
+          value: 20.
 
 
       - symptom_tag: recovered
@@ -94,10 +90,10 @@ trajectories:
       - symptom_tag: hospitalised
         completion_time:
           type: beta
-          a: 6.56
-          b: 61.22
-          loc: -4.0
-          scale: 273
+          a: 1.35
+          b: 3.68
+          loc: 0.05
+          scale: 27.1
 
 
       - symptom_tag: recovered
@@ -123,28 +119,18 @@ trajectories:
           scale: 4.12
 
 
-      - symptom_tag: hospitalised
-        completion_time:
-          type: constant
-          value: 2.
 
 
       
       - symptom_tag: intensive_care
         completion_time:
-          type: lognormal
-          s: 0.619
-          loc: 0.0
-          scale: 10.73
-
-
-      - symptom_tag: hospitalised
-        completion_time:
           type: beta
-          a: 6.56
-          b: 61.22
-          loc: -4.0
-          scale: 273
+          a: 1.35
+          b: 3.68
+          loc: 0.05
+          scale: 27.1
+
+
 
 
       - symptom_tag: recovered
@@ -198,9 +184,11 @@ trajectories:
       
       - symptom_tag: hospitalised
         completion_time:
-          type: exponential
-          loc: 1
-          scale: 8.854
+          type: beta
+          a: 1.21
+          b: 1.97
+          loc: 0.08
+          scale: 22.9      
 
       - symptom_tag: dead
         completion_time:
@@ -226,7 +214,7 @@ trajectories:
       - symptom_tag: hospitalised
         completion_time:
           type: constant
-          value: 2.
+          value: 1.
 
       - symptom_tag: intensive_care
         completion_time:
