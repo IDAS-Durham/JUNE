@@ -12,7 +12,11 @@ from june import paths
 
 class ReadLogger:
     def __init__(
-            self, output_path: str = "results", output_file_name: str = "logger.hdf5", light_logger: bool =False, load_real=True
+        self,
+        output_path: str = "results",
+        output_file_name: str = "logger.hdf5",
+        light_logger: bool = False,
+        load_real=True,
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -98,17 +102,31 @@ class ReadLogger:
         -------
         A data frame whose index is the date recorded, and columns are number of recovered, dead, infected...
         """
+        dead_symptoms = [
+            SymptomTag.dead_home,
+            SymptomTag.dead_icu,
+            SymptomTag.dead_hospital,
+        ]
         df = pd.DataFrame()
         df["recovered"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
         ).cumsum()
+        df["dead_home"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_home), axis=1
+        ).cumsum()
+        df["dead_hospital"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_hospital), axis=1
+        ).cumsum()
+        df["dead_icu"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
+        ).cumsum()
         df["dead"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead), axis=1
+            lambda x: np.count_nonzero(np.isin(x.symptoms, dead_symptoms)), axis=1,
         ).cumsum()
         # get rid of those that just recovered or died
         df["infected"] = symptoms_df.apply(
             lambda x: (
-                (x.symptoms != SymptomTag.recovered) & (x.symptoms != SymptomTag.dead)
+                (x.symptoms != SymptomTag.recovered) & (~np.isin(x.symptoms,dead_symptoms))
             ).sum(),
             axis=1,
         )
@@ -313,7 +331,7 @@ class ReadLogger:
                 "trust_code": trust_code,
             }
         )
-        hospitals_df['trust_code'] = hospitals_df['trust_code'].str.decode("utf-8")
+        hospitals_df["trust_code"] = hospitals_df["trust_code"].str.decode("utf-8")
         hospitals_df.index.rename("hospital_id")
         return hospitals_df
 
@@ -332,7 +350,12 @@ class ReadLogger:
             n_patients_icu = []
             time_stamps = []
             for time_stamp in hospitals.keys():
-                if time_stamp not in ("coordinates", "n_beds", "n_icu_beds", "trust_code"):
+                if time_stamp not in (
+                    "coordinates",
+                    "n_beds",
+                    "n_icu_beds",
+                    "trust_code",
+                ):
                     hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
                     n_patients.append(hospitals[time_stamp]["n_patients"][:])
                     n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
