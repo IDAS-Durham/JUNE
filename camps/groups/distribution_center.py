@@ -8,8 +8,8 @@ from june.groups.leisure.social_venue import SocialVenue, SocialVenues, SocialVe
 from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_data_path, camp_configs_path
 
-default_distribution_centers_coordinates_filename = camp_data_path / "input/activities/distribution_centers.csv"
-default_config_filename = camp_configs_path / "defaults/groups/distribution_centers.yaml"
+default_distribution_centers_coordinates_filename = camp_data_path / "input/activities/distribution_center.csv"
+default_config_filename = camp_configs_path / "defaults/groups/distribution_center.yaml"
 
 class DistributionCenter(SocialVenue):
     def __init__(self, max_size=np.inf):
@@ -29,7 +29,7 @@ class DistributionCenters(SocialVenues):
         areas: Areas,
         coordinates_filename: str = default_distribution_centers_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         distribution_centers_df = pd.read_csv(coordinates_filename)
         coordinates = distribution_centers_df.loc[:, ["latitude", "longitude"]].values
@@ -46,7 +46,7 @@ class DistributionCenters(SocialVenues):
         geography,
         coordinates_filename: str = default_distribution_centers_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         return cls.for_areas(
             areas=geography.areas,
@@ -59,7 +59,7 @@ class DistributionCenters(SocialVenues):
     def from_coordinates(
         cls,
         coordinates: List[np.array],
-        max_size = 10,
+        max_size = np.inf,
         areas: Optional[Areas] = None,
         max_distance_to_area=5,
         **kwargs

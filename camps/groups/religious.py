@@ -4,35 +4,35 @@ import yaml
 from typing import List, Optional
 from june.demography.geography import Areas
 
-from .social_venue import SocialVenue, SocialVenues, SocialVenueError
-from .social_venue_distributor import SocialVenueDistributor
-from june.paths import camp_data_path, configs_path
+from june.groups.leisure.social_venue import SocialVenue, SocialVenues, SocialVenueError
+from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
+from camps.paths import camp_data_path, camp_configs_path
 
-default_female_communals_coordinates_filename = camp_data_path / "input/activities/female_communal.csv"
-default_config_filename = configs_path / "defaults/groups/leisure/female_communal.yaml"
+default_religiouss_coordinates_filename = camp_data_path / "input/activities/religious.csv"
+default_config_filename = camp_configs_path / "defaults/groups/religious.yaml"
 
-class FemaleCommunal(SocialVenue):
+class Religious(SocialVenue):
     def __init__(self, max_size=np.inf):
         super().__init__()
         self.max_size = max_size
 
 
-class FemaleCommunals(SocialVenues):
-    def __init__(self, female_communals, make_tree:bool = True):
-        super().__init__(female_communals)
-        if len(female_communals) != 0 and make_tree:
+class Religiouss(SocialVenues):
+    def __init__(self, religiouss, make_tree:bool = True):
+        super().__init__(religiouss)
+        if len(religiouss) != 0 and make_tree:
             self.make_tree()
 
     @classmethod
     def for_areas(
         cls,
         areas: Areas,
-        coordinates_filename: str = default_female_communals_coordinates_filename,
+        coordinates_filename: str = default_religiouss_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
-        female_communals_df = pd.read_csv(coordinates_filename)
-        coordinates = female_communals_df.loc[:, ["latitude", "longitude"]].values
+        religiouss_df = pd.read_csv(coordinates_filename)
+        coordinates = religiouss_df.loc[:, ["latitude", "longitude"]].values
         return cls.from_coordinates(
             coordinates,
             max_size,
@@ -40,21 +40,19 @@ class FemaleCommunals(SocialVenues):
             max_distance_to_area=max_distance_to_area,
 
         )
-
+    
     @classmethod
     def for_geography(
         cls,
         geography,
-        coordinates_filename: str = default_female_communals_coordinates_filename,
+        coordinates_filename: str = default_religiouss_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
-        female_communals_df = pd.read_csv(coordinates_filename)
-        coordinates = female_communals_df.loc[:, ["latitude", "longitude"]].values
-        return cls.from_coordinates(
-            coordinates,
-            max_size,
-            geography.areas,
+        return cls.for_areas(
+            coordinates_filename=coordinates_filename,
+            max_size=max_size,
+            areas =geography.areas,
             max_distance_to_area=max_distance_to_area,
         )
 
@@ -62,7 +60,7 @@ class FemaleCommunals(SocialVenues):
     def from_coordinates(
         cls,
         coordinates: List[np.array],
-        max_size = 10,
+        max_size = np.inf,
         areas: Optional[Areas] = None,
         max_distance_to_area=5,
         **kwargs
@@ -75,16 +73,16 @@ class FemaleCommunals(SocialVenues):
             coordinates = coordinates[distances_close]
         social_venues = list()
         for coord in coordinates:
-            sv = FemaleCommunal(max_size)
+            sv = Religious(max_size)
             sv.coordinates = coord
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 
 
-class FemaleCommunalDistributor(SocialVenueDistributor):
+class ReligiousDistributor(SocialVenueDistributor):
     def __init__(
         self,
-        female_communals: FemaleCommunals,
+        religiouss: Religiouss,
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
         neighbours_to_consider=5,
@@ -93,7 +91,7 @@ class FemaleCommunalDistributor(SocialVenueDistributor):
         drags_household_probability=0.3,
     ):
         super().__init__(
-            social_venues=female_communals,
+            social_venues=religiouss,
             male_age_probabilities=male_age_probabilities,
             female_age_probabilities=female_age_probabilities,
             neighbours_to_consider=neighbours_to_consider,
@@ -103,7 +101,7 @@ class FemaleCommunalDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(cls, female_communals: FemaleCommunals, config_filename: str = default_config_filename):
+    def from_config(cls, religiouss: Religiouss, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(female_communals, **config)
+        return cls(religiouss, **config)

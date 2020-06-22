@@ -29,7 +29,7 @@ class Communals(SocialVenues):
         areas: Areas,
         coordinates_filename: str = default_communals_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         communals_df = pd.read_csv(coordinates_filename)
         coordinates = communals_df.loc[:, ["latitude", "longitude"]].values
@@ -47,7 +47,7 @@ class Communals(SocialVenues):
         geography,
         coordinates_filename: str = default_communals_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         return cls.for_areas(
             coordinates_filename=coordinates_filename,
@@ -60,7 +60,7 @@ class Communals(SocialVenues):
     def from_coordinates(
         cls,
         coordinates: List[np.array],
-        max_size = 10,
+        max_size = np.inf,
         areas: Optional[Areas] = None,
         max_distance_to_area=5,
         **kwargs
