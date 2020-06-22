@@ -250,9 +250,9 @@ class HealthIndexGenerator:
              3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 6 
              outcomes for 120 ages and the 2 sex.
         """
-        
-        sex = 0
         if person.sex == "m":
+            sex = 0
+        else:
             sex = 1
         roundage = int(round(person.age))
         return np.cumsum(self.Prob_lists[sex][roundage])

@@ -3,16 +3,16 @@ import pandas as pd
 import yaml
 from typing import List, Optional
 from june.demography.geography import Areas, SuperAreas
-from june.groups import CareHomes, Households
+from june.groups import Households
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 
-default_config_filename = configs_path / "defaults/groups/leisure/residence_visits.yaml"
+default_config_filename = configs_path / "defaults/groups/leisure/household_visits.yaml"
 
 
-class VisitsDistributor(SocialVenueDistributor):
+class HouseholdVisitsDistributor(SocialVenueDistributor):
     def __init__(
         self,
         super_areas: SuperAreas,
@@ -32,7 +32,7 @@ class VisitsDistributor(SocialVenueDistributor):
             weekend_boost=weekend_boost,
             drags_household_probability=drags_household_probability,
         )
-        self.link_households_to_care_homes(super_areas)
+        self.link_households_to_households(super_areas)
 
     @classmethod
     def from_config(
@@ -42,11 +42,10 @@ class VisitsDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(super_areas, **config)
 
-    def link_households_to_care_homes(self, super_areas):
+    def link_households_to_households(self, super_areas):
         """
-        Links households and care homes in the giving super areas. For each care home,
-        we find a random house in the super area and link it to it.
-        The house needs to be occupied by a family, or a couple.
+        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later 
+        at every time step.
 
         Parameters
         ----------
@@ -59,31 +58,41 @@ class VisitsDistributor(SocialVenueDistributor):
                 households_super_area += [
                     household
                     for household in area.households
-                    if household.type in ["families", "ya_parents", "nokids"]
+                    if household.type
+                    in [
+                        "families",
+                        "ya_parents",
+                        "nokids",
+                        "old",
+                        "student",
+                        "young_adults",
+                    ]
                 ]
                 np.random.shuffle(households_super_area)
-            for area in super_area.areas:
-                if area.care_home is not None:
-                    people_in_care_home = [person for person in area.care_home.residents]
-                    for i, person in enumerate(people_in_care_home):
-                        if households_super_area[i].relatives is None:
-                            households_super_area[i].relatives = (person,)
-                        else:
-                            households_super_area[i].relatives = tuple(
-                                (*households_super_area[i].relatives, person,)
-                            )
+            for household in households_super_area:
+                if household.size == 0:
+                    continue
+                households_to_link_n = np.random.randint(0, 3)
+                relatives_to_visit = []
+                for _ in range(households_to_link_n):
+                    house_idx = np.random.randint(0, len(households_super_area))
+                    house = households_super_area[house_idx]
+                    if house.id == household.id:
+                        continue
+                    if len(house.people) == 0:
+                        continue
+                    person_idx = np.random.randint(len(house.people))
+                    relatives_to_visit.append(house.people[person_idx])
+                household.relatives_in_households = tuple(relatives_to_visit)
 
     def get_social_venue_for_person(self, person):
-        relatives = person.residence.group.relatives
+        relatives = person.residence.group.relatives_in_households
         if relatives is None:
-            return
-        if len([person for person in relatives if person.dead is False]) == 0:
-            return
-        elif len(relatives) == 1:
-            return relatives[0].residence.group
-        else:
-            relative = np.random.choice(relatives)
-            return relative.residence.group
+            return None
+        alive_relatives = [relative for relative in relatives if relative.dead is False]
+        return alive_relatives[
+            np.random.randint(0, len(alive_relatives))
+        ].residence.group
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """
@@ -99,14 +108,17 @@ class VisitsDistributor(SocialVenueDistributor):
         is_weekend
             whether it is a weekend or not
         """
-        if person.residence.group.relatives is None:
+        if (
+            person.residence.group.spec == "care_home"
+            or person.residence.group.relatives_in_households is None
+        ):
             return 0
         # do not visit dead people
         if (
             len(
                 [
                     person
-                    for person in person.residence.group.relatives
+                    for person in person.residence.group.relatives_in_households
                     if person.dead is False
                 ]
             )
