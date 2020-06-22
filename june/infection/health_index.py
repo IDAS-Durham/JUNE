@@ -224,8 +224,8 @@ class HealthIndexGenerator:
                Exces_Death_male[Boolean]=Exces_Deaths[Exces_Deaths_index][2]
         
         
-        Exces_Death_female[ages>Exces_Deaths[-1][0]]=Exces_Deaths[-1][1]
-        Exces_Death_male[ages>Exces_Deaths[-1][0]]=Exces_Deaths[-1][2] 
+        Exces_Death_female[ages>=Exces_Deaths[-1][0]]=Exces_Deaths[-1][1]
+        Exces_Death_male[ages>=Exces_Deaths[-1][0]]=Exces_Deaths[-1][2] 
         
         Deaths_at_home_female=ratio_Death_female*(1-Exces_Death_female)
         Deaths_at_home_male=ratio_Death_male*(1-Exces_Death_male)
@@ -251,8 +251,8 @@ class HealthIndexGenerator:
              outcomes for 120 ages and the 2 sex.
         """
         
-        sex = 1
+        sex = 0
         if person.sex == "m":
-            sex = 0
+            sex = 1
         roundage = int(round(person.age))
         return np.cumsum(self.Prob_lists[sex][roundage])
