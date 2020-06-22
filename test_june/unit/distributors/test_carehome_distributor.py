@@ -7,7 +7,7 @@ from june.groups.carehome import CareHome, CareHomes
 from june.demography.geography import Geography
 from june.demography import Demography
 from june.demography.person import Person
-from june.world import World
+from june.world import World, generate_world_from_geography
 
 default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 
@@ -74,8 +74,7 @@ def create_area():
     g = Geography.from_file(
         filter_key={"super_area" : ["E02003353"]},
     )
-    dem = Demography.for_geography(g)
-    world = World(g, dem)
+    world = generate_world_from_geography(g)
     return world
 
 def test__carehome_for_geography(world, carehome_distributor):

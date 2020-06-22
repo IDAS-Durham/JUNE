@@ -1,5 +1,7 @@
 trajectories:
 
+
+# exposed => asymptomatic => recovered
   - stages:
       - symptom_tag: exposed
         completion_time:
@@ -14,13 +16,13 @@ trajectories:
           type: constant
           value: 14
 
-
       - symptom_tag: recovered
         completion_time:
           type: constant
           value: 0.0
 
 
+# exposed => influenza => recovered 
   - stages:
       - symptom_tag: exposed
         completion_time:
@@ -35,12 +37,13 @@ trajectories:
           type: constant
           value: 20.
 
-
       - symptom_tag: recovered
         completion_time:
           type: constant
           value: 0.0
 
+
+# exposed => influenza => pneumonia => recovered
 
   - stages:
       - symptom_tag: exposed
@@ -51,24 +54,22 @@ trajectories:
           loc: 0.39
           scale: 39.8
  
-
       - symptom_tag: influenza
         completion_time:
           type: constant
           value: 5.
-
 
       - symptom_tag: pneumonia
         completion_time:
           type: constant
           value: 20.
 
-
       - symptom_tag: recovered
         completion_time:
           type: constant
           value: 0.0
 
+# exposed => influenza => hospitalised => recovered
 
   - stages:
       
@@ -85,7 +86,6 @@ trajectories:
           type: exponential
           loc: 1
           scale: 4.12
-
 
       - symptom_tag: hospitalised
         completion_time:
@@ -95,12 +95,12 @@ trajectories:
           loc: 0.05
           scale: 27.1
 
-
       - symptom_tag: recovered
         completion_time:
           type: constant
           value: 0.0
 
+# exposed => influenza => intensive_care => recovered
 
   - stages:
       
@@ -118,10 +118,6 @@ trajectories:
           loc: 1
           scale: 4.12
 
-
-
-
-      
       - symptom_tag: intensive_care
         completion_time:
           type: beta
@@ -130,13 +126,12 @@ trajectories:
           loc: 0.05
           scale: 27.1
 
-
-
-
       - symptom_tag: recovered
         completion_time:
           type: constant
           value: 0.0
+
+# exposed => influenza => pneumonia => dead
 
   - stages:
       - symptom_tag: exposed
@@ -158,14 +153,12 @@ trajectories:
           type: constant
           value: 3.0
 
-      - symptom_tag: dead
+      - symptom_tag: dead_home
         completion_time:
           type: constant
           value: 0.0
 
-
-
-
+# exposed => influenza => hospitalised => dead
 
   - stages:
       - symptom_tag: exposed
@@ -190,12 +183,14 @@ trajectories:
           loc: 0.08
           scale: 22.9      
 
-      - symptom_tag: dead
+      - symptom_tag: dead_hospitalised
         completion_time:
           type: constant
           value: 0.
-  - stages:
 
+# exposed => influenza => hospitalised => intensive_care => dead
+
+  - stages:
       - symptom_tag: exposed
         completion_time:
           type: beta
@@ -223,7 +218,7 @@ trajectories:
           loc: 0.0
           scale: 7.15
 
-      - symptom_tag: dead
+      - symptom_tag: dead_icu
         completion_time:
           type: constant
           value: 0.
