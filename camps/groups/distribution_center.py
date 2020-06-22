@@ -29,7 +29,7 @@ class DistributionCenters(SocialVenues):
         areas: Areas,
         coordinates_filename: str = default_distribution_centers_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         distribution_centers_df = pd.read_csv(coordinates_filename)
         coordinates = distribution_centers_df.loc[:, ["latitude", "longitude"]].values
@@ -46,7 +46,7 @@ class DistributionCenters(SocialVenues):
         geography,
         coordinates_filename: str = default_distribution_centers_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         return cls.for_areas(
             areas=geography.areas,

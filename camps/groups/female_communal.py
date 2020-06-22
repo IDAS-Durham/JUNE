@@ -47,7 +47,7 @@ class FemaleCommunals(SocialVenues):
         geography,
         coordinates_filename: str = default_female_communals_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         female_communals_df = pd.read_csv(coordinates_filename)
         coordinates = female_communals_df.loc[:, ["latitude", "longitude"]].values
@@ -62,7 +62,7 @@ class FemaleCommunals(SocialVenues):
     def from_coordinates(
         cls,
         coordinates: List[np.array],
-        max_size = 10,
+        max_size = np.inf,
         areas: Optional[Areas] = None,
         max_distance_to_area=5,
         **kwargs
