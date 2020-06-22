@@ -183,7 +183,7 @@ trajectories:
           loc: 0.08
           scale: 22.9      
 
-      - symptom_tag: dead_hospitalised
+      - symptom_tag: dead_hospital
         completion_time:
           type: constant
           value: 0.
