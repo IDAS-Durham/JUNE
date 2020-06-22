@@ -60,7 +60,7 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == SymptomTag.dead
+        return self.tag in [SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu]
 
     def update_health_status(self, time, delta_time):
         self.infection.update_at_time(time + delta_time)

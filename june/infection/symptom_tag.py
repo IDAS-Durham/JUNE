@@ -17,7 +17,9 @@ class SymptomTag(IntEnum):
     pneumonia = 2
     hospitalised = 3
     intensive_care = 4
-    dead = 5
+    dead_home = 5
+    dead_hospital = 6
+    dead_icu = 7
 
     @classmethod
     def from_string(cls, string: str) -> "SymptomTag":

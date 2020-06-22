@@ -251,8 +251,8 @@ class HealthIndexGenerator:
              outcomes for 120 ages and the 2 sex.
         """
         if person.sex == "m":
-            sex = 0
-        else:
             sex = 1
+        else:
+            sex = 0
         roundage = int(round(person.age))
         return np.cumsum(self.Prob_lists[sex][roundage])
