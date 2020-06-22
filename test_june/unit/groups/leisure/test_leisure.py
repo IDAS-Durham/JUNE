@@ -2,6 +2,7 @@ import numpy as np
 from pytest import fixture
 from june.groups import Household
 from june.demography.geography import Area, SuperArea
+from june.world import generate_world_from_geography
 
 from june.groups.leisure import (
     Leisure,
@@ -63,7 +64,7 @@ def test__probability_of_leisure(leisure):
                 raise ValueError
             times.append(counter)
             break
-    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0, rtol=0.25)
+    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0.1, rtol=0)
     assert np.isclose(times_goes_pub / times_goes_cinema, 0.5 / 0.2, atol=0, rtol=0.25)
 
 
@@ -93,7 +94,7 @@ def test__person_drags_household(leisure):
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02000140"]})
     demography = Demography.for_geography(geography)
-    world = World(geography, demography, include_households=False)
+    world = generate_world_from_geography(geography, include_households=False, include_commute=False)
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)

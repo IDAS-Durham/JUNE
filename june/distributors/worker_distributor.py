@@ -9,7 +9,7 @@ from scipy import stats
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
+from june.demography.geography import Geography, Areas, SuperAreas
 
 default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (
@@ -78,7 +78,7 @@ class WorkerDistributor:
         self.n_boundary_workers = 0
 
     def distribute(
-        self, geography: Geography, population: Population,
+            self, areas: Areas, super_areas: SuperAreas, population: Population,
     ):
         """
         Assign any person within the eligible working age range a location
@@ -88,10 +88,11 @@ class WorkerDistributor:
         Parameters
         ----------
         """
-        self.geography = geography
+        self.areas = areas
+        self.super_areas = super_areas
         for i, area in enumerate(
-            iter(geography.areas)
-        ):  # TODO a.t.m. only for_geography() supported
+            iter(self.areas)
+        ):  
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
             for idx, person in enumerate(area.people):
@@ -100,7 +101,7 @@ class WorkerDistributor:
                     self._assign_work_sector(idx, person)
             if i % 5000 == 0 and i != 0:
                 logger.info(
-                    f"Distributed workers in {i} areas of {len(geography.areas)}"
+                    f"Distributed workers in {i} areas of {len(self.areas)}"
                 )
         logger.info(
             f"There are {self.n_boundary_workers} who had to be told to stay real"
@@ -165,7 +166,7 @@ class WorkerDistributor:
             work_location = wf_area_df.index.values[self.work_msoa_man_rnd[i]]
         super_area = [
             super_area
-            for super_area in self.geography.super_areas
+            for super_area in self.super_areas
             if super_area.name == work_location
         ]
         if len(super_area) != 0:
@@ -183,8 +184,8 @@ class WorkerDistributor:
         """
         Selects random SuperArea to send a worker to work in
         """
-        idx = np.random.choice(np.arange(len(self.geography.super_areas)))
-        self.geography.super_areas.members[idx].add_worker(person)
+        idx = np.random.choice(np.arange(len(self.super_areas)))
+        self.super_areas.members[idx].add_worker(person)
 
     def _assign_work_sector(self, i: int, person: Person):
         """
@@ -283,7 +284,7 @@ class WorkerDistributor:
     @classmethod
     def from_file(
         cls,
-        area_names: Optional[List[str]] = [],
+        area_names: Optional[List[str]] = None, 
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
@@ -300,6 +301,8 @@ class WorkerDistributor:
         education_sector_file
         healthcare_sector_file
         """
+        if area_names is None:
+            area_names = []
         workflow_df = load_workflow_df(workflow_file, area_names)
         sex_per_sector_df = load_sex_per_sector(sex_per_sector_file, area_names)
         with open(config_file) as f:
