@@ -28,7 +28,7 @@ def make_geography():
 
 @fixture(name="leisure")
 def make_leisure():
-    pubs = Pubs([Pub()],make_tree=False)
+    pubs = Pubs([Pub()], make_tree=False)
     pub_distributor = PubDistributor(
         pubs, male_age_probabilities={"18-50": 0.5}, drags_household_probability=0.0
     )
@@ -36,7 +36,9 @@ def make_leisure():
     cinema_distributor = CinemaDistributor(
         cinemas, male_age_probabilities={"10-40": 0.2}, drags_household_probability=1.0,
     )
-    leisure = Leisure(leisure_distributors=[pub_distributor, cinema_distributor])
+    leisure = Leisure(
+        leisure_distributors={"pubs": pub_distributor, "cinemas": cinema_distributor}
+    )
     return leisure
 
 
@@ -86,25 +88,29 @@ def test__person_drags_household(leisure):
         leisure_distributor=leisure.leisure_distributors[1],
     )
     for person in [person1, person2, person3]:
-        assert (
-            person.subgroups.leisure == social_venue.subgroups[0]
-        )
+        assert person.subgroups.leisure == social_venue.subgroups[0]
 
 
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02000140"]})
     demography = Demography.for_geography(geography)
-    world = generate_world_from_geography(geography, include_households=False, include_commute=False)
+    world = generate_world_from_geography(
+        geography, include_households=False, include_commute=False
+    )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(geography.super_areas, venues_per_capita=1/500)
+    world.groceries = Groceries.for_super_areas(
+        geography.super_areas, venues_per_capita=1 / 500
+    )
     person = Person(sex="m", age=27)
     household = Household()
     household.add(person)
     person.area = geography.areas[0]
-    assert np.isclose(len(world.groceries), len(world.people) * 1/500, atol=0, rtol=0.1)
+    assert np.isclose(
+        len(world.groceries), len(world.people) * 1 / 500, atol=0, rtol=0.1
+    )
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
-    for _ in range(0,100):
+    for _ in range(0, 100):
         leisure.get_subgroup_for_person_and_housemates(person, 0.1, False)

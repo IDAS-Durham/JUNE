@@ -3,17 +3,21 @@ import datetime
 import re
 import sys
 from abc import ABC, abstractmethod
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Dict
 
 import yaml
 
 from june import paths
 from june.demography.person import Person
+from june.groups.leisure.social_venue_distributor import parse_age_probabilites
+from june.groups.leisure import Leisure
 
 # TODO: reduce leisure attendance
 
 default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
+class PolicyError(BaseException):
+    pass
 
 class Policy(ABC):
     def __init__(
@@ -295,7 +299,28 @@ class CloseCompanies(SkipActivity):
                 return self.remove_activity(activities, "primary_activity")
         return activities
 
+class ChangeLeisureProbability(Policy):
+    def __init__(self, start_time: str, end_time: str, leisure_activities_probabilities : Dict[str, Dict[str, Dict[str, float]]]):
+        """
+        Changes the probability of the specified leisure activities.
 
+        Parameters
+        ----------
+        - start_time : starting time of the policy.
+        - end_time : end time of the policy.
+        - leisure_activities_probabilities : dictionary where the first key is an age range, and the second  a
+            number with the new probability for the activity in that age. Example:
+            * leisure_activities_probabilities = {"pubs" : {"men" :{"0-50" : 0.5, "50-99" : 0.2}, "women" : {"0-70" : 0.2, "71-99" : 0.8}}}
+        """
+        super().__init__(start_time, end_time)
+        self.leisure_probabilities = {}
+        self.original_leisure_probabilities = {}
+        for activity in leisure_activities_probabilities:
+            self.leisure_probabilities[activity] = {}
+            self.leisure_probabilities[activity]["men"] = parse_age_probabilites(leisure_activities_probabilities[activity]["men"])
+            self.leisure_probabilities[activity]["women"] = parse_age_probabilites(leisure_activities_probabilities[activity]["women"])
+            self.original_leisure_probabilities[activity] = {} # this will be filled when coupled to leisure
+        
 class Policies:
     def __init__(self, policies=None):
         self.policies = [PermanentPolicy()] + (policies or list())
@@ -352,6 +377,9 @@ class Policies:
                     return True
         return False
 
+    def get_change_leisure_probabilities_policies(self, date):
+        return self.get_active_policies_for_type(policy_type=ChangeLeisureProbability, date=date)
+
     def apply_social_distancing_policy(self, betas, time):
         '''
         Implement social distancing policy
@@ -388,6 +416,33 @@ class Policies:
         for policy in self.close_venues_policies(date):
             closed_venues.update(policy.venues_to_close)
         return closed_venues
+
+    def apply_change_probabilities_leisure(self, date, leisure: Leisure):
+        """
+        Changes probabilities of doing leisure activities according to the policies specified.
+        The current probabilities are stored in the policies, and restored at the end of the policy 
+        time span. Keep this in mind when trying to stack policies that modify the same social venue.
+        """
+        active_policies = self.get_change_leisure_probabilities_policies(date)
+        for policy in active_policies:
+            if policy.start_time == date:
+                # activate policy
+                for activity in policy.leisure_probabilities:
+                    if activity not in leisure.leisure_distributors:
+                        raise PolicyError("Trying to change leisure probability for a non-existing activity")
+                    activity_distributor = leisure.leisure_distributors[activity]
+                    policy.original_leisure_probabilities[activity]["men"] = activity_distributor.male_probabilities
+                    policy.original_leisure_probabilities[activity]["women"] = activity_distributor.female_probabilities
+                    activity_distributor.male_probabilities = policy.leisure_probabilities[activity]["men"]
+                    activity_distributor.female_probabilities = policy.leisure_probabilities[activity]["women"]
+            elif policy.end_time == date:
+                # restore policy 
+                for activity in policy.leisure_probabilities:
+                    if activity not in leisure.leisure_distributors:
+                        raise PolicyError("Trying to restore a leisure probability for a non-existing activity")
+                    activity_distributor = leisure.leisure_distributors[activity]
+                    activity_distributor.male_probabilities = policy.original_leisure_probabilities[activity]["men"]
+                    activity_distributor.female_probabilities = policy.original_leisure_probabilities[activity]["women"]
 
 
 def str_to_class(classname):
