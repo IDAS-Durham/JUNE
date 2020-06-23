@@ -157,7 +157,7 @@ class ReadLogger:
         df['hospital_admissions'] = self.get_daily_updates(symptoms_df, SymptomTag.hospitalised) 
         df['intensive_care_admissions'] = self.get_daily_updates(symptoms_df, SymptomTag.intensive_care) 
 
-        df['new_dead'] = self.get_daily_updates(symptoms_df, SymptomTag.dead) 
+        #df['new_dead'] = self.get_daily_updates(symptoms_df, SymptomTag.dead) 
         return df
 
 
