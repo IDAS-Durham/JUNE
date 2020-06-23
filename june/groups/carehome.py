@@ -11,12 +11,8 @@ from june import paths
 from june.demography.geography import Geography, Area
 from june.groups.group import Group, Supergroup
 
-default_data_filename = (
-    paths.data_path / "input/care_homes/care_homes_ew.csv"
-)
-default_areas_map_path = (
-    paths.data_path / "input/geography/area_super_area_region.csv"
-)
+default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
+default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 logger = logging.getLogger(__name__)
 
@@ -34,39 +30,39 @@ class CareHome(Group):
     1 - residents 
     2 - visitors 
     """
-    __slots__ = "n_residents", "area", 'n_workers', "relatives"
+
+    __slots__ = "n_residents", "area", "n_workers", "relatives"
+
     class SubgroupType(IntEnum):
         workers = 0
         residents = 1
         visitors = 2
 
-    def __init__(self, area: Area=None, n_residents: int=None, n_workers: int=None):
+    def __init__(
+        self, area: Area = None, n_residents: int = None, n_workers: int = None
+    ):
         super().__init__()
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
-        self.relatives = None
 
     def add(
         self,
         person,
-        subgroup_type = SubgroupType.residents,
+        subgroup_type=SubgroupType.residents,
         activity: str = "residence",
         dynamic: bool = False,
     ):
         if activity == "leisure":
             super().add(
                 person,
-                subgroup_type = self.SubgroupType.visitors,
-                activity = "leisure",
-                dynamic = True,
+                subgroup_type=self.SubgroupType.visitors,
+                activity="leisure",
+                dynamic=True,
             )
         else:
             super().add(
-                person,
-                subgroup_type = subgroup_type,
-                activity = activity,
-                dynamic = dynamic,
+                person, subgroup_type=subgroup_type, activity=activity, dynamic=dynamic,
             )
 
     @property
@@ -104,7 +100,6 @@ class CareHomes(Supergroup):
             raise CareHomeError("Empty geography!")
         return cls.for_areas(areas, data_file, config_file)
 
-
     @classmethod
     def for_areas(
         cls,
@@ -129,7 +124,9 @@ class CareHomes(Supergroup):
             # filter out carehomes that are in the area of interest
             care_home_df = care_home_df.loc[area_names]
         care_homes = []
-        logger.info(f"There are {len(care_home_df)} care_homes in this geography.")
+        logger.info(
+            f"There are {len(care_home_df.loc[care_home_df.values!=0])} care_homes in this geography."
+        )
         for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]
             n_worker = max(int(n_residents / config["sector"]["Q"]["nr_of_clients"]), 1)

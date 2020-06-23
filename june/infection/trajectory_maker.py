@@ -5,7 +5,7 @@ import yaml
 from scipy import stats
 
 from june import paths
-from june.infection.symptoms import SymptomTag
+from june.infection.symptom_tag import SymptomTag
 
 default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 
@@ -43,6 +43,8 @@ class CompletionTime(ABC):
             return ExponentialCompletionTime
         if type_string == "beta":
             return BetaCompletionTime
+        if type_string == "lognormal":
+            return LognormalCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
         )
@@ -108,6 +110,27 @@ class BetaCompletionTime(DistributionCompletionTime):
         self.b = b
         self.loc = loc
         self.scale = scale
+
+class LognormalCompletionTime(DistributionCompletionTime):
+    def __init__(
+            self,
+            s,
+            loc=0.0,
+            scale=1.0
+    ):
+        super().__init__(
+            stats.lognorm(
+                s,
+                loc=loc,
+                scale=scale
+            )
+        )
+        self.s = s
+        self.loc = loc
+        self.scale = scale
+
+
+
 
 
 class Stage:

@@ -23,7 +23,7 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = ("area", "type", "max_size", "n_residents", "residents", "relatives")
+    __slots__ = ("area", "type", "max_size", "n_residents", "residents", "relatives_in_care_homes", "relatives_in_households")
 
     class SubgroupType(IntEnum):
         kids = 0
@@ -39,15 +39,29 @@ class Household(Group):
         super().__init__()
         self.area = area
         self.type = type
-        self.residents = tuple()
+        self.relatives_in_care_homes = None
+        self.relatives_in_households = None
         self.max_size = max_size
         self.n_residents = 0
-        self.relatives = None
+        self.residents = tuple()
 
-    def add(self, person, subgroup_type=SubgroupType.adults):
-        self[subgroup_type].append(person)
-        self.residents = tuple((*self.residents, person))
-        person.subgroups.residence = self[subgroup_type]
+    def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
+        if activity == "leisure":
+            if person.age < 18:
+                subgroup = self.SubgroupType.kids
+            elif person.age <= 35:
+                subgroup = self.SubgroupType.young_adults
+            elif person.age < 65:
+                subgroup = self.SubgroupType.adults
+            else:
+                subgroup = self.SubgroupType.old_adults
+            person.subgroups.leisure = self[subgroup]
+        elif activity == "residence":
+            self[subgroup_type].append(person)
+            self.residents = tuple((*self.residents, person))
+            person.subgroups.residence = self[subgroup_type]
+        else:
+            raise NotImplementedError(f"Activity {activity} not supported in household")
 
     @property
     def kids(self):
