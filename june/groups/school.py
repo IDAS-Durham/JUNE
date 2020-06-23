@@ -216,7 +216,7 @@ class Schools(Supergroup):
         logger.info(f"There are {len(school_df)} schools in this geography.")
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls.build_schools_for_areas(areas, school_df, **config,)
+        return cls.build_schools_for_areas(areas, school_df)#, **config,)
 
     @classmethod
     def build_schools_for_areas(

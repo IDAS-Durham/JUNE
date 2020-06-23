@@ -72,9 +72,9 @@ class HealthIndexGenerator:
           Vo et al 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
           
         """
-        self.poli_hosp = poli_hosp
-        self.poli_icu = poli_icu
-        self.poli_deaths = poli_deaths
+        self.Poli_Hosp = poli_hosp
+        self.Poli_ICU = poli_icu
+        self.Poli_Deaths = poli_deaths
         self.Asimpto_ratio = Asimpto_ratio
         self.make_list()
 
@@ -143,8 +143,8 @@ class HealthIndexGenerator:
              - if N_3<r<N_4  Goes to the Hospital but not to ICU and survives.
              - if N_4<r<N_5  Goes to ICU ans survives.
              - if N_5<r<N_6  Stays at home with pneumonia and dies.
-             - if N_6<r<N_7  Goes to the Hospital but not to ICU ans dies.
-             - if N_7<r<1    Goes to ICU ans dies.
+             - if N_6<r<N_7  Goes to the Hospital but not to ICU and dies.
+             - if N_7<r<1    Goes to ICU and dies.
               
 
         """
@@ -157,9 +157,9 @@ class HealthIndexGenerator:
         ratio_ICU_female=self.model(ages,self.Poli_ICU[0])#Going to ICU
         ratio_Death_female=self.model(ages,self.Poli_Deaths[0])#Dying in Hospital (ICU+Hosp)
         
-        ratio_Hosp_male=self.model(ages,self.Poli_Hosp[0])#Going to the Hospital but not to ICU
-        ratio_ICU_male=self.model(ages,self.Poli_ICU[0])#Going to ICU
-        ratio_Death_male=self.model(ages,self.Poli_Deaths[0])#Dying in Hospital (ICU+Hosp)
+        ratio_Hosp_male=self.model(ages,self.Poli_Hosp[1])#Going to the Hospital but not to ICU
+        ratio_ICU_male=self.model(ages,self.Poli_ICU[1])#Going to ICU
+        ratio_Death_male=self.model(ages,self.Poli_Deaths[1])#Dying in Hospital (ICU+Hosp)
         
         #Probability of being simptomatic but not going to hospital
         No_Hosp_female=1.0-self.Asimpto_ratio-ratio_Hosp_female-ratio_ICU_female
@@ -223,11 +223,12 @@ class HealthIndexGenerator:
                Exces_Death_female[Boolean]=Exces_Deaths[Exces_Deaths_index][1]
                Exces_Death_male[Boolean]=Exces_Deaths[Exces_Deaths_index][2]
         
-        Exces_Death_female[np.arange(0,121,1)>=80]=Exces_Deaths[len(Exces_Deaths)-1][1]
-        Exces_Death_male[np.arange(0,121,1)>=80]=Exces_Deaths[len(Exces_Deaths)-1][2] 
         
-        Deaths_at_home_female=ratio_Death_female*Exces_Death_female
-        Deaths_at_home_male=ratio_Death_male*Exces_Death_male
+        Exces_Death_female[ages>=Exces_Deaths[-1][0]]=Exces_Deaths[-1][1]
+        Exces_Death_male[ages>=Exces_Deaths[-1][0]]=Exces_Deaths[-1][2] 
+        
+        Deaths_at_home_female=ratio_Death_female*(1-Exces_Death_female)
+        Deaths_at_home_male=ratio_Death_male*(1-Exces_Death_male)
         
         self.Prob_lists[0,:,5]=Deaths_at_home_female
         self.Prob_lists[1,:,5]=Deaths_at_home_male
@@ -249,9 +250,9 @@ class HealthIndexGenerator:
              3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 6 
              outcomes for 120 ages and the 2 sex.
         """
-        
-        sex = 1
         if person.sex == "m":
+            sex = 1
+        else:
             sex = 0
         roundage = int(round(person.age))
-        return np.cumsum(self.prob_lists[sex][roundage])
+        return np.cumsum(self.Prob_lists[sex][roundage])
