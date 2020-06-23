@@ -92,5 +92,20 @@ class Subgroup:
         self.group.size += 1
         person.busy = True
 
+    def remove(self, person: Person):
+        if person.infected:
+            self.infected.remove(person)
+            self.size_infected -= 1
+        elif person.susceptible:
+            self.susceptible.remove(person)
+            self.size_susceptible -= 1
+        else:
+            self.recovered.remove(person)
+            self.size_recovered -= 1
+        self.size -= 1
+        self.people.remove(person)
+        self.group.size -= 1
+        person.busy=False
+
     def __getitem__(self, item):
         return list(self.people)[item]

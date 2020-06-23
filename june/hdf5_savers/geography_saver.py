@@ -43,11 +43,11 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_coordinates.append(np.array(super_area.coordinates))
 
     area_ids = np.array(area_ids, dtype=np.int)
-    area_names = np.array(area_names, dtype="S10")
+    area_names = np.array(area_names, dtype="S20")
     area_super_areas = np.array(area_super_areas, dtype=np.int)
     area_coordinates = np.array(area_coordinates, dtype=np.float)
     super_area_ids = np.array(super_area_ids, dtype=np.int)
-    super_area_names = np.array(super_area_names, dtype="S10")
+    super_area_names = np.array(super_area_names, dtype="S20")
     super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
 
     with h5py.File(file_path, "a") as f:
