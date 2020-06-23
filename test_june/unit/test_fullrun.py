@@ -11,7 +11,7 @@ from june.demography.geography import Geography
 from june.demography import Demography
 import june.interaction as inter
 from june.infection import InfectionSelector
-from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
+from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.infection import transmission as trans
 from june.infection import symptoms as sym
@@ -28,10 +28,12 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
 def test_full_run():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697"]})
+    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02004314"]})
+                
     geography.hospitals = Hospitals.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.cemeteries = Cemeteries()
     world = generate_world_from_geography(
