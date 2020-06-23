@@ -5,12 +5,11 @@ import yaml
 
 from june import paths
 from june.infection.health_index import HealthIndexGenerator
-from june.infection.symptoms import SymptomsConstant
-from june.infection.symptoms_trajectory import SymptomsTrajectory
+from june.infection.health_information import HealthInformation
+from june.infection.symptoms import Symptoms
 from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
-from june.infection.health_information import HealthInformation
 
 default_config_filename = (
         paths.configs_path
@@ -33,26 +32,12 @@ class TransmissionType(IntEnum):
 class InfectionSelector:
     def __init__(self, config=None):
         transmission_type = "XNExp"
-        symptoms_type = "Trajectories"
         if config is not None:
             if "transmission" in config and "type" in config["transmission"]:
                 transmission_type = config["transmission"]["type"]
-            if "symptoms" in config and "type" in config["symptoms"]:
-                symptoms_type = config["symptoms"]["type"]
-        self.init_symptoms_parameters(symptoms_type, config)
+        self.trajectory_maker = TrajectoryMakers.from_file()
         self.init_transmission_parameters(transmission_type, config)
         self.health_index_generator = HealthIndexGenerator.from_file()
-
-    def init_symptoms_parameters(self, symptoms_type, config):
-        if symptoms_type == "Trajectories":
-            self.stype = SymptomsType.trajectories
-            self.trajectory_maker = TrajectoryMakers.from_file()
-        else:
-            self.stype = SymptomsType.constant
-            self.recovery_rate = 0.2
-            if (config is not None and
-                    "symptoms" in config and "recovery_rate" in config["symptoms"]):
-                self.recovery_rate = config["symptoms"]["recovery_rate"]
 
     def init_transmission_parameters(self, transmission_type, config):
         if transmission_type == "XNExp":
@@ -86,8 +71,8 @@ class InfectionSelector:
 
     @classmethod
     def from_file(
-        cls,
-        config_filename: str = default_config_filename,
+            cls,
+            config_filename: str = default_config_filename,
     ) -> "InfectionSelector":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -117,12 +102,7 @@ class InfectionSelector:
 
     def select_symptoms(self, person):
         health_index = self.health_index_generator(person)
-        if self.stype == SymptomsType.trajectories:
-            symptoms = SymptomsTrajectory(health_index=health_index)
-        elif self.stype == SymptomsType.constant:
-            symptoms = SymptomsConstant(health_index=health_index,
-                                        recovery_rate=self.recovery_rate)
-        return symptoms
+        return Symptoms(health_index=health_index)
 
 
 class Infection:

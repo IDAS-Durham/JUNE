@@ -1,20 +1,17 @@
-import pytest
 import random
-import numpy as np
 
-from june.demography.geography import Geography
+import pytest
+
+from june import paths
 from june.demography import Demography
-from june.world import World, generate_world_from_geography
-from june.interaction import ContactAveraging
-from june.infection import InfectionSelector, Infection
-from june.infection import SymptomTag, SymptomsConstant
-from june.infection.transmission import TransmissionConstant
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
+from june.demography.geography import Geography
+from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.policy import Policies
+from june.infection import InfectionSelector, SymptomTag
+from june.interaction import ContactAveraging
 from june.simulator import Simulator
-from june import paths
-
+from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
@@ -23,14 +20,23 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 @pytest.fixture(name="sim", scope="module")
 def create_simulator():
     geography = Geography.from_file(
-        {"super_area": ["E02003282", "E02001720", "E00088544", "E02002560", "E02002559"]}
+        {
+            "super_area": [
+                "E02003282",
+                "E02001720",
+                "E00088544",
+                "E02002560",
+                "E02002559",
+                "E02004314",
+            ]
+        }
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
     geography.companies = Companies.for_geography(geography)
-    demography = Demography.for_geography(geography)
     world = generate_world_from_geography(
         geography=geography, include_commute=True, include_households=True
     )
@@ -40,7 +46,7 @@ def create_simulator():
         geography.super_areas, venues_per_capita=1 / 500
     )
     leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+        world=world, config_filename=test_config
     )
     selector = InfectionSelector.from_file(constant_config)
     selector.recovery_rate = 0.05
@@ -84,6 +90,7 @@ def test__activities_to_groups(sim):
         "commutecityunits",
         "schools",
         "companies",
+        "universities",
         "pubs",
         "cinemas",
         "groceries",
@@ -116,7 +123,6 @@ def test__get_subgroup_active(sim):
 
 
 def test__move_people_to_residence(sim):
-
     sim.move_people_to_active_subgroups(["residence"])
     for person in sim.world.people.members:
         assert person in person.residence.people
@@ -151,7 +157,6 @@ def test__move_people_to_leisure(sim):
 
 
 def test__move_people_to_primary_activity(sim):
-
     sim.move_people_to_active_subgroups(["primary_activity", "residence"])
     for person in sim.world.people.members:
         if person.primary_activity is not None:
@@ -171,7 +176,6 @@ def test__move_people_to_commute(sim):
     sim.clear_world()
 
 def test__kid_at_home_is_supervised(sim, health_index):
-
     kids_at_school = []
     for person in sim.world.people.members:
         if person.primary_activity is not None and person.age < sim.min_age_home_alone:

@@ -57,11 +57,3 @@ infection:
       mean:       10.
     end_time:
       mean:       20.
-  symptoms:
-    type:         Tanh
-    onset_time:
-      mean:       5.
-    max_time:
-      mean:       10.
-    end_time:
-      mean:       20.

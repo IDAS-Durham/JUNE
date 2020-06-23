@@ -12,8 +12,7 @@ from sklearn.neighbors import BallTree
 from june.groups import Group, Supergroup
 
 from june.demography.geography import SuperArea
-from june.infection.symptoms import SymptomTag
-
+from june.infection import SymptomTag
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area", "trust_code"
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area", "trust_code" 
 
     def __init__(
         self,
