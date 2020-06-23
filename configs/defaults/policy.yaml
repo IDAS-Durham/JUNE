@@ -2,21 +2,21 @@ quarantine:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
         start_time: 2020-03-16 
-        end_time: 2020-07-01 
+        end_time: 2020-07-04 
 
 shielding:
         min_age: 80
         start_time: 2020-03-16 
-        end_time: 2020-07-01 
+        end_time: 2020-07-04 
 
 close_companies:
         start_time: 2020-03-16
-        end_time: 2020-07-01 #TODO: Until when really?
+        end_time: 2020-07-04 #TODO: Until when really?
         full_closure: True #TODO: sectors or percent of companies to open? 
 
 social_distancing:
         start_time: 2020-03-16
-        end_time: 2020-07-01 #TODO: end time?
+        end_time: 2020-07-04 #TODO: end time?
         beta_factor:
                 box: 0.25
                 pub: 0.25
@@ -33,17 +33,17 @@ social_distancing:
 
 close_leisure_venue:
         start_time: 2020-03-21
-        end_time: 2020-07-01 #TODO: end time ?
+        end_time: 2020-07-04 #TODO: end time ?
         venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
         #TODO: household_visits?
 
 close_schools:
         start_time: 2020-03-20
-        end_time: 2020-07-01 #TODO: end time?
+        end_time: 2020-07-04 #TODO: end time?
         full_closure: True
 
 close_universities:
         start_time: 2020-03-20
-        end_time: 2020-07-01
+        end_time: 2020-07-04
 
 
