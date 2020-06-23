@@ -219,7 +219,7 @@ class Quarantine(StayHome):
         try:
             release_day = person.health_information.time_of_symptoms_onset + n_days_at_home
             return release_day > days_from_start > person.health_information.time_of_symptoms_onset
-        except AttributeError:
+        except (TypeError, AttributeError) as error:
             return False
 
     def must_stay_at_home_housemates(
