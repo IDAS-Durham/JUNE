@@ -1,6 +1,7 @@
 import copy
 from datetime import datetime
 from pathlib import Path
+import numpy as np
 
 import pytest
 
@@ -13,7 +14,14 @@ from june.infection import Infection
 from june.infection import SymptomTag
 from june.infection.infection import InfectionSelector
 from june.groups import Hospital, School, Company, Household, University
-from june.groups import Hospitals, Schools, Companies, Households, Universities, Cemeteries
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    Universities,
+    Cemeteries,
+)
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries, Cinema, Pub, Grocery
 from june.policy import (
     Policy,
@@ -26,6 +34,7 @@ from june.policy import (
     Policies,
     SocialDistancing,
     CloseLeisureVenue,
+    ChangeLeisureProbability,
 )
 from june.simulator import Simulator
 from june.seed import Seed
@@ -39,6 +48,7 @@ constant_config = (
     / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
+
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
@@ -102,6 +112,7 @@ def make_dummy_world(super_area):
     world.pubs = Pubs([pub])
     return pupil, worker, world
 
+
 def make_dummy_world_with_university(super_area):
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     school = School(
@@ -143,7 +154,6 @@ def make_dummy_world_with_university(super_area):
     return pupil, student, world
 
 
-
 def infect_person(person, selector, symptom_tag="influenza"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
@@ -152,7 +162,7 @@ def infect_person(person, selector, symptom_tag="influenza"):
 
 class TestPolicy:
     def test__is_active(self):
-        policy = Policy(start_time='2020-5-6', end_time='2020-6-6')
+        policy = Policy(start_time="2020-5-6", end_time="2020-6-6")
         assert policy.is_active(datetime(2020, 6, 6))
         assert not policy.is_active(datetime(2020, 6, 7))
 
@@ -257,9 +267,7 @@ class TestClosure:
     def test__close_schools(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         school_closure = CloseSchools(
-            start_time='2020-1-1',
-            end_time='2020-10-1',
-            years_to_close=[6],
+            start_time="2020-1-1", end_time="2020-10-1", years_to_close=[6],
         )
         policies = Policies([school_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -300,8 +308,7 @@ class TestClosure:
     def test__close_universities(self, super_area, selector, interaction):
         pupil, student, world = make_dummy_world_with_university(super_area)
         university_closure = CloseUniversities(
-            start_time='2020-1-1',
-            end_time='2020-10-1',
+            start_time="2020-1-1", end_time="2020-10-1",
         )
         policies = Policies([university_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -339,13 +346,10 @@ class TestClosure:
         assert student in student.primary_activity.people
         sim.clear_world()
 
-
     def test__close_companies(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time='2020-1-1',
-            end_time='2020-10-1',
-            sectors_to_close=["Q"],
+            start_time="2020-1-1", end_time="2020-10-1", sectors_to_close=["Q"],
         )
         policies = Policies([company_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -387,9 +391,7 @@ class TestClosure:
     def test__close_companies_other_sector(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time='2020-1-1',
-            end_time='2020-10-1',
-            sectors_to_close=["R"],
+            start_time="2020-1-1", end_time="2020-10-1", sectors_to_close=["R"],
         )
         policies = Policies([company_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -418,9 +420,7 @@ class TestClosure:
 class TestShielding:
     def test__old_people_shield(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
-        shielding = Shielding(
-            start_time='2020-1-1', end_time='2020-10-1', min_age=30
-        )
+        shielding = Shielding(start_time="2020-1-1", end_time="2020-10-1", min_age=30)
         policies = Policies([shielding])
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
@@ -447,10 +447,7 @@ class TestQuarantine:
     def test__symptomatic_stays_for_one_week(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
-            start_time='2020-1-1',
-            end_time='2020-1-30',
-            n_days=7,
-            n_days_household=14,
+            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
         )
         policies = Policies([quarantine])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -478,10 +475,7 @@ class TestQuarantine:
     def test__housemates_stay_for_two_weeks(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
-            start_time='2020-1-1',
-            end_time='2020-1-30',
-            n_days=7,
-            n_days_household=14,
+            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
         )
         policies = Policies([quarantine])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -516,9 +510,7 @@ class TestCloseLeisure:
     def test__close_leisure_venues(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         close_venues = CloseLeisureVenue(
-            start_time='2020-3-1',
-            end_time='2020-3-30',
-            venues_to_close=["pub"],
+            start_time="2020-3-1", end_time="2020-3-30", venues_to_close=["pub"],
         )
         policies = Policies([close_venues])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -552,29 +544,30 @@ class TestCloseLeisure:
         ) or worker in worker.residence.people
         sim.clear_world()
 
+
 def test__social_distancing(super_area, selector, interaction):
     pupil, worker, world = make_dummy_world(super_area)
     world.cemeteries = Cemeteries()
     start_date = datetime(2020, 3, 10)
     end_date = datetime(2020, 3, 12)
     beta_factor = {
-                'box': 0.5,
-                'pub': 0.5,
-                'grocery': 0.5,
-                'cinema': 0.5,
-                'commute_unit': 0.5,
-                'commute_city_unit': 0.5,
-                'hospital': 0.5,
-                'care_home': 0.5,
-                'company': 0.5,
-                'school': 0.5,
-                'household': 1.0,
-                'university': 0.5,
-            }
+        "box": 0.5,
+        "pub": 0.5,
+        "grocery": 0.5,
+        "cinema": 0.5,
+        "commute_unit": 0.5,
+        "commute_city_unit": 0.5,
+        "hospital": 0.5,
+        "care_home": 0.5,
+        "company": 0.5,
+        "school": 0.5,
+        "household": 1.0,
+        "university": 0.5,
+    }
 
-
-    social_distance = SocialDistancing(start_time='2020-03-10', end_time='2020-03-12',
-            beta_factor = beta_factor)
+    social_distance = SocialDistancing(
+        start_time="2020-03-10", end_time="2020-03-12", beta_factor=beta_factor
+    )
     policies = Policies([social_distance])
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
@@ -586,10 +579,10 @@ def test__social_distancing(super_area, selector, interaction):
         config_filename=test_config,
         policies=policies,
         leisure=leisure_instance,
-        )
-   
+    )
+
     sim.timer.reset()
-    
+
     initial_betas = copy.deepcopy(sim.interaction.beta)
     sim.clear_world()
     for time in sim.timer:
@@ -604,7 +597,112 @@ def test__social_distancing(super_area, selector, interaction):
                     assert sim.interaction.beta[group] == initial_betas[group]
         else:
             assert sim.interaction.beta == initial_betas
-'''
+
+
+class TestReduceLeisureProbabilities:
+    def test__reduce_household_visits(self, super_area, selector, interaction):
+        _, _, world = make_dummy_world(super_area)
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        reduce_leisure_probabilities = ChangeLeisureProbability(
+            start_time="2020-03-08",
+            end_time="2020-03-11",
+            leisure_activities_probabilities={
+                "pubs": {"men": {"0-50": 0.5, "50-100": 0.0}, "women": {"0-100": 0.4},},
+            },
+        )
+        policies = Policies([reduce_leisure_probabilities])
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        sim.clear_world()
+        sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
+        original_male_pub_probabilities = sim.leisure.leisure_distributors[
+            "pubs"
+        ].male_probabilities
+        original_female_pub_probabilities = sim.leisure.leisure_distributors[
+            "pubs"
+        ].female_probabilities
+        assert str(sim.timer.date.date()) == "2020-03-07"
+        household = Household()
+        person1 = Person.from_attributes(age=60, sex="m")
+        person1.area = super_area.areas[0]
+        household.add(person1)
+        person2 = Person.from_attributes(age=80, sex="f")
+        person2.area = super_area.areas[0]
+        household.add(person2)
+        pubs1_visits_before = 0
+        pubs2_visits_before = 0
+        for _ in range(5000):
+            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(
+                person1, 0.1, False
+            )
+            if subgroup is not None and subgroup.group.spec == "pub":
+                pubs1_visits_before += 1
+            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(
+                person2, 0.1, False
+            )
+            if subgroup is not None and subgroup.group.spec == "pub":
+                pubs2_visits_before += 1
+        assert pubs1_visits_before > 0
+        assert pubs2_visits_before > 0
+        # next day leisure policies are
+        while str(sim.timer.date.date()) != "2020-03-08":
+            next(sim.timer)
+        sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
+        assert sim.leisure.leisure_distributors["pubs"].male_probabilities[60] == 0.0
+        assert sim.leisure.leisure_distributors["pubs"].female_probabilities[60] == 0.4
+        pubs1_visits_after = 0
+        pubs2_visits_after = 0
+        for _ in range(5000):
+            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(
+                person1, 0.1, False
+            )
+            if subgroup is not None and subgroup.group.spec == "pub":
+                pubs1_visits_after += 1
+            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(
+                person2, 0.1, False
+            )
+            if subgroup is not None and subgroup.group.spec == "pub":
+                pubs2_visits_after += 1
+        assert pubs1_visits_after == 0
+        assert 0 < pubs2_visits_after < pubs2_visits_before
+        # end of policy
+        while str(sim.timer.date.date()) != "2020-03-11":
+            next(sim.timer)
+        sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
+        pubs1_visits_restored = 0
+        pubs2_visits_restored = 0
+        for _ in range(5000):
+            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(
+                person1, 0.1, False
+            )
+            if subgroup is not None and subgroup.group.spec == "pub":
+                pubs1_visits_restored += 1
+            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(
+                person2, 0.1, False
+            )
+            if subgroup is not None and subgroup.group.spec == "pub":
+                pubs2_visits_restored += 1
+        assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.1)
+        assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.1)
+        assert (
+            sim.leisure.leisure_distributors["pubs"].male_probabilities
+            == original_male_pub_probabilities
+        )
+        assert (
+            sim.leisure.leisure_distributors["pubs"].female_probabilities
+            == original_female_pub_probabilities
+        )
+
+
+"""
 class TestSocialDistancing:
     def test__social_distancing(self, selector):
         beta_factor = {
@@ -630,6 +728,4 @@ class TestSocialDistancing:
                 assert interaction.beta[group]*interaction.policies.get_beta_factors(group) == initial_betas[group] * 0.5
             else:
                 assert interaction.beta[group]*interaction.policies.social_distance_beta_factor(group) == initial_betas[group]
-'''
-
-
+"""
