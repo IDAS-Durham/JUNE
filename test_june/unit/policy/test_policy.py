@@ -524,7 +524,7 @@ class TestCloseLeisure:
             policies=policies,
             leisure=leisure_instance,
         )
-        sim.leisure.leisure_distributors[0].weekend_boost = 5000
+        sim.leisure.leisure_distributors["pubs"].weekend_boost = 5000
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
