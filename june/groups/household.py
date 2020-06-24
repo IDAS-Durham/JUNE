@@ -63,6 +63,16 @@ class Household(Group):
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
+    def get_leisure_subgroup(self, person):
+        if person.age < 18:
+            return self.subgroups[self.SubgroupType.kids]
+        elif person.age <= 35:
+            return self.subgroups[self.SubgroupType.young_adults]
+        elif person.age < 65:
+            return self.subgroups[self.SubgroupType.adults]
+        else:
+            return self.subgroups[self.SubgroupType.old_adults]
+
     @property
     def kids(self):
         return self.subgroups[self.SubgroupType.kids]
