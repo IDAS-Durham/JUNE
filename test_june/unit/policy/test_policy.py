@@ -1,18 +1,13 @@
 import copy
 from datetime import datetime
 from pathlib import Path
-import numpy as np
 
+import numpy as np
 import pytest
 
 from june import paths
-from june.demography.geography import Geography
 from june.demography import Person, Population
-from june.world import World
-from june.interaction import ContactAveraging
-from june.infection import Infection
-from june.infection import SymptomTag
-from june.infection.infection import InfectionSelector
+from june.demography.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -22,7 +17,10 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.groups.leisure import leisure, Cinemas, Pubs, Groceries, Cinema, Pub, Grocery
+from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
+from june.infection import SymptomTag
+from june.infection.infection import InfectionSelector
+from june.interaction import ContactAveraging
 from june.policy import (
     Policy,
     PermanentPolicy,
@@ -37,15 +35,13 @@ from june.policy import (
     ChangeLeisureProbability,
 )
 from june.simulator import Simulator
-from june.seed import Seed
-from june.simulator import Simulator
-from june.world import generate_world_from_geography
+from june.world import World
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent
-    / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
+        dir_pwd.parent.parent.parent
+        / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
@@ -114,7 +110,7 @@ def make_dummy_world(super_area):
 
 
 def make_dummy_world_with_university(super_area):
-    university = University(coordinates=super_area.coordinates, n_students_max=100,)
+    university = University(coordinates=super_area.coordinates, n_students_max=100, )
     school = School(
         coordinates=super_area.coordinates,
         n_pupils_max=100,
@@ -184,7 +180,7 @@ class TestDefaultPolicy:
             leisure=leisure_instance,
         )
         sim.clear_world()
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.move_people_to_active_subgroups(["primary_activity", "residence"], )
         date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
@@ -192,14 +188,14 @@ class TestDefaultPolicy:
         infect_person(worker, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
         assert policies.must_stay_at_home(worker, date, None)
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.move_people_to_active_subgroups(["primary_activity", "residence"], )
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         worker.health_information = None
         sim.clear_world()
 
     def test__default_policy_adults_still_go_to_hospital(
-        self, super_area, selector, interaction
+            self, super_area, selector, interaction
     ):
         pupil, worker, world = make_dummy_world(super_area)
         permanent_policy = PermanentPolicy()
@@ -248,7 +244,7 @@ class TestDefaultPolicy:
             leisure=leisure_instance,
         )
         sim.clear_world()
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.move_people_to_active_subgroups(["primary_activity", "residence"], )
         date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
@@ -256,7 +252,7 @@ class TestDefaultPolicy:
         infect_person(pupil, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
         assert policies.must_stay_at_home(pupil, date, None)
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.move_people_to_active_subgroups(["primary_activity", "residence"], )
         assert worker in worker.residence.people
         assert pupil in pupil.residence.people
         pupil.health_information = None
@@ -289,14 +285,14 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(pupil, time_during_policy, activities) == [
+        assert policies.activity_ban_for_date(time_during_policy)(pupil, activities) == [
             "residence"
         ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert pupil in pupil.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.apply_activity_ban(pupil, time_after_policy, activities) == [
+        assert policies.activity_ban_for_date(time_after_policy)(pupil, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -330,14 +326,14 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(student, time_during_policy, activities) == [
+        assert policies.activity_ban_for_date(time_during_policy)(student, activities) == [
             "residence"
         ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert student in student.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.apply_activity_ban(student, time_after_policy, activities) == [
+        assert policies.activity_ban_for_date(time_after_policy)(student, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -371,7 +367,7 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(worker, time_during_policy, activities) == [
+        assert policies.activity_ban_for_date(time_during_policy)(worker, activities) == [
             "residence"
         ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
@@ -379,7 +375,7 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.apply_activity_ban(worker, time_after_policy, activities) == [
+        assert policies.activity_ban_for_date(time_after_policy)(worker, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -408,7 +404,7 @@ class TestClosure:
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.apply_activity_ban(worker, time_during_policy, activities) == [
+        assert policies.activity_ban_for_date(time_during_policy)(worker, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -540,8 +536,8 @@ class TestCloseLeisure:
             activities, time_during_policy, 0.0, 24, is_weekend=True
         )
         assert (
-            worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
-        ) or worker in worker.residence.people
+                       worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
+               ) or worker in worker.residence.people
         sim.clear_world()
 
 
@@ -609,7 +605,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-08",
             end_time="2020-03-11",
             leisure_activities_probabilities={
-                "pubs": {"men": {"0-50": 0.5, "50-100": 0.0}, "women": {"0-100": 0.4},},
+                "pubs": {"men": {"0-50": 0.5, "50-100": 0.0}, "women": {"0-100": 0.4}, },
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -693,12 +689,12 @@ class TestReduceLeisureProbabilities:
         assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.1)
         assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.1)
         assert (
-            sim.leisure.leisure_distributors["pubs"].male_probabilities
-            == original_male_pub_probabilities
+                sim.leisure.leisure_distributors["pubs"].male_probabilities
+                == original_male_pub_probabilities
         )
         assert (
-            sim.leisure.leisure_distributors["pubs"].female_probabilities
-            == original_female_pub_probabilities
+                sim.leisure.leisure_distributors["pubs"].female_probabilities
+                == original_female_pub_probabilities
         )
 
 

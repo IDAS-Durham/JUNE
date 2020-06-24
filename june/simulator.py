@@ -421,12 +421,16 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
+        activity_ban = self.policies.activity_ban_for_date(
+            date
+        )
+
         activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = self.policies.apply_activity_ban(
-                person, date, activities
+            allowed_activities = activity_ban(
+                person, activities
             )
             if self.policies.must_stay_at_home(person, date, days_from_start):
                 self.move_mild_ill_to_household(
