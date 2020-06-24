@@ -25,6 +25,8 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     list_of_leisure_groups
         list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
     """
+    print("LIST OF LEISURE ")
+    print(list_of_leisure_groups)
     leisure_distributors = []
     if "pubs" in list_of_leisure_groups:
         if not hasattr(world, "pubs"):

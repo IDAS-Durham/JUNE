@@ -1,2 +1,4 @@
 male_age_probabilities:
   11-100: 0.624
+female_age_probabilities:
+  0-100: 0.0
