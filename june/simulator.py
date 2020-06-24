@@ -281,9 +281,8 @@ class Simulator:
             if group_name in ["care_home_visits", "household_visits"]:
                 continue
             grouptype = getattr(self.world, group_name)
-            if grouptype is not None:
-                for group in grouptype.members:
-                    group.clear()
+            for group in grouptype.members:
+                group.clear()
 
         for person in self.world.people.members:
             person.busy = False
