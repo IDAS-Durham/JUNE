@@ -60,7 +60,7 @@ def create_symptoms(symptoms_trajectories):
 @pytest.fixture(name="symptoms_trajectories", scope="session")
 def create_symptoms_trajectories():
     return june.infection.symptoms.Symptoms(
-        health_index=[0.1, 0.2, 0.3, 0.4, 0.5]
+        health_index=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
     )
 
 
