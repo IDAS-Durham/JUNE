@@ -12,6 +12,8 @@ class Shelter(Group):
 
     def __init__(self):
         super().__init__()
+        self.type = "family"
+        self.residents = ()
 
     def add(self, household: Household):
         if not isinstance(household, Household):
@@ -28,6 +30,8 @@ class Shelter(Group):
                 setattr(person.subgroups, "residence", self[1])
         else:
             raise ValueError("Shelter full!")
+        # add to residents
+        self.residents = tuple((*self.residents, person))
 
     @property
     def families(self):
