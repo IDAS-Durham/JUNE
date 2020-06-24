@@ -2,7 +2,7 @@ title: Covid configuration example
 
 activity_to_groups:
   #primary_activity: ['schools']
-  leisure: ['distribution_centers', 'communals', 'female_communals', 'pump_latrines', 'household_visits', 'religiouss'] 
+  leisure: ['distribution_centers', 'communals', 'female_communals', 'pump_latrines', 'religiouss'] 
   residence: ['shelters']
 
 time:

@@ -8,6 +8,7 @@ beta:
   pump_latrine: 0.2
   hospital: 0.1
   household: 2.5
+  shelter: 1.0
 
 contact_matrices:
   communal:
@@ -37,4 +38,8 @@ contact_matrices:
   household:
     contacts: [[1.2,1.27,1.27,1.27],[1.69,1.34,1.3,1.3],[1.69,1.47,1.34,1.34],[1.69,1.47,1.34,2.00]]
     proportion_physical: [[0.79,0.7,0.7,0.7],[0.7,0.34,0.4,0.4],[0.7,0.4,0.62,0.62],[0.7,0.62,0.62,0.45]] 
+    characteristic_time: 12
+  shelter:
+    contacts: [[1, 0.2], [0.2, 1]]
+    proportion_physical: [[0.8, 0.3], [0.8, 0.3]]
     characteristic_time: 12
