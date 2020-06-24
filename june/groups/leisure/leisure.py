@@ -1,7 +1,7 @@
 import numpy as np
 from numba import jit
 import yaml
-from typing import List
+from typing import List, Dict
 from june.demography import Person
 from june.demography.geography import Geography
 from june.groups.leisure import (
@@ -48,27 +48,27 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     list_of_leisure_groups
         list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
     """
-    leisure_distributors = []
+    leisure_distributors = {}
     if "pubs" in list_of_leisure_groups:
         if not hasattr(world, "pubs"):
             raise ValueError("Your world does not have pubs.")
-        leisure_distributors.append(PubDistributor.from_config(world.pubs))
+        leisure_distributors["pubs"] = PubDistributor.from_config(world.pubs)
     if "cinemas" in list_of_leisure_groups:
         if not hasattr(world, "cinemas"):
             raise ValueError("Your world does not have cinemas.")
-        leisure_distributors.append(CinemaDistributor.from_config(world.cinemas))
+        leisure_distributors["cinemas"]  = CinemaDistributor.from_config(world.cinemas)
     if "groceries" in list_of_leisure_groups:
         if not hasattr(world, "groceries"):
             raise ValueError("Your world does not have groceries.")
-        leisure_distributors.append(GroceryDistributor.from_config(world.groceries))
+        leisure_distributors["groceries"] = GroceryDistributor.from_config(world.groceries)
     if "care_home_visits" in list_of_leisure_groups:
         if not hasattr(world, "care_homes"):
             raise ValueError("Your world does not have care homes.")
-        leisure_distributors.append(CareHomeVisitsDistributor.from_config(world.super_areas))
+        leisure_distributors["care_home_visits"] = CareHomeVisitsDistributor.from_config(world.super_areas)
     if "household_visits" in list_of_leisure_groups:
         if not hasattr(world, "households"):
             raise ValueError("Your world does not have households.")
-        leisure_distributors.append(HouseholdVisitsDistributor.from_config(world.super_areas))
+        leisure_distributors["household_visits"] = HouseholdVisitsDistributor.from_config(world.super_areas)
     if "residence_visits" in list_of_leisure_groups:
         raise NotImplementedError
 
@@ -93,7 +93,7 @@ class Leisure:
     Class to manage all possible activites that happen during leisure time.
     """
 
-    def __init__(self, leisure_distributors: List[SocialVenueDistributor]):
+    def __init__(self, leisure_distributors: Dict[str, SocialVenueDistributor]):
         """
         Parameters
         ----------
@@ -104,7 +104,7 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
 
     def get_leisure_distributor_for_person(
-        self, person: Person, delta_time: float, is_weekend: bool = False, closed_groups = [],
+        self, person: Person, delta_time: float, is_weekend: bool = False, closed_venues = None,
     ):
         """
         Given a person, reads its characteristics, and the amount of free time it has,
@@ -125,18 +125,24 @@ class Leisure:
             whether it is a weekend or not
         """
         poisson_parameters = []
-        for distributor in self.leisure_distributors:
-            if distributor.spec not in closed_groups:
+        activities = []
+        for activity, distributor in self.leisure_distributors.items():
+            if closed_venues is not None and distributor.spec in closed_venues:
+                poisson_parameters.append(0.)
+            else:
                 poisson_parameters.append(
                     distributor.get_poisson_parameter(person, is_weekend)
                 )
-        activity = roll_activity_dice(
+            activities.append(activity)
+        if not poisson_parameters:
+            return
+        activity_idx = roll_activity_dice(
             np.array(poisson_parameters, dtype=np.float), delta_time, self.n_activities
         )
-        if activity is None:
+        if activity_idx is None:
             return
         else:
-            return self.leisure_distributors[activity]
+            return self.leisure_distributors[activities[activity_idx]]
 
     def assign_social_venue_to_person(self, person, leisure_distributor):
         social_venue = leisure_distributor.get_social_venue_for_person(person)
@@ -163,7 +169,7 @@ class Leisure:
             return True
 
     def get_subgroup_for_person_and_housemates(
-            self, person: Person, delta_time: float, is_weekend: bool, closed_groups=[]
+            self, person: Person, delta_time: float, is_weekend: bool, closed_venues = None
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
@@ -188,7 +194,7 @@ class Leisure:
             whether it is a weekend or not
         """
         social_venue_distributor = self.get_leisure_distributor_for_person(
-            person, delta_time, is_weekend, closed_groups
+            person, delta_time, is_weekend, closed_venues
         )
         if social_venue_distributor is None:
             return None

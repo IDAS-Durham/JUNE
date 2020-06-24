@@ -15,6 +15,38 @@ def random_choice_numba(arr, prob):
     return arr[np.searchsorted(np.cumsum(prob), np.random.rand(), side="right")]
 
 
+def parse_age_probabilites(age_dict):
+    """
+    Parses the age probability dictionaries into two arrays.
+    Example: {18-35: 0.2, 40-60: 0.1} get converted to
+    [18, 35, 40, 60] [0, 0.2, 0.1, 0]
+    """
+    if age_dict is None:
+        return [0], [0]
+    bins = []
+    probabilities = []
+    for age_range in age_dict:
+        age_range_split = age_range.split("-")
+        if len(age_range_split) == 1:
+            raise SocialVenueError("Please give age ranges as intervals")
+        else:
+            bins.append(int(age_range_split[0]))
+            bins.append(int(age_range_split[1]))
+        probabilities.append(age_dict[age_range])
+    sorting_idx = np.argsort(bins[::2])
+    bins = list(chain(*[[bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx]))
+    probabilities = np.array(probabilities)[sorting_idx]
+    probabilities_binned = []
+    for prob in probabilities:
+        probabilities_binned.append(0.0)
+        probabilities_binned.append(prob)
+    probabilities_binned.append(0.0)
+    probabilities_per_age = []
+    for age in range(100):
+        idx = np.searchsorted(bins, age+1) # we do +1 to include the lower boundary
+        probabilities_per_age.append(probabilities_binned[idx])
+    return probabilities_per_age
+
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
@@ -51,46 +83,14 @@ class SocialVenueDistributor:
             boosting factor for the weekend probability
         """
         self.social_venues = social_venues
-        self.male_probabilities = self._parse_age_probabilites(male_age_probabilities)
-        self.female_probabilities = self._parse_age_probabilites(female_age_probabilities)
+        self.male_probabilities = parse_age_probabilites(male_age_probabilities)
+        self.female_probabilities = parse_age_probabilites(female_age_probabilities)
         self.weekend_boost = weekend_boost
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
-
-    def _parse_age_probabilites(self, age_dict):
-        """
-        Parses the age probability dictionaries into two arrays.
-        Example: {18-35: 0.2, 40-60: 0.1} get converted to
-        [18, 35, 40, 60] [0, 0.2, 0.1, 0]
-        """
-        if age_dict is None:
-            return [0], [0]
-        bins = []
-        probabilities = []
-        for age_range in age_dict:
-            age_range_split = age_range.split("-")
-            if len(age_range_split) == 1:
-                raise SocialVenueError("Please give age ranges as intervals")
-            else:
-                bins.append(int(age_range_split[0]))
-                bins.append(int(age_range_split[1]))
-            probabilities.append(age_dict[age_range])
-        sorting_idx = np.argsort(bins[::2])
-        bins = list(chain(*[[bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx]))
-        probabilities = np.array(probabilities)[sorting_idx]
-        probabilities_binned = []
-        for prob in probabilities:
-            probabilities_binned.append(0.0)
-            probabilities_binned.append(prob)
-        probabilities_binned.append(0.0)
-        probabilities_per_age = []
-        for age in range(100):
-            idx = np.searchsorted(bins, age+1) # we do +1 to include the lower boundary
-            probabilities_per_age.append(probabilities_binned[idx])
-        return probabilities_per_age
 
     def get_poisson_parameter(self, person, is_weekend: bool = False):
         """

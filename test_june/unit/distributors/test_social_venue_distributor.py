@@ -5,6 +5,7 @@ from scipy.stats import poisson
 
 from june.groups.leisure import SocialVenueDistributor
 from june.groups.leisure import SocialVenue, SocialVenues
+from june.groups.leisure.social_venue_distributor import parse_age_probabilites
 from june.demography import Person
 
 
@@ -33,9 +34,9 @@ def make_distributor(social_venues):
         maximum_distance=30,
     )
 
-def test__age_dict_parsing(social_venue_distributor):
+def test__age_dict_parsing():
     age_dict = {"40-60" : 0.4, "10-20" : 0.2}
-    probabilities_per_age = social_venue_distributor._parse_age_probabilites(age_dict)
+    probabilities_per_age = parse_age_probabilites(age_dict)
     for idx, prob in enumerate(probabilities_per_age):
         if idx < 10:
             assert prob == 0.0
