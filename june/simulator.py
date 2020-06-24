@@ -1,30 +1,23 @@
+import copy
 import logging
 import random
-from june import paths
-from typing import List, Optional
 from datetime import datetime
-import copy
-
 from itertools import chain
-import numpy as np
+from typing import List, Optional
+
 import yaml
-import time
 
+from june import paths
 from june.demography import Person, Activities
-from june.groups import Group
-from june.groups.leisure import leisure
+from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
+from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 from june.infection.infection import InfectionSelector
-from june.infection import Infection
-from june.infection.health_index import HealthIndexGenerator
 from june.interaction import Interaction
-from june.policy import Policies
-
 from june.logger.logger import Logger
+from june.policy import Policies
 from june.time import Timer
 from june.world import World
-from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
-from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
-from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -37,20 +30,20 @@ class SimulatorError(BaseException):
 
 class Simulator:
     def __init__(
-        self,
-        world: World,
-        interaction: Interaction,
-        selector: InfectionSelector,
-        activity_to_groups: dict,
-        time_config: dict,
-        seed: Optional["Seed"] = None,
-        leisure: Optional["Leisure"] = None,
-        min_age_home_alone: int = 15,
-        stay_at_home_complacency: float = 0.95,
-        policies: Optional["Policies"] = None,
-        save_path: str = "results",
-        output_filename: str = "logger.hdf5",
-        light_logger: bool = False,
+            self,
+            world: World,
+            interaction: Interaction,
+            selector: InfectionSelector,
+            activity_to_groups: dict,
+            time_config: dict,
+            seed: Optional["Seed"] = None,
+            leisure: Optional["Leisure"] = None,
+            min_age_home_alone: int = 15,
+            stay_at_home_complacency: float = 0.95,
+            policies: Optional["Policies"] = None,
+            save_path: str = "results",
+            output_filename: str = "logger.hdf5",
+            light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -127,22 +120,22 @@ class Simulator:
             self.leisure = leisure
             self.leisure.distribute_social_venues_to_people(self.world.people)
         if (
-            "rail_travel_out" in self.all_activities
-            or "rail_travel_back" in self.all_activities
+                "rail_travel_out" in self.all_activities
+                or "rail_travel_back" in self.all_activities
         ):
             self.initialize_rail_travel(activity_to_groups["rail_travel"])
 
     @classmethod
     def from_file(
-        cls,
-        world: "World",
-        interaction: "Interaction",
-        selector: "InfectionSelector",
-        policies: Optional["Policies"] = None,
-        seed: Optional["Seed"] = None,
-        leisure: Optional["Leisure"] = None,
-        config_filename: str = default_config_filename,
-        save_path: str = "results",
+            cls,
+            world: "World",
+            interaction: "Interaction",
+            selector: "InfectionSelector",
+            policies: Optional["Policies"] = None,
+            seed: Optional["Seed"] = None,
+            leisure: Optional["Leisure"] = None,
+            config_filename: str = default_config_filename,
+            save_path: str = "results",
     ) -> "Simulator":
 
         """
@@ -289,7 +282,7 @@ class Simulator:
             person.subgroups.leisure = None
 
     def get_subgroup_active(
-        self, activities: List[str], person: "Person", date, duration, is_weekend
+            self, activities: List[str], person: "Person", date, duration, is_weekend
     ) -> "Subgroup":
         """
         Given the hierarchy of activities and a person, decide what subgroup  
@@ -323,13 +316,13 @@ class Simulator:
         )
 
     def kid_drags_guardian(
-        self,
-        kid: "Person",
-        guardian: "Person",
-        activities: List[str],
-        date,
-        duration,
-        is_weekend,
+            self,
+            kid: "Person",
+            guardian: "Person",
+            activities: List[str],
+            date,
+            duration,
+            is_weekend,
     ):
         """
         A kid makes their guardian go home.
@@ -353,7 +346,7 @@ class Simulator:
             guardian.residence.append(guardian)
 
     def move_mild_kid_guardian_to_household(
-        self, kid: "Person", activities: List[str], date, duration, is_weekend
+            self, kid: "Person", activities: List[str], date, duration, is_weekend
     ):
         """
         Move  a kid and their guardian to the household, so no kid is left
@@ -377,7 +370,7 @@ class Simulator:
         kid.residence.append(kid)
 
     def move_mild_ill_to_household(
-        self, person: "Person", activities: List[str], date, duration, is_weekend
+            self, person: "Person", activities: List[str], date, duration, is_weekend
     ):
         """
         Move person with a mild illness to their households. For kids that will
@@ -405,12 +398,12 @@ class Simulator:
             subgroup.append(person)
 
     def move_people_to_active_subgroups(
-        self,
-        activities: List[str],
-        date: datetime = datetime(2020, 2, 2),
-        days_from_start=0.0,
-        duration=0.0,
-        is_weekend=True,
+            self,
+            activities: List[str],
+            date: datetime = datetime(2020, 2, 2),
+            days_from_start=0.0,
+            duration=0.0,
+            is_weekend=True,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -421,18 +414,21 @@ class Simulator:
         active_groups:
             list of groups that are active at a time step
         """
-        activity_ban = self.policies.activity_ban_for_date(
-            date
+        skip_activity_collection = self.policies.skip_activity_collection(
+            date=date
+        )
+        stay_home_collection = self.policies.stay_home_collection(
+            date=date
         )
 
         activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = activity_ban(
+            allowed_activities = skip_activity_collection(
                 person, activities
             )
-            if self.policies.must_stay_at_home(person, date, days_from_start):
+            if stay_home_collection(person, days_from_start):
                 self.move_mild_ill_to_household(
                     person, allowed_activities, date, duration, is_weekend
                 )
@@ -577,10 +573,10 @@ class Simulator:
         )
 
         if (
-            self.policies.social_distancing
-            and self.policies.social_distancing_start
-            <= self.timer.date
-            < self.policies.social_distancing_end
+                self.policies.social_distancing
+                and self.policies.social_distancing_start
+                <= self.timer.date
+                < self.policies.social_distancing_end
         ):
 
             self.interaction.beta = self.policies.apply_social_distancing_policy(
@@ -642,20 +638,20 @@ class Simulator:
 
 class SimulatorBox(Simulator):
     def __init__(
-        self,
-        world: World,
-        interaction: Interaction,
-        selector: InfectionSelector,
-        activity_to_groups: dict,
-        time_config: dict,
-        seed: Optional["Seed"] = None,
-        leisure: Optional["Leisure"] = None,
-        min_age_home_alone: int = 15,
-        stay_at_home_complacency: float = 0.95,
-        policies=Policies(),
-        save_path: str = "results",
-        output_filename: str = "logger.hdf5",
-        light_logger: bool = False,
+            self,
+            world: World,
+            interaction: Interaction,
+            selector: InfectionSelector,
+            activity_to_groups: dict,
+            time_config: dict,
+            seed: Optional["Seed"] = None,
+            leisure: Optional["Leisure"] = None,
+            min_age_home_alone: int = 15,
+            stay_at_home_complacency: float = 0.95,
+            policies=Policies(),
+            save_path: str = "results",
+            output_filename: str = "logger.hdf5",
+            light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on a box. It is 
@@ -701,7 +697,7 @@ class SimulatorBox(Simulator):
         )
 
     def kid_drags_guardian(
-        self, kid: "Person", guardian: "Person", activities: List[str]
+            self, kid: "Person", guardian: "Person", activities: List[str]
     ):
         # not available in box
         pass
