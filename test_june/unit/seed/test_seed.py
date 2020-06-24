@@ -44,7 +44,7 @@ def get_demography(geography):
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file(config=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
