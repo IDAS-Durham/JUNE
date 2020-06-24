@@ -120,11 +120,22 @@ class ReadLogger:
         A data frame whose index is the date recorded, and columns are number of recovered, dead, infected...
         """
         dead_symptoms = [
-            SymptomTag.dead,
+            SymptomTag.dead_home,
+            SymptomTag.dead_icu,
+            SymptomTag.dead_hospital,
         ]
         df = pd.DataFrame()
         df["recovered"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
+        ).cumsum()
+        df["dead_home"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_home), axis=1
+        ).cumsum()
+        df["dead_hospital"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_hospital), axis=1
+        ).cumsum()
+        df["dead_icu"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
         ).cumsum()
         df["dead"] = symptoms_df.apply(
             lambda x: np.count_nonzero(np.isin(x.symptoms, dead_symptoms)), axis=1,

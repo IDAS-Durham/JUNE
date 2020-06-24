@@ -2,7 +2,7 @@ import logging
 import random
 from june import paths
 from typing import List, Optional
-import datetime
+from datetime import datetime
 import copy
 
 from itertools import chain
@@ -47,7 +47,7 @@ class Simulator:
         leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
-        policies=Policies(),
+        policies: Optional["Policies"] = None,
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
         light_logger: bool = False,
@@ -79,7 +79,6 @@ class Simulator:
         self.world = world
         self.interaction = interaction
         self.beta_copy = copy.deepcopy(self.interaction.beta)
-        self.alpha_copy = copy.copy(self.interaction.alpha_physical)
         self.seed = seed
         self.selector = selector
         self.policies = policies
@@ -138,9 +137,9 @@ class Simulator:
         world: "World",
         interaction: "Interaction",
         selector: "InfectionSelector",
-        policies=Policies(),
-        seed: "Seed" = None,
-        leisure: "Leisure" = None,
+        policies: Optional["Policies"] = None,
+        seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ) -> "Simulator":
@@ -289,7 +288,7 @@ class Simulator:
             person.subgroups.leisure = None
 
     def get_subgroup_active(
-        self, activities: List[str], person: "Person"
+        self, activities: List[str], person: "Person", date, duration, is_weekend
     ) -> "Subgroup":
         """
         Given the hierarchy of activities and a person, decide what subgroup  
@@ -305,32 +304,31 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-        activities = self.apply_activity_hierarchy(activities)
-        # personal_closed_groups = self.policies.get_fully_closed_groups(
-        #    time=self.timer.now
-        # ) + self.policies.get_partially_closed_groups(
-        #    person=person, time=self.timer.now
-        # )
+
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person,
-                    self.timer.duration,
-                    self.timer.is_weekend,
-                    closed_groups=[],  # personal_closed_groups,
+                    person=person,
+                    delta_time=duration,
+                    is_weekend=is_weekend,
+                    closed_venues=self.policies.find_closed_venues(date),
                 )
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                # if subgroup.group.spec in personal_closed_groups:
-                #    continue
                 return subgroup
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
 
     def kid_drags_guardian(
-        self, kid: "Person", guardian: "Person", activities: List[str]
+        self,
+        kid: "Person",
+        guardian: "Person",
+        activities: List[str],
+        date,
+        duration,
+        is_weekend,
     ):
         """
         A kid makes their guardian go home.
@@ -347,11 +345,15 @@ class Simulator:
 
         if guardian is not None:
             if guardian.busy:
-                guardian_subgroup = self.get_subgroup_active(activities, guardian)
+                guardian_subgroup = self.get_subgroup_active(
+                    activities, guardian, date, duration, is_weekend
+                )
                 guardian_subgroup.remove(guardian)
             guardian.residence.append(guardian)
 
-    def move_mild_kid_guardian_to_household(self, kid: "Person", activities: List[str]):
+    def move_mild_kid_guardian_to_household(
+        self, kid: "Person", activities: List[str], date, duration, is_weekend
+    ):
         """
         Move  a kid and their guardian to the household, so no kid is left
         home alone.
@@ -368,10 +370,14 @@ class Simulator:
         ]
         if len(possible_guardians) == 0:
             guardian = kid.find_guardian()
-            self.kid_drags_guardian(kid, guardian, activities)
+            self.kid_drags_guardian(
+                kid, guardian, activities, date, duration, is_weekend
+            )
         kid.residence.append(kid)
 
-    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
+    def move_mild_ill_to_household(
+        self, person: "Person", activities: List[str], date, duration, is_weekend
+    ):
         """
         Move person with a mild illness to their households. For kids that will
         always happen, and if they are left alone at home they will also drag one
@@ -386,14 +392,25 @@ class Simulator:
             list of activities that take place at a given time step
         """
         if person.age < self.min_age_home_alone:
-            self.move_mild_kid_guardian_to_household(person, activities)
+            self.move_mild_kid_guardian_to_household(
+                person, activities, date, duration, is_weekend
+            )
         elif random.random() <= self.stay_at_home_complacency:
             person.residence.append(person)
         else:
-            subgroup = self.get_subgroup_active(activities, person)
+            subgroup = self.get_subgroup_active(
+                activities, person, date, duration, is_weekend
+            )
             subgroup.append(person)
 
-    def move_people_to_active_subgroups(self, activities: List[str]):
+    def move_people_to_active_subgroups(
+        self,
+        activities: List[str],
+        date: datetime = datetime(2020, 2, 2),
+        days_from_start=0.0,
+        duration=0.0,
+        is_weekend=True,
+    ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
         they stay at home with a certain probability given by stay_at_home_complacency
@@ -407,13 +424,17 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            if (
-                person.health_information is not None
-                and person.health_information.must_stay_at_home
-            ):
-                self.move_mild_ill_to_household(person, activities)
+            allowed_activities = self.policies.apply_activity_ban(
+                person, date, activities
+            )
+            if self.policies.must_stay_at_home(person, date, days_from_start):
+                self.move_mild_ill_to_household(
+                    person, allowed_activities, date, duration, is_weekend
+                )
             else:
-                subgroup = self.get_subgroup_active(activities, person)
+                subgroup = self.get_subgroup_active(
+                    allowed_activities, person, date, duration, is_weekend
+                )
                 subgroup.append(person)
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
@@ -520,7 +541,17 @@ class Simulator:
             self.distribute_rail_out()
         if "rail_travel_back" in activities:
             self.distribute_rail_back()
-        self.move_people_to_active_subgroups(activities)
+        if self.policies is not None:
+            self.policies.apply_change_probabilities_leisure(
+                self.timer.date, self.leisure
+            )
+        self.move_people_to_active_subgroups(
+            activities,
+            self.timer.date,
+            self.timer.now,
+            duration=self.timer.duration,
+            is_weekend=self.timer.is_weekend,
+        )
         active_groups = self.activities_to_groups(activities)
         group_instances = [
             getattr(self.world, group)
@@ -528,6 +559,7 @@ class Simulator:
             if group not in ["household_visits", "care_home_visits"]
         ]
         n_people = 0
+
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
         sim_logger.info(
@@ -540,14 +572,11 @@ class Simulator:
             <= self.timer.date
             < self.policies.social_distancing_end
         ):
-            (
-                self.interaction.alpha_physical,
-                self.interaction.beta,
-            ) = self.policies.social_distancing_policy(
-                self.alpha_copy, self.beta_copy, self.timer.now
+
+            self.interaction.beta = self.policies.apply_social_distancing_policy(
+                self.beta_copy, self.timer.now
             )
         else:
-            self.interaction.alpha_physical = self.alpha_copy
             self.interaction.beta = self.beta_copy
 
         for group_type in group_instances:
@@ -558,7 +587,7 @@ class Simulator:
                 )
                 n_people += group.size
                 n_people_group += group.size
-            
+
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "

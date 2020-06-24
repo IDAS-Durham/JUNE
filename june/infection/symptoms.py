@@ -15,6 +15,14 @@ class Symptoms:
         self.stage = 0
         self.tag = self.trajectory[self.stage][1]
 
+    def time_symptoms_onset(self):
+        symptoms_onset = 0
+        for completion_time, tag in self.trajectory:
+            if tag == SymptomTag.influenza:
+                break
+            symptoms_onset += completion_time
+        return symptoms_onset
+
     def is_recovered(self):
         return self.tag == SymptomTag.recovered
 

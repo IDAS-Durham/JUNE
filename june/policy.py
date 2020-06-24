@@ -1,73 +1,415 @@
-#school_policy = Policy('school', years, start, end)
-#company_policy = Policy('company', sectors, start2, end2)
-#school_policy_2 = Policy('school', years, start, end)
-#policies = Policies([school_policy, company_policy])
-#policies = [school_policy, company_policy]
+import copy
+import datetime
+import re
+import sys
+from abc import ABC, abstractmethod
+from typing import Union, Optional, List, Dict
 
-# Simulator(policies)
+import yaml
 
 from june import paths
-import yaml
-import copy
+from june.demography.person import Person
+from june.groups.leisure.social_venue_distributor import parse_age_probabilites
+from june.groups.leisure import Leisure
+
+# TODO: reduce leisure attendance
 
 default_config_filename = paths.configs_path / "defaults/policy.yaml"
 
-class Policy:
-    def __init__(self, policy, start_time, end_time):
-        self.name = policy
-        self.start_time = start_time
-        self.end_time = end_time
+
+class PolicyError(BaseException):
+    pass
+
+
+class Policy(ABC):
+    def __init__(
+        self,
+        start_time: Union[str, datetime.datetime] = "1900-01-01",
+        end_time: Union[str, datetime.datetime] = "2100-01-01",
+    ):
+        """
+        Template for a general policy.
+
+        Parameters
+        ----------
+        start_time:
+            date at which to start applying the policy
+        end_time:
+            date from which the policy won't apply
+        """
+        self.spec = self.get_spec()
+        self.start_time = self.read_date(start_time)
+        self.end_time = self.read_date(end_time)
+
+    @staticmethod
+    def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
+        """
+        Read date in two possible formats, either string or datetime.date, both
+        are translated into datetime.datetime to be used by the simulator
+
+        Parameters
+        ----------
+        date:
+            date to translate into datetime.datetime
+
+        Returns
+        -------
+            date in datetime format
+        """
+        if type(date) is str:
+            return datetime.datetime.strptime(date, "%Y-%m-%d")
+        elif isinstance(date, datetime.date):
+            return datetime.datetime.combine(date, datetime.datetime.min.time())
+        else:
+            raise TypeError("date must be a string or a datetime.date object")
+
+    def get_spec(self) -> str:
+        """
+        Returns the speciailization of the policy.
+        """
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+
+    def is_active(self, date: datetime.datetime) -> bool:
+        """
+        Returns true if the policy is active, false otherwise
+
+        Parameters
+        ----------
+        date:
+            date to check
+        """
+        return self.start_time <= date <= self.end_time
+
+
+class SocialDistancing(Policy):
+    def __init__(
+        self,
+        start_time: Union[str, datetime.datetime] = "1900-01-01",
+        end_time: Union[str, datetime.datetime] = "2100-01-01",
+        beta_factor: Optional[dict] = None,
+    ):
+        super().__init__(start_time, end_time)
+        if beta_factor is None:
+            self.beta_factor = {}
+        else:
+            self.beta_factor = beta_factor
+
+
+class SkipActivity(Policy):
+    """
+    Template for policies that will ban an activity for a person
+    """
+
+    @abstractmethod
+    def skip_activity(self, person: "Person", activities: List[str]) -> bool:
+        """
+        Returns True if the activity is to be skipped, otherwise False
+        """
+        pass
+
+    def remove_activity(
+        self, activities: List[str], activity_to_remove: str
+    ) -> List[str]:
+        """
+        Remove an activity from a list of activities
+
+        Parameters
+        ----------
+        activities:
+            list of activities
+        activity_to_remove:
+            activity that will be removed from the list
+        """
+        return [activity for activity in activities if activity != activity_to_remove]
+
+
+class StayHome(Policy):
+    """
+    Template for policies that will force someone to stay at home
+    """
+
+    @abstractmethod
+    def must_stay_at_home(self, person: "Person", days_from_start: float):
+        """
+        Returns True if Person must stay at home, otherwise False
+
+        Parameters
+        ----------
+        person: 
+            person to whom the policy is being applied
+
+        days_from_start:
+            time past from beginning of simulation, in units of days
+        """
+        pass
+
+
+class CloseLeisureVenue(Policy):
+    def __init__(
+        self,
+        start_time: Union[str, datetime.datetime] = "1900-01-01",
+        end_time: Union[str, datetime.datetime] = "2100-01-01",
+        venues_to_close=("cinemas", "groceries"),
+    ):
+        """
+        Template for policies that will close types of leisure venues
+
+        Parameters
+        ----------
+        start_time:
+            date at which to start applying the policy
+        end_time:
+            date from which the policy won't apply
+        venues_to_close:
+            list of leisure venues that will close
+        """
+
+        super().__init__(start_time, end_time)
+        self.venues_to_close = venues_to_close
+
+
+class PermanentPolicy(StayHome):
+    def must_stay_at_home(self, person: "Person", days_from_start: float) -> bool:
+        """
+        Returns True if person has symptoms, otherwise False
+
+        Parameters
+        ----------
+        person: 
+            person to whom the policy is being applied
+
+        days_from_start:
+            time past from beginning of simulation, in units of days
+        """
+        return (
+            person.health_information is not None
+            and person.health_information.must_stay_at_home
+        )
+
+
+class Quarantine(StayHome):
+    def __init__(
+        self,
+        start_time: Union[str, datetime.datetime] = "1900-01-01",
+        end_time: Union[str, datetime.datetime] = "2100-01-01",
+        n_days: int = 7,
+        n_days_household: int = 14,
+    ):
+        """
+        This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
+
+        Parameters
+        ----------
+        start_time:
+            date at which to start applying the policy
+        end_time:
+            date from which the policy won't apply
+        n_days:
+            days for which the person has to stay at home if they show symtpoms
+        n_days_household:
+            days for which the person has to stay at home if someone in their household shows symptoms
+        """
+        super().__init__(start_time, end_time)
+        self.n_days = n_days
+        self.n_days_household = n_days_household
+
+    # TODO: if someone recovers or dies it will stop checking !
+    def must_stay_at_home(self, person: "Person", days_from_start: float):
+        return self.must_stay_at_home_housemates(
+            person, days_from_start, self.n_days_household
+        ) or self.must_stay_at_home_symptoms(person, days_from_start, self.n_days)
+
+    @staticmethod
+    def must_stay_at_home_symptoms(
+        person: "Person", days_from_start: float, n_days_at_home
+    ):
+        try:
+            release_day = (
+                person.health_information.time_of_symptoms_onset + n_days_at_home
+            )
+            return (
+                release_day
+                > days_from_start
+                > person.health_information.time_of_symptoms_onset
+            )
+        except (TypeError, AttributeError) as error:
+            return False
+
+    def must_stay_at_home_housemates(
+        self, person: "Person", days_from_start: float, n_days_at_home
+    ):
+        for housemate in person.housemates:
+            if self.must_stay_at_home_symptoms(
+                housemate, days_from_start, n_days_at_home
+            ):
+                return True
+        return False
+
+
+class Shielding(StayHome):
+    def __init__(
+        self, start_time: str, end_time: str, min_age: int,
+    ):
+        super().__init__(start_time, end_time)
+        self.min_age = min_age
+
+    def must_stay_at_home(self, person: "Person", days_from_start: float):
+        return person.age >= self.min_age
+
+
+# TODO: should we automatically have parents staying with children left alone?
+class CloseSchools(SkipActivity):
+    def __init__(
+        self, start_time: str, end_time: str, years_to_close=None, full_closure=None,
+    ):
+        super().__init__(start_time, end_time)
+        self.full_closure = full_closure
+        self.years_to_close = years_to_close
+
+    def skip_activity(self, person: "Person", activities):
+        if (
+            person.primary_activity is not None
+            and person.primary_activity.group.spec == "school"
+        ):
+            if self.full_closure or person.age in self.years_to_close:
+                return self.remove_activity(activities, "primary_activity")
+        return activities
+
+
+class CloseUniversities(SkipActivity):
+    def __init__(
+        self, start_time: str, end_time: str,
+    ):
+        super().__init__(start_time, end_time)
+
+    def skip_activity(self, person: "Person", activities):
+        if (
+            person.primary_activity is not None
+            and person.primary_activity.group.spec == "university"
+        ):
+            return self.remove_activity(activities, "primary_activity")
+        return activities
+
+
+class CloseCompanies(SkipActivity):
+    def __init__(
+        self, start_time: str, end_time: str, sectors_to_close=None, full_closure=None,
+    ):
+        super().__init__(start_time, end_time)
+        self.full_closure = full_closure
+        self.sectors_to_close = sectors_to_close
+
+    def skip_activity(self, person: "Person", activities):
+        if (
+            person.primary_activity is not None
+            and person.primary_activity.group.spec == "company"
+        ):
+            if self.full_closure or person.sector in self.sectors_to_close:
+                return self.remove_activity(activities, "primary_activity")
+        return activities
+
+
+class ChangeLeisureProbability(Policy):
+    def __init__(
+        self,
+        start_time: str,
+        end_time: str,
+        leisure_activities_probabilities: Dict[str, Dict[str, Dict[str, float]]],
+    ):
+        """
+        Changes the probability of the specified leisure activities.
+
+        Parameters
+        ----------
+        - start_time : starting time of the policy.
+        - end_time : end time of the policy.
+        - leisure_activities_probabilities : dictionary where the first key is an age range, and the second  a
+            number with the new probability for the activity in that age. Example:
+            * leisure_activities_probabilities = {"pubs" : {"men" :{"0-50" : 0.5, "50-99" : 0.2}, "women" : {"0-70" : 0.2, "71-99" : 0.8}}}
+        """
+        super().__init__(start_time, end_time)
+        self.leisure_probabilities = {}
+        self.original_leisure_probabilities = {}
+        for activity in leisure_activities_probabilities:
+            self.leisure_probabilities[activity] = {}
+            self.leisure_probabilities[activity]["men"] = parse_age_probabilites(
+                leisure_activities_probabilities[activity]["men"]
+            )
+            self.leisure_probabilities[activity]["women"] = parse_age_probabilites(
+                leisure_activities_probabilities[activity]["women"]
+            )
+            self.original_leisure_probabilities[
+                activity
+            ] = {}  # this will be filled when coupled to leisure
+
 
 class Policies:
-
-    def __init__(self, policies = [], config=None):
-        self.config = config
-        self.policies = policies
-        self.full_closure_policies = 1# filter out closure ones
-        self.partial_closure_policies = 1# filter out closure ones
+    def __init__(self, policies=None):
+        self.policies = [PermanentPolicy()] + (policies or list())
         self.social_distancing = False
         self.social_distancing_start = 0
         self.social_distancing_end = 0
-        
+
         for policy in self.policies:
-            if policy.name == "social_distance":
+            if isinstance(policy, SocialDistancing):
+                self.social_distancing_policy = policy
                 self.social_distancing = True
                 self.social_distancing_start = policy.start_time
                 self.social_distancing_end = policy.end_time
 
     @classmethod
     def from_file(
-            cls,
-            policies: list = [],
-            config_file = default_config_filename,
+        cls, config_file=default_config_filename,
     ):
-
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-            
-        return Policies(policies, config)
-        
-    def get_fully_closed_groups(self, time):
-        closed_groups = []
-        for policy in self.full_closure_policies:
-            if policy.is_fully_closed(person, time):
-                closed_groups.append(policy.group)
-        return closed_groups
+        policies = []
+        for key, value in config.items():
+            camel_case_key = "".join(x.capitalize() or "_" for x in key.split("_"))
+            policies.append(str_to_class(camel_case_key)(**value))
+        return Policies(policies=policies)
 
-    def get_partially_closed_groups(self, person, time):
-        closed_groups = []
-        for policy in self.partial_closure_policies:
-            if policy.is_partially_closed(person, time):
-                closed_groups.append(policy.group)
-        return closed_groups
+    def get_active_policies_for_type(self, policy_type, date):
+        return [
+            policy
+            for policy in self.policies
+            if isinstance(policy, policy_type) and policy.is_active(date)
+        ]
 
-    def social_distancing_policy(self, alpha, betas, time):
-        '''
+    def stay_home_policies(self, date):
+        return self.get_active_policies_for_type(policy_type=StayHome, date=date)
+
+    def skip_activity_policies(self, date):
+        return self.get_active_policies_for_type(policy_type=SkipActivity, date=date)
+
+    def social_distancing_policies(self, date):
+        return self.get_active_policies_for_type(
+            policy_type=SocialDistancing, date=date
+        )
+
+    def close_venues_policies(self, date):
+        return self.get_active_policies_for_type(
+            policy_type=CloseLeisureVenue, date=date
+        )
+
+    def must_stay_at_home(self, person, date, days_from_start):
+        if person.hospital is None:
+            for policy in self.stay_home_policies(date):
+                if policy.must_stay_at_home(person, days_from_start):
+                    return True
+        return False
+
+    def get_change_leisure_probabilities_policies(self, date):
+        return self.get_active_policies_for_type(
+            policy_type=ChangeLeisureProbability, date=date
+        )
+
+    def apply_social_distancing_policy(self, betas, time):
+        """
         Implement social distancing policy
         
         -----------
         Parameters:
-        alphas: e.g. (float) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).alpha
         betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
 
         Assumptions:
@@ -79,297 +421,79 @@ class Policies:
         TODO:
         - Implement structure for people to adhere to social distancing with a certain compliance
         - Check per group in config file
-        '''
-        #TODO: should probably leave alpha value for households untouched!
-
+        """
         betas_new = copy.deepcopy(betas)
-        
-        
-        if self.config is None:
-            alpha_new = alpha * 1.0
-        else:
-            alpha_new = alpha * self.config['social distancing']['alpha factor']
-
         for group in betas:
-            if self.config is None:
-                if group != 'household':
-                    betas_new[group] = betas_new[group] * 0.5
-            else:
-                betas_new[group] = betas_new[group] * self.config['social distancing']['beta factor'][group]
+            betas_new[group] = (
+                self.social_distancing_policy.beta_factor[group] * betas_new[group]
+            )
+        return betas_new
 
-        return alpha_new, betas_new
+    def get_beta_factors(self, group):
+        pass
 
+    def apply_activity_ban(self, person, date, activities):
+        for policy in self.skip_activity_policies(date):
+            activities = policy.skip_activity(person, activities)
+        return activities
 
-class Closure(Policy):
-    def __init__(self, 
-                group='school', 
-                start_time=3, 
-                end_time=10,
-                partial=('year', [5,7,8]),
-                ):
-        super().__init__(start_time, end_time)
-        self.group = group
-        self.partial = partial
+    def find_closed_venues(self, date):
+        closed_venues = set()
+        for policy in self.close_venues_policies(date):
+            closed_venues.update(policy.venues_to_close)
+        return closed_venues
 
-    def is_fully_closed(self, time):
-        if self.partial is None:
-            return self.start_time < time < self.end_time
-     
-    def is_partially_closed(self, person, time):
-        # TODO: need to use mapping between activities and groups
-        # TODO: if it is a company closure, key workers can send their
-        # children to school with a certain probability:
-            # i) make sure there is a teacher
-        subgroup = person.primary_activity
-        if self.partial:
-            if subgroup.group.spec == self.group:
-                if self.start_time < time < self.end_time:
-                    if getattr(subgroup, partial[0]) in partial[1]:
-                        return True
-                    else:
-                        return True
-        return False
-    
-# class Policy: # takes list of Policy
-#     '''
-#     Implement certain policy decisions into the simulartor
-#     Policies should be implemented in a modular fashion applying one after the other
-
-#     Assumptions:
-#     - If alpha and beta values are changed this is done by social distancing
-#       This means that this function must be called first
-#     - Any functions making edits to the active subgroups of a person assume that there is an attribute person.policy_subgroups
-#       This attribute is all the groups which will be accessed under and policy implementations
-#       To undo a policy this attribute has to be reset and the fraction implemented again
-#       This can be done by running the open_all() function
-
-#       e.g. full school closure:
-#            school_closure(person, years = None, full_closure = True)
-#            now reopen only certain schools:
-#            open_all()
-#            school_closure(person, years = [...], full_closure = False)
-
-#     - Many things rely on the the knowledge of key workers - let this be decided by whether or not their companies are closed
-#     '''
-
-#     # want to make this modular so that you could apply policies in combinations - Keras stype
-
-#     # input config file -> alter -> altererd config file -> alter again
-
-#     # How to alter things:
-#     ## can read in the beta and alpha physical
-#     ## could put an additional override group in heirarchy
-
-#     # either from config file or from Keras style
-    
-#     def __init__(self, config_file = None, adherence = 1.):
-
-#         self.config_file = config_file
-#         self.adherence = adherence
-
-#     def do_nothing(self):
-#         pass
-
-#     def open_all(self, person):
-#         '''
-#         Set people back to moving as before
-#         This is done by resetting all their subgroups to what they had before
-        
-#         -----------
-#         Parameters:
-#         person: a member of the Persons class
-#         '''
-
-#         person.policy_subgroup = person.subgroups
-        
-#     def quarantine(self, person):
-#         '''
-#         Given symptopatic and household information, impose quarantine on people
-
-#         -----------
-#         Parameters:
-#         person: member of the Persons class
-
-#         TODO:
-#         - Case of someone in household becoming symptomatic while they are under household quarantine
-#         - Finish this
-#         - Think about adherence
-#         '''
-
-#         # Make it so that there is a dict of households that are symptomatic and have a timer that sets and end date for knocking them out of the dict
-        
-#         pass
-
-#         ## THIS IS NOT FINISHED AND NEEDS SOME REWORKING ##
-
-#         ##  imo
-        
-#         # # set number of quarantine days from policy
-#         # if self.config_file is not None:
-#         #     symptomatic_quarantine = self.config_file['symptomatic quarantine']
-#         #     household_quarantine = self.config_file['household quarantine']
-#         # else:
-#         #     symptomatic_quarantine = 7
-#         #     household_quarantine = 14
-        
-        
-#         # # possible COVID-19 symptoms to trigger quarantine
-#         # possible_symptoms = [...]
-        
-#         # # check if person is already quarantining
-#         # if 'quarantine_symptomatic' in person.policy_subgroups:
-#         #     if person.quarantine_days == symptomatic_quarantine:
-#         #         person.policy_subgroups.pop('quarantine_symptomatic')
-
-#         #         if 'quarantine_household' in person.household.member[0].policy_subgroups:
-#         #             for member in person.household.members:
-#         #                 member.policy_subgroups.pop('quarantine_household')
-                        
-#         #     else:
-#         #         person.quarantine_days += 1
-
-#         #         if 'quarantine_household' in person.household.member[0].policy_subgroups:
-#         #             for member in person.household.members:
-#         #                 pass
+    def apply_change_probabilities_leisure(self, date, leisure: Leisure):
+        """
+        Changes probabilities of doing leisure activities according to the policies specified.
+        The current probabilities are stored in the policies, and restored at the end of the policy 
+        time span. Keep this in mind when trying to stack policies that modify the same social venue.
+        """
+        active_policies = self.get_change_leisure_probabilities_policies(date)
+        for policy in active_policies:
+            if policy.start_time == date:
+                # activate policy
+                for activity in policy.leisure_probabilities:
+                    if activity not in leisure.leisure_distributors:
+                        raise PolicyError(
+                            "Trying to change leisure probability for a non-existing activity"
+                        )
+                    activity_distributor = leisure.leisure_distributors[activity]
+                    policy.original_leisure_probabilities[activity][
+                        "men"
+                    ] = activity_distributor.male_probabilities
+                    policy.original_leisure_probabilities[activity][
+                        "women"
+                    ] = activity_distributor.female_probabilities
+                    activity_distributor.male_probabilities = policy.leisure_probabilities[
+                        activity
+                    ][
+                        "men"
+                    ]
+                    activity_distributor.female_probabilities = policy.leisure_probabilities[
+                        activity
+                    ][
+                        "women"
+                    ]
+            elif policy.end_time == date:
+                # restore policy
+                for activity in policy.leisure_probabilities:
+                    if activity not in leisure.leisure_distributors:
+                        raise PolicyError(
+                            "Trying to restore a leisure probability for a non-existing activity"
+                        )
+                    activity_distributor = leisure.leisure_distributors[activity]
+                    activity_distributor.male_probabilities = policy.original_leisure_probabilities[
+                        activity
+                    ][
+                        "men"
+                    ]
+                    activity_distributor.female_probabilities = policy.original_leisure_probabilities[
+                        activity
+                    ][
+                        "women"
+                    ]
 
 
-#     #def categorise_key_workers(self, person):
-#     #
-#     #    if person.age not in ['WORK AGE BRACKET']:
-#     #        raise ValueError('Person passed must be of working age')
-#     #
-#     #    if self.config_file is not None:
-#     #        if person.company is not None:
-        
-
-#     def school_closure(self, person, years = [], full_closure = False):
-#         '''
-#         Implement school closure by year group
-        
-#         ----------
-#         Parametes:
-#         person: member of the Persons class and is a child
-#         years: (list) year groups to close schools with
-#         full_closure: (bool) if True then all years closed, otherwise only close certain years
-#         '''
-#         if len(years) == 0 and full_closure = False:
-#             print ('WARNING: Policy applied and no schools are being closed')
-
-#         if person.age not in ['SCHOOL AGE BRACKET']:
-#             raise ValueError('Person passed must be of school age')
-        
-#         # This will currently not work and is more like pseudocode
-#         if full_closure:
-#             person.policy_subgroup.pop('school')
-#         else:
-#             if person.age is in years:
-
-#                 # check if BOTH parents are in work or not
-#                 working = True:
-#                 for parent in person.parents:
-#                     if 'company' not in parent.policy_subgroups:
-#                         working = False
-#                         break
-
-#                 # if BOTH parents are not working then do not send child to school
-#                 if not working:
-#                     person.policy_subgroups.pop('school')
-                                   
-    
-#     def company_closure(self, person, sectors = [], full_closure = False):
-#         '''
-#         Close companies by sector
-        
-#         -----------
-#         Parameters:
-#         person: member of the Persons class
-#         sectors: (list) sectors to be closed
-#         full_closure: (bool) if True then all sectors closed, otherwise only close certain sectors
-
-#         TODO:
-#         - Handle hospital workers in full_closure
-#         - Handle hospitals
-#         '''
-
-#         if len(sectors) == 0 and full_closure = False:
-#             print ('WARNING: Policy applied and no companies are being closed')
-        
-#         if person.age not in ['WORK AGE BRACKET']:
-#             raise ValueError('Person passed must be of working age')
-
-#         #  we still need to handle hospital workers separately
-#         if full_closue:
-#             person.policy_subgroups.pop('company')
-#         else:
-#             if person.sector in sectors:
-#                 person.policy_subgroups.pop('company')
-        
-#     def leisure_closure(self, person, venues = [], full_closure):
-#         '''
-#         Close leisure activities by venue type
-
-#         -----------
-#         Parameters:
-#         person: member of the Persons class
-#         venues: (list) venue types to close
-#         full_closure: (bool) if True then all venues closed, otherwise only close certain venues
-
-#         TODO:
-#         - Handle adherence
-#         '''
-
-#         possible_venues = ['pubs', 'cinemas', 'supermarkets', 'shopping_malls']
-
-#         for venue in venues:
-#             if venue not in possible_venues:
-#                 raise ValueError('Venue {} not known'.format(venue))
-        
-#         if len(venues) == 0 and full_closure = False:
-#             print ('WARNING: Policy applied and no venues are being closed')
-
-#         if full_closure:
-#             for venue in venues:
-#                 person.policy_subgroups.pop(venue)
-#         else:
-#             for venue in venues:   
-#                 if venue in person.policy_subgroups:
-#                     person.policy_subgroups.pop(venue)
-    
-#     def social_distancing(self, alpha, betas):
-#         '''
-#         Implement social distancing policy
-        
-#         -----------
-#         Parameters:
-#         alphas: e.g. (float) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).alpha
-#         betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
-
-#         Assumptions:
-#         - Currently we assume that social distancing is implemented first and this affects all
-#           interactions and intensities globally
-#         - Currently we assume that the changes are not group dependent
-
-
-#         TODO:
-#         - Implement structure for people to adhere to social distancing
-#         '''
-#         #TODO: should probably leave alpha value for households untouched! 
-        
-#         if self.config_file is not None:
-#             alpha /= 2
-#         else:
-#             alpha /= self.config_file['social distancing']['alpha factor']
-
-#         for group in betas.keys():
-#             if group != 'household': 
-#                 if not self.config_file:
-#                     betas[group] /= 2
-#                 else:
-#                     betas[group] /= self.config_file['social distancing']['beta factor']
-
-
-#     def lockdown(self):
-
-#         # this could be a combination of all
-
-#         pass
+def str_to_class(classname):
+    return getattr(sys.modules["june.policy"], classname)
