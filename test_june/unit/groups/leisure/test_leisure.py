@@ -80,12 +80,12 @@ def test__person_drags_household(leisure):
     household.add(person3)
     person2.busy = False
     person3.busy = False
-    social_venue = leisure.leisure_distributors[1].social_venues[0]
+    social_venue = leisure.leisure_distributors["cinemas"].social_venues[0]
     social_venue.add(person1)
     leisure.send_household_with_person_if_necessary(
         person=person1,
         social_venue=social_venue,
-        leisure_distributor=leisure.leisure_distributors[1],
+        leisure_distributor=leisure.leisure_distributors["cinemas"],
     )
     for person in [person1, person2, person3]:
         assert person.subgroups.leisure == social_venue.subgroups[0]
@@ -93,7 +93,6 @@ def test__person_drags_household(leisure):
 
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02000140"]})
-    demography = Demography.for_geography(geography)
     world = generate_world_from_geography(
         geography, include_households=False, include_commute=False
     )
