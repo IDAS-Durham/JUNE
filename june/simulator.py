@@ -125,6 +125,7 @@ class Simulator:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
             self.leisure = leisure
+            self.leisure.distribute_social_venues_to_people(self.world.people)
         if (
             "rail_travel_out" in self.all_activities
             or "rail_travel_back" in self.all_activities
@@ -309,9 +310,9 @@ class Simulator:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
-                    delta_time=duration,
-                    is_weekend=is_weekend,
-                    closed_venues=self.policies.find_closed_venues(date),
+                    # delta_time=duration,
+                    # is_weekend=is_weekend,
+                    # closed_venues=self.policies.find_closed_venues(date),
                 )
             else:
                 subgroup = getattr(person, activity)
@@ -545,6 +546,11 @@ class Simulator:
             self.policies.apply_change_probabilities_leisure(
                 self.timer.date, self.leisure
             )
+        self.leisure.generate_leisure_probabilities_for_timestep(
+            self.timer.duration,
+            self.timer.is_weekend,
+            self.policies.find_closed_venues(self.timer.date),
+        )
         self.move_people_to_active_subgroups(
             activities,
             self.timer.date,

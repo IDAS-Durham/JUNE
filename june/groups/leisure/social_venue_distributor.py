@@ -92,7 +92,7 @@ class SocialVenueDistributor:
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
 
-    def get_poisson_parameter(self, person, is_weekend: bool = False):
+    def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -108,10 +108,10 @@ class SocialVenueDistributor:
         """
         if len(self.social_venues) == 0:
             return 0
-        if person.sex == "m":
-            probability = self.male_probabilities[person.age]
+        if sex == "m":
+            probability = self.male_probabilities[age]
         else:
-            probability = self.female_probabilities[person.age]
+            probability = self.female_probabilities[age]
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
@@ -134,6 +134,17 @@ class SocialVenueDistributor:
         """
         poisson_parameter = self.get_poisson_parameter(person, is_weekend)
         return 1 - np.exp(-poisson_parameter * delta_time)
+
+    def get_possible_venues_for_person(self, person):
+        person_location = person.area.coordinates
+        potential_venues = self.social_venues.get_venues_in_radius(
+            person_location, self.maximum_distance
+        )
+        if potential_venues is None:
+            venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
+            return [venue]
+        return potential_venues
+
 
     def get_social_venue_for_person(self, person):
         """

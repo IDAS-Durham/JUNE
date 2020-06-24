@@ -27,6 +27,8 @@ class SocialVenue(Group):
             subgroup_type=self.SubgroupType.default,
             dynamic=True
         )
+    def get_leisure_subgroup(self, person):
+        return self.subgroups[0]
 
 
 class SocialVenues(Supergroup):
