@@ -169,24 +169,23 @@ class Leisure:
     #    social_venue.add(person, activity="leisure")
     #    return social_venue
 
-    # def send_household_with_person_if_necessary(
-    #    self, person, leisure_distributor, social_venue
-    # ):
-    #    """
-    #    When we know that the person does an activity in the social venue X,
-    #    then we ask X whether the person needs to drag the household with
-    #    him or her.
-    #    """
-    #    if (
-    #        person.residence.group.spec == "care_home"
-    #        or person.residence.group.type in ["communal", "other", "student"]
-    #    ):
-    #        return False
-    #    if leisure_distributor.person_drags_household():
-    #        for mate in person.residence.group.residents:
-    #            if not mate.busy:
-    #                social_venue.add(mate, activity="leisure")  # ignores size checking
-    #        return True
+    def send_household_with_person_if_necessary(
+        self, person, subgroup, probability,
+    ):
+        """
+        When we know that the person does an activity in the social venue X,
+        then we ask X whether the person needs to drag the household with
+        him or her.
+        """
+        if (
+            person.residence.group.spec == "care_home"
+            or person.residence.group.type in ["communal", "other", "student"]
+        ):
+            return False
+        if np.random.rand() < probability:
+            for mate in person.residence.group.residents:
+                mate.subgroups.leisure = subgroup
+            return True
 
     def get_subgroup_for_person_and_housemates(self, person: Person):
         """
@@ -218,10 +217,13 @@ class Leisure:
             if not candidates:
                 return
             if len(candidates) == 1:
-                return candidates[0].get_leisure_subgroup(person)
+                subgroup = candidates[0].get_leisure_subgroup(person)
             else:
                 idx = np.random.randint(0, len(candidates))
-                return candidates[idx].get_leisure_subgroup(person)
+                subgroup = candidates[idx].get_leisure_subgroup(person)
+            self.send_household_with_person_if_necessary(person, subgroup, prob_age_sex["drags_household"][activity])
+            person.subgroups.leisure = subgroup
+            return subgroup
         else:
             return 
 
