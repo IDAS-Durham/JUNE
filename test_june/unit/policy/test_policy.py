@@ -187,7 +187,7 @@ class TestDefaultPolicy:
         sim.clear_world()
         infect_person(worker, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
-        assert policies.must_stay_at_home(worker, date, None)
+        assert policies.stay_home_collection(date=date)(worker, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"], )
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
@@ -251,7 +251,7 @@ class TestDefaultPolicy:
         sim.clear_world()
         infect_person(pupil, selector, "influenza")
         sim.update_health_status(0.0, 0.0)
-        assert policies.must_stay_at_home(pupil, date, None)
+        assert policies.stay_home_collection(date=date)(pupil, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"], )
         assert worker in worker.residence.people
         assert pupil in pupil.residence.people
@@ -285,14 +285,14 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.activity_ban_for_date(time_during_policy)(pupil, activities) == [
+        assert policies.skip_activity_collection(date=time_during_policy)(pupil, activities) == [
             "residence"
         ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert pupil in pupil.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.activity_ban_for_date(time_after_policy)(pupil, activities) == [
+        assert policies.skip_activity_collection(date=time_after_policy)(pupil, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -326,14 +326,14 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.activity_ban_for_date(time_during_policy)(student, activities) == [
+        assert policies.skip_activity_collection(date=time_during_policy)(student, activities) == [
             "residence"
         ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert student in student.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.activity_ban_for_date(time_after_policy)(student, activities) == [
+        assert policies.skip_activity_collection(date=time_after_policy)(student, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -367,7 +367,7 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.activity_ban_for_date(time_during_policy)(worker, activities) == [
+        assert policies.skip_activity_collection(date=time_during_policy)(worker, activities) == [
             "residence"
         ]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
@@ -375,7 +375,7 @@ class TestClosure:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
-        assert policies.activity_ban_for_date(time_after_policy)(worker, activities) == [
+        assert policies.skip_activity_collection(date=time_after_policy)(worker, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -404,7 +404,7 @@ class TestClosure:
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.activity_ban_for_date(time_during_policy)(worker, activities) == [
+        assert policies.skip_activity_collection(date=time_during_policy)(worker, activities) == [
             "primary_activity",
             "residence",
         ]
@@ -432,7 +432,7 @@ class TestShielding:
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
-        assert policies.must_stay_at_home(worker, time_during_policy, activities)
+        assert policies.stay_home_collection(date=time_during_policy)(worker, activities)
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
@@ -462,7 +462,7 @@ class TestQuarantine:
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
-        assert policies.must_stay_at_home(worker, time_during_policy, 6.0)
+        assert policies.stay_home_collection(date=time_during_policy)(worker, 6.0)
         sim.move_people_to_active_subgroups(activities, time_during_policy, 6.0)
         assert worker in worker.residence.people
         worker.health_information = None
@@ -491,13 +491,13 @@ class TestQuarantine:
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
         # before symptoms onset
-        assert not policies.must_stay_at_home(pupil, time_during_policy, 4.0)
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 4.0)
         # after symptoms onset
-        assert policies.must_stay_at_home(pupil, time_during_policy, 8.0)
+        assert policies.stay_home_collection(date=time_during_policy)(pupil, 8.0)
         sim.move_people_to_active_subgroups(activities, time_during_policy, 8.0)
         assert pupil in pupil.residence.people
         # more thatn two weeks after symptoms onset
-        assert not policies.must_stay_at_home(pupil, time_during_policy, 25.0)
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 25.0)
         worker.health_information = None
         sim.clear_world()
 
