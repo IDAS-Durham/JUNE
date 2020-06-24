@@ -47,7 +47,7 @@ def create_simulator():
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
     )
-    selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()

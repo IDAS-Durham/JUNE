@@ -46,7 +46,7 @@ def test_full_run():
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename = test_config 
     )
-    selector = InfectionSelector.from_file(selector_config)
+    selector = InfectionSelector.from_file(config_filename=selector_config)
     interaction = inter.ContactAveraging.from_file(selector=selector)
     simulator = Simulator.from_file(
         world, interaction, selector, config_filename=test_config, leisure=leisure_instance
