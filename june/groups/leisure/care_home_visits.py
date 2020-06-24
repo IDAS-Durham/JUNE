@@ -78,6 +78,11 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                                 )
                             )
 
+    def get_possible_venues_for_person(self, person):
+        if person.residence.group.relatives_in_care_homes is None:
+            return
+        return [relative.residence.group for relative in person.residence.group.relatives_in_care_homes if relative.dead is False]
+
     def get_social_venue_for_person(self, person):
         relatives = person.residence.group.relatives_in_care_homes
         if relatives is None:
@@ -87,7 +92,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
             np.random.randint(0, len(alive_relatives))
         ].residence.group
 
-    def get_poisson_parameter(self, person, is_weekend: bool = False):
+    def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -102,27 +107,27 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
             whether it is a weekend or not
         """
 
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.relatives_in_care_homes is None
-        ):
-            return 0
-        # do not visit dead people
-        if (
-            len(
-                [
-                    person
-                    for person in person.residence.group.relatives_in_care_homes
-                    if person.dead is False
-                ]
-            )
-            == 0
-        ):
-            return 0
-        if person.sex == "m":
-            probability = self.male_probabilities[person.age]
+        #if (
+        #    person.residence.group.spec == "care_home"
+        #    or person.residence.group.relatives_in_care_homes is None
+        #):
+        #    return 0
+        ## do not visit dead people
+        #if (
+        #    len(
+        #        [
+        #            person
+        #            for person in person.residence.group.relatives_in_care_homes
+        #            if person.dead is False
+        #        ]
+        #    )
+        #    == 0
+        #):
+        #    return 0
+        if sex == "m":
+            probability = self.male_probabilities[age]
         else:
-            probability = self.female_probabilities[person.age]
+            probability = self.female_probabilities[age]
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
