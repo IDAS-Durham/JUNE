@@ -343,6 +343,19 @@ class ChangeLeisureProbability(Policy):
             ] = {}  # this will be filled when coupled to leisure
 
 
+class ActivityBan:
+    def __init__(self, policies: List[SkipActivity]):
+        self.policies = policies
+
+    def __call__(self, person: Person, activities):
+        for policy in self.policies:
+            activities = policy.skip_activity(
+                person,
+                activities
+            )
+        return activities
+
+
 class Policies:
     def __init__(self, policies=None):
         self.policies = [PermanentPolicy()] + (policies or list())
@@ -379,8 +392,15 @@ class Policies:
     def stay_home_policies(self, date):
         return self.get_active_policies_for_type(policy_type=StayHome, date=date)
 
-    def skip_activity_policies(self, date):
+    def _skip_activity_policies(self, date):
         return self.get_active_policies_for_type(policy_type=SkipActivity, date=date)
+
+    def activity_ban_for_date(self, date):
+        return ActivityBan(
+            self._skip_activity_policies(
+                date
+            )
+        )
 
     def social_distancing_policies(self, date):
         return self.get_active_policies_for_type(
@@ -431,11 +451,6 @@ class Policies:
 
     def get_beta_factors(self, group):
         pass
-
-    def apply_activity_ban(self, person, date, activities):
-        for policy in self.skip_activity_policies(date):
-            activities = policy.skip_activity(person, activities)
-        return activities
 
     def find_closed_venues(self, date):
         closed_venues = set()
