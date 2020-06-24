@@ -36,7 +36,7 @@ class HealthIndexGenerator:
      given by Pneumonia/(ILI+Peumonia) - probably too crude.
      """
 
-    def __init__(self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict):
+    def __init__(self, asymptomatic_ratio: float, poli_hosp: dict, poli_icu: dict, poli_deaths: dict):
         """
         Parameters:
         - poli_hosp,poli_icu,poli_deaths:
@@ -48,7 +48,7 @@ class HealthIndexGenerator:
         - the probaility (P) is computed as 
           P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
           The 10 exponent is requiered as the fits where done in logarithmic space.
-        - asimpto_ratio:
+        - asymptomatic_ratio:
           The percentage of the population that will be asymptomatic, we fixed it to 
           43% and assume that is age-independent.  This assumptions comes from 
           Vo et al 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
@@ -57,12 +57,13 @@ class HealthIndexGenerator:
         self.poli_hosp = poli_hosp
         self.poli_icu = poli_icu
         self.poli_deaths = poli_deaths
-        self.asimpto_ratio = 0.43
+        self.asymptomatic_ratio = asymptomatic_ratio
+        self.baseline_asymptomatic_ratio = 0.43
         self.make_list()
 
     @classmethod
     def from_file(
-            cls, polinome_filename: str = default_polinom_filename,
+            cls, asymptomatic_ratio: float=0.43, polinome_filename: str = default_polinom_filename,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -81,7 +82,7 @@ class HealthIndexGenerator:
         poli_icu = np.array([polinoms[:, 2], polinoms[:, 3]])
         poli_deaths = np.array([polinoms[:, 4], polinoms[:, 5]])
 
-        return cls(poli_hosp, poli_icu, poli_deaths)
+        return cls(asymptomatic_ratio,poli_hosp, poli_icu, poli_deaths)
 
     def model(self, age, poli):
         """
@@ -120,15 +121,17 @@ class HealthIndexGenerator:
         ages = np.arange(0, 121, 1)  # from 0 to 120
         self.prob_lists = np.zeros([2, 121, 5])
 
-        self.prob_lists[:, :, 0] = self.asimpto_ratio
+        self.prob_lists[:, :, 0] = self.asymptomatic_ratio
         hosp_ratio_female =  self.model(ages, self.poli_hosp[0])
         hosp_ratio_male =  self.model(ages, self.poli_hosp[1])
 
         icu_ratio_female = self.model(ages, self.poli_icu[0])
         icu_ratio_male = self.model(ages, self.poli_icu[1])
 
+
         death_ratio_female = self.model(ages, self.poli_deaths[0])
         death_ratio_male = self.model(ages, self.poli_deaths[1])
+
 
         # This makes sure that the ICU<deaths
         Boolean_icu_female = (death_ratio_female > icu_ratio_female)  # If the DEath ratio is larger that the ICU ratio
@@ -145,22 +148,23 @@ class HealthIndexGenerator:
         hosp_ratio_female[Boolean_hosp_female] = icu_ratio_female[Boolean_hosp_female]
         hosp_ratio_male[Boolean_hosp_male] = icu_ratio_male[Boolean_hosp_male]
 
+        asymptomatic_correction = (1+self.baseline_asymptomatic_ratio)/(1+self.asymptomatic_ratio)
 
 
-        self.prob_lists[0, :, 2] = 1 - hosp_ratio_female
-        self.prob_lists[1, :, 2] = 1 - hosp_ratio_male
+        self.prob_lists[0, :, 2] = 1 - hosp_ratio_female*asymptomatic_correction
+        self.prob_lists[1, :, 2] = 1 - hosp_ratio_male*asymptomatic_correction
 
-        self.prob_lists[0, :, 3] = 1 - icu_ratio_female
-        self.prob_lists[1, :, 3] = 1 - icu_ratio_male
+        self.prob_lists[0, :, 3] = 1 - icu_ratio_female*asymptomatic_correction
+        self.prob_lists[1, :, 3] = 1 - icu_ratio_male*asymptomatic_correction
 
-        self.prob_lists[0, :, 4] = 1 - death_ratio_female
-        self.prob_lists[1, :, 4] = 1 - death_ratio_male
+        self.prob_lists[0, :, 4] = 1 - death_ratio_female*asymptomatic_correction
+        self.prob_lists[1, :, 4] = 1 - death_ratio_male*asymptomatic_correction
 
 
         No_hosp_prov = np.array(
             [
-                self.prob_lists[0, :, 2] - self.asimpto_ratio,
-                self.prob_lists[1, :, 2] - self.asimpto_ratio,
+                self.prob_lists[0, :, 2] - self.asymptomatic_ratio,
+                self.prob_lists[1, :, 2] - self.asymptomatic_ratio,
             ]
         )
         Pneumonia = np.ones(121)
@@ -171,10 +175,10 @@ class HealthIndexGenerator:
         Pneumonia[Boolean] = RKIdata[pneumonia_index][1]
         Pneumonia[Pneumonia == 1] = RKIdata[len(RKIdata) - 1][1]
 
-        self.prob_lists[0, :, 1] = self.asimpto_ratio + No_hosp_prov[0] * (
+        self.prob_lists[0, :, 1] = self.asymptomatic_ratio + No_hosp_prov[0] * (
                 1 - Pneumonia
         )
-        self.prob_lists[1, :, 1] = self.asimpto_ratio + No_hosp_prov[1] * (
+        self.prob_lists[1, :, 1] = self.asymptomatic_ratio + No_hosp_prov[1] * (
                 1 - Pneumonia
         )
 
