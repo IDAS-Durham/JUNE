@@ -22,7 +22,6 @@ from june.groups import (
     Universities,
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
-from june.infection.infection import InfectionSelector
 from june.interaction import ContactAveraging
 from june.policy import Policy, Policies
 from june.seed import Seed
@@ -62,7 +61,7 @@ def create_world():
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
