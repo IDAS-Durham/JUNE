@@ -12,8 +12,8 @@ from june.groups import Household
 def make_dist(world_visits):
     visits_distributor = HouseholdVisitsDistributor(
         world_visits.super_areas,
-        male_age_probabilities={"0-99": 0.5},
-        female_age_probabilities={"0-99": 0.5},
+        male_age_probabilities={"0-100": 0.5},
+        female_age_probabilities={"0-100": 0.5},
     )
     return visits_distributor
 
@@ -42,6 +42,7 @@ def test__every_household_has_up_to_2_links(world_visits, visits_distributor):
 @fixture(name="leisure")
 def make_leisure(world_visits):
     leisure = generate_leisure_for_world(["household_visits"], world_visits)
+    leisure.generate_leisure_probabilities_for_timestep(0.1, True, [])
     return leisure
 
 
@@ -52,13 +53,14 @@ def test__household_home_visits_leisure_integration(leisure):
     household2 = Household(type="student")
     household1.add(person1)
     household2.add(person2, subgroup_type=household1.SubgroupType.young_adults)
+    person1.social_venues = {"household_visits" : [household2]}
     person1.busy = False
     person2.busy = False
     person1.residence.group.relatives_in_households = (person2,)
     counter = 0
     for _ in range(100):
         subgroup = leisure.get_subgroup_for_person_and_housemates(
-            person1, delta_time=0.1, is_weekend=False
+            person1
         )
         if subgroup is not None:
             counter += 1
@@ -71,9 +73,11 @@ def test__do_not_visit_dead_people(leisure):
     person = Person.from_attributes()
     person2 = Person.from_attributes()
     household = Household(type="family")
+    person.social_venues = {"household_visits" : [household]}
     household.add(person)
     household.relatives_in_care_homes = [person2]
     person2.dead = True
+    leisure.update_household_and_care_home_visits_targets([person])
     for _ in range(0, 100):
-        household = leisure.get_subgroup_for_person_and_housemates(person, 0.1, True)
+        household = leisure.get_subgroup_for_person_and_housemates(person)
         assert household is None
