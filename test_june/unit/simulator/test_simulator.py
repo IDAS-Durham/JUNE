@@ -56,6 +56,7 @@ def create_simulator():
     policies = Policies.from_file()
     sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
             leisure=leisure_instance, policies=policies)
+    sim.leisure.generate_leisure_probabilities_for_timestep(3, False, [])
     return sim
 
 
@@ -115,11 +116,11 @@ def test__clear_world(sim):
         assert person.busy == False
 
 
-def test__get_subgroup_active(sim):
-    active_subgroup = sim.get_subgroup_active(
+def test__move_to_active_subgroup(sim):
+    sim.move_to_active_subgroup(
         ["residence"], sim.world.people.members[0]
     )
-    assert active_subgroup.group.spec in ("carehome", "household")
+    assert sim.world.people.members[0].residence.group.spec in ("carehome", "household")
 
 
 def test__move_people_to_residence(sim):

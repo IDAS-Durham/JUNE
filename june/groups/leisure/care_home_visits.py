@@ -79,9 +79,18 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                             )
 
     def get_possible_venues_for_person(self, person):
-        if person.residence.group.relatives_in_care_homes is None:
-            return
-        return [relative.residence.group for relative in person.residence.group.relatives_in_care_homes if relative.dead is False]
+        if (
+            person.residence.group.spec == "care_home"
+            or person.residence.group.relatives_in_care_homes is None
+        ):
+            return ()
+        return tuple(
+            [
+                relative.residence.group
+                for relative in person.residence.group.relatives_in_care_homes
+                if relative.dead is False
+            ]
+        )
 
     def get_social_venue_for_person(self, person):
         relatives = person.residence.group.relatives_in_care_homes
@@ -107,13 +116,13 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
             whether it is a weekend or not
         """
 
-        #if (
+        # if (
         #    person.residence.group.spec == "care_home"
         #    or person.residence.group.relatives_in_care_homes is None
-        #):
+        # ):
         #    return 0
         ## do not visit dead people
-        #if (
+        # if (
         #    len(
         #        [
         #            person
@@ -122,7 +131,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
         #        ]
         #    )
         #    == 0
-        #):
+        # ):
         #    return 0
         if sex == "m":
             probability = self.male_probabilities[age]

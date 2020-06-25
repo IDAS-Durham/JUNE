@@ -56,6 +56,7 @@ class Household(Group):
             else:
                 subgroup = self.SubgroupType.old_adults
             person.subgroups.leisure = self[subgroup]
+            self[subgroup].append(person)
         elif activity == "residence":
             self[subgroup_type].append(person)
             self.residents = tuple((*self.residents, person))

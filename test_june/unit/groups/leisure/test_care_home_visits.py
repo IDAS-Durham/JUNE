@@ -71,6 +71,7 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
 @fixture(name="leisure")
 def make_leisure(world_visits):
     leisure = generate_leisure_for_world(["care_home_visits"], world_visits)
+    leisure.generate_leisure_probabilities_for_timestep(0.1, True, [])
     return leisure
 
 
@@ -86,10 +87,11 @@ def test__care_home_visits_leisure_integration(world_visits, leisure):
         if area.care_home is not None:
             break
     person1.residence.group.relatives_in_care_homes = [area.care_home.residents[0]]
+    person1.social_venues = {"care_home_visits": [area.care_home]}
     assigned = False
     for _ in range(0, 100):
         subgroup = leisure.get_subgroup_for_person_and_housemates(
-            person1, delta_time=1, is_weekend=True
+            person1
         )
         if subgroup is not None:
             assigned = True
@@ -114,7 +116,9 @@ def test__do_not_visit_dead_people(world_visits, leisure):
     household = Household(type="family")
     household.add(person2)
     household.relatives_in_care_homes = [person]
+    person2.social_venues = {"care_home_visits" : [person.residence.group[2]]}
     person.dead = True
+    leisure.update_household_and_care_home_visits_targets([person2])
     for _ in range(0, 100):
-        care_home = leisure.get_subgroup_for_person_and_housemates(person2, 0.1, True)
+        care_home = leisure.get_subgroup_for_person_and_housemates(person2)
         assert care_home is None

@@ -1,8 +1,8 @@
 male_age_probabilities:
-  18-64 : 0.8
+  18-65 : 0.8
   65-100 : 0.4
 female_age_probabilities:
-  18-64 : 0.8
+  18-65 : 0.8
   65-100 : 0.4
 neighbours_to_consider: 5
 maximum_distance: 5
