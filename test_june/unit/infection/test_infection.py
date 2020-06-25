@@ -59,7 +59,7 @@ class TestInfectionSelector:
         assert selector.transmission_median == 1.
 
     def test__constant_filename(self):
-        selector = InfectionSelector.from_file(constant_config)
+        selector = InfectionSelector.from_file(config_filename=constant_config)
         assert selector.ttype == TransmissionType.constant
         assert selector.transmission_probability == 0.3
 
