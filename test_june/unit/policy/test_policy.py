@@ -48,7 +48,7 @@ test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
