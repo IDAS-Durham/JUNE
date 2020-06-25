@@ -115,24 +115,6 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
         is_weekend
             whether it is a weekend or not
         """
-
-        # if (
-        #    person.residence.group.spec == "care_home"
-        #    or person.residence.group.relatives_in_care_homes is None
-        # ):
-        #    return 0
-        ## do not visit dead people
-        # if (
-        #    len(
-        #        [
-        #            person
-        #            for person in person.residence.group.relatives_in_care_homes
-        #            if person.dead is False
-        #        ]
-        #    )
-        #    == 0
-        # ):
-        #    return 0
         if sex == "m":
             probability = self.male_probabilities[age]
         else:
