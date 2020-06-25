@@ -1,8 +1,8 @@
 male_age_probabilities:
   18-65 : 1.36 
-  66-100 : 0.68
+  65-100 : 0.68
 female_age_probabilities:
   18-65 : 1.36 
-  66-100 : 0.68
+  65-100 : 0.68
 weekend_boost: 1
 drags_household_probability: 0.3

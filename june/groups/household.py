@@ -56,12 +56,23 @@ class Household(Group):
             else:
                 subgroup = self.SubgroupType.old_adults
             person.subgroups.leisure = self[subgroup]
+            self[subgroup].append(person)
         elif activity == "residence":
             self[subgroup_type].append(person)
             self.residents = tuple((*self.residents, person))
             person.subgroups.residence = self[subgroup_type]
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
+
+    def get_leisure_subgroup(self, person):
+        if person.age < 18:
+            return self.subgroups[self.SubgroupType.kids]
+        elif person.age <= 35:
+            return self.subgroups[self.SubgroupType.young_adults]
+        elif person.age < 65:
+            return self.subgroups[self.SubgroupType.adults]
+        else:
+            return self.subgroups[self.SubgroupType.old_adults]
 
     @property
     def kids(self):
