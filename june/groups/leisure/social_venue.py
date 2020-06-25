@@ -21,12 +21,9 @@ class SocialVenue(Group):
         self.max_size = max_size
 
     def add(self, person, activity="leisure"):
-        super().add(
-            person,
-            activity,
-            subgroup_type=self.SubgroupType.default,
-            dynamic=True
-        )
+        self.subgroups[0].append(person)
+        setattr(person.subgroups, activity, self.subgroups[0])
+
     def get_leisure_subgroup(self, person):
         return self.subgroups[0]
 
@@ -103,7 +100,9 @@ class SocialVenues(Supergroup):
         return cls(social_venues)
 
     @classmethod
-    def for_super_areas(cls, super_areas: List[SuperArea], venues_per_super_area=1, venues_per_capita =1):
+    def for_super_areas(
+        cls, super_areas: List[SuperArea], venues_per_super_area=1, venues_per_capita=1
+    ):
         """
         Generates social venues in the given super areas.
 

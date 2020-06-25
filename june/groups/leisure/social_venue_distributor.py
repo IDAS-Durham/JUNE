@@ -132,7 +132,7 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        poisson_parameter = self.get_poisson_parameter(person, is_weekend)
+        poisson_parameter = self.get_poisson_parameter(person.sex, person.age, is_weekend)
         return 1 - np.exp(-poisson_parameter * delta_time)
 
     def get_possible_venues_for_person(self, person):
@@ -142,8 +142,15 @@ class SocialVenueDistributor:
         )
         if potential_venues is None:
             venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
-            return [venue]
-        return potential_venues
+            return (venue, )
+
+        potential_venues = np.random.choice(
+            potential_venues[
+                : min(len(potential_venues), self.neighbours_to_consider)
+            ],
+            size=self.neighbours_to_consider,
+        )
+        return tuple(potential_venues, )
 
 
     def get_social_venue_for_person(self, person):
