@@ -22,7 +22,7 @@ default_config_file = (
     paths.configs_path / "defaults/distributors/worker_distributor.yaml"
 )
 default_policy_config_file = (
-    paths.configs_path / "defaults/policy.yaml"
+    paths.configs_path / "defaults/company_closure.yaml"
 )
 
 logger = logging.getLogger(__name__)
