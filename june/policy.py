@@ -14,7 +14,7 @@ from june.groups.leisure.social_venue_distributor import parse_age_probabilites
 
 # TODO: reduce leisure attendance
 
-default_config_filename = paths.configs_path / "defaults/policy.yaml"
+default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
 
 
 class PolicyError(BaseException):

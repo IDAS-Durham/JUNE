@@ -14,6 +14,7 @@ from june.groups import (
     Schools,
     Companies,
     Households,
+    CareHomes,
     Universities,
     Cemeteries,
 )
@@ -35,7 +36,7 @@ from june.policy import (
     ChangeLeisureProbability,
 )
 from june.simulator import Simulator
-from june.world import World
+from june.world import World, generate_world_from_hdf5, generate_world_from_geography
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -64,6 +65,17 @@ def create_interaction(selector):
 def create_geography():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     return g.super_areas.members[0]
+
+@pytest.fixture(name="super_area_big", scope="module")
+def create_big_geography():
+    g = Geography.from_file(filter_key={"super_area": [
+        "E02003282",
+        "E02001720",
+        "E00088544",
+        "E02002560",
+        "E02002559",
+        "E02004314"]})
+    return g
 
 
 def make_dummy_world(super_area):
@@ -108,7 +120,6 @@ def make_dummy_world(super_area):
     world.pubs = Pubs([pub])
     return pupil, worker, world
 
-
 def make_dummy_world_with_university(super_area):
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     school = School(
@@ -150,6 +161,14 @@ def make_dummy_world_with_university(super_area):
     world.pubs = Pubs([pub])
     return pupil, student, world
 
+def make_world(geography):
+    geography.hospitals = Hospitals.for_geography(geography)
+    geography.schools = Schools.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
+    world = generate_world_from_geography(geography, include_households=False, include_commute=False)
+    return world
 
 def infect_person(person, selector, symptom_tag="influenza"):
     selector.infect_person_at_time(person, 0.0)
@@ -163,6 +182,42 @@ class TestPolicy:
         assert policy.is_active(datetime(2020, 6, 6))
         assert not policy.is_active(datetime(2020, 6, 7))
 
+class TestLockdownStatus:
+    def test__lockdown_status_random(self, super_area_big):
+        world = make_world(super_area_big)
+
+        found_worker = False
+        found_child = False
+        for person in world.areas[0].people:
+            if person.age > 18:
+                worker = person
+                found_worker = True
+            elif person.age < 18:
+                child = person
+                found_child = True
+            if found_worker and found_child:
+                break
+
+        assert worker.lockdown_status is not None
+        assert child.lockdown_status is None
+
+    def test__lockdown_status_teacher(self, super_area_big):
+        world = make_world(super_area_big)
+
+        teacher = world.schools.members[0].teachers.people[0]
+        assert teacher.lockdown_status == 'key_worker'
+
+    def test__lockdown_status_medic(self, super_area_big):
+        world = make_world(super_area_big)
+
+        medic = world.hospitals.members[0].people[0]
+        assert medic.lockdown_status == 'key_worker'
+
+    def test__lockdown_status_care_home(self, super_area_big):
+        world = make_world(super_area_big)
+
+        care_home_worker = world.care_homes[0].people[0]
+        assert care_home_worker.lockdown_status == 'key_worker'
 
 class TestDefaultPolicy:
     def test__default_policy_adults(self, super_area, selector, interaction):
