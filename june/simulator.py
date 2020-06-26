@@ -298,6 +298,13 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
+        if person.busy:
+            for subgroup in person.subgroups.iter():
+                if subgroup is not None:
+                    if person in subgroup.people:
+                        print(subgroup)
+                        print(subgroup.group.spec)
+            raise ValueError
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -307,14 +314,13 @@ class Simulator:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
                 subgroup.append(person)
-                return 
+                return
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
 
     def kid_drags_guardian(
-        self,
-        guardian: "Person",
+        self, guardian: "Person",
     ):
         """
         A kid makes their guardian go home.
@@ -328,7 +334,6 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
-
         if guardian is not None:
             if guardian.busy:
                 for subgroup in guardian.subgroups.iter():
@@ -337,9 +342,7 @@ class Simulator:
                         break
             guardian.residence.append(guardian)
 
-    def move_mild_kid_guardian_to_household(
-        self, kid: "Person"
-    ):
+    def move_mild_kid_guardian_to_household(self, kid: "Person"):
         """
         Move  a kid and their guardian to the household, so no kid is left
         home alone.
@@ -352,18 +355,16 @@ class Simulator:
             list of activities that take place at a given time step
         """
         possible_guardians = [
-            housemate for housemate in kid.residence.group.people if housemate.age >= 18
+            housemate
+            for housemate in kid.residence.group.residents
+            if housemate.age >= 18
         ]
         if len(possible_guardians) == 0:
             guardian = kid.find_guardian()
-            self.kid_drags_guardian(
-                guardian
-            )
+            self.kid_drags_guardian(guardian)
         kid.residence.append(kid)
 
-    def move_mild_ill_to_household(
-        self, person: "Person", activities: List[str]
-    ):
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
         """
         Move person with a mild illness to their households. For kids that will
         always happen, and if they are left alone at home they will also drag one
@@ -378,15 +379,11 @@ class Simulator:
             list of activities that take place at a given time step
         """
         if person.age < self.min_age_home_alone:
-            self.move_mild_kid_guardian_to_household(
-                person
-            )
+            self.move_mild_kid_guardian_to_household(person)
         elif random.random() <= self.stay_at_home_complacency:
             person.residence.append(person)
         else:
-            self.move_to_active_subgroup(
-                activities, person
-            )
+            self.move_to_active_subgroup(activities, person)
 
     def move_people_to_active_subgroups(
         self,
@@ -412,9 +409,7 @@ class Simulator:
                 continue
             allowed_activities = skip_activity_collection(person, activities)
             if stay_home_collection(person, days_from_start):
-                self.move_mild_ill_to_household(
-                    person, allowed_activities
-                )
+                self.move_mild_ill_to_household(person, allowed_activities)
             else:
                 self.move_to_active_subgroup(allowed_activities, person)
 
@@ -532,9 +527,7 @@ class Simulator:
             self.policies.find_closed_venues(self.timer.date),
         )
         self.move_people_to_active_subgroups(
-            activities,
-            self.timer.date,
-            self.timer.now,
+            activities, self.timer.date, self.timer.now,
         )
         active_groups = self.activities_to_groups(activities)
         group_instances = [
@@ -674,9 +667,7 @@ class SimulatorBox(Simulator):
             light_logger,
         )
 
-    def kid_drags_guardian(
-        self, guardian
-    ):
+    def kid_drags_guardian(self, guardian):
         # not available in box
         pass
 
