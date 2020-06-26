@@ -13,3 +13,48 @@ social distancing:
     school: 0.5
     household: 1.0
     university: 0.5
+
+company_closure:
+  sectors:
+    A:
+      furlough: 0.
+    B:
+      furlough: 0.
+    C:
+      furlough: 0.
+    D:
+      furlough: 0.
+    E:
+      furlough: 0.
+    F:
+      furlough: 0.
+    G:
+      furlough: 0.0680
+    H:
+      furlough: 0.242
+    I:
+      furlough: 0.154
+    J:
+      furlough: 0.
+    K:
+      furlough: 0.
+    L:
+      furlough: 0.
+    M:
+      furlough: 0.
+    N:
+      furlough: 0.0455
+    O:
+      furlough: 0.
+    P:
+      furlough: 0.0833
+    Q:
+      furlough: 0.0769
+    R:
+      furlough: 0.912
+    S:
+      furlough: 0.211
+    T:
+      furlough: 0.25
+    U:
+      furlough: 0.
