@@ -47,6 +47,7 @@ class Person(dataobject):
     # infection
     susceptibility: float = 1.0
     dead: bool = False
+    social_venues : dict = None
 
     @classmethod
     def from_attributes(
@@ -63,6 +64,7 @@ class Person(dataobject):
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             subgroups=Activities(None, None, None, None, None, None, None),
+            social_venues = {}
         )
 
     @property

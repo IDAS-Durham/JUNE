@@ -189,6 +189,17 @@ class Seed:
                     )
             self.dates_seeded.append(date.date())
 
+    def unleash_virus_per_day(self, area, n_cases, date):
+        """
+        Seed the infection in a given area, over several days
+
+        """
+        date_str = date.strftime("%Y-%m-%d 00:00:00")
+        if date.date() not in self.dates_seeded:
+            self.infect_super_area(self, n_cases)
+            self.dates_seeded.append(date.date())
+
+
     def unleash_virus(self, n_cases, box_mode=False):
         """
         Seed the infection with n_cases random people being infected,
