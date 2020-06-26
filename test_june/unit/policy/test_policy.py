@@ -36,7 +36,7 @@ from june.policy import (
     ChangeLeisureProbability,
 )
 from june.simulator import Simulator
-from june.world import World
+from june.world import World, generate_world_from_hdf5, generate_world_from_geography
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -200,8 +200,18 @@ class TestLockdownStatus:
 
         assert worker.lockdown_status is not None
         assert child.lockdown_status is None
-    
-        
+
+    def test__lockdown_status_teacher(self, super_area_big):
+        world = make_world(super_area_big)
+
+        teacher = world.schools.members[0].teachers.people[0]
+        assert teacher.lockdown_status == 'key_worker'
+
+    def test__lockdown_status_medic(self, super_area_big):
+        world = make_world(super_area_big)
+
+        medic = world.hospitals.members[0].people[0]
+        assert medic.lockdown_status == 'key_worker'
 
 class TestDefaultPolicy:
     def test__default_policy_adults(self, super_area, selector, interaction):
