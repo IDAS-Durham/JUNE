@@ -17,18 +17,32 @@ social distancing:
 company_closure:
   sectors:
     A:
+    # Agriculture, forestry and fishing
+      key_worker: 1.
       furlough: 0.
     B:
+    # Mining and quarrying
+      key_worker: 1.
       furlough: 0.
     C:
+    # Manufacturing
+    # Key workers defiend as those in food, beverage, petroleum and pharmaceutical products
+      key_worker: 0.177
       furlough: 0.
     D:
+    # Electricity, gas, steam and air conditioning supply
+      key_worker: 1.
       furlough: 0.
     E:
+    # Water supply, sewerage, waste management and remediation activities
+      key_worker: 1.
       furlough: 0.
     F:
+    # Construction
       furlough: 0.
     G:
+    # Wholesale and retrail trade, repair of motor vehicles and motorcycles
+      key_worker: 0.223
       furlough: 0.0680
     H:
       furlough: 0.242
@@ -47,8 +61,12 @@ company_closure:
     O:
       furlough: 0.
     P:
+    # Education
+    # Key workers assigned by distributor separately
       furlough: 0.0833
     Q:
+    # Human health and social work
+    # Key workers assigned by distributor separately
       furlough: 0.0769
     R:
       furlough: 0.912
