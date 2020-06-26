@@ -171,7 +171,7 @@ class Person(dataobject):
     @property
     def kid_of_key_worker(self):
         for mate in self.housemates:
-            if mate.lockdown_status == "key_worker":
+            if mate.lockdown_status in ["key_worker", "random"]:
                 return True
         return False
 

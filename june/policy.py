@@ -107,8 +107,8 @@ class SkipActivity(Policy):
         """
         pass
 
-    def remove_activity(
-        self, activities: List[str], activity_to_remove: str
+    def remove_activities(
+            self, activities: List[str], activities_to_remove: List[str]
     ) -> List[str]:
         """
         Remove an activity from a list of activities
@@ -120,7 +120,7 @@ class SkipActivity(Policy):
         activity_to_remove:
             activity that will be removed from the list
         """
-        return [activity for activity in activities if activity != activity_to_remove]
+        return [activity for activity in activities if activity not in activities_to_remove]
 
 
 class StayHome(Policy):
@@ -274,7 +274,7 @@ class CloseSchools(SkipActivity):
             if (
                 self.full_closure or person.age in self.years_to_close
             ) and not person.kid_of_key_worker:
-                return self.remove_activity(activities, "primary_activity")
+                return self.remove_activities(activities, ["primary_activity"])
         return activities
 
 
@@ -289,25 +289,28 @@ class CloseUniversities(SkipActivity):
             person.primary_activity is not None
             and person.primary_activity.group.spec == "university"
         ):
-            return self.remove_activity(activities, "primary_activity")
+            return self.remove_activities(activities, ["primary_activity"])
         return activities
 
 
 class CloseCompanies(SkipActivity):
     def __init__(
-        self, start_time: str, end_time: str, sectors_to_close=None, full_closure=None,
+            self, start_time: str, end_time: str, full_closure=False,
     ):
+        """
+        Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
+        If full_closure is True, then no one will go to work.
+        """
         super().__init__(start_time, end_time)
         self.full_closure = full_closure
-        self.sectors_to_close = sectors_to_close
 
     def skip_activity(self, person: "Person", activities):
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
         ):
-            if self.full_closure or person.sector in self.sectors_to_close:
-                return self.remove_activity(activities, "primary_activity")
+            if self.full_closure or person.lockdown_status == "furlough":
+                return self.remove_activities(activities, ["primary_activity", "commute"])
         return activities
 
 
