@@ -177,4 +177,5 @@ class Observed2Cases:
             date = index - timedelta(days=time_to_get_there)
             n_cases = self.get_n_cases_from_observed(n_observed, avg_rates)
             n_initial_cases.append((date, round(n_cases)))
-        return n_initial_cases
+        return pd.DataFrame(n_initial_cases, columns=['date',
+                                        'n_cases'])
