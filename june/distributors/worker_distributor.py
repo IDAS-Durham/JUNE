@@ -91,7 +91,7 @@ class WorkerDistributor:
     ):
         """
         Assign any person within the eligible working age range a location
-        (SuperArea) of their work, and the sector (e.g. "P"=educatioin) of
+        (SuperArea) of their work, and the sector (e.g. "P"=education) of
         their work.
         
         Parameters
@@ -104,10 +104,12 @@ class WorkerDistributor:
         ):  
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
+            self._lockdown_status_lottery(len(area.people))
             for idx, person in enumerate(area.people):
                 if self.age_range[0] <= person.age <= self.age_range[1]:
                     self._assign_work_location(idx, person, wf_area_df)
                     self._assign_work_sector(idx, person)
+                    self._assign_lockdown_status(idx, person)
             if i % 5000 == 0 and i != 0:
                 logger.info(
                     f"Distributed workers in {i} areas of {len(self.areas)}"
@@ -223,6 +225,23 @@ class WorkerDistributor:
             person.sub_sector = self.sub_sector_distr[person.sector]["label"][
                 sub_sector_idx
             ]
+
+    def _lockdown_status_random_lottery(self, n_workers):
+
+        self.lockdown_status_random = np.random.choice(2, n_workers, p=[4/5, 1/5])
+            
+    def _assign_lockdown_status(self, idx, person):
+        """
+        Assign lockdown_status in proportion to definitions in the policy config
+        """
+        values = ['key_worker', 'random', 'furlough']
+        probs = [self.company_closure[person.sector][values[0]], self.company_closure[person.sector][values[1]], self.company_closure[person.sector][values[2]]]
+        value = np.random.choice(values, 1, p=probs)
+        if value == 'random' and self.lockdown_status_random[idx] == 0:
+            value = 'furlough'
+
+        person.lockdown_status = value
+            
 
     @classmethod
     def for_geography(
