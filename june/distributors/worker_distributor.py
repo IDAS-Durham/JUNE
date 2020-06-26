@@ -226,7 +226,10 @@ class WorkerDistributor:
                 sub_sector_idx
             ]
 
-    def _lockdown_status_random_lottery(self, n_workers):
+    def _lockdown_status_lottery(self, n_workers):
+        """
+        Creates run-once random list for each person in an area for assigning to a lockdown status
+        """
 
         self.lockdown_status_random = np.random.choice(2, n_workers, p=[4/5, 1/5])
             
@@ -237,6 +240,10 @@ class WorkerDistributor:
         values = ['key_worker', 'random', 'furlough']
         probs = [self.company_closure[person.sector][values[0]], self.company_closure[person.sector][values[1]], self.company_closure[person.sector][values[2]]]
         value = np.random.choice(values, 1, p=probs)
+
+        # Currently all people definitely not furloughed or key are assigned a 'random' tag which allows for
+        # them to dynamically be sent to work. For now we fix this so that the same 1/5 people go to work once a week
+        # rather than a 1/5 chance that a person with a 'random' tag goes to work
         if value == 'random' and self.lockdown_status_random[idx] == 0:
             value = 'furlough'
 
@@ -341,7 +348,7 @@ class WorkerDistributor:
             config = yaml.load(f, Loader=yaml.FullLoader)
         with open(policy_config_file) as f:
             policy_config = yaml.load(f, Loader=yaml.FullLoader)
-        return WorkerDistributor(workflow_df, sex_per_sector_df, policy_config['company_closure'], **config)
+        return WorkerDistributor(workflow_df, sex_per_sector_df, policy_config['company_closure']['sectors'], **config)
 
 
 
