@@ -403,7 +403,7 @@ class TestClosure:
     def test__close_companies(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time="2020-1-1", end_time="2020-10-1", sectors_to_close=["Q"],
+            start_time="2020-1-1", end_time="2020-10-1"
         )
         policies = Policies([company_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -417,10 +417,11 @@ class TestClosure:
             policies=policies,
             leisure=leisure_instance,
         )
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        #sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
         activities = ["primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
+        worker.lockdown_status = "furlough"
         sim.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
@@ -442,10 +443,36 @@ class TestClosure:
         assert worker in worker.primary_activity.people
         sim.clear_world()
 
-    def test__close_companies_other_sector(self, super_area, selector, interaction):
+        # no furlough
+        sim.clear_world()
+        activities = ["primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        worker.lockdown_status = "key_worker"
+        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        assert policies.skip_activity_collection(date=time_during_policy)(
+            worker, activities
+        ) == ["primary_activity", "residence"]
+        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        assert policies.skip_activity_collection(date=time_after_policy)(
+            worker, activities
+        ) == ["primary_activity", "residence",]
+        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
+    def test__close_companies_full_closure(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time="2020-1-1", end_time="2020-10-1", sectors_to_close=["R"],
+            start_time="2020-1-1", end_time="2020-10-1", full_closure=True,
         )
         policies = Policies([company_closure])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -459,14 +486,15 @@ class TestClosure:
             policies=policies,
             leisure=leisure_instance,
         )
+        worker.lockdown_status = "key_worker"
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
         assert policies.skip_activity_collection(date=time_during_policy)(
             worker, activities
-        ) == ["primary_activity", "residence",]
+        ) == ["residence"]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
-        assert worker in worker.primary_activity.people
+        assert worker in worker.residence.people
         sim.clear_world()
 
 

@@ -15,15 +15,11 @@ default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (
     paths.data_path / "input/work/industry_by_sex_ew.csv"
 )
-default_areas_map_path = (
-    paths.data_path / "input/geography/area_super_area_region.csv"
-)
+default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_file = (
     paths.configs_path / "defaults/distributors/worker_distributor.yaml"
 )
-default_policy_config_file = (
-    paths.configs_path / "defaults/policy/company_closure.yaml"
-)
+default_policy_config_file = paths.configs_path / "defaults/policy/company_closure.yaml"
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +83,7 @@ class WorkerDistributor:
         self.n_boundary_workers = 0
 
     def distribute(
-            self, areas: Areas, super_areas: SuperAreas, population: Population,
+        self, areas: Areas, super_areas: SuperAreas, population: Population,
     ):
         """
         Assign any person within the eligible working age range a location
@@ -99,9 +95,7 @@ class WorkerDistributor:
         """
         self.areas = areas
         self.super_areas = super_areas
-        for i, area in enumerate(
-            iter(self.areas)
-        ):  
+        for i, area in enumerate(iter(self.areas)):
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
             self._lockdown_status_lottery(len(area.people))
@@ -111,9 +105,7 @@ class WorkerDistributor:
                     self._assign_work_sector(idx, person)
                     self._assign_lockdown_status(idx, person)
             if i % 5000 == 0 and i != 0:
-                logger.info(
-                    f"Distributed workers in {i} areas of {len(self.areas)}"
-                )
+                logger.info(f"Distributed workers in {i} areas of {len(self.areas)}")
         logger.info(
             f"There are {self.n_boundary_workers} who had to be told to stay real"
         )
@@ -150,7 +142,9 @@ class WorkerDistributor:
         }
         try:
             # fails if no female work in this Area
-            distribution_female = self.sex_per_sector_df.loc[area_name][f_col].fillna(0).values
+            distribution_female = (
+                self.sex_per_sector_df.loc[area_name][f_col].fillna(0).values
+            )
             self.sector_distribution_female = stats.rv_discrete(
                 values=(numbers, distribution_female)
             )
@@ -159,7 +153,9 @@ class WorkerDistributor:
             logger.info(f"The Area {area_name} has no woman working in it.")
         try:
             # fails if no male work in this Area
-            distribution_male = self.sex_per_sector_df.loc[area_name][m_col].fillna(0).values
+            distribution_male = (
+                self.sex_per_sector_df.loc[area_name][m_col].fillna(0).values
+            )
             self.sector_distribution_male = stats.rv_discrete(
                 values=(numbers, distribution_male)
             )
@@ -190,7 +186,7 @@ class WorkerDistributor:
                 self._select_rnd_superarea(person)
         else:
             self._select_rnd_superarea(person)
-   
+
     def _select_rnd_superarea(self, person: Person):
         """
         Selects random SuperArea to send a worker to work in
@@ -231,24 +227,27 @@ class WorkerDistributor:
         Creates run-once random list for each person in an area for assigning to a lockdown status
         """
 
-        self.lockdown_status_random = np.random.choice(2, n_workers, p=[4/5, 1/5])
-            
+        self.lockdown_status_random = np.random.choice(2, n_workers, p=[4 / 5, 1 / 5])
+
     def _assign_lockdown_status(self, idx, person):
         """
         Assign lockdown_status in proportion to definitions in the policy config
         """
-        values = ['key_worker', 'random', 'furlough']
-        probs = [self.company_closure[person.sector][values[0]], self.company_closure[person.sector][values[1]], self.company_closure[person.sector][values[2]]]
-        value = np.random.choice(values, 1, p=probs)
+        values = ["key_worker", "random", "furlough"]
+        probs = [
+            self.company_closure[person.sector][values[0]],
+            self.company_closure[person.sector][values[1]],
+            self.company_closure[person.sector][values[2]],
+        ]
+        value = np.random.choice(values, 1, p=probs)[0]
 
         # Currently all people definitely not furloughed or key are assigned a 'random' tag which allows for
         # them to dynamically be sent to work. For now we fix this so that the same 1/5 people go to work once a week
         # rather than a 1/5 chance that a person with a 'random' tag goes to work
-        if value == 'random' and self.lockdown_status_random[idx] == 0:
-            value = 'furlough'
+        if value == "random" and self.lockdown_status_random[idx] == 0:
+            value = "furlough"
 
         person.lockdown_status = value
-            
 
     @classmethod
     def for_geography(
@@ -269,7 +268,11 @@ class WorkerDistributor:
         if len(area_names) == 0:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
-            area_names, workflow_file, sex_per_sector_file, config_file, policy_config_file
+            area_names,
+            workflow_file,
+            sex_per_sector_file,
+            config_file,
+            policy_config_file,
         )
 
     @classmethod
@@ -297,11 +300,17 @@ class WorkerDistributor:
             )
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
-        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["super_area"]
+        area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)][
+            "super_area"
+        ]
         if len(area_names) == 0:
             raise CompanyError("Region returned empty area list.")
         return cls.for_super_areas(
-            area_names, workflow_file, sex_per_sector_file, config_file, policy_config_file
+            area_names,
+            workflow_file,
+            sex_per_sector_file,
+            config_file,
+            policy_config_file,
         )
 
     @classmethod
@@ -316,13 +325,17 @@ class WorkerDistributor:
         """
         """
         return cls.from_file(
-            area_names, workflow_file, sex_per_sector_file, config_file, policy_config_file
+            area_names,
+            workflow_file,
+            sex_per_sector_file,
+            config_file,
+            policy_config_file,
         )
 
     @classmethod
     def from_file(
         cls,
-        area_names: Optional[List[str]] = None, 
+        area_names: Optional[List[str]] = None,
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
@@ -348,13 +361,16 @@ class WorkerDistributor:
             config = yaml.load(f, Loader=yaml.FullLoader)
         with open(policy_config_file) as f:
             policy_config = yaml.load(f, Loader=yaml.FullLoader)
-        return WorkerDistributor(workflow_df, sex_per_sector_df, policy_config['company_closure']['sectors'], **config)
-
+        return WorkerDistributor(
+            workflow_df,
+            sex_per_sector_df,
+            policy_config["company_closure"]["sectors"],
+            **config,
+        )
 
 
 def load_workflow_df(
-        workflow_file: str = default_workflow_file,
-        area_names: Optional[List[str]] = None,
+    workflow_file: str = default_workflow_file, area_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     wf_df = pd.read_csv(
         workflow_file,
@@ -367,7 +383,9 @@ def load_workflow_df(
     if len(area_names) != 0:
         wf_df = wf_df[wf_df["super_area"].isin(area_names)]
     # convert into ratios
-    wf_df = wf_df.groupby(["super_area", "work_super_area"]).agg({"n_man": "sum", "n_woman": "sum"})
+    wf_df = wf_df.groupby(["super_area", "work_super_area"]).agg(
+        {"n_man": "sum", "n_woman": "sum"}
+    )
     wf_df["n_man"] = (
         wf_df.groupby(level=0)["n_man"].apply(lambda x: x / float(x.sum(axis=0))).values
     )
@@ -379,10 +397,9 @@ def load_workflow_df(
     return wf_df
 
 
-
 def load_sex_per_sector(
-        sector_by_sex_file: str = default_sex_per_sector_per_superarea_file,
-        area_names: Optional[List[str]] = None,
+    sector_by_sex_file: str = default_sex_per_sector_per_superarea_file,
+    area_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     sector_by_sex_df = pd.read_csv(sector_by_sex_file, index_col=0)
     # define all columns in csv file relateing to males
@@ -397,7 +414,7 @@ def load_sex_per_sector(
     sector_by_sex_df = sector_by_sex_df.drop(
         uni_columns + ["m all", "m R S T U", "f all", "f R S T U"], axis=1,
     )
-    
+
     if len(area_names) != 0:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
         area_names = geo_hierarchy[geo_hierarchy["super_area"].isin(area_names)]["area"]
