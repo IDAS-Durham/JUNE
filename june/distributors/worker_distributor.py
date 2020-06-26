@@ -40,6 +40,7 @@ class WorkerDistributor:
         sub_sector_ratio: dict,
         sub_sector_distr: dict,
         non_geographical_work_location: dict,
+        company_closure: dict,
     ):
         """
         Parameters
@@ -67,6 +68,9 @@ class WorkerDistributor:
             on what should be done with these workers. Currently they are:
             "home": let them work from home
             "bind": randomly select a SuperArea to send the worker to work in
+        company_closure:
+            Proportion of each company sector who will be defined as a key worker,
+            become furloughed of will randomly assigned to go to work during a lockdown
         """
         self.workflow_df = workflow_df
         self.sex_per_sector_df = sex_per_sector_df
@@ -74,6 +78,7 @@ class WorkerDistributor:
         self.sub_sector_ratio = sub_sector_ratio
         self.sub_sector_distr = sub_sector_distr
         self.non_geographical_work_location = non_geographical_work_location
+        self.company_closure = company_closure
         self._boundary_workers_counter = count()
         self.n_boundary_workers = 0
 
@@ -222,6 +227,7 @@ class WorkerDistributor:
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
+        policy_config_file: str = default_policy_config_file,
     ) -> "WorkerDistributor":
         """
         Parameters
@@ -233,7 +239,7 @@ class WorkerDistributor:
         if len(area_names) == 0:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
-            area_names, workflow_file, sex_per_sector_file, config_file,
+            area_names, workflow_file, sex_per_sector_file, config_file, policy_config_file
         )
 
     @classmethod
@@ -244,6 +250,7 @@ class WorkerDistributor:
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
+        policy_config_file: str = default_policy_config_file,
     ) -> "WorkerDistributor":
         """
         
@@ -264,7 +271,7 @@ class WorkerDistributor:
         if len(area_names) == 0:
             raise CompanyError("Region returned empty area list.")
         return cls.for_super_areas(
-            area_names, workflow_file, sex_per_sector_file, config_file,
+            area_names, workflow_file, sex_per_sector_file, config_file, policy_config_file
         )
 
     @classmethod
@@ -274,11 +281,12 @@ class WorkerDistributor:
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
+        policy_config_file: str = default_policy_config_file,
     ) -> "WorkerDistributor":
         """
         """
         return cls.from_file(
-            area_names, workflow_file, sex_per_sector_file, config_file,
+            area_names, workflow_file, sex_per_sector_file, config_file, policy_config_file
         )
 
     @classmethod
@@ -288,6 +296,7 @@ class WorkerDistributor:
         workflow_file: str = default_workflow_file,
         sex_per_sector_file: str = default_sex_per_sector_per_superarea_file,
         config_file: str = default_config_file,
+        policy_config_file: str = default_policy_config_file,
     ) -> "WorkerDistributor":
         """
         Parameters
@@ -307,7 +316,9 @@ class WorkerDistributor:
         sex_per_sector_df = load_sex_per_sector(sex_per_sector_file, area_names)
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return WorkerDistributor(workflow_df, sex_per_sector_df, **config,)
+        with open(policy_config_file) as f:
+            policy_config = yaml.load(f, Loader=yaml.FullLoader)
+        return WorkerDistributor(workflow_df, sex_per_sector_df, **config, **policy_config)
 
 
 
