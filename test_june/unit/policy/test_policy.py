@@ -419,7 +419,7 @@ class TestClosure:
         )
         #sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
-        activities = ["primary_activity", "residence"]
+        activities = ["commute", "primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
         worker.lockdown_status = "furlough"
         sim.move_people_to_active_subgroups(activities, time_before_policy)
@@ -437,7 +437,7 @@ class TestClosure:
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             worker, activities
-        ) == ["primary_activity", "residence",]
+        ) == ["commute", "primary_activity", "residence",]
         sim.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
@@ -445,7 +445,7 @@ class TestClosure:
 
         # no furlough
         sim.clear_world()
-        activities = ["primary_activity", "residence"]
+        activities = ["commute", "primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
         worker.lockdown_status = "key_worker"
         sim.move_people_to_active_subgroups(activities, time_before_policy)
@@ -455,7 +455,7 @@ class TestClosure:
         time_during_policy = datetime(2020, 2, 1)
         assert policies.skip_activity_collection(date=time_during_policy)(
             worker, activities
-        ) == ["primary_activity", "residence"]
+        ) == ["commute", "primary_activity", "residence"]
         sim.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
@@ -463,7 +463,7 @@ class TestClosure:
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             worker, activities
-        ) == ["primary_activity", "residence",]
+        ) == ["commute", "primary_activity", "residence",]
         sim.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
@@ -487,7 +487,7 @@ class TestClosure:
             leisure=leisure_instance,
         )
         worker.lockdown_status = "key_worker"
-        activities = ["primary_activity", "residence"]
+        activities = ["commute", "primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
         assert policies.skip_activity_collection(date=time_during_policy)(
