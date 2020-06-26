@@ -15,6 +15,7 @@ default_msoa_region_filename = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
+
 class Observed2Cases:
     def __init__(
         self,
@@ -24,7 +25,7 @@ class Observed2Cases:
         n_observed_admissions: Optional[pd.DataFrame] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
         msoa_region: Optional[pd.DataFrame] = None,
-        regions = ['London']
+        regions=["London"],
     ):
         self.trajectories = trajectories
         self.msoa_region = msoa_region
@@ -36,7 +37,11 @@ class Observed2Cases:
 
     @classmethod
     def from_file(
-        cls, super_areas, health_index, regions, config_path: str = default_config_path,
+        cls,
+        super_areas,
+        health_index,
+        regions,
+        config_path: str = default_config_path,
         msoa_region_filename: str = default_msoa_region_filename,
     ):
         with open(default_config_path) as f:
@@ -46,13 +51,12 @@ class Observed2Cases:
         ]
         n_observed_admissions = pd.read_csv(
             paths.data_path / "processed/time_series/hospital_admissions_region.csv",
-            index_col=0
+            index_col=0,
         )
         n_observed_admissions.index = pd.to_datetime(n_observed_admissions.index)
 
         n_observed_deaths = pd.read_csv(
-            paths.data_path / "processed/time_series/n_deaths_region.csv",
-            index_col=0
+            paths.data_path / "processed/time_series/n_deaths_region.csv", index_col=0
         )
         n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
@@ -64,10 +68,12 @@ class Observed2Cases:
             health_index=health_index,
             n_observed_admissions=n_observed_admissions,
             n_observed_deaths=n_observed_deaths,
-            msoa_region=msoa_region
+            msoa_region=msoa_region,
         )
 
-    def _filter_region(self, super_areas, region: str = "North East") -> List["SuperArea"]:
+    def _filter_region(
+        self, super_areas, region: str = "North East"
+    ) -> List["SuperArea"]:
         """
         Given a region, return a list of super areas belonging to that region
 
@@ -90,7 +96,6 @@ class Observed2Cases:
             )
         )
         return np.array(super_areas.members)[filter_region]
- 
 
     def get_population(self, super_areas, regions):
         population = dict()
@@ -100,7 +105,7 @@ class Observed2Cases:
 
     def get_population_for_region(self, super_areas, region):
         super_in_region = self._filter_region(super_areas, region)
-        print('super in region = ', super_in_region)
+        print("super in region = ", super_in_region)
         population = []
         for super_area in super_in_region:
             population += super_area.people
@@ -134,26 +139,27 @@ class Observed2Cases:
         return time_to_symptoms
 
     def get_age_structure(self, region):
-        age_dict = {'m': defaultdict(int), 'f': defaultdict(int)}
+        age_dict = {"m": defaultdict(int), "f": defaultdict(int)}
         for person in self.population[region]:
             age_dict[person.sex][person.age] += 1
         return age_dict
 
     def get_health_index_by_age_and_sex(self):
-        health_dict = {'m': defaultdict(int), 'f': defaultdict(int)}
-        for sex in ('m', 'f'):
+        health_dict = {"m": defaultdict(int), "f": defaultdict(int)}
+        for sex in ("m", "f"):
             for age in np.arange(100):
                 health_dict[sex][age] = self.health_index(Person(sex=sex, age=age))
         return health_dict
 
     def get_avg_rate_for_symptoms(self, symptoms_tags, region):
-        # TODO: do only for one person per age/sex and multiply by number of people
         avg_rates = 0
         age_dict = self.get_age_structure(region)
         health_dict = self.get_health_index_by_age_and_sex()
-        for sex in ('m', 'f'):
+        for sex in ("m", "f"):
             for age in np.arange(100):
-                avg_rates += np.diff(np.append(health_dict[sex][age], 1))*age_dict[sex][age]
+                avg_rates += (
+                    np.diff(np.append(health_dict[sex][age], 1)) * age_dict[sex][age]
+                )
         idx = [getattr(SymptomTag, tag) - 1 for tag in symptoms_tags]
         return avg_rates[idx] / len(self.population[region])
 
@@ -171,11 +177,44 @@ class Observed2Cases:
         avg_rate = sum(avg_rates)
         return n_observed / avg_rate
 
-    def cases_from_observation(self, n_observed_df, time_to_get_there, avg_rates):
+    def cases_from_observation(
+        self, n_observed_df, time_to_get_there, avg_rates, region
+    ):
         n_initial_cases = []
         for index, n_observed in n_observed_df.iteritems():
             date = index - timedelta(days=time_to_get_there)
             n_cases = self.get_n_cases_from_observed(n_observed, avg_rates)
             n_initial_cases.append((date, round(n_cases)))
-        return pd.DataFrame(n_initial_cases, columns=['date',
-                                        'n_cases'])
+        return pd.DataFrame(n_initial_cases, columns=["date", region])
+
+    def cases_from_deaths(self, region):
+        dead_trajectories = self.filter_trajectories(self.trajectories)
+        avg_rates = self.get_avg_rate_for_symptoms(
+            symptoms_tags=("dead_icu", "dead_hospital"), region=region
+        )
+        time_to_death = self.get_avg_time_to_symptoms(
+            dead_trajectories, avg_rates, symptoms_tags=("dead_icu", "dead_hospital")
+        )
+        return self.cases_from_observation(
+            self.n_observed_deaths, time_to_death, avg_rates, region=region
+        )
+
+    def cases_from_admissions(self, region):
+        hospitalised_trajectories = self.filter_trajectories(self.trajectories)
+        avg_rates = self.get_avg_rate_for_symptoms(
+            symptoms_tags=(
+                "hospitalised",
+                "intensive_care",
+                "dead_icu",
+                "dead_hospital",
+            ),
+            region=region,
+        )
+        time_to_hospital = self.get_avg_time_to_symptoms(
+            hospitalised_trajectories,
+            avg_rates,
+            symptoms_tags=("hospitalised", "intensive_care"),
+        )
+        return self.cases_from_observation(
+            self.n_observed_deaths, time_to_hospital, avg_rates, region=region
+        )
