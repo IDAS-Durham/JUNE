@@ -109,10 +109,11 @@ def test__cases_from_observations(oc):
             index=['2020-04-20','2020-04-21'], 
         )
     n_observed_df.index = pd.to_datetime(n_observed_df.index)
-    cases_df = oc.cases_from_observation(n_observed_df, time_to_get_there=5, avg_rates=[0.4])
+    cases_df = oc.cases_from_observation(n_observed_df, time_to_get_there=5, avg_rates=[0.4], 
+            region='London')
     assert cases_df.date.iloc[0] == datetime(2020,4,15) 
     assert cases_df.date.iloc[1] == datetime(2020,4,16) 
-    assert cases_df.n_cases.iloc[0] == 250 
-    assert cases_df.n_cases.iloc[1] == 500 
+    assert cases_df['London'].iloc[0] == 250 
+    assert cases_df['London'].iloc[1] == 500 
 
 
