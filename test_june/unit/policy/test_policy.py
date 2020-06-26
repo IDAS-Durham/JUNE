@@ -213,6 +213,12 @@ class TestLockdownStatus:
         medic = world.hospitals.members[0].people[0]
         assert medic.lockdown_status == 'key_worker'
 
+    def test__lockdown_status_care_home(self, super_area_big):
+        world = make_world(super_area_big)
+
+        care_home_worker = world.care_homes[0].people[0]
+        assert care_home_worker.lockdown_status == 'key_worker'
+
 class TestDefaultPolicy:
     def test__default_policy_adults(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
