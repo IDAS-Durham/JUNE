@@ -45,20 +45,36 @@ company_closure:
       key_worker: 0.223
       furlough: 0.0680
     H:
+    # Transport and storage
+    # Assume all not furloughed are key
+      key_worker: 0.758
       furlough: 0.242
     I:
-      furlough: 0.154
+    # Accommodation and food service activities
+      furlough: 1.
     J:
+    # Information and communication
+    # Key workers assumed to be those working in TV and newspapers
+      key_worker: 0.267
       furlough: 0.
     K:
+    # Financial and insurance activities
+    # Assume can work from home
       furlough: 0.
     L:
+    # Real estate activities
+    # Assume can work from home
       furlough: 0.
     M:
+    # Professional, scientific and technical activities
+    # Assume legal and lab workers go into work
+      key_worker: 0.0909
       furlough: 0.
     N:
-      furlough: 0.0455
+    # Assume all can work from home
+      furlough: 0.0919
     O:
+      key_worker: 1.
       furlough: 0.
     P:
     # Education
@@ -69,10 +85,18 @@ company_closure:
     # Key workers assigned by distributor separately
       furlough: 0.0769
     R:
+    # Arts, enterntainment and recreation
       furlough: 0.912
     S:
+    # Other service activities
+    # Key workers are funeral workers
+      key_worker: 0.0526
       furlough: 0.211
     T:
+    # Activities of households as employers, undifferentiated good-and services-producing activities of households for own use
+    # Assume can work from home
       furlough: 0.25
     U:
+    # Activities of extraterritorial organisations and bodies
+    # Assume can work from home
       furlough: 0.
