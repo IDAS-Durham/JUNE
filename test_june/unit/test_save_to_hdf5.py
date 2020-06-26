@@ -412,3 +412,11 @@ class TestSaveWorld:
                 assert len(people_in_hub1) == 0
             else:
                 assert (np.sort(people_in_hub1) == np.sort(people_in_hub2)).all()
+
+    def test__household_residents(self, world_h5, world_h5_loaded):
+        for h1, h2 in zip(world_h5.households, world_h5_loaded.households):
+            assert len(h1.residents) == len(h2.residents)
+            h1_resident_ids = np.array([p.id for p in h1.residents])
+            h2_resident_ids = np.array([p.id for p in h2.residents])
+            for p1, p2 in zip(np.sort(h1_resident_ids), np.sort(h2_resident_ids)):
+                assert p1 == p2
