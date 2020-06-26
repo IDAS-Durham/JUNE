@@ -36,6 +36,7 @@ class Person(dataobject):
     work_super_area: str = None
     sector: str = None
     sub_sector: str = None
+    lockdown_work: str = None
     # commute
     home_city: str = None
     mode_of_transport: ModeOfTransport = None
