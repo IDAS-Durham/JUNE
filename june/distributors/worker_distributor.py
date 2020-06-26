@@ -23,7 +23,7 @@ default_config_file = (
 )
 default_policy_config_file = (
     paths.configs_path / "defaults/policy.yaml"
-
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +40,11 @@ class WorkerDistributor:
         self,
         workflow_df: pd.DataFrame,
         sex_per_sector_df: pd.DataFrame,
+        company_closure: dict,
         age_range: List[int],
         sub_sector_ratio: dict,
         sub_sector_distr: dict,
         non_geographical_work_location: dict,
-        company_closure: dict,
     ):
         """
         Parameters
@@ -322,7 +322,7 @@ class WorkerDistributor:
             config = yaml.load(f, Loader=yaml.FullLoader)
         with open(policy_config_file) as f:
             policy_config = yaml.load(f, Loader=yaml.FullLoader)
-        return WorkerDistributor(workflow_df, sex_per_sector_df, **config, **policy_config)
+        return WorkerDistributor(workflow_df, sex_per_sector_df, policy_config['company_closure'], **config)
 
 
 
