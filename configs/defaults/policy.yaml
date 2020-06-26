@@ -58,6 +58,7 @@ company_closure:
     # Assume all can work from home
       furlough: 0.0919
     O:
+    # Public administration and defence, compulsory social security
       key_worker: 1.
       furlough: 0.
     P:
