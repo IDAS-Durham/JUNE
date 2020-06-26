@@ -2,6 +2,7 @@ import copy
 import datetime
 import re
 import sys
+import numpy as np
 from abc import ABC, abstractmethod
 from typing import Union, Optional, List, Dict
 
@@ -239,6 +240,8 @@ class Quarantine(StayHome):
         self, person: "Person", days_from_start: float, n_days_at_home
     ):
         for housemate in person.housemates:
+            if housemate == person:
+                continue
             if self.must_stay_at_home_symptoms(
                 housemate, days_from_start, n_days_at_home
             ):
@@ -265,6 +268,8 @@ class CloseSchools(SkipActivity):
         super().__init__(start_time, end_time)
         self.full_closure = full_closure
         self.years_to_close = years_to_close
+        if self.years_to_close == "all":
+            self.years_to_close = np.arange(0, 20)
 
     def skip_activity(self, person: "Person", activities):
         if (

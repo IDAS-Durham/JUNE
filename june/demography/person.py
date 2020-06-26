@@ -135,10 +135,9 @@ class Person(dataobject):
 
     @property
     def housemates(self):
-        hmates = [
-            person for person in self.residence.group.residents if person is not self
-        ]
-        return hmates
+        if self.residence.group.spec == "care_home":
+            return []
+        return self.residence.group.residents
 
     def find_guardian(self):
 
