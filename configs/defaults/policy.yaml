@@ -15,7 +15,7 @@ company_closure:
     # Key workers defiend as those in food, beverage, petroleum and pharmaceutical products
       key_worker: 0.177
       furlough: 0.
-      random: 0.832
+      random: 0.823
     D:
     # Electricity, gas, steam and air conditioning supply
       key_worker: 1.
@@ -28,6 +28,7 @@ company_closure:
       random: 0.
     F:
     # Construction
+      key_worker: 0.
       furlough: 0.
       random: 1.
     G:
@@ -43,6 +44,7 @@ company_closure:
       random: 0.
     I:
     # Accommodation and food service activities
+      key_worker: 0.
       furlough: 1.
       random: 0.
     J:
@@ -54,11 +56,13 @@ company_closure:
     K:
     # Financial and insurance activities
     # Assume can work from home
+      key_worker: 0.
       furlough: 0.
       random: 1.
     L:
     # Real estate activities
     # Assume can work from home
+      key_worker: 0.
       furlough: 0.
       random: 1.
     M:
@@ -69,6 +73,7 @@ company_closure:
       random: 0.9091
     N:
     # Assume all can work from home
+      key_worker: 0.
       furlough: 0.0919
       random: 0.9081
     O:
@@ -79,15 +84,18 @@ company_closure:
     P:
     # Education
     # Key workers assigned by distributor separately
+      key_worker: 0.
       furlough: 0.0833
       random: 0.9167
     Q:
     # Human health and social work
     # Key workers assigned by distributor separately
+      key_worker: 0.
       furlough: 0.0769
       random: 0.9231
     R:
     # Arts, enterntainment and recreation
+      key_worker: 0.
       furlough: 0.912
       random: 0.088
     S:
@@ -99,11 +107,13 @@ company_closure:
     T:
     # Activities of households as employers, undifferentiated good-and services-producing activities of households for own use
     # Assume can work from home
+      key_worker: 0.
       furlough: 0.25
       random: 0.75
     U:
     # Activities of extraterritorial organisations and bodies
     # Assume can work from home
+      key_worker: 0.
       furlough: 0.
       random: 1.
 
