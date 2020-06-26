@@ -66,6 +66,9 @@ class GroceryDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(groceries, **config)
 
+    def get_possible_venues_for_person(self, person):
+        return person.area.super_area.groceries
+
     def get_social_venue_for_person(self, person):
         """
         We select a random grocery shop from the person super area.

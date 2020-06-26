@@ -14,6 +14,7 @@ class HealthInformation:
         "maximal_symptoms_time",
         "maximal_symptoms_tag",
         "time_of_infection",
+        "time_of_symptoms_onset",
         "length_of_infection",
         "infecter",
     )
@@ -39,7 +40,11 @@ class HealthInformation:
         self.susceptible = False
         self.susceptibility = 0.0
         self.time_of_infection = infection.start_time
+        if infection.symptoms.time_symptoms_onset():
+            self.time_of_symptoms_onset = self.time_of_infection + infection.symptoms.time_symptoms_onset()
 
+        else:
+            self.time_of_symptoms_onset = None
     @property
     def tag(self):
         if self.infection is not None:
@@ -60,7 +65,7 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag == SymptomTag.dead
+        return self.tag in [SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu]
 
     def update_health_status(self, time, delta_time):
         self.infection.update_at_time(time + delta_time)

@@ -7,6 +7,7 @@ from june.demography import Demography
 from june.demography.geography import Geography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.policy import Policies
 from june.infection import InfectionSelector, SymptomTag
 from june.interaction import ContactAveraging
 from june.simulator import Simulator
@@ -47,18 +48,15 @@ def create_simulator():
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
     )
-    selector = InfectionSelector.from_file(constant_config)
+    selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
-    sim = Simulator.from_file(
-        world,
-        interaction,
-        selector,
-        config_filename=test_config,
-        leisure=leisure_instance,
-    )
+    policies = Policies.from_file()
+    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
+            leisure=leisure_instance, policies=policies)
+    sim.leisure.generate_leisure_probabilities_for_timestep(3, False, [])
     return sim
 
 
@@ -118,11 +116,11 @@ def test__clear_world(sim):
         assert person.busy == False
 
 
-def test__get_subgroup_active(sim):
-    active_subgroup = sim.get_subgroup_active(
+def test__move_to_active_subgroup(sim):
+    sim.move_to_active_subgroup(
         ["residence"], sim.world.people.members[0]
     )
-    assert active_subgroup.group.spec in ("carehome", "household")
+    assert sim.world.people.members[0].residence.group.spec in ("carehome", "household")
 
 
 def test__move_people_to_residence(sim):
@@ -178,7 +176,6 @@ def test__move_people_to_commute(sim):
     assert n_commuters > 0
     sim.clear_world()
 
-
 def test__kid_at_home_is_supervised(sim, health_index):
     kids_at_school = []
     for person in sim.world.people.members:
@@ -200,7 +197,6 @@ def test__kid_at_home_is_supervised(sim, health_index):
         assert len(guardians_at_home) != 0
 
     sim.clear_world()
-
 
 def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]

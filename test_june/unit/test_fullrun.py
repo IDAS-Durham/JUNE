@@ -18,6 +18,7 @@ from june.infection import symptoms as sym
 from june import World
 from june.world import generate_world_from_geography
 from june.seed import Seed
+from june.policy import Policies
 from june import paths
 
 from pathlib import Path
@@ -46,10 +47,12 @@ def test_full_run():
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename = test_config 
     )
-    selector = InfectionSelector.from_file(selector_config)
+    selector = InfectionSelector.from_file(config_filename=selector_config)
     interaction = inter.ContactAveraging.from_file(selector=selector)
+    policies = Policies.from_file()
     simulator = Simulator.from_file(
-        world, interaction, selector, config_filename=test_config, leisure=leisure_instance
+        world, interaction, selector, config_filename=test_config, leisure=leisure_instance,
+        policies=policies
     )
     seed = Seed(simulator.world.super_areas, selector,)
     seed.unleash_virus(100)
