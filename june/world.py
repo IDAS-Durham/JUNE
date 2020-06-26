@@ -366,4 +366,10 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                 world.people[idx - first_person_idx] for idx in city.commute_internal
             ]
             city.commute_internal = commute_internal_people
+
+    # household residents
+    if world.households is not None:
+        for household in world.households:
+            household.residents = tuple(household.people)
+
     return world
