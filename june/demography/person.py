@@ -167,3 +167,11 @@ class Person(dataobject):
             return None
         else:
             return self.health_information.infection.symptoms
+
+    @property
+    def kid_of_key_worker(self):
+        for mate in self.housemates:
+            if mate.lockdown_status == "key_worker":
+                return True
+        return False
+
