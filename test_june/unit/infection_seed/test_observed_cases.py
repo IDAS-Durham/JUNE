@@ -1,5 +1,7 @@
 import yaml
 import pytest
+import pandas as pd
+from datetime import datetime
 from june.infection_seed import Observed2Cases
 from june.demography import Person
 from june.demography.geography import Area, SuperArea, SuperAreas
@@ -100,5 +102,17 @@ def test__get_avg_time_to_symptoms(oc):
 
 def test__n_cases_from_observed(oc):
     assert oc.get_n_cases_from_observed(100, [0.0, 0.4]) == 250
+
+def test__cases_from_observations(oc):
+    n_observed_df = pd.Series(
+             [100,200],
+            index=['2020-04-20','2020-04-21'], 
+        )
+    n_observed_df.index = pd.to_datetime(n_observed_df.index)
+    cases_df = oc.cases_from_observation(n_observed_df, time_to_get_there=5, avg_rates=[0.4])
+    assert cases_df.date.iloc[0] == datetime(2020,4,15) 
+    assert cases_df.date.iloc[1] == datetime(2020,4,16) 
+    assert cases_df.n_cases.iloc[0] == 250 
+    assert cases_df.n_cases.iloc[1] == 500 
 
 
