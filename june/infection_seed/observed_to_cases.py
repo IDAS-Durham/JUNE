@@ -22,25 +22,25 @@ class Observed2Cases:
         trajectories=None,
         super_areas=None,
         health_index=None,
-        n_observed_admissions: Optional[pd.DataFrame] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
         msoa_region: Optional[pd.DataFrame] = None,
-        regions=["London"],
+        regions: Optional[List[str]]=None,
     ):
         self.trajectories = trajectories
         self.msoa_region = msoa_region
+        self.super_areas = super_areas
+        self.all_regions = n_observed_deaths.columns
         if super_areas is not None:
+            regions = self.find_regions_for_super_areas(super_areas)
             self.population = self.get_population(super_areas, regions)
-        self.health_index = health_index
-        #self.n_observed_admissions = n_observed_admissions[regions]
         self.n_observed_deaths = n_observed_deaths[regions]
+        self.health_index = health_index
 
     @classmethod
     def from_file(
         cls,
         super_areas,
         health_index,
-        regions,
         config_path: str = default_config_path,
         msoa_region_filename: str = default_msoa_region_filename,
     ):
@@ -49,12 +49,6 @@ class Observed2Cases:
         trajectories = [
             TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
         ]
-        #n_observed_admissions = pd.read_csv(
-        #    paths.data_path / "processed/time_series/hospital_admissions_region.csv",
-        #    index_col=0,
-        #)
-        #n_observed_admissions.index = pd.to_datetime(n_observed_admissions.index)
-
         n_observed_deaths = pd.read_csv(
             paths.data_path / "input/seed/n_deaths_region.csv", index_col=0
         )
@@ -64,9 +58,7 @@ class Observed2Cases:
         return Observed2Cases(
             trajectories=trajectories,
             super_areas=super_areas,
-            regions=regions,
             health_index=health_index,
-            n_observed_admissions=None,#n_observed_admissions,
             n_observed_deaths=n_observed_deaths,
             msoa_region=msoa_region,
         )
@@ -102,6 +94,13 @@ class Observed2Cases:
             )
         )
         return np.array(super_areas.members)[filter_region]
+
+    def find_regions_for_super_areas(self, super_areas):
+        regions = []
+        for region in self.all_regions:
+            if self._filter_region(super_areas,region):
+                regions.append(region)
+        return regions
 
     def get_population(self, super_areas, regions):
         population = dict()
