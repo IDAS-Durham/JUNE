@@ -31,9 +31,9 @@ class Observed2Cases:
         self.super_areas = super_areas
         self.all_regions = n_observed_deaths.columns
         if super_areas is not None:
-            regions = self.find_regions_for_super_areas(super_areas)
-            self.population = self.get_population(super_areas, regions)
-        self.n_observed_deaths = n_observed_deaths[regions]
+            self.regions = self.find_regions_for_super_areas(super_areas)
+            self.population = self.get_population(super_areas, self.regions)
+        self.n_observed_deaths = n_observed_deaths[self.regions]
         self.health_index = health_index
 
     @classmethod
@@ -98,7 +98,7 @@ class Observed2Cases:
     def find_regions_for_super_areas(self, super_areas):
         regions = []
         for region in self.all_regions:
-            if self._filter_region(super_areas,region):
+            if len(self._filter_region(super_areas,region)) > 0:
                 regions.append(region)
         return regions
 
@@ -207,9 +207,9 @@ class Observed2Cases:
             self.n_observed_deaths, time_to_death, avg_rates, region=region
         )
 
-    def cases_from_deaths(self, regions):
+    def cases_from_deaths(self):
         cases_dfs = []
-        for region in regions:
+        for region in self.regions:
             cases_dfs.append(self.cases_from_deaths_for_region(region))
         return pd.concat(cases_dfs, axis=1)
 
