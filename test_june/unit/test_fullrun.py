@@ -17,7 +17,7 @@ from june.infection import transmission as trans
 from june.infection import symptoms as sym
 from june import World
 from june.world import generate_world_from_geography
-from june.seed import Seed
+from june.infection_seed import InfectionSeed
 from june.policy import Policies
 from june import paths
 
@@ -54,6 +54,6 @@ def test_full_run():
         world, interaction, selector, config_filename=test_config, leisure=leisure_instance,
         policies=policies
     )
-    seed = Seed(simulator.world.super_areas, selector,)
+    seed = InfectionSeed(simulator.world.super_areas, selector,)
     seed.unleash_virus(100)
     simulator.run()
