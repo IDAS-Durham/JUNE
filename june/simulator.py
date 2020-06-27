@@ -36,7 +36,7 @@ class Simulator:
         selector: InfectionSelector,
         activity_to_groups: dict,
         time_config: dict,
-        seed: Optional["Seed"] = None,
+        infection_seed: Optional["InfectionSeed"] = None,
         leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
@@ -72,7 +72,7 @@ class Simulator:
         self.world = world
         self.interaction = interaction
         self.beta_copy = copy.deepcopy(self.interaction.beta)
-        self.seed = seed
+        self.infection_seed = infection_seed
         self.selector = selector
         self.policies = policies
         self.light_logger = light_logger
@@ -132,7 +132,7 @@ class Simulator:
         interaction: "Interaction",
         selector: "InfectionSelector",
         policies: Optional["Policies"] = None,
-        seed: Optional["Seed"] = None,
+        infection_seed: Optional["InfectionSeed"] = None,
         leisure: Optional["Leisure"] = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
@@ -164,7 +164,7 @@ class Simulator:
             activity_to_groups,
             time_config,
             policies=policies,
-            seed=seed,
+            infection_seed=infection_seed,
             leisure=leisure,
             save_path=save_path,
         )
@@ -608,9 +608,9 @@ class Simulator:
         for time in self.timer:
             if time > self.timer.final_date:
                 break
-            if self.seed:
-                if (time >= self.seed.min_date) and (time <= self.seed.max_date):
-                    self.seed.unleash_virus_per_region(time)
+            if self.infection_seed:
+                if (time >= self.infection_seed.min_date) and (time <= self.infection_seed.max_date):
+                    self.infection_seed.unleash_virus_per_region(time)
             self.do_timestep()
 
 

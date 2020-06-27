@@ -87,6 +87,12 @@ class Observed2Cases:
                 (self.msoa_region.region == "North East")
                 | (self.msoa_region.region == "Yorkshire and The Humber")
             ]
+        elif "Midlands" in region:
+            msoa_region_filtered = self.msoa_region[
+                (self.msoa_region.region == "West Midlands")
+                | (self.msoa_region.region == "East Midlands")
+            ]
+
         else:
             msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
         filter_region = list(
@@ -105,7 +111,6 @@ class Observed2Cases:
 
     def get_population_for_region(self, super_areas, region):
         super_in_region = self._filter_region(super_areas, region)
-        print("super in region = ", super_in_region)
         population = []
         for super_area in super_in_region:
             population += super_area.people
@@ -181,13 +186,17 @@ class Observed2Cases:
         self, n_observed_df, time_to_get_there, avg_rates, region
     ):
         n_initial_cases = []
-        for index, n_observed in n_observed_df.iteritems():
-            date = index - timedelta(days=time_to_get_there)
-            n_cases = self.get_n_cases_from_observed(n_observed, avg_rates)
+        for index, n_observed in n_observed_df.iterrows():
+            date = index - timedelta(days=round(time_to_get_there))
+            n_cases = self.get_n_cases_from_observed(n_observed[region], avg_rates)
             n_initial_cases.append((date, round(n_cases)))
-        return pd.DataFrame(n_initial_cases, columns=["date", region])
+        n_cases_df = pd.DataFrame(n_initial_cases, columns=["date", region])
+        n_cases_df.set_index('date', inplace=True)
+        n_cases_df.index = pd.to_datetime(n_cases_df.index)
+        n_cases_df.index = n_cases_df.index.round('D')
+        return n_cases_df
 
-    def cases_from_deaths(self, region):
+    def cases_from_deaths_for_region(self, region):
         dead_trajectories = self.filter_trajectories(self.trajectories)
         avg_rates = self.get_avg_rate_for_symptoms(
             symptoms_tags=("dead_icu", "dead_hospital"), region=region
@@ -198,6 +207,13 @@ class Observed2Cases:
         return self.cases_from_observation(
             self.n_observed_deaths, time_to_death, avg_rates, region=region
         )
+
+    def cases_from_deaths(self, regions):
+        cases_dfs = []
+        for region in regions:
+            cases_dfs.append(self.cases_from_deaths_for_region(region))
+        return pd.concat(cases_dfs, axis=1)
+
 
     def cases_from_admissions(self, region):
         hospitalised_trajectories = self.filter_trajectories(self.trajectories)
