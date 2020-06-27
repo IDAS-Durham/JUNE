@@ -32,7 +32,7 @@ class Observed2Cases:
         if super_areas is not None:
             self.population = self.get_population(super_areas, regions)
         self.health_index = health_index
-        self.n_observed_admissions = n_observed_admissions[regions]
+        #self.n_observed_admissions = n_observed_admissions[regions]
         self.n_observed_deaths = n_observed_deaths[regions]
 
     @classmethod
@@ -49,14 +49,14 @@ class Observed2Cases:
         trajectories = [
             TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
         ]
-        n_observed_admissions = pd.read_csv(
-            paths.data_path / "processed/time_series/hospital_admissions_region.csv",
-            index_col=0,
-        )
-        n_observed_admissions.index = pd.to_datetime(n_observed_admissions.index)
+        #n_observed_admissions = pd.read_csv(
+        #    paths.data_path / "processed/time_series/hospital_admissions_region.csv",
+        #    index_col=0,
+        #)
+        #n_observed_admissions.index = pd.to_datetime(n_observed_admissions.index)
 
         n_observed_deaths = pd.read_csv(
-            paths.data_path / "processed/time_series/n_deaths_region.csv", index_col=0
+            paths.data_path / "input/seed/n_deaths_region.csv", index_col=0
         )
         n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
@@ -66,7 +66,7 @@ class Observed2Cases:
             super_areas=super_areas,
             regions=regions,
             health_index=health_index,
-            n_observed_admissions=n_observed_admissions,
+            n_observed_admissions=None,#n_observed_admissions,
             n_observed_deaths=n_observed_deaths,
             msoa_region=msoa_region,
         )
