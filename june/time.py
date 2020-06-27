@@ -7,7 +7,7 @@ SECONDS_PER_DAY = 24 * 60 * 60
 class Timer:
     def __init__(
         self,
-        initial_day: str = "2020-03-07",
+        initial_day: str = "2020-03-01",
         total_days : int = 10,
         weekday_step_duration: List[int]=[12, 12],
         weekend_step_duration: List[int]=[24],
