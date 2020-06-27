@@ -214,7 +214,7 @@ class Observed2Cases:
         return pd.concat(cases_dfs, axis=1)
 
 
-    def cases_from_admissions(self, region):
+    def cases_from_admissions_for_region(self, region):
         hospitalised_trajectories = self.filter_trajectories(self.trajectories)
         avg_rates = self.get_avg_rate_for_symptoms(
             symptoms_tags=(
