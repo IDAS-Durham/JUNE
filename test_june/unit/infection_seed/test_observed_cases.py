@@ -17,9 +17,11 @@ def get_oc():
     super_area = SuperArea(areas=[area], coordinates=(1,1), name='E02000134')
     super_areas = SuperAreas([super_area])
     health_index = HealthIndexGenerator.from_file()
-    return Observed2Cases.from_file(super_areas=super_areas, health_index=health_index,
-            regions=['London'])
+    return Observed2Cases.from_file(super_areas=super_areas, health_index=health_index)
 
+def test__find_regions(oc):
+    regions = oc.find_regions_for_super_areas(oc.super_areas)
+    assert regions == ['London']
 
 def test__filter_trajectories(oc):
     hospitalised_trajectories = oc.filter_trajectories(
