@@ -36,6 +36,7 @@ class Person(dataobject):
     work_super_area: str = None
     sector: str = None
     sub_sector: str = None
+    lockdown_status: str = None
     # commute
     home_city: str = None
     mode_of_transport: ModeOfTransport = None
@@ -134,10 +135,9 @@ class Person(dataobject):
 
     @property
     def housemates(self):
-        hmates = [
-            person for person in self.residence.group.residents if person is not self
-        ]
-        return hmates
+        if self.residence.group.spec == "care_home":
+            return []
+        return self.residence.group.residents
 
     def find_guardian(self):
 
@@ -166,3 +166,11 @@ class Person(dataobject):
             return None
         else:
             return self.health_information.infection.symptoms
+
+    @property
+    def kid_of_key_worker(self):
+        for mate in self.housemates:
+            if mate.lockdown_status in ["key_worker", "random"]:
+                return True
+        return False
+

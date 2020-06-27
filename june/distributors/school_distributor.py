@@ -305,6 +305,7 @@ class SchoolDistributor:
                     schools_without_teachers.append(primary_school)
                     break
                 primary_school.add(teacher, school.SubgroupType.teachers)
+                teacher.lockdown_status = 'key_worker'
 
         for secondary_school in secondary_schools:
             n_students = len(secondary_school.students)
@@ -320,6 +321,7 @@ class SchoolDistributor:
                     schools_without_teachers.append(secondary_school)
                     break
                 secondary_school.add(teacher, school.SubgroupType.teachers)
+                teacher.lockdown_status = 'key_worker'
 
         remaining_teachers = primary_teachers + secondary_teachers + extra_teachers
         if schools_without_teachers:
@@ -332,3 +334,4 @@ class SchoolDistributor:
                 school.add(
                     teacher, school.SubgroupType.teachers
                 )
+                teacher.lockdown_status = 'key_worker'

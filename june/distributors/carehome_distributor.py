@@ -164,6 +164,7 @@ class CareHomeDistributor:
                     subgroup_type=care_home.SubgroupType.workers,
                     activity="primary_activity",
                 )
+                carer.lockdown_status = 'key_worker'
                 n_assigned += 1
             if care_home.n_workers > n_assigned:
                 logger.info(
