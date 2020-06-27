@@ -175,8 +175,6 @@ class InfectionSeed:
         n_cases_region = self.n_cases_region.loc[date_str]
         if date.date() not in self.dates_seeded:
             for region, n_cases in n_cases_region.iteritems():
-                print('region = ', region)
-                print('n_cases = ', n_cases)
                 super_areas = self._filter_region(region=region)
                 if len(super_areas) > 0:
                     self.infect_super_areas(
