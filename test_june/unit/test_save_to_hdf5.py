@@ -84,6 +84,7 @@ class TestSavePeople:
                 "ethnicity",
                 "sector",
                 "sub_sector",
+                "lockdown_status",
             ]:
                 attribute = getattr(person, attribute_name)
                 attribute2 = getattr(person2, attribute_name)

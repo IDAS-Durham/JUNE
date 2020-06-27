@@ -5,38 +5,36 @@ quarantine:
         end_time: 2020-07-04 
 
 shielding:
-        min_age: 80
+        min_age: 70
         start_time: 2020-03-16 
         end_time: 2020-07-04 
 
 close_companies:
         start_time: 2020-03-16
         end_time: 2020-07-04 #TODO: Until when really?
-        full_closure: True #TODO: sectors or percent of companies to open? 
+        full_closure: False 
 
 social_distancing:
         start_time: 2020-03-16
         end_time: 2020-07-04 #TODO: end time?
         beta_factor:
-                box: 0.25
-                pub: 0.25
-                grocery: 0.25
-                cinema: 0.25
-                commute_unit: 0.25
-                commute_city_unit: 0.25
-                hospital: 0.25
-                care_home: 0.25
-                company: 0.25
-                school: 0.25
+                box: 0.5
+                pub: 0.5
+                grocery: 0.5
+                cinema: 0.5
+                commute_unit: 0.5
+                commute_city_unit: 0.5
+                hospital: 0.5
+                care_home: 0.5
+                company: 0.5
+                school: 0.5
                 household: 1.0
-                university: 0.25
+                university: 0.5
 
 close_leisure_venue:
         start_time: 2020-03-21
-        end_time: 2020-07-04 #TODO: end time ?
+        end_time: 2020-07-04 
         venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
-        #TODO: household_visits?
-        #
 
 change_leisure_probability:
         start_time: 2020-03-21
@@ -53,10 +51,9 @@ change_leisure_probability:
 close_schools:
         start_time: 2020-03-20
         end_time: 2020-07-04 #TODO: end time?
-        full_closure: True
+        years_to_close: all
+        full_closure: False
 
 close_universities:
         start_time: 2020-03-20
-        end_time: 2020-07-04
-
-
+        end_time: 2020-10-01
