@@ -4,7 +4,7 @@ import numpy as np
 from june.demography.geography import Geography
 from june.demography import Demography
 from june import World
-from june.seed import Seed
+from june.infection_seed import InfectionSeed
 from june.infection import InfectionSelector
 from pathlib import Path
 from june.time import Timer
@@ -55,7 +55,7 @@ def get_seed(geography, selector, demography):
     super_area_to_region = pd.DataFrame(
         {"super_area": SUPER_AREA_LIST, "region": REGION_LIST}
     )
-    return Seed(geography.super_areas, selector, None, super_area_to_region)
+    return InfectionSeed(geography.super_areas, selector, None, super_area_to_region)
 
 
 def test__filter_region(seed):
@@ -99,27 +99,32 @@ def test__n_infected_total_region_seeds_only_once_per_day(selector,):
     demography = Demography.for_geography(geography)
     for area in geography.areas:
         area.populate(demography)
-
-    seed = Seed.from_file(super_areas=geography.super_areas, selector=selector)
-    timer = Timer(initial_day="2020-03-01", total_days=15,)
+    n_cases_region = pd.DataFrame(
+            {'East of England': np.array([100,200, 300,400]).astype(np.int),
+            'date':['2020-03-01','2020-03-02', '2020-03-03','2020-03-04',]
+            }
+        )
+    n_cases_region.set_index('date', inplace=True)
+    n_cases_region.index = pd.to_datetime(n_cases_region.index)
+    seed = InfectionSeed.from_file(super_areas=geography.super_areas, 
+            selector=selector,
+            n_cases_region=n_cases_region)
+    timer = Timer(initial_day='2020-02-29',total_days=7,)
     for time in timer:
         if time > timer.final_date:
             break
         if (time >= seed.min_date) and (time <= seed.max_date):
             seed.unleash_virus_per_region(time)
-
     n_infected = 0
     for super_area in geography.super_areas:
         for person in super_area.people:
             if person.infected:
                 n_infected += 1
     n_cases = (
-        seed.n_cases_region[seed.n_cases_region["region"] == "East of England"]
-        .sum(axis=1)
-        .loc[0]
+        seed.n_cases_region["East of England"]
+        .sum()
     )
     np.testing.assert_allclose(n_cases, n_infected, rtol=0.05)
-
 
 def test__seed_strength(selector,):
     geography = Geography.from_file(
@@ -128,25 +133,32 @@ def test__seed_strength(selector,):
     demography = Demography.for_geography(geography)
     for area in geography.areas:
         area.populate(demography)
-
-    seed = Seed.from_file(
-        super_areas=geography.super_areas, selector=selector, seed_strength=0.2
-    )
-    timer = Timer(initial_day="2020-03-01", total_days=15,)
+    n_cases_region = pd.DataFrame(
+            {'East of England': np.array([100,200, 300,400]).astype(np.int),
+            'date':['2020-03-01','2020-03-02', '2020-03-03','2020-03-04',]
+            }
+        )
+    n_cases_region.set_index('date', inplace=True)
+    n_cases_region.index = pd.to_datetime(n_cases_region.index)
+    seed = InfectionSeed.from_file(super_areas=geography.super_areas, 
+            selector=selector,
+            n_cases_region=n_cases_region,
+            seed_strength=0.2)
+    timer = Timer(initial_day='2020-02-29',total_days=7,)
     for time in timer:
         if time > timer.final_date:
             break
         if (time >= seed.min_date) and (time <= seed.max_date):
             seed.unleash_virus_per_region(time)
-
     n_infected = 0
     for super_area in geography.super_areas:
         for person in super_area.people:
             if person.infected:
                 n_infected += 1
     n_cases = (
-        seed.n_cases_region[seed.n_cases_region["region"] == "East of England"]
-        .sum(axis=1)
-        .loc[0]
+        seed.n_cases_region["East of England"]
+        .sum()
     )
     np.testing.assert_allclose(0.2 * n_cases, n_infected, rtol=0.05)
+
+
