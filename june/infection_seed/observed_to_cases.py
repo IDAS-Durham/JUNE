@@ -50,7 +50,7 @@ class Observed2Cases:
             TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
         ]
         n_observed_deaths = pd.read_csv(
-            paths.data_path / "input/seed/n_deaths_region.csv", index_col=0
+            paths.data_path / "covid_real_data/n_deaths_region.csv", index_col=0
         )
         n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
