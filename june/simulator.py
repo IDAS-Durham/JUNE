@@ -18,6 +18,7 @@ from june.logger.logger import Logger
 from june.policy import Policies
 from june.time import Timer
 from june.world import World, possible_groups
+from june.infection.symptom_tag import SymptomTag
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -475,6 +476,11 @@ class Simulator:
             health_information = person.health_information
             previous_tag = health_information.tag
             health_information.update_health_status(time, duration)
+            if (
+                previous_tag == SymptomTag.exposed
+                and health_information.tag == SymptomTag.influenza
+            ):
+                person.residence.group.quarantine_starting_date = time
             ids.append(person.id)
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)

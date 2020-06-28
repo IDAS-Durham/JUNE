@@ -23,7 +23,7 @@ class Household(Group):
     3 - old adults
     """
 
-    __slots__ = ("area", "type", "max_size", "n_residents", "residents", "relatives_in_care_homes", "relatives_in_households")
+    __slots__ = ("area", "type", "max_size", "n_residents", "residents", "relatives_in_care_homes", "relatives_in_households", "quarantine_starting_date")
 
     class SubgroupType(IntEnum):
         kids = 0
@@ -39,6 +39,7 @@ class Household(Group):
         super().__init__()
         self.area = area
         self.type = type
+        self.quarantine_starting_date = None
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
         self.max_size = max_size
@@ -90,6 +91,13 @@ class Household(Group):
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
 
+    def quarantine(self, time, quarantine_days):
+        if self.type == "communal":
+            return False
+        if self.quarantine_starting_date:
+            if self.quarantine_starting_date + quarantine_days > time:
+                return True
+        return False
 
 class Households(Supergroup):
     """
