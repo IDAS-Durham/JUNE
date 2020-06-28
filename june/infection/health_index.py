@@ -75,6 +75,7 @@ class HealthIndexGenerator:
         self.poli_icu = poli_icu
         self.poli_deaths = poli_deaths
         self.Asimpto_ratio = Asimpto_ratio
+        self.max_age = 80
         self.make_list()
 
     @classmethod
@@ -118,7 +119,7 @@ class HealthIndexGenerator:
              The probability P for all ages in the array "age".
         """
         c, c1, c2, c3 = poli
-        age[age > 85.0] = 85.0
+        age[age > self.max_age] = self.max_age
         return 10 ** (
             c + c1 * age + c2 * age ** 2 + c3 * age ** 3
         )  # The coefficients are a fit to the logarithmic model
