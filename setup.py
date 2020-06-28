@@ -27,6 +27,7 @@ setup(
         install_requires=requirements,
         packages=['june',
                   'june.infection',
+                  'june.infection.seed',
                   'june.demography',
                   'june.distributors',
                   'june.groups',
