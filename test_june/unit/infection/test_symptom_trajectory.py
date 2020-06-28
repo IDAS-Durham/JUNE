@@ -174,7 +174,7 @@ class TestSymptoms:
         selector = infect.InfectionSelector()
         dummy = Person(sex='m', age=65)
         infection = selector.make_infection(person=dummy, time=0.1)
-        fixed_severity = 0.98
+        fixed_severity = 0.97
         infection.symptoms.max_severity = fixed_severity
         max_tag = infection.symptoms.max_tag()
         assert max_tag == june.infection.symptom_tag.SymptomTag.hospitalised
