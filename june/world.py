@@ -24,7 +24,17 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
-possible_groups = ["schools", "hospitals", "companies", "care_homes", "universities"]
+possible_groups = [
+    "households",
+    "care_homes",
+    "schools",
+    "hospitals",
+    "companies",
+    "universities",
+    "pubs",
+    "groceries",
+    "cinemas",
+]
 
 
 def _populate_areas(areas: Areas, demography):
@@ -346,12 +356,18 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         for area in super_area.areas:
             super_area.people.extend(area.people)
 
-    # households in areas
+    # households and care homes in areas
     if world.households is not None:
         for household in world.households:
             area = world.areas[household.area - first_area_id]
             household.area = area
             area.households.append(household)
+
+    if world.care_homes is not None:
+        for care_home in world.care_homes:
+            area = world.areas[care_home.area - first_area_id]
+            care_home.area = area
+            area.care_home = care_home
 
     # commute
     if world.commutehubs is not None and world.commutecities is not None:
