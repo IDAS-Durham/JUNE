@@ -723,8 +723,8 @@ class TestReduceLeisureProbabilities:
             world=world, config_filename=test_config
         )
         reduce_leisure_probabilities = ChangeLeisureProbability(
-            start_time="2020-03-08",
-            end_time="2020-03-11",
+            start_time="2020-03-02",
+            end_time="2020-03-05",
             leisure_activities_probabilities={
                 "pubs": {"men": {"0-50": 0.5, "50-100": 0.0}, "women": {"0-100": 0.4},},
             },
@@ -747,7 +747,7 @@ class TestReduceLeisureProbabilities:
         original_female_pub_probabilities = sim.leisure.leisure_distributors[
             "pubs"
         ].female_probabilities
-        assert str(sim.timer.date.date()) == "2020-03-07"
+        assert str(sim.timer.date.date()) == "2020-03-01"
         household = Household()
         person1 = Person.from_attributes(age=60, sex="m")
         person1.area = super_area.areas[0]
@@ -770,7 +770,7 @@ class TestReduceLeisureProbabilities:
         assert pubs1_visits_before > 0
         assert pubs2_visits_before > 0
         # next day leisure policies are
-        while str(sim.timer.date.date()) != "2020-03-08":
+        while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
         sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
         sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
@@ -790,7 +790,7 @@ class TestReduceLeisureProbabilities:
         assert pubs1_visits_after == 0
         assert 0 < pubs2_visits_after < pubs2_visits_before
         # end of policy
-        while str(sim.timer.date.date()) != "2020-03-11":
+        while str(sim.timer.date.date()) != "2020-03-05":
             next(sim.timer)
         sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
         sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
