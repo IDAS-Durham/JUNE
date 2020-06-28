@@ -12,7 +12,7 @@ shielding:
 close_companies:
         start_time: 2020-03-16
         end_time: 2020-07-04 #TODO: Until when really?
-        full_closure: True #TODO: sectors or percent of companies to open? 
+        full_closure: False 
 
 social_distancing:
         start_time: 2020-03-16
@@ -53,7 +53,8 @@ change_leisure_probability:
 close_schools:
         start_time: 2020-03-20
         end_time: 2020-07-04 #TODO: end time?
-        full_closure: True
+        years_to_close: all
+        full_closure: False
 
 close_universities:
         start_time: 2020-03-20

@@ -298,13 +298,6 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-        if person.busy:
-            for subgroup in person.subgroups.iter():
-                if subgroup is not None:
-                    if person in subgroup.people:
-                        print(subgroup)
-                        print(subgroup.group.spec)
-            raise ValueError
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -356,7 +349,7 @@ class Simulator:
         """
         possible_guardians = [
             housemate
-            for housemate in kid.residence.group.residents
+            for housemate in kid.residence.group.people
             if housemate.age >= 18
         ]
         if len(possible_guardians) == 0:

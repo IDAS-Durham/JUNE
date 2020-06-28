@@ -419,4 +419,7 @@ class TestSaveWorld:
             h1_resident_ids = np.array([p.id for p in h1.residents])
             h2_resident_ids = np.array([p.id for p in h2.residents])
             for p1, p2 in zip(np.sort(h1_resident_ids), np.sort(h2_resident_ids)):
+                print(p1)
+                print(p2)
                 assert p1 == p2
+            raise ValueError
