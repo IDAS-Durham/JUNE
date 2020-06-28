@@ -17,7 +17,7 @@ from june.interaction import Interaction
 from june.logger.logger import Logger
 from june.policy import Policies
 from june.time import Timer
-from june.world import World
+from june.world import World, possible_groups
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -116,8 +116,8 @@ class Simulator:
         self.stay_at_home_complacency = stay_at_home_complacency
         if "commute" in self.all_activities:
             self.initialize_commute(activity_to_groups["commute"])
+        self.leisure = leisure
         if "leisure" in self.all_activities:
-            self.leisure = leisure
             self.leisure.generate_leisure_probabilities_for_timestep
         if (
             "rail_travel_out" in self.all_activities
@@ -274,8 +274,9 @@ class Simulator:
             if group_name in ["care_home_visits", "household_visits"]:
                 continue
             grouptype = getattr(self.world, group_name)
-            for group in grouptype.members:
-                group.clear()
+            if grouptype is not None:
+                for group in grouptype.members:
+                    group.clear()
 
         for person in self.world.people.members:
             person.busy = False
@@ -348,9 +349,7 @@ class Simulator:
             list of activities that take place at a given time step
         """
         possible_guardians = [
-            housemate
-            for housemate in kid.residence.group.people
-            if housemate.age >= 18
+            housemate for housemate in kid.residence.group.people if housemate.age >= 18
         ]
         if len(possible_guardians) == 0:
             guardian = kid.find_guardian()
@@ -510,15 +509,16 @@ class Simulator:
             self.distribute_rail_out()
         if "rail_travel_back" in activities:
             self.distribute_rail_back()
-        if self.policies is not None:
-            self.policies.apply_change_probabilities_leisure(
-                self.timer.date, self.leisure
+        if self.leisure is not None:
+            self.leisure.generate_leisure_probabilities_for_timestep(
+                self.timer.duration,
+                self.timer.is_weekend,
+                self.policies.find_closed_venues(self.timer.date),
             )
-        self.leisure.generate_leisure_probabilities_for_timestep(
-            self.timer.duration,
-            self.timer.is_weekend,
-            self.policies.find_closed_venues(self.timer.date),
-        )
+            if self.policies is not None:
+                self.policies.apply_change_probabilities_leisure(
+                    self.timer.date, self.leisure
+                )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
