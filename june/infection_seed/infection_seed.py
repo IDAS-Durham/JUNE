@@ -14,7 +14,7 @@ default_msoa_region_filename = (
 )
 
 
-class Seed:
+class InfectionSeed:
     def __init__(
         self,
         super_areas: SuperAreas,
@@ -57,7 +57,7 @@ class Seed:
         self,
         super_areas: "SuperAreas",
         selector: "InfectionSelector",
-        n_cases_region_filename: str = default_n_cases_region_filename,
+        n_cases_region,
         msoa_region_filename: str = default_msoa_region_filename,
         seed_strength: float = 1.0,
     ) -> "Seed":
@@ -73,8 +73,8 @@ class Seed:
             an instance of the infection class to infect the selected seed.
         health_index_generator:
             an instance of health index generator to assign symptoms to selected seed.
-        n_cases_region_filename:
-            path to csv file with n cases per region.
+        n_cases_region:
+            pandas dataframe with number of cases per region.
         msoa_region:
             path to csv file containing mapping between super areas and regions.
         seed_strengh:
@@ -85,15 +85,9 @@ class Seed:
         Seed instance
         """
 
-        n_cases_region = pd.read_csv(n_cases_region_filename)
-        dates = list(n_cases_region.columns[1:])
-        dates = [
-            datetime.datetime(*[int(value) for value in date.split(" ")[0].split("-")])
-            for date in dates
-        ]
-
+        dates = n_cases_region.index.tolist() 
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
-        return Seed(
+        return InfectionSeed(
             super_areas,
             selector,
             n_cases_region,
@@ -178,10 +172,9 @@ class Seed:
 
         """
         date_str = date.strftime("%Y-%m-%d 00:00:00")
+        n_cases_region = self.n_cases_region.loc[date_str]
         if date.date() not in self.dates_seeded:
-            for region, n_cases in zip(
-                self.n_cases_region["region"], self.n_cases_region[date_str]
-            ):
+            for region, n_cases in n_cases_region.iteritems():
                 super_areas = self._filter_region(region=region)
                 if len(super_areas) > 0:
                     self.infect_super_areas(
@@ -211,3 +204,18 @@ class Seed:
             self.infect_super_areas(
                 self.super_areas.members, int(self.seed_strength * n_cases)
             )
+
+    def filter_trajectories(self, trajectories, symptoms_to_keep=('dead_hospital', 'dead_icu')):
+        filtered_trajectories=[]
+        for trajectory in trajectories:
+            symptom_tags = [stage['symptom_tag'] for stage in trajectory['stages']]
+            if set(symptom_tags).intersection(symptoms_to_keep):
+                filtered_trajectories.append(trajectory)
+        return filtered_trajectories
+
+    def get_mean_completion_time(self, stage):
+        if hasattr(stage.completion_time,'distribution'):
+            return stage.completion_time.distribution.mean() 
+        else:
+            return stage.completion_time.value    
+
