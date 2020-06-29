@@ -216,20 +216,20 @@ class Quarantine(StayHome):
         self.n_days = n_days
         self.n_days_household = n_days_household
 
-    # TODO: if someone recovers or dies it will stop checking !
-    # def must_stay_at_home(self, person: "Person", days_from_start: float):
     def must_stay_at_home(self, person: "Person", days_from_start):
         self_quarantine = False
         try:
             if person.symptoms.tag.value >= 2:
                 self_quarantine = True
-            else:
+            elif person.symptoms.tag.value == 1:
                 time_of_symptoms_onset = (
                     person.health_information.time_of_symptoms_onset
                 )
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
                     self_quarantine = True
+            else:
+                self_quarantine = False
         except:
             pass
         housemates_quarantine = person.residence.group.quarantine(
