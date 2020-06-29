@@ -160,12 +160,7 @@ class ReadLogger:
         df['intensive_care_admissions'] = self.get_daily_updates(symptoms_df, 
                                     lambda x: x.infected_id[x.symptoms==SymptomTag.intensive_care])
 
-
-        df['new_infections'] = self.get_daily_updates(symptoms_df,
-                lambda x: (
-                x.infected_id[(x.symptoms != SymptomTag.recovered) & (~np.isin(x.symptoms,dead_symptoms))]
-            )
-            )
+        df['new_infections'] = -df['susceptible'].diff().fillna(-df['infected'][0]).astype(int)
 
         #df['new_dead'] = self.get_daily_updates(symptoms_df, SymptomTag.dead) 
         return df
