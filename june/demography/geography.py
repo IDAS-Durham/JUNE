@@ -239,6 +239,7 @@ class Geography:
         self.areas = areas
         self.super_areas = super_areas
         # possible buildings
+        self.households = None
         self.schools = None
         self.hospitals = None
         self.companies = None
