@@ -170,9 +170,9 @@ class TestSymptoms:
         ]
         assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
 
-    def test__symptoms__progression(self):
+    def test__symptoms_progression(self):
         selector = infect.InfectionSelector()
-        dummy = Person(sex='m', age=65)
+        dummy = Person(sex='f', age=65)
         infection = selector.make_infection(person=dummy, time=0.1)
         fixed_severity = 0.97
         infection.symptoms.max_severity = fixed_severity
