@@ -84,12 +84,13 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
     This function should be rarely be called oustide world.py
     """
     with h5py.File(file_path, "r") as f:
+        print("loading companies from hdf5 ", end="")
         companies = f["companies"]
         companies_list = list()
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
-            print(f"Loaded chunk {chunk} of {n_chunks}")
+            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             ids = companies["id"][idx1:idx2]
@@ -103,4 +104,5 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
                 company = Company(super_area, n_workers_maxs[k], sectors[k].decode())
                 company.id = ids[k]
                 companies_list.append(company)
+    print("\n", end="")
     return Companies(companies_list)

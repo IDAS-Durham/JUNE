@@ -321,6 +321,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "commute_hub": "commutehubs",
         "university": "universities",
     }
+    print("restoring world...")
     # restore areas -> super_areas
     for area in world.areas:
         super_area_id = area.super_area
@@ -388,4 +389,5 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         for household in world.households:
             household.residents = tuple(household.people)
 
+    world.cemeteries = Cemeteries()
     return world
