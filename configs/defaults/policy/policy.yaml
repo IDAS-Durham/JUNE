@@ -36,17 +36,17 @@ close_leisure_venue:
         end_time: 2020-07-04 
         venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
 
-        #change_leisure_probability:
-        #        start_time: 2020-03-21
-        #        end_time: 2020-07-04
-        #        leisure_activities_probabilities:
-        #          household_visits:
-        #            men: 
-        #              0-64: 0.054
-        #              65-100: 0.0
-        #            women: 
-        #              0-64: 0.054
-        #              65-100: 0.0
+change_leisure_probability:
+        start_time: 2020-03-21
+        end_time: 2020-07-04
+        leisure_activities_probabilities:
+          household_visits:
+            men: 
+              0-64: 0.054
+              65-100: 0.0
+            women: 
+              0-64: 0.054
+              65-100: 0.0
 
 close_schools:
         start_time: 2020-03-20
