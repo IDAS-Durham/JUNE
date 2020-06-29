@@ -174,6 +174,7 @@ def infect_person(person, selector, symptom_tag="influenza"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
     person.health_information.time_of_symptoms_onset = 5.3
+    person.residence.group.quarantine_starting_date = 5.3
 
 
 class TestPolicy:
