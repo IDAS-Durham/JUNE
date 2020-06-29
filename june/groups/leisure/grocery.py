@@ -34,15 +34,12 @@ class Groceries(SocialVenues):
             how many venus per super_area to generate
         """
         groceries = []
-        print(super_areas)
         for super_area in super_areas:
             area_population = len(super_area.people)
-            print(area_population)
             for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
                 grocery = Grocery(max_size)
                 super_area.groceries.append(grocery)
                 groceries.append(grocery)
-        print(groceries)
         return cls(groceries)
 
 
