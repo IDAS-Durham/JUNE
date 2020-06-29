@@ -32,13 +32,21 @@ class Pubs(SocialVenues):
             self.make_tree()
 
     @classmethod
+    def for_areas(
+        cls,
+        areas: Areas,
+        coordinates_filename: str = default_pub_coordinates_filename,
+    ):
+        pub_coordinates = np.loadtxt(coordinates_filename)
+        return cls.from_coordinates(pub_coordinates, areas)
+
+    @classmethod
     def for_geography(
         cls,
         geography: Geography,
         coordinates_filename: str = default_pub_coordinates_filename,
     ):
-        pub_coordinates = np.loadtxt(coordinates_filename)
-        return cls.from_coordinates(pub_coordinates, geography.areas)
+        return cls.for_areas(geography.areas, coordinates_filename)
 
     @classmethod
     def from_coordinates(

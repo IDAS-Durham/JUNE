@@ -24,7 +24,17 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
-possible_groups = ["schools", "hospitals", "companies", "care_homes", "universities"]
+possible_groups = [
+    "households",
+    "care_homes",
+    "schools",
+    "hospitals",
+    "companies",
+    "universities",
+    "pubs",
+    "groceries",
+    "cinemas",
+]
 
 
 def _populate_areas(areas: Areas, demography):
@@ -311,6 +321,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "commute_hub": "commutehubs",
         "university": "universities",
     }
+    print("restoring world...")
     # restore areas -> super_areas
     for area in world.areas:
         super_area_id = area.super_area
@@ -346,12 +357,18 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         for area in super_area.areas:
             super_area.people.extend(area.people)
 
-    # households in areas
+    # households and care homes in areas
     if world.households is not None:
         for household in world.households:
             area = world.areas[household.area - first_area_id]
             household.area = area
             area.households.append(household)
+
+    if world.care_homes is not None:
+        for care_home in world.care_homes:
+            area = world.areas[care_home.area - first_area_id]
+            care_home.area = area
+            area.care_home = care_home
 
     # commute
     if world.commutehubs is not None and world.commutecities is not None:
@@ -366,4 +383,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                 world.people[idx - first_person_idx] for idx in city.commute_internal
             ]
             city.commute_internal = commute_internal_people
+
+    # household residents
+    if world.households is not None:
+        for household in world.households:
+            household.residents = tuple(household.people)
+
+    world.cemeteries = Cemeteries()
     return world
