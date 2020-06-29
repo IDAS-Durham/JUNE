@@ -221,11 +221,12 @@ class Leisure:
             for mate in person.residence.group.residents:
                 if mate != person:
                     if mate.busy:
-                        if mate.leisure is not None:
+                        if mate.leisure is not None: #this perosn has already been assigned somewhere
                             mate.leisure.remove(mate)
+                            mate.subgroups.leisure = subgroup
                             subgroup.append(mate)
                     else:
-                        mate.subgroups.leisure = subgroup
+                        mate.subgroups.leisure = subgroup #person will be added later in the simulator.
 
     def get_subgroup_for_person_and_housemates(self, person: Person):
         """

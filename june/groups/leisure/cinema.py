@@ -29,9 +29,9 @@ class Cinemas(SocialVenues):
             self.make_tree()
 
     @classmethod
-    def for_geography(
+    def for_areas(
         cls,
-        geography,
+        areas: Areas,
         coordinates_filename: str = default_cinemas_coordinates_filename,
         max_distance_to_area=5,
     ):
@@ -41,8 +41,20 @@ class Cinemas(SocialVenues):
         return cls.from_coordinates(
             coordinates,
             n_seats,
-            geography.areas,
+            areas,
             max_distance_to_area=max_distance_to_area,
+        )
+    @classmethod
+    def for_geography(
+        cls,
+        geography,
+        coordinates_filename: str = default_cinemas_coordinates_filename,
+        max_distance_to_area=5,
+    ):
+        return cls.for_areas(
+            geography.areas,
+            coordinates_filename,
+            max_distance_to_area,
         )
 
     @classmethod
