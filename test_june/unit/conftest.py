@@ -15,7 +15,8 @@ from june.infection import InfectionSelector
 from june.infection import infection as infect
 from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
-from june.simulator import Simulator, SimulatorBox
+from june.simulator import Simulator
+from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"

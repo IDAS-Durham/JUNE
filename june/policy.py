@@ -109,7 +109,7 @@ class SkipActivity(Policy):
         pass
 
     def remove_activities(
-            self, activities: List[str], activities_to_remove: List[str]
+        self, activities: List[str], activities_to_remove: List[str]
     ) -> List[str]:
         """
         Remove an activity from a list of activities
@@ -121,7 +121,9 @@ class SkipActivity(Policy):
         activity_to_remove:
             activity that will be removed from the list
         """
-        return [activity for activity in activities if activity not in activities_to_remove]
+        return [
+            activity for activity in activities if activity not in activities_to_remove
+        ]
 
 
 class StayHome(Policy):
@@ -214,39 +216,26 @@ class Quarantine(StayHome):
         self.n_days = n_days
         self.n_days_household = n_days_household
 
-    # TODO: if someone recovers or dies it will stop checking !
-    def must_stay_at_home(self, person: "Person", days_from_start: float):
-        return self.must_stay_at_home_housemates(
-            person, days_from_start, self.n_days_household
-        ) or self.must_stay_at_home_symptoms(person, days_from_start, self.n_days)
-
-    @staticmethod
-    def must_stay_at_home_symptoms(
-        person: "Person", days_from_start: float, n_days_at_home
-    ):
+    def must_stay_at_home(self, person: "Person", days_from_start):
+        self_quarantine = False
         try:
-            release_day = (
-                person.health_information.time_of_symptoms_onset + n_days_at_home
-            )
-            return (
-                release_day
-                > days_from_start
-                > person.health_information.time_of_symptoms_onset
-            )
-        except (TypeError, AttributeError) as error:
-            return False
-
-    def must_stay_at_home_housemates(
-        self, person: "Person", days_from_start: float, n_days_at_home
-    ):
-        for housemate in person.housemates:
-            if housemate == person:
-                continue
-            if self.must_stay_at_home_symptoms(
-                housemate, days_from_start, n_days_at_home
-            ):
-                return True
-        return False
+            if person.symptoms.tag.value >= 2:
+                self_quarantine = True
+            elif person.symptoms.tag.value == 1:
+                time_of_symptoms_onset = (
+                    person.health_information.time_of_symptoms_onset
+                )
+                release_day = time_of_symptoms_onset + self.n_days
+                if release_day > days_from_start > time_of_symptoms_onset:
+                    self_quarantine = True
+            else:
+                self_quarantine = False
+        except:
+            pass
+        housemates_quarantine = person.residence.group.quarantine(
+            days_from_start, self.n_days_household
+        )
+        return self_quarantine or housemates_quarantine
 
 
 class Shielding(StayHome):
@@ -300,7 +289,7 @@ class CloseUniversities(SkipActivity):
 
 class CloseCompanies(SkipActivity):
     def __init__(
-            self, start_time: str, end_time: str, full_closure=False,
+        self, start_time: str, end_time: str, full_closure=False,
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -315,7 +304,9 @@ class CloseCompanies(SkipActivity):
             and person.primary_activity.group.spec == "company"
         ):
             if self.full_closure or person.lockdown_status == "furlough":
-                return self.remove_activities(activities, ["primary_activity", "commute"])
+                return self.remove_activities(
+                    activities, ["primary_activity", "commute"]
+                )
         return activities
 
 

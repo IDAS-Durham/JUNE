@@ -75,12 +75,14 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    print("loading households from hdf5 ", end="")
     with h5py.File(file_path, "r") as f:
         households = f["households"]
         households_list = list()
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
+            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             ids = households["id"][idx1:idx2]
@@ -101,4 +103,5 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 )
                 household.id = ids[k]
                 households_list.append(household)
+    print("\n", end="")
     return Households(households_list)
