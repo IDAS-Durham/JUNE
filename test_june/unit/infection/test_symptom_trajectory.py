@@ -155,18 +155,18 @@ class TestSymptoms:
         assert symptoms_trajectories.trajectory == [
             (0.0, june.infection.symptom_tag.SymptomTag.exposed),
             (pytest.approx(3.4, rel=0.5), june.infection.symptom_tag.SymptomTag.influenza),
-            (pytest.approx(4.8, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
-            (pytest.approx(5.8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(10, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
+            (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(12, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
         ]
         assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
             (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(1, rel=0.25), june.infection.symptom_tag.SymptomTag.influenza),
-            (pytest.approx(2.5, rel=0.25), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(11.5, rel=0.25), june.infection.symptom_tag.SymptomTag.recovered)
+            (pytest.approx(2, rel=0.5), june.infection.symptom_tag.SymptomTag.influenza),
+            (pytest.approx(6.5, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(18.5, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
         assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
 
@@ -174,7 +174,7 @@ class TestSymptoms:
         selector = infect.InfectionSelector()
         dummy = Person(sex='m', age=65)
         infection = selector.make_infection(person=dummy, time=0.1)
-        fixed_severity = 0.98
+        fixed_severity = 0.97
         infection.symptoms.max_severity = fixed_severity
         max_tag = infection.symptoms.max_tag()
         assert max_tag == june.infection.symptom_tag.SymptomTag.hospitalised
