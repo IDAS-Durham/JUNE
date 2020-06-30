@@ -240,7 +240,7 @@ class Quarantine(StayHome):
 
 class Shielding(StayHome):
     def __init__(
-        self, start_time: str, end_time: str, min_age: int,
+            self, start_time: str, end_time: str, min_age: int, complacency: Optional[float]
     ):
         super().__init__(start_time, end_time)
         self.min_age = min_age
