@@ -41,7 +41,6 @@ class SimulatorBox(Simulator):
         infection_seed: Optional["InfectionSeed"] = None,
         leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
-        stay_at_home_complacency: float = 0.95,
         policies=Policies(),
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
@@ -67,8 +66,6 @@ class SimulatorBox(Simulator):
             dictionary with temporal configuration to set up the simulation
         min_age_home_alone:
             minimum age of a child to be left alone at home when ill
-        stay_at_home_complacency:
-            probability that an ill person will not stay at home
         policies:
             policies to be implemented at different time steps
         save_path:
@@ -83,7 +80,6 @@ class SimulatorBox(Simulator):
             infection_seed,
             leisure,
             min_age_home_alone,
-            stay_at_home_complacency,
             policies,
             save_path,
             output_filename,
@@ -105,7 +101,7 @@ class SimulatorBox(Simulator):
     def move_people_to_active_subgroups(self, activities: List[str]):
         """
         Sends every person to one subgroup. If a person has a mild illness,
-        they stay at home with a certain probability given by stay_at_home_complacency
+        they stay at home 
 
         Parameters
         ----------
