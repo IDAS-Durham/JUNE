@@ -1,12 +1,12 @@
 male_age_probabilities:
-  0-65 : 0.37
-  65-80 : 0.30
+  0-65 : 0.6
+  65-80 : 0.4
   80-100: 0.0
 female_age_probabilities:
-  0-65 : 0.37
-  65-80 : 0.30
+  0-65 : 0.6
+  65-80 : 0.4
   80-100: 0.0
-weekend_boost: 1
+weekend_boost: 0.5
 drags_household_probability: 1.0
 # source
 #https://www.ageuk.org.uk/globalassets/age-uk/documents/reports-and-publications/reports-and-briefings/health--wellbeing/rb_june15_lonelines_in_later_life_evidence_review.pdf
