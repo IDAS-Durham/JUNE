@@ -40,7 +40,6 @@ class Simulator:
         infection_seed: Optional["InfectionSeed"] = None,
         leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
-        stay_at_home_complacency: float = 0.95,
         policies: Optional["Policies"] = None,
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
@@ -63,8 +62,6 @@ class Simulator:
             dictionary with temporal configuration to set up the simulation
         min_age_home_alone:
             minimum age of a child to be left alone at home when ill
-        stay_at_home_complacency:
-            probability that an ill person will not stay at home
         policies:
             policies to be implemented at different time steps
         save_path:
@@ -114,7 +111,6 @@ class Simulator:
                 "rail_travel": activity_to_groups.get("rail_travel", []),
             }
         self.min_age_home_alone = min_age_home_alone
-        self.stay_at_home_complacency = stay_at_home_complacency
         if "commute" in self.all_activities:
             self.initialize_commute(activity_to_groups["commute"])
         self.leisure = leisure
@@ -361,8 +357,7 @@ class Simulator:
         """
         Move person with a mild illness to their households. For kids that will
         always happen, and if they are left alone at home they will also drag one
-        of their guardians home. For adults, they will go home with a probability 
-        given by stay_at_home_complacency
+        of their guardians home. 
 
         Parameters
         ----------
@@ -373,10 +368,8 @@ class Simulator:
         """
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person)
-        elif random.random() <= self.stay_at_home_complacency:
-            person.residence.append(person)
         else:
-            self.move_to_active_subgroup(activities, person)
+            person.residence.append(person)
 
     def move_people_to_active_subgroups(
         self,
@@ -386,7 +379,7 @@ class Simulator:
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
-        they stay at home with a certain probability given by stay_at_home_complacency
+        they stay at home 
 
         Parameters
         ----------
@@ -400,7 +393,8 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = skip_activity_collection(person, activities)
+            allowed_activities = skip_activity_collection(person, activities, 
+                    time_step_duration=self.timer.duration)
             if stay_home_collection(person, days_from_start):
                 self.move_mild_ill_to_household(person, allowed_activities)
             else:
