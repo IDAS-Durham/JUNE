@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 
 from june import paths
-from june.demography import Person, Population
 from june.demography.geography import Geography
+from june.demography import Person, Population
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -36,7 +36,7 @@ from june.policy import (
     ChangeLeisureProbability,
 )
 from june.simulator import Simulator
-from june.world import World, generate_world_from_hdf5, generate_world_from_geography
+from june.world import World
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -65,17 +65,6 @@ def create_interaction(selector):
 def create_geography():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     return g.super_areas.members[0]
-
-@pytest.fixture(name="super_area_big", scope="module")
-def create_big_geography():
-    g = Geography.from_file(filter_key={"super_area": [
-        "E02003282",
-        "E02001720",
-        "E00088544",
-        "E02002560",
-        "E02002559",
-        "E02004314"]})
-    return g
 
 
 def make_dummy_world(super_area):
@@ -161,15 +150,6 @@ def make_dummy_world_with_university(super_area):
     world.pubs = Pubs([pub])
     return pupil, student, world
 
-def make_world(geography):
-    geography.hospitals = Hospitals.for_geography(geography)
-    geography.schools = Schools.for_geography(geography)
-    geography.companies = Companies.for_geography(geography)
-    geography.care_homes = CareHomes.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
-    world = generate_world_from_geography(geography, include_households=False, include_commute=False)
-    return world
-
 def infect_person(person, selector, symptom_tag="influenza"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
@@ -182,43 +162,6 @@ class TestPolicy:
         policy = Policy(start_time="2020-5-6", end_time="2020-6-6")
         assert policy.is_active(datetime(2020, 6, 6))
         assert not policy.is_active(datetime(2020, 6, 7))
-
-class TestLockdownStatus:
-    def test__lockdown_status_random(self, super_area_big):
-        world = make_world(super_area_big)
-
-        found_worker = False
-        found_child = False
-        for person in world.areas[0].people:
-            if person.age > 18:
-                worker = person
-                found_worker = True
-            elif person.age < 18:
-                child = person
-                found_child = True
-            if found_worker and found_child:
-                break
-
-        assert worker.lockdown_status is not None
-        assert child.lockdown_status is None
-
-    def test__lockdown_status_teacher(self, super_area_big):
-        world = make_world(super_area_big)
-
-        teacher = world.schools.members[0].teachers.people[0]
-        assert teacher.lockdown_status == 'key_worker'
-
-    def test__lockdown_status_medic(self, super_area_big):
-        world = make_world(super_area_big)
-
-        medic = world.hospitals.members[0].people[0]
-        assert medic.lockdown_status == 'key_worker'
-
-    def test__lockdown_status_care_home(self, super_area_big):
-        world = make_world(super_area_big)
-
-        care_home_worker = world.care_homes[0].people[0]
-        assert care_home_worker.lockdown_status == 'key_worker'
 
 class TestDefaultPolicy:
     def test__default_policy_adults(self, super_area, selector, interaction):
@@ -242,7 +185,7 @@ class TestDefaultPolicy:
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "pneumonia")
         sim.update_health_status(0.0, 0.0)
         assert policies.stay_home_collection(date=date)(worker, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
@@ -308,7 +251,7 @@ class TestDefaultPolicy:
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
-        infect_person(pupil, selector, "influenza")
+        infect_person(pupil, selector, "pneumonia")
         sim.update_health_status(0.0, 0.0)
         assert policies.stay_home_collection(date=date)(pupil, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
@@ -502,6 +445,56 @@ class TestClosure:
         assert worker in worker.primary_activity.people
         sim.clear_world()
 
+    def test__close_companies_frequency_of_randoms(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        company_closure = CloseCompanies(
+            start_time="2020-1-1", end_time="2020-10-1", random_lambda=8./300.
+            # go for 8 hours per week (one week has 168 hours)
+        )
+        policies = Policies([company_closure])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        #sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        sim.clear_world()
+        activities = ["commute", "primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        worker.lockdown_status = "random"
+        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        # Move the person 1_0000 times for five days
+        n_days_in_week = []
+        for i in range(1000):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in policies.skip_activity_collection(date=time_during_policy)(
+                        worker, activities, time_step_duration=8. #TODO: check timer.duration is actually in hours
+                ):
+                    n_days += 1
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(1., rel=0.1)
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        assert policies.skip_activity_collection(date=time_after_policy)(
+            worker, activities
+        ) == ["commute", "primary_activity", "residence",]
+        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
+
     def test__close_companies_full_closure(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
@@ -557,6 +550,31 @@ class TestShielding:
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
+    def test__old_people_shield_with_complacency(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        shielding = Shielding(start_time="2020-1-1", end_time="2020-10-1", min_age=30, complacency=0.6)
+        policies = Policies([shielding])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        complient_days = 0
+        for i in range(100):
+            if policies.stay_home_collection(date=time_during_policy)(worker, activities):
+                complient_days += 1
+        assert complient_days/100 == pytest.approx(shielding.complacency, abs=0.1)
+        sim.clear_world()
+
 
 
 class TestQuarantine:
