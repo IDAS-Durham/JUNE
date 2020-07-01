@@ -240,4 +240,6 @@ class CampHouseholdDistributor:
             [person for household in households for person in household.people]
         )
         assert people_in_households == len(area.people)
+        # remove empty households
+        households = [household for household in households if household.size != 0]
         return households
