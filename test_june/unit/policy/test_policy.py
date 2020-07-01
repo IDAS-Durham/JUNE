@@ -487,7 +487,6 @@ class TestClosure:
                 )(
                     worker,
                     activities,
-                    time_step_duration=8.0,  # TODO: check timer.duration is actually in hours
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -501,7 +500,6 @@ class TestClosure:
                 )(
                     worker,
                     activities,
-                    time_step_duration=4.0,  # TODO: check timer.duration is actually in hours
                 ):
                     n_days += 0.5
             n_days_in_week.append(n_days)
