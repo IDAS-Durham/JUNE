@@ -72,7 +72,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             for household in households_super_area:
                 if household.size == 0:
                     continue
-                households_to_link_n = np.random.randint(0, 3)
+                households_to_link_n = np.random.randint(0, 4)
                 relatives_to_visit = []
                 for _ in range(households_to_link_n):
                     house_idx = np.random.randint(0, len(households_super_area))

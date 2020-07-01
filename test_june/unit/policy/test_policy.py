@@ -848,8 +848,8 @@ class TestReduceLeisureProbabilities:
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_restored += 1
             person2.subgroups.leisure = None
-        assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.1)
-        assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.1)
+        assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.2)
+        assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.2)
         assert (
             sim.leisure.leisure_distributors["pubs"].male_probabilities
             == original_male_pub_probabilities
