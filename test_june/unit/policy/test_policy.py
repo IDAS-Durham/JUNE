@@ -448,7 +448,7 @@ class TestClosure:
     def test__close_companies_frequency_of_randoms(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
-            start_time="2020-1-1", end_time="2020-10-1", random_lambda=8./300.
+            start_time="2020-1-1", end_time="2020-10-1", random_lambda=8./40.
             # go for 8 hours per week (one week has 168 hours)
         )
         policies = Policies([company_closure])
@@ -475,15 +475,26 @@ class TestClosure:
         time_during_policy = datetime(2020, 2, 1)
         # Move the person 1_0000 times for five days
         n_days_in_week = []
-        for i in range(1000):
+        for i in range(8000):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in policies.skip_activity_collection(date=time_during_policy)(
                         worker, activities, time_step_duration=8. #TODO: check timer.duration is actually in hours
                 ):
-                    n_days += 1
+                    n_days += 1. 
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(1., rel=0.1)
+        n_days_in_week = []
+        for i in range(20_000):
+            n_days = 0
+            for j in range(10):
+                if "primary_activity" in policies.skip_activity_collection(date=time_during_policy)(
+                        worker, activities, time_step_duration=4. #TODO: check timer.duration is actually in hours
+                ):
+                    n_days += 0.5 
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(1., rel=0.1)
+
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
