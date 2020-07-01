@@ -243,9 +243,10 @@ class WorkerDistributor:
 
         # Currently all people definitely not furloughed or key are assigned a 'random' tag which allows for
         # them to dynamically be sent to work. For now we fix this so that the same 1/5 people go to work once a week
-        # rather than a 1/5 chance that a person with a 'random' tag goes to work
-        if value == "random" and self.lockdown_status_random[idx] == 0:
-            value = "furlough"
+        # rather than a 1/5 chance that a person with a 'random' tag goes to work.
+        # If commented out then people will be correctly assigned random tag for going to work randomly
+        #if value == "random" and self.lockdown_status_random[idx] == 0:
+        #    value = "furlough"
 
         person.lockdown_status = value
 
