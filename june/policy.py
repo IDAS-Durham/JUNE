@@ -253,9 +253,7 @@ class Shielding(StayHome):
 
     def must_stay_at_home(self, person: "Person", days_from_start: float):
         if person.age >= self.min_age:
-            if self.complacency is None:
-                return True
-            elif np.random.rand() < self.complacency:
+            if self.complacency is None or np.random.rand() < self.complacency:
                 return True
         return False
 
