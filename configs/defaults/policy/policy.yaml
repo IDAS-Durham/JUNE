@@ -44,11 +44,11 @@ change_leisure_probability:
         leisure_activities_probabilities:
           household_visits:
             men: 
-              0-64: 0.054
-              65-100: 0.0
+              0-64: 0.50
+              65-100: 0.25
             women: 
-              0-64: 0.054
-              65-100: 0.0
+              0-64: 0.50
+              65-100: 0.25
 
 close_schools:
         start_time: 2020-03-20
