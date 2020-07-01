@@ -127,7 +127,7 @@ def test__generate_leisure_from_world():
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0
-    for _ in range(0, 100):
+    for _ in range(0, 1000):
         subgroup = leisure.get_subgroup_for_person_and_housemates(person)
         if subgroup is not None:
             if subgroup.group.spec == "pub":
