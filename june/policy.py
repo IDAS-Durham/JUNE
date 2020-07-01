@@ -11,6 +11,7 @@ import yaml
 from june import paths
 from june.demography.person import Person
 from june.groups.leisure import Leisure
+from june.infection.symptom_tag import SymptomTag
 from june.groups.leisure.social_venue_distributor import parse_age_probabilites
 
 # TODO: reduce leisure attendance
@@ -102,7 +103,9 @@ class SkipActivity(Policy):
     """
 
     @abstractmethod
-    def skip_activity(self, person: "Person", activities: List[str]) -> bool:
+    def skip_activity(
+        self, person: "Person", activities: List[str], time_step_duration: float
+    ) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -219,9 +222,7 @@ class Quarantine(StayHome):
     def must_stay_at_home(self, person: "Person", days_from_start):
         self_quarantine = False
         try:
-            if person.symptoms.tag.value >= 2:
-                self_quarantine = True
-            elif person.symptoms.tag.value == 1:
+            if person.symptoms.tag in (SymptomTag.influenza, SymptomTag.pneumonia):
                 time_of_symptoms_onset = (
                     person.health_information.time_of_symptoms_onset
                 )
@@ -240,16 +241,25 @@ class Quarantine(StayHome):
 
 class Shielding(StayHome):
     def __init__(
-            self, start_time: str, end_time: str, min_age: int, complacency: Optional[float]
+        self,
+        start_time: str,
+        end_time: str,
+        min_age: int,
+        complacency: Optional[float] = None,
     ):
         super().__init__(start_time, end_time)
         self.min_age = min_age
+        self.complacency = complacency
 
     def must_stay_at_home(self, person: "Person", days_from_start: float):
-        return person.age >= self.min_age
+        if person.age >= self.min_age:
+            if self.complacency is None:
+                return True
+            elif np.random.rand() < self.complacency:
+                return True
+        return False
 
 
-# TODO: should we automatically have parents staying with children left alone?
 class CloseSchools(SkipActivity):
     def __init__(
         self, start_time: str, end_time: str, years_to_close=None, full_closure=None,
@@ -260,7 +270,9 @@ class CloseSchools(SkipActivity):
         if self.years_to_close == "all":
             self.years_to_close = np.arange(0, 20)
 
-    def skip_activity(self, person: "Person", activities):
+    def skip_activity(
+        self, person: "Person", activities: List, time_step_duration=None
+    ):
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "school"
@@ -278,7 +290,9 @@ class CloseUniversities(SkipActivity):
     ):
         super().__init__(start_time, end_time)
 
-    def skip_activity(self, person: "Person", activities):
+    def skip_activity(
+        self, person: "Person", activities: List, time_step_duration: float = None
+    ):
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "university"
@@ -289,7 +303,7 @@ class CloseUniversities(SkipActivity):
 
 class CloseCompanies(SkipActivity):
     def __init__(
-        self, start_time: str, end_time: str, full_closure=False,
+        self, start_time: str, end_time: str, full_closure=False, random_lambda=None
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -297,16 +311,28 @@ class CloseCompanies(SkipActivity):
         """
         super().__init__(start_time, end_time)
         self.full_closure = full_closure
+        self.random_lambda = random_lambda
 
-    def skip_activity(self, person: "Person", activities):
+    def skip_activity(
+        self, person: "Person", activities: List, time_step_duration: float
+    ):
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
         ):
+
             if self.full_closure or person.lockdown_status == "furlough":
                 return self.remove_activities(
                     activities, ["primary_activity", "commute"]
                 )
+            elif person.lockdown_status == "random" and self.random_lambda is not None:
+                probability_to_go_today = 1 - np.exp(
+                    -self.random_lambda * time_step_duration
+                )
+                if np.random.rand() > probability_to_go_today:
+                    return self.remove_activities(
+                        activities, ["primary_activity", "commute"]
+                    )
         return activities
 
 
@@ -355,7 +381,12 @@ class PolicyCollection(ABC):
 class SkipActivityCollection(PolicyCollection):
     policies: List[SkipActivity]
 
-    def __call__(self, person: Person, activities):
+    def __call__(
+        self,
+        person: Person,
+        activities: List,
+        time_step_duration: Optional[float] = None,
+    ):
         """
         Filter activities this person is not permitted to do on a given date
 
@@ -371,7 +402,7 @@ class SkipActivityCollection(PolicyCollection):
         Activities the person may still do
         """
         for policy in self.policies:
-            activities = policy.skip_activity(person, activities)
+            activities = policy.skip_activity(person, activities, time_step_duration)
         return activities
 
 
