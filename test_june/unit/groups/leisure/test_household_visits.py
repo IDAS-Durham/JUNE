@@ -18,7 +18,7 @@ def make_dist(world_visits):
     return visits_distributor
 
 
-def test__every_household_has_up_to_2_links(world_visits, visits_distributor):
+def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
     super_areas = world_visits.super_areas
     visits_distributor.link_households_to_households(super_areas)
     for super_area in super_areas:
@@ -32,7 +32,7 @@ def test__every_household_has_up_to_2_links(world_visits, visits_distributor):
                 else:
                     assert (
                         household.relatives_in_households is None
-                        or len(household.relatives_in_households) <= 2
+                        or len(household.relatives_in_households) <= 3
                     )
                     if household.relatives_in_households is not None:
                         for link in household.relatives_in_households:
@@ -66,7 +66,7 @@ def test__household_home_visits_leisure_integration(leisure):
             counter += 1
             assert subgroup == person2.residence
 
-    assert np.isclose(counter, np.random.poisson(0.54 * 0.1 * 100), atol=5)
+    assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 100), atol=5)
 
 
 def test__do_not_visit_dead_people(leisure):
