@@ -1,18 +1,7 @@
-# characteristic time of 3 hours
 male_age_probabilities:
-  7-14: 0.57
-  15-24: 0.57
-  25-34: 0.32
-  35-44: 0.32
-  45-64: 0.16
-  65-100: 0.05
+  3-100: 0.03
 female_age_probabilities:
-  7-14: 0.57
-  15-24: 0.57
-  25-34: 0.32
-  35-44: 0.32
-  45-64: 0.16
-  65-100: 0.05
+  3-100: 0.03
 neighbours_to_consider: 5
 maximum_distance: 5
 weekend_boost: 1
