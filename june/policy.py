@@ -326,9 +326,7 @@ class CloseCompanies(SkipActivity):
                     activities, ["primary_activity", "commute"]
                 )
             elif person.lockdown_status == "random" and self.random_lambda is not None:
-                probability_to_go_today = 1 - np.exp(
-                    -self.random_lambda * 8./time_step_duration
-                )
+                probability_to_go_today = 1 - np.exp(-self.random_lambda)
                 if np.random.rand() > probability_to_go_today:
                     return self.remove_activities(
                         activities, ["primary_activity", "commute"]
