@@ -104,7 +104,7 @@ class SkipActivity(Policy):
 
     @abstractmethod
     def skip_activity(
-        self, person: "Person", activities: List[str], time_step_duration: float
+        self, person: "Person", activities: List[str], 
     ) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
@@ -271,7 +271,7 @@ class CloseSchools(SkipActivity):
             self.years_to_close = np.arange(0, 20)
 
     def skip_activity(
-        self, person: "Person", activities: List, time_step_duration=None
+        self, person: "Person", activities: List, 
     ):
         if (
             person.primary_activity is not None
@@ -291,7 +291,7 @@ class CloseUniversities(SkipActivity):
         super().__init__(start_time, end_time)
 
     def skip_activity(
-        self, person: "Person", activities: List, time_step_duration: float = None
+        self, person: "Person", activities: List, 
     ):
         if (
             person.primary_activity is not None
@@ -314,7 +314,7 @@ class CloseCompanies(SkipActivity):
         self.random_lambda = random_lambda
 
     def skip_activity(
-        self, person: "Person", activities: List, time_step_duration: float
+        self, person: "Person", activities: List, 
     ):
         if (
             person.primary_activity is not None
@@ -383,7 +383,6 @@ class SkipActivityCollection(PolicyCollection):
         self,
         person: Person,
         activities: List,
-        time_step_duration: Optional[float] = None,
     ):
         """
         Filter activities this person is not permitted to do on a given date
@@ -400,7 +399,7 @@ class SkipActivityCollection(PolicyCollection):
         Activities the person may still do
         """
         for policy in self.policies:
-            activities = policy.skip_activity(person, activities, time_step_duration)
+            activities = policy.skip_activity(person, activities)
         return activities
 
 

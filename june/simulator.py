@@ -393,8 +393,7 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = skip_activity_collection(person, activities, 
-                    time_step_duration=self.timer.duration)
+            allowed_activities = skip_activity_collection(person, activities,)
             if stay_home_collection(person, days_from_start):
                 self.move_mild_ill_to_household(person, allowed_activities)
             else:
