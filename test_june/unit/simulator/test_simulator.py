@@ -43,12 +43,11 @@ def create_simulator():
     world = generate_world_from_hdf5("simulator_tests.hdf5")
     world.cinemas = Cinemas.for_areas(world.areas)
     world.pubs = Pubs.for_areas(world.areas)
-    world.groceries = Groceries.for_super_areas(
-        world.super_areas, venues_per_capita=1 / 500
-    )
+    world.groceries = Groceries.for_geography(geography)
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
     )
+    leisure_instance.distribute_social_venues_to_households(world.households)
     selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
