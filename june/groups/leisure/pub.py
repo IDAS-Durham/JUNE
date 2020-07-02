@@ -7,11 +7,9 @@ from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 from june.demography.geography import Geography
-from june.demography.geography import Area, Areas
+from june.demography.geography import Area, Areas, SuperArea, SuperAreas
 
-default_pub_coordinates_filename = (
-    data_path / "input/leisure/pubs.txt"
-)
+default_pub_coordinates_filename = data_path / "input/leisure/pubs_per_super_area.csv"
 default_config_filename = configs_path / "defaults/groups/leisure/pubs.yaml"
 
 
@@ -20,25 +18,34 @@ class Pub(SocialVenue):
     Pubs are fun.
     """
 
-    def __init__(self, max_size=100):
-        self.max_size = max_size
+    def __init__(self):
         super().__init__()
 
 
 class Pubs(SocialVenues):
-    def __init__(self, pubs: List[Pub], make_tree:bool = True):
+    def __init__(self, pubs: List[Pub]):
         super().__init__(pubs)
-        if make_tree:
-            self.make_tree()
+        self.make_tree()
+
+    @classmethod
+    def for_super_areas(
+        cls,
+        super_areas: List[SuperArea],
+        coordinates_filename: str = default_pub_coordinates_filename,
+    ):
+        pubs_per_super_area = pd.read_csv(coordinates_filename)
+        sa_names = [super_area.name for super_area in super_areas]
+        pubs_coordinates = pubs_per_super_area.loc[
+            pubs_per_super_area.super_area.isin(sa_names), ["lat", "lon"]
+        ]
+        return cls.from_coordinates(pubs_coordinates.values)
 
     @classmethod
     def for_areas(
-        cls,
-        areas: Areas,
-        coordinates_filename: str = default_pub_coordinates_filename,
+        cls, areas: Areas, coordinates_filename: str = default_pub_coordinates_filename,
     ):
-        pub_coordinates = np.loadtxt(coordinates_filename)
-        return cls.from_coordinates(pub_coordinates, areas)
+        super_areas = list(np.unique([area.super_area for area in areas]))
+        return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod
     def for_geography(
@@ -46,22 +53,10 @@ class Pubs(SocialVenues):
         geography: Geography,
         coordinates_filename: str = default_pub_coordinates_filename,
     ):
-        return cls.for_areas(geography.areas, coordinates_filename)
+        return cls.for_super_areas(geography.super_areas, coordinates_filename)
 
     @classmethod
-    def from_coordinates(
-        cls,
-        coordinates: List[np.array],
-        areas: Optional[Areas] = None,
-        max_distance_to_area=5,
-        **kwargs
-    ):
-        if areas is not None:
-            _, distances = areas.get_closest_areas(
-                coordinates, k=1, return_distance=True
-            )
-            distances_close = np.where(distances < max_distance_to_area)
-            coordinates = coordinates[distances_close]
+    def from_coordinates(cls, coordinates: List[np.array], **kwargs):
         social_venues = list()
         for coord in coordinates:
             sv = Pub()
@@ -76,8 +71,8 @@ class PubDistributor(SocialVenueDistributor):
         pubs: Pubs,
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
-        neighbours_to_consider=5,
-        maximum_distance=5,
+        neighbours_to_consider=10,
+        maximum_distance=10,
         weekend_boost: float = 2.0,
         drags_household_probability=0.5,
     ):
