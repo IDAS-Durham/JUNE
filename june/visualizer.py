@@ -68,7 +68,7 @@ def render_content(tab):
                                 ),
                             ],
                             style={
-                                "width": "49%",
+                                "width": "80%",
                                 "float": "right",
                                 "display": "inline-block",
                             },
@@ -76,8 +76,8 @@ def render_content(tab):
                     ],
                     style={
                         "borderBottom": "thin lightgrey solid",
-                        "backgroundColor": "rgb(250, 250, 250)",
-                        "padding": "10px 5px",
+                        #"backgroundColor": "rgb(250, 250, 250)",
+                        #"padding": "10px 5px",
                     },
                 ),
                 html.Div(
@@ -155,7 +155,7 @@ def render_content(tab):
                         min=0,
                         max=len(dash_plotter.days) - 1,
                         value=0,
-                        marks={i: str(i) for i, day in enumerate(dash_plotter.days)},
+                        marks={i: str(day) for i, day in enumerate(dash_plotter.days)},
                         step=None,
                     ),
                     style={"width": "100%", "padding": "0px 20px 20px 20px"},
@@ -223,8 +223,8 @@ def render_content(tab):
     dash.dependencies.Output("crossfilter-indicator-map", "figure"),
     [dash.dependencies.Input("crossfilter-time--slider", "value"),],
 )
-def update_map(day_number):
-    return dash_plotter.generate_infection_map_by_county(day_number=day_number)
+def update_map(value):
+    return dash_plotter.generate_infection_map_by_county(day_number=value)
 
 
 @app.callback(
@@ -243,8 +243,9 @@ def update_infection_plot(hoverData, axis_type):
     dash.dependencies.Output("hospital-map", "figure"),
     [dash.dependencies.Input("hospital-time-slider", "value"),],
 )
-def update_hospital_map(day_number):
-    return dash_plotter.generate_hospital_map(day_number=day_number)
+def update_hospital_map(value):
+    return dash_plotter.generate_hospital_map(day_number=value)
+
 
 @app.callback(
     dash.dependencies.Output("deaths_region", "figure"),
