@@ -56,6 +56,7 @@ class DashPlotter:
         self.hospital_data["time_stamp"] = pd.to_datetime(
             self.hospital_data["time_stamp"]
         )
+        self.hospital_data['date'] = self.hospital_data.index.date
         self.hospital_data.set_index("time_stamp", inplace=True)
         self.deaths_region_data = pd.read_csv(deaths_region_data, index_col=0)
         self.deaths_region_data.index = pd.to_datetime(self.deaths_region_data.index)
