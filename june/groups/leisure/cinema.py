@@ -44,7 +44,7 @@ class Cinemas(SocialVenues):
     def for_areas(
         cls, areas: Areas, coordinates_filename: str = default_cinemas_coordinates_filename,
     ):
-        super_areas = list(np.unique([area.super_area for area in areas]))
+        super_areas = [area.super_area for area in areas]
         return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod

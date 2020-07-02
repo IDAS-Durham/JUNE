@@ -8,6 +8,7 @@ from june.groups import Households
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
+from june.groups import Household
 
 default_config_filename = configs_path / "defaults/groups/leisure/household_visits.yaml"
 
@@ -85,18 +86,13 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     relatives_to_visit.append(house.people[person_idx])
                 household.relatives_in_households = tuple(relatives_to_visit)
 
-    def get_possible_venues_for_person(self, person):
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.relatives_in_households is None
-        ):
+    def get_possible_venues_for_household(self, household: Household):
+        if household.relatives_in_households is None:
             return ()
         return tuple(
-            [
                 relative.residence.group
-                for relative in person.residence.group.relatives_in_households
+                for relative in household.relatives_in_households
                 if relative.dead is False
-            ]
         )
 
     def get_social_venue_for_person(self, person):
