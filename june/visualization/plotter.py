@@ -337,4 +337,5 @@ class DashPlotter:
     def days(self):
         dates = np.unique(self.dates)
         days = [date.day for date in dates]
-        return days
+        days_rebase =np.arange(len(days))
+        return days_rebase
