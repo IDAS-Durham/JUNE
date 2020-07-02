@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 from typing import List, Optional
 from june.demography.geography import Areas, SuperAreas
-from june.groups import CareHomes, Households
+from june.groups import CareHomes, Households, Household
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
@@ -78,18 +78,13 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                                 )
                             )
 
-    def get_possible_venues_for_person(self, person):
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.relatives_in_care_homes is None
-        ):
+    def get_possible_venues_for_household(self, household: Household):
+        if household.relatives_in_care_homes is None:
             return ()
         return tuple(
-            [
-                relative.residence.group
-                for relative in person.residence.group.relatives_in_care_homes
-                if relative.dead is False
-            ]
+            relative.residence.group
+            for relative in household.relatives_in_care_homes
+            if relative.dead is False
         )
 
     def get_social_venue_for_person(self, person):
