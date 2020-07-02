@@ -107,12 +107,25 @@ class DashPlotter:
 
     def generate_animated_general_map(self):
         data = self.area_data.reset_index()
-        data["time_stamp"] = data["time_stamp"].dt.day
-        data = data.groupby(["time_stamp", "super_area"]).sum()
+        #data["time_stamp"] = data["time_stamp"].dt.day
+        date = []
+        for idx, row in data.iterrows():
+            date.append(row['time_stamp'].date())
+        data['date'] = date
+        data = data.groupby(["date", "super_area"]).sum()
         data.reset_index(inplace=True)
         data = pd.merge(
             data, self.super_area_coordinates, left_on="super_area", right_on="super_area"
         )
+        dates = np.unique(data['date'])
+        encoding = np.arange(len(dates))
+        encode = {}
+        for idx, i in enumerate(dates):
+            encode[i] = encoding[idx]
+        encoded = []
+        for i in data['date']:
+            encoded.append(encode[i])
+        data['dates_encoded'] = encoded
         fig = px.scatter_mapbox(
             data,
             lat="latitude",
@@ -121,7 +134,7 @@ class DashPlotter:
             color_continuous_scale=px.colors.cyclical.IceFire,
             size_max=15,
             zoom=10,
-            animation_frame="time_stamp",
+            animation_frame="dates_encoded",
             height=800,
             width=2000,
         )
