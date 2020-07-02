@@ -48,6 +48,7 @@ class DashPlotter:
         self.area_super_area_region = pd.read_csv(area_super_area_region_filename)
         self.area_super_area_region.set_index("super_area", inplace=True)
         self.county_data = self.group_data_by_counties(self.area_data.copy())
+        self.county_data['date'] = self.county_data.index.date
         self.hospital_characteristics = (
             self.logger_reader.load_hospital_characteristics()
         )
