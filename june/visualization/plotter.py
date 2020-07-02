@@ -83,8 +83,8 @@ class DashPlotter:
         return data
 
     def generate_infection_map_by_county(self, day_number):
-        date = self.county_data.index[0] + timedelta(days=day_number)
-        data = self.county_data.loc[date]
+        date = self.county_data['date'][0] + timedelta(days=day_number)
+        data = self.county_data[self.county_data['date'] == date]
         fig = px.choropleth(
             data,
             geojson=self.county_shapes,
