@@ -49,7 +49,7 @@ class Cinemas(SocialVenues):
         cls,
         geography,
         coordinates_filename: str = default_cinemas_coordinates_filename,
-        max_distance_to_area=5,
+        max_distance_to_area=15,
     ):
         return cls.for_areas(
             geography.areas,
@@ -63,7 +63,7 @@ class Cinemas(SocialVenues):
         coordinates: List[np.array],
         seats: List[int],
         areas: Optional[Areas] = None,
-        max_distance_to_area=5,
+        max_distance_to_area=15,
         **kwargs
     ):
         if areas is not None:
@@ -87,7 +87,7 @@ class CinemaDistributor(SocialVenueDistributor):
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
         neighbours_to_consider=5,
-        maximum_distance=5,
+        maximum_distance=15,
         weekend_boost: float = 2.0,
         drags_household_probability=0.5,
     ):
