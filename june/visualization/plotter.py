@@ -110,12 +110,12 @@ class DashPlotter:
         data = data.groupby(["time_stamp", "super_area"]).sum()
         data.reset_index(inplace=True)
         data = pd.merge(
-            data, self.super_area_coordinates, left_on="super_area", right_on="msoa"
+            data, self.super_area_coordinates, left_on="super_area", right_on="super_area"
         )
         fig = px.scatter_mapbox(
             data,
-            lat="Y",
-            lon="X",
+            lat="latitude",
+            lon="longitude",
             size="infected",
             color_continuous_scale=px.colors.cyclical.IceFire,
             size_max=15,
