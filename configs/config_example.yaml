@@ -7,7 +7,7 @@ activity_to_groups:
   commute: ['commuteunits', 'commutecityunits']
 
 time:
-  total_days: 45 
+  total_days: 200
   step_duration: 
       weekday:
           0: 1 

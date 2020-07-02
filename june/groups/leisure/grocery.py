@@ -9,7 +9,9 @@ from june.paths import data_path, configs_path
 from june.demography.geography import SuperArea, Areas, Geography
 
 default_config_filename = configs_path / "defaults/groups/leisure/groceries.yaml"
-default_groceries_coordinates_filename = data_path / "input/leisure/groceries_per_super_area.csv"
+default_groceries_coordinates_filename = (
+    data_path / "input/leisure/groceries_per_super_area.csv"
+)
 
 
 class Grocery(SocialVenue):
@@ -18,9 +20,10 @@ class Grocery(SocialVenue):
 
 
 class Groceries(SocialVenues):
-    def __init__(self, groceries: List[Grocery]):
+    def __init__(self, groceries: List[Grocery], make_tree=True):
         super().__init__(groceries)
-        self.make_tree()
+        if make_tree:
+            self.make_tree()
 
     @classmethod
     def for_super_areas(
@@ -37,9 +40,11 @@ class Groceries(SocialVenues):
 
     @classmethod
     def for_areas(
-        cls, areas: Areas, coordinates_filename: str = default_groceries_coordinates_filename,
+        cls,
+        areas: Areas,
+        coordinates_filename: str = default_groceries_coordinates_filename,
     ):
-        super_areas = list(np.unique([area.super_area for area in areas]))
+        super_areas = [area.super_area for area in areas]
         return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod
@@ -69,7 +74,7 @@ class GroceryDistributor(SocialVenueDistributor):
         neighbours_to_consider=10,
         maximum_distance=10,
         weekend_boost: float = 2.0,
-        drags_household_probability = 0.5
+        drags_household_probability=0.5,
     ):
         super().__init__(
             social_venues=groceries,
@@ -86,4 +91,3 @@ class GroceryDistributor(SocialVenueDistributor):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(groceries, **config)
-

@@ -55,7 +55,7 @@ def test__probability_of_leisure(leisure):
     person = Person.from_attributes(sex="m", age=26)
     household = Household(type="student")
     household.add(person)
-    person.social_venues = {
+    person.residence.group.social_venues = {
         "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
         "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
     }
@@ -103,27 +103,23 @@ def test__person_drags_household(leisure):
 
 
 def test__generate_leisure_from_world():
-    geography = Geography.from_file({"super_area": ["E02003282"]})
+    geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(
-        geography, include_households=False, include_commute=False
+        geography, include_households=True, include_commute=False
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(
-        geography.super_areas, venues_per_capita=1 / 500
-    )
+    world.groceries = Groceries.for_geography(geography)
     person = Person.from_attributes(sex="m", age=27)
     household = Household()
+    household.area = world.areas[0]
     household.add(person)
     person.area = geography.areas[0]
-    assert np.isclose(
-        len(world.groceries), len(world.people) * 1 / 500, atol=0, rtol=0.1
-    )
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
+    leisure.distribute_social_venues_to_households([household])
     leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
-    leisure.distribute_social_venues_to_people([person])
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0
