@@ -98,6 +98,7 @@ class Areas:
 
     def get_closest_areas(self, coordinates, k=1, return_distance=False):
         coordinates = np.array(coordinates)
+        print(coordinates)
         if self.ball_tree is None:
             raise GeographyError("Areas initialized without a BallTree")
         if coordinates.shape == (2,):
@@ -106,8 +107,12 @@ class Areas:
             distances, indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            areas = [self[idx] for idx in indcs[:, 0]]
-            return areas, distances[:, 0] * earth_radius
+            if coordinates.shape == (1,2):
+                areas = [self[idx] for idx in indcs[0]]
+                return areas, distances[0] * earth_radius
+            else:
+                areas = [self[idx] for idx in indcs[:,0]]
+                return areas, distances[:,0] * earth_radius
         else:
             indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
