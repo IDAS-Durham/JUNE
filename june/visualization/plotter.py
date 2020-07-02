@@ -168,7 +168,7 @@ class DashPlotter:
                 x=data.index.values, y=data["recovered"].values, name="recovered"
             )
         )
-        fig.update_layout(template="simple_white", title="Infection curves by county")
+        fig.update_layout(template="simple_white", title="Infection by county")
         if axis_type == "Log":
             fig.update_layout(yaxis_type="log")
         return fig
@@ -200,13 +200,13 @@ class DashPlotter:
                 x=data.index.values, y=data["recovered"].values, name="recovered"
             )
         )
-        fig.update_layout(template="simple_white", title="world infection curves")
+        fig.update_layout(template="simple_white", title="World infection curves")
         if axis_type == "Log":
             fig.update_layout(yaxis_type="log")
         return fig
 
     def generate_hospital_map(self, day_number):
-        date = self.hospital_data['date']+ timedelta(days=day_number)
+        date = self.hospital_data['date'][0] + timedelta(days=day_number)
         hospital_data = self.hospital_data[self.hospital_data['date'] == date]
         lon = self.hospital_characteristics["longitude"].values
         lat = self.hospital_characteristics["latitude"].values
@@ -250,7 +250,7 @@ class DashPlotter:
             fig.add_trace(
                 go.Scatter(x=toplot["time_stamp"], y=toplot["infected"], name=age_range)
             )
-        fig.update_layout(template="simple_white")
+        fig.update_layout(template="simple_white", title="World infections by age")
         return fig
 
     def generate_r0(self):
