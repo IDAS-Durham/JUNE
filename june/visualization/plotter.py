@@ -217,7 +217,7 @@ class DashPlotter:
             self.hospital_characteristics["n_beds"].values,
             self.hospital_characteristics["n_icu_beds"].values,
         ):
-            text = f"Occupied {n_patients} beds of {n_beds}. \nOccupied {n_patients_icu} ICU beds of {n_icu_beds}"
+            text = "Occupied {} beds of {}. Occupied {} ICU beds of {}".format(n_patients, n_beds, n_patients_icu, n_icu_beds)
             text_list.append(text)
         fig = go.Figure(
             go.Scattermapbox(
