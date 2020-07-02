@@ -141,7 +141,7 @@ def render_content(tab):
         return html.Div(
             [
                 html.Div(
-                    dcc.Graph(figure=dash_plotter.generate_hospital_map(0)),
+                    dcc.Graph(figure=dash_plotter.generate_hospital_map(day_number = 0)),
                     id="hospital-map",
                     style={
                         "display": "inline-block",
