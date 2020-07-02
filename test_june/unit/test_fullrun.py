@@ -41,12 +41,11 @@ def test_full_run():
     )
     world.cinemas = Cinemas.for_geography(geography)
     world.pubs = Pubs.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(
-        geography.super_areas, venues_per_capita=1 / 500
-    )
+    world.groceries = Groceries.for_geography(geography)
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename = test_config 
     )
+    leisure_instance.distribute_social_venues_to_households(world.households)
     selector = InfectionSelector.from_file(config_filename=selector_config)
     interaction = inter.ContactAveraging.from_file(selector=selector)
     policies = Policies.from_file()

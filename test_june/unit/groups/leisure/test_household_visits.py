@@ -53,7 +53,7 @@ def test__household_home_visits_leisure_integration(leisure):
     household2 = Household(type="student")
     household1.add(person1)
     household2.add(person2, subgroup_type=household1.SubgroupType.young_adults)
-    person1.social_venues = {"household_visits" : [household2]}
+    person1.residence.group.social_venues = {"household_visits" : [household2]}
     person1.busy = False
     person2.busy = False
     person1.residence.group.relatives_in_households = (person2,)
@@ -73,8 +73,8 @@ def test__do_not_visit_dead_people(leisure):
     person = Person.from_attributes()
     person2 = Person.from_attributes()
     household = Household(type="family")
-    person.social_venues = {"household_visits" : [household]}
     household.add(person)
+    person.residence.group.social_venues = {"household_visits" : [household]}
     household.relatives_in_care_homes = [person2]
     person2.dead = True
     leisure.update_household_and_care_home_visits_targets([person])

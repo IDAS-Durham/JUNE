@@ -32,6 +32,7 @@ class Household(Group):
         "relatives_in_care_homes",
         "relatives_in_households",
         "quarantine_starting_date",
+        "social_venues",
     )
 
     class SubgroupType(IntEnum):
@@ -54,6 +55,7 @@ class Household(Group):
         self.max_size = max_size
         self.n_residents = 0
         self.residents = tuple()
+        self.social_venues = {}
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":

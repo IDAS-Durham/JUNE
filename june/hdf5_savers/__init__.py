@@ -12,3 +12,4 @@ from .commute_saver import (
     load_commute_hubs_from_hdf5,
 )
 from .university_saver import save_universities_to_hdf5, load_universities_from_hdf5
+from .leisure_saver import save_cinemas_to_hdf5, save_groceries_to_hdf5, save_pubs_to_hdf5, load_cinemas_from_hdf5, load_groceries_from_hdf5, load_pubs_from_hdf5

@@ -23,9 +23,10 @@ class Pub(SocialVenue):
 
 
 class Pubs(SocialVenues):
-    def __init__(self, pubs: List[Pub]):
+    def __init__(self, pubs: List[Pub], make_tree=True):
         super().__init__(pubs)
-        self.make_tree()
+        if make_tree:
+            self.make_tree()
 
     @classmethod
     def for_super_areas(
@@ -44,7 +45,7 @@ class Pubs(SocialVenues):
     def for_areas(
         cls, areas: Areas, coordinates_filename: str = default_pub_coordinates_filename,
     ):
-        super_areas = list(np.unique([area.super_area for area in areas]))
+        super_areas = [area.super_area for area in areas]
         return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod

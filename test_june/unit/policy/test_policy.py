@@ -77,6 +77,7 @@ def make_dummy_world(super_area):
         sector="primary",
     )
     household = Household()
+    household.area = super_area.areas[0]
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
@@ -92,6 +93,7 @@ def make_dummy_world(super_area):
     pupil = Person.from_attributes(age=6)
     pupil.area = super_area
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
+    household.area = super_area
     school.add(pupil)
 
     world = World()
@@ -120,6 +122,7 @@ def make_dummy_world_with_university(super_area):
         sector="primary",
     )
     household = Household()
+    household.area = super_area
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
@@ -174,6 +177,7 @@ class TestDefaultPolicy:
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
+        leisure_instance.distribute_social_venues_to_households(world.households)
         sim = Simulator.from_file(
             world,
             interaction,
@@ -268,6 +272,7 @@ class TestClosure:
     def test__close_schools(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         household = Household()
+        household.area = super_area.areas[0]
         household.add(pupil, subgroup_type=household.SubgroupType.kids)
         household.add(worker, subgroup_type=household.SubgroupType.adults)
         school_closure = CloseSchools(
@@ -676,6 +681,7 @@ class TestCloseLeisure:
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
+        leisure_instance.distribute_social_venues_to_households(world.households)
         sim = Simulator.from_file(
             world,
             interaction,
@@ -732,6 +738,7 @@ def test__social_distancing(super_area, selector, interaction):
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
     )
+    leisure_instance.distribute_social_venues_to_households(world.households)
     sim = Simulator.from_file(
         world,
         interaction,
@@ -792,12 +799,14 @@ class TestReduceLeisureProbabilities:
         ].female_probabilities
         assert str(sim.timer.date.date()) == "2020-03-01"
         household = Household()
+        household.area = super_area.areas[0]
+        leisure_instance.distribute_social_venues_to_households([household])
         person1 = Person.from_attributes(age=60, sex="m")
         person1.area = super_area.areas[0]
         household.add(person1)
         person2 = Person.from_attributes(age=80, sex="f")
         person2.area = super_area.areas[0]
-        sim.leisure.distribute_social_venues_to_people([person1, person2])
+        sim.leisure.distribute_social_venues_to_households([household])
         household.add(person2)
         pubs1_visits_before = 0
         pubs2_visits_before = 0
