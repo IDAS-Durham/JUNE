@@ -6,6 +6,8 @@ from itertools import chain
 import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
+from june.groups import Household
+
 
 @jit(nopython=True)
 def random_choice_numba(arr, prob):
@@ -43,9 +45,10 @@ def parse_age_probabilites(age_dict):
     probabilities_binned.append(0.0)
     probabilities_per_age = []
     for age in range(100):
-        idx = np.searchsorted(bins, age+1) # we do +1 to include the lower boundary
+        idx = np.searchsorted(bins, age + 1)  # we do +1 to include the lower boundary
         probabilities_per_age.append(probabilities_binned[idx])
     return probabilities_per_age
+
 
 class SocialVenueDistributor:
     """
@@ -132,26 +135,25 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        poisson_parameter = self.get_poisson_parameter(person.sex, person.age, is_weekend)
+        poisson_parameter = self.get_poisson_parameter(
+            person.sex, person.age, is_weekend
+        )
         return 1 - np.exp(-poisson_parameter * delta_time)
 
-    def get_possible_venues_for_person(self, person):
-        person_location = person.area.coordinates
+    def get_possible_venues_for_household(self, household: Household):
+        house_location = household.area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
-            person_location, self.maximum_distance
+            house_location, self.maximum_distance
         )
         if potential_venues is None:
-            venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
-            return (venue, )
+            venue = self.social_venues.get_closest_venues(house_location, k=1)[0]
+            return (venue,)
 
         potential_venues = np.random.choice(
-            potential_venues[
-                : min(len(potential_venues), self.neighbours_to_consider)
-            ],
+            potential_venues[: min(len(potential_venues), self.neighbours_to_consider)],
             size=self.neighbours_to_consider,
         )
-        return tuple(potential_venues, )
-
+        return tuple(potential_venues,)
 
     def get_social_venue_for_person(self, person):
         """
