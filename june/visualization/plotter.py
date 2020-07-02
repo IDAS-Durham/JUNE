@@ -107,7 +107,6 @@ class DashPlotter:
 
     def generate_animated_general_map(self):
         data = self.area_data.reset_index()
-        #data["time_stamp"] = data["time_stamp"].dt.day
         date = []
         for idx, row in data.iterrows():
             date.append(row['time_stamp'].date())
