@@ -82,18 +82,6 @@ def create_world(geography_h5):
         ["pubs", "cinemas", "groceries", "household_visits", "care_home_vists"], world
     )
     leisure.distribute_social_venues_to_households(world.households)
-
-    # geography.hospitals = Hospitals.for_geography(geography)
-    # world = generate_world_from_geography(
-    #    geography=geography, include_households=True, include_commute=False
-    # )
-    # world.pubs = Pubs.for_geography(geography)
-    # world.cinemas = Cinemas.for_geography(geography)
-    # world.groceries = Groceries.for_geography(geography)
-    # leisure = generate_leisure_for_world(
-    #    ["pubs", "cinemas", "groceries", "household_visits", "care_home_vists"], world
-    # )
-    # leisure.distribute_social_venues_to_households(world.households)
     return world
 
 
