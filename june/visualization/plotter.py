@@ -310,6 +310,41 @@ class DashPlotter:
         )
         return fig
 
+    def generate_hospital_map_callback(self, day_number):
+        date = self.hospital_data['date'][0] + timedelta(days=day_number)
+        hospital_data = self.hospital_data[self.hospital_data['date'] == date]
+        lon = self.hospital_characteristics["longitude"].values
+        lat = self.hospital_characteristics["latitude"].values
+        text_list = []
+        for n_patients, n_patients_icu, n_beds, n_icu_beds in zip(
+            hospital_data["n_patients"].values,
+            hospital_data["n_patients_icu"].values,
+            self.hospital_characteristics["n_beds"].values,
+            self.hospital_characteristics["n_icu_beds"].values,
+        ):
+            text = "Occupied {} beds of {}. Occupied {} ICU beds of {}".format(n_patients, n_beds, n_patients_icu, n_icu_beds)
+            text_list.append(text)
+        fig = go.Figure(
+            go.Scattermapbox(
+                mode="markers",
+                lon=lon,
+                lat=lat,
+                marker={"size": 20, "symbol": ["marker"] * len(lat),},
+                text=text_list,
+                textposition="bottom right",
+            )
+        )
+        fig.update_layout(
+            margin={"r": 0, "t": 0, "l": 0, "b": 0},
+            mapbox={
+                "accesstoken": mapbox_access_token,
+                "style": "light",
+                "zoom": 10,
+                "center": {"lat": np.mean(lat), "lon": np.mean(lon)},
+            },
+        )
+        return fig
+
     def generate_infections_by_age(self):
         data = self.ages_data.reset_index().set_index("age_range")
         fig = go.Figure()
