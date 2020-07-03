@@ -171,7 +171,7 @@ class DashPlotter:
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
 
-    def generate_infection_curves_callback(self, selectedData, chart_type):
+    def generate_infection_curves_callback(self, selectedData, chart_type, axis_type):
 
         area_data = self.area_data.reset_index()
         area_data = pd.merge(area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
@@ -203,7 +203,6 @@ class DashPlotter:
             fig.add_trace(
                 go.Scatter(x=area_data_grouped['date'], y=area_data_grouped['recovered'], name="recovered")
             )
-            axis_type="Log"
             if axis_type == "Log":
                 fig.update_layout(yaxis_type="log")
             return fig
