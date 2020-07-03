@@ -345,6 +345,47 @@ class DashPlotter:
         )
         return fig
 
+    def generate_hospital_curves_callback(self, selectedData, chart_type, axis_type):
+
+        hospital_data = self.hospital_data
+        hospital_characteristics = self.hospital_characteristics.reset_index()
+        #hospital_data = pd.merge(hospital_data, hospital_characteristics, left_on="id", right_on="index")
+
+        if selectedData is None:
+            selected_hospitals = np.unique(hospital_data['id'])
+        else:
+            hospitals = []
+            for point in selectedData['points']:
+                super_areas.append(list(hospital_data['index'][hospital_data['latitude'] == point['lat']])[0])
+            selected_hospitals = np.unique(hospitals)
+        
+        hospital_data = hospital_data[hospital_data['id'].isin(selected_hospitals)]
+        hospital_data_grouped = hospital_data.groupby(['date']).sum().reset_index()
+
+        if chart_type == 'show_hospitalisation_curves':
+
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients'], name="patients")
+            )
+            fig.add_trace(
+                go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients_icu'], name="ICU admittance")
+            )
+            # fig.add_trace(
+            #     go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_beds'], name="total bed capacity")
+            # )
+            # fig.add_trace(
+            #     go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_beds'], name="ICU bed capacity")
+            # )
+            fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
+                  font = {"color": "#2cfec1"},\
+                  title = {"font": {"color": "#2cfec1"}},\
+                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
+                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
+            if axis_type == "Log":
+                fig.update_layout(yaxis_type="log")
+            return fig
+
     def generate_infections_by_age(self):
         data = self.ages_data.reset_index().set_index("age_range")
         fig = go.Figure()
