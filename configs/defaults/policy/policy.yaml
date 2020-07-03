@@ -49,6 +49,12 @@ change_leisure_probability:
             women: 
               0-64: 0.50
               65-100: 0.25
+        leisure_activities_probabilities:
+          care_home_visits:
+            men:
+              0-100: 0.05
+            women:
+              0-100: 0.05
 
 close_schools:
         start_time: 2020-03-20
