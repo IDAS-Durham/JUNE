@@ -332,7 +332,11 @@ class DashPlotter:
         fig.add_trace(
             go.Scatter(x=[r_df.index[0], r_df.index[-1]], y=[1, 1], name="unity")
         )
-        fig.update_layout(template="simple_white", title="R0")
+        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
+                  font = {"color": "#2cfec1"},\
+                  title = {"font": {"color": "#2cfec1"}},\
+                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
+                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
         return fig
 
     def generate_place_of_infection(self):
