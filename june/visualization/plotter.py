@@ -164,9 +164,6 @@ class DashPlotter:
             color_continuous_scale=px.colors.cyclical.IceFire,
             size_max=15,
             zoom=5,
-            #animation_frame="dates_encoded",
-            #height=800,
-            #width=2000,
         )
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
