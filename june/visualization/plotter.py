@@ -141,6 +141,36 @@ class DashPlotter:
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
 
+    def generate_animated_map_callback(self, day_number):
+        data = self.area_data.reset_index()
+        date = []
+        for idx, row in data.iterrows():
+            date.append(row['time_stamp'].date())
+        data['date'] = date
+        data = data.groupby(["date", "super_area"]).sum()
+        data.reset_index(inplace=True)
+        data = pd.merge(
+            data, self.super_area_coordinates, left_on="super_area", right_on="super_area"
+        )
+        max_infected = np.max(data["infected"])
+        data["infected_scaled"] = np.array(data["infected"])/max_infected
+        test_date = data['date'][0] + timedelta(days=day_number)
+        data_day = data[data['date'] == test_date]
+        fig = px.scatter_mapbox(
+            data_day,
+            lat="latitude",
+            lon="longitude",
+            size="infected",
+            color_continuous_scale=px.colors.cyclical.IceFire,
+            size_max=15,
+            zoom=5,
+            #animation_frame="dates_encoded",
+            #height=800,
+            #width=2000,
+        )
+        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+        return fig
+
     def generate_county_infection_curves(self, county, axis_type="Linear"):
         data = self.county_data[self.county_data["LAD17NM"] == county]
         data = data.groupby(by=data.index.date).first()
