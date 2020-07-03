@@ -344,7 +344,11 @@ class DashPlotter:
         places = places["percentage_infections"].sort_values()
         fig = go.Figure()
         fig.add_trace(go.Bar(x=places.index, y=places.values))
-        fig.update_layout(template="simple_white", title="Places of infection")
+        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
+                  font = {"color": "#2cfec1"},\
+                  title = {"font": {"color": "#2cfec1"}},\
+                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
+                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
         return fig
 
     def generate_symptom_trajectories(self):
