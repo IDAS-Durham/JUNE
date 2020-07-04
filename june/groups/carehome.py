@@ -81,7 +81,7 @@ class CareHome(Group):
     def visitors(self):
         return self.subgroups[self.SubgroupType.visitors]
     
-    def quarantine(self, time, quarantine_days):
+    def quarantine(self, time, quarantine_days, household_complacency):
         return True
 
 
