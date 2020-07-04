@@ -60,6 +60,8 @@ world.communals = Communals.for_areas(world.areas)
 world.female_communals = FemaleCommunals.for_areas(world.areas)
 world.religiouss = Religiouss.for_areas(world.areas)
 
+print('Total people = ', len(world.people))
+print('Mean age = ', np.mean([person.age for person in world.people]))
 #world.box_mode = False
 world.cemeteries = Cemeteries()
 
@@ -74,14 +76,30 @@ interaction = ContactAveraging.from_file(config_filename='../configs_camps/defau
                                          selector=selector)
 
 social_distance = Policy(policy="social_distance",
-                         start_time=datetime(2021, 3, 25), 
-                         end_time=datetime(2021, 4, 1))
+                         start_time=datetime(2031, 3, 25), 
+                         end_time=datetime(2031, 4, 1))
 policies = Policies.from_file([social_distance])
 
-seed = Seed(world.super_areas,
-           selector)
+cases_detected =  {
+        'CXB-202': 3, 
+        'CXB-204': 6, 
+        'CXB-208': 8, 
+        'CXB-203': 1,
+        'CXB-207':2, 
+        'CXB-213': 2,
+        } # By the 24th May
+print('Detected cases = ', sum(cases_detected.values()))
+seed = Seed.from_file(world.super_areas,
+           selector,
+           msoa_region_filename = camp_data_path / 'input/geography/area_super_area_region.csv'
+           )
 
-seed.unleash_virus(n_cases=5)
+for key, n_cases in cases_detected.items():
+    seed.unleash_virus_regional_cases(key, n_cases*10)
+# Add some extra random cases
+seed.unleash_virus(n_cases=100)
+
+print('Infected people in seed = ' , len(world.people.infected))
 
 CONFIG_PATH = "../configs_camps/config_example.yaml"
 
