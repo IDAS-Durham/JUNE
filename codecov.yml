@@ -19,3 +19,8 @@ comment:
   layout: "reach,diff,flags,tree"
   behavior: default
   require_changes: no
+
+ignore:
+  - "june/visualization/plotter.py"
+  - "june/visualizer.py"
+  - "june/interaction/contact_sampling.py"

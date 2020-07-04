@@ -47,6 +47,7 @@ def save_population_to_hdf5(
             home_city = []
             mode_of_transport_description = []
             mode_of_transport_is_public = []
+            lockdown_status = []
 
             for person in population.people[idx1:idx2]:
                 ids.append(person.id)
@@ -76,6 +77,12 @@ def save_population_to_hdf5(
                     sub_sectors.append(" ".encode("ascii", "ignore"))
                 else:
                     sub_sectors.append(person.sub_sector.encode("ascii", "ignore"))
+                if person.lockdown_status is None:
+                    lockdown_status.append(" ".encode("ascii", "ignore"))
+                else:
+                    lockdown_status.append(
+                        person.lockdown_status.encode("ascii", "ignore")
+                    )
                 gids = []
                 stypes = []
                 specs = []
@@ -120,6 +127,7 @@ def save_population_to_hdf5(
             mode_of_transport_is_public = np.array(
                 mode_of_transport_is_public, dtype=np.bool
             )
+            lockdown_status = np.array(lockdown_status, dtype="S20")
 
             if chunk == 0:
                 people_dset.attrs["n_people"] = n_people
@@ -127,7 +135,9 @@ def save_population_to_hdf5(
                 people_dset.create_dataset("age", data=ages, maxshape=(None,))
                 people_dset.create_dataset("sex", data=sexes, maxshape=(None,))
                 people_dset.create_dataset("sector", data=sectors, maxshape=(None,))
-                people_dset.create_dataset("sub_sector", data=sub_sectors, maxshape=(None,))
+                people_dset.create_dataset(
+                    "sub_sector", data=sub_sectors, maxshape=(None,)
+                )
                 people_dset.create_dataset(
                     "socioecon_index", data=socioecon_indices, maxshape=(None,)
                 )
@@ -158,6 +168,9 @@ def save_population_to_hdf5(
                     "mode_of_transport_is_public",
                     data=mode_of_transport_is_public,
                     maxshape=(None,),
+                )
+                people_dset.create_dataset(
+                    "lockdown_status", data=lockdown_status, maxshape=(None,)
                 )
             else:
                 newshape = (people_dset["id"].shape[0] + ids.shape[0],)
@@ -193,6 +206,10 @@ def save_population_to_hdf5(
                 people_dset["mode_of_transport_is_public"][
                     idx1:idx2
                 ] = mode_of_transport_is_public
+                people_dset["lockdown_status"].resize(newshape)
+                people_dset["lockdown_status"][
+                    idx1:idx2
+                ] = lockdown_status
 
 
 def load_population_from_hdf5(file_path: str, chunk_size=100000):
@@ -202,6 +219,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    print("loading population from hdf5 ", end="")
     with h5py.File(file_path, "r") as f:
         people = list()
         population = f["population"]
@@ -209,7 +227,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            print(f"Loaded chunk {chunk} of {n_chunks}")
+            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             ids = population["id"][idx1:idx2]
@@ -223,6 +241,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             subgroup_types = population["subgroup_types"][idx1:idx2]
             sectors = population["sector"][idx1:idx2]
             sub_sectors = population["sub_sector"][idx1:idx2]
+            lockdown_status = population["lockdown_status"][idx1:idx2]
             mode_of_transport_is_public_list = population[
                 "mode_of_transport_is_public"
             ][idx1:idx2]
@@ -282,5 +301,10 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     person.sub_sector = None
                 else:
                     person.sub_sector = sub_sectors[k].decode()
+                if lockdown_status[k].decode() == " ":
+                    person.lockdown_status = None
+                else:
+                    person.lockdown_status = lockdown_status[k].decode()
                 people.append(person)
+    print("\n", end="")
     return Population(people)
