@@ -104,10 +104,10 @@ class Household(Group):
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
 
-    def quarantine(self, time, quarantine_days, complacency):
+    def quarantine(self, time, quarantine_days, household_complacency):
         if self.type == "communal":
             return False
-        if self.quarantine_starting_date and self.household_complacency < complacency:
+        if self.quarantine_starting_date and self.household_complacency < household_complacency:
             if (
                 self.quarantine_starting_date
                 < time
