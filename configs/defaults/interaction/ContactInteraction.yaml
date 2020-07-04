@@ -2,17 +2,17 @@ alpha_physical: 2.
 
 beta:
  box: 1
- pub: 1 
- grocery: 1
- cinema: 1
+ pub: 0.1 
+ grocery: 0.1
+ cinema: 0.1
  commute_unit: 1.0 
  commute_city_unit: 1.0 
  hospital: 1.0 
  care_home: 1.0
- company: 1.0
- school: 1.0
- household: 1.0 
- university: 1.00
+ company: 0.1 
+ school: 0.1 
+ household: 0.2 
+ university: 0.01 
 
 contact_matrices:
   # number 10 comes from the fact that on average there are 10 medics per patient
@@ -24,7 +24,7 @@ contact_matrices:
   
   care_home:
     # note, visitors contacts are multiplied by ~4 because they only stay 1/4th of the characteristic time.
-    contacts: [[15.00, 30., 0.], [3., 2, 48.], [1.5, 6, 0]]
+    contacts: [[15.00, 30.0, 24.0], [3., 2, 48.], [1.5, 6, 0]]
     proportion_physical: [[0.05, 1., 0.], [1.0, 0.4, 1.],[0., 0.5, 0.]]
     characteristic_time: 24 
   

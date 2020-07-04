@@ -1,0 +1,118 @@
+company_closure:
+  sectors:
+    A:
+    # Agriculture, forestry and fishing
+      key_worker: 1.
+      furlough: 0.
+      random: 0.
+    B:
+    # Mining and quarrying
+      key_worker: 1.
+      furlough: 0.
+      random: 0.
+    C:
+    # Manufacturing
+    # Key workers defiend as those in food, beverage, petroleum and pharmaceutical products
+      key_worker: 0.177
+      furlough: 0.
+      random: 0.823
+    D:
+    # Electricity, gas, steam and air conditioning supply
+      key_worker: 1.
+      furlough: 0.
+      random: 0.
+    E:
+    # Water supply, sewerage, waste management and remediation activities
+      key_worker: 1.
+      furlough: 0.
+      random: 0.
+    F:
+    # Construction
+      key_worker: 0.
+      furlough: 0.
+      random: 1.
+    G:
+    # Wholesale and retrail trade, repair of motor vehicles and motorcycles
+      key_worker: 0.223
+      furlough: 0.0680
+      random: 0.709
+    H:
+    # Transport and storage
+    # Assume all not furloughed are key
+      key_worker: 0.758
+      furlough: 0.242
+      random: 0.
+    I:
+    # Accommodation and food service activities
+      key_worker: 0.
+      furlough: 1.
+      random: 0.
+    J:
+    # Information and communication
+    # Key workers assumed to be those working in TV and newspapers
+      key_worker: 0.267
+      furlough: 0.
+      random: 0.733
+    K:
+    # Financial and insurance activities
+    # Assume can work from home
+      key_worker: 0.
+      furlough: 0.
+      random: 1.
+    L:
+    # Real estate activities
+    # Assume can work from home
+      key_worker: 0.
+      furlough: 0.
+      random: 1.
+    M:
+    # Professional, scientific and technical activities
+    # Assume legal and lab workers go into work
+      key_worker: 0.0909
+      furlough: 0.
+      random: 0.9091
+    N:
+    # Assume all can work from home
+      key_worker: 0.
+      furlough: 0.0919
+      random: 0.9081
+    O:
+    # Public administration and defence, compulsory social security
+      key_worker: 1.
+      furlough: 0.
+      random: 0.
+    P:
+    # Education
+    # Key workers assigned by distributor separately
+      key_worker: 0.
+      furlough: 0.0833
+      random: 0.9167
+    Q:
+    # Human health and social work
+    # Key workers assigned by distributor separately
+      key_worker: 0.
+      furlough: 0.0769
+      random: 0.9231
+    R:
+    # Arts, enterntainment and recreation
+      key_worker: 0.
+      furlough: 0.912
+      random: 0.088
+    S:
+    # Other service activities
+    # Key workers are funeral workers
+      key_worker: 0.0526
+      furlough: 0.211
+      random: 0.7364
+    T:
+    # Activities of households as employers, undifferentiated good-and services-producing activities of households for own use
+    # Assume can work from home
+      key_worker: 0.
+      furlough: 0.25
+      random: 0.75
+    U:
+    # Activities of extraterritorial organisations and bodies
+    # Assume can work from home
+      key_worker: 0.
+      furlough: 0.
+      random: 1.
