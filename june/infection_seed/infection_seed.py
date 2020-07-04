@@ -205,6 +205,17 @@ class InfectionSeed:
                 self.super_areas.members, int(self.seed_strength * n_cases)
             )
 
+    def unleash_virus_regional_cases(self, region, n_cases):
+        """
+        Seed the infection with n_cases random people being infected in region ```region```,
+        proportionally place more cases in the more populated super areas.
+        """
+        super_areas = self._filter_region(region=region)
+        if len(super_areas) > 0:
+            self.infect_super_areas(
+                super_areas, int(self.seed_strength * n_cases)
+            )
+
     def filter_trajectories(self, trajectories, symptoms_to_keep=('dead_hospital', 'dead_icu')):
         filtered_trajectories=[]
         for trajectory in trajectories:
