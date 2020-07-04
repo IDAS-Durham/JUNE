@@ -8,6 +8,7 @@ activity_to_groups:
 
 time:
   total_days: 200
+  initial_day: "2020-03-01" 
   step_duration: 
       weekday:
           0: 1 
