@@ -158,7 +158,7 @@ class TestSaveHouses:
         save_households_to_hdf5(households, "test.hdf5")
         households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
-            for attribute_name in ["id", "max_size", "type"]:
+            for attribute_name in ["id", "max_size", "type", "household_complacency"]:
                 if attribute_name == "type":
                     attribute2 = getattr(household2, attribute_name)
                 else:
