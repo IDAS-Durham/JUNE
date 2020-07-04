@@ -238,7 +238,7 @@ class Quarantine(StayHome):
         except:
             pass
         housemates_quarantine = person.residence.group.quarantine(
-            days_from_start, self.n_days_household, complacency = self.household_complacency
+            days_from_start, self.n_days_household, household_complacency = self.household_complacency
         )
         return self_quarantine or housemates_quarantine
 
