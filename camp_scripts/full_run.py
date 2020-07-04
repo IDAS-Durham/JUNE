@@ -85,16 +85,21 @@ cases_detected =  {
         'CXB-207':2, 
         'CXB-213': 2,
         } # By the 24th May
+
 print('Detected cases = ', sum(cases_detected.values()))
-seed = Seed.from_file(world.super_areas,
-           selector,
-           msoa_region_filename = camp_data_path / 'input/geography/area_super_area_region.csv'
-           )
+
+msoa_region_filename = camp_data_path / 'input/geography/area_super_area_region.csv'
+msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
+infection_seed = InfectionSeed(
+        super_areas=world.super_areas,
+        selector=selector,
+        msoa_region = msoa_region
+        )
 
 for key, n_cases in cases_detected.items():
-    seed.unleash_virus_regional_cases(key, n_cases*10)
+    infection_seed.unleash_virus_regional_cases(key, n_cases*10)
 # Add some extra random cases
-seed.unleash_virus(n_cases=100)
+infection_seed.unleash_virus(n_cases=100)
 
 print('Infected people in seed = ' , len(world.people.infected))
 
@@ -103,19 +108,17 @@ CONFIG_PATH = "../configs_camps/config_example.yaml"
 leisure_instance = generate_leisure_for_config(
             world=world, config_filename=CONFIG_PATH
 )
-leisure_instance.leisure_distributors = [
-    PumpLatrineDistributor.from_config(pump_latrines=world.pump_latrines),
-    DistributionCenterDistributor.from_config(distribution_centers=world.distribution_centers),
-    CommunalDistributor.from_config(communals=world.communals),
-    FemaleCommunalDistributor.from_config(female_communals=world.female_communals),
-]
+leisure_instance.leisure_distributors = {}
+leisure_instance.leisure_distributors['pump_latrines'] = PumpLatrineDistributor.from_config(pump_latrines=world.pump_latrines)
+leisure_instance.leisure_distributors['distribution_centers'] = DistributionCenterDistributor.from_config(distribution_centers=world.distribution_centers)
+leisure_instance.leisure_distributors['communals'] = CommunalDistributor.from_config(communals=world.communals)
+leisure_instance.leisure_distributors['female_communals'] = FemaleCommunalDistributor.from_config(female_communals=world.female_communals)
 
 simulator = CampSimulator.from_file(
      world, interaction, selector,
     leisure = leisure_instance,
     policies=policies,
     config_filename = CONFIG_PATH,
-    #seed=seed
 )
 
 leisure_instance.leisure_distributors
