@@ -86,7 +86,7 @@ class Simulator:
         ]
         self.check_inputs(time_config)
         self.timer = Timer(
-            initial_day=time_config["initial_day"],
+            initial_day = time_config['initial_day'],
             total_days=time_config["total_days"],
             weekday_step_duration=time_config["step_duration"]["weekday"],
             weekend_step_duration=time_config["step_duration"]["weekend"],
