@@ -37,6 +37,7 @@ def save_households_to_hdf5(
             areas = []
             types = []
             max_sizes = []
+            household_complacencies = []
             for household in households[idx1:idx2]:
                 ids.append(household.id)
                 if household.area is None:
@@ -48,11 +49,13 @@ def save_households_to_hdf5(
                 else:
                     types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
+                household_complacencies.append(household.household_complacency)
 
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
             types = np.array(types, dtype="S15")
             max_sizes = np.array(max_sizes, dtype=np.float)
+            household_complacencies = np.array(household_complacencies, dtype=np.float)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
                 households_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -61,6 +64,10 @@ def save_households_to_hdf5(
                 households_dset.create_dataset(
                     "max_size", data=max_sizes, maxshape=(None,)
                 )
+                households_dset.create_dataset(
+                    "household_complacency", data=household_complacencies, maxshape=(None,)
+                )
+
             else:
                 newshape = (households_dset["id"].shape[0] + ids.shape[0],)
                 households_dset["id"].resize(newshape)
@@ -71,6 +78,8 @@ def save_households_to_hdf5(
                 households_dset["type"][idx1:idx2] = types
                 households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
+                households_dset["household_complacency"].resize(newshape)
+                households_dset["household_complacency"][idx1:idx2] = household_complacencies 
 
         # I dont know how to chunk these...
         relatives_in_households = []
@@ -167,6 +176,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
             types = households["type"][idx1:idx2]
             areas = households["area"][idx1:idx2]
             max_sizes = households["max_size"][idx1:idx2]
+            household_complacencies = households["household_complacency"][idx1:idx2]
             relatives_in_households = households["relatives_in_households"][idx1:idx2]
             relatives_in_care_homes = households["relatives_in_care_homes"][idx1:idx2]
             social_venues_specs = households["social_venues_specs"][idx1:idx2]
@@ -180,7 +190,8 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                     type = None
                 else:
                     type = type.decode()
-                household = Household(type=type, area=area, max_size=max_sizes[k])
+                household = Household(type=type, area=area, max_size=max_sizes[k],
+                        household_complacency=household_complacencies[k])
                 household.id = ids[k]
                 if relatives_in_households[k][0] == nan_integer:
                     household.relatives_in_households = ()

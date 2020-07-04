@@ -670,6 +670,38 @@ class TestQuarantine:
         worker.health_information = None
         sim.clear_world()
 
+    def test__quarantine_zero_complacency(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        quarantine = Quarantine(
+            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+            household_complacency=0.
+        )
+        policies = Policies([quarantine])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        infect_person(worker, selector, "influenza")
+        sim.update_health_status(0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        # before symptoms onset
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 4.0)
+        # after symptoms onset
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 8.0)
+        # more thatn two weeks after symptoms onset
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 25.0)
+        worker.health_information = None
+        sim.clear_world()
+
 
 class TestCloseLeisure:
     def test__close_leisure_venues(self, super_area, selector, interaction):

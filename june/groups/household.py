@@ -32,6 +32,7 @@ class Household(Group):
         "relatives_in_care_homes",
         "relatives_in_households",
         "quarantine_starting_date",
+        "household_complacency",
         "social_venues",
     )
 
@@ -41,7 +42,7 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf):
+    def __init__(self, type=None, area=None, max_size=np.inf, household_complacency=np.random.rand()):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
@@ -50,6 +51,7 @@ class Household(Group):
         self.area = area
         self.type = type
         self.quarantine_starting_date = None
+        self.household_complacency = household_complacency
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
         self.max_size = max_size
@@ -102,10 +104,10 @@ class Household(Group):
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
 
-    def quarantine(self, time, quarantine_days):
+    def quarantine(self, time, quarantine_days, household_complacency):
         if self.type == "communal":
             return False
-        if self.quarantine_starting_date:
+        if self.quarantine_starting_date and self.household_complacency < household_complacency:
             if (
                 self.quarantine_starting_date
                 < time
