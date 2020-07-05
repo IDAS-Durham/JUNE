@@ -176,7 +176,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
             types = households["type"][idx1:idx2]
             areas = households["area"][idx1:idx2]
             max_sizes = households["max_size"][idx1:idx2]
-            household_complacencies = households["household_complacency"][idx1:idx2]
+            # TODO: household_complacencies = households["household_complacency"][idx1:idx2]
             relatives_in_households = households["relatives_in_households"][idx1:idx2]
             relatives_in_care_homes = households["relatives_in_care_homes"][idx1:idx2]
             social_venues_specs = households["social_venues_specs"][idx1:idx2]
@@ -191,7 +191,9 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 else:
                     type = type.decode()
                 household = Household(type=type, area=area, max_size=max_sizes[k],
-                        household_complacency=household_complacencies[k])
+                        household_complacency = np.random.rand()
+                        # TODO: :household_complacency=household_complacencies[k]
+                        )
                 household.id = ids[k]
                 if relatives_in_households[k][0] == nan_integer:
                     household.relatives_in_households = ()
