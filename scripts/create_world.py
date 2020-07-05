@@ -114,10 +114,10 @@ msoaslist = [
 t1 = time.time()
 
 # we have two options, we can take the list of areas above and select a few:
-#geography = Geography.from_file({"super_area": msoaslist[:20]})
+geography = Geography.from_file({"super_area": msoaslist[:20]})
 # or select an entire region:
-geography = Geography.from_file({"region" : ["North East", "Yorkshire and The Humber"]})
-# geography = Geography.from_file({"region" : ["London"]})
+#geography = Geography.from_file({"region" : ["North East", "Yorkshire and The Humber"]})
+#geography = Geography.from_file({"region" : ["London"]})
 
 demography = Demography.for_geography(geography)
 # then this automatically creates the world and saves it to world.hdf5
@@ -140,5 +140,5 @@ for household in world.households:
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 print("Saving hdf5...")
-world.to_hdf5("north_east_yorkshire.hdf5")
+world.to_hdf5("small_test_04_07.hdf5")
 print("Done :)")
