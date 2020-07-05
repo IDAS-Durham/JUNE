@@ -1,6 +1,7 @@
 import logging
 import pickle
 import h5py
+from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
 from typing import Optional
@@ -24,7 +25,17 @@ from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
-possible_groups = ["schools", "hospitals", "companies", "care_homes", "universities"]
+possible_groups = [
+    "households",
+    "care_homes",
+    "schools",
+    "hospitals",
+    "companies",
+    "universities",
+    "pubs",
+    "groceries",
+    "cinemas",
+]
 
 
 def _populate_areas(areas: Areas, demography):
@@ -211,6 +222,12 @@ class World:
             save_commute_hubs_to_hdf5(self.commutehubs, file_path)
         if self.universities is not None:
             save_universities_to_hdf5(self.universities, file_path)
+        if self.pubs is not None:
+            save_pubs_to_hdf5(self.pubs, file_path)
+        if self.cinemas is not None:
+            save_cinemas_to_hdf5(self.cinemas, file_path)
+        if self.groceries is not None:
+            save_groceries_to_hdf5(self.groceries, file_path)
 
 
 def generate_world_from_geography(
@@ -298,6 +315,12 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         )
     if "commute_hubs" in f_keys:
         world.commutehubs, world.commuteunits = load_commute_hubs_from_hdf5(file_path)
+    if "pubs" in f_keys:
+        world.pubs = load_pubs_from_hdf5(file_path)
+    if "cinemas" in f_keys:
+        world.cinemas = load_cinemas_from_hdf5(file_path)
+    if "groceries" in f_keys:
+        world.groceries = load_groceries_from_hdf5(file_path)
 
     spec_mapper = {
         "hospital": "hospitals",
@@ -307,7 +330,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "care_home": "care_homes",
         "commute_hub": "commutehubs",
         "university": "universities",
+        "pub": "pubs",
+        "grocery": "groceries",
+        "cinema": "cinemas",
     }
+    print("restoring world...")
     # restore areas -> super_areas
     for area in world.areas:
         super_area_id = area.super_area
@@ -318,6 +345,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
 
     # restore person -> subgroups
     first_area_id = world.areas[0].id
+    first_person_idx = world.people[0].id
     pbar = tqdm(total=len(world.people))
     for person in world.people:
         pbar.update(1)
@@ -343,17 +371,48 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         for area in super_area.areas:
             super_area.people.extend(area.people)
 
-    # households in areas
+    # households and care homes in areas
+    social_venues_spec_mapper = {
+        "pubs": "pubs",
+        "household_visits": "households",
+        "care_home_visits": "care_homes",
+        "cinemas": "cinemas",
+        "groceries": "groceries",
+    }
     if world.households is not None:
         for household in world.households:
             area = world.areas[household.area - first_area_id]
             household.area = area
+            household.residents = tuple(household.people)
+            household.relatives_in_households = tuple(
+                world.people[id - first_person_idx]
+                for id in household.relatives_in_households
+            )
+            household.relatives_in_care_homes = tuple(
+                world.people[id - first_person_idx]
+                for id in household.relatives_in_care_homes
+            )
             area.households.append(household)
+            # social venues
+            sv_dict = household.social_venues.copy()
+            household.social_venues = defaultdict(list)
+            for spec, ids in sv_dict.items():
+                spec_mapped = social_venues_spec_mapper[spec]
+                supergroup = getattr(world, spec_mapped)
+                first_group_id = supergroup.members[0].id
+                for id in ids:
+                    group = supergroup.members[id - first_group_id]
+                    household.social_venues[spec].append(group)
+
+    if world.care_homes is not None:
+        for care_home in world.care_homes:
+            area = world.areas[care_home.area - first_area_id]
+            care_home.area = area
+            area.care_home = care_home
 
     # commute
     if world.commutehubs is not None and world.commutecities is not None:
         first_hub_idx = world.commutehubs[0].id
-        first_person_idx = world.people[0].id
         for city in world.commutecities:
             commute_hubs = [
                 world.commutehubs[idx - first_hub_idx] for idx in city.commutehubs
@@ -363,4 +422,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                 world.people[idx - first_person_idx] for idx in city.commute_internal
             ]
             city.commute_internal = commute_internal_people
+
+    world.cemeteries = Cemeteries()
     return world

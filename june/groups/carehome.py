@@ -31,7 +31,7 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    __slots__ = "n_residents", "area", "n_workers", "relatives"
+    __slots__ = "n_residents", "area", "n_workers", "relatives_in_care_homes", "relatives_in_households", "quarantine_starting_date"
 
     class SubgroupType(IntEnum):
         workers = 0
@@ -45,25 +45,29 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
+        self.relatives_in_care_homes = None
+        self.relatives_in_households = None
+        self.quarantine_starting_date = None
 
     def add(
         self,
         person,
         subgroup_type=SubgroupType.residents,
         activity: str = "residence",
-        dynamic: bool = False,
     ):
         if activity == "leisure":
             super().add(
                 person,
                 subgroup_type=self.SubgroupType.visitors,
                 activity="leisure",
-                dynamic=True,
             )
         else:
             super().add(
-                person, subgroup_type=subgroup_type, activity=activity, dynamic=dynamic,
+                person, subgroup_type=subgroup_type, activity=activity
             )
+
+    def get_leisure_subgroup(self, person):
+        return self.subgroups[self.SubgroupType.visitors]
 
     @property
     def workers(self):
@@ -76,6 +80,9 @@ class CareHome(Group):
     @property
     def visitors(self):
         return self.subgroups[self.SubgroupType.visitors]
+    
+    def quarantine(self, time, quarantine_days, household_complacency):
+        return True
 
 
 class CareHomes(Supergroup):

@@ -113,7 +113,7 @@ class Group:
         person: Person,
         activity: str,
         subgroup_type: SubgroupType,
-        dynamic: bool = False,
+        dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school

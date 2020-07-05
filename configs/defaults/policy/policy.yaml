@@ -1,0 +1,68 @@
+quarantine:
+        n_days: 7 # for the symptomatic person
+        n_days_household: 14 # for the housemates
+        household_complacency: 0.6
+        start_time: 2020-03-16 
+        end_time: 2020-07-04 
+
+shielding:
+        min_age: 70
+        complacency: 0.7
+        start_time: 2020-03-16 
+        end_time: 2020-07-04 
+
+close_companies:
+        start_time: 2020-03-16
+        end_time: 2020-07-04 #TODO: Until when really?
+        full_closure: False 
+        random_lambda:  0.2 # 8./40. , since we want them to go to work once (8 hours) a week (40 working hours)
+
+social_distancing:
+        start_time: 2020-03-16
+        end_time: 2020-07-04 #TODO: end time?
+        beta_factor:
+                box: 0.5
+                pub: 0.5
+                grocery: 0.5
+                cinema: 0.5
+                commute_unit: 0.5
+                commute_city_unit: 0.5
+                hospital: 0.5
+                care_home: 0.5
+                company: 0.5
+                school: 0.5
+                household: 1.0
+                university: 0.5
+
+close_leisure_venue:
+        start_time: 2020-03-21
+        end_time: 2020-07-04 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
+
+change_leisure_probability:
+        start_time: 2020-03-21
+        end_time: 2020-07-04
+        leisure_activities_probabilities:
+          household_visits:
+            men: 
+              0-64: 0.50
+              65-100: 0.25
+            women: 
+              0-64: 0.50
+              65-100: 0.25
+        leisure_activities_probabilities:
+          care_home_visits:
+            men:
+              0-100: 0.05
+            women:
+              0-100: 0.05
+
+close_schools:
+        start_time: 2020-03-20
+        end_time: 2020-07-04 #TODO: end time?
+        years_to_close: all
+        full_closure: False
+
+close_universities:
+        start_time: 2020-03-20
+        end_time: 2020-10-01

@@ -21,3 +21,6 @@ __MACOSX
 box_results/
 build/
 dist/
+*.prof
+*.dat
+*.svg

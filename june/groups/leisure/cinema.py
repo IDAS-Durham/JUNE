@@ -2,24 +2,23 @@ import numpy as np
 import pandas as pd
 import yaml
 from typing import List, Optional
-from june.demography.geography import Areas
+from june.demography.geography import Areas, SuperArea, SuperAreas, Geography
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 
-default_cinemas_coordinates_filename = data_path / "input/leisure/cinemas.csv"
+default_cinemas_coordinates_filename = data_path / "input/leisure/cinemas_per_super_area.csv"
 default_config_filename = configs_path / "defaults/groups/leisure/cinemas.yaml"
 
 
 class Cinema(SocialVenue):
     """
-    Pubs are fun.
+    cinemas are fun.
     """
 
-    def __init__(self, n_seats=np.inf):
+    def __init__(self):
         super().__init__()
-        self.max_size = n_seats
 
 
 class Cinemas(SocialVenues):
@@ -29,40 +28,38 @@ class Cinemas(SocialVenues):
             self.make_tree()
 
     @classmethod
-    def for_geography(
+    def for_super_areas(
         cls,
-        geography,
+        super_areas: List[SuperArea],
         coordinates_filename: str = default_cinemas_coordinates_filename,
-        max_distance_to_area=5,
     ):
-        cinemas_df = pd.read_csv(coordinates_filename)
-        coordinates = cinemas_df.loc[:, ["latitude", "longitude"]].values
-        n_seats = cinemas_df.loc[:, ["seats"]].values
-        return cls.from_coordinates(
-            coordinates,
-            n_seats,
-            geography.areas,
-            max_distance_to_area=max_distance_to_area,
-        )
+        cinemas_per_super_area = pd.read_csv(coordinates_filename)
+        sa_names = [super_area.name for super_area in super_areas]
+        cinemas_coordinates = cinemas_per_super_area.loc[
+            cinemas_per_super_area.super_area.isin(sa_names), ["lat", "lon"]
+        ]
+        return cls.from_coordinates(cinemas_coordinates.values)
 
     @classmethod
-    def from_coordinates(
-        cls,
-        coordinates: List[np.array],
-        seats: List[int],
-        areas: Optional[Areas] = None,
-        max_distance_to_area=5,
-        **kwargs
+    def for_areas(
+        cls, areas: Areas, coordinates_filename: str = default_cinemas_coordinates_filename,
     ):
-        if areas is not None:
-            _, distances = areas.get_closest_areas(
-                coordinates, k=1, return_distance=True
-            )
-            distances_close = np.where(distances < max_distance_to_area)
-            coordinates = coordinates[distances_close]
+        super_areas = [area.super_area for area in areas]
+        return cls.for_super_areas(super_areas, coordinates_filename)
+
+    @classmethod
+    def for_geography(
+        cls,
+        geography: Geography,
+        coordinates_filename: str = default_cinemas_coordinates_filename,
+    ):
+        return cls.for_super_areas(geography.super_areas, coordinates_filename)
+
+    @classmethod
+    def from_coordinates(cls, coordinates: List[np.array], **kwargs):
         social_venues = list()
-        for coord, n_seats in zip(coordinates, seats):
-            sv = Cinema(int(n_seats))
+        for coord in coordinates:
+            sv = Cinema()
             sv.coordinates = coord
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
@@ -75,7 +72,7 @@ class CinemaDistributor(SocialVenueDistributor):
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
         neighbours_to_consider=5,
-        maximum_distance=5,
+        maximum_distance=15,
         weekend_boost: float = 2.0,
         drags_household_probability=0.5,
     ):

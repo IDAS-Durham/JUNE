@@ -91,6 +91,7 @@ class HospitalDistributor:
             for _ in range(n_medics):
                 medic = medics.pop()
                 hospital.add(medic, hospital.SubgroupType.workers)
+                medic.lockdown_status = 'key_worker'
 
     def distribute_medics_to_super_areas(self, super_areas: SuperAreas):
         '''
@@ -154,3 +155,4 @@ class HospitalDistributor:
                 for _ in range(n_medics):
                     medic = medics.pop()
                     hospital.add(medic, hospital.SubgroupType.workers)
+                    medic.lockdown_status = 'key_worker'

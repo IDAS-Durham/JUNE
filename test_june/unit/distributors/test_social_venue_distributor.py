@@ -5,6 +5,7 @@ from scipy.stats import poisson
 
 from june.groups.leisure import SocialVenueDistributor
 from june.groups.leisure import SocialVenue, SocialVenues
+from june.groups.leisure.social_venue_distributor import parse_age_probabilites
 from june.demography import Person
 
 
@@ -33,9 +34,9 @@ def make_distributor(social_venues):
         maximum_distance=30,
     )
 
-def test__age_dict_parsing(social_venue_distributor):
+def test__age_dict_parsing():
     age_dict = {"40-60" : 0.4, "10-20" : 0.2}
-    probabilities_per_age = social_venue_distributor._parse_age_probabilites(age_dict)
+    probabilities_per_age = parse_age_probabilites(age_dict)
     for idx, prob in enumerate(probabilities_per_age):
         if idx < 10:
             assert prob == 0.0
@@ -95,14 +96,3 @@ class MockArea:
     def __init__(self):
         self.coordinates = np.array([10, 11])
 
-
-def test__add_person_to_social_venues(social_venues, social_venue_distributor):
-    social_venues.make_tree()
-    person = Person(age=20, sex="m")
-    person.area = MockArea()
-    social_venue = social_venue_distributor.get_social_venue_for_person(person)
-    social_venue.add(person)
-    social_venue = social_venues[-1]
-    assert person.leisure == social_venue[0]
-    # not added to group
-    assert len(social_venue.people) == 0
