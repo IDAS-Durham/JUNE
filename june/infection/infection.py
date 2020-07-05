@@ -30,14 +30,14 @@ class TransmissionType(IntEnum):
 
 
 class InfectionSelector:
-    def __init__(self, config=None):
+    def __init__(self, asymptomatic_ratio:float=0.43, config=None):
         transmission_type = "XNExp"
         if config is not None:
             if "transmission" in config and "type" in config["transmission"]:
                 transmission_type = config["transmission"]["type"]
         self.trajectory_maker = TrajectoryMakers.from_file()
         self.init_transmission_parameters(transmission_type, config)
-        self.health_index_generator = HealthIndexGenerator.from_file()
+        self.health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=asymptomatic_ratio)
 
     def init_transmission_parameters(self, transmission_type, config):
         if transmission_type == "XNExp":
@@ -72,11 +72,12 @@ class InfectionSelector:
     @classmethod
     def from_file(
             cls,
+            asymptomatic_ratio:float =0.43,
             config_filename: str = default_config_filename,
     ) -> "InfectionSelector":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return InfectionSelector(config)
+        return InfectionSelector(asymptomatic_ratio,config)
 
     def infect_person_at_time(self, person, time):
         infection = self.make_infection(person, time)

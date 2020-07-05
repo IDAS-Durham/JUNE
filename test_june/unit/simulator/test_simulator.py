@@ -7,10 +7,11 @@ from june.demography import Demography
 from june.demography.geography import Geography
 from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.policy import Policies
 from june.infection import InfectionSelector, SymptomTag
 from june.interaction import ContactAveraging
 from june.simulator import Simulator
-from june.world import generate_world_from_geography
+from june.world import generate_world_from_geography, generate_world_from_hdf5
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
@@ -31,7 +32,6 @@ def create_simulator():
         }
     )
     geography.hospitals = Hospitals.for_geography(geography)
-    geography.cemeteries = Cemeteries()
     geography.care_homes = CareHomes.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.universities = Universities.for_super_areas(geography.super_areas)
@@ -39,26 +39,24 @@ def create_simulator():
     world = generate_world_from_geography(
         geography=geography, include_commute=True, include_households=True
     )
-    world.cinemas = Cinemas.for_geography(geography)
-    world.pubs = Pubs.for_geography(geography)
-    world.groceries = Groceries.for_super_areas(
-        geography.super_areas, venues_per_capita=1 / 500
-    )
+    world.to_hdf5("simulator_tests.hdf5")
+    world = generate_world_from_hdf5("simulator_tests.hdf5")
+    world.cinemas = Cinemas.for_areas(world.areas)
+    world.pubs = Pubs.for_areas(world.areas)
+    world.groceries = Groceries.for_geography(geography)
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
     )
-    selector = InfectionSelector.from_file(constant_config)
+    leisure_instance.distribute_social_venues_to_households(world.households)
+    selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
-    sim = Simulator.from_file(
-        world,
-        interaction,
-        selector,
-        config_filename=test_config,
-        leisure=leisure_instance,
-    )
+    policies = Policies.from_file()
+    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
+            leisure=leisure_instance, policies=policies)
+    sim.leisure.generate_leisure_probabilities_for_timestep(3, False, [])
     return sim
 
 
@@ -118,11 +116,11 @@ def test__clear_world(sim):
         assert person.busy == False
 
 
-def test__get_subgroup_active(sim):
-    active_subgroup = sim.get_subgroup_active(
+def test__move_to_active_subgroup(sim):
+    sim.move_to_active_subgroup(
         ["residence"], sim.world.people.members[0]
     )
-    assert active_subgroup.group.spec in ("carehome", "household")
+    assert sim.world.people.members[0].residence.group.spec in ("carehome", "household")
 
 
 def test__move_people_to_residence(sim):
@@ -178,8 +176,7 @@ def test__move_people_to_commute(sim):
     assert n_commuters > 0
     sim.clear_world()
 
-
-def test__kid_at_home_is_supervised(sim, health_index):
+def test__kid_at_home_is_supervised(sim):
     kids_at_school = []
     for person in sim.world.people.members:
         if person.primary_activity is not None and person.age < sim.min_age_home_alone:
@@ -187,7 +184,8 @@ def test__kid_at_home_is_supervised(sim, health_index):
 
     for kid in kids_at_school:
         sim.selector.infect_person_at_time(kid, 0.0)
-        kid.health_information.infection.symptoms.tag = SymptomTag.influenza
+        kid.health_information.infection.symptoms.tag = getattr(SymptomTag, 'pneumonia')
+        kid.health_information.infection.symptoms.tag = SymptomTag.pneumonia
         assert kid.health_information.must_stay_at_home
 
     sim.move_people_to_active_subgroups(["primary_activity", "residence"])
@@ -200,7 +198,6 @@ def test__kid_at_home_is_supervised(sim, health_index):
         assert len(guardians_at_home) != 0
 
     sim.clear_world()
-
 
 def test__hospitalise_the_sick(sim):
     dummy_person = sim.world.people.members[0]

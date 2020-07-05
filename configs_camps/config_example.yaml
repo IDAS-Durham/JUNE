@@ -6,7 +6,8 @@ activity_to_groups:
   residence: ['shelters']
 
 time:
-  total_days: 70
+  initial_day: '2020-05-24'
+  total_days: 120
   step_duration: 
       weekday:
           0: 2 

@@ -12,7 +12,11 @@ from june import paths
 
 class ReadLogger:
     def __init__(
-            self, output_path: str = "results", output_file_name: str = "logger.hdf5", light_logger: bool =False, load_real=True
+        self,
+        output_path: str = "results",
+        output_file_name: str = "logger.hdf5",
+        light_logger: bool = False,
+        load_real=True,
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -80,6 +84,23 @@ class ReadLogger:
             )
             self.infections_df.set_index("time_stamp", inplace=True)
 
+    def subtract_previous(self, row, hospitalised_id, prev_hospitalised_id):
+        try:
+            return len(set(hospitalised_id.loc[row.name]) - set(prev_hospitalised_id.loc[row.name]))   
+        except:
+            return len(set(hospitalised_id.loc[row.name]))
+
+    def get_daily_updates(self, symptoms_df, lambda_to_filter):
+        # Admissions
+        symptoms_id = symptoms_df.apply(
+                lambda_to_filter,
+                axis=1
+        )
+        previous_symptoms_id = symptoms_id.shift(1)
+        return symptoms_df.apply(self.subtract_previous, 
+                args=(symptoms_id, previous_symptoms_id), axis=1
+                )
+
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
     ) -> pd.DataFrame:
@@ -98,17 +119,31 @@ class ReadLogger:
         -------
         A data frame whose index is the date recorded, and columns are number of recovered, dead, infected...
         """
+        dead_symptoms = [
+            SymptomTag.dead_home,
+            SymptomTag.dead_icu,
+            SymptomTag.dead_hospital,
+        ]
         df = pd.DataFrame()
         df["recovered"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
         ).cumsum()
+        df["dead_home"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_home), axis=1
+        ).cumsum()
+        df["dead_hospital"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_hospital), axis=1
+        ).cumsum()
+        df["dead_icu"] = symptoms_df.apply(
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
+        ).cumsum()
         df["dead"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead), axis=1
+            lambda x: np.count_nonzero(np.isin(x.symptoms, dead_symptoms)), axis=1,
         ).cumsum()
         # get rid of those that just recovered or died
         df["infected"] = symptoms_df.apply(
             lambda x: (
-                (x.symptoms != SymptomTag.recovered) & (x.symptoms != SymptomTag.dead)
+                (x.symptoms != SymptomTag.recovered) & (~np.isin(x.symptoms,dead_symptoms))
             ).sum(),
             axis=1,
         )
@@ -119,7 +154,17 @@ class ReadLogger:
         df["intensive_care"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
+        df['hospital_admissions'] = self.get_daily_updates(symptoms_df, 
+                                    lambda x: x.infected_id[x.symptoms==SymptomTag.hospitalised])
+
+        df['intensive_care_admissions'] = self.get_daily_updates(symptoms_df, 
+                                    lambda x: x.infected_id[x.symptoms==SymptomTag.intensive_care])
+
+        df['new_infections'] = -df['susceptible'].diff().fillna(-df['infected'][0]).astype(int)
+
+        #df['new_dead'] = self.get_daily_updates(symptoms_df, SymptomTag.dead) 
         return df
+
 
     def world_summary(self) -> pd.DataFrame:
         """
@@ -151,6 +196,9 @@ class ReadLogger:
             n_people_in_area = np.sum(self.super_areas == area)
             area_df["symptoms"] = self.infections_df.apply(
                 lambda x: x.symptoms[x.super_areas == area], axis=1
+            )
+            area_df["infected_id"] = self.infections_df.apply(
+                lambda x: x.infected_id[x.super_areas == area], axis=1
             )
             area_df = self.process_symptoms(area_df, n_people_in_area)
             area_df["super_area"] = area
@@ -188,6 +236,13 @@ class ReadLogger:
                 ],
                 axis=1,
             )
+            age_df["infected_id"] = self.infections_df.apply(
+                lambda x: x.infected_id[
+                    (x.age >= age_ranges[i]) & (x.age < age_ranges[i + 1])
+                ],
+                axis=1,
+            )
+ 
             age_df = self.process_symptoms(age_df, n_age)
             age_df["age_range"] = f"{age_ranges[i]}_{age_ranges[i+1]-1}"
             ages_df.append(age_df)
@@ -313,7 +368,7 @@ class ReadLogger:
                 "trust_code": trust_code,
             }
         )
-        hospitals_df['trust_code'] = hospitals_df['trust_code'].str.decode("utf-8")
+        hospitals_df["trust_code"] = hospitals_df["trust_code"].str.decode("utf-8")
         hospitals_df.index.rename("hospital_id")
         return hospitals_df
 
@@ -332,7 +387,12 @@ class ReadLogger:
             n_patients_icu = []
             time_stamps = []
             for time_stamp in hospitals.keys():
-                if time_stamp not in ("coordinates", "n_beds", "n_icu_beds", "trust_code"):
+                if time_stamp not in (
+                    "coordinates",
+                    "n_beds",
+                    "n_icu_beds",
+                    "trust_code",
+                ):
                     hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
                     n_patients.append(hospitals[time_stamp]["n_patients"][:])
                     n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])

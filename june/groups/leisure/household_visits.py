@@ -8,6 +8,7 @@ from june.groups import Households
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
+from june.groups import Household
 
 default_config_filename = configs_path / "defaults/groups/leisure/household_visits.yaml"
 
@@ -72,7 +73,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             for household in households_super_area:
                 if household.size == 0:
                     continue
-                households_to_link_n = np.random.randint(0, 3)
+                households_to_link_n = np.random.randint(0, 4)
                 relatives_to_visit = []
                 for _ in range(households_to_link_n):
                     house_idx = np.random.randint(0, len(households_super_area))
@@ -85,6 +86,15 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     relatives_to_visit.append(house.people[person_idx])
                 household.relatives_in_households = tuple(relatives_to_visit)
 
+    def get_possible_venues_for_household(self, household: Household):
+        if household.relatives_in_households is None:
+            return ()
+        return tuple(
+                relative.residence.group
+                for relative in household.relatives_in_households
+                if relative.dead is False
+        )
+
     def get_social_venue_for_person(self, person):
         relatives = person.residence.group.relatives_in_households
         if relatives is None:
@@ -94,7 +104,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             np.random.randint(0, len(alive_relatives))
         ].residence.group
 
-    def get_poisson_parameter(self, person, is_weekend: bool = False):
+    def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -108,27 +118,10 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         is_weekend
             whether it is a weekend or not
         """
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.relatives_in_households is None
-        ):
-            return 0
-        # do not visit dead people
-        if (
-            len(
-                [
-                    person
-                    for person in person.residence.group.relatives_in_households
-                    if person.dead is False
-                ]
-            )
-            == 0
-        ):
-            return 0
-        if person.sex == "m":
-            probability = self.male_probabilities[person.age]
+        if sex == "m":
+            probability = self.male_probabilities[age]
         else:
-            probability = self.female_probabilities[person.age]
+            probability = self.female_probabilities[age]
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
