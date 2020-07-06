@@ -13,7 +13,7 @@ import json
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from june.visualization.plotter_clean import DashPlotter
+from june.visualization.plotter import DashPlotter
 import sys
 
 dash_plotter = DashPlotter(sys.argv[1])
