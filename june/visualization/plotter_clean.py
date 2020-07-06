@@ -38,6 +38,15 @@ class DashPlotter:
         )
         self.hospital_data.set_index("time_stamp", inplace=True)
         self.hospital_data['date'] = self.hospital_data.index.date
+        self.hospital_data = self.hospital_data.reset_index()
+        dates = np.unique(self.hospital_data['date'])
+        ids = np.unique(self.hospital_data['id'])
+        indices = []
+        for h_id in ids:
+            hospital_specific_data = self.hospital_data[self.hospital_data['id'] == h_id]
+            for date in dates:
+                indices.append(hospital_specific_data[hospital_specific_data['date'] == date].index[-1])
+        self.hospital_data = self.hospital_data.loc[indices].reset_index()
         print ('Hospital data loaded')
 
         print ('Loading age data')
