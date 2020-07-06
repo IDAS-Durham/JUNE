@@ -422,5 +422,16 @@ def update_map_title(day):
 def update_hospiptalisation_map(value):
     return dash_plotter.generate_hospital_map_callback(day_number=value)
 
+
+@app.callback(Output("hospitalisation-selected-data", "figure"),
+              [
+                  Input("hospitalisation-map", "selectedData"),
+                  Input("hospitalisation-chart-dropdown", "value"),
+                  Input("hospitalisation-crossfilter-yaxis-type"),
+              ],
+)
+def update_hospitalisation_curves(selectedData, chart, crossfilter):
+    return dash_plotter.generate_hospital_curves_callback(selectedData, chart_type, axis_type)
+
 if __name__ == "__main__":
     app.run_server(debug=True)
