@@ -183,7 +183,7 @@ tab2 = html.Div(
                                     min=0,
                                     max=len(dash_plotter.days) - 1,
                                     value=0,
-                                    marks={i: str(day) for i, day in enumerate(dash_plotter.days)}
+                                    marks={i: str(date) for i, date in enumerate(dash_plotter.days)}
                                 ),
                             ],
                         ),
@@ -353,7 +353,6 @@ app.layout = html.Div([
             html.Div(
                 id="header-tab",
                 children=[
-                    #html.Img(id="logo", src=app.get_asset_url("IDAS.png")),
                     html.H4(children="JUNE"),
                     html.P(
                         id="description-tab-p1",
@@ -380,6 +379,7 @@ app.layout = html.Div([
                         Arnau Quera-Bofarull,
                         Aidan Sedgewick,
                         Henry Truong,
+                        Ian Vernon,
                         Julian Willams
                         """,
                     ),
