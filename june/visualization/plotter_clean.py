@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-from datetime import timedelta
+from datetime import timedelta, datetime
 from itertools import chain
 
 from june.logger.read_logger import ReadLogger
@@ -259,6 +259,11 @@ class DashPlotter:
             days = np.arange(0, len(dates))
         else:
             days = np.arange(0, len(dates), 3)
-        return days
+            dates = dates[days]
+
+        dates_reformat = []
+        for date in dates:
+            dates_reformat.append(datetime.utcfromtimestamp(date.tolist()/1e9).strftime("%d/%m"))
+        return dates_reformat
         
     
