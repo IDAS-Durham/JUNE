@@ -10,6 +10,8 @@ from itertools import chain
 from june.logger.read_logger import ReadLogger
 from june.paths import data_path
 
+import dash_html_components as html
+
 super_area_coordinates_filename = (
     data_path / "input/geography/super_area_coordinates.csv"
 )
@@ -140,7 +142,7 @@ class DashPlotter:
         else:
             return "#da5657"
 
-    def get_infection_change(self, selectedData):
+    def get_infection_change(self, selectedData, day_number):
 
         area_data = pd.merge(self.area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
 
@@ -160,12 +162,17 @@ class DashPlotter:
         
         # Calculate 7-day rolling average
         base = np.zeros(6)
-        infected_rm = running_mean(infected, 7)
+        infected_rm = self.running_mean(infected, 7)
         infected_rm = np.concatenate((base,infected_rm))
 
-        change_2day = int(((infected_rm[-1] - infected_rm[-2])/infected_rm[-2])*100)
-
-        return change_2day
+        if day_number == 0 or day_number == 1:
+            return "{}%".format(0)
+        else:
+            if infected_rm[day_number-2] == 0.:
+                return "{}%".format(0)
+            else:
+                change_2day = int(((infected_rm[day_number] - infected_rm[day_number-2])/infected_rm[day_number-2])*100)
+                return "{}%".format(change_2day)
 
     def get_death_change(self, selectedData, day_number):
 
@@ -196,9 +203,11 @@ class DashPlotter:
         dead_rm = self.running_mean(new_dead, 7)
         dead_rm = np.concatenate((base,dead_rm))
 
-        change_2day = int(((dead_rm[-1] - dead_rm[-2])/dead_rm[-2])*100)
-
-        return change_2day
+        if day_number == 0 or day_number == 1:
+            return "{}%".format(0)
+        else:
+            change_2day = int(((dead_rm[day_number] - dead_rm[day_number-2])/dead_rm[day_number-2])*100)
+            return "{}%".format(change_2day)
 
 
     def generate_infection_curves_callback(self, selectedData, chart_type, axis_type):
