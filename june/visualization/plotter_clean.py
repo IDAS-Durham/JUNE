@@ -201,7 +201,7 @@ class DashPlotter:
         else:
             hospitals = []
             for point in selectedData['points']:
-                super_areas.append(list(hospital_data['index'][hospital_data['latitude'] == point['lat']])[0])
+                hospitals.append(list(hospital_characteristics['index'][hospital_characteristics['latitude'] == point['lat']])[0])
             selected_hospitals = np.unique(hospitals)
         
         hospital_data = hospital_data[hospital_data['id'].isin(selected_hospitals)]
