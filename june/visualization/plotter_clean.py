@@ -178,8 +178,7 @@ class DashPlotter:
                     id="geographical-infection-growth-trends-value",
                     children = [
                         "-{}%".format(
-                            #-1*change_2day
-                            day_number
+                            -1*change_2day
                         ),
                     ],
                     style={"color": self.get_color(change_2day), "font-size": "300%"},
@@ -191,8 +190,7 @@ class DashPlotter:
                     id="geographical-infection-growth-trends-value",
                     children = [
                         "+{}%".format(
-                            #change_2day
-                            day_number
+                            change_2day
                         ),
                     ],
                     style={"color": self.get_color(change_2day), "font-size": "300%"},
@@ -387,11 +385,8 @@ class DashPlotter:
     @property
     def days(self):
         dates = np.unique(self.dates)
-        #if len(dates) <= 40:
-        #    days = np.arange(0, len(dates))
-        #else:
-        #    days = np.arange(0, len(dates), 3)
-        #    dates = dates[days]
+        days = np.arange(0, len(dates), 3)
+        dates = dates[days]
 
         dates_reformat = []
         for idx, date in enumerate(dates):
