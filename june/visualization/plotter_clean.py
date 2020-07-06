@@ -171,18 +171,33 @@ class DashPlotter:
             pass
         else:
             change_2day = int(((infected_rm[day_number] - infected_rm[day_number-2])/infected_rm[day_number-2])*100)
-
-        return [
-            html.P(
-                id="geographical-infection-growth-trends-value",
-                children = [
-                    "{}%".format(
-                        change_2day
-                    ),
-                ],
-                style={"color": self.get_color(change_2day), "font-size": "300%"},
-            ),
-        ]
+            
+        if change_2day < 0:
+            return [
+                html.P(
+                    id="geographical-infection-growth-trends-value",
+                    children = [
+                        "-{}%".format(
+                            #-1*change_2day
+                            day_number
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
+        else:
+            return [
+                html.P(
+                    id="geographical-infection-growth-trends-value",
+                    children = [
+                        "+{}%".format(
+                            #change_2day
+                            day_number
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
 
     def get_death_change(self, selectedData, day_number):
 
@@ -201,6 +216,7 @@ class DashPlotter:
         area_data_grouped = area_data.groupby(['date']).sum().reset_index()
 
         dead = list(area_data_grouped['dead'])
+        print (dead)
         new_dead = [0]
         for idx, row in area_data_grouped.iterrows():
             if idx == 0:
@@ -213,12 +229,37 @@ class DashPlotter:
         dead_rm = self.running_mean(new_dead, 7)
         dead_rm = np.concatenate((base,dead_rm))
 
-        if day_number == 0 or day_number == 1:
-            return "{}%".format(0)
+        change_2day = 0
+        if day_number == 0 or day_number == 1 or dead_rm[day_number-2] == 0.:
+            pass
         else:
             change_2day = int(((dead_rm[day_number] - dead_rm[day_number-2])/dead_rm[day_number-2])*100)
-            return "{}%".format(change_2day)
-
+        print (day_number)
+        print (change_2day)
+        if change_2day < 0:
+            return [
+                html.P(
+                    id="geographical-death-growth-trends-value",
+                    children = [
+                        "-{}%".format(
+                            -1*change_2day
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
+        else:
+            return [
+                html.P(
+                    id="geographical-death-growth-trends-value",
+                    children = [
+                        "+{}%".format(
+                            change_2day
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
 
     def generate_infection_curves_callback(self, selectedData, chart_type, axis_type):
 
@@ -346,14 +387,14 @@ class DashPlotter:
     @property
     def days(self):
         dates = np.unique(self.dates)
-        if len(dates) <= 40:
-            days = np.arange(0, len(dates))
-        else:
-            days = np.arange(0, len(dates), 3)
-            dates = dates[days]
+        #if len(dates) <= 40:
+        #    days = np.arange(0, len(dates))
+        #else:
+        #    days = np.arange(0, len(dates), 3)
+        #    dates = dates[days]
 
         dates_reformat = []
-        for date in dates:
+        for idx, date in enumerate(dates):
             dates_reformat.append(datetime.utcfromtimestamp(date.tolist()/1e9).strftime("%d/%m"))
         return dates_reformat
         
