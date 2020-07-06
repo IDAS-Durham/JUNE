@@ -19,3 +19,5 @@ Then the visualizer can be run:
 ```
 python app.py [PATH TO RESULTS DIRECTORY]
 ```
+
+This work was inspired by and adapted from the [Dash Opioid app](https://github.com/plotly/dash-sample-apps/tree/master/apps/dash-opioid-epidemic)
