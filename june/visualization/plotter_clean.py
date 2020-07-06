@@ -238,7 +238,10 @@ class DashPlotter:
     @property
     def days(self):
         dates = np.unique(self.dates)
-        days = np.arange(len(dates))
+        if len(dates) <= 40:
+            days = np.arange(0, len(dates))
+        else:
+            days = np.arange(0, len(dates), 3)
         return days
         
     
