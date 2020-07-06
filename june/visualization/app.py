@@ -133,12 +133,12 @@ tab1 = html.Div(
                 html.Div(
                     id="graph-container-tab1-col2",
                     children=[
-                        html.P(id="chart-selector-tab1-world-where", children="Infection locations", style={'padding':'20px'}),
+                        html.P(id="chart-selector-tab1-world-where", children="Infection locations", style={'padding':'28px'}),
                         dcc.Graph(
                             figure=dash_plotter.generate_place_of_infection(),
                             id="world-infection-where",
                         ),
-                        html.P(id="chart-selector-tab1-world-r0", children="Reproduction number", style={'padding':'20px'}),
+                        html.P(id="chart-selector-tab1-world-r0", children="Reproduction number", style={'padding':'28px'}),
                         dcc.Graph(
                             figure=dash_plotter.generate_r0(
                             ),
