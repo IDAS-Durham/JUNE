@@ -200,6 +200,7 @@ class Quarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         n_days: int = 7,
         n_days_household: int = 14,
+        household_complacency: float = 1.,
     ):
         """
         This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
@@ -214,10 +215,13 @@ class Quarantine(StayHome):
             days for which the person has to stay at home if they show symtpoms
         n_days_household:
             days for which the person has to stay at home if someone in their household shows symptoms
+        household_complacency:
+            percentage of people that will adhere to the hoseuhold quarantine policy
         """
         super().__init__(start_time, end_time)
         self.n_days = n_days
         self.n_days_household = n_days_household
+        self.household_complacency = household_complacency
 
     def must_stay_at_home(self, person: "Person", days_from_start):
         self_quarantine = False
@@ -234,7 +238,7 @@ class Quarantine(StayHome):
         except:
             pass
         housemates_quarantine = person.residence.group.quarantine(
-            days_from_start, self.n_days_household
+            days_from_start, self.n_days_household, household_complacency = self.household_complacency
         )
         return self_quarantine or housemates_quarantine
 

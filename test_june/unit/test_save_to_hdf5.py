@@ -2,6 +2,7 @@ import numpy as np
 import h5py
 from collections import defaultdict
 from itertools import count
+from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
 from june.demography import Demography, Person, Population
 from june.demography.geography import Geography, Area, SuperArea
 from june.groups import (
@@ -27,6 +28,9 @@ from june.hdf5_savers import (
     save_commute_cities_to_hdf5,
     save_commute_hubs_to_hdf5,
     save_universities_to_hdf5,
+    save_cinemas_to_hdf5,
+    save_pubs_to_hdf5,
+    save_groceries_to_hdf5,
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -40,6 +44,9 @@ from june.hdf5_savers import (
     load_commute_cities_from_hdf5,
     load_commute_hubs_from_hdf5,
     load_universities_from_hdf5,
+    load_pubs_from_hdf5,
+    load_cinemas_from_hdf5,
+    load_groceries_from_hdf5,
 )
 from june import paths
 
@@ -68,6 +75,13 @@ def create_world(geography_h5):
     world = generate_world_from_geography(
         geography=geography, include_households=True, include_commute=True
     )
+    world.pubs = Pubs.for_geography(geography)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.groceries = Groceries.for_geography(geography)
+    leisure = generate_leisure_for_world(
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_vists"], world
+    )
+    leisure.distribute_social_venues_to_households(world.households)
     return world
 
 
@@ -320,7 +334,9 @@ class TestSaveCommute:
         commute_hubs = world_h5.commutehubs
         commute_units = world_h5.commuteunits
         save_commute_hubs_to_hdf5(commute_hubs, "test.hdf5")
-        commute_hubs_recovered, commute_units_recovered = load_commute_hubs_from_hdf5("test.hdf5")
+        commute_hubs_recovered, commute_units_recovered = load_commute_hubs_from_hdf5(
+            "test.hdf5"
+        )
         for hub, hub_recovered in zip(commute_hubs, commute_hubs_recovered):
             assert hub.id == hub_recovered.id
             assert hub.city == hub_recovered.city
@@ -353,6 +369,35 @@ class TestSaveUniversities:
                     assert attribute == attribute2
             assert uni.coordinates[0] == uni2.coordinates[0]
             assert uni.coordinates[1] == uni2.coordinates[1]
+
+
+class TestSaveLeisure:
+    def test__save_pubs(self, world_h5):
+        pubs = world_h5.pubs
+        save_pubs_to_hdf5(pubs, "test.hdf5")
+        pubs_recovered = load_pubs_from_hdf5("test.hdf5")
+        for pub1, pub2 in zip(pubs, pubs_recovered):
+            assert pub1.coordinates[0] == pub2.coordinates[0]
+            assert pub1.coordinates[1] == pub2.coordinates[1]
+            assert pub1.id == pub2.id
+
+    def test__save_groceries(self, world_h5):
+        groceries = world_h5.groceries
+        save_groceries_to_hdf5(groceries, "test.hdf5")
+        groceries_recovered = load_groceries_from_hdf5("test.hdf5")
+        for gr1, gr2 in zip(groceries, groceries_recovered):
+            assert gr1.coordinates[0] == gr2.coordinates[0]
+            assert gr1.coordinates[1] == gr2.coordinates[1]
+            assert gr1.id == gr2.id
+
+    def test__save_cinemas(self, world_h5):
+        cinemas = world_h5.cinemas
+        save_cinemas_to_hdf5(cinemas, "test.hdf5")
+        cinemas_recovered = load_cinemas_from_hdf5("test.hdf5")
+        for cinema1, cinema2 in zip(cinemas, cinemas_recovered):
+            assert cinema1.coordinates[0] == cinema2.coordinates[0]
+            assert cinema1.coordinates[1] == cinema2.coordinates[1]
+            assert cinema1.id == cinema2.id
 
 
 class TestSaveWorld:
@@ -420,3 +465,49 @@ class TestSaveWorld:
             h2_resident_ids = np.array([p.id for p in h2.residents])
             for p1, p2 in zip(np.sort(h1_resident_ids), np.sort(h2_resident_ids)):
                 assert p1 == p2
+
+    def test__social_venues(self, world_h5, world_h5_loaded):
+        for p1, p2 in zip(world_h5.people, world_h5_loaded.people):
+            if p1.residence.group.spec == "household":
+                for key in p1.residence.group.social_venues.keys():
+                    if key not in p2.residence.group.social_venues.keys():
+                        assert len(p1.residence.group.social_venues[key]) == 0
+                        continue
+                    social_venues = p1.residence.group.social_venues[key]
+                    social_venues_recovered = p2.residence.group.social_venues[key]
+                    social_venues_id = np.sort([sv.id for sv in social_venues])
+                    social_venues_recovered_id = np.sort(
+                        [sv.id for sv in social_venues_recovered]
+                    )
+                    assert np.array_equal(social_venues_id, social_venues_recovered_id)
+        for h1, h2 in zip(world_h5.households, world_h5_loaded.households):
+            if h1.relatives_in_households is None:
+                assert (
+                    h2.relatives_in_households is None
+                    or len(h2.relatives_in_households) == 0
+                )
+                continue
+            assert len(h1.relatives_in_households) == len(h2.relatives_in_households)
+            if h1.relatives_in_care_homes is None:
+                assert (
+                    h2.relatives_in_care_homes is None
+                    or len(h2.relatives_in_care_homes) == 0
+                )
+                continue
+            assert len(h1.relatives_in_care_homes) == len(h2.relatives_in_care_homes)
+            if len(h1.relatives_in_households) > 0:
+                h1ids = np.sort(
+                    [relative.id for relative in h1.relatives_in_households]
+                )
+                h2ids = np.sort(
+                    [relative.id for relative in h2.relatives_in_households]
+                )
+                assert np.array_equal(h1ids, h2ids)
+            if len(h1.relatives_in_care_homes) > 0:
+                h1ids = np.sort(
+                    [relative.id for relative in h1.relatives_in_care_homes]
+                )
+                h2ids = np.sort(
+                    [relative.id for relative in h2.relatives_in_care_homes]
+                )
+                assert np.array_equal(h1ids, h2ids)

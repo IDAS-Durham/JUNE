@@ -2,6 +2,7 @@ title: SI model
 
 time:
   total_days: 7
+  initial_day: "2020-03-01" 
   step_duration: 
       weekday:
           0: 12 
