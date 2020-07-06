@@ -214,7 +214,7 @@ class DashPlotter:
         area_data_grouped = area_data.groupby(['date']).sum().reset_index()
 
         dead = list(area_data_grouped['dead'])
-        print (dead)
+
         new_dead = [0]
         for idx, row in area_data_grouped.iterrows():
             if idx == 0:
@@ -232,8 +232,6 @@ class DashPlotter:
             pass
         else:
             change_2day = int(((dead_rm[day_number] - dead_rm[day_number-2])/dead_rm[day_number-2])*100)
-        print (day_number)
-        print (change_2day)
         if change_2day < 0:
             return [
                 html.P(
