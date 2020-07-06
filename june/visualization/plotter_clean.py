@@ -165,14 +165,24 @@ class DashPlotter:
         infected_rm = self.running_mean(infected, 7)
         infected_rm = np.concatenate((base,infected_rm))
 
-        if day_number == 0 or day_number == 1:
-            return "{}%".format(0)
+
+        change_2day = 0
+        if day_number == 0 or day_number == 1 or infected_rm[day_number-2] == 0.:
+            pass
         else:
-            if infected_rm[day_number-2] == 0.:
-                return "{}%".format(0)
-            else:
-                change_2day = int(((infected_rm[day_number] - infected_rm[day_number-2])/infected_rm[day_number-2])*100)
-                return "{}%".format(change_2day)
+            change_2day = int(((infected_rm[day_number] - infected_rm[day_number-2])/infected_rm[day_number-2])*100)
+
+        return [
+            html.P(
+                id="geographical-infection-growth-trends-value",
+                children = [
+                    "{}%".format(
+                        change_2day
+                    ),
+                ],
+                style={"color": self.get_color(change_2day), "font-size": "300%"},
+            ),
+        ]
 
     def get_death_change(self, selectedData, day_number):
 

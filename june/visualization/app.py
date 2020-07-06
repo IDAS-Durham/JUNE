@@ -221,16 +221,13 @@ tab2 = html.Div(
                                     id="geographical-infection-growth-trends-value",
                                     children = [
                                         "{}%".format(
-                                            dash_plotter.get_infection_change(
-                                                selectedData=None,
-                                                day_number = 0
-                                            )
-                                        )
+                                            0
+                                        ),
                                     ],
-                                    style={"color": dash_plotter.get_color(40), "font-size": "300%"},
-                                    className="two-col"
+                                style={"color": dash_plotter.get_color(0), "font-size": "300%"},
                                 ),
                             ],
+                            
                         ),
                         html.P(id="geographical-death-growth-trends-title", children="Death change"),
                         html.P(
@@ -481,7 +478,7 @@ def update_infection_curves(selectedData, chart, crossfilter):
 
 
 @app.callback(
-    Output("geographical-infection-growth-trends-value", "children"),
+    Output("geographical-infection-growth-block", "children"),
     [
         Input("infected-map", "selectedData"),
         Input("day-slider", "value"),
