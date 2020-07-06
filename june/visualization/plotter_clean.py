@@ -47,7 +47,7 @@ class DashPlotter:
         print ('Age data loaded')
 
 
-    def generate_infections_by_age(self):
+    def generate_infections_by_age(self, axis_type):
         data = self.ages_data.reset_index().set_index("age_range")
         fig = go.Figure()
         for age_range in data.index.unique():
@@ -60,6 +60,8 @@ class DashPlotter:
                   title = {"font": {"color": "#2cfec1"}},\
                   xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
                   yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
+        if axis_type == "Log":
+                fig.update_layout(yaxis_type="log")
         return fig
 
     def generate_r0(self):
