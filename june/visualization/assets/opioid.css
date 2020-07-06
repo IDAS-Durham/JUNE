@@ -737,6 +737,11 @@ hr {
     border-top: 1px solid #E1E1E1;
 }
 
+.two-col{
+  display: inline-block;
+  width: 16.25%;
+  text-align: center;
+}
 
 /* Clearing
 –––––––––––––––––––––––––––––––––––––––––––––––––– */

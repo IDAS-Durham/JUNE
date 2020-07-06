@@ -151,6 +151,14 @@ tab1 = html.Div(
     ],
 )
 
+def get_color(a):
+    if a == 0:
+        return "white"
+    elif a < 0:
+        return "#45df7e"
+    else:
+        return "#da5657"
+
 tab2 = html.Div(
     id="root-tab2",
     children=[
@@ -210,6 +218,33 @@ tab2 = html.Div(
                 html.Div(
                     id="graph-container-tab2",
                     children=[
+                        html.P(
+                            id="geographical-infection-growth-trends-title",
+                            children="Infection change",
+                        ),
+                        html.Div(
+                            id="geographical-infection-growth-block",
+                            className="row",
+                            children=[
+                                html.P(
+                                    id="geographical-infection-growth-trends-value",
+                                    children = [
+                                        "{}%".format(40)
+                                    ],
+                                    style={"color": get_color(40), "font-size": "300%"},
+                                    className="two-col"
+                                ),
+                            ],
+                        ),
+                        html.P(id="geographical-death-growth-trends-title", children="Death change"),
+                        html.P(
+                            id="geographical-death-growth-trends-value",
+                            children = [
+                                "{}%".format(40)
+                            ],
+                            style={"color": get_color(40), "font-size": "300%"},
+                            className="two-col"
+                        ),
                         html.P(id="chart-selector-tab2", children="Select chart:", style={'padding':'10px'}),
                         dcc.Dropdown(
                             options=[
@@ -268,7 +303,7 @@ tab3 = html.Div(
                             children=[
                                 html.P(
                                     id="slider-text-tab3",
-                                    children="Drag the slider to change day after start of simualtion:",
+                                    children=["Drag the slider to change day after start of simualtion:"],
                                     style={'padding':'10px'},
                                 ),
                                 dcc.Slider(
