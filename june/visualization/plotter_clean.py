@@ -211,17 +211,17 @@ class DashPlotter:
 
             fig = go.Figure()
             fig.add_trace(
+                go.Scatter(x=hospital_data_grouped['date'], y=np.ones(len(hospital_data_grouped['date']))*hospital_characteristics['n_beds'].sum(), name="total bed capacity")
+            )
+            fig.add_trace(
                 go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients'], name="patients")
+            )
+            fig.add_trace(
+                go.Scatter(x=hospital_data_grouped['date'], y=np.ones(len(hospital_data_grouped['date']))*hospital_characteristics['n_icu_beds'].sum(), name="ICU bed capacity")
             )
             fig.add_trace(
                 go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients_icu'], name="ICU admittance")
             )
-            # fig.add_trace(
-            #     go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_beds'], name="total bed capacity")
-            # )
-            # fig.add_trace(
-            #     go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_beds'], name="ICU bed capacity")
-            # )
             fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
                   font = {"color": "#2cfec1"},\
                   title = {"font": {"color": "#2cfec1"}},\
