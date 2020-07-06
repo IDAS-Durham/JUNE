@@ -4,51 +4,33 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-from datetime import timedelta
+from datetime import timedelta, datetime
 from itertools import chain
 
 from june.logger.read_logger import ReadLogger
 from june.paths import data_path
 
-sa_to_county_filename = (
-    data_path / "not_used_in_code/processed/geographical_data/oa_msoa_lad.csv"
-)
-area_super_area_region_filename = (
-    data_path / "input/geography/area_super_area_region.csv"
-)
-county_shapes_filename = data_path / "input/geography/lad_boundaries.geojson"
+import dash_html_components as html
+
 super_area_coordinates_filename = (
     data_path / "input/geography/super_area_coordinates.csv"
 )
-deaths_region_data = data_path / "covid_real_data/n_deaths_region.csv"
-cases_region_data = data_path / "covid_real_data/n_cases_region.csv"
 
 mapbox_access_token = "pk.eyJ1IjoiYXN0cm9ieXRlIiwiYSI6ImNrYWwxeHNxZTA3cXMyeG15dGlsbzd1aHAifQ.XvkJbn9mEZ2cuctaX1UwTw"
 px.set_mapbox_access_token(mapbox_access_token)
 
-regions_dictionary = {
-    "East Of England": ["East of England"],
-    "Midlands": ["East Midlands", "West Midlands"],
-    "London": ["London"],
-    "South West": ["South West"],
-    "South East": ["South East"],
-    "North East And Yorkshire": ["North East", "Yorkshire and The Humber"],
-    "Wales": ["Wales"],
-}
-
-
 class DashPlotter:
     def __init__(self, results_folder_path: str):
+        print ('Loading logger')
         self.logger_reader = ReadLogger(results_folder_path)
-        with open(county_shapes_filename, "r") as f:
-            self.county_shapes = json.load(f)
+        print ('Logger loaded')
         self.super_area_coordinates = pd.read_csv(super_area_coordinates_filename)
-        self.world_data = self.logger_reader.world_summary()
-        self.area_data = self.logger_reader.super_area_summary()
-        self.area_super_area_region = pd.read_csv(area_super_area_region_filename)
-        self.area_super_area_region.set_index("super_area", inplace=True)
-        self.county_data = self.group_data_by_counties(self.area_data.copy())
-        self.county_data['date'] = self.county_data.index.date
+        print ('Loading area data')
+        self.area_data = pd.read_csv(results_folder_path + '/super_area_summary_clean.csv')
+        self.area_data['date'] = pd.to_datetime(self.area_data['date'], infer_datetime_format=True)
+        print ('Area data loaded')
+
+        print ('Loading hospital data')
         self.hospital_characteristics = (
             self.logger_reader.load_hospital_characteristics()
         )
@@ -58,95 +40,75 @@ class DashPlotter:
         )
         self.hospital_data.set_index("time_stamp", inplace=True)
         self.hospital_data['date'] = self.hospital_data.index.date
-        self.deaths_region_data = pd.read_csv(deaths_region_data, index_col=0)
-        self.deaths_region_data.index = pd.to_datetime(self.deaths_region_data.index)
-        self.cases_region_data = pd.read_csv(cases_region_data, index_col=0)
-        self.cases_region_data.index = pd.to_datetime(self.cases_region_data.index)
-        self.regions = self.deaths_region_data.columns
+        self.hospital_data = self.hospital_data.reset_index()
+        dates = np.unique(self.hospital_data['date'])
+        ids = np.unique(self.hospital_data['id'])
+        indices = []
+        for h_id in ids:
+            hospital_specific_data = self.hospital_data[self.hospital_data['id'] == h_id]
+            for date in dates:
+                indices.append(hospital_specific_data[hospital_specific_data['date'] == date].index[-1])
+        self.hospital_data = self.hospital_data.loc[indices].reset_index()
+        print ('Hospital data has length = {}'.format(len(self.hospital_data)))
+        print ('Hospital data loaded')
+
+        print ('Loading age data')
         self.ages_data = self.logger_reader.age_summary(
             [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         )
+        print ('Age data loaded')
 
-    def group_data_by_counties(self, area_df: pd.DataFrame):
-        area_df.reset_index(inplace=True)
-        sa_to_county_df = pd.read_csv(sa_to_county_filename)
-        data = area_df.reset_index()
-        data = pd.merge(
-            area_df,
-            sa_to_county_df[["MSOA11CD", "LAD17NM"]],
-            left_on="super_area",
-            right_on="MSOA11CD",
-        )
-        data.drop(columns=["MSOA11CD", "super_area"], inplace=True)
-        data.drop_duplicates(inplace=True)
-        data = data.groupby(["time_stamp", "LAD17NM"]).sum().reset_index()
-        data.set_index("time_stamp", inplace=True)
-        return data
 
-    def generate_infection_map_by_county(self, day_number):
-        date = self.county_data['date'][0] + timedelta(days=day_number)
-        data = self.county_data[self.county_data['date'] == date]
-        fig = px.choropleth(
-            data,
-            geojson=self.county_shapes,
-            color="infected",
-            locations="LAD17NM",
-            featureidkey="properties.lad17nm",
-            projection="mercator",
-            hover_data=[
-                "infected",
-                "recovered",
-                "hospitalised",
-                "intensive_care",
-                "dead",
-            ],
-            range_color=(0, self.max_infected),
-        )
-        fig.update_geos(fitbounds="locations", visible=False)
-        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    def generate_infections_by_age(self, axis_type):
+        data = self.ages_data.reset_index().set_index("age_range")
+        fig = go.Figure()
+        for age_range in data.index.unique():
+            toplot = data.loc[age_range]
+            fig.add_trace(
+                go.Scatter(x=toplot["time_stamp"], y=toplot["infected"], name=age_range)
+            )
+        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
+                  font = {"color": "#2cfec1"},\
+                  title = {"font": {"color": "#2cfec1"}},\
+                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
+                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
+        if axis_type == "Log":
+                fig.update_layout(yaxis_type="log")
         return fig
 
-    def generate_animated_general_map(self):
-        data = self.area_data.reset_index()
-        date = []
-        for idx, row in data.iterrows():
-            date.append(row['time_stamp'].date())
-        data['date'] = date
-        data = data.groupby(["date", "super_area"]).sum()
-        data.reset_index(inplace=True)
-        data = pd.merge(
-            data, self.super_area_coordinates, left_on="super_area", right_on="super_area"
+    def generate_r0(self):
+        r_df = self.logger_reader.get_r()
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=r_df.index, y=r_df["value"].values, name="R0"))
+        fig.add_trace(
+            go.Scatter(x=[r_df.index[0], r_df.index[-1]], y=[1, 1], name="unity")
         )
-        dates = np.unique(data['date'])
-        encoding = np.arange(len(dates))
-        encode = {}
-        for idx, i in enumerate(dates):
-            encode[i] = encoding[idx]
-        encoded = []
-        for i in data['date']:
-            encoded.append(encode[i])
-        data['dates_encoded'] = encoded
-        fig = px.scatter_mapbox(
-            data,
-            lat="latitude",
-            lon="longitude",
-            size="infected",
-            color_continuous_scale=px.colors.cyclical.IceFire,
-            size_max=15,
-            zoom=10,
-            animation_frame="dates_encoded",
-            height=800,
-            width=2000,
-        )
-        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
+                  font = {"color": "#2cfec1"},\
+                  title = {"font": {"color": "#2cfec1"}},\
+                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
+                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
         return fig
+
+    def generate_place_of_infection(self):
+        start_date = self.ages_data.index[0].strftime("%Y/%m/%d")
+        end_date = self.ages_data.index[-1].strftime("%Y/%m/%d")
+        places = self.logger_reader.get_locations_infections(
+            start_date=start_date, end_date=end_date,
+        )
+        places = places["percentage_infections"].sort_values()
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=places.index, y=places.values))
+        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
+                  font = {"color": "#2cfec1"},\
+                  title = {"font": {"color": "#2cfec1"}},\
+                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
+                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
+        return fig
+    
 
     def generate_animated_map_callback(self, day_number):
-        data = self.area_data.reset_index()
-        date = []
-        for idx, row in data.iterrows():
-            date.append(row['time_stamp'].date())
-        data['date'] = date
+        data = self.area_data
         data = data.groupby(["date", "super_area"]).sum()
         data.reset_index(inplace=True)
         data = pd.merge(
@@ -168,10 +130,21 @@ class DashPlotter:
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
 
-    def generate_infection_curves_callback(self, selectedData, chart_type, axis_type):
+    def running_mean(self, x, N):
+        cumsum = np.cumsum(np.insert(x, 0, 0)) 
+        return (cumsum[N:] - cumsum[:-N]) / float(N)
 
-        area_data = self.area_data.reset_index()
-        area_data = pd.merge(area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
+    def get_color(self, a):
+        if a == 0:
+            return "white"
+        elif a < 0:
+            return "#45df7e"
+        else:
+            return "#da5657"
+
+    def get_infection_change(self, selectedData, day_number):
+
+        area_data = pd.merge(self.area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
 
         if selectedData is None:
             selected_super_areas = np.unique(area_data['super_area'])
@@ -182,10 +155,122 @@ class DashPlotter:
             selected_super_areas = np.unique(super_areas)
         
         area_data = area_data[area_data['super_area'].isin(selected_super_areas)]
-        date = []
-        for idx, row in area_data.iterrows():
-            date.append(row['time_stamp'].date())
-        area_data['date'] = date
+
+        area_data_grouped = area_data.groupby(['date']).sum().reset_index()
+
+        infected = list(area_data_grouped['infected'])
+        
+        # Calculate 7-day rolling average
+        base = np.zeros(6)
+        infected_rm = self.running_mean(infected, 7)
+        infected_rm = np.concatenate((base,infected_rm))
+
+
+        change_2day = 0
+        if day_number == 0 or day_number == 1 or infected_rm[day_number-2] == 0.:
+            pass
+        else:
+            change_2day = int(((infected_rm[day_number] - infected_rm[day_number-2])/infected_rm[day_number-2])*100)
+            
+        if change_2day < 0:
+            return [
+                html.P(
+                    id="geographical-infection-growth-trends-value",
+                    children = [
+                        "-{}%".format(
+                            -1*change_2day
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
+        else:
+            return [
+                html.P(
+                    id="geographical-infection-growth-trends-value",
+                    children = [
+                        "+{}%".format(
+                            change_2day
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
+
+    def get_death_change(self, selectedData, day_number):
+
+        area_data = pd.merge(self.area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
+
+        if selectedData is None:
+            selected_super_areas = np.unique(area_data['super_area'])
+        else:
+            super_areas = []
+            for point in selectedData['points']:
+                super_areas.append(list(area_data['super_area'][area_data['latitude'] == point['lat']])[0])
+            selected_super_areas = np.unique(super_areas)
+        
+        area_data = area_data[area_data['super_area'].isin(selected_super_areas)]
+
+        area_data_grouped = area_data.groupby(['date']).sum().reset_index()
+
+        dead = list(area_data_grouped['dead'])
+
+        new_dead = [0]
+        for idx, row in area_data_grouped.iterrows():
+            if idx == 0:
+                pass
+            else:
+                new_dead.append(row['dead'] - dead[idx-1])
+
+        # Calculate 7-day rolling average
+        base = np.zeros(6)
+        dead_rm = self.running_mean(new_dead, 7)
+        dead_rm = np.concatenate((base,dead_rm))
+
+        change_2day = 0
+        if day_number == 0 or day_number == 1 or dead_rm[day_number-2] == 0.:
+            pass
+        else:
+            change_2day = int(((dead_rm[day_number] - dead_rm[day_number-2])/dead_rm[day_number-2])*100)
+        if change_2day < 0:
+            return [
+                html.P(
+                    id="geographical-death-growth-trends-value",
+                    children = [
+                        "-{}%".format(
+                            -1*change_2day
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
+        else:
+            return [
+                html.P(
+                    id="geographical-death-growth-trends-value",
+                    children = [
+                        "+{}%".format(
+                            change_2day
+                        ),
+                    ],
+                    style={"color": self.get_color(change_2day), "font-size": "300%"},
+                ),
+            ]
+
+    def generate_infection_curves_callback(self, selectedData, chart_type, axis_type):
+
+        area_data = pd.merge(self.area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
+
+        if selectedData is None:
+            selected_super_areas = np.unique(area_data['super_area'])
+        else:
+            super_areas = []
+            for point in selectedData['points']:
+                super_areas.append(list(area_data['super_area'][area_data['latitude'] == point['lat']])[0])
+            selected_super_areas = np.unique(super_areas)
+        
+        area_data = area_data[area_data['super_area'].isin(selected_super_areas)]
+
         area_data_grouped = area_data.groupby(['date']).sum().reset_index()
 
         if chart_type == 'show_SIR_curves':
@@ -208,107 +293,7 @@ class DashPlotter:
             if axis_type == "Log":
                 fig.update_layout(yaxis_type="log")
             return fig
-        
-    def generate_county_infection_curves(self, county, axis_type="Linear"):
-        data = self.county_data[self.county_data["LAD17NM"] == county]
-        data = data.groupby(by=data.index.date).first()
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(x=data.index.values, y=data["infected"].values, name="infected")
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=data.index.values, y=data["hospitalised"].values, name="hospitalised"
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=data.index.values,
-                y=data["intensive_care"].values,
-                name="intensive care",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(x=data.index.values, y=data["dead"].values, name="dead")
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=data.index.values, y=data["recovered"].values, name="recovered"
-            )
-        )
-        fig.update_layout(template="simple_white", title="Infection by county")
-        if axis_type == "Log":
-            fig.update_layout(yaxis_type="log")
-        return fig
 
-    def generate_general_infection_curves(self, axis_type="Linear"):
-        data = self.world_data
-        data = data.groupby(by=data.index.date).first()
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(x=data.index.values, y=data["infected"].values, name="infected")
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=data.index.values, y=data["hospitalised"].values, name="hospitalised"
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=data.index.values,
-                y=data["intensive_care"].values,
-                name="intensive care",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(x=data.index.values, y=data["dead"].values, name="dead")
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=data.index.values, y=data["recovered"].values, name="recovered"
-            )
-        )
-        fig.update_layout(template="simple_white", title="World infection curves")
-        if axis_type == "Log":
-            fig.update_layout(yaxis_type="log")
-        return fig
-
-    def generate_hospital_map(self, day_number):
-        date = self.hospital_data['date'][0] + timedelta(days=day_number)
-        hospital_data = self.hospital_data[self.hospital_data['date'] == date]
-        lon = self.hospital_characteristics["longitude"].values
-        lat = self.hospital_characteristics["latitude"].values
-        text_list = []
-        for n_patients, n_patients_icu, n_beds, n_icu_beds in zip(
-            hospital_data["n_patients"].values,
-            hospital_data["n_patients_icu"].values,
-            self.hospital_characteristics["n_beds"].values,
-            self.hospital_characteristics["n_icu_beds"].values,
-        ):
-            text = "Occupied {} beds of {}. Occupied {} ICU beds of {}".format(n_patients, n_beds, n_patients_icu, n_icu_beds)
-            text_list.append(text)
-        fig = go.Figure(
-            go.Scattermapbox(
-                mode="markers",
-                lon=lon,
-                lat=lat,
-                marker={"size": 20, "symbol": ["marker"] * len(lat),},
-                text=text_list,
-                textposition="bottom right",
-            )
-        )
-        fig.update_layout(
-            margin={"r": 0, "t": 0, "l": 0, "b": 0},
-            width=2000,
-            height=800,
-            mapbox={
-                "accesstoken": mapbox_access_token,
-                "style": "light",
-                "zoom": 10,
-                "center": {"lat": np.mean(lat), "lon": np.mean(lon)},
-            },
-        )
-        return fig
 
     def generate_hospital_map_callback(self, day_number):
         date = self.hospital_data['date'][0] + timedelta(days=day_number)
@@ -349,34 +334,39 @@ class DashPlotter:
 
         hospital_data = self.hospital_data
         hospital_characteristics = self.hospital_characteristics.reset_index()
-        #hospital_data = pd.merge(hospital_data, hospital_characteristics, left_on="id", right_on="index")
 
         if selectedData is None:
             selected_hospitals = np.unique(hospital_data['id'])
         else:
             hospitals = []
             for point in selectedData['points']:
-                super_areas.append(list(hospital_data['index'][hospital_data['latitude'] == point['lat']])[0])
+                hospitals.append(list(hospital_characteristics['index'][hospital_characteristics['latitude'] == point['lat']])[0])
             selected_hospitals = np.unique(hospitals)
         
         hospital_data = hospital_data[hospital_data['id'].isin(selected_hospitals)]
-        hospital_data_grouped = hospital_data.groupby(['date']).sum().reset_index()
+
+        dates = np.unique(hospital_data['date'])
+        patients = []
+        icu_patients = []
+        for date in dates:
+            patients.append(hospital_data['n_patients'][hospital_data['date'] == date].sum())
+            icu_patients.append(hospital_data['n_patients_icu'][hospital_data['date'] == date].sum())
 
         if chart_type == 'show_hospitalisation_curves':
 
             fig = go.Figure()
             fig.add_trace(
-                go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients'], name="patients")
+                go.Scatter(x=dates, y=np.ones(len(dates))*hospital_characteristics['n_beds'].sum(), name="total bed capacity")
             )
             fig.add_trace(
-                go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients_icu'], name="ICU admittance")
+                go.Scatter(x=dates, y=patients, name="patients")
             )
-            # fig.add_trace(
-            #     go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_beds'], name="total bed capacity")
-            # )
-            # fig.add_trace(
-            #     go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_beds'], name="ICU bed capacity")
-            # )
+            fig.add_trace(
+                go.Scatter(x=dates, y=np.ones(len(dates))*hospital_characteristics['n_icu_beds'].sum(), name="ICU bed capacity")
+            )
+            fig.add_trace(
+                go.Scatter(x=dates, y=icu_patients, name="ICU admittance")
+            )
             fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
                   font = {"color": "#2cfec1"},\
                   title = {"font": {"color": "#2cfec1"}},\
@@ -386,126 +376,19 @@ class DashPlotter:
                 fig.update_layout(yaxis_type="log")
             return fig
 
-    def generate_infections_by_age(self):
-        data = self.ages_data.reset_index().set_index("age_range")
-        fig = go.Figure()
-        for age_range in data.index.unique():
-            toplot = data.loc[age_range]
-            fig.add_trace(
-                go.Scatter(x=toplot["time_stamp"], y=toplot["infected"], name=age_range)
-            )
-        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
-                  font = {"color": "#2cfec1"},\
-                  title = {"font": {"color": "#2cfec1"}},\
-                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
-                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
-        return fig
-
-    def generate_r0(self):
-        r_df = self.logger_reader.get_r()
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=r_df.index, y=r_df["value"].values, name="R0"))
-        fig.add_trace(
-            go.Scatter(x=[r_df.index[0], r_df.index[-1]], y=[1, 1], name="unity")
-        )
-        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
-                  font = {"color": "#2cfec1"},\
-                  title = {"font": {"color": "#2cfec1"}},\
-                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
-                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
-        return fig
-
-    def generate_place_of_infection(self):
-        start_date = self.ages_data.index[0].strftime("%Y/%m/%d")
-        end_date = self.ages_data.index[-1].strftime("%Y/%m/%d")
-        places = self.logger_reader.get_locations_infections(
-            start_date=start_date, end_date=end_date,
-        )
-        places = places["percentage_infections"].sort_values()
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=places.index, y=places.values))
-        fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
-                  font = {"color": "#2cfec1"},\
-                  title = {"font": {"color": "#2cfec1"}},\
-                  xaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"},\
-                  yaxis = {"tickfont": {"color":"#2cfec1"}, "gridcolor": "#5b5b5b"})
-        return fig
-
-    def generate_symptom_trajectories(self):
-        random_trajectories = self.logger_reader.draw_symptom_trajectories(
-            window_length=100, n_people=5
-        )
-        fig = go.Figure()
-        for df_person in random_trajectories:
-            fig.add_trace(go.Scatter(x=df_person.index, y=df_person["symptoms"]))
-        symptoms_names = [
-            "recovered",
-            "healthy",
-            "exposed",
-            "asymptomatic",
-            "influenza",
-            "pneumonia",
-            "hospitalised",
-            "intensive_care",
-            "dead",
-        ]
-        fig.update_layout(
-            template="simple_white",
-            title="Symptoms trajectories",
-            yaxis=dict(
-                tickmode="array", tickvals=np.arange(-3, 6), ticktext=symptoms_names,
-            ),
-            xaxis_title="Date",
-            yaxis_title="Symptoms",
-        )
-        return fig
-
-    def generate_data_comparison(self, region):
-        region_names = regions_dictionary[region]
-        deaths_real_data = self.deaths_region_data[region]
-        super_areas = self.area_super_area_region[
-            self.area_super_area_region.region.isin(region_names)
-        ].index.values
-        june_data = self.area_data.loc[self.area_data.super_area.isin(super_areas)]
-        june_data = june_data.groupby(june_data.index).sum()
-        fig = make_subplots(rows=1, cols=1)
-        fig.add_trace(
-            go.Scatter(
-                x=deaths_real_data.index.date,
-                y=deaths_real_data.values.cumsum(),
-                name="data",
-                line=dict(color="rgb(231,107,243)", width=4, dash="dash"),
-            ),
-            row=1,
-            col=1,
-        )
-        if len(june_data) != 0:
-            fig.add_trace(
-                go.Scatter(
-                    x=june_data.index.date,
-                    y=june_data["dead"].values.cumsum(),
-                    name="prediction",
-                    line=dict(color="royalblue", width=4),
-                ),
-                row=1,
-                col=1,
-            )
-        fig.update_layout(template="simple_white",)
-        fig.update_xaxes(title_text="Date", row=1, col=1)
-        fig.update_yaxes(title_text="Deaths", row=1, col=1)
-        return fig
-
-    @property
-    def max_infected(self):
-        return self.county_data["infected"].max()
-
     @property
     def dates(self):
-        return self.county_data.index.date
+        return self.area_data['date']
 
     @property
     def days(self):
         dates = np.unique(self.dates)
-        days = [date.day for date in dates]
-        days_rebase =np.arange(len(days))
-        return days_rebase
+        days = np.arange(0, len(dates), 3)
+        dates = dates[days]
+
+        dates_reformat = []
+        for idx, date in enumerate(dates):
+            dates_reformat.append(datetime.utcfromtimestamp(date.tolist()/1e9).strftime("%d/%m"))
+        return dates_reformat
+        
+    
