@@ -427,11 +427,11 @@ def update_hospiptalisation_map(value):
               [
                   Input("hospitalisation-map", "selectedData"),
                   Input("hospitalisation-chart-dropdown", "value"),
-                  Input("hospitalisation-crossfilter-yaxis-type"),
+                  Input("hospitalisation-crossfilter-yaxis-type", "value"),
               ],
 )
 def update_hospitalisation_curves(selectedData, chart, crossfilter):
-    return dash_plotter.generate_hospital_curves_callback(selectedData, chart_type, axis_type)
+    return dash_plotter.generate_hospital_curves_callback(selectedData, chart, crossfilter)
 
 if __name__ == "__main__":
     app.run_server(debug=True)
