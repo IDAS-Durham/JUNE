@@ -13,6 +13,7 @@ from june.groups.leisure import (
     CareHomeVisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
+from june.groups import Household
 from june import paths
 
 default_config_filename = paths.configs_path / "config_example.yaml"
@@ -79,7 +80,6 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     if "residence_visits" in list_of_leisure_groups:
         raise NotImplementedError
     leisure = Leisure(leisure_distributors)
-    leisure.distribute_social_venues_to_people(world.people)
     return leisure
 
 
@@ -133,12 +133,12 @@ class Leisure:
             self.refresh_random_numbers()
             return self.random_integers.pop()
 
-    def distribute_social_venues_to_people(self, people: List[Person]):
-        for person in people:
-            person.social_venues = {}
+    def distribute_social_venues_to_households(self, households: List[Household]):
+        for household in households:
+            household.social_venues = {}
             for activity, distributor in self.leisure_distributors.items():
-                social_venues = distributor.get_possible_venues_for_person(person)
-                person.social_venues[activity] = social_venues
+                social_venues = distributor.get_possible_venues_for_household(household)
+                household.social_venues[activity] = social_venues
 
     def update_household_and_care_home_visits_targets(self, people: List[Person]):
         """
@@ -146,14 +146,24 @@ class Leisure:
         This is necessary in case the relatives have died.
         """
         for person in people:
-            if "household_visits" in person.social_venues:
-                person.social_venues["household_visits"] = self.leisure_distributors[
+            if person.residence is None or person.residence.group.spec != "household":
+                continue
+            if "household_visits" in person.residence.group.social_venues:
+                person.residence.group.social_venues[
                     "household_visits"
-                ].get_possible_venues_for_person(person)
-            if "care_home_visits" in person.social_venues:
-                person.social_venues["care_home_visits"] = self.leisure_distributors[
+                ] = self.leisure_distributors[
+                    "household_visits"
+                ].get_possible_venues_for_household(
+                    person.residence.group
+                )
+            if "care_home_visits" in person.residence.group.social_venues:
+                person.residence.group.social_venues[
                     "care_home_visits"
-                ].get_possible_venues_for_person(person)
+                ] = self.leisure_distributors[
+                    "care_home_visits"
+                ].get_possible_venues_for_household(
+                    person.residence.group
+                )
 
     def get_leisure_probability_for_age_and_sex(
         self, age, sex, delta_time, is_weekend, closed_venues
@@ -216,17 +226,21 @@ class Leisure:
             person.residence.group.spec == "care_home"
             or person.residence.group.type in ["communal", "other", "student"]
         ):
-            return 
+            return
         if self.get_random_number() < probability:
             for mate in person.residence.group.residents:
                 if mate != person:
                     if mate.busy:
-                        if mate.leisure is not None: #this perosn has already been assigned somewhere
+                        if (
+                            mate.leisure is not None
+                        ):  # this perosn has already been assigned somewhere
                             mate.leisure.remove(mate)
                             mate.subgroups.leisure = subgroup
                             subgroup.append(mate)
                     else:
-                        mate.subgroups.leisure = subgroup #person will be added later in the simulator.
+                        mate.subgroups.leisure = (
+                            subgroup  # person will be added later in the simulator.
+                        )
 
     def get_subgroup_for_person_and_housemates(self, person: Person):
         """
@@ -247,6 +261,8 @@ class Leisure:
         person
             an instance of person
         """
+        if person.residence.group.spec != "household":
+            return
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
         if self.get_random_number() < prob_age_sex["does_activity"]:
             activity_idx = random_choice_numba(
@@ -254,7 +270,7 @@ class Leisure:
                 prob=np.array(list(prob_age_sex["activities"].values())),
             )
             activity = list(prob_age_sex["activities"].keys())[activity_idx]
-            candidates = person.social_venues[activity]
+            candidates = person.residence.group.social_venues[activity]
             candidates_length = len(candidates)
             if candidates_length == 0:
                 return
