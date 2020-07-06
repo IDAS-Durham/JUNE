@@ -212,7 +212,7 @@ tab2 = html.Div(
                     children=[
                         html.P(
                             id="geographical-infection-growth-trends-title",
-                            children="Infection change",
+                            children="Infection change over previous 48 hours (calculated using 7-day rolling average)",
                         ),
                         html.Div(
                             id="geographical-infection-growth-block",
@@ -228,7 +228,7 @@ tab2 = html.Div(
                                 ),
                             ],                         
                         ),
-                        html.P(id="geographical-death-growth-trends-title", children="Death change"),
+                        html.P(id="geographical-death-growth-trends-title", children="Death change over previous 48 hours (calculated using 7-day rolling average)"),
                         html.Div(
                             id="geographical-death-growth-block",
                             children=[
