@@ -160,7 +160,7 @@ tab2 = html.Div(
                 html.H4(children="Geographical statistics"),
                 html.P(
                     id="description-tab2",
-                    children="Infection statistics broken down by geographical regions over time",
+                    children="Infection statistics broken down by geographical regions over time. Instructions: Selected a date using the slider and then use the selection tools on the map to update the growth numbers and plots.",
                 ),
             ],
         ),
@@ -228,7 +228,9 @@ tab2 = html.Div(
                                 ),
                             ],                         
                         ),
-                        html.P(id="geographical-death-growth-trends-title", children="Death change over previous 48 hours (calculated using 7-day rolling average)"),
+                        html.P(
+                            id="geographical-death-growth-trends-title",
+                            children="Death change over previous 48 hours (calculated using 7-day rolling average)"),
                         html.Div(
                             id="geographical-death-growth-block",
                             children=[
@@ -286,7 +288,7 @@ tab3 = html.Div(
                 html.H4(children="Hospitalisation statistics"),
                 html.P(
                     id="description-tab3",
-                    children="Hospitalisation statistics broken down by geographical regions over time",
+                    children="Hospitalisation statistics broken down by geographical regions over time. Instructions: Selected a date using the slider and then use the selection tools on the map to update the plots",
                 ),
             ],
         ),
