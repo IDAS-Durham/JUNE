@@ -261,7 +261,12 @@ class Leisure:
                         if (
                             mate.leisure is not None
                         ):  # this perosn has already been assigned somewhere
-                            mate.leisure.remove(mate)
+                            try:
+                                mate.leisure.remove(mate)
+                            except:
+                                print(person)
+                                print(subgroup.group.spec)
+                                raise ValueError
                             mate.subgroups.leisure = subgroup
                             subgroup.append(mate)
                     else:
@@ -288,7 +293,7 @@ class Leisure:
         person
             an instance of person
         """
-        if person.residence.group.spec != "household":
+        if person.residence.group.spec == "care_home":
             return
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
         if self.get_random_number() < prob_age_sex["does_activity"]:

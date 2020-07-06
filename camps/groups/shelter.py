@@ -5,15 +5,13 @@ from june.groups import Group, Supergroup, Households, Household
 from june.demography.geography import Areas
 
 
-class Shelter(Group):
+class Shelter(Household):
     class SubgroupType(IntEnum):
         household_1 = 1
         household_2 = 2
 
-    def __init__(self):
-        super().__init__()
-        self.type = "family"
-        self.residents = ()
+    def __init__(self, area=None):
+        super().__init__(type="shelter", area=area)
 
     def add(self, household: Household):
         if not isinstance(household, Household):
@@ -38,10 +36,6 @@ class Shelter(Group):
         return [subgroup for subgroup in self.subgroups if len(subgroup) != 0]
 
     @property
-    def households(self):
-        return [subgroup for subgroup in self.subgroups if len(subgroup) != 0]
-
-    @property
     def n_families(self):
         return len(self.families)
 
@@ -49,6 +43,12 @@ class Shelter(Group):
     def n_households(self):
         return len(self.families)
 
+    @property
+    def coordinates(self):
+        return self.area.coordinates
+
+    def get_leisure_subgroup(self, person):
+        raise NotImplementedError()
 
 class Shelters(Supergroup):
     def __init__(self, shelters):
@@ -69,7 +69,7 @@ class Shelters(Supergroup):
             n_families_area = len(area.households)
             n_shelters_multi = int(np.floor(sharing_shelter_ratio * n_families_area/ 2))
             n_shelters = n_families_area - n_shelters_multi
-            area.shelters = [Shelter() for _ in range(n_shelters)]
+            area.shelters = [Shelter(area=area) for _ in range(n_shelters)]
             shelters += area.shelters
         return cls(shelters)
 

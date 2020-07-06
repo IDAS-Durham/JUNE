@@ -7,6 +7,7 @@ from june.groups.leisure.social_venue import SocialVenue, SocialVenues, SocialVe
 from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_configs_path
 from june.demography.geography import SuperArea, Area
+from june.groups import Household
 
 default_config_filename = camp_configs_path / "defaults/groups/pump_latrine.yaml"
 
@@ -59,3 +60,7 @@ class PumpLatrineDistributor(SocialVenueDistributor):
         """
         venue = np.random.choice(person.area.pump_latrines)
         return venue
+
+    def get_possible_venues_for_household(self, household: Household):
+        venue = np.random.choice(household.area.pump_latrines)
+        return [venue]

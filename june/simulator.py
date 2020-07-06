@@ -329,7 +329,7 @@ class Simulator:
         if guardian is not None:
             if guardian.busy:
                 for subgroup in guardian.subgroups.iter():
-                    if guardian in subgroup:
+                    if subgroup is not None and guardian in subgroup:
                         subgroup.remove(guardian)
                         break
             guardian.residence.append(guardian)

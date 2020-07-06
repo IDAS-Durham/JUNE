@@ -3,3 +3,4 @@ male_age_probabilities:
 female_age_probabilities:
   0-100 : 0.5
 weekend_boost: 1.
+drags_household_probability: 0.0
