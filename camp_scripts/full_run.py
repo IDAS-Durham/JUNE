@@ -114,6 +114,9 @@ leisure_instance.leisure_distributors['distribution_centers'] = DistributionCent
 leisure_instance.leisure_distributors['communals'] = CommunalDistributor.from_config(communals=world.communals)
 leisure_instance.leisure_distributors['female_communals'] = FemaleCommunalDistributor.from_config(female_communals=world.female_communals)
 
+#associate social activities to shelters
+leisure_instance.distribute_social_venues_to_households(world.households)
+
 simulator = CampSimulator.from_file(
      world, interaction, selector,
     leisure = leisure_instance,
