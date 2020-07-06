@@ -47,6 +47,7 @@ class DashPlotter:
             for date in dates:
                 indices.append(hospital_specific_data[hospital_specific_data['date'] == date].index[-1])
         self.hospital_data = self.hospital_data.loc[indices].reset_index()
+        print ('Hospital data has length = {}'.format(len(self.hospital_data)))
         print ('Hospital data loaded')
 
         print ('Loading age data')
@@ -216,22 +217,28 @@ class DashPlotter:
             selected_hospitals = np.unique(hospitals)
         
         hospital_data = hospital_data[hospital_data['id'].isin(selected_hospitals)]
-        hospital_data_grouped = hospital_data.groupby(['date']).sum().reset_index()
+        #hospital_data_grouped = hospital_data.groupby(['date']).sum().reset_index()
+        dates = np.unique(hospital_data['date'])
+        patients = []
+        icu_patients = []
+        for date in dates:
+            patients.append(hospital_data['n_patients'][hospital_data['date'] == date].sum())
+            icu_patients.append(hospital_data['n_patients_icu'][hospital_data['date'] == date].sum())
 
         if chart_type == 'show_hospitalisation_curves':
 
             fig = go.Figure()
             fig.add_trace(
-                go.Scatter(x=hospital_data_grouped['date'], y=np.ones(len(hospital_data_grouped['date']))*hospital_characteristics['n_beds'].sum(), name="total bed capacity")
+                go.Scatter(x=dates, y=np.ones(len(dates))*hospital_characteristics['n_beds'].sum(), name="total bed capacity")
             )
             fig.add_trace(
-                go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients'], name="patients")
+                go.Scatter(x=dates, y=patients, name="patients")
             )
             fig.add_trace(
-                go.Scatter(x=hospital_data_grouped['date'], y=np.ones(len(hospital_data_grouped['date']))*hospital_characteristics['n_icu_beds'].sum(), name="ICU bed capacity")
+                go.Scatter(x=dates, y=np.ones(len(dates))*hospital_characteristics['n_icu_beds'].sum(), name="ICU bed capacity")
             )
             fig.add_trace(
-                go.Scatter(x=hospital_data_grouped['date'], y=hospital_data_grouped['n_patients_icu'], name="ICU admittance")
+                go.Scatter(x=dates, y=icu_patients, name="ICU admittance")
             )
             fig.update_layout(paper_bgcolor="#1f2630", plot_bgcolor="#1f2630", \
                   font = {"color": "#2cfec1"},\
