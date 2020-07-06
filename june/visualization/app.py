@@ -183,7 +183,7 @@ tab2 = html.Div(
                                     min=0,
                                     max=len(dash_plotter.days) - 1,
                                     value=0,
-                                    marks={i: str(date) for i, date in enumerate(dash_plotter.days)}
+                                    marks={i: str(day) for i, day in enumerate(dash_plotter.days)},
                                 ),
                             ],
                         ),
@@ -226,17 +226,22 @@ tab2 = html.Div(
                                     ],
                                 style={"color": dash_plotter.get_color(0), "font-size": "300%"},
                                 ),
-                            ],
-                            
+                            ],                         
                         ),
                         html.P(id="geographical-death-growth-trends-title", children="Death change"),
-                        html.P(
-                            id="geographical-death-growth-trends-value",
-                            children = [
-                                "{}%".format(40)
+                        html.Div(
+                            id="geographical-death-growth-block",
+                            children=[
+                                html.P(
+                                    id="geographical-death-growth-trends-value",
+                                    children = [
+                                        "{}%".format(
+                                            0
+                                        ),
+                                    ],
+                                style={"color": dash_plotter.get_color(0), "font-size": "300%"},
+                                ),
                             ],
-                            style={"color": dash_plotter.get_color(40), "font-size": "300%"},
-                            className="two-col"
                         ),
                         html.P(id="chart-selector-tab2", children="Select chart:", style={'padding':'10px'}),
                         dcc.Dropdown(
@@ -304,7 +309,7 @@ tab3 = html.Div(
                                     min=0,
                                     max=len(dash_plotter.days) - 1,
                                     value=0,
-                                    marks={i: str(day) for i, day in enumerate(dash_plotter.days)}
+                                    marks={i: str(day) for i, day in enumerate(dash_plotter.days)},
                                 ),
                             ],
                         ),
@@ -486,6 +491,17 @@ def update_infection_curves(selectedData, chart, crossfilter):
 )
 def update_infection_change(selectedData, value):
     return dash_plotter.get_infection_change(selectedData, value)
+
+
+@app.callback(
+    Output("geographical-death-growth-block", "children"),
+    [
+        Input("infected-map", "selectedData"),
+        Input("day-slider", "value"),
+    ]
+)
+def update_death_change(selectedData, value):
+    return dash_plotter.get_death_change(selectedData, value)
 
 
 @app.callback(Output("hospitalisation-map-title", "children"), [Input("hospitalisation-day-slider", "value")])
