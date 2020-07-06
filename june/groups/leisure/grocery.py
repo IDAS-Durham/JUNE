@@ -6,41 +6,63 @@ from typing import List
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
-from june.demography.geography import SuperArea
+from june.demography.geography import SuperArea, Areas, Geography
 
 default_config_filename = configs_path / "defaults/groups/leisure/groceries.yaml"
+default_groceries_coordinates_filename = (
+    data_path / "input/leisure/groceries_per_super_area.csv"
+)
 
 
 class Grocery(SocialVenue):
-    def __init__(self, max_size=100):
-        self.max_size = max_size
+    def __init__(self):
         super().__init__()
 
 
 class Groceries(SocialVenues):
-    def __init__(self, groceries: List[Grocery]):
+    def __init__(self, groceries: List[Grocery], make_tree=True):
         super().__init__(groceries)
+        if make_tree:
+            self.make_tree()
 
     @classmethod
-    def for_super_areas(cls, super_areas: List[SuperArea], venues_per_capita=1/760, max_size=100):
-        """
-        Generates social venues in the given super areas.
+    def for_super_areas(
+        cls,
+        super_areas: List[SuperArea],
+        coordinates_filename: str = default_groceries_coordinates_filename,
+    ):
+        groceries_per_super_area = pd.read_csv(coordinates_filename)
+        sa_names = [super_area.name for super_area in super_areas]
+        groceries_coordinates = groceries_per_super_area.loc[
+            groceries_per_super_area.super_area.isin(sa_names), ["lat", "lon"]
+        ]
+        return cls.from_coordinates(groceries_coordinates.values)
 
-        Parameters
-        ----------
-        super_areas
-            list of areas to generate the venues in
-        venues_per_super_area
-            how many venus per super_area to generate
-        """
-        groceries = []
-        for super_area in super_areas:
-            area_population = len(super_area.people)
-            for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
-                grocery = Grocery(max_size)
-                super_area.groceries.append(grocery)
-                groceries.append(grocery)
-        return cls(groceries)
+    @classmethod
+    def for_areas(
+        cls,
+        areas: Areas,
+        coordinates_filename: str = default_groceries_coordinates_filename,
+    ):
+        super_areas = [area.super_area for area in areas]
+        return cls.for_super_areas(super_areas, coordinates_filename)
+
+    @classmethod
+    def for_geography(
+        cls,
+        geography: Geography,
+        coordinates_filename: str = default_groceries_coordinates_filename,
+    ):
+        return cls.for_super_areas(geography.super_areas, coordinates_filename)
+
+    @classmethod
+    def from_coordinates(cls, coordinates: List[np.array], **kwargs):
+        social_venues = list()
+        for coord in coordinates:
+            sv = Grocery()
+            sv.coordinates = coord
+            social_venues.append(sv)
+        return cls(social_venues, **kwargs)
 
 
 class GroceryDistributor(SocialVenueDistributor):
@@ -49,15 +71,19 @@ class GroceryDistributor(SocialVenueDistributor):
         groceries: Groceries,
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
+        neighbours_to_consider=10,
+        maximum_distance=10,
         weekend_boost: float = 2.0,
-        drags_household_probability = 0.5
+        drags_household_probability=0.5,
     ):
         super().__init__(
             social_venues=groceries,
             male_age_probabilities=male_age_probabilities,
             female_age_probabilities=female_age_probabilities,
             weekend_boost=weekend_boost,
-            drags_household_probability=drags_household_probability
+            drags_household_probability=drags_household_probability,
+            neighbours_to_consider=neighbours_to_consider,
+            maximum_distance=maximum_distance,
         )
 
     @classmethod
@@ -65,14 +91,3 @@ class GroceryDistributor(SocialVenueDistributor):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(groceries, **config)
-
-    def get_possible_venues_for_person(self, person):
-        return person.area.super_area.groceries
-
-    def get_social_venue_for_person(self, person):
-        """
-        We select a random grocery shop from the person super area.
-        """
-        venue = np.random.choice(person.area.super_area.groceries) 
-        return venue
-
