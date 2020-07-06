@@ -181,9 +181,9 @@ tab2 = html.Div(
                                 dcc.Slider(
                                     id="day-slider",
                                     min=0,
-                                    max=len(dash_plotter.days) - 1,
+                                    max=10,#len(dash_plotter.days) - 1,
                                     value=0,
-                                    marks={i: str(day) for i, day in enumerate(dash_plotter.days)},
+                                    marks={0:'test0', 5:'test5', 7:'test7', 10:'test10'}#{i: str(day) for i, day in enumerate(dash_plotter.days)},
                                 ),
                             ],
                         ),
