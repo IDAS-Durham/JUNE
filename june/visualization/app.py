@@ -151,14 +151,6 @@ tab1 = html.Div(
     ],
 )
 
-def get_color(a):
-    if a == 0:
-        return "white"
-    elif a < 0:
-        return "#45df7e"
-    else:
-        return "#da5657"
-
 tab2 = html.Div(
     id="root-tab2",
     children=[
@@ -224,14 +216,18 @@ tab2 = html.Div(
                         ),
                         html.Div(
                             id="geographical-infection-growth-block",
-                            className="row",
                             children=[
                                 html.P(
                                     id="geographical-infection-growth-trends-value",
                                     children = [
-                                        "{}%".format(40)
+                                        "{}%".format(
+                                            dash_plotter.get_infection_change(
+                                                selectedData=None,
+                                                day_number = 0
+                                            )
+                                        )
                                     ],
-                                    style={"color": get_color(40), "font-size": "300%"},
+                                    style={"color": dash_plotter.get_color(40), "font-size": "300%"},
                                     className="two-col"
                                 ),
                             ],
@@ -242,7 +238,7 @@ tab2 = html.Div(
                             children = [
                                 "{}%".format(40)
                             ],
-                            style={"color": get_color(40), "font-size": "300%"},
+                            style={"color": dash_plotter.get_color(40), "font-size": "300%"},
                             className="two-col"
                         ),
                         html.P(id="chart-selector-tab2", children="Select chart:", style={'padding':'10px'}),
@@ -482,6 +478,17 @@ def update_map_title(day):
 )
 def update_infection_curves(selectedData, chart, crossfilter):
     return dash_plotter.generate_infection_curves_callback(selectedData, chart, crossfilter)
+
+
+@app.callback(
+    Output("geographical-infection-growth-trends-value", "children"),
+    [
+        Input("infected-map", "selectedData"),
+        Input("day-slider", "value"),
+    ]
+)
+def update_infection_change(selectedData, value):
+    return dash_plotter.get_infection_change(selectedData, value)
 
 
 @app.callback(Output("hospitalisation-map-title", "children"), [Input("hospitalisation-day-slider", "value")])
