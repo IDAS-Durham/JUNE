@@ -95,6 +95,16 @@ tab1 = html.Div(
                     id="graph-container-tab1-col1",
                     children=[
                         html.P(id="chart-selector-tab1-world-all", children="World Infection Curves", style={'padding':'10px'}),
+                        
+                        dcc.RadioItems(
+                            id='world-infection-crossfilter-yaxis-type',
+                            options=[
+                                {"label": i, "value": i}
+                                for i in ["Linear", "Log"]
+                            ],
+                            value="Linear",
+                        ),
+                        
                         dcc.Graph(
                             figure=dash_plotter.generate_infection_curves_callback(
                                 selectedData=None, chart_type='show_SIR_curves', axis_type="Log"
@@ -102,8 +112,19 @@ tab1 = html.Div(
                             id="world-infection",
                         ),
                         html.P(id="chart-selector-tab1-world-age", children="Age Infection Curves", style={'padding':'10px'}),
+
+                        dcc.RadioItems(
+                            id='world-infection-age-crossfilter-yaxis-type',
+                            options=[
+                                {"label": i, "value": i}
+                                for i in ["Linear", "Log"]
+                            ],
+                            value="Linear",
+                        ),
+                        
                         dcc.Graph(
                             figure=dash_plotter.generate_infections_by_age(
+                                axis_type="Log"
                             ),
                             id="world-infection-age",
                         ),
@@ -112,12 +133,12 @@ tab1 = html.Div(
                 html.Div(
                     id="graph-container-tab1-col2",
                     children=[
-                        html.P(id="chart-selector-tab1-world-where", children="Infection locations", style={'padding':'10px'}),
+                        html.P(id="chart-selector-tab1-world-where", children="Infection locations", style={'padding':'20px'}),
                         dcc.Graph(
                             figure=dash_plotter.generate_place_of_infection(),
                             id="world-infection-where",
                         ),
-                        html.P(id="chart-selector-tab1-world-r0", children="Reproduction number", style={'padding':'10px'}),
+                        html.P(id="chart-selector-tab1-world-r0", children="Reproduction number", style={'padding':'20px'}),
                         dcc.Graph(
                             figure=dash_plotter.generate_r0(
                             ),
@@ -136,7 +157,6 @@ tab2 = html.Div(
         html.Div(
             id="header-tab2",
             children=[
-                #html.Img(id="logo", src=app.get_asset_url("IDAS.png")),
                 html.H4(children="Geographical statistics"),
                 html.P(
                     id="description-tab2",
@@ -379,6 +399,26 @@ def render_content(tab):
         return tab2
     elif tab == 'tab-3':
         return tab3
+
+
+@app.callback(
+    Output("world-infection", "figure"),
+    [Input("world-infection-crossfilter-yaxis-type", "value")]
+)
+def update_world_infection(crossfilter):
+    return dash_plotter.generate_infection_curves_callback(
+        selectedData=None, chart_type='show_SIR_curves', axis_type=crossfilter
+    )
+
+
+@app.callback(
+    Output("world-infection-age", "figure"),
+    [Input("world-infection-age-crossfilter-yaxis-type", "value")]
+)
+def update_world_infection_age(crossfilter):
+    return dash_plotter.generate_infections_by_age(
+        axis_type=crossfilter
+    )
 
     
 @app.callback(
