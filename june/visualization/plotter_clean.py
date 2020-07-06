@@ -128,6 +128,78 @@ class DashPlotter:
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
 
+    def running_mean(self, x, N):
+        cumsum = np.cumsum(np.insert(x, 0, 0)) 
+        return (cumsum[N:] - cumsum[:-N]) / float(N)
+
+    def get_color(self, a):
+        if a == 0:
+            return "white"
+        elif a < 0:
+            return "#45df7e"
+        else:
+            return "#da5657"
+
+    def get_infection_change(self, selectedData):
+
+        area_data = pd.merge(self.area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
+
+        if selectedData is None:
+            selected_super_areas = np.unique(area_data['super_area'])
+        else:
+            super_areas = []
+            for point in selectedData['points']:
+                super_areas.append(list(area_data['super_area'][area_data['latitude'] == point['lat']])[0])
+            selected_super_areas = np.unique(super_areas)
+        
+        area_data = area_data[area_data['super_area'].isin(selected_super_areas)]
+
+        area_data_grouped = area_data.groupby(['date']).sum().reset_index()
+
+        infected = list(area_data_grouped['infected'])
+        
+        # Calculate 7-day rolling average
+        base = np.zeros(6)
+        infected_rm = running_mean(infected, 7)
+        infected_rm = np.concatenate((base,infected_rm))
+
+        change_2day = int(((infected_rm[-1] - infected_rm[-2])/infected_rm[-2])*100)
+
+        return change_2day
+
+    def get_death_change(self, selectedData, day_number):
+
+        area_data = pd.merge(self.area_data, self.super_area_coordinates, left_on="super_area", right_on="super_area")
+
+        if selectedData is None:
+            selected_super_areas = np.unique(area_data['super_area'])
+        else:
+            super_areas = []
+            for point in selectedData['points']:
+                super_areas.append(list(area_data['super_area'][area_data['latitude'] == point['lat']])[0])
+            selected_super_areas = np.unique(super_areas)
+        
+        area_data = area_data[area_data['super_area'].isin(selected_super_areas)]
+
+        area_data_grouped = area_data.groupby(['date']).sum().reset_index()
+
+        dead = list(area_data_grouped['dead'])
+        new_dead = [0]
+        for idx, row in area_data_grouped.iterrows():
+            if idx == 0:
+                pass
+            else:
+                new_dead.append(row['dead'] - dead[idx-1])
+
+        # Calculate 7-day rolling average
+        base = np.zeros(6)
+        dead_rm = self.running_mean(new_dead, 7)
+        dead_rm = np.concatenate((base,dead_rm))
+
+        change_2day = int(((dead_rm[-1] - dead_rm[-2])/dead_rm[-2])*100)
+
+        return change_2day
+
 
     def generate_infection_curves_callback(self, selectedData, chart_type, axis_type):
 
