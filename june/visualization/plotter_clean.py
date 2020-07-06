@@ -206,7 +206,6 @@ class DashPlotter:
 
         hospital_data = self.hospital_data
         hospital_characteristics = self.hospital_characteristics.reset_index()
-        #hospital_data = pd.merge(hospital_data, hospital_characteristics, left_on="id", right_on="index")
 
         if selectedData is None:
             selected_hospitals = np.unique(hospital_data['id'])
@@ -217,7 +216,7 @@ class DashPlotter:
             selected_hospitals = np.unique(hospitals)
         
         hospital_data = hospital_data[hospital_data['id'].isin(selected_hospitals)]
-        #hospital_data_grouped = hospital_data.groupby(['date']).sum().reset_index()
+
         dates = np.unique(hospital_data['date'])
         patients = []
         icu_patients = []
