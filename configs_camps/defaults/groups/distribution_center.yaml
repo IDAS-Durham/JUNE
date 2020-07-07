@@ -7,6 +7,6 @@ female_age_probabilities:
 neighbours_to_consider: 5
 maximum_distance: 1000
 weekend_boost: 1.5
-drags_household_probability: 0.2
+drags_household_probability: 0.0
 
 # this includes distirbution centres of all types and therefore we set the max distance to be arbitrarily large
