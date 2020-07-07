@@ -59,8 +59,6 @@ class CommuteHubs(Supergroup):
         super().__init__()
         
         self.commutecities = commutecities
-        #self.msoa_coordinates = msoa_coordinates
-        #self.init = init
         self.members = []
 
     def _get_msoa_lat_lon(self, msoa):
