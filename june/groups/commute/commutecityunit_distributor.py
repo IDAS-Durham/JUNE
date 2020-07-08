@@ -1,8 +1,6 @@
 import numpy as np
 import random
 
-#TODO: CommuteUnitDistributor and this distributor seem to be doing the same thing, unify
-
 class CommuteCityUnitDistributor:
     """
     Distirbute people to commutecity units based on the cities they are affiliated to
