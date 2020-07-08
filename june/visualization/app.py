@@ -81,7 +81,7 @@ tab1 = html.Div(
         html.Div(
             id="header-tab1",
             children=[
-                html.H4(children="Simulated UK COVID-19 Summary Statistics"),
+                html.H4(children="Simulated COVID-19 Summary Statistics"),
                 html.P(
                     id="description-tab1",
                     children="Summary statistics of JUNE simualtion",
@@ -183,7 +183,7 @@ tab2 = html.Div(
                                     min=0,
                                     max=(len(dash_plotter.days) - 1)*3,
                                     value=0,
-                                    marks={i*3: str(day) for i, day in enumerate(dash_plotter.days)},
+                                    marks={i*5: str(day) for i, day in enumerate(dash_plotter.days)},
                                 ),
                             ],
                         ),
