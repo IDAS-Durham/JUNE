@@ -23,15 +23,7 @@ class CommuteHubDistributor:
 
     def __init__(self, commutecities):
 
-        # self.msoa_oa_coordinates = msoa_oa_coordinates
         self.commutecities = commutecities
-
-    # def _get_msoa_oa(self,oa):
-    #    'Get MSOA for a give OA'
-    #
-    #    msoa = self.msoa_oa_coordinates['MSOA11CD'][self.msoa_oa_coordinates['OA11CD'] == oa]
-    #
-    #     return msoa
 
     def _get_msoa_oa(self, area):
         "Get MSOA for a given OA"
@@ -39,15 +31,10 @@ class CommuteHubDistributor:
 
     def _get_area_lat_lon(self, oa):
         "Get lat/lon for  a given OA"
-        # lat = float(self.msoa_oa_coordinates['Y'][self.msoa_oa_coordinates['OA11CD'] == oa])
-        # lon = float(self.msoa_oa_coordinates['X'][self.msoa_oa_coordinates['OA11CD'] == oa])
-
         area_dict = self.coordinates_dict[oa]
         return area_dict["latitude"], area_dict["longitude"]
 
     def from_file(self):
-
-        # self.msoa_oa_coordinates = pd.read_csv(default_msoa_oa_coordinates)
 
         coordinates_dict = dict()
         with open(default_msoa_oa_coordinates) as f:
@@ -68,11 +55,10 @@ class CommuteHubDistributor:
             # people commuting into city
             work_people = commutecity.people
 
-            # THIS IS GLACIALLY SLOW
             to_commute_in = []
             to_commute_out = []
             for work_person in work_people:
-                # msoa = list(self._get_msoa_oa(work_person.area.name))[0]
+
                 msoa = self._get_msoa_oa(work_person.area.name)
                 # check if live AND work in metropolitan area
                 if msoa in commutecity.metro_msoas:
@@ -89,7 +75,6 @@ class CommuteHubDistributor:
 
             commutehub_tree = spatial.KDTree(commutehub_in_city_lat_lon)
 
-            # THIS IS GLACIALLY SLOW
             for work_person in to_commute_out:
                 live_area = work_person.area.name
                 live_lat_lon = self._get_area_lat_lon(live_area)
