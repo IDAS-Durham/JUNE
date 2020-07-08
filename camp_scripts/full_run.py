@@ -70,7 +70,7 @@ shelter_distributor = ShelterDistributor(sharing_shelter_ratio = 0.75) # proport
 for area in world.areas:
     shelter_distributor.distribute_people_in_shelters(area.shelters, area.households)
 
-selector = InfectionSelector.from_file()
+selector = InfectionSelector.from_file(asymptomatic_ratio=0.2)
 
 interaction = ContactAveraging.from_file(config_filename='../configs_camps/defaults/interaction/ContactInteraction.yaml',\
                                          selector=selector)
