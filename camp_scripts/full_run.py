@@ -72,7 +72,7 @@ for area in world.areas:
 
 selector = InfectionSelector.from_file()
 
-interaction = ContactAveraging.from_file(config_filename='../configs_camps/defaults/interaction/ContactInteraction.yaml',\
+interaction = ContactAveraging.from_file(config_filename='../configs_camps/defaults/interaction/ContactInteraction_low.yaml',\
                                          selector=selector)
 
 policies = Policies.from_file(camp_configs_path / 'defaults/policy/policy.yaml') # no policies for now

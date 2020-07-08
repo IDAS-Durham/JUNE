@@ -1,4 +1,4 @@
-alpha_physical: 3. # double UK alpha
+alpha_physical: 4. # double UK alpha
 
 beta:
   communal: 1.0
@@ -40,6 +40,6 @@ contact_matrices:
     proportion_physical: [[0.79,0.7,0.7,0.7],[0.7,0.34,0.4,0.4],[0.7,0.4,0.62,0.62],[0.7,0.62,0.62,0.45]] 
     characteristic_time: 12
   shelter:
-    contacts: [[1, 0.2], [0.2, 1]]
+    contacts: [[5, 2], [2, 5]]
     proportion_physical: [[0.8, 0.3], [0.8, 0.3]]
     characteristic_time: 12
