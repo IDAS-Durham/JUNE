@@ -275,9 +275,9 @@ class SchoolDistributor:
                             secondary_schools.append(school)
         # assign teacher to student ratios in schools
         for school in primary_schools:
-            school.n_teachers_max = int(np.floor(school.n_pupils / np.random.poisson(self.teacher_student_ratio_primary)))
+            school.n_teachers_max = int(np.round(school.n_pupils / np.random.poisson(self.teacher_student_ratio_primary)))
         for school in secondary_schools:
-            school.n_teachers_max = int(np.floor(school.n_pupils / np.random.poisson(self.teacher_student_ratio_secondary)))
+            school.n_teachers_max = int(np.round(school.n_pupils / np.random.poisson(self.teacher_student_ratio_secondary)))
 
         np.random.shuffle(primary_schools)
         np.random.shuffle(secondary_schools)
