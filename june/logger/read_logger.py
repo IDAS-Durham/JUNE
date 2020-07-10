@@ -45,12 +45,15 @@ class ReadLogger:
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             population = f["population"]
+            print(population.keys())
             self.n_people = population.attrs["n_people"]
             if not light_logger:
                 self.ids = population["id"][:]
                 self.ages = population["age"][:]
                 self.sexes = population["sex"][:]
                 self.super_areas = population["super_area"][:].astype("U13")
+                self.ethnicities = population["ethnicity"][:]
+                self.socioeconomic_indices = population["socioeconomic_index"][:]
 
     def load_infected_data(self,):
         """
