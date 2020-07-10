@@ -1,1 +1,3 @@
-probability: 0.1
+probability:
+        type: constant
+        value: 0.1
