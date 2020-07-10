@@ -1,8 +1,12 @@
+from june.infection.trajectory_maker import CompletionTime
+from june import paths
 import autofit as af
+import yaml
 import numpy as np
 import sys
 
 
+default_config_path = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
 class Transmission:
     def __init__(self):
         self.probability = 0.0
@@ -25,5 +29,14 @@ class TransmissionConstant(Transmission):
         super().__init__()
         self.probability = probability
 
+    @classmethod
+    def from_file(cls, config_path: str  = default_config_path) -> "TransmissionConstant":
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        probability = CompletionTime.from_dict(config['probability'])()
+        return TransmissionConstant(probability=probability)
+
+
+ 
     def update_probability_from_delta_time(self, delta_time):
         pass
