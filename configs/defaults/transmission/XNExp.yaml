@@ -1,0 +1,8 @@
+max_probability:
+        type: lognormal
+        s: 0.5 
+        loc: 0.0
+        scale: 1. 
+norm_time:       
+        type: constant
+        value: 1.
