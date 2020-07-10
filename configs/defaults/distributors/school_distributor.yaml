@@ -3,5 +3,7 @@ mandatory_age_range: [5,18]
 neighbour_schools: 35 
 sector: 'P'            # NOMIS name convention
 sub_sector: ["teacher_secondary", "teacher_primary"]
-school_student_ratio: 25
+# ratios source https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/183364/DFE-RR169.pdf
+teacher_student_ratio_primary: 21
+teacher_student_ratio_secondary: 16
 teacher_min_age: 21

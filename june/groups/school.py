@@ -36,6 +36,7 @@ class School(Group):
         "coordinates",
         "super_area",
         "n_pupils_max",
+        "n_teachers_max",
         "age_min",
         "age_max",
         "age_structure",
@@ -84,6 +85,7 @@ class School(Group):
         self.coordinates = coordinates
         self.super_area = None
         self.n_pupils_max = n_pupils_max
+        self.n_teachers_max = None
         self.age_min = age_min
         self.age_max = age_max
         #TODO: is age structure used?
