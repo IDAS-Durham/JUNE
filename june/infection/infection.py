@@ -12,7 +12,7 @@ from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 
 default_config_filename = (
-    paths.configs_path / "defaults/infection/InfectionTrajectoriesXNExp.yaml"
+    paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
 )
 
 
@@ -109,7 +109,7 @@ class InfectionSelector:
         if self.transmission_type == "xnexp":
             start_transmission = incubation_period - np.random.normal(2.0, 0.5)
             peak_position = (
-                incubation_period - np.random.normal(0.7, 0.4) - start_transmission
+                incubation_period - np.random.normal(0.7, 0.4) - start_transmission 
             )
             alpha = 1.5
             N = peak_position / alpha
