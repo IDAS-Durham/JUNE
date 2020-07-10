@@ -46,7 +46,7 @@ class TestInfectionSelector:
 
     def test__constant_filename(self):
         selector = InfectionSelector.from_file(config_filename=constant_config)
-        assert selector.transmission_type == 'Constant'
+        assert selector.transmission_type == 'constant'
 
     def test__lognormal_in_maxprob(self):
         selector = InfectionSelector.from_file()
@@ -62,15 +62,15 @@ class TestInfectionSelector:
         selector = InfectionSelector.from_file()
         dummy = person.Person(sex='f', age=26)
         infection = selector.make_infection(time=0., person=dummy)
-        infection.transmission.N = 0.28
+        infection.transmission.N = 0.5
         infection.transmission.alpha = 1.5
-        infection.transmission.start_transmission = 1.609
+        infection.transmission.start_transmission = 2. 
         ratio = 1. / infection.transmission.max_probability
         max_t = (infection.transmission.N * infection.transmission.alpha *
                  infection.transmission.norm_time +
                  infection.transmission.start_transmission)
         infection.update_at_time(max_t)
         max_prob = ratio * infection.transmission.probability
-        np.testing.assert_allclose(max_t, 2.02, rtol=0.02, atol=0.02)
-        np.testing.assert_allclose(max_prob, 1.00, rtol=0.1, atol=0.1)
+        np.testing.assert_allclose(max_t, 2.75, rtol=0.02, atol=0.02)
+        np.testing.assert_allclose(max_prob, 1.00, rtol=0.02, atol=0.02)
 
