@@ -55,11 +55,11 @@ class InfectionSelector:
 
     def select_transmission(self, person, incubation_period):
         if self.transmission_type == 'xnexp': 
-            start_transmission = incubation_period - np.random.normal(3., 1.)
-            peak_position = incubation_period - np.random.normal(0.7,1.)  #- start_transmission
+            start_transmission = incubation_period - np.random.normal(2., 0.5)
+            peak_position = incubation_period - np.random.normal(0.7,0.1)  - start_transmission
             alpha = 1.
             N = peak_position/alpha
-
+            print('peak position = ', peak_position)
             return TransmissionXNExp.from_file(
                                      start_transmission=start_transmission,
                                      N=N,
