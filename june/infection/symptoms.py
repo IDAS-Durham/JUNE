@@ -23,6 +23,9 @@ class Symptoms:
             symptoms_onset += completion_time
         return symptoms_onset
 
+    def time_exposed(self):
+        return self.trajectory[1][0]
+
     def is_recovered(self):
         return self.tag == SymptomTag.recovered
 
