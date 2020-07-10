@@ -42,7 +42,7 @@ path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
     dir_pwd.parent.parent.parent
-    / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
+    / "configs/defaults/infection/InfectionXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
