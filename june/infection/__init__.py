@@ -1,4 +1,4 @@
-from .infection import Infection, InfectionSelector, SymptomsType, TransmissionType
+from .infection import Infection, InfectionSelector, SymptomsType 
 from .trajectory_maker import TrajectoryMakers
 from .health_index import HealthIndexGenerator
 from june.infection.symptom_tag import SymptomTag
