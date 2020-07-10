@@ -36,7 +36,8 @@ class SchoolDistributor:
         neighbour_schools: int = 35,
         age_range: Tuple[int, int] = (0, 19),
         mandatory_age_range: Tuple[int, int] = (5, 18),
-        students_teacher_ratio=25,
+        teacher_student_ratio_primary = 21,
+        teacher_student_ratio_secondary = 16,
         teacher_min_age=21,
     ):
         """
@@ -53,12 +54,13 @@ class SchoolDistributor:
             config dictionary.
         """
         self.schools = schools
-        self.students_teacher_ratio = students_teacher_ratio
         self.neighbour_schools = neighbour_schools
         self.school_age_range = age_range
         self.mandatory_school_age_range = mandatory_age_range
         self.education_sector_label = education_sector_label
         self.teacher_min_age = teacher_min_age
+        self.teacher_student_ratio_primary = teacher_student_ratio_primary
+        self.teacher_student_ratio_secondary = teacher_student_ratio_secondary
 
     @classmethod
     def from_file(
@@ -225,10 +227,10 @@ class SchoolDistributor:
     def distribute_teachers_to_schools_in_super_areas(
         self, super_areas: List[SuperArea]
     ):
-        for msoarea in super_areas:
-            self.distribute_teachers_to_school(msoarea)
+        for super_area in super_areas:
+            self.distribute_teachers_to_school(super_area)
 
-    def distribute_teachers_to_school(self, msoarea: SuperArea):
+    def distribute_teachers_to_school(self, super_area: SuperArea):
         """
         Assigns teachers to super area. The strategy is the following:
         we loop over the schools to divide them into two subgroups,
@@ -239,9 +241,10 @@ class SchoolDistributor:
         We assign the teachers to the schools following a fix student to teacher ratio.
         We put a lower age limit to teachers at the age of 21.
         """
+        # separate schools in primary and secondary
         primary_schools = []
         secondary_schools = []
-        for area in msoarea.areas:
+        for area in super_area.areas:
             for school in area.schools:
                 if school.n_pupils == 0:
                     continue
@@ -270,11 +273,17 @@ class SchoolDistributor:
                             primary_schools.append(school)
                         else:
                             secondary_schools.append(school)
+        # assign teacher to student ratios in schools
+        for school in primary_schools:
+            school.n_teachers_max = int(np.floor(school.n_pupils / np.random.poisson(self.teacher_student_ratio_primary)))
+        for school in secondary_schools:
+            school.n_teachers_max = int(np.floor(school.n_pupils / np.random.poisson(self.teacher_student_ratio_secondary)))
+
         np.random.shuffle(primary_schools)
         np.random.shuffle(secondary_schools)
         all_teachers = [
             person
-            for person in msoarea.workers
+            for person in super_area.workers
             if person.sector == self.education_sector_label and person.age > self.teacher_min_age and person.primary_activity is None
         ]
         primary_teachers = []
@@ -290,48 +299,59 @@ class SchoolDistributor:
         np.random.shuffle(primary_teachers)
         np.random.shuffle(secondary_teachers)
         np.random.shuffle(extra_teachers)
-        schools_without_teachers = []
-        for primary_school in primary_schools:
-            n_students = len(primary_school.students)
-            if n_students == 0:
-                continue
-            n_teachers = max(int(np.floor(n_students / self.students_teacher_ratio)), 1)
-            for _ in range(n_teachers):
-                if primary_teachers:
+        while primary_teachers:
+            all_filled = True
+            for primary_school in primary_schools:
+                if primary_school.n_pupils == 0:
+                    continue
+                if primary_school.n_teachers < primary_school.n_teachers_max:
+                    all_filled = False
                     teacher = primary_teachers.pop()
-                elif extra_teachers:
-                    teacher = extra_teachers.pop()
-                else:
-                    schools_without_teachers.append(primary_school)
-                    break
-                primary_school.add(teacher, school.SubgroupType.teachers)
-                teacher.lockdown_status = 'key_worker'
+                    if not primary_teachers:
+                        all_filled = True
+                        break
+                    primary_school.add(teacher, school.SubgroupType.teachers)
+                    teacher.lockdown_status = 'key_worker'
+            if all_filled:
+                break
 
-        for secondary_school in secondary_schools:
-            n_students = len(secondary_school.students)
-            if n_students == 0:
-                continue
-            n_teachers = max(int(np.floor(n_students / self.students_teacher_ratio)), 1)
-            for _ in range(n_teachers):
-                if secondary_teachers:
+        while secondary_teachers:
+            all_filled = True
+            for secondary_school in secondary_schools:
+                if secondary_school.n_pupils == 0:
+                    continue
+                if secondary_school.n_teachers < secondary_school.n_teachers_max:
+                    all_filled = False
                     teacher = secondary_teachers.pop()
-                elif extra_teachers:
-                    teacher = extra_teachers.pop()
-                else:
-                    schools_without_teachers.append(secondary_school)
-                    break
-                secondary_school.add(teacher, school.SubgroupType.teachers)
-                teacher.lockdown_status = 'key_worker'
+                    if not secondary_teachers:
+                        all_filled = True
+                        break
+                    secondary_school.add(teacher, school.SubgroupType.teachers)
+                    teacher.lockdown_status = 'key_worker'
+            if all_filled:
+                break
 
         remaining_teachers = primary_teachers + secondary_teachers + extra_teachers
-        if schools_without_teachers:
-            for i in range(len(remaining_teachers)):
-                teacher = remaining_teachers[i]
-                school_idx = i % len(schools_without_teachers)
-                school = schools_without_teachers[school_idx]
-                if school.n_pupils / school.n_teachers <= self.students_teacher_ratio:
+        empty_schools = [school for school in primary_schools + secondary_schools if school.n_pupils > 0 and school.n_teachers == 0]
+        for school in empty_schools:
+            if not remaining_teachers:
+                break
+            teacher = remaining_teachers.pop()
+            school.add(teacher, school.SubgroupType.teachers)
+            teacher.lockdown_status = 'key_worker'
+
+        while remaining_teachers:
+            all_filled = True
+            for school in primary_schools + secondary_schools:
+                if school.n_pupils == 0:
                     continue
-                school.add(
-                    teacher, school.SubgroupType.teachers
-                )
-                teacher.lockdown_status = 'key_worker'
+                if school.n_teachers < school.n_teachers_max:
+                    all_filled = False
+                    teacher = remaining_teachers.pop()
+                    if not remaining_teachers:
+                        all_filled = True
+                        break
+                    school.add(teacher, school.SubgroupType.teachers)
+                    teacher.lockdown_status = 'key_worker'
+            if all_filled:
+                break
