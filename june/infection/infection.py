@@ -24,50 +24,11 @@ class SymptomsType(IntEnum):
     trajectories = 3
 
 
-class TransmissionType(IntEnum):
-    constant = 0,
-    xnexp = 1
-
-
 class InfectionSelector:
-    def __init__(self, asymptomatic_ratio:float=0.43, config=None):
-        transmission_type = "XNExp"
-        if config is not None:
-            if "transmission" in config and "type" in config["transmission"]:
-                transmission_type = config["transmission"]["type"]
+    def __init__(self, transmission_type: str, asymptomatic_ratio:float=0.3):
+        self.transmission_type = transmission_type
         self.trajectory_maker = TrajectoryMakers.from_file()
-        self.init_transmission_parameters(transmission_type, config)
         self.health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=asymptomatic_ratio)
-
-    def init_transmission_parameters(self, transmission_type, config):
-        if transmission_type == "XNExp":
-            self.ttype = TransmissionType.xnexp
-            self.incubation_time = 2.6
-            self.transmission_median = 1.
-            self.transmission_sigma = 0.5
-            self.transmission_norm_time = 1.
-            self.transmission_N = 1.
-            self.transmission_alpha = 5.
-            if config is not None and "transmission" in config:
-                if "incubation_time" in config["transmission"]:
-                    self.incubation_time = config["transmission"]["incubation_time"]
-                if "median" in config["transmission"]:
-                    self.transmission_median = config["transmission"]["median"]
-                if "sigma" in config["transmission"]:
-                    self.transmission_sigma = config["transmission"]["sigma"]
-                if "norm_time" in config["transmission"]:
-                    self.transmission_norm_time = config["transmission"]["norm_time"]
-                if "N" in config["transmission"]:
-                    self.transmission_N = config["transmission"]["N"]
-                if "alpha" in config["transmission"]:
-                    self.transmission_alpha = config["transmission"]["alpha"]
-            self.transmission_mu = np.log(self.transmission_median)
-        else:
-            self.ttype = TransmissionType.constant
-            self.transmission_probability = 0.2
-            if (config is not None and
-                    "transmission" in config and "probability" in config["transmission"]):
-                self.transmission_probability = config["transmission"]["probability"]
 
     @classmethod
     def from_file(
@@ -77,7 +38,7 @@ class InfectionSelector:
     ) -> "InfectionSelector":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return InfectionSelector(asymptomatic_ratio,config)
+        return InfectionSelector(config['transmission_type'], asymptomatic_ratio)
 
     def infect_person_at_time(self, person, time):
         infection = self.make_infection(person, time)
@@ -85,21 +46,29 @@ class InfectionSelector:
         person.health_information.set_infection(infection=infection)
 
     def make_infection(self, person, time):
-        return Infection(transmission=self.select_transmission(person),
-                         symptoms=self.select_symptoms(person),
+        symptoms = self.select_symptoms(person)
+        incubation_period = symptoms.time_exposed()
+        transmission = self.select_transmission(person, incubation_period)
+        return Infection(transmission=transmission,
+                         symptoms=symptoms,
                          start_time=time)
 
-    def select_transmission(self, person):
-        if self.ttype == TransmissionType.xnexp:
-            maxprob = np.random.lognormal(self.transmission_mu,
-                                          self.transmission_sigma)
-            return TransmissionXNExp(max_probability=maxprob,
-                                     incubation_time=self.incubation_time,
-                                     norm_time=self.transmission_norm_time,
-                                     N=self.transmission_N,
-                                     alpha=self.transmission_alpha)
+    def select_transmission(self, person, incubation_period):
+        if self.transmission_type == 'xnexp': 
+            start_transmission = incubation_period - np.random.normal(3., 1.)
+            peak_position = incubation_period - np.random.normal(0.7,1.)  #- start_transmission
+            alpha = 1.
+            N = peak_position/alpha
+
+            return TransmissionXNExp.from_file(
+                                     start_transmission=start_transmission,
+                                     N=N,
+                                     alpha=alpha,
+                                     )
+        elif self.transmission_type ==  'constant':
+            return TransmissionConstant.from_file()
         else:
-            return TransmissionConstant(probability=self.transmission_probability)
+            raise NotImplementedError('This transmission type has not been implemented')
 
     def select_symptoms(self, person):
         health_index = self.health_index_generator(person)
