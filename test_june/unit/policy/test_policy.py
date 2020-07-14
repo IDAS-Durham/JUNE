@@ -41,8 +41,7 @@ from june.world import World
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent
-    / "configs/defaults/infection/InfectionXNExp.yaml"
+    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
@@ -489,10 +488,7 @@ class TestClosure:
             for j in range(5):
                 if "primary_activity" in policies.skip_activity_collection(
                     date=time_during_policy
-                )(
-                    worker,
-                    activities,
-                ):
+                )(worker, activities,):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
@@ -502,10 +498,7 @@ class TestClosure:
             for j in range(10):
                 if "primary_activity" in policies.skip_activity_collection(
                     date=time_during_policy
-                )(
-                    worker,
-                    activities,
-                ):
+                )(worker, activities,):
                     n_days += 0.5
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
@@ -673,8 +666,11 @@ class TestQuarantine:
     def test__quarantine_zero_complacency(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
-            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
-            household_complacency=0.
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
+            household_complacency=0.0,
         )
         policies = Policies([quarantine])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -743,58 +739,69 @@ class TestCloseLeisure:
         sim.clear_world()
 
 
-def test__social_distancing(super_area, selector, interaction):
-    pupil, worker, world = make_dummy_world(super_area)
-    world.cemeteries = Cemeteries()
-    start_date = datetime(2020, 3, 10)
-    end_date = datetime(2020, 3, 12)
-    beta_factor = {
-        "box": 0.5,
-        "pub": 0.5,
-        "grocery": 0.5,
-        "cinema": 0.5,
-        "commute_unit": 0.5,
-        "commute_city_unit": 0.5,
-        "hospital": 0.5,
-        "care_home": 0.5,
-        "company": 0.5,
-        "school": 0.5,
-        "household": 1.0,
-        "university": 0.5,
-    }
-
-    social_distance = SocialDistancing(
-        start_time="2020-03-10", end_time="2020-03-12", beta_factor=beta_factor
-    )
-    policies = Policies([social_distance])
-    leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename=test_config
-    )
-    leisure_instance.distribute_social_venues_to_households(world.households)
-    sim = Simulator.from_file(
-        world,
-        interaction,
-        selector,
-        config_filename=test_config,
-        policies=policies,
-        leisure=leisure_instance,
-    )
-
-    sim.timer.reset()
-
-    initial_betas = copy.deepcopy(sim.interaction.beta)
-    sim.clear_world()
-    for time in sim.timer:
-        if time > sim.timer.final_date:
-            break
-        sim.do_timestep()
-        if sim.timer.date >= start_date and sim.timer.date < end_date:
-            for group in sim.interaction.beta:
-                if group != "household":
-                    assert sim.interaction.beta[group] == initial_betas[group] * 0.5
-                else:
-                    assert sim.interaction.beta[group] == initial_betas[group]
-        else:
+class TestSocialDistancing:
+    def test__social_distancing(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        world.cemeteries = Cemeteries()
+        start_date = datetime(2020, 3, 10)
+        end_date = datetime(2020, 3, 12)
+        beta_factors = {
+            "box": 0.5,
+            "pub": 0.5,
+            "grocery": 0.5,
+            "cinema": 0.5,
+            "commute_unit": 0.5,
+            "commute_city_unit": 0.5,
+            "hospital": 0.5,
+            "care_home": 0.5,
+            "company": 0.5,
+            "school": 0.5,
+            "household": 1.0,
+            "university": 0.5,
+        }
+        social_distance = SocialDistancing(
+            start_time="2020-03-10", end_time="2020-03-12", beta_factors=beta_factors
+        )
+        beta_factors2 = {"cinema": 4}
+        start_date2 = datetime(2020, 3, 12)
+        end_date2 = datetime(2020, 3, 15)
+        social_distance2 = SocialDistancing(
+            start_time="2020-03-12", end_time="2020-03-15", beta_factors=beta_factors2
+        )
+        policies = Policies([social_distance, social_distance2])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        leisure_instance.distribute_social_venues_to_households(world.households)
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            selector,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        sim.timer.reset()
+        initial_betas = copy.deepcopy(sim.interaction.beta)
+        sim.clear_world()
+        for time in sim.timer:
+            if time > sim.timer.final_date:
+                break
+            sim.do_timestep()
+            if sim.timer.date >= start_date and sim.timer.date < end_date:
+                for group in sim.interaction.beta:
+                    if group != "household":
+                        assert sim.interaction.beta[group] == initial_betas[group] * 0.5
+                    else:
+                        assert sim.interaction.beta[group] == initial_betas[group]
+                continue
+            if sim.timer.date >= start_date2 and sim.timer.date < end_date2:
+                for group in sim.interaction.beta:
+                    if group != "cinema":
+                        assert sim.interaction.beta == 4.0
+                    else:
+                        assert sim.interaction.beta[group] == initial_betas[group]
+                continue
             assert sim.interaction.beta == initial_betas
 
 
@@ -899,32 +906,3 @@ class TestReduceLeisureProbabilities:
             sim.leisure.leisure_distributors["pubs"].female_probabilities
             == original_female_pub_probabilities
         )
-
-
-"""
-class TestSocialDistancing:
-    def test__social_distancing(self, selector):
-        beta_factor = {
-                    'box': 0.5,
-                    'pub': 0.5,
-                    'grocery': 0.5,
-                    'cinema': 0.5,
-                    'commute_unit': 0.5,
-                    'commute_city_unit': 0.5,
-                    'hospital': 0.5,
-                    'care_home': 0.5,
-                    'company': 0.5,
-                    'school': 0.5,
-                    'university': 0.5,
-                }
-        social_distance = SocialDistancing(start_time='2020-03-10', end_time='2020-03-12',
-            beta_factor = beta_factor)
-        interaction = ContactAveraging.from_file(selector=selector,
-                policies=Policies([social_distance]))
-        initial_betas = interaction.beta
-        for group in interaction.beta.keys():
-            if group in social_distance.beta_factor.keys(): 
-                assert interaction.beta[group]*interaction.policies.get_beta_factors(group) == initial_betas[group] * 0.5
-            else:
-                assert interaction.beta[group]*interaction.policies.social_distance_beta_factor(group) == initial_betas[group]
-"""
