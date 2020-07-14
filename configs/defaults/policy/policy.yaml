@@ -18,21 +18,39 @@ close_companies:
         random_lambda:  0.2 # 8./40. , since we want them to go to work once (8 hours) a week (40 working hours)
 
 social_distancing:
-        start_time: 2020-03-16
-        end_time: 2020-07-04 #TODO: end time?
-        beta_factor:
-                box: 0.5
-                pub: 0.5
-                grocery: 0.5
-                cinema: 0.5
-                commute_unit: 0.5
-                commute_city_unit: 0.5
-                hospital: 0.5
-                care_home: 0.5
-                company: 0.5
-                school: 0.5
-                household: 1.0
-                university: 0.5
+        1: 
+          start_time: 2020-03-16
+          end_time: 2020-03-22 
+          beta_factors:
+                  box: 0.75
+                  pub: 0.75
+                  grocery: 0.75
+                  cinema: 0.75
+                  commute_unit: 0.75
+                  commute_city_unit: 0.75
+                  hospital: 0.75
+                  care_home: 0.75
+                  company: 0.75
+                  school: 0.75
+                  household: 1.0
+                  university: 0.75
+
+        2:
+          start_time: 2020-03-22
+          end_time: 2020-07-04 
+          beta_factors:
+                  box: 0.5
+                  pub: 0.5
+                  grocery: 0.5
+                  cinema: 0.5
+                  commute_unit: 0.5
+                  commute_city_unit: 0.5
+                  hospital: 0.5
+                  care_home: 0.5
+                  company: 0.5
+                  school: 0.5
+                  household: 1.0
+                  university: 0.5
 
 close_leisure_venue:
         start_time: 2020-03-21
@@ -50,7 +68,6 @@ change_leisure_probability:
             women: 
               0-64: 0.50
               65-100: 0.25
-        leisure_activities_probabilities:
           care_home_visits:
             men:
               0-100: 0.05
