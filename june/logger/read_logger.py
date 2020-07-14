@@ -45,7 +45,6 @@ class ReadLogger:
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             population = f["population"]
-            print(population.keys())
             self.n_people = population.attrs["n_people"]
             if not light_logger:
                 self.ids = population["id"][:]
