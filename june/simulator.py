@@ -5,7 +5,7 @@ from typing import Optional
 import yaml
 
 from june import paths
-from june.activity_manager import ActivityManager, activity_hierarchy
+from june.activity.activity_manager import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
