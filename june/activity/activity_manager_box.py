@@ -1,7 +1,7 @@
 from typing import List
 
 from june import Person
-from june.groups.activity.activity_manager import ActivityManager
+from june.activity.activity_manager import ActivityManager
 from june.exc import SimulatorError
 
 
