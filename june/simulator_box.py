@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from june import paths
+from june.activity.activity_manager_box import ActivityManagerBox
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import World
@@ -16,6 +17,8 @@ class SimulatorError(BaseException):
 
 
 class SimulatorBox(Simulator):
+    ActivityManager = ActivityManagerBox
+
     def __init__(
             self,
             world: World,
@@ -75,6 +78,8 @@ class SimulatorBox(Simulator):
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
+
+        self.activity_manager.do_timestep()
 
         policies = self.activity_manager.policies
 
