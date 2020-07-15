@@ -122,11 +122,9 @@ def create_box_world():
 
 @pytest.fixture(name="simulator_box", scope="session")
 def create_simulator_box(world_box, interaction):
-    selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
     config_file = paths.configs_path / "config_boxmode_example.yaml"
-    selector = InfectionSelector.from_file(config_filename=selector_file)
     return SimulatorBox.from_file(
-        world_box, interaction, selector, config_filename=config_file
+        world_box, interaction, config_filename=config_file
     )
 
 
