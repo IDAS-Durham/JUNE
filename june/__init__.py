@@ -14,6 +14,7 @@ from . import infection
 from . import interaction
 from . import simulator
 from . import policy
+from . import activity
 from .demography import Person
 from .demography import geography
 from .exc import GroupException

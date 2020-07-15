@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from june import paths
-from june.groups.activity.activity_manager_box import ActivityManagerBox
+from june.activity.activity_manager_box import ActivityManagerBox
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import World
