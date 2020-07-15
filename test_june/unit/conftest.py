@@ -125,7 +125,8 @@ def create_box_world():
     scope="session"
 )
 def make_selector():
-    pass
+    selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+    return  InfectionSelector.from_file(config_filename=selector_file)
 
 
 @pytest.fixture(name="simulator_box", scope="session")

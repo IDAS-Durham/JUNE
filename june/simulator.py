@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class Simulator:
+    ActivityManager = ActivityManager
+
     def __init__(
             self,
             world: World,
@@ -111,7 +113,7 @@ class Simulator:
             weekend_activities=time_config["step_activities"]["weekend"],
         )
 
-        activity_manager = ActivityManager(
+        activity_manager = cls.ActivityManager(
             world=world,
             all_activities=all_activities,
             activity_to_groups=activity_to_groups,
