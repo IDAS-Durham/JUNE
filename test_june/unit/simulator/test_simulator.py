@@ -16,8 +16,19 @@ constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yam
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
+@pytest.fixture(
+    name="selector",
+    scope="module"
+)
+def make_selector():
+    selector = InfectionSelector.from_file(config_filename=constant_config)
+    selector.recovery_rate = 0.05
+    selector.transmission_probability = 0.7
+    return selector
+
+
 @pytest.fixture(name="sim", scope="module")
-def create_simulator():
+def create_simulator(selector):
     geography = Geography.from_file(
         {
             "super_area": [
@@ -47,14 +58,16 @@ def create_simulator():
         world=world, config_filename=test_config
     )
     leisure_instance.distribute_social_venues_to_households(world.households)
-    selector = InfectionSelector.from_file(config_filename=constant_config)
-    selector.recovery_rate = 0.05
-    selector.transmission_probability = 0.7
     interaction = ContactAveraging.from_file()
     interaction.selector = selector
     policies = Policies.from_file()
-    sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,
-                              leisure=leisure_instance, policies=policies)
+    sim = Simulator.from_file(
+        world=world,
+        interaction=interaction,
+        config_filename=test_config,
+        leisure=leisure_instance,
+        policies=policies
+    )
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(3, False, [])
     return sim
 
@@ -176,14 +189,14 @@ def test__move_people_to_commute(sim: Simulator):
     sim.clear_world()
 
 
-def test__kid_at_home_is_supervised(sim: Simulator):
+def test__kid_at_home_is_supervised(sim: Simulator, selector):
     kids_at_school = []
     for person in sim.world.people.members:
         if person.primary_activity is not None and person.age < sim.activity_manager.min_age_home_alone:
             kids_at_school.append(person)
 
     for kid in kids_at_school:
-        sim.selector.infect_person_at_time(kid, 0.0)
+        selector.infect_person_at_time(kid, 0.0)
         kid.health_information.infection.symptoms.tag = getattr(SymptomTag, 'pneumonia')
         kid.health_information.infection.symptoms.tag = SymptomTag.pneumonia
         assert kid.health_information.must_stay_at_home
@@ -200,9 +213,9 @@ def test__kid_at_home_is_supervised(sim: Simulator):
     sim.clear_world()
 
 
-def test__hospitalise_the_sick(sim: Simulator):
+def test__hospitalise_the_sick(sim: Simulator, selector):
     dummy_person = sim.world.people.members[0]
-    sim.selector.infect_person_at_time(dummy_person, 0.0)
+    selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.health_information.infection.symptoms.tag = SymptomTag.hospitalised
     assert dummy_person.health_information.should_be_in_hospital
     sim.update_health_status(0.0, 0.0)
