@@ -120,6 +120,14 @@ def create_box_world():
     return generate_world_from_geography(geography, box_mode=True)
 
 
+@pytest.fixture(
+    name="selector",
+    scope="session"
+)
+def make_selector():
+    pass
+
+
 @pytest.fixture(name="simulator_box", scope="session")
 def create_simulator_box(world_box, interaction):
     config_file = paths.configs_path / "config_boxmode_example.yaml"
