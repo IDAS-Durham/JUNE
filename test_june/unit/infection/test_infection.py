@@ -9,10 +9,15 @@ from june.infection import Infection, InfectionSelector
 from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission_xnexp as transxnexp
 from june.infection.health_information import HealthInformation
+from june.infection.symptom_tag import SymptomTag
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+def infect_person(person, selector, symptom_tag="influenza"):
+
+    selector.infect_person_at_time(person, 0.0)
+    person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
 
 
 class TestInfection:
@@ -61,7 +66,42 @@ class TestInfectionSelector:
     def test__xnexp_in_transmission(self):
         selector = InfectionSelector.from_file()
         dummy = person.Person(sex='f', age=26)
-        infection = selector.make_infection(time=0., person=dummy)
+        infect_person(person=dummy, selector=selector, symptom_tag='hospitalised')
+        infection = dummy.health_information.infection
+        infection.transmission.N = 0.5
+        infection.transmission.alpha = 1.5
+        infection.transmission.start_transmission = 2. 
+        ratio = 1. / infection.transmission.max_probability
+        max_t = (infection.transmission.N * infection.transmission.alpha *
+                 infection.transmission.norm_time +
+                 infection.transmission.start_transmission)
+        infection.update_at_time(max_t)
+        max_prob = ratio * infection.transmission.probability
+        np.testing.assert_allclose(max_t, 2.75, rtol=0.02, atol=0.02)
+        np.testing.assert_allclose(max_prob, 1.00, rtol=0.02, atol=0.02)
+
+    def test__xnexp_in_asymptomatic_transmission(self):
+        selector = InfectionSelector.from_file()
+        dummy = person.Person(sex='f', age=26)
+        infect_person(person=dummy, selector=selector, symptom_tag='asymptomatic')
+        infection = dummy.health_information.infection
+        infection.transmission.N = 0.5
+        infection.transmission.alpha = 1.5
+        infection.transmission.start_transmission = 2. 
+        ratio = 1. / infection.transmission.max_probability
+        max_t = (infection.transmission.N * infection.transmission.alpha *
+                 infection.transmission.norm_time +
+                 infection.transmission.start_transmission)
+        infection.update_at_time(max_t)
+        max_prob = ratio * infection.transmission.probability
+        np.testing.assert_allclose(max_t, 2.75, rtol=0.02, atol=0.02)
+        np.testing.assert_allclose(max_prob, 1.00, rtol=0.02, atol=0.02)
+
+    def test__xnexp_in_mild_transmission(self):
+        selector = InfectionSelector.from_file()
+        dummy = person.Person(sex='f', age=26)
+        infect_person(person=dummy, selector=selector, symptom_tag='influenza')
+        infection = dummy.health_information.infection
         infection.transmission.N = 0.5
         infection.transmission.alpha = 1.5
         infection.transmission.start_transmission = 2. 
