@@ -12,10 +12,17 @@ shielding:
         end_time: 2020-07-04 
 
 close_companies:
-        start_time: 2020-03-16
-        end_time: 2020-07-04 #TODO: Until when really?
-        full_closure: False 
-        random_lambda:  0.2 # 8./40. , since we want them to go to work once (8 hours) a week (40 working hours)
+  1:
+    start_time: 2020-03-16
+    end_time: 2020-03-23 
+    full_closure: False 
+    random_work_probability:  0.8
+
+  2:
+    start_time: 2020-03-23
+    end_time: 2020-07-04
+    full_closure: False 
+    random_work_probability: 0.6
 
 social_distancing:
         1: 
