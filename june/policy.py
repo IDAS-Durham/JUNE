@@ -369,6 +369,11 @@ class ChangeLeisureProbability(Policy):
                 activity
             ] = {}  # this will be filled when coupled to leisure
 
+    def is_active(self, date: datetime.datetime) -> bool:
+        """
+        This is modified in this policy to include the end date.
+        """
+        return self.start_time <= date <= self.end_time
 
 class PolicyCollection(ABC):
     def __init__(self, policies: List[Policy]):
