@@ -50,7 +50,7 @@ class HealthIndexGenerator:
     """
 
     def __init__(
-        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.43
+        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio : dict
     ):
         """
         Parameters:
@@ -78,7 +78,7 @@ class HealthIndexGenerator:
 
     @classmethod
     def from_file(
-        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.43
+        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.2
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
