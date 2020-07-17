@@ -28,6 +28,7 @@ def test__No_negative_provavility():
 
 def test__growing_index():
     index_list=HealthIndexGenerator.from_file()
+    print(index_list)
     increasing_count=0
     for i in range(len(index_list.prob_lists[0])):
         index_m=index_list(Person.from_attributes(age=i,sex='m'))
