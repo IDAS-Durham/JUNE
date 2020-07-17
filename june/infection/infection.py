@@ -90,10 +90,10 @@ class InfectionSelector:
 
         symptoms = self.select_symptoms(person)
         incubation_period = symptoms.time_exposed()
-        transmission = self.select_transmission(person, incubation_period)
+        transmission = self.select_transmission(person, incubation_period, symptoms.max_tag())
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
 
-    def select_transmission(self, person: "Person", incubation_period: float)->"Transmission":
+    def select_transmission(self, person: "Person", incubation_period: float, max_symptoms_tag: "SymptomsTag")->"Transmission":
         """
         Selects the transmission type specified by the user in the init, 
         and links its parameters to the symptom onset for the person (incubation
@@ -115,6 +115,7 @@ class InfectionSelector:
             N = peak_position / alpha
             return TransmissionXNExp.from_file(
                 start_transmission=start_transmission, N=N, alpha=alpha,
+                max_symptoms=max_symptoms_tag
             )
         elif self.transmission_type == "constant":
             return TransmissionConstant.from_file()
