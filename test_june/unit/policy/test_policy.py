@@ -164,8 +164,9 @@ def infect_person(person, selector, symptom_tag="influenza"):
 class TestPolicy:
     def test__is_active(self):
         policy = Policy(start_time="2020-5-6", end_time="2020-6-6")
-        assert policy.is_active(datetime(2020, 6, 6))
-        assert not policy.is_active(datetime(2020, 6, 7))
+        assert policy.is_active(datetime(2020, 5, 6))
+        assert policy.is_active(datetime(2020, 6, 5))
+        assert not policy.is_active(datetime(2020, 6, 6))
 
 
 class TestDefaultPolicy:
@@ -456,7 +457,7 @@ class TestClosure:
         company_closure = CloseCompanies(
             start_time="2020-1-1",
             end_time="2020-10-1",
-            random_lambda=8.0 / 40.0
+            random_work_probability=0.2
             # go for 8 hours per week (one week has 168 hours)
         )
         policies = Policies([company_closure])
@@ -483,7 +484,7 @@ class TestClosure:
         time_during_policy = datetime(2020, 2, 1)
         # Move the person 1_0000 times for five days
         n_days_in_week = []
-        for i in range(8000):
+        for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in policies.skip_activity_collection(
@@ -493,7 +494,7 @@ class TestClosure:
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
         n_days_in_week = []
-        for i in range(60_000):
+        for i in range(500):
             n_days = 0
             for j in range(10):
                 if "primary_activity" in policies.skip_activity_collection(
@@ -815,7 +816,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             leisure_activities_probabilities={
-                "pubs": {"men": {"0-50": 0.5, "50-100": 0.0}, "women": {"0-100": 0.4},},
+                "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -866,7 +867,7 @@ class TestReduceLeisureProbabilities:
         sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
         sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         assert sim.leisure.leisure_distributors["pubs"].male_probabilities[60] == 0.0
-        assert sim.leisure.leisure_distributors["pubs"].female_probabilities[60] == 0.4
+        assert sim.leisure.leisure_distributors["pubs"].female_probabilities[60] == 0.2
         pubs1_visits_after = 0
         pubs2_visits_after = 0
         for _ in range(5000):
