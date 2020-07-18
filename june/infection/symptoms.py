@@ -38,7 +38,7 @@ class Symptoms:
         index = np.searchsorted(self.health_index, self.max_severity)
         return SymptomTag(index)
 
-    def update_severity_from_delta_time(self, delta_time):
-        if delta_time > self.trajectory[self.stage + 1][0]:
+    def update_severity_from_delta_time(self, time_from_infection):
+        if time_from_infection > self.trajectory[self.stage + 1][0]:
             self.stage += 1
             self.tag = self.trajectory[self.stage][1]
