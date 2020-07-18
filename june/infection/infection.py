@@ -11,15 +11,13 @@ from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 
-default_config_filename = (
-    paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
-)
+default_config_filename = paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
 
 
 class SymptomsType(IntEnum):
-    constant = (0,)
-    gaussian = (1,)
-    step = (2,)
+    constant = 0
+    gaussian = 1
+    step = 2
     trajectories = 3
 
 
@@ -90,10 +88,17 @@ class InfectionSelector:
 
         symptoms = self.select_symptoms(person)
         incubation_period = symptoms.time_exposed()
-        transmission = self.select_transmission(person, incubation_period)
+        transmission = self.select_transmission(
+            person=person, incubation_period=incubation_period, max_symptoms_tag=symptoms.max_tag()
+        )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
 
-    def select_transmission(self, person: "Person", incubation_period: float)->"Transmission":
+    def select_transmission(
+        self,
+        person: "Person",
+        incubation_period: float,
+        max_symptoms_tag: "SymptomsTag",
+    ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init, 
         and links its parameters to the symptom onset for the person (incubation
@@ -107,21 +112,24 @@ class InfectionSelector:
             time of symptoms onset for person
         """
         if self.transmission_type == "xnexp":
-            start_transmission = incubation_period - np.random.normal(2.0, 0.5)
+            time_first_infectious = incubation_period - np.random.normal(2.0, 0.5)
             peak_position = (
-                incubation_period - np.random.normal(0.7, 0.4) - start_transmission 
+                incubation_period - np.random.normal(0.7, 0.4) - time_first_infectious
             )
             alpha = 1.5
-            N = peak_position / alpha
+            n = peak_position / alpha
             return TransmissionXNExp.from_file(
-                start_transmission=start_transmission, N=N, alpha=alpha,
+                time_first_infectious=time_first_infectious,
+                n=n,
+                alpha=alpha,
+                max_symptoms=max_symptoms_tag,
             )
         elif self.transmission_type == "constant":
             return TransmissionConstant.from_file()
         else:
             raise NotImplementedError("This transmission type has not been implemented")
 
-    def select_symptoms(self, person: "Person")->"Symptoms":
+    def select_symptoms(self, person: "Person") -> "Symptoms":
         """
         Select the symptoms that a given person has, and how they will evolve
         in the future
@@ -141,7 +149,9 @@ class Infection:
     person, and their symptoms trajectory.
     """
 
-    def __init__(self, transmission: "Transmission", symptoms: "Symptoms", start_time: float=-1):
+    def __init__(
+        self, transmission: "Transmission", symptoms: "Symptoms", start_time: float = -1
+    ):
         """
         Parameters
         ----------
@@ -168,10 +178,10 @@ class Infection:
             time elapsed from time of infection
         """
         if self.last_time_updated <= time:
-            delta_time = time - self.start_time
+            time_from_infection = time - self.start_time
             self.last_time_updated = time
-            self.transmission.update_probability_from_delta_time(delta_time=delta_time)
-            self.symptoms.update_severity_from_delta_time(delta_time=delta_time)
+            self.transmission.update_probability_from_delta_time(time_from_infection=time_from_infection)
+            self.symptoms.update_severity_from_delta_time(time_from_infection=time_from_infection)
             self.infection_probability = self.transmission.probability
 
     @property
