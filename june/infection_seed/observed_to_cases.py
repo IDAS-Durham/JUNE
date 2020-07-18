@@ -215,7 +215,14 @@ class Observed2Cases:
 
 
     def cases_from_admissions_for_region(self, region):
-        hospitalised_trajectories = self.filter_trajectories(self.trajectories)
+        hospitalised_trajectories = self.filter_trajectories(self.trajectories,
+             symptoms_to_keep=(
+                "hospitalised",
+                "intensive_care",
+                "dead_icu",
+                "dead_hospital",
+            ),
+        )
         avg_rates = self.get_avg_rate_for_symptoms(
             symptoms_tags=(
                 "hospitalised",

@@ -188,7 +188,7 @@ class PermanentPolicy(StayHome):
         """
         return (
             person.health_information is not None
-            and person.health_information.must_stay_at_home
+            and person.health_information.tag is SymptomTag.severe
         )
 
 
