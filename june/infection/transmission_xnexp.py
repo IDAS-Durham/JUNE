@@ -10,8 +10,8 @@ default_config_path = paths.configs_path / "defaults/transmission/XNExp.yaml"
 
 
 @nb.jit(nopython=True)
-def f(t, n, alpha):
-    return t ** n * np.exp(-t / alpha)
+def f(delta_tau, n, alpha):
+    return delta_tau ** n * np.exp(-delta_tau / alpha)
 
 
 @nb.jit(nopython=True)
@@ -40,9 +40,9 @@ class TransmissionXNExp(Transmission):
         self.norm_time = norm_time
         self.N = N
         self.alpha = alpha
-        max_time = self.N * self.alpha * self.norm_time
+        max_delta_time = self.N * self.alpha * self.norm_time 
         self.norm = self.max_probability / f(
-            max_time / self.norm_time, self.N, self.alpha
+            max_delta_time / self.norm_time, self.N, self.alpha
         )  
         if (
             asymptomatic_infectious_factor is not None
@@ -63,14 +63,17 @@ class TransmissionXNExp(Transmission):
             config = yaml.safe_load(f)
         max_probability = CompletionTime.from_dict(config["max_probability"])()
         norm_time = CompletionTime.from_dict(config["norm_time"])()
+        asymptomatic_infectious_factor = CompletionTime.from_dict(config["asymptomatic_infectious_factor"])()
+        mild_infectious_factor = CompletionTime.from_dict(config["mild_infectious_factor"])()
         return TransmissionXNExp(
             max_probability=max_probability,
             start_transmission=start_transmission,
             norm_time=norm_time,
             N=N,
             alpha=alpha,
-            asymptomatic_infectious_factor=config["asymptomatic_infectious_factor"],
-            mild_infectious_factor=config["mild_infectious_factor"]
+            max_symptoms=max_symptoms,
+            asymptomatic_infectious_factor=asymptomatic_infectious_factor,
+            mild_infectious_factor=mild_infectious_factor
         )
 
     def update_probability_from_delta_time(self, delta_time):
