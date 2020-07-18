@@ -43,7 +43,7 @@ class TransmissionXNExp(Transmission):
         max_time = self.N * self.alpha * self.norm_time
         self.norm = self.max_probability / f(
             max_time / self.norm_time, self.N, self.alpha
-        )  # self.f(max_time/self.norm_time)  #/self.norm_time)
+        )  
         if (
             asymptomatic_infectious_factor is not None
             and max_symptoms == SymptomTag.asymptomatic
