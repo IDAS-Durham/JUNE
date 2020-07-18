@@ -53,7 +53,7 @@ class HealthInformation:
 
     @property
     def must_stay_at_home(self) -> bool:
-        return self.tag is SymptomTag.pneumonia
+        return self.tag is SymptomTag.severe
 
     @property
     def should_be_in_hospital(self) -> bool:
