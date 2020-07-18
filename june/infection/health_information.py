@@ -52,10 +52,6 @@ class HealthInformation:
         return None
 
     @property
-    def must_stay_at_home(self) -> bool:
-        return self.tag is SymptomTag.severe
-
-    @property
     def should_be_in_hospital(self) -> bool:
         return self.tag in (SymptomTag.hospitalised, SymptomTag.intensive_care)
 
