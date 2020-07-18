@@ -39,7 +39,7 @@ excess_deaths = [
 
 class HealthIndexGenerator:
     """
-    Computes probabilities for (asymptomatic, influenza-like symptoms, pneumonia, 
+    Computes probabilities for (asymptomatic, mild symptoms, severe symptoms, 
     hospitalisation, intensive care, fatality), using the age and sex of the subject.
     The probablities of hospitalisation,death and ICU are taken taken from fits made by 
     Miguel Icaza to the England data taken from several sources.
@@ -136,7 +136,7 @@ class HealthIndexGenerator:
              - if  N_2<r<N_3  Stays at home with pneoumonia symptoms and survives.
              - if  N_3<r<N_4  Goes to the hospital but not to ICU and survives.
              - if  N_4<r<N_5  Goes to ICU ans survives.
-             - if  N_5<r<N_6  Stays at home with pneumonia and dies.
+             - if  N_5<r<N_6  Stays at home with severe and dies.
              - if  N_6<r<N_7  Goes to the hospital but not to ICU and dies.
              - if  N_7<r<1    Goes to ICU and dies.
               
@@ -171,18 +171,18 @@ class HealthIndexGenerator:
         no_hosp_female = 1.0 - self.Asimpto_ratio - ratio_hosp_female_with_icu
         no_hosp_male = 1.0 - self.Asimpto_ratio - ratio_hosp_male_with_icu
 
-        # Probability of getting pneumonia
-        prob_pneumonia = np.ones(121)
-        for pneumonia_index in range(len(RKIdata) - 1):
-            boolean = (RKIdata[pneumonia_index][0] <= np.arange(0, 121, 1)) & (
-                np.arange(0, 121, 1) < RKIdata[pneumonia_index + 1][0]
+        # Probability of getting severe
+        prob_severe = np.ones(121)
+        for severe_index in range(len(RKIdata) - 1):
+            boolean = (RKIdata[severe_index][0] <= np.arange(0, 121, 1)) & (
+                np.arange(0, 121, 1) < RKIdata[severe_index + 1][0]
             )
-            prob_pneumonia[boolean] = RKIdata[pneumonia_index][1]
-        prob_pneumonia[prob_pneumonia == 1] = RKIdata[len(RKIdata) - 1][1]
+            prob_severe[boolean] = RKIdata[severe_index][1]
+        prob_severe[prob_severe == 1] = RKIdata[len(RKIdata) - 1][1]
 
         # probavility of  mild simptoms
-        self.prob_lists[0, :, 1] = no_hosp_female * (1 - prob_pneumonia)
-        self.prob_lists[1, :, 1] = no_hosp_male * (1 - prob_pneumonia)
+        self.prob_lists[0, :, 1] = no_hosp_female * (1 - prob_severe)
+        self.prob_lists[1, :, 1] = no_hosp_male * (1 - prob_severe)
 
         # probavility of Surviving ICU
         survival_icu = np.ones(121)
@@ -246,11 +246,11 @@ class HealthIndexGenerator:
 
         # Probability of having sever simptoms at home but surviving
 
-        prob_home_pneumonia_female = no_hosp_female * prob_pneumonia
-        prob_home_pneumonia_male = no_hosp_male * prob_pneumonia
+        prob_home_severe_female = no_hosp_female * prob_severe
+        prob_home_severe_male = no_hosp_male * prob_severe
 
-        self.prob_lists[0, :, 2] = prob_home_pneumonia_female - deaths_at_home_female
-        self.prob_lists[1, :, 2] = prob_home_pneumonia_male - deaths_at_home_male
+        self.prob_lists[0, :, 2] = prob_home_severe_female - deaths_at_home_female
+        self.prob_lists[1, :, 2] = prob_home_severe_male - deaths_at_home_male
 
     def __call__(self, person):
         """

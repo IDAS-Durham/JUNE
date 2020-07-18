@@ -225,7 +225,7 @@ class Quarantine(StayHome):
     def must_stay_at_home(self, person: "Person", days_from_start):
         self_quarantine = False
         try:
-            if person.symptoms.tag in (SymptomTag.influenza, SymptomTag.pneumonia):
+            if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = (
                     person.health_information.time_of_symptoms_onset
                 )
