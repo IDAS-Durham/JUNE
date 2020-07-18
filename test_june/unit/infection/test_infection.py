@@ -14,16 +14,16 @@ from june.infection.symptom_tag import SymptomTag
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
-def infect_person(person, selector, max_symptom_tag="influenza"):
+def infect_person(person, selector, max_symptom_tag="mild"):
     infection = selector.make_infection(person, 0.0)
     infection.symptoms = june.infection.symptoms.Symptoms(
             health_index=[0.1,0.2,0.3,0.4,0.5,0.6,0.7]
             )
     if max_symptom_tag == 'asymptomatic':
         infection.symptoms.max_severity = 0.05
-    elif max_symptom_tag == 'influenza':
+    elif max_symptom_tag == 'mild':
         infection.symptoms.max_severity = 0.15
-    elif max_symptom_tag == 'pneumonia':
+    elif max_symptom_tag == 'severe':
         infection.symptoms.max_severity = 0.25
     infection.transmission = selector.select_transmission(person, 
             incubation_period=infection.symptoms.time_exposed(),
@@ -78,7 +78,7 @@ class TestInfectionSelector:
     def test__xnexp_in_transmission(self):
         selector = InfectionSelector.from_file()
         dummy = person.Person(sex='f', age=26)
-        infection = infect_person(person=dummy, selector=selector, max_symptom_tag='pneumonia')
+        infection = infect_person(person=dummy, selector=selector, max_symptom_tag='severe')
         ratio = 1. / infection.transmission.max_probability
         max_t = (infection.transmission.n * infection.transmission.alpha *
                  infection.transmission.norm_time +
@@ -106,7 +106,7 @@ class TestInfectionSelector:
     def test__xnexp_in_mild_transmission(self):
         selector = InfectionSelector.from_file()
         dummy = person.Person(sex='f', age=26)
-        infection = infect_person(person=dummy, selector=selector, max_symptom_tag='influenza')
+        infection = infect_person(person=dummy, selector=selector, max_symptom_tag='mild')
         ratio = 1. / infection.transmission.max_probability
         max_t = (infection.transmission.n * infection.transmission.alpha *
                  infection.transmission.norm_time +
