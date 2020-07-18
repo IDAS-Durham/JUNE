@@ -15,9 +15,9 @@ default_config_filename = paths.configs_path / "defaults/infection/InfectionXNEx
 
 
 class SymptomsType(IntEnum):
-    constant = (0,)
-    gaussian = (1,)
-    step = (2,)
+    constant = 0
+    gaussian = 1
+    step = 2
     trajectories = 3
 
 
@@ -89,7 +89,7 @@ class InfectionSelector:
         symptoms = self.select_symptoms(person)
         incubation_period = symptoms.time_exposed()
         transmission = self.select_transmission(
-            person, incubation_period, symptoms.max_tag()
+            person=person, incubation_period=incubation_period, max_symptoms_tag=symptoms.max_tag()
         )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
 
