@@ -11,9 +11,7 @@ from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 
-default_config_filename = (
-    paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
-)
+default_config_filename = paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
 
 
 class SymptomsType(IntEnum):
@@ -90,10 +88,17 @@ class InfectionSelector:
 
         symptoms = self.select_symptoms(person)
         incubation_period = symptoms.time_exposed()
-        transmission = self.select_transmission(person, incubation_period, symptoms.max_tag())
+        transmission = self.select_transmission(
+            person, incubation_period, symptoms.max_tag()
+        )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
 
-    def select_transmission(self, person: "Person", incubation_period: float, max_symptoms_tag: "SymptomsTag")->"Transmission":
+    def select_transmission(
+        self,
+        person: "Person",
+        incubation_period: float,
+        max_symptoms_tag: "SymptomsTag",
+    ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init, 
         and links its parameters to the symptom onset for the person (incubation
@@ -109,20 +114,22 @@ class InfectionSelector:
         if self.transmission_type == "xnexp":
             start_transmission = incubation_period - np.random.normal(2.0, 0.5)
             peak_position = (
-                incubation_period - np.random.normal(0.7, 0.4) - start_transmission 
+                incubation_period - np.random.normal(0.7, 0.4) - start_transmission
             )
             alpha = 1.5
             N = peak_position / alpha
             return TransmissionXNExp.from_file(
-                start_transmission=start_transmission, N=N, alpha=alpha,
-                max_symptoms=max_symptoms_tag
+                start_transmission=start_transmission,
+                N=N,
+                alpha=alpha,
+                max_symptoms=max_symptoms_tag,
             )
         elif self.transmission_type == "constant":
             return TransmissionConstant.from_file()
         else:
             raise NotImplementedError("This transmission type has not been implemented")
 
-    def select_symptoms(self, person: "Person")->"Symptoms":
+    def select_symptoms(self, person: "Person") -> "Symptoms":
         """
         Select the symptoms that a given person has, and how they will evolve
         in the future
@@ -142,7 +149,9 @@ class Infection:
     person, and their symptoms trajectory.
     """
 
-    def __init__(self, transmission: "Transmission", symptoms: "Symptoms", start_time: float=-1):
+    def __init__(
+        self, transmission: "Transmission", symptoms: "Symptoms", start_time: float = -1
+    ):
         """
         Parameters
         ----------
