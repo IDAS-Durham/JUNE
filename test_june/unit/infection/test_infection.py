@@ -25,7 +25,6 @@ def infect_person(person, selector, max_symptom_tag="influenza"):
         infection.symptoms.max_severity = 0.15
     elif max_symptom_tag == 'pneumonia':
         infection.symptoms.max_severity = 0.25
-    print('exposed time = ',infection.symptoms.time_exposed())
     infection.transmission = selector.select_transmission(person, 
             incubation_period=infection.symptoms.time_exposed(),
             max_symptoms_tag=infection.symptoms.max_tag()
@@ -81,22 +80,24 @@ class TestInfectionSelector:
         dummy = person.Person(sex='f', age=26)
         infection = infect_person(person=dummy, selector=selector, max_symptom_tag='pneumonia')
         ratio = 1. / infection.transmission.max_probability
-        max_t = (infection.transmission.N * infection.transmission.alpha *
+        max_t = (infection.transmission.n * infection.transmission.alpha *
                  infection.transmission.norm_time +
-                 infection.transmission.start_transmission)
+                 infection.transmission.time_first_infectious)
         infection.update_at_time(max_t)
         max_prob = ratio * infection.transmission.probability
 
         np.testing.assert_allclose(max_t, 0.55, rtol=0.02, atol=0.02)
         np.testing.assert_allclose(max_prob, 1.00, rtol=0.02, atol=0.02)
+
     def test__xnexp_in_asymptomatic_transmission(self):
         selector = InfectionSelector.from_file()
         dummy = person.Person(sex='f', age=26)
         infection = infect_person(person=dummy, selector=selector, max_symptom_tag='asymptomatic')
         ratio = 1. / infection.transmission.max_probability
-        max_t = (infection.transmission.N * infection.transmission.alpha *
+        max_t = (infection.transmission.n * infection.transmission.alpha *
                  infection.transmission.norm_time +
-                 infection.transmission.start_transmission)
+                 infection.transmission.time_first_infectious)
+        infection.update_at_time(max_t)
         infection.update_at_time(max_t)
         max_prob = ratio * infection.transmission.probability
         np.testing.assert_allclose(max_t, 0.55, rtol=0.02, atol=0.02)
@@ -107,9 +108,9 @@ class TestInfectionSelector:
         dummy = person.Person(sex='f', age=26)
         infection = infect_person(person=dummy, selector=selector, max_symptom_tag='influenza')
         ratio = 1. / infection.transmission.max_probability
-        max_t = (infection.transmission.N * infection.transmission.alpha *
+        max_t = (infection.transmission.n * infection.transmission.alpha *
                  infection.transmission.norm_time +
-                 infection.transmission.start_transmission)
+                 infection.transmission.time_first_infectious)
         infection.update_at_time(max_t)
         max_prob = ratio * infection.transmission.probability
         np.testing.assert_allclose(max_t, 0.55, rtol=0.02, atol=0.02)

@@ -112,15 +112,15 @@ class InfectionSelector:
             time of symptoms onset for person
         """
         if self.transmission_type == "xnexp":
-            start_transmission = incubation_period - np.random.normal(2.0, 0.5)
+            time_first_infectious = incubation_period - np.random.normal(2.0, 0.5)
             peak_position = (
-                incubation_period - np.random.normal(0.7, 0.4) - start_transmission
+                incubation_period - np.random.normal(0.7, 0.4) - time_first_infectious
             )
             alpha = 1.5
-            N = peak_position / alpha
+            n = peak_position / alpha
             return TransmissionXNExp.from_file(
-                start_transmission=start_transmission,
-                N=N,
+                time_first_infectious=time_first_infectious,
+                n=n,
                 alpha=alpha,
                 max_symptoms=max_symptoms_tag,
             )
@@ -178,10 +178,10 @@ class Infection:
             time elapsed from time of infection
         """
         if self.last_time_updated <= time:
-            delta_time = time - self.start_time
+            time_from_infection = time - self.start_time
             self.last_time_updated = time
-            self.transmission.update_probability_from_delta_time(delta_time=delta_time)
-            self.symptoms.update_severity_from_delta_time(delta_time=delta_time)
+            self.transmission.update_probability_from_delta_time(time_from_infection=time_from_infection)
+            self.symptoms.update_severity_from_delta_time(time_from_infection=time_from_infection)
             self.infection_probability = self.transmission.probability
 
     @property
