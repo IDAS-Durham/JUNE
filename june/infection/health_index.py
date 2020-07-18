@@ -48,9 +48,8 @@ class HealthIndexGenerator:
     according to the ratios in the RKI publication (table 1/column 2 of
     https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile)
     """
-
     def __init__(
-        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.43
+        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.2
     ):
         """
         Parameters:
@@ -78,7 +77,7 @@ class HealthIndexGenerator:
 
     @classmethod
     def from_file(
-        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.43
+        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.2
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
