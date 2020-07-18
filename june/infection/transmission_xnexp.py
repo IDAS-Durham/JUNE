@@ -10,7 +10,7 @@ default_config_path = paths.configs_path / "defaults/transmission/XNExp.yaml"
 
 
 @nb.jit(nopython=True)
-def xnexp(x: float, n: float, alpha: float)->float:
+def xnexp(x: float, n: float, alpha: float) -> float:
     """
     Implementation of x^n exp(-x/alpha)
 
@@ -31,7 +31,14 @@ def xnexp(x: float, n: float, alpha: float)->float:
 
 
 @nb.jit(nopython=True)
-def update_probability(time_from_infection: float, time_first_infectious: float, norm: float, norm_time: float, alpha: float, n: float)->float:
+def update_probability(
+    time_from_infection: float,
+    time_first_infectious: float,
+    norm: float,
+    norm_time: float,
+    alpha: float,
+    n: float,
+) -> float:
     """
     Determines how the infectiousness profile is updated over time
 
@@ -57,7 +64,7 @@ def update_probability(time_from_infection: float, time_first_infectious: float,
 
     if time_from_infection > time_first_infectious:
         delta_tau = (time_from_infection - time_first_infectious) / norm_time
-        return norm * xnexp(x=delta_tau, n=n, alpha=alpha) 
+        return norm * xnexp(x=delta_tau, n=n, alpha=alpha)
     else:
         return 0.0
 
@@ -104,15 +111,12 @@ class TransmissionXNExp(Transmission):
         self.n = n
         self.alpha = alpha
         self.asymptomatic_infectious_factor = asymptomatic_infectious_factor
-        self.mild_infectious_factor = mild_infectious_factor 
+        self.mild_infectious_factor = mild_infectious_factor
         max_delta_time = self.n * self.alpha * self.norm_time
         max_tau = max_delta_time / self.norm_time
-        self.norm = self.max_probability / xnexp(
-            max_tau, self.n, self.alpha
-        )
+        self.norm = self.max_probability / xnexp(max_tau, self.n, self.alpha)
         self.modify_infectiousness_for_symptoms(max_symptoms=max_symptoms)
         self.probability = 0.0
-
 
     @classmethod
     def from_file(
@@ -120,7 +124,7 @@ class TransmissionXNExp(Transmission):
         time_first_infectious: float,
         n: float,
         alpha: float,
-        max_symptoms: "SymptomTag" =None,
+        max_symptoms: "SymptomTag" = None,
         config_path: str = default_config_path,
     ) -> "TransmissionXNExp":
         """
@@ -181,10 +185,10 @@ class TransmissionXNExp(Transmission):
         ):
             self.norm *= self.asymptomatic_infectious_factor
         elif (
-            self.mild_infectious_factor is not None and max_symptoms == SymptomTag.influenza
+            self.mild_infectious_factor is not None
+            and max_symptoms == SymptomTag.mild
         ):
             self.norm *= self.mild_infectious_factor
-
 
     def update_probability_from_delta_time(self, time_from_infection: float):
         """

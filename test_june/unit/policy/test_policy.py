@@ -154,7 +154,7 @@ def make_dummy_world_with_university(super_area):
     return pupil, student, world
 
 
-def infect_person(person, selector, symptom_tag="influenza"):
+def infect_person(person, selector, symptom_tag="mild"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
     person.health_information.time_of_symptoms_onset = 5.3
@@ -192,7 +192,7 @@ class TestDefaultPolicy:
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
-        infect_person(worker, selector, "pneumonia")
+        infect_person(worker, selector, "severe")
         sim.update_health_status(0.0, 0.0)
         assert policies.stay_home_collection(date=date)(worker, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
@@ -258,7 +258,7 @@ class TestDefaultPolicy:
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
-        infect_person(pupil, selector, "pneumonia")
+        infect_person(pupil, selector, "severe")
         sim.update_health_status(0.0, 0.0)
         assert policies.stay_home_collection(date=date)(pupil, None)
         sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
@@ -620,7 +620,7 @@ class TestQuarantine:
             policies=policies,
             leisure=leisure_instance,
         )
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
@@ -648,7 +648,7 @@ class TestQuarantine:
             policies=policies,
             leisure=leisure_instance,
         )
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
@@ -685,7 +685,7 @@ class TestQuarantine:
             policies=policies,
             leisure=leisure_instance,
         )
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
