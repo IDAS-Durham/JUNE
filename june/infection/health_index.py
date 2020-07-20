@@ -1,6 +1,7 @@
 import numpy as np
-
+from june.infection.symptom_tag import SymptomTag
 from june import paths
+from typing import Optional
 
 default_polinom_filename = paths.configs_path / "defaults/health_index_ratios.txt"
 
@@ -49,7 +50,7 @@ class HealthIndexGenerator:
     https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile)
     """
     def __init__(
-        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.2
+            self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.2, comorbidities_multiplier: Optional[dict] = None
     ):
         """
         Parameters:
@@ -74,10 +75,13 @@ class HealthIndexGenerator:
         self.Asimpto_ratio = Asimpto_ratio
         self.max_age = 90
         self.make_list()
+        if comorbidities_multiplier is not None:
+            self.max_mild_symptom_tag = [tag.value for tag in SymptomTag if tag.name=='severe'][0]
+            self.comorbidities_multiplier = comorbidities_multiplier
 
     @classmethod
     def from_file(
-        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.2
+        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.2, comorbidities_multiplier = None
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -94,7 +98,7 @@ class HealthIndexGenerator:
         poli_icu = np.array([polinoms[:, 2], polinoms[:, 3]])
         poli_deaths = np.array([polinoms[:, 4], polinoms[:, 5]])
 
-        return cls(poli_hosp, poli_icu, poli_deaths, asymptomatic_ratio)
+        return cls(poli_hosp, poli_icu, poli_deaths, asymptomatic_ratio, comorbidities_multiplier)
 
     def model(self, age, poli):
         """
@@ -266,4 +270,13 @@ class HealthIndexGenerator:
         else:
             sex = 0
         roundage = int(round(person.age))
-        return np.cumsum(self.prob_lists[sex][roundage])
+        health_index = np.cumsum(self.prob_lists[sex][roundage])
+        if hasattr(self,'comorbidities_multiplier'):
+            health_index = self.adjust_for_comorbidities(health_index, person)
+        return health_index
+
+    def adjust_for_comorbidities(self, health_index, person):
+        multiplier = self.comorbidities_multiplier.get(person.comorbidity, 1.)
+        health_index[:self.max_mild_symptom_tag] *= 2.-multiplier
+        health_index[self.max_mild_symptom_tag+1:] *= multiplier
+        return health_index
