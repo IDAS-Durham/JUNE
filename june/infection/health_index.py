@@ -56,7 +56,7 @@ class HealthIndexGenerator:
         poli_hosp: dict,
         poli_icu: dict,
         poli_deaths: dict,
-        Asimpto_ratio=0.2,
+        asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
     ):
         """
@@ -79,7 +79,7 @@ class HealthIndexGenerator:
         self.poli_hosp = poli_hosp
         self.poli_icu = poli_icu
         self.poli_deaths = poli_deaths
-        self.Asimpto_ratio = Asimpto_ratio
+        self.asymptomatic_ratio = asymptomatic_ratio
         self.max_age = 90
         self.make_list()
         if comorbidity_multipliers is not None:
@@ -189,7 +189,7 @@ class HealthIndexGenerator:
         """
         ages = np.arange(0, 121, 1)  # from 0 to 120
         self.prob_lists = np.zeros([2, 121, 7])
-        self.prob_lists[:, :, 0] = self.Asimpto_ratio
+        self.prob_lists[:, :, 0] = self.asymptomatic_ratio
         # hosp,ICU,death ratios
 
         ratio_hosp_female_with_icu = self.model(
@@ -213,8 +213,8 @@ class HealthIndexGenerator:
         ratio_hosp_male = ratio_hosp_male_with_icu - ratio_icu_male
 
         # Probability of being simptomatic but not going to hospital
-        no_hosp_female = 1.0 - self.Asimpto_ratio - ratio_hosp_female_with_icu
-        no_hosp_male = 1.0 - self.Asimpto_ratio - ratio_hosp_male_with_icu
+        no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_female_with_icu
+        no_hosp_male = 1.0 - self.asymptomatic_ratio - ratio_hosp_male_with_icu
 
         # Probability of getting severe
         prob_severe = np.ones(121)
