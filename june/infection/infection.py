@@ -22,7 +22,7 @@ class SymptomsType(IntEnum):
 
 
 class InfectionSelector:
-    def __init__(self, transmission_type: str, asymptomatic_ratio: float = 0.3):
+    def __init__(self, transmission_type: str, health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3)):
         """
         Selects the type of infection a person is given
 
@@ -35,15 +35,13 @@ class InfectionSelector:
         """
         self.transmission_type = transmission_type
         self.trajectory_maker = TrajectoryMakers.from_file()
-        self.health_index_generator = HealthIndexGenerator.from_file(
-            asymptomatic_ratio=asymptomatic_ratio
-        )
+        self.health_index_generator = health_index_generator
 
     @classmethod
     def from_file(
         cls,
-        asymptomatic_ratio: float = 0.3,
         config_filename: str = default_config_filename,
+        health_index_generator: HealthIndexGenerator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.3)
     ) -> "InfectionSelector":
         """
         Generate infection selector from default config file
@@ -57,7 +55,7 @@ class InfectionSelector:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return InfectionSelector(config["transmission_type"], asymptomatic_ratio)
+        return InfectionSelector(config["transmission_type"], health_index_generator=health_index_generator)
 
     def infect_person_at_time(self, person: "Person", time: float):
         """
