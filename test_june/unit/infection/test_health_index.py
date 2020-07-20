@@ -43,23 +43,31 @@ def test__growing_index():
     assert increasing_count ==0
 
 def test__comorbidities_effect():
-    comorbidities_multiplier = {
+    comorbidity_multipliers = {
             'guapo': 0.8,
             'feo': 1.2
             }
-    health_index=HealthIndexGenerator.from_file(comorbidities_multiplier=comorbidities_multiplier)
+    health_index=HealthIndexGenerator.from_file(comorbidity_multipliers=comorbidity_multipliers)
 
     dummy = Person.from_attributes(sex='f', age=40)
-    dummy_commorbidity = Person.from_attributes(sex='f', 
+    feo = Person.from_attributes(sex='f', 
             age=40, 
             comorbidity='feo')
+    guapo = Person.from_attributes(sex='f', 
+            age=40, 
+            comorbidity='guapo')
 
     dummy_health = health_index(dummy)
-    comorbidity_health = health_index(dummy_commorbidity)
+    feo_health = health_index(feo)
+    guapo_health = health_index(guapo)
 
-    np.testing.assert_equal(np.array(comorbidity_health[:2]), np.array(dummy_health[:2])*0.8)
-    np.testing.assert_equal(comorbidity_health[3:], dummy_health[3:]*1.2)
+    np.testing.assert_equal(feo_health[:2], dummy_health[:2]*0.8)
+    np.testing.assert_equal(feo_health[3:], dummy_health[3:]*1.2)
+    np.testing.assert_equal(guapo_health[:2], dummy_health[:2]*1.2)
+    np.testing.assert_equal(guapo_health[3:], dummy_health[3:]*0.8)
 
-  
+
+
+ 
 
 
