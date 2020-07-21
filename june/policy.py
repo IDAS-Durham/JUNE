@@ -81,7 +81,7 @@ class Policy(ABC):
         date:
             date to check
         """
-        return self.start_time <= date <= self.end_time
+        return self.start_time <= date < self.end_time
 
 
 class SocialDistancing(Policy):
@@ -188,7 +188,7 @@ class PermanentPolicy(StayHome):
         """
         return (
             person.health_information is not None
-            and person.health_information.must_stay_at_home
+            and person.health_information.tag is SymptomTag.severe
         )
 
 
@@ -225,7 +225,7 @@ class Quarantine(StayHome):
     def must_stay_at_home(self, person: "Person", days_from_start):
         self_quarantine = False
         try:
-            if person.symptoms.tag in (SymptomTag.influenza, SymptomTag.pneumonia):
+            if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = (
                     person.health_information.time_of_symptoms_onset
                 )
@@ -306,7 +306,7 @@ class CloseUniversities(SkipActivity):
 
 class CloseCompanies(SkipActivity):
     def __init__(
-        self, start_time: str, end_time: str, full_closure=False, random_lambda=None
+        self, start_time: str, end_time: str, full_closure=False, random_work_probability=None
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -314,7 +314,7 @@ class CloseCompanies(SkipActivity):
         """
         super().__init__(start_time, end_time)
         self.full_closure = full_closure
-        self.random_lambda = random_lambda
+        self.random_work_probability =random_work_probability 
 
     def skip_activity(
         self, person: "Person", activities: List,
@@ -328,9 +328,8 @@ class CloseCompanies(SkipActivity):
                 return self.remove_activities(
                     activities, ["primary_activity", "commute"]
                 )
-            elif person.lockdown_status == "random" and self.random_lambda is not None:
-                probability_to_go_today = 1 - np.exp(-self.random_lambda)
-                if np.random.rand() > probability_to_go_today:
+            elif person.lockdown_status == "random" and self.random_work_probability is not None:
+                if np.random.rand() > self.random_work_probability:
                     return self.remove_activities(
                         activities, ["primary_activity", "commute"]
                     )
@@ -370,6 +369,11 @@ class ChangeLeisureProbability(Policy):
                 activity
             ] = {}  # this will be filled when coupled to leisure
 
+    def is_active(self, date: datetime.datetime) -> bool:
+        """
+        This is modified in this policy to include the end date.
+        """
+        return self.start_time <= date <= self.end_time
 
 class PolicyCollection(ABC):
     def __init__(self, policies: List[Policy]):
