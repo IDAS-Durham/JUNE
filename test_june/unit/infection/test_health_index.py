@@ -41,4 +41,3 @@ def test__growing_index():
             increasing_count+=0
 
     assert increasing_count ==0
-

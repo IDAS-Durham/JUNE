@@ -13,6 +13,7 @@ from june.demography.person import Person
 from june.groups.leisure import Leisure
 from june.infection.symptom_tag import SymptomTag
 from june.groups.leisure.social_venue_distributor import parse_age_probabilites
+from june.interaction import Interaction
 
 # TODO: reduce leisure attendance
 
@@ -80,21 +81,21 @@ class Policy(ABC):
         date:
             date to check
         """
-        return self.start_time <= date <= self.end_time
+        return self.start_time <= date < self.end_time
 
 
 class SocialDistancing(Policy):
     def __init__(
         self,
-        start_time: Union[str, datetime.datetime] = "1900-01-01",
-        end_time: Union[str, datetime.datetime] = "2100-01-01",
-        beta_factor: Optional[dict] = None,
+        start_time: Union[str, datetime.datetime],
+        end_time: Union[str, datetime.datetime],
+        beta_factors: dict = None,
     ):
         super().__init__(start_time, end_time)
-        if beta_factor is None:
-            self.beta_factor = {}
-        else:
-            self.beta_factor = beta_factor
+        self.original_betas = {}
+        self.beta_factors = beta_factors
+        for key in beta_factors.keys():
+            self.original_betas[key] = None  # to be filled when coupled to interaction
 
 
 class SkipActivity(Policy):
@@ -103,9 +104,7 @@ class SkipActivity(Policy):
     """
 
     @abstractmethod
-    def skip_activity(
-        self, person: "Person", activities: List[str], 
-    ) -> bool:
+    def skip_activity(self, person: "Person", activities: List[str],) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -189,7 +188,7 @@ class PermanentPolicy(StayHome):
         """
         return (
             person.health_information is not None
-            and person.health_information.must_stay_at_home
+            and person.health_information.tag is SymptomTag.severe
         )
 
 
@@ -200,7 +199,7 @@ class Quarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         n_days: int = 7,
         n_days_household: int = 14,
-        household_complacency: float = 1.,
+        household_complacency: float = 1.0,
     ):
         """
         This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
@@ -226,7 +225,7 @@ class Quarantine(StayHome):
     def must_stay_at_home(self, person: "Person", days_from_start):
         self_quarantine = False
         try:
-            if person.symptoms.tag in (SymptomTag.influenza, SymptomTag.pneumonia):
+            if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = (
                     person.health_information.time_of_symptoms_onset
                 )
@@ -238,7 +237,9 @@ class Quarantine(StayHome):
         except:
             pass
         housemates_quarantine = person.residence.group.quarantine(
-            days_from_start, self.n_days_household, household_complacency = self.household_complacency
+            days_from_start,
+            self.n_days_household,
+            household_complacency=self.household_complacency,
         )
         return self_quarantine or housemates_quarantine
 
@@ -273,7 +274,7 @@ class CloseSchools(SkipActivity):
             self.years_to_close = np.arange(0, 20)
 
     def skip_activity(
-        self, person: "Person", activities: List, 
+        self, person: "Person", activities: List,
     ):
         if (
             person.primary_activity is not None
@@ -293,7 +294,7 @@ class CloseUniversities(SkipActivity):
         super().__init__(start_time, end_time)
 
     def skip_activity(
-        self, person: "Person", activities: List, 
+        self, person: "Person", activities: List,
     ):
         if (
             person.primary_activity is not None
@@ -305,7 +306,7 @@ class CloseUniversities(SkipActivity):
 
 class CloseCompanies(SkipActivity):
     def __init__(
-        self, start_time: str, end_time: str, full_closure=False, random_lambda=None
+        self, start_time: str, end_time: str, full_closure=False, random_work_probability=None
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -313,10 +314,10 @@ class CloseCompanies(SkipActivity):
         """
         super().__init__(start_time, end_time)
         self.full_closure = full_closure
-        self.random_lambda = random_lambda
+        self.random_work_probability =random_work_probability 
 
     def skip_activity(
-        self, person: "Person", activities: List, 
+        self, person: "Person", activities: List,
     ):
         if (
             person.primary_activity is not None
@@ -327,9 +328,8 @@ class CloseCompanies(SkipActivity):
                 return self.remove_activities(
                     activities, ["primary_activity", "commute"]
                 )
-            elif person.lockdown_status == "random" and self.random_lambda is not None:
-                probability_to_go_today = 1 - np.exp(-self.random_lambda)
-                if np.random.rand() > probability_to_go_today:
+            elif person.lockdown_status == "random" and self.random_work_probability is not None:
+                if np.random.rand() > self.random_work_probability:
                     return self.remove_activities(
                         activities, ["primary_activity", "commute"]
                     )
@@ -369,6 +369,11 @@ class ChangeLeisureProbability(Policy):
                 activity
             ] = {}  # this will be filled when coupled to leisure
 
+    def is_active(self, date: datetime.datetime) -> bool:
+        """
+        This is modified in this policy to include the end date.
+        """
+        return self.start_time <= date <= self.end_time
 
 class PolicyCollection(ABC):
     def __init__(self, policies: List[Policy]):
@@ -382,9 +387,7 @@ class SkipActivityCollection(PolicyCollection):
     policies: List[SkipActivity]
 
     def __call__(
-        self,
-        person: Person,
-        activities: List,
+        self, person: Person, activities: List,
     ):
         """
         Filter activities this person is not permitted to do on a given date
@@ -433,16 +436,6 @@ class StayHomeCollection(PolicyCollection):
 class Policies:
     def __init__(self, policies=None):
         self.policies = [PermanentPolicy()] + (policies or list())
-        self.social_distancing = False
-        self.social_distancing_start = 0
-        self.social_distancing_end = 0
-
-        for policy in self.policies:
-            if isinstance(policy, SocialDistancing):
-                self.social_distancing_policy = policy
-                self.social_distancing = True
-                self.social_distancing_start = policy.start_time
-                self.social_distancing_end = policy.end_time
 
     @classmethod
     def from_file(
@@ -451,9 +444,20 @@ class Policies:
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         policies = []
-        for key, value in config.items():
-            camel_case_key = "".join(x.capitalize() or "_" for x in key.split("_"))
-            policies.append(str_to_class(camel_case_key)(**value))
+        for policy, policy_data in config.items():
+            camel_case_key = "".join(
+                x.capitalize() or "_" for x in policy.split("_")
+            )
+            if "start_time" not in policy_data:
+                for policy_i, policy_data_i in policy_data.items():
+                    if (
+                        "start_time" not in policy_data_i.keys()
+                        or "end_time" not in policy_data_i.keys()
+                    ):
+                        raise ValueError("policy config file not valid.")
+                    policies.append(str_to_class(camel_case_key)(**policy_data_i))
+            else:
+                policies.append(str_to_class(camel_case_key)(**policy_data))
         return Policies(policies=policies)
 
     def get_active_policies_for_type(self, policy_type, date):
@@ -481,7 +485,7 @@ class Policies:
         """
         return StayHomeCollection(self._stay_home_policies(date))
 
-    def social_distancing_policies(self, date):
+    def get_social_distancing_policies(self, date):
         return self.get_active_policies_for_type(
             policy_type=SocialDistancing, date=date
         )
@@ -496,7 +500,7 @@ class Policies:
             policy_type=ChangeLeisureProbability, date=date
         )
 
-    def apply_social_distancing_policy(self, betas, time):
+    def apply_social_distancing_policy(self, date, interaction: Interaction):
         """
         Implement social distancing policy
         
@@ -508,18 +512,23 @@ class Policies:
         - Currently we assume that social distancing is implemented first and this affects all
           interactions and intensities globally
         - Currently we assume that the changes are not group dependent
-
-
         TODO:
         - Implement structure for people to adhere to social distancing with a certain compliance
         - Check per group in config file
         """
-        betas_new = copy.deepcopy(betas)
-        for group in betas:
-            betas_new[group] = (
-                self.social_distancing_policy.beta_factor[group] * betas_new[group]
-            )
-        return betas_new
+        social_distancing_policies = self.get_social_distancing_policies(date)
+        # order matters, first deactivate all policies that expire in this day.
+        for policy in social_distancing_policies:
+            if policy.end_time == date:  # deactivate policy, restore betas.
+                for key, value in policy.original_betas.items():
+                    interaction.beta[key] = value
+
+        # now activate all policies that need to be activated
+        for policy in social_distancing_policies:
+            if policy.start_time == date:  # activate policy, save current betas.
+                for key, value in policy.beta_factors.items():
+                    policy.original_betas[key] = interaction.beta[key]
+                    interaction.beta[key] = interaction.beta[key] * value
 
     def get_beta_factors(self, group):
         pass
