@@ -1,8 +1,9 @@
 import pandas as pd
 import pytest
 import numpy as np
+from collections import Counter
 from june.demography.geography import Geography
-from june.demography import Demography
+from june.demography import Demography, Person
 from june import World
 from june.infection_seed import InfectionSeed
 from june.infection import InfectionSelector
@@ -56,7 +57,6 @@ def get_seed(geography, selector, demography):
         {"super_area": SUPER_AREA_LIST, "region": REGION_LIST}
     )
     return InfectionSeed(geography.super_areas, selector, None, super_area_to_region)
-
 
 def test__filter_region(seed):
     super_areas = seed._filter_region(region="Yorkshire")
@@ -161,4 +161,53 @@ def test__seed_strength(selector,):
     )
     np.testing.assert_allclose(0.2 * n_cases, n_infected, rtol=0.05)
 
+def test__simple_age_profile_test(selector,):
+    n_people = 10000
+    ages = np.random.randint(low=0, high=100, size=n_people)
+    people = [Person.from_attributes(age=ages[n]) for n in range(n_people)] 
+    seed = InfectionSeed(
+            super_areas=None,
+            selector=selector,
+            age_profile= {
+                '0-9': 0.3,
+                '10-39': 0.5,
+                '40-100': 0.2}
+            )
+    choice = seed.select_from_susceptible(people, 1000, age_profile=seed.age_profile)
+    ages_infected = np.array([person.age for person in people])[choice]
+    count = Counter(ages_infected)
+    count_0_9 = sum([count_value for count_key, count_value in count.items() if count_key < 10])
+    assert count_0_9/len(ages_infected) == pytest.approx(0.3, 0.05)
+    count_10_39 = sum([count_value for count_key, count_value in count.items() if count_key >= 10 and count_key < 40])
+    assert count_10_39/len(ages_infected) == pytest.approx(0.5, 0.05)
+    count_40_100 = sum([count_value for count_key, count_value in count.items() if count_key > 40])
+    assert count_40_100/len(ages_infected) == pytest.approx(0.2, 0.05)
+
+
+def test__seed_with_age_profile(selector,):
+    geography = Geography.from_file(
+        filter_key={"super_area": ["E02004940"]}
+    )
+    demography = Demography.for_geography(geography)
+    for area in geography.areas:
+        area.populate(demography)
+
+    seed = InfectionSeed(
+            super_areas=geography.super_areas, 
+            selector=selector,
+            age_profile= {
+                '0-9': 0.,
+                '10-39': 1.,
+                '40-100': 0.}
+            )
+
+    seed.unleash_virus(100)
+
+    should_not_infected = [person for super_area in geography.super_areas for person in super_area.people if person.infected and (person.age < 10 or person.age >=40)]
+
+    assert len(should_not_infected) == 0
+
+    should_infected = [person for super_area in geography.super_areas for person in super_area.people if person.infected and (person.age >= 10 and person.age < 40)]
+
+    assert len(should_infected) == 100
 

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import random
 import datetime
 from collections import Counter
 from june import paths
@@ -17,12 +18,13 @@ default_msoa_region_filename = (
 class InfectionSeed:
     def __init__(
         self,
-        super_areas: SuperAreas,
+        super_areas: Optional[SuperAreas],
         selector: InfectionSelector,
         n_cases_region: Optional[pd.DataFrame] = None,
         msoa_region: Optional[pd.DataFrame] = None,
         dates: Optional[List["datetime"]] = None,
         seed_strength: float = 1.0,
+        age_profile: Optional[dict] = None,
     ):
         """
         Class to initialize the infection 
@@ -43,13 +45,15 @@ class InfectionSeed:
         self.selector = selector
         self.n_cases_region = n_cases_region
         self.msoa_region = msoa_region
-        self.super_area_names = [
+        if self.super_areas is not None:
+            self.super_area_names = [
             super_area.name for super_area in self.super_areas.members
         ]
         self.dates = dates
         self.min_date = min(self.dates) if self.dates else None
         self.max_date = max(self.dates) if self.dates else None
         self.seed_strength = seed_strength
+        self.age_profile = age_profile
         self.dates_seeded = []
 
     @classmethod
@@ -60,6 +64,7 @@ class InfectionSeed:
         n_cases_region,
         msoa_region_filename: str = default_msoa_region_filename,
         seed_strength: float = 1.0,
+        age_profile: Optional[dict] = None,
     ) -> "Seed":
         """
         Initialize Seed from file containing the number of cases per region, and mapping
@@ -161,10 +166,35 @@ class InfectionSeed:
         susceptible_in_area = [
             person for person in super_area.people if person.susceptible
         ]
-        choices = np.random.choice(len(susceptible_in_area), n_cases, replace=False)
+        choices = self.select_from_susceptible(susceptible_in_area, n_cases, self.age_profile)
         for choice in choices:
             person = list(susceptible_in_area)[choice]
             self.selector.infect_person_at_time(person=person, time=1.0)
+
+    def select_from_susceptible(self, susceptibles, n_cases, age_profile):
+        if age_profile is None:
+            return np.random.choice(len(susceptibles), n_cases, replace=False)
+        else:
+            random.shuffle(susceptibles)
+            n_per_age_group = n_cases*np.array(list(self.age_profile.values()))
+            choices = []
+            for idx, age_group in enumerate(self.age_profile.keys()):
+                age_choices = self.get_people_from_age_group(susceptibles, int(n_per_age_group[idx]), age_group)
+                choices.extend(age_choices)
+            return choices
+
+    def get_people_from_age_group(self, people, n_people, age_group):
+        choices = []
+        for idx, person in enumerate(people):
+            if len(choices) == n_people:
+                break
+            if int(age_group.split('-')[0]) <= person.age < int(age_group.split('-')[1]):
+                choices.append(idx)
+        return choices
+                
+
+            
+
 
     def unleash_virus_per_region(self, date):
         """
