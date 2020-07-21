@@ -21,5 +21,6 @@ sub_sector_distr:
 # bind = send to random SuperArea within simulated geography
 non_geographical_work_location:
   OD0000001: "home"
+  OD0000002: "home"
   OD0000003: "bind"
   OD0000004: "bind"

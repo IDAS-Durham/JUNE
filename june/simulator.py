@@ -86,7 +86,7 @@ class Simulator:
         ]
         self.check_inputs(time_config)
         self.timer = Timer(
-            initial_day = time_config['initial_day'],
+            initial_day=time_config["initial_day"],
             total_days=time_config["total_days"],
             weekday_step_duration=time_config["step_duration"]["weekday"],
             weekend_step_duration=time_config["step_duration"]["weekend"],
@@ -472,7 +472,7 @@ class Simulator:
             health_information.update_health_status(time, duration)
             if (
                 previous_tag == SymptomTag.exposed
-                and health_information.tag == SymptomTag.influenza
+                and health_information.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
             ids.append(person.id)
@@ -519,6 +519,9 @@ class Simulator:
                 self.policies.apply_change_probabilities_leisure(
                     self.timer.date, self.leisure
                 )
+                self.policies.apply_social_distancing_policy(
+                    self.timer.date, self.interaction
+                )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
@@ -535,20 +538,6 @@ class Simulator:
         sim_logger.info(
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
-
-        if (
-            self.policies.social_distancing
-            and self.policies.social_distancing_start
-            <= self.timer.date
-            < self.policies.social_distancing_end
-        ):
-
-            self.interaction.beta = self.policies.apply_social_distancing_policy(
-                self.beta_copy, self.timer.now
-            )
-        else:
-            self.interaction.beta = self.beta_copy
-
         for group_type in group_instances:
             n_people_group = 0
             for group in group_type.members:
@@ -595,6 +584,8 @@ class Simulator:
             if time > self.timer.final_date:
                 break
             if self.infection_seed:
-                if (time >= self.infection_seed.min_date) and (time <= self.infection_seed.max_date):
+                if (time >= self.infection_seed.min_date) and (
+                    time <= self.infection_seed.max_date
+                ):
                     self.infection_seed.unleash_virus_per_region(time)
             self.do_timestep()
