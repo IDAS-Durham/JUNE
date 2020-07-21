@@ -6,7 +6,7 @@ but at least we can use it in the meantime to make sure the code runs before pus
 from june.infection_seed import InfectionSeed
 
 
-def test_box_full_run(simulator_box):
-    seed = InfectionSeed(simulator_box.world.boxes, simulator_box.selector, )
+def test_box_full_run(simulator_box, selector):
+    seed = InfectionSeed(simulator_box.world.boxes, selector, )
     seed.unleash_virus(1000, box_mode=True)
     simulator_box.run()
