@@ -22,7 +22,7 @@ trajectories:
           value: 0.0
 
 
-# exposed => influenza => recovered 
+# exposed => mild => recovered 
   - stages:
       - symptom_tag: exposed
         completion_time:
@@ -32,7 +32,7 @@ trajectories:
           loc: 0.39
           scale: 39.8
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant
           value: 20.
@@ -43,7 +43,7 @@ trajectories:
           value: 0.0
 
 
-# exposed => influenza => pneumonia => recovered
+# exposed => mild => severe => recovered
 
   - stages:
       - symptom_tag: exposed
@@ -54,12 +54,12 @@ trajectories:
           loc: 0.39
           scale: 39.8
  
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant
           value: 5.
 
-      - symptom_tag: pneumonia
+      - symptom_tag: severe
         completion_time:
           type: constant
           value: 20.
@@ -69,7 +69,7 @@ trajectories:
           type: constant
           value: 0.0
 
-# exposed => influenza => hospitalised => recovered
+# exposed => mild => hospitalised => recovered
 
   - stages:
       
@@ -81,7 +81,7 @@ trajectories:
           loc: 0.39
           scale: 39.8
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 5
@@ -94,7 +94,7 @@ trajectories:
           loc: 0.05
           scale: 27.1
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 8 
@@ -104,7 +104,7 @@ trajectories:
           type: constant
           value: 0.0
 
-# exposed => influenza => intensive_care => recovered
+# exposed => mild => intensive_care => recovered
 
   - stages:
       
@@ -116,7 +116,7 @@ trajectories:
           loc: 0.39
           scale: 39.8
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 5 
@@ -129,7 +129,7 @@ trajectories:
           loc: 0.05
           scale: 27.1
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 8 
@@ -139,7 +139,7 @@ trajectories:
           type: constant
           value: 0.0
 
-# exposed => influenza => pneumonia => dead
+# exposed => mild => severe => dead
 
   - stages:
       - symptom_tag: exposed
@@ -150,12 +150,12 @@ trajectories:
           loc: 0.39
           scale: 39.8
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 5
 
-      - symptom_tag: pneumonia
+      - symptom_tag: severe
         completion_time:
           type: constant
           value: 3.0
@@ -165,7 +165,7 @@ trajectories:
           type: constant
           value: 0.0
 
-# exposed => influenza => hospitalised => dead
+# exposed => mild => hospitalised => dead
 
   - stages:
       - symptom_tag: exposed
@@ -176,7 +176,7 @@ trajectories:
           loc: 0.39
           scale: 39.8
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 5 
@@ -194,7 +194,7 @@ trajectories:
           type: constant
           value: 0.
 
-# exposed => influenza => hospitalised => intensive_care => dead
+# exposed => mild => hospitalised => intensive_care => dead
 
   - stages:
       - symptom_tag: exposed
@@ -205,7 +205,7 @@ trajectories:
           loc: 0.39
           scale: 39.8
 
-      - symptom_tag: influenza
+      - symptom_tag: mild
         completion_time:
           type: constant 
           value: 5

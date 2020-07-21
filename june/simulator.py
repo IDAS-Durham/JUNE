@@ -247,8 +247,8 @@ class Simulator:
             previous_tag = health_information.tag
             health_information.update_health_status(time, duration)
             if (
-                    previous_tag == SymptomTag.exposed
-                    and health_information.tag == SymptomTag.influenza
+                previous_tag == SymptomTag.exposed
+                and health_information.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
             ids.append(person.id)

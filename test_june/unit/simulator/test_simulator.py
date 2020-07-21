@@ -196,11 +196,11 @@ def test__kid_at_home_is_supervised(sim: Simulator, selector):
             kids_at_school.append(person)
 
     for kid in kids_at_school:
-        selector.infect_person_at_time(kid, 0.0)
-        kid.health_information.infection.symptoms.tag = getattr(SymptomTag, 'pneumonia')
-        kid.health_information.infection.symptoms.tag = SymptomTag.pneumonia
-        assert kid.health_information.must_stay_at_home
 
+        sim.selector.infect_person_at_time(kid, 0.0)
+        kid.health_information.infection.symptoms.tag = getattr(SymptomTag, 'severe')
+        kid.health_information.infection.symptoms.tag = SymptomTag.severe
+        assert kid.health_information.must_stay_at_home
     sim.activity_manager.move_people_to_active_subgroups(["primary_activity", "residence"])
 
     for kid in kids_at_school:
