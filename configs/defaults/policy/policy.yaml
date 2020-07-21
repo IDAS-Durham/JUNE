@@ -1,38 +1,77 @@
 quarantine:
+    1:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-        household_complacency: 0.6
+        household_complacency: 0.2
         start_time: 2020-03-16 
-        end_time: 2020-07-04 
+        end_time: 2020-03-23 
+    2:
+        n_days: 7 # for the symptomatic person
+        n_days_household: 14 # for the housemates
+        household_complacency: 0.9
+        start_time: 2020-03-16 
+        end_time: 2020-03-23
 
 shielding:
+    1:
+        min_age: 70
+        complacency: 0.2
+        start_time: 2020-03-16 
+        end_time: 2020-03-23
+    2:
         min_age: 70
         complacency: 0.7
-        start_time: 2020-03-16 
-        end_time: 2020-07-04 
+        start_time: 2020-03-23
+        end_time: 2020-06-01
+
 
 close_companies:
-        start_time: 2020-03-16
-        end_time: 2020-07-04 #TODO: Until when really?
-        full_closure: False 
-        random_lambda:  0.2 # 8./40. , since we want them to go to work once (8 hours) a week (40 working hours)
+  1:
+    start_time: 2020-03-16
+    end_time: 2020-03-23 
+    full_closure: False 
+    random_work_probability: 0.85
+
+  2:
+    start_time: 2020-03-23
+    end_time: 2020-07-04
+    full_closure: False 
+    random_work_probability: 0.25
 
 social_distancing:
-        start_time: 2020-03-16
-        end_time: 2020-07-04 #TODO: end time?
-        beta_factor:
-                box: 0.5
-                pub: 0.5
-                grocery: 0.5
-                cinema: 0.5
-                commute_unit: 0.5
-                commute_city_unit: 0.5
-                hospital: 0.5
-                care_home: 0.5
-                company: 0.5
-                school: 0.5
-                household: 1.0
-                university: 0.5
+        1: 
+          start_time: 2020-03-16
+          end_time: 2020-03-23 
+          beta_factors:
+                  box: 0.875
+                  pub: 0.875
+                  grocery: 0.875
+                  cinema: 0.875
+                  commute_unit: 0.875
+                  commute_city_unit: 0.875
+                  hospital: 0.875
+                  care_home: 0.875
+                  company: 0.875
+                  school: 0.875
+                  household: 1.0
+                  university: 0.875
+
+        2:
+          start_time: 2020-03-23
+          end_time: 2020-07-04 
+          beta_factors:
+                  box: 0.75
+                  pub: 0.75
+                  grocery: 0.75
+                  cinema: 0.75
+                  commute_unit: 0.75
+                  commute_city_unit: 0.75
+                  hospital: 0.75
+                  care_home: 0.75
+                  company: 0.75
+                  school: 0.75
+                  household: 1.0
+                  university: 0.75
 
 close_leisure_venue:
         start_time: 2020-03-21
@@ -40,7 +79,7 @@ close_leisure_venue:
         venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
 
 change_leisure_probability:
-        start_time: 2020-03-21
+        start_time: 2020-03-23
         end_time: 2020-07-04
         leisure_activities_probabilities:
           household_visits:
@@ -50,7 +89,6 @@ change_leisure_probability:
             women: 
               0-64: 0.50
               65-100: 0.25
-        leisure_activities_probabilities:
           care_home_visits:
             men:
               0-100: 0.05
