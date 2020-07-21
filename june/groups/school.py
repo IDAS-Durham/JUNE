@@ -88,7 +88,6 @@ class School(Group):
         self.n_teachers_max = None
         self.age_min = age_min
         self.age_max = age_max
-        #TODO: is age structure used?
         self.sector = sector
         self.years = list(range(age_min, age_max+1))
         
@@ -245,7 +244,7 @@ class Schools(Supergroup):
         for school_name, row in school_df.iterrows():
             n_pupils_max = row["NOR"]
             school_type = row["sector"]
-            if school_type is np.nan:  # TODO double check dataframe
+            if school_type is np.nan: 
                 school_type = list(employee_per_clients.keys())[0]
             school = School(
                 np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
