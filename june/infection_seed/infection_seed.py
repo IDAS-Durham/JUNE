@@ -246,17 +246,4 @@ class InfectionSeed:
                 super_areas, int(self.seed_strength * n_cases)
             )
 
-    def filter_trajectories(self, trajectories, symptoms_to_keep=('dead_hospital', 'dead_icu')):
-        filtered_trajectories=[]
-        for trajectory in trajectories:
-            symptom_tags = [stage['symptom_tag'] for stage in trajectory['stages']]
-            if set(symptom_tags).intersection(symptoms_to_keep):
-                filtered_trajectories.append(trajectory)
-        return filtered_trajectories
-
-    def get_mean_completion_time(self, stage):
-        if hasattr(stage.completion_time,'distribution'):
-            return stage.completion_time.distribution.mean() 
-        else:
-            return stage.completion_time.value    
 
