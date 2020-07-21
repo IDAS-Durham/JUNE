@@ -26,6 +26,7 @@ setup(
         license="MIT license",
         install_requires=requirements,
         packages=['june',
+                  'june.activity',
                   'june.infection',
                   'june.infection_seed',
                   'june.demography',
