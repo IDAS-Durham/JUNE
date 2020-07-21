@@ -26,15 +26,15 @@ class Simulator:
     ActivityManager = ActivityManager
 
     def __init__(
-            self,
-            world: World,
-            interaction,
-            timer: Timer,
-            activity_manager: ActivityManager,
-            infection_seed: Optional["InfectionSeed"] = None,
-            save_path: str = "results",
-            output_filename: str = "logger.hdf5",
-            light_logger: bool = False,
+        self,
+        world: World,
+        interaction,
+        timer: Timer,
+        activity_manager: ActivityManager,
+        infection_seed: Optional["InfectionSeed"] = None,
+        save_path: str = "results",
+        output_filename: str = "logger.hdf5",
+        light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on the world
@@ -59,14 +59,14 @@ class Simulator:
 
     @classmethod
     def from_file(
-            cls,
-            world: "World",
-            interaction: "ContactAveraging",
-            policies: Optional["Policies"] = None,
-            infection_seed: Optional["InfectionSeed"] = None,
-            leisure: Optional["Leisure"] = None,
-            config_filename: str = default_config_filename,
-            save_path: str = "results",
+        cls,
+        world: World,
+        interaction: ContactAveraging,
+        policies: Optional[Policies] = None,
+        infection_seed: Optional[InfectionSeed] = None,
+        leisure: Optional[Leisure] = None,
+        config_filename: str = default_config_filename,
+        save_path: str = "results",
     ) -> "Simulator":
 
         """
@@ -128,7 +128,7 @@ class Simulator:
             timer=timer,
             infection_seed=infection_seed,
             save_path=save_path,
-            interaction=interaction
+            interaction=interaction,
         )
 
     def clear_world(self):
@@ -161,9 +161,7 @@ class Simulator:
             dictionary with time steps configuration
         """
 
-        # Sadly, days only have 24 hours
         assert sum(time_config["step_duration"]["weekday"].values()) == 24
-        # even during the weekend :(
         assert sum(time_config["step_duration"]["weekend"].values()) == 24
 
         # Check that all groups given in time_config file are in the valid group hierarchy
@@ -174,22 +172,22 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
-    def hospitalise_the_sick(self, person: "Person", previous_tag: str):
-        """
-        Hospitalise sick person. Also moves them from a regular bed
-        to an ICU bed if their symptoms tag has changed.
+    # def hospitalise_the_sick(self, person: "Person", previous_tag: str):
+    #    """
+    #    Hospitalise sick person. Also moves them from a regular bed
+    #    to an ICU bed if their symptoms tag has changed.
 
-        Parameters
-        ----------
-        person:
-            person to hospitalise
-        previous_tag:
-            previous symptoms tag of a person
-        """
-        if person.hospital is None:
-            self.world.hospitals.allocate_patient(person)
-        elif previous_tag != person.health_information.tag:
-            person.hospital.group.move_patient_within_hospital(person)
+    #    Parameters
+    #    ----------
+    #    person:
+    #        person to hospitalise
+    #    previous_tag:
+    #        previous symptoms tag of a person
+    #    """
+    #    if person.hospital is None:
+    #        self.world.hospitals.allocate_patient(person)
+    #    elif previous_tag != person.health_information.tag:
+    #        person.hospital.group.move_patient_within_hospital(person)
 
     def bury_the_dead(self, person: "Person", time: float):
         """
@@ -242,6 +240,9 @@ class Simulator:
         ids = []
         symptoms = []
         n_secondary_infections = []
+        medical_care_policies = self.activity_manager.policies.get_active_medical_care_policies(
+            self.timer.date
+        )
         for person in self.world.people.infected:
             health_information = person.health_information
             previous_tag = health_information.tag
@@ -255,12 +256,11 @@ class Simulator:
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
+            self.activity_manager.policies.apply_medical_care_policies(
+                policies = medical_care_policies, person = person
+            )
             if health_information.recovered:
-                if person.hospital is not None:
-                    person.hospital.group.release_as_patient(person)
                 self.recover(person, time)
-            elif health_information.should_be_in_hospital:
-                self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead:
                 self.bury_the_dead(person, time)
         if self.logger:
@@ -273,11 +273,17 @@ class Simulator:
         Perform a time step in the simulation
 
         """
+        if self.policies is not None:
+            interaction_policies = self.activity_manager.policies.get_active_interaction_policies(
+                date=self.timer.date
+            )
+            self.activity_manager.policies.apply_interaction_policies(
+                policies=interaction_policies, date=self.timer.date
+            )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
             logger.info("==== do_timestep(): no active groups found. ====")
             return
-
         self.activity_manager.do_timestep()
 
         active_groups = self.activity_manager.active_groups
