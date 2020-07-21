@@ -270,7 +270,10 @@ class TestClosure:
         household = Household()
         household.area = super_area.areas[0]
         household.add(pupil, subgroup_type=household.SubgroupType.kids)
+        worker2 = Person.from_attributes(age=50)
+        worker2.lockdown_status = "key_worker"
         household.add(worker, subgroup_type=household.SubgroupType.adults)
+        household.add(worker2, subgroup_type=household.SubgroupType.adults)
         school_closure = CloseSchools(
             start_time="2020-1-1", end_time="2020-10-1", years_to_close=[6],
         )
