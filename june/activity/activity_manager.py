@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 activity_hierarchy = [
     "box",
-    "hospital",
+    "medical_facility",
     "rail_travel_out",
     "rail_travel_back",
     "commute",
@@ -27,15 +27,15 @@ activity_hierarchy = [
 
 class ActivityManager:
     def __init__(
-            self,
-            world,
-            policies,
-            timer,
-            all_activities,
-            interaction,
-            activity_to_groups: dict,
-            leisure: Optional["Leisure"] = None,
-            min_age_home_alone: int = 15,
+        self,
+        world,
+        policies,
+        timer,
+        all_activities,
+        interaction,
+        activity_to_groups: dict,
+        leisure: Optional["Leisure"] = None,
+        min_age_home_alone: int = 15,
     ):
         self.interaction = interaction
         self.logger = logger
@@ -51,7 +51,7 @@ class ActivityManager:
             }
         else:
             self.activity_to_group_dict = {
-                "hospital": ["hospitals"],
+                "medical_facility": activity_to_groups.get("medical_facility", []),
                 "primary_activity": activity_to_groups.get("primary_activity", []),
                 "leisure": activity_to_groups.get("leisure", []),
                 "residence": activity_to_groups.get("residence", []),
@@ -72,8 +72,8 @@ class ActivityManager:
                 )
 
         if (
-                "rail_travel_out" in self.all_activities
-                or "rail_travel_back" in self.all_activities
+            "rail_travel_out" in self.all_activities
+            or "rail_travel_back" in self.all_activities
         ):
             travel_options = activity_to_groups["rail_travel"]
             if "travelunits" in travel_options:
@@ -137,7 +137,7 @@ class ActivityManager:
         return list(chain(*groups))
 
     def move_to_active_subgroup(
-            self, activities: List[str], person: "Person"
+        self, activities: List[str], person: "Person"
     ) -> Optional["Subgroup"]:
         """
         Given the hierarchy of activities and a person, decide what subgroup
@@ -169,7 +169,6 @@ class ActivityManager:
 
     def do_timestep(self):
         activities = self.timer.activities
-
         if "commute" in activities:
             self.distribute_commuters()
         if "rail_travel_out" in activities:
@@ -177,26 +176,26 @@ class ActivityManager:
         if "rail_travel_back" in activities:
             self.distribute_rail_back()
         if self.leisure is not None:
+            if self.policies is not None:
+                leisure_policies = self.policies.get_active_leisure_policies(
+                    date=self.timer.date
+                )
+                self.policies.apply_leisure_policies(
+                    policies=leisure_policies,
+                    date=self.timer.date,
+                    leisure=self.leisure,
+                )
             self.leisure.generate_leisure_probabilities_for_timestep(
                 self.timer.duration,
                 self.timer.is_weekend,
                 self.policies.find_closed_venues(self.timer.date),
             )
-            if self.policies is not None:
-                self.policies.apply_change_probabilities_leisure(
-                    self.timer.date, self.leisure
-                )
-                self.policies.apply_social_distancing_policy(
-                    self.timer.date, self.interaction
-                )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
 
     @staticmethod
-    def kid_drags_guardian(
-            guardian: "Person",
-    ):
+    def kid_drags_guardian(guardian: "Person",):
         """
         A kid makes their guardian go home.
 
@@ -248,10 +247,10 @@ class ActivityManager:
             person.residence.append(person)
 
     def move_people_to_active_subgroups(
-            self,
-            activities: List[str],
-            date: datetime = datetime(2020, 2, 2),
-            days_from_start=0,
+        self,
+        activities: List[str],
+        date: datetime = datetime(2020, 2, 2),
+        days_from_start=0,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -261,15 +260,23 @@ class ActivityManager:
         ----------
 
         """
-        skip_activity_collection = self.policies.skip_activity_collection(date=date)
-        stay_home_collection = self.policies.stay_home_collection(date=date)
-
+        # skip_activity_collection = self.policies.skip_activity_collection(date=date)
+        # stay_home_collection = self.policies.stay_home_collection(date=date)
+        individual_policies = self.policies.get_active_individual_policies(date=date)
         activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            if stay_home_collection(person, days_from_start):
-                self.move_mild_ill_to_household(person)
-            else:
-                allowed_activities = skip_activity_collection(person, activities, )
-                self.move_to_active_subgroup(allowed_activities, person)
+            allowed_activities = self.policies.apply_individual_policies(
+                policies=individual_policies,
+                person=person,
+                activities=activities,
+                days_from_start=days_from_start,
+            )
+            # if stay_home_collection(person, days_from_start):
+            #    self.move_mild_ill_to_household(person)
+            # else:
+            #    allowed_activities = skip_activity_collection(person, activities, )
+            #    self.move_to_active_subgroup(allowed_activities, person)
+            # allowed_activities = skip_activity_collection(person, activities,)
+            self.move_to_active_subgroup(allowed_activities, person)

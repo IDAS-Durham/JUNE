@@ -89,7 +89,7 @@ class Hospital(Group):
             self.SubgroupType.icu_patients,
         ]:
             super().add(
-                person, activity="hospital", subgroup_type=subgroup_type,
+                person, activity="medical_facility", subgroup_type=subgroup_type,
             )
         else:
             super().add(
@@ -129,19 +129,19 @@ class Hospital(Group):
     def release_as_patient(self, person):
         person.subgroups.hospital = None
 
-    def move_patient_within_hospital(self, person):
-        if person.health_information.tag == SymptomTag.intensive_care:
-            person.subgroups.hospital = person.hospital.group[
-                self.SubgroupType.icu_patients
-            ]
-        elif person.health_information.tag == SymptomTag.hospitalised:
-            person.subgroups.hospital = person.hospital.group[
-                self.SubgroupType.patients
-            ]
-        else:
-            raise AssertionError(
-                "ERROR: This person shouldn't be trying to get to a hospital"
-            )
+    #def move_patient_within_hospital(self, person):
+    #    if person.health_information.tag == SymptomTag.intensive_care:
+    #        person.subgroups.hospital = person.hospital.group[
+    #            self.SubgroupType.icu_patients
+    #        ]
+    #    elif person.health_information.tag == SymptomTag.hospitalised:
+    #        person.subgroups.hospital = person.hospital.group[
+    #            self.SubgroupType.patients
+    #        ]
+    #    else:
+    #        raise AssertionError(
+    #            "ERROR: This person shouldn't be trying to get to a hospital"
+    #        )
 
 
 class Hospitals(Supergroup):

@@ -114,6 +114,7 @@ class Leisure:
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
         self.refresh_random_numbers()
+        self.closed_venues = ()
 
     def refresh_random_numbers(self):
         self.random_integers = list(np.random.randint(0, 2000, 10_000_000))
