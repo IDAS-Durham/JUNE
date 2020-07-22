@@ -40,9 +40,8 @@ class HealthInformation:
         self.susceptible = False
         self.susceptibility = 0.0
         self.time_of_infection = infection.start_time
-        if infection.symptoms.time_symptoms_onset():
+        if infection.symptoms.time_symptoms_onset() is not None:
             self.time_of_symptoms_onset = self.time_of_infection + infection.symptoms.time_symptoms_onset()
-
         else:
             self.time_of_symptoms_onset = None
     @property
