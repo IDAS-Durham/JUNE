@@ -15,8 +15,6 @@ default_areas_map_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
-camps_data_path = paths.data_path / "processed"
-
 
 def parse_age_bin(age_bin: str):
     pairs = list(map(int, age_bin.split("-")))
