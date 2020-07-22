@@ -18,11 +18,11 @@ class Symptoms:
     def time_from_infection_to_symptoms(self):
         symptoms_onset = 0
         for completion_time, tag in self.trajectory:
-            if tag == SymptomTag.asymptomatic:
-                return None
             symptoms_onset += completion_time
             if tag == SymptomTag.mild:
                 break
+            elif tag == SymptomTag.asymptomatic:
+                return None
         return symptoms_onset
 
     def time_exposed(self):

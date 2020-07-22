@@ -63,7 +63,7 @@ def test__get_time_it_takes_to_symptoms(oc):
         hospitalised_trajectories, ["hospitalised", "intensive_care"]
     )
     for time in times_to_hospital:
-        assert 8.0 < time < 10.0
+        assert 1.0 < time < 16.0
 
 
 def test__get_avg_rate_for_symptoms(oc):
@@ -99,7 +99,7 @@ def test__get_avg_time_to_symptoms(oc):
     avg_time_to_hospital = oc.get_avg_time_to_symptoms(
         hospitalised_trajectories, avg_rates, ["hospitalised", "intensive_care"]
     )
-    assert 8.0 < avg_time_to_hospital < 10.0
+    assert 1.0 < avg_time_to_hospital < 13.0
 
 
 def test__n_cases_from_observed(oc):
