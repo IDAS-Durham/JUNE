@@ -1,8 +1,0 @@
-transmission:
-  type:            XNExp
-  incubation_time: 2.6
-  median:          1.
-  shape:           0.5
-  norm_time:       1.
-  N:               1.
-  alpha:           5.

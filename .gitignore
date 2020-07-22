@@ -1,3 +1,4 @@
+.envr
 .coverage
 coverage.xml
 test_june/unit/results/
