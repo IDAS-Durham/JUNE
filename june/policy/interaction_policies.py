@@ -8,8 +8,8 @@ from typing import Union, Optional, List, Dict
 class InteractionPolicy(Policy):
     def __init__(
         self,
-        start_time: Union[str, datetime.datetime],
-        end_time: Union[str, datetime.datetime],
+        start_time: str,
+        end_time: str,
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.policy_type = "interaction"
@@ -17,13 +17,7 @@ class InteractionPolicy(Policy):
 class InteractionPolicies(PolicyCollection):
     def __init__(self, policies: List[InteractionPolicy]):
         super().__init__(policies=policies)
-
-    @classmethod
-    def get_active_policies(cls, policies: Policies, date: datetime):
-        policies = policies.get_active_policies_for_type(
-            policy_type="interaction", date=date
-        )
-        return cls(policies)
+        self.policy_type = "interaction"
 
     def apply(self, date: datetime, interaction: Interaction):
         # order matters, first deactivate all policies that expire in this day.
@@ -38,14 +32,14 @@ class InteractionPolicies(PolicyCollection):
 class SocialDistancing(InteractionPolicy):
     def __init__(
         self,
-        start_time: Union[str, datetime.datetime],
-        end_time: Union[str, datetime.datetime],
+        start_time: str,
+        end_time: str,
         beta_factors: dict = None,
     ):
         super().__init__(start_time, end_time)
         self.original_betas = {}
         self.beta_factors = beta_factors
-        for key in beta_factors.keys():
+        for key in beta_factors:
             self.original_betas[key] = None  # to be filled when coupled to interaction
 
     def apply(self, date: datetime, interaction: Interaction):

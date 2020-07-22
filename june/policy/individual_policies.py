@@ -15,18 +15,13 @@ class IndividualPolicy(Policy):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.policy_type = "individual"
+        self.min_age_home_alone = 15
 
 
 class IndividualPolicies(PolicyCollection):
     def __init__(self, policies: List[IndividualPolicy]):
         super().__init__(policies=policies)
-
-    @classmethod
-    def get_active_policies(cls, policies: Policies, date: datetime):
-        policies = policies.get_active_policies_for_type(
-            policy_type="individual", date=date
-        )
-        return cls(policies)
+        self.policy_type = "individual"
 
     def apply(self, person: Person, days_from_start: float, activities: List[str]):
         """
@@ -42,7 +37,7 @@ class IndividualPolicies(PolicyCollection):
                         days_from_start=days_from_start,
                         activities=activities,
                     )
-                    if person.age < 15:  # can't stay home alone
+                    if person.age < self.min_age_home_alone:  # can't stay home alone
                         possible_guardians = [
                             housemate
                             for housemate in person.residence.group.people
@@ -81,7 +76,7 @@ class StayHome(IndividualPolicy):
         else:
             return ["residence"]
 
-    def check_stay_home_condition(person: Person, days_from_start: float):
+    def check_stay_home_condition(self, person: Person, days_from_start: float):
         """
         Returns true if a person must stay at home.
         Parameters
@@ -92,7 +87,9 @@ class StayHome(IndividualPolicy):
         days_from_start:
             time past from beginning of simulation, in units of days
         """
-        pass
+        raise NotImplementedError(
+            f"Need to implement check_stay_home_condition for policy {self.__class__.__name__}"
+        )
 
 
 class SevereSymptomsStayHome(StayHome):
@@ -217,11 +214,13 @@ class CloseSchools(SkipActivity):
     def __init__(
         self, start_time: str, end_time: str, years_to_close=None, full_closure=None,
     ):
-        super().__init__(start_time, end_time, activities_to_remove=["primary_activity"])
+        super().__init__(
+            start_time, end_time, activities_to_remove=["primary_activity"]
+        )
         self.full_closure = full_closure
         self.years_to_close = years_to_close
         if self.years_to_close == "all":
-            self.years_to_close = np.arange(0, 20)
+            self.years_to_close = np.arange(20)
 
     def _check_kid_goes_to_school(self, person: "Person"):
         """
@@ -242,14 +241,13 @@ class CloseSchools(SkipActivity):
         """
         Returns True if the activity is to be skipped, otherwise False
         """
-        if (
-            person.primary_activity is not None
-            and person.primary_activity.group.spec == "school"
-        ):
-            if (
-                self.full_closure or person.age in self.years_to_close
-            ) and not self._check_kid_goes_to_school(person):
-                return True
+        try:
+            if person.primary_activity.group.spec == "school":
+                return (
+                    self.full_closure or person.age in self.years_to_close
+                ) and not self._check_kid_goes_to_school(person)
+        except AttributeError:
+            return False
         return False
 
 

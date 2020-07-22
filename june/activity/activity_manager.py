@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
+from collections import defaultdict
 
 from june.demography import Person
 from june.exc import SimulatorError
@@ -40,7 +41,7 @@ class ActivityManager:
         all_activities,
         interaction,
         activity_to_groups: dict,
-        leisure: Optional["Leisure"] = None,
+        leisure: Optional[Leisure] = None,
         min_age_home_alone: int = 15,
     ):
         self.interaction = interaction
@@ -143,7 +144,7 @@ class ActivityManager:
         return list(chain(*groups))
 
     def move_to_active_subgroup(
-        self, activities: List[str], person: "Person"
+        self, activities: List[str], person: Person
     ) -> Optional["Subgroup"]:
         """
         Given the hierarchy of activities and a person, decide what subgroup

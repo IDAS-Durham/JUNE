@@ -180,7 +180,7 @@ class Leisure:
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
-            if self.closed_venues is not None and distributor.spec in self.closed_venues:
+            if distributor.spec in self.closed_venues:
                 poisson_parameters.append(0.0)
             else:
                 poisson_parameters.append(
