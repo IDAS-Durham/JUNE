@@ -2,7 +2,7 @@ import numpy as np
 from typing import Union, Optional, List, Dict
 import datetime
 
-from .policy import Policy, PolicyCollection
+from .policy import Policy, PolicyCollection, Policies
 from june.infection.symptom_tag import SymptomTag
 from june.demography.person import Person
 
@@ -21,21 +21,54 @@ class IndividualPolicies(PolicyCollection):
     def __init__(self, policies: List[IndividualPolicy]):
         super().__init__(policies=policies)
 
-    def apply(self, person:Person, days_from_start: float, activities: List[str]):
+    @classmethod
+    def get_active_policies(cls, policies: Policies, date: datetime):
+        policies = policies.get_active_policies_for_type(
+            policy_type="individual", date=date
+        )
+        return cls(policies)
+
+    def apply(self, person: Person, days_from_start: float, activities: List[str]):
+        """
+        Applies all active individual policies to the person. Stay home policies are applied first,
+        since if the person stays home we don't need to check for the others.
+        IF a person is below 15 years old, then we look for a guardian to stay with that person at home.
+        """
         for policy in self.policies:
             if isinstance(policy, StayHome):
                 if policy.check_stay_home_condition(person, days_from_start):
-                    activities = policy.apply(person=person, days_from_start=days_from_start, activities=activities)
-                    return activities # if it stays at home we don't need to check the rest
+                    activities = policy.apply(
+                        person=person,
+                        days_from_start=days_from_start,
+                        activities=activities,
+                    )
+                    if person.age < 15:  # can't stay home alone
+                        possible_guardians = [
+                            housemate
+                            for housemate in person.residence.group.people
+                            if housemate.age >= 18
+                        ]
+                        if len(possible_guardians) == 0:
+                            guardian = person.find_guardian()
+                            if guardian is not None:
+                                if guardian.busy:
+                                    for subgroup in guardian.subgroups.iter():
+                                        if guardian in subgroup:
+                                            subgroup.remove(guardian)
+                                            break
+                                guardian.residence.append(guardian)
+                    return activities  # if it stays at home we don't need to check the rest
             elif isinstance(policy, SkipActivity):
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
         return activities
 
+
 class StayHome(IndividualPolicy):
     """
     Template for policies that will force someone to stay at home
     """
+
     def __init__(self, start_time, end_time):
         super().__init__(start_time=start_time, end_time=end_time)
 
@@ -43,10 +76,10 @@ class StayHome(IndividualPolicy):
         """
         Removes all activities but residence if the person has to stay at home.
         """
-        if self.check_stay_home_condition(person, days_from_start):
+        if "medical_facility" in activities:
             return ["medical_facility", "residence"]
         else:
-            return activities
+            return ["residence"]
 
     def check_stay_home_condition(person: Person, days_from_start: float):
         """
@@ -80,7 +113,7 @@ class Quarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         n_days: int = 7,
         n_days_household: int = 14,
-        household_complacency: float = 1.0,
+        household_compliance: float = 1.0,
     ):
         """
         This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
@@ -95,13 +128,13 @@ class Quarantine(StayHome):
             days for which the person has to stay at home if they show symtpoms
         n_days_household:
             days for which the person has to stay at home if someone in their household shows symptoms
-        household_complacency:
+        household_compliance:
             percentage of people that will adhere to the hoseuhold quarantine policy
         """
         super().__init__(start_time, end_time)
         self.n_days = n_days
         self.n_days_household = n_days_household
-        self.household_complacency = household_complacency
+        self.household_compliance = household_compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start):
         self_quarantine = False
@@ -113,14 +146,12 @@ class Quarantine(StayHome):
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
                     self_quarantine = True
-            else:
-                self_quarantine = False
-        except:
+        except AttributeError:
             pass
         housemates_quarantine = person.residence.group.quarantine(
             days_from_start,
             self.n_days_household,
-            household_complacency=self.household_complacency,
+            household_compliance=self.household_compliance,
         )
         return self_quarantine or housemates_quarantine
 
@@ -131,31 +162,32 @@ class Shielding(StayHome):
         start_time: str,
         end_time: str,
         min_age: int,
-        complacency: Optional[float] = None,
+        compliance: Optional[float] = None,
     ):
         super().__init__(start_time, end_time)
         self.min_age = min_age
-        self.complacency = complacency
+        self.compliance = compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         if person.age >= self.min_age:
-            if self.complacency is None or np.random.rand() < self.complacency:
+            if self.compliance is None or np.random.rand() < self.compliance:
                 return True
         return False
+
 
 class SkipActivity(IndividualPolicy):
     """
     Template for policies that will ban an activity for a person
     """
+
     def __init__(
         self,
         start_time: Union[str, datetime.datetime] = "1900-01-01",
         end_time: Union[str, datetime.datetime] = "2100-01-01",
-        activity_to_remove = None,
+        activities_to_remove=None,
     ):
-        self.activity_to_remove = activity_to_remove
-        self.start_time = start_time
-        self.end_time = end_time
+        super().__init__(start_time=start_time, end_time=end_time)
+        self.activities_to_remove = activities_to_remove
 
     def check_skips_activity(self, person: "Person") -> bool:
         """
@@ -163,9 +195,7 @@ class SkipActivity(IndividualPolicy):
         """
         pass
 
-    def apply(
-        self, activities: List[str]
-    ) -> List[str]:
+    def apply(self, activities: List[str]) -> List[str]:
         """
         Remove an activity from a list of activities
 
@@ -177,7 +207,9 @@ class SkipActivity(IndividualPolicy):
             activity that will be removed from the list
         """
         return [
-            activity for activity in activities if activity not in self.activities_to_remove
+            activity
+            for activity in activities
+            if activity not in self.activities_to_remove
         ]
 
 
@@ -185,7 +217,7 @@ class CloseSchools(SkipActivity):
     def __init__(
         self, start_time: str, end_time: str, years_to_close=None, full_closure=None,
     ):
-        super().__init__(start_time, end_time, ["primary_activity"])
+        super().__init__(start_time, end_time, activities_to_remove=["primary_activity"])
         self.full_closure = full_closure
         self.years_to_close = years_to_close
         if self.years_to_close == "all":
@@ -218,14 +250,16 @@ class CloseSchools(SkipActivity):
                 self.full_closure or person.age in self.years_to_close
             ) and not self._check_kid_goes_to_school(person):
                 return True
-        return False 
+        return False
 
 
 class CloseUniversities(SkipActivity):
     def __init__(
         self, start_time: str, end_time: str,
     ):
-        super().__init__(start_time, end_time, activities_to_remove = ["primary_activity"])
+        super().__init__(
+            start_time, end_time, activities_to_remove=["primary_activity"]
+        )
 
     def check_skips_activity(self, person: "Person") -> bool:
         """
@@ -238,9 +272,14 @@ class CloseUniversities(SkipActivity):
             return True
         return False
 
+
 class CloseCompanies(SkipActivity):
     def __init__(
-        self, start_time: str, end_time: str, full_closure=False, random_work_probability=None
+        self,
+        start_time: str,
+        end_time: str,
+        full_closure=False,
+        random_work_probability=None,
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -248,7 +287,7 @@ class CloseCompanies(SkipActivity):
         """
         super().__init__(start_time, end_time, ["primary_activity", "commute"])
         self.full_closure = full_closure
-        self.random_work_probability =random_work_probability 
+        self.random_work_probability = random_work_probability
 
     def check_skips_activity(self, person: "Person") -> bool:
         """
@@ -261,8 +300,10 @@ class CloseCompanies(SkipActivity):
 
             if self.full_closure or person.lockdown_status == "furlough":
                 return True
-            elif person.lockdown_status == "random" and self.random_work_probability is not None:
+            elif (
+                person.lockdown_status == "random"
+                and self.random_work_probability is not None
+            ):
                 if np.random.rand() > self.random_work_probability:
                     return True
         return False
-

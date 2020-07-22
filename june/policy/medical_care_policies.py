@@ -1,7 +1,7 @@
 import datetime
 from typing import Union, Optional, List, Dict
 
-from .policy import Policy
+from .policy import Policy, Policies, PolicyCollection
 from june.groups import Hospitals
 from june.demography import Person
 
@@ -14,11 +14,19 @@ class MedicalCarePolicy(Policy):
     def is_active(self, date: datetime.datetime) -> bool:
         return True
 
-class MedicalCarePolicies(MedicalCarePolicy):
+class MedicalCarePolicies(PolicyCollection):
     def __init__(self, policies: List[MedicalCarePolicy]):
         super().__init__(policies=policies)
 
+    @classmethod
+    def get_active_policies(cls, policies: Policies, date: datetime):
+        policies = policies.get_active_policies_for_type(
+            policy_type="medical_care", date=date
+        )
+        return cls(policies)
+
     def apply(self, person: Person):
+        print(self.policies)
         for policy in self.policies:
             policy.apply(person)
 

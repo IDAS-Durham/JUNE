@@ -13,7 +13,7 @@ from june.infection.symptom_tag import SymptomTag
 from june.infection_seed import InfectionSeed
 from june.interaction import ContactAveraging
 from june.logger.logger import Logger
-from june.policy import Policies
+from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
 
@@ -240,8 +240,8 @@ class Simulator:
         ids = []
         symptoms = []
         n_secondary_infections = []
-        medical_care_policies = self.activity_manager.policies.get_active_medical_care_policies(
-            self.timer.date
+        medical_care_policies = MedicalCarePolicies.get_active_policies(
+            policies=self.activity_manager.policies, date=self.timer.date
         )
         for person in self.world.people.infected:
             health_information = person.health_information
@@ -256,9 +256,7 @@ class Simulator:
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
-            self.activity_manager.policies.apply_medical_care_policies(
-                policies = medical_care_policies, person = person
-            )
+            medical_care_policies.apply(person=person)
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:
@@ -273,12 +271,12 @@ class Simulator:
         Perform a time step in the simulation
 
         """
-        if self.policies is not None:
-            interaction_policies = self.activity_manager.policies.get_active_interaction_policies(
-                date=self.timer.date
+        if self.activity_manager.policies is not None:
+            interaction_policies = InteractionPolicies.get_active_policies(
+                policies=self.activity_manager.policies, date=self.timer.date
             )
-            self.activity_manager.policies.apply_interaction_policies(
-                policies=interaction_policies, date=self.timer.date
+            interaction_policies.apply(
+                date=self.timer.date, interaction=self.interaction
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
