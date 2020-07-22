@@ -162,7 +162,8 @@ def infect_person(person, selector, symptom_tag="mild"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
     person.health_information.time_of_symptoms_onset = 5.3
-    person.residence.group.quarantine_starting_date = 5.3
+    if symptom_tag != 'asymptomatic':
+        person.residence.group.quarantine_starting_date = 5.3
 
 
 class TestPolicy:
@@ -742,6 +743,33 @@ class TestQuarantine:
         worker.health_information = None
         sim.clear_world()
 
+    def test__asymptomatic_is_free(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        quarantine = Quarantine(
+            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+        )
+        policies = Policies([quarantine])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        infect_person(worker, selector, "asymptomatic")
+        sim.update_health_status(0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        print(worker.health_information.infection.symptoms.tag)
+        assert not policies.stay_home_collection(date=time_during_policy)(worker, 6.0)
+        worker.health_information = None
+        sim.clear_world()
+
+
     def test__housemates_stay_for_two_weeks(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
@@ -787,7 +815,35 @@ class TestQuarantine:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
 
-    def test__quarantine_zero_compliance(self, super_area, selector, interaction):
+    def test__housemates_of_asymptomatic_are_free(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        quarantine = Quarantine(
+            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+        )
+        policies = Policies([quarantine])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        infect_person(worker, selector, "asymptomatic")
+        sim.update_health_status(0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        # after symptoms onset
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 8.0)
+        assert not policies.stay_home_collection(date=time_during_policy)(pupil, 25.0)
+        worker.health_information = None
+        sim.clear_world()
+
+
+    def test__quarantine_zero_complacency(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
             start_time="2020-1-1",
