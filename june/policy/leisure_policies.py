@@ -112,9 +112,7 @@ class ChangeLeisureProbability(LeisurePolicy):
         #for policy in active_policies:
         if self.start_time == date:
             # activate policy
-            print("activating policy")
             for activity in self.leisure_probabilities:
-                print(activity)
                 if activity not in leisure.leisure_distributors:
                     raise PolicyError(
                         "Trying to change leisure probability for a non-existing activity"
