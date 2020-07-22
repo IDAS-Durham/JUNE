@@ -10,6 +10,7 @@ import sys
 from june.demography.geography import Geography
 from june.demography.demography import load_age_and_sex_generators_for_bins, Demography, Population
 from june.paths import data_path
+from june.infection import Infection, HealthIndexGenerator
 from june.infection_seed import InfectionSeed
 from june.infection.infection import InfectionSelector
 from june.interaction import ContactAveraging
@@ -70,10 +71,10 @@ shelter_distributor = ShelterDistributor(sharing_shelter_ratio = 0.75) # proport
 for area in world.areas:
     shelter_distributor.distribute_people_in_shelters(area.shelters, area.households)
 
-selector = InfectionSelector.from_file(asymptomatic_ratio=0.2)
+health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
-interaction = ContactAveraging.from_file(config_filename='../configs_camps/defaults/interaction/ContactInteraction_low.yaml',\
-                                         selector=selector)
+interaction = ContactAveraging.from_file(config_filename='../configs_camps/defaults/interaction/ContactInteraction_low.yaml',selector=selector)
 
 policies = Policies.from_file(camp_configs_path / 'defaults/policy/policy.yaml') # no policies for now
 
@@ -118,9 +119,10 @@ leisure_instance.leisure_distributors['female_communals'] = FemaleCommunalDistri
 leisure_instance.distribute_social_venues_to_households(world.shelters)
 
 simulator = CampSimulator.from_file(
-     world, interaction, selector,
+    world = world,
+    interaction = interaction,
     leisure = leisure_instance,
-    policies=policies,
+    policies = policies,
     config_filename = CONFIG_PATH,
 )
 
