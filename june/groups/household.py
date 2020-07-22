@@ -113,10 +113,7 @@ class Household(Group):
                 < time
                 < self.quarantine_starting_date + quarantine_days
             ):
-                if np.random.rand() < household_compliance:
-                    return True
-                else:
-                    return False
+                return np.random.rand() < household_compliance
         return False
 
 

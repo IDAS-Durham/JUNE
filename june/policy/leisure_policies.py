@@ -2,7 +2,8 @@ import datetime
 import numpy as np
 from typing import Union, Optional, List, Dict
 
-from .policy import Policy, Policies, PolicyCollection, PolicyError
+from .policy import Policy, Policies, PolicyCollection
+from june.exc import PolicyError
 from june.groups.leisure.social_venue_distributor import parse_age_probabilites
 from june.groups.leisure import Leisure
 
@@ -18,14 +19,8 @@ class LeisurePolicy(Policy):
 
 class LeisurePolicies(PolicyCollection):
     def __init__(self, policies: List[LeisurePolicy]):
-        self.policies = policies
-
-    @classmethod
-    def get_active_policies(cls, policies: Policies, date: datetime):
-        policies = policies.get_active_policies_for_type(
-            policy_type="leisure", date=date
-        )
-        return cls(policies)
+        super().__init__(policies=policies)
+        self.policy_type = "leisure"
 
     def apply(self, date: datetime, leisure: Leisure):
         for policy in self.policies:
