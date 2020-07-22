@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 from typing import Union, Optional, List, Dict
 
-from .policy import Policy, PolicyCollection, PolicyError
+from .policy import Policy, Policies, PolicyCollection, PolicyError
 from june.groups.leisure.social_venue_distributor import parse_age_probabilites
 from june.groups.leisure import Leisure
 
@@ -19,6 +19,17 @@ class LeisurePolicy(Policy):
 class LeisurePolicies(PolicyCollection):
     def __init__(self, policies: List[LeisurePolicy]):
         self.policies = policies
+
+    @classmethod
+    def get_active_policies(cls, policies: Policies, date: datetime):
+        policies = policies.get_active_policies_for_type(
+            policy_type="leisure", date=date
+        )
+        return cls(policies)
+
+    def apply(self, date: datetime, leisure: Leisure):
+        for policy in self.policies:
+            policy.apply(date=date, leisure=leisure)
 
 class CloseLeisureVenue(LeisurePolicy):
     def __init__(
@@ -101,7 +112,9 @@ class ChangeLeisureProbability(LeisurePolicy):
         #for policy in active_policies:
         if self.start_time == date:
             # activate policy
+            print("activating policy")
             for activity in self.leisure_probabilities:
+                print(activity)
                 if activity not in leisure.leisure_distributors:
                     raise PolicyError(
                         "Trying to change leisure probability for a non-existing activity"
@@ -113,7 +126,7 @@ class ChangeLeisureProbability(LeisurePolicy):
                 self.original_leisure_probabilities[activity][
                     "women"
                 ] = activity_distributor.female_probabilities
-                activity_distributor.male_probabilities = self.policy.leisure_probabilities[
+                activity_distributor.male_probabilities = self.leisure_probabilities[
                     activity
                 ][
                     "men"
