@@ -53,11 +53,17 @@ trajectories:
           b: 19.05
           loc: 0.39
           scale: 39.8
- 
+      
+
+
       - symptom_tag: mild
         completion_time:
-          type: constant
-          value: 5.
+          type: lognormal
+          s: 0.8325
+          loc: 0.0
+          scale: 5.727
+
+ 
 
       - symptom_tag: severe
         completion_time:
@@ -80,11 +86,14 @@ trajectories:
           b: 19.05
           loc: 0.39
           scale: 39.8
-
+      
       - symptom_tag: mild
         completion_time:
-          type: constant 
-          value: 5
+          type: lognormal
+          s: 0.8325
+          loc: 0.0
+          scale: 5.727
+
 
       - symptom_tag: hospitalised
         completion_time:
@@ -118,16 +127,26 @@ trajectories:
 
       - symptom_tag: mild
         completion_time:
-          type: constant 
-          value: 5 
+          type: lognormal
+          s: 0.8325
+          loc: 0.0
+          scale: 5.727
+
+
+      - symptom_tag: hospitalised
+        completion_time:
+          type: lognormal
+          s: 1.412
+          loc: 0.0
+          scale: 0.907
 
       - symptom_tag: intensive_care
         completion_time:
-          type: beta
-          a: 1.35
-          b: 3.68
-          loc: 0.05
-          scale: 27.1
+          type: lognormal
+          s: 0.8967
+          loc: 0.0
+          scale: 9.811
+
 
       - symptom_tag: mild
         completion_time:
@@ -152,8 +171,12 @@ trajectories:
 
       - symptom_tag: mild
         completion_time:
-          type: constant 
-          value: 5
+          type: lognormal
+          s: 0.8325
+          loc: 0.0
+          scale: 5.727
+
+
 
       - symptom_tag: severe
         completion_time:
@@ -178,8 +201,12 @@ trajectories:
 
       - symptom_tag: mild
         completion_time:
-          type: constant 
-          value: 5 
+          type: lognormal
+          s: 0.8325
+          loc: 0.0
+          scale: 5.727
+
+ 
       
       - symptom_tag: hospitalised
         completion_time:
@@ -207,21 +234,25 @@ trajectories:
 
       - symptom_tag: mild
         completion_time:
-          type: constant 
-          value: 5
-
+          type: lognormal
+          s: 0.8325
+          loc: 0.0
+          scale: 5.727
 
       - symptom_tag: hospitalised
         completion_time:
-          type: constant
-          value: 1.
+          type: lognormal
+          s: 1.412
+          loc: 0.0
+          scale: 0.907
+
 
       - symptom_tag: intensive_care
         completion_time:
           type: lognormal
-          s: 0.619
+          s: 0.713
           loc: 0.0
-          scale: 4.15
+          scale: 7.75
 
       - symptom_tag: dead_icu
         completion_time:

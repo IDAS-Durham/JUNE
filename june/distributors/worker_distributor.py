@@ -184,6 +184,8 @@ class WorkerDistributor:
                 person.work_super_area = "home"
             elif self.non_geographical_work_location[work_location] == "bind":
                 self._select_rnd_superarea(person)
+            else:
+                raise ValueError
         else:
             self._select_rnd_superarea(person)
 
