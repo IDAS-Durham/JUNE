@@ -51,6 +51,8 @@ class ReadLogger:
                 self.ages = population["age"][:]
                 self.sexes = population["sex"][:]
                 self.super_areas = population["super_area"][:].astype("U13")
+                self.ethnicities = population["ethnicity"][:]
+                self.socioeconomic_indices = population["socioeconomic_index"][:]
 
     def load_infected_data(self,):
         """
