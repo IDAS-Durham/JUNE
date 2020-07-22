@@ -1,5 +1,5 @@
 male:
-  0-5:
+  0-4:
     cardiovascular: 0.001
     chronic_kidney: 0.001
     chronic respiratory: 0.009
@@ -241,7 +241,7 @@ male:
     sickle_cell:	0.000
 
 female:
-  0-5:
+  0-4:
     cardiovascular:	0.000
     chronic_kidney:	0.001
     chronic respiratory:	0.008
