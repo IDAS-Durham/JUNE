@@ -21,7 +21,8 @@ class Symptoms:
             symptoms_onset += completion_time
             if tag == SymptomTag.mild:
                 break
-
+            elif tag == SymptomTag.asymptomatic:
+                return None
         return symptoms_onset
 
     def time_exposed(self):
