@@ -10,6 +10,12 @@ from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistr
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
 from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+from june.policy import (
+    IndividualPolicies,
+    LeisurePolicies,
+    MedicalCarePolicies,
+    InteractionPolicies,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -177,74 +183,18 @@ class ActivityManager:
             self.distribute_rail_back()
         if self.leisure is not None:
             if self.policies is not None:
-                leisure_policies = self.policies.get_active_leisure_policies(
-                    date=self.timer.date
+                leisure_policies = LeisurePolicies.get_active_policies(
+                    date=self.timer.date, policies=self.policies
                 )
-                self.policies.apply_leisure_policies(
-                    policies=leisure_policies,
-                    date=self.timer.date,
-                    leisure=self.leisure,
+                leisure_policies.apply(
+                    date=self.timer.date, leisure=self.leisure,
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
-                self.timer.duration,
-                self.timer.is_weekend,
-                self.policies.find_closed_venues(self.timer.date),
+                self.timer.duration, self.timer.is_weekend,
             )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
-
-    @staticmethod
-    def kid_drags_guardian(guardian: "Person",):
-        """
-        A kid makes their guardian go home.
-
-        Parameters
-        ----------
-        guardian:
-            guardian to be sent home
-        """
-        if guardian is not None:
-            if guardian.busy:
-                for subgroup in guardian.subgroups.iter():
-                    if guardian in subgroup:
-                        subgroup.remove(guardian)
-                        break
-            guardian.residence.append(guardian)
-
-    def move_mild_kid_guardian_to_household(self, kid: "Person"):
-        """
-        Move  a kid and their guardian to the household, so no kid is left
-        home alone.
-
-        Parameters
-        ----------
-        kid:
-            kid to be sent home
-        """
-        possible_guardians = [
-            housemate for housemate in kid.residence.group.people if housemate.age >= 18
-        ]
-        if len(possible_guardians) == 0:
-            guardian = kid.find_guardian()
-            self.kid_drags_guardian(guardian)
-        kid.residence.append(kid)
-
-    def move_mild_ill_to_household(self, person: "Person"):
-        """
-        Move person with a mild illness to their households. For kids that will
-        always happen, and if they are left alone at home they will also drag one
-        of their guardians home.
-
-        Parameters
-        ----------
-        person:
-            person to be sent home
-        """
-        if person.age < self.min_age_home_alone:
-            self.move_mild_kid_guardian_to_household(person)
-        else:
-            person.residence.append(person)
 
     def move_people_to_active_subgroups(
         self,
@@ -260,23 +210,14 @@ class ActivityManager:
         ----------
 
         """
-        # skip_activity_collection = self.policies.skip_activity_collection(date=date)
-        # stay_home_collection = self.policies.stay_home_collection(date=date)
-        individual_policies = self.policies.get_active_individual_policies(date=date)
+        individual_policies = IndividualPolicies.get_active_policies(
+            policies=self.policies, date=date
+        )
         activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = self.policies.apply_individual_policies(
-                policies=individual_policies,
-                person=person,
-                activities=activities,
-                days_from_start=days_from_start,
+            allowed_activities = individual_policies.apply(
+                person=person, activities=activities, days_from_start=days_from_start,
             )
-            # if stay_home_collection(person, days_from_start):
-            #    self.move_mild_ill_to_household(person)
-            # else:
-            #    allowed_activities = skip_activity_collection(person, activities, )
-            #    self.move_to_active_subgroup(allowed_activities, person)
-            # allowed_activities = skip_activity_collection(person, activities,)
             self.move_to_active_subgroup(allowed_activities, person)

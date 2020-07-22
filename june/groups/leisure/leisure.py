@@ -114,7 +114,7 @@ class Leisure:
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
         self.refresh_random_numbers()
-        self.closed_venues = ()
+        self.closed_venues = set()
 
     def refresh_random_numbers(self):
         self.random_integers = list(np.random.randint(0, 2000, 10_000_000))
@@ -167,7 +167,7 @@ class Leisure:
                 )
 
     def get_leisure_probability_for_age_and_sex(
-        self, age, sex, delta_time, is_weekend, closed_venues
+        self, age, sex, delta_time, is_weekend
     ):
         """
         Computes the probabilities of going to different leisure activities,
@@ -180,7 +180,7 @@ class Leisure:
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
-            if closed_venues is not None and distributor.spec in closed_venues:
+            if self.closed_venues is not None and distributor.spec in self.closed_venues:
                 poisson_parameters.append(0.0)
             else:
                 poisson_parameters.append(
@@ -287,17 +287,17 @@ class Leisure:
             return subgroup
 
     def generate_leisure_probabilities_for_timestep(
-        self, delta_time, is_weekend, closed_venues=None
+        self, delta_time, is_weekend
     ):
         men_probs = [
             self.get_leisure_probability_for_age_and_sex(
-                age, "m", delta_time, is_weekend, closed_venues
+                age, "m", delta_time, is_weekend
             )
             for age in range(0, 100)
         ]
         women_probs = [
             self.get_leisure_probability_for_age_and_sex(
-                age, "f", delta_time, is_weekend, closed_venues
+                age, "f", delta_time, is_weekend
             )
             for age in range(0, 100)
         ]

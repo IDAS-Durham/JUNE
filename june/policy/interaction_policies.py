@@ -1,6 +1,6 @@
 import datetime
 
-from .policy import Policy, PolicyCollection
+from .policy import Policy, PolicyCollection, Policies
 from june.interaction import Interaction
 from typing import Union, Optional, List, Dict
 
@@ -18,6 +18,23 @@ class InteractionPolicies(PolicyCollection):
     def __init__(self, policies: List[InteractionPolicy]):
         super().__init__(policies=policies)
 
+    @classmethod
+    def get_active_policies(cls, policies: Policies, date: datetime):
+        policies = policies.get_active_policies_for_type(
+            policy_type="interaction", date=date
+        )
+        return cls(policies)
+
+    def apply(self, date: datetime, interaction: Interaction):
+        # order matters, first deactivate all policies that expire in this day.
+        for policy in self.policies:
+            if policy.end_time == date:
+                policy.apply(date=date, interaction=interaction)
+        # now activate all policies that need to be activated
+        for policy in self.policies:
+            if policy.start_time == date:
+                policy.apply(date=date, interaction=interaction)
+
 class SocialDistancing(InteractionPolicy):
     def __init__(
         self,
@@ -31,7 +48,7 @@ class SocialDistancing(InteractionPolicy):
         for key in beta_factors.keys():
             self.original_betas[key] = None  # to be filled when coupled to interaction
 
-    def apply(self, date, interaction: Interaction):
+    def apply(self, date: datetime, interaction: Interaction):
         """
         Implement social distancing policy
         
@@ -47,17 +64,12 @@ class SocialDistancing(InteractionPolicy):
         - Implement structure for people to adhere to social distancing with a certain compliance
         - Check per group in config file
         """
-        social_distancing_policies = self.get_social_distancing_policies(date)
-        # order matters, first deactivate all policies that expire in this day.
-        for policy in social_distancing_policies:
-            if policy.end_time == date:  # deactivate policy, restore betas.
-                for key, value in policy.original_betas.items():
-                    interaction.beta[key] = value
+        if self.end_time == date:  # deactivate policy, restore betas.
+            for key, value in self.original_betas.items():
+                interaction.beta[key] = value
 
-        # now activate all policies that need to be activated
-        for policy in social_distancing_policies:
-            if policy.start_time == date:  # activate policy, save current betas.
-                for key, value in policy.beta_factors.items():
-                    policy.original_betas[key] = interaction.beta[key]
-                    interaction.beta[key] = interaction.beta[key] * value
+        if self.start_time == date:  # activate policy, save current betas.
+            for key, value in self.beta_factors.items():
+                self.original_betas[key] = interaction.beta[key]
+                interaction.beta[key] = interaction.beta[key] * value
 
