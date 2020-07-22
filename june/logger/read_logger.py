@@ -62,7 +62,7 @@ class ReadLogger:
             time_stamps = [
                 key
                 for key in f.keys()
-                if key not in ("population", "hospitals", "locations")
+                if key not in ("population", "hospitals", "locations", "parameters")
             ]
             ids = []
             symptoms = []
@@ -456,3 +456,25 @@ class ReadLogger:
             estimated_cases_df.index < self.end_date
         )
         self.estimated_cases_df = estimated_cases_df[mask]
+
+    def get_parameters(
+        self,
+        parameter_list=['beta','alpha_physical']
+    ):
+        print('loading params')
+
+        output_params = {}
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:            
+            for param in parameter_list:
+                if param == 'beta':
+                    output_params['beta'] = {}
+                    for k,v in f['parameters/beta'].items():
+                        output_params['beta'][k] = v[()]
+                else:
+                    data_loc = f'parameters/{param}'
+                    print(data_loc)
+                    output_params[param] = f[data_loc][()]
+
+        return output_params
+
+            

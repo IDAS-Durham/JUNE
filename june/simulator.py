@@ -580,6 +580,9 @@ class Simulator:
                 self.world.people, light_logger=self.light_logger
             )
             self.logger.log_hospital_characteristics(self.world.hospitals)
+            self.logger.log_parameters(
+                self.interaction,self.infection_seed,self.policies,self.leisure
+            )
         for time in self.timer:
             if time > self.timer.final_date:
                 break
