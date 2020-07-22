@@ -172,23 +172,6 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
-    # def hospitalise_the_sick(self, person: "Person", previous_tag: str):
-    #    """
-    #    Hospitalise sick person. Also moves them from a regular bed
-    #    to an ICU bed if their symptoms tag has changed.
-
-    #    Parameters
-    #    ----------
-    #    person:
-    #        person to hospitalise
-    #    previous_tag:
-    #        previous symptoms tag of a person
-    #    """
-    #    if person.hospital is None:
-    #        self.world.hospitals.allocate_patient(person)
-    #    elif previous_tag != person.health_information.tag:
-    #        person.hospital.group.move_patient_within_hospital(person)
-
     def bury_the_dead(self, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
@@ -256,7 +239,7 @@ class Simulator:
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
-            medical_care_policies.apply(person=person)
+            medical_care_policies.apply(person=person, medical_facilities=self.world.hospitals)
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:

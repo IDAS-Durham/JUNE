@@ -47,7 +47,7 @@ def make_leisure():
     leisure = Leisure(
         leisure_distributors={"pubs": pub_distributor, "cinemas": cinema_distributor}
     )
-    leisure.generate_leisure_probabilities_for_timestep(0.01, False, [])
+    leisure.generate_leisure_probabilities_for_timestep(0.01, False)
     return leisure
 
 
@@ -119,7 +119,7 @@ def test__generate_leisure_from_world():
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
     leisure.distribute_social_venues_to_households([household])
-    leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+    leisure.generate_leisure_probabilities_for_timestep(0.1, False)
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0

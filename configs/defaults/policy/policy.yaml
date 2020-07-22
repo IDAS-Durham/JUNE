@@ -1,26 +1,30 @@
+hospitalisation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
 quarantine:
     1:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-        household_complacency: 0.2
+        household_compliance: 0.2
         start_time: 2020-03-16 
         end_time: 2020-03-23 
     2:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-        household_complacency: 0.9
+        household_compliance: 0.9
         start_time: 2020-03-16 
         end_time: 2020-03-23
 
 shielding:
     1:
         min_age: 70
-        complacency: 0.2
+        compliance: 0.2
         start_time: 2020-03-16 
         end_time: 2020-03-23
     2:
         min_age: 70
-        complacency: 0.7
+        compliance: 0.7
         start_time: 2020-03-23
         end_time: 2020-06-01
 
