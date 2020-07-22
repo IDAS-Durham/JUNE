@@ -157,17 +157,18 @@ class TestSymptoms:
             (pytest.approx(3.4, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
             (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
             (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(12, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
+            (pytest.approx(25, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
         ]
         assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
             (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(2, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
-            (pytest.approx(6.5, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(14.5, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
-            (pytest.approx(26.5, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
+            (pytest.approx(1, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (pytest.approx(13, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(15, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
+            (pytest.approx(24, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (pytest.approx(30, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
         assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[0][0]
 
@@ -196,9 +197,9 @@ class TestSymptoms:
         assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
         infection.update_at_time(float(6.))
         assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.mild
-        infection.update_at_time(hospitalised_time + 6)
+        infection.update_at_time(hospitalised_time + 8.)
         assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.hospitalised
-        infection.update_at_time(float(20.))
+        infection.update_at_time(float(40.))
         assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.mild
-        infection.update_at_time(float(32))
+        infection.update_at_time(float(50.))
         assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.recovered

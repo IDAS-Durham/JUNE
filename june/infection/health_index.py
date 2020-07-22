@@ -1,6 +1,8 @@
 import numpy as np
-
+import yaml
+from june.infection.symptom_tag import SymptomTag
 from june import paths
+from typing import Optional
 
 default_polinom_filename = paths.configs_path / "defaults/health_index_ratios.txt"
 
@@ -48,8 +50,14 @@ class HealthIndexGenerator:
     according to the ratios in the RKI publication (table 1/column 2 of
     https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile)
     """
+
     def __init__(
-        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.2
+        self,
+        poli_hosp: dict,
+        poli_icu: dict,
+        poli_deaths: dict,
+        asymptomatic_ratio=0.2,
+        comorbidity_multipliers: Optional[dict] = None,
     ):
         """
         Parameters:
@@ -71,13 +79,21 @@ class HealthIndexGenerator:
         self.poli_hosp = poli_hosp
         self.poli_icu = poli_icu
         self.poli_deaths = poli_deaths
-        self.Asimpto_ratio = Asimpto_ratio
+        self.asymptomatic_ratio = asymptomatic_ratio
         self.max_age = 90
         self.make_list()
+        if comorbidity_multipliers is not None:
+            self.max_mild_symptom_tag = [
+                tag.value for tag in SymptomTag if tag.name == "severe"
+            ][0]
+            self.comorbidity_multipliers = comorbidity_multipliers
 
     @classmethod
     def from_file(
-        cls, polinome_filename: str = default_polinom_filename, asymptomatic_ratio=0.2
+        cls,
+        polinome_filename: str = default_polinom_filename,
+        asymptomatic_ratio=0.2,
+        comorbidity_multipliers=None,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -94,7 +110,37 @@ class HealthIndexGenerator:
         poli_icu = np.array([polinoms[:, 2], polinoms[:, 3]])
         poli_deaths = np.array([polinoms[:, 4], polinoms[:, 5]])
 
-        return cls(poli_hosp, poli_icu, poli_deaths, asymptomatic_ratio)
+        return cls(
+            poli_hosp,
+            poli_icu,
+            poli_deaths,
+            asymptomatic_ratio,
+            comorbidity_multipliers,
+        )
+
+    @classmethod
+    def comorbidities_from_file(
+        cls,
+        comorbidity_filename: str ,
+        polinome_filename: str = default_polinom_filename,
+        asymptomatic_ratio: float = 0.2,
+    ) -> "HealthIndexGenerator":
+        """
+        Initialize the Health index from path to data frame, and path to config file 
+        Parameters:
+        - filename:
+            polinome_filename:  path to the file where the coefficients of the fits to 
+            the spanish data are stored.       
+        Returns:
+          Interaction instance
+        """
+        with open(comorbidity_filename) as f:
+            comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
+        return cls.from_file(
+                polinome_filename=polinome_filename,
+                asymptomatic_ratio=asymptomatic_ratio,
+                comorbidity_multipliers=comorbidity_multipliers
+        )
 
     def model(self, age, poli):
         """
@@ -143,12 +189,12 @@ class HealthIndexGenerator:
         """
         ages = np.arange(0, 121, 1)  # from 0 to 120
         self.prob_lists = np.zeros([2, 121, 7])
-        self.prob_lists[:, :, 0] = self.Asimpto_ratio
+        self.prob_lists[:, :, 0] = self.asymptomatic_ratio
         # hosp,ICU,death ratios
 
         ratio_hosp_female_with_icu = self.model(
             ages, self.poli_hosp[0]
-        )  # Going to the hospital 
+        )  # Going to the hospital
         ratio_icu_female = self.model(ages, self.poli_icu[0])  # Going to ICU
         ratio_death_female = self.model(
             ages, self.poli_deaths[0]
@@ -156,20 +202,19 @@ class HealthIndexGenerator:
 
         ratio_hosp_male_with_icu = self.model(
             ages, self.poli_hosp[1]
-        )  # Going to the hospital 
+        )  # Going to the hospital
         ratio_icu_male = self.model(ages, self.poli_icu[1])  # Going to ICU
         ratio_death_male = self.model(
             ages, self.poli_deaths[1]
         )  # Dying in hospital (ICU+hosp)
-        
-        # Going to the hospital but not to ICU
-        ratio_hosp_female=ratio_hosp_female_with_icu-ratio_icu_female 
-        ratio_hosp_male=ratio_hosp_male_with_icu-ratio_icu_male
 
-  
+        # Going to the hospital but not to ICU
+        ratio_hosp_female = ratio_hosp_female_with_icu - ratio_icu_female
+        ratio_hosp_male = ratio_hosp_male_with_icu - ratio_icu_male
+
         # Probability of being simptomatic but not going to hospital
-        no_hosp_female = 1.0 - self.Asimpto_ratio - ratio_hosp_female_with_icu
-        no_hosp_male = 1.0 - self.Asimpto_ratio - ratio_hosp_male_with_icu
+        no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_female_with_icu
+        no_hosp_male = 1.0 - self.asymptomatic_ratio - ratio_hosp_male_with_icu
 
         # Probability of getting severe
         prob_severe = np.ones(121)
@@ -266,4 +311,13 @@ class HealthIndexGenerator:
         else:
             sex = 0
         roundage = int(round(person.age))
-        return np.cumsum(self.prob_lists[sex][roundage])
+        health_index = np.cumsum(self.prob_lists[sex][roundage])
+        if hasattr(self, "comorbidity_multipliers"):
+            health_index = self.adjust_for_comorbidities(health_index, person)
+        return health_index
+
+    def adjust_for_comorbidities(self, health_index, person):
+        multiplier = self.comorbidity_multipliers.get(person.comorbidity, 1.0)
+        health_index[: self.max_mild_symptom_tag] *= 2.0 - multiplier
+        health_index[self.max_mild_symptom_tag + 1 :] *= multiplier
+        return health_index

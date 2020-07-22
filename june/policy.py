@@ -273,6 +273,21 @@ class CloseSchools(SkipActivity):
         if self.years_to_close == "all":
             self.years_to_close = np.arange(0, 20)
 
+    def _check_kid_goes_to_school(self, person: "Person"):
+        """
+        Checks if a kid should go to school when there is a lockdown.
+        The rule is that a kid goes to school if the age is below 14 (not included)
+        and there are at least two key workers at home.
+        """
+        if person.age < 14:
+            keyworkers_parents = 0
+            for person in person.residence.group.residents:
+                if person.lockdown_status == "key_worker":
+                    keyworkers_parents += 1
+                    if keyworkers_parents > 1:
+                        return True
+        return False
+
     def skip_activity(
         self, person: "Person", activities: List,
     ):
@@ -282,7 +297,7 @@ class CloseSchools(SkipActivity):
         ):
             if (
                 self.full_closure or person.age in self.years_to_close
-            ) and not person.kid_of_key_worker:
+            ) and not self._check_kid_goes_to_school(person):
                 return self.remove_activities(activities, ["primary_activity"])
         return activities
 
