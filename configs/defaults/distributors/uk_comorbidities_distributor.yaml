@@ -1,27 +1,28 @@
 male:
   0-5:
-    cardiovascular:
-    chronic_kidney:
-    chronic respiratory:
-    chronic_liver disease:
-    diabetes_mellitus:
-    cancers_w_direct_immunosuppression:
-    cancers_w_possible_immunosuppression:
-    HIV/AIDS:
-    tuberculosis:
-    chronic_neurological:
-    sickle_cell:
+    cardiovascular: 0.001
+    chronic_kidney: 0.001
+    chronic respiratory: 0.009
+    chronic_liver disease: 0.002
+    diabetes_mellitus: 0.
+    cancers_w_direct_immunosuppression: 0.004
+    cancers_w_possible_immunosuppression: 0.001
+    HIV/AIDS: 0.
+    tuberculosis: 0.
+    chronic_neurological: 0.004
+    sickle_cell: 0.
   5-9:
-    cardiovascular:
-    chronic_kidney:
-    chronic respiratory:
-    chronic_liver disease:
-    diabetes_mellitus:
-    cancers_w_direct_immunosuppression:
-    cancers_w_possible_immunosuppression:
-    HIV/AIDS:
-    tuberculosis:
-    chronic_neurological:
+    cardiovascular: 0.002
+    chronic_kidney: 0.002
+    chronic respiratory: 0.016
+    chronic_liver disease: 0.002
+    diabetes_mellitus: 0.001
+    cancers_w_direct_immunosuppression: 0.006
+    cancers_w_possible_immunosuppression: 0.
+    HIV/AIDS: 0.
+    tuberculosis: 0.005 
+    chronic_neurological: 0.
+    sickle_cell: 0.
   10-14:
     cardiovascular:
     chronic_kidney:
@@ -33,6 +34,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   15-19:
     cardiovascular:
     chronic_kidney:
@@ -44,6 +46,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   20-24:
     cardiovascular:
     chronic_kidney:
@@ -55,6 +58,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   25-29:
     cardiovascular:
     chronic_kidney:
@@ -66,6 +70,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   30-34:
     cardiovascular:
     chronic_kidney:
@@ -77,6 +82,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   35-39:
     cardiovascular:
     chronic_kidney:
@@ -88,6 +94,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   40-44:
     cardiovascular:
     chronic_kidney:
@@ -99,6 +106,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   45-49:
     cardiovascular:
     chronic_kidney:
@@ -110,6 +118,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   50-54:
     cardiovascular:
     chronic_kidney:
@@ -121,6 +130,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   55-59:
     cardiovascular:
     chronic_kidney:
@@ -132,6 +142,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   60-64:
     cardiovascular:
     chronic_kidney:
@@ -143,6 +154,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   65-69:
     cardiovascular:
     chronic_kidney:
@@ -154,6 +166,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   70-74:
     cardiovascular:
     chronic_kidney:
@@ -165,6 +178,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   75-79:
     cardiovascular:
     chronic_kidney:
@@ -176,6 +190,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   80-84:
     cardiovascular:
     chronic_kidney:
@@ -187,6 +202,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   85-89:
     cardiovascular:
     chronic_kidney:
@@ -198,6 +214,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   90-94:
     cardiovascular:
     chronic_kidney:
@@ -209,6 +226,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   95-100:
     cardiovascular:
     chronic_kidney:
@@ -220,6 +238,7 @@ male:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
 
 female:
   0-5:
@@ -234,6 +253,7 @@ female:
     tuberculosis:
     chronic_neurological:
     sickle_cell:
+    sickle_cell: 0.
   5-9:
     cardiovascular:
     chronic_kidney:
@@ -245,6 +265,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   10-14:
     cardiovascular:
     chronic_kidney:
@@ -256,6 +277,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   15-19:
     cardiovascular:
     chronic_kidney:
@@ -267,6 +289,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   20-24:
     cardiovascular:
     chronic_kidney:
@@ -278,6 +301,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   25-29:
     cardiovascular:
     chronic_kidney:
@@ -289,6 +313,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   30-34:
     cardiovascular:
     chronic_kidney:
@@ -300,6 +325,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   35-39:
     cardiovascular:
     chronic_kidney:
@@ -311,6 +337,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   40-44:
     cardiovascular:
     chronic_kidney:
@@ -322,6 +349,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   45-49:
     cardiovascular:
     chronic_kidney:
@@ -333,6 +361,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   50-54:
     cardiovascular:
     chronic_kidney:
@@ -344,6 +373,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   55-59:
     cardiovascular:
     chronic_kidney:
@@ -355,6 +385,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   60-64:
     cardiovascular:
     chronic_kidney:
@@ -366,6 +397,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   65-69:
     cardiovascular:
     chronic_kidney:
@@ -377,6 +409,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   70-74:
     cardiovascular:
     chronic_kidney:
@@ -388,6 +421,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   75-79:
     cardiovascular:
     chronic_kidney:
@@ -399,6 +433,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   80-84:
     cardiovascular:
     chronic_kidney:
@@ -410,6 +445,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   85-89:
     cardiovascular:
     chronic_kidney:
@@ -421,6 +457,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   90-94:
     cardiovascular:
     chronic_kidney:
@@ -432,6 +469,7 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
   95-100:
     cardiovascular:
     chronic_kidney:
@@ -443,3 +481,4 @@ female:
     HIV/AIDS:
     tuberculosis:
     chronic_neurological:
+    sickle_cell: 0.
