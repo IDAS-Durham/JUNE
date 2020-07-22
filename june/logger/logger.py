@@ -299,9 +299,7 @@ class Logger:
             return None
         for key,val in data.items():
             dset_path = f'{base_path}/{key}'
-            print(dset_path,val,type(val),)
             if type(val) in [int,float,str,List[int],List[float],np.ndarray]:
-                print('ok!')
                 hdf5_obj.create_dataset(dset_path,data=val)
             elif isinstance(val,list):
                 if all( isinstance(x,(int,float)) for x in val):
@@ -312,20 +310,16 @@ class Logger:
                     hdf5_obj.create_dataset(dset_path,(len(asciiList),),dtype=dt, data=asciiList)
                     
             elif isinstance(val, datetime.datetime):
-                print(dset_path,val)
                 hdf5_obj.create_dataset(dset_path,data=val.strftime("%Y-%m-%dT%H:%M:%S.%f"))
             elif type(val) is dict:
                 self.unpack_dict(hdf5_obj,val,dset_path,depth=depth+1) # Recursion!!
-
-            print('\n\n')
             
     
     def log_parameters(
         self,
         interaction: "Interaction",
         infection_seed: "InfectionSeed",
-        policies: "Policies",
-        leisure: "Leisure"
+        activity_manager: "ActivityManager"
     ):
         with h5py.File(self.file_path, "a", libver="latest") as f:
             params = f.require_group("parameters")
@@ -342,15 +336,16 @@ class Logger:
                 f.create_dataset(dset_path,data=data)
 
             # selector params
-            #params.create_dataset("asymptomatic_ratio",data=interaction.selector.asymptomatic_ratio)
+            f.create_dataset("parameters/asymptomatic_ratio",
+                data=interaction.selector.health_index_generator.asymptomatic_ratio) # 
             f.create_dataset("parameters/seed_strength",data=infection_seed.seed_strength)
 
             # policies
             policy_types = defaultdict(int)
-            for pol in policies.policies:
+            for pol in activity_manager.policies.policies:
                 policy_types[pol.get_spec()] +=1 # How many of each type of policy?
 
-            for pol in policies.policies:
+            for pol in activity_manager.policies.policies:
                 pol_spec = pol.get_spec()
                 n_instances = policy_types[pol_spec]
 
@@ -364,5 +359,5 @@ class Logger:
                     i = None
                     policy_path = f"parameters/policies/{pol_spec}"
 
-                self.unpack_dict(f,pol.__dict__,policy_path,depth=0) 
+                self.unpack_dict(f,pol.__dict__,policy_path,depth=0)
 

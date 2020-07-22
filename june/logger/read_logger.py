@@ -457,23 +457,44 @@ class ReadLogger:
         )
         self.estimated_cases_df = estimated_cases_df[mask]
 
+    def repack_dict(
+        self,hdf5_obj,output_dict,base_path,output_name=None,depth=0,max_depth=8
+    ):
+
+        if output_name is None:
+            output_name = base_path.split('/')[-1]
+
+        if depth > max_depth:
+            output_dict[output_name] = (
+                f"increase get_parameters max_depth=2, exceeded at max_depth={max_depth}"
+            )
+            return None
+
+        if isinstance(hdf5_obj[base_path],h5py.Dataset):
+            output_dict[output_name] = hdf5_obj[base_path][()]
+        elif isinstance(hdf5_obj[base_path], h5py.Group):
+            output_dict[output_name] = {}
+            for obj_name in hdf5_obj[base_path]:
+                dset_path = f'{base_path}/{obj_name}'
+                self.repack_dict(
+                    hdf5_obj,output_dict[output_name],dset_path,depth=depth+1,max_depth=max_depth
+                )
+
     def get_parameters(
         self,
-        parameter_list=['beta','alpha_physical']
+        parameters=['beta','alpha_physical'],
+        max_depth=8
     ):
-        print('loading params')
+        if isinstance(parameters,list):
+            parameters = {p:p for p in parameters}
 
         output_params = {}
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:            
-            for param in parameter_list:
-                if param == 'beta':
-                    output_params['beta'] = {}
-                    for k,v in f['parameters/beta'].items():
-                        output_params['beta'][k] = v[()]
-                else:
-                    data_loc = f'parameters/{param}'
-                    print(data_loc)
-                    output_params[param] = f[data_loc][()]
+            for input_name,output_name in parameters.items():
+                dset_path = f'parameters/{input_name}'
+                self.repack_dict(
+                    f,output_params,dset_path,output_name=output_name,depth=0,max_depth=max_depth
+                )
 
         return output_params
 
