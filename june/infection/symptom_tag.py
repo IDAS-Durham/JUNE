@@ -13,8 +13,8 @@ class SymptomTag(IntEnum):
     healthy = -2
     exposed = -1
     asymptomatic = 0
-    influenza = 1
-    pneumonia = 2
+    mild = 1
+    severe = 2
     hospitalised = 3
     intensive_care = 4
     dead_home = 5

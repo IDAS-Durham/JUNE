@@ -7,16 +7,15 @@ activity_to_groups:
   commute: ['commuteunits', 'commutecityunits']
 
 time:
-  total_days: 200
+  total_days: 250
   initial_day: "2020-03-01" 
   step_duration: 
       weekday:
           0: 1 
-          1: 4
-          2: 4
-          3: 1
-          4: 3
-          5: 11
+          1: 8
+          2: 1
+          3: 3
+          4: 11
       weekend:
           0: 4 
           1: 4 
@@ -26,10 +25,9 @@ time:
       weekday:
           0: ['hospital', 'commute', 'residence'] 
           1: ['hospital', 'primary_activity', 'leisure', 'residence'] 
-          2: ['hospital', 'primary_activity', 'leisure', 'residence'] 
-          3: ['hospital', 'commute', 'residence'] 
-          4: ['hospital', 'leisure', 'residence']
-          5: ['hospital', 'residence']
+          2: ['hospital', 'commute', 'residence'] 
+          3: ['hospital', 'leisure', 'residence']
+          4: ['hospital', 'residence']
       weekend:
           0: ['hospital', 'leisure', 'residence']
           1: ['hospital', 'leisure', 'residence']

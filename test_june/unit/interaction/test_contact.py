@@ -140,6 +140,7 @@ def create_school(n_students, n_teachers):
 )
 def test__average_time_to_infect(n_teachers, mode):
     selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+    transmission_probability = 0.1
     selector = InfectionSelector.from_file(config_filename=selector_config)
     n_students = 1
     contact_matrices = {
@@ -171,8 +172,8 @@ def test__average_time_to_infect(n_teachers, mode):
         n_days.append(
             days_to_infection(interaction, teacher, school, people, n_students)
         )
-    teacher_teacher = interaction.selector.transmission_probability * (n_teachers - 1)
-    student_teacher = interaction.selector.transmission_probability / n_students
+    teacher_teacher = transmission_probability * (n_teachers - 1)
+    student_teacher = transmission_probability / n_students
     np.testing.assert_allclose(
         np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1,
     )
