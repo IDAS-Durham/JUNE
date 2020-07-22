@@ -1,0 +1,445 @@
+male:
+  0-5:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+    sickle_cell:
+  5-9:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  10-14:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  15-19:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  20-24:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  25-29:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  30-34:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  35-39:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  40-44:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  45-49:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  50-54:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  55-59:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  60-64:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  65-69:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  70-74:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  75-79:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  80-84:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  85-89:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  90-94:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  95-100:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+
+female:
+  0-5:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+    sickle_cell:
+  5-9:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  10-14:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  15-19:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  20-24:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  25-29:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  30-34:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  35-39:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  40-44:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  45-49:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  50-54:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  55-59:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  60-64:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  65-69:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  70-74:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  75-79:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  80-84:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  85-89:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  90-94:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
+  95-100:
+    cardiovascular:
+    chronic_kidney:
+    chronic respiratory:
+    chronic_liver disease:
+    diabetes_mellitus:
+    cancers_w_direct_immunosuppression:
+    cancers_w_possible_immunosuppression:
+    HIV/AIDS:
+    tuberculosis:
+    chronic_neurological:
