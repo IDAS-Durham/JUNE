@@ -149,8 +149,8 @@ class Quarantine(StayHome):
         except AttributeError:
             pass
         housemates_quarantine = person.residence.group.quarantine(
-            days_from_start,
-            self.n_days_household,
+            time=days_from_start,
+            quarantine_days=self.n_days_household,
             household_compliance=self.household_compliance,
         )
         return self_quarantine or housemates_quarantine

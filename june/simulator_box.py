@@ -6,6 +6,7 @@ from june.activity import ActivityManagerBox
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import World
+from june.policy import MedicalCarePolicies
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -148,6 +149,10 @@ class SimulatorBox(Simulator):
         ids = []
         symptoms = []
         n_secondary_infections = []
+        if self.activity_manager.policies is not None:
+            medical_care_policies = MedicalCarePolicies.get_active_policies(
+                policies=self.activity_manager.policies, date=self.timer.date
+            )
         for person in self.world.people.infected:
             health_information = person.health_information
             previous_tag = health_information.tag
@@ -156,12 +161,10 @@ class SimulatorBox(Simulator):
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
+            if self.activity_manager.policies is not None:
+                medical_care_policies.apply(person=person)
             if health_information.recovered:
-                if person.hospital is not None:
-                    person.hospital.group.release_as_patient(person)
                 self.recover(person, time)
-            elif health_information.should_be_in_hospital:
-                self.hospitalise_the_sick(person, previous_tag)
             elif health_information.is_dead:
                 self.bury_the_dead(person, time)
         if self.logger:
