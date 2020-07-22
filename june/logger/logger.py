@@ -6,6 +6,7 @@ from typing import List
 from june.demography import Population
 from pathlib import Path
 
+nan_integer = -999
 
 class Logger:
     def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
@@ -69,8 +70,14 @@ class Logger:
                     for person in population.people[idx1:idx2]:
                         ids.append(person.id)
                         ages.append(person.age)
-                        ethnicities.append(person.ethnicity.encode("ascii", "ignore"))
-                        socioeconomic_indcs.append(person.socioecon_index)
+                        if person.ethnicity is None:
+                            ethnicities.append("X")
+                        else:
+                            ethnicities.append(person.ethnicity.encode("ascii", "ignore"))
+                        if person.socioecon_index is None:
+                            socioeconomic_indcs.append(-1)
+                        else:
+                            socioeconomic_indcs.append(person.socioecon_index)
                         sexes.append(person.sex.encode("ascii", "ignore"))
                         super_areas.append(person.area.super_area.name)
 

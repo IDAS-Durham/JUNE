@@ -74,7 +74,7 @@ for area in world.areas:
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
-interaction = ContactAveraging.from_file(config_filename='../configs_camps/defaults/interaction/ContactInteraction_low.yaml',selector=selector)
+interaction = ContactAveraging.from_file(config_filename=camp_configs_path / 'defaults/interaction/ContactInteraction.yaml',selector=selector)
 
 policies = Policies.from_file(camp_configs_path / 'defaults/policy/policy.yaml') # no policies for now
 
@@ -104,7 +104,7 @@ infection_seed.unleash_virus(n_cases=100)
 
 print('Infected people in seed = ' , len(world.people.infected))
 
-CONFIG_PATH = "../configs_camps/config_example.yaml"
+CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 leisure_instance = generate_leisure_for_config(
             world=world, config_filename=CONFIG_PATH
