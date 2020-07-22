@@ -21,10 +21,6 @@ def str_to_class(classname):
     return getattr(sys.modules["june.policy"], classname)
 
 
-class PolicyError(BaseException):
-    pass
-
-
 class Policy(ABC):
     def __init__(
         self,
@@ -92,8 +88,15 @@ class PolicyCollection(ABC):
         """
         self.policies = policies
 
+    @classmethod
+    def get_active_policies(cls, policies: Policies, date: datetime):
+        policies = policies.get_active_policies_for_type(
+            policy_type=cls.policy_type, date=date
+        )
+        return cls(policies)
+
     def apply(self):
-        pass
+        raise NotImplementedError()
 
 
 class Policies:

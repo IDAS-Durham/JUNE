@@ -17,13 +17,7 @@ class MedicalCarePolicy(Policy):
 class MedicalCarePolicies(PolicyCollection):
     def __init__(self, policies: List[MedicalCarePolicy]):
         super().__init__(policies=policies)
-
-    @classmethod
-    def get_active_policies(cls, policies: Policies, date: datetime):
-        policies = policies.get_active_policies_for_type(
-            policy_type="medical_care", date=date
-        )
-        return cls(policies)
+        self.policy_type = "medical_care"
 
     def apply(self, person: Person, medical_facilities):
         for policy in self.policies:
