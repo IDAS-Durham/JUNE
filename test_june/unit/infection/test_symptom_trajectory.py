@@ -173,6 +173,9 @@ class TestSymptoms:
         ]
         assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[1][0]
         assert symptoms_trajectories.time_symptoms_onset() > 0
+        symptoms_trajectories.max_severity = 0.05
+        symptoms_trajectories.update_trajectory()
+        assert symptoms_trajectories.time_symptoms_onset() is None
 
     def test__symptoms_progression(self):
         selector = infect.InfectionSelector(transmission_type='constant')

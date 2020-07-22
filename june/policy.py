@@ -230,7 +230,7 @@ class Quarantine(StayHome):
                     person.health_information.time_of_symptoms_onset
                 )
                 release_day = time_of_symptoms_onset + self.n_days
-                if release_day > days_from_start > time_of_symptoms_onset:
+                if time_of_symptoms_onset is not None and release_day > days_from_start > time_of_symptoms_onset:
                     self_quarantine = True
             else:
                 self_quarantine = False
