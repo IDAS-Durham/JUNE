@@ -6,15 +6,14 @@ import numpy as np
 import pytest
 
 from june import paths
-from june.demography.geography import Geography
 from june.demography import Person, Population
+from june.demography.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
     Schools,
     Companies,
     Households,
-    CareHomes,
     Universities,
     Cemeteries,
 )
@@ -41,8 +40,7 @@ from june.world import World
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent
-    / "configs/defaults/infection/InfectionTrajectoriesXNExp.yaml"
+        dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionXNExp.yaml"
 )
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
@@ -113,7 +111,7 @@ def make_dummy_world(super_area):
 
 
 def make_dummy_world_with_university(super_area):
-    university = University(coordinates=super_area.coordinates, n_students_max=100,)
+    university = University(coordinates=super_area.coordinates, n_students_max=100, )
     school = School(
         coordinates=super_area.coordinates,
         n_pupils_max=100,
@@ -155,7 +153,7 @@ def make_dummy_world_with_university(super_area):
     return pupil, student, world
 
 
-def infect_person(person, selector, symptom_tag="influenza"):
+def infect_person(person, selector, symptom_tag="mild"):
     selector.infect_person_at_time(person, 0.0)
     person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
     person.health_information.time_of_symptoms_onset = 5.3
@@ -165,8 +163,9 @@ def infect_person(person, selector, symptom_tag="influenza"):
 class TestPolicy:
     def test__is_active(self):
         policy = Policy(start_time="2020-5-6", end_time="2020-6-6")
-        assert policy.is_active(datetime(2020, 6, 6))
-        assert not policy.is_active(datetime(2020, 6, 7))
+        assert policy.is_active(datetime(2020, 5, 6))
+        assert policy.is_active(datetime(2020, 6, 5))
+        assert not policy.is_active(datetime(2020, 6, 6))
 
 
 class TestDefaultPolicy:
@@ -181,28 +180,27 @@ class TestDefaultPolicy:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
         sim.clear_world()
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.activity_manager.move_people_to_active_subgroups(["primary_activity", "residence"], )
         date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
-        infect_person(worker, selector, "pneumonia")
+        infect_person(worker, selector, "severe")
         sim.update_health_status(0.0, 0.0)
         assert policies.stay_home_collection(date=date)(worker, None)
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.activity_manager.move_people_to_active_subgroups(["primary_activity", "residence"], )
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         worker.health_information = None
         sim.clear_world()
 
     def test__default_policy_adults_still_go_to_hospital(
-        self, super_area, selector, interaction
+            self, super_area, selector, interaction
     ):
         pupil, worker, world = make_dummy_world(super_area)
         permanent_policy = PermanentPolicy()
@@ -213,14 +211,13 @@ class TestDefaultPolicy:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
-        sim.move_people_to_active_subgroups(
+        sim.activity_manager.move_people_to_active_subgroups(
             ["hospital", "primary_activity", "residence"],
         )
         assert worker in worker.primary_activity.people
@@ -228,7 +225,7 @@ class TestDefaultPolicy:
         sim.clear_world()
         infect_person(worker, selector, "hospitalised")
         sim.update_health_status(0.0, 0.0)
-        sim.move_people_to_active_subgroups(
+        sim.activity_manager.move_people_to_active_subgroups(
             ["hospital", "primary_activity", "residence"],
         )
         assert worker in worker.hospital.people
@@ -246,22 +243,21 @@ class TestDefaultPolicy:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.activity_manager.move_people_to_active_subgroups(["primary_activity", "residence"], )
         date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
-        infect_person(pupil, selector, "pneumonia")
+        infect_person(pupil, selector, "severe")
         sim.update_health_status(0.0, 0.0)
         assert policies.stay_home_collection(date=date)(pupil, None)
-        sim.move_people_to_active_subgroups(["primary_activity", "residence"],)
+        sim.activity_manager.move_people_to_active_subgroups(["primary_activity", "residence"], )
         assert worker in worker.residence.people
         assert pupil in pupil.residence.people
         pupil.health_information = None
@@ -274,7 +270,10 @@ class TestClosure:
         household = Household()
         household.area = super_area.areas[0]
         household.add(pupil, subgroup_type=household.SubgroupType.kids)
+        worker2 = Person.from_attributes(age=50)
+        worker2.lockdown_status = "key_worker"
         household.add(worker, subgroup_type=household.SubgroupType.adults)
+        household.add(worker2, subgroup_type=household.SubgroupType.adults)
         school_closure = CloseSchools(
             start_time="2020-1-1", end_time="2020-10-1", years_to_close=[6],
         )
@@ -285,7 +284,6 @@ class TestClosure:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
@@ -295,7 +293,7 @@ class TestClosure:
         sim.clear_world()
         activities = ["primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
-        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
@@ -303,15 +301,15 @@ class TestClosure:
         assert policies.skip_activity_collection(date=time_during_policy)(
             pupil, activities
         ) == ["residence"]
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert pupil in pupil.residence.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             pupil, activities
-        ) == ["primary_activity", "residence",]
-        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        ) == ["primary_activity", "residence", ]
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
@@ -321,7 +319,7 @@ class TestClosure:
         sim.clear_world()
         activities = ["primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
-        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
@@ -329,15 +327,15 @@ class TestClosure:
         assert policies.skip_activity_collection(date=time_during_policy)(
             pupil, activities
         ) == ["primary_activity", "residence"]
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             pupil, activities
-        ) == ["primary_activity", "residence",]
-        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        ) == ["primary_activity", "residence", ]
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
@@ -354,16 +352,15 @@ class TestClosure:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
         activities = ["primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
-        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy)
         assert student in student.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
@@ -371,14 +368,14 @@ class TestClosure:
         assert policies.skip_activity_collection(date=time_during_policy)(
             student, activities
         ) == ["residence"]
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert student in student.residence.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             student, activities
-        ) == ["primary_activity", "residence",]
-        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        ) == ["primary_activity", "residence", ]
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert student in student.primary_activity.people
         sim.clear_world()
@@ -393,17 +390,16 @@ class TestClosure:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        # sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        # sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
         activities = ["commute", "primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
         worker.lockdown_status = "furlough"
-        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
@@ -411,15 +407,15 @@ class TestClosure:
         assert policies.skip_activity_collection(date=time_during_policy)(
             worker, activities
         ) == ["residence"]
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             worker, activities
-        ) == ["commute", "primary_activity", "residence",]
-        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        ) == ["commute", "primary_activity", "residence", ]
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
@@ -429,7 +425,7 @@ class TestClosure:
         activities = ["commute", "primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
         worker.lockdown_status = "key_worker"
-        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
@@ -437,27 +433,27 @@ class TestClosure:
         assert policies.skip_activity_collection(date=time_during_policy)(
             worker, activities
         ) == ["commute", "primary_activity", "residence"]
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             worker, activities
-        ) == ["commute", "primary_activity", "residence",]
-        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        ) == ["commute", "primary_activity", "residence", ]
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
 
     def test__close_companies_frequency_of_randoms(
-        self, super_area, selector, interaction
+            self, super_area, selector, interaction
     ):
         pupil, worker, world = make_dummy_world(super_area)
         company_closure = CloseCompanies(
             start_time="2020-1-1",
             end_time="2020-10-1",
-            random_lambda=8.0 / 40.0
+            random_work_probability=0.2
             # go for 8 hours per week (one week has 168 hours)
         )
         policies = Policies([company_closure])
@@ -467,45 +463,38 @@ class TestClosure:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        # sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        # sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         sim.clear_world()
         activities = ["commute", "primary_activity", "residence"]
         time_before_policy = datetime(2019, 2, 1)
         worker.lockdown_status = "random"
-        sim.move_people_to_active_subgroups(activities, time_before_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy)
         assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         time_during_policy = datetime(2020, 2, 1)
         # Move the person 1_0000 times for five days
         n_days_in_week = []
-        for i in range(8000):
+        for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in policies.skip_activity_collection(
-                    date=time_during_policy
-                )(
-                    worker,
-                    activities,
-                ):
+                        date=time_during_policy
+                )(worker, activities, ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
         n_days_in_week = []
-        for i in range(60_000):
+        for i in range(500):
             n_days = 0
             for j in range(10):
                 if "primary_activity" in policies.skip_activity_collection(
-                    date=time_during_policy
-                )(
-                    worker,
-                    activities,
-                ):
+                        date=time_during_policy
+                )(worker, activities, ):
                     n_days += 0.5
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
@@ -514,8 +503,8 @@ class TestClosure:
         time_after_policy = datetime(2030, 2, 2)
         assert policies.skip_activity_collection(date=time_after_policy)(
             worker, activities
-        ) == ["commute", "primary_activity", "residence",]
-        sim.move_people_to_active_subgroups(activities, time_after_policy)
+        ) == ["commute", "primary_activity", "residence", ]
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_after_policy)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
         sim.clear_world()
@@ -532,7 +521,6 @@ class TestClosure:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
@@ -544,7 +532,7 @@ class TestClosure:
         assert policies.skip_activity_collection(date=time_during_policy)(
             worker, activities
         ) == ["residence"]
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.residence.people
         sim.clear_world()
 
@@ -560,7 +548,6 @@ class TestShielding:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
@@ -571,13 +558,13 @@ class TestShielding:
         assert policies.stay_home_collection(date=time_during_policy)(
             worker, activities
         )
-        sim.move_people_to_active_subgroups(activities, time_during_policy)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy)
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
 
     def test__old_people_shield_with_complacency(
-        self, super_area, selector, interaction
+            self, super_area, selector, interaction
     ):
         pupil, worker, world = make_dummy_world(super_area)
         shielding = Shielding(
@@ -590,7 +577,6 @@ class TestShielding:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
@@ -601,7 +587,7 @@ class TestShielding:
         complient_days = 0
         for i in range(100):
             if policies.stay_home_collection(date=time_during_policy)(
-                worker, activities
+                    worker, activities
             ):
                 complient_days += 1
         assert complient_days / 100 == pytest.approx(shielding.complacency, abs=0.1)
@@ -621,18 +607,17 @@ class TestQuarantine:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
         assert policies.stay_home_collection(date=time_during_policy)(worker, 6.0)
-        sim.move_people_to_active_subgroups(activities, time_during_policy, 6.0)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy, 6.0)
         assert worker in worker.residence.people
         worker.health_information = None
         sim.clear_world()
@@ -649,12 +634,11 @@ class TestQuarantine:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
@@ -663,7 +647,7 @@ class TestQuarantine:
         assert not policies.stay_home_collection(date=time_during_policy)(pupil, 4.0)
         # after symptoms onset
         assert policies.stay_home_collection(date=time_during_policy)(pupil, 8.0)
-        sim.move_people_to_active_subgroups(activities, time_during_policy, 8.0)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy, 8.0)
         assert pupil in pupil.residence.people
         # more thatn two weeks after symptoms onset
         assert not policies.stay_home_collection(date=time_during_policy)(pupil, 25.0)
@@ -673,8 +657,11 @@ class TestQuarantine:
     def test__quarantine_zero_complacency(self, super_area, selector, interaction):
         pupil, worker, world = make_dummy_world(super_area)
         quarantine = Quarantine(
-            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
-            household_complacency=0.
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
+            household_complacency=0.0,
         )
         policies = Policies([quarantine])
         leisure_instance = leisure.generate_leisure_for_config(
@@ -683,12 +670,11 @@ class TestQuarantine:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        infect_person(worker, selector, "influenza")
+        infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
@@ -717,84 +703,93 @@ class TestCloseLeisure:
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
-        sim.leisure.leisure_distributors["pubs"].weekend_boost = 5000
+        sim.activity_manager.leisure.leisure_distributors["pubs"].weekend_boost = 5000
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
-        sim.leisure.generate_leisure_probabilities_for_timestep(10000, False, [])
-        sim.move_people_to_active_subgroups(activities, time_before_policy, 0.0)
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(10000, False, [])
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_before_policy, 0.0)
         assert worker in worker.leisure.people
         sim.clear_world()
         time_during_policy = datetime(2020, 3, 14)
         closed_venues = policies.find_closed_venues(date=time_during_policy)
         assert list(closed_venues) == ["pub"]
-        sim.leisure.generate_leisure_probabilities_for_timestep(
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
             10000, False, closed_venues
         )
-        sim.move_people_to_active_subgroups(activities, time_during_policy, 0.0)
+        sim.activity_manager.move_people_to_active_subgroups(activities, time_during_policy, 0.0)
         assert (
-            worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
-        ) or worker in worker.residence.people
+                       worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
+               ) or worker in worker.residence.people
         sim.clear_world()
 
 
-def test__social_distancing(super_area, selector, interaction):
-    pupil, worker, world = make_dummy_world(super_area)
-    world.cemeteries = Cemeteries()
-    start_date = datetime(2020, 3, 10)
-    end_date = datetime(2020, 3, 12)
-    beta_factor = {
-        "box": 0.5,
-        "pub": 0.5,
-        "grocery": 0.5,
-        "cinema": 0.5,
-        "commute_unit": 0.5,
-        "commute_city_unit": 0.5,
-        "hospital": 0.5,
-        "care_home": 0.5,
-        "company": 0.5,
-        "school": 0.5,
-        "household": 1.0,
-        "university": 0.5,
-    }
-
-    social_distance = SocialDistancing(
-        start_time="2020-03-10", end_time="2020-03-12", beta_factor=beta_factor
-    )
-    policies = Policies([social_distance])
-    leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename=test_config
-    )
-    leisure_instance.distribute_social_venues_to_households(world.households)
-    sim = Simulator.from_file(
-        world,
-        interaction,
-        selector,
-        config_filename=test_config,
-        policies=policies,
-        leisure=leisure_instance,
-    )
-
-    sim.timer.reset()
-
-    initial_betas = copy.deepcopy(sim.interaction.beta)
-    sim.clear_world()
-    for time in sim.timer:
-        if time > sim.timer.final_date:
-            break
-        sim.do_timestep()
-        if sim.timer.date >= start_date and sim.timer.date < end_date:
-            for group in sim.interaction.beta:
-                if group != "household":
-                    assert sim.interaction.beta[group] == initial_betas[group] * 0.5
-                else:
-                    assert sim.interaction.beta[group] == initial_betas[group]
-        else:
+class TestSocialDistancing:
+    def test__social_distancing(self, super_area, selector, interaction):
+        pupil, worker, world = make_dummy_world(super_area)
+        world.cemeteries = Cemeteries()
+        start_date = datetime(2020, 3, 10)
+        end_date = datetime(2020, 3, 12)
+        beta_factors = {
+            "box": 0.5,
+            "pub": 0.5,
+            "grocery": 0.5,
+            "cinema": 0.5,
+            "commute_unit": 0.5,
+            "commute_city_unit": 0.5,
+            "hospital": 0.5,
+            "care_home": 0.5,
+            "company": 0.5,
+            "school": 0.5,
+            "household": 1.0,
+            "university": 0.5,
+        }
+        social_distance = SocialDistancing(
+            start_time="2020-03-10", end_time="2020-03-12", beta_factors=beta_factors
+        )
+        beta_factors2 = {"cinema": 4}
+        start_date2 = datetime(2020, 3, 12)
+        end_date2 = datetime(2020, 3, 15)
+        social_distance2 = SocialDistancing(
+            start_time="2020-03-12", end_time="2020-03-15", beta_factors=beta_factors2
+        )
+        policies = Policies([social_distance, social_distance2])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        leisure_instance.distribute_social_venues_to_households(world.households)
+        sim = Simulator.from_file(
+            world,
+            interaction,
+            config_filename=test_config,
+            policies=policies,
+            leisure=leisure_instance,
+        )
+        sim.timer.reset()
+        initial_betas = copy.deepcopy(sim.interaction.beta)
+        sim.clear_world()
+        for time in sim.timer:
+            if time > sim.timer.final_date:
+                break
+            sim.do_timestep()
+            if sim.timer.date >= start_date and sim.timer.date < end_date:
+                for group in sim.interaction.beta:
+                    if group != "household":
+                        assert sim.interaction.beta[group] == initial_betas[group] * 0.5
+                    else:
+                        assert sim.interaction.beta[group] == initial_betas[group]
+                continue
+            if sim.timer.date >= start_date2 and sim.timer.date < end_date2:
+                for group in sim.interaction.beta:
+                    if group != "cinema":
+                        assert sim.interaction.beta == 4.0
+                    else:
+                        assert sim.interaction.beta[group] == initial_betas[group]
+                continue
             assert sim.interaction.beta == initial_betas
 
 
@@ -808,25 +803,24 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             leisure_activities_probabilities={
-                "pubs": {"men": {"0-50": 0.5, "50-100": 0.0}, "women": {"0-100": 0.4},},
+                "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
             },
         )
         policies = Policies([reduce_leisure_probabilities])
         sim = Simulator.from_file(
             world,
             interaction,
-            selector,
             config_filename=test_config,
             policies=policies,
             leisure=leisure_instance,
         )
         sim.clear_world()
-        sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
-        original_male_pub_probabilities = sim.leisure.leisure_distributors[
+        sim.activity_manager.policies.apply_change_probabilities_leisure(sim.timer.date, sim.activity_manager.leisure)
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        original_male_pub_probabilities = sim.activity_manager.leisure.leisure_distributors[
             "pubs"
         ].male_probabilities
-        original_female_pub_probabilities = sim.leisure.leisure_distributors[
+        original_female_pub_probabilities = sim.activity_manager.leisure.leisure_distributors[
             "pubs"
         ].female_probabilities
         assert str(sim.timer.date.date()) == "2020-03-01"
@@ -838,16 +832,16 @@ class TestReduceLeisureProbabilities:
         household.add(person1)
         person2 = Person.from_attributes(age=80, sex="f")
         person2.area = super_area.areas[0]
-        sim.leisure.distribute_social_venues_to_households([household])
+        sim.activity_manager.leisure.distribute_social_venues_to_households([household])
         household.add(person2)
         pubs1_visits_before = 0
         pubs2_visits_before = 0
         for _ in range(5000):
-            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(person1)
+            subgroup = sim.activity_manager.leisure.get_subgroup_for_person_and_housemates(person1)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs1_visits_before += 1
             person1.subgroups.leisure = None
-            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(person2)
+            subgroup = sim.activity_manager.leisure.get_subgroup_for_person_and_housemates(person2)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_before += 1
             person2.subgroups.leisure = None
@@ -856,18 +850,18 @@ class TestReduceLeisureProbabilities:
         # next day leisure policies are
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
-        sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
-        assert sim.leisure.leisure_distributors["pubs"].male_probabilities[60] == 0.0
-        assert sim.leisure.leisure_distributors["pubs"].female_probabilities[60] == 0.4
+        sim.activity_manager.policies.apply_change_probabilities_leisure(sim.timer.date, sim.activity_manager.leisure)
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        assert sim.activity_manager.leisure.leisure_distributors["pubs"].male_probabilities[60] == 0.0
+        assert sim.activity_manager.leisure.leisure_distributors["pubs"].female_probabilities[60] == 0.2
         pubs1_visits_after = 0
         pubs2_visits_after = 0
         for _ in range(5000):
-            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(person1)
+            subgroup = sim.activity_manager.leisure.get_subgroup_for_person_and_housemates(person1)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs1_visits_after += 1
             person1.subgroups.leisure = None
-            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(person2)
+            subgroup = sim.activity_manager.leisure.get_subgroup_for_person_and_housemates(person2)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_after += 1
             person2.subgroups.leisure = None
@@ -876,55 +870,26 @@ class TestReduceLeisureProbabilities:
         # end of policy
         while str(sim.timer.date.date()) != "2020-03-05":
             next(sim.timer)
-        sim.policies.apply_change_probabilities_leisure(sim.timer.date, sim.leisure)
-        sim.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
+        sim.activity_manager.policies.apply_change_probabilities_leisure(sim.timer.date, sim.activity_manager.leisure)
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(0.1, False, [])
         pubs1_visits_restored = 0
         pubs2_visits_restored = 0
         for _ in range(5000):
-            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(person1)
+            subgroup = sim.activity_manager.leisure.get_subgroup_for_person_and_housemates(person1)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs1_visits_restored += 1
             person1.subgroups.leisure = None
-            subgroup = sim.leisure.get_subgroup_for_person_and_housemates(person2)
+            subgroup = sim.activity_manager.leisure.get_subgroup_for_person_and_housemates(person2)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_restored += 1
             person2.subgroups.leisure = None
         assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.2)
         assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.2)
         assert (
-            sim.leisure.leisure_distributors["pubs"].male_probabilities
-            == original_male_pub_probabilities
+                sim.activity_manager.leisure.leisure_distributors["pubs"].male_probabilities
+                == original_male_pub_probabilities
         )
         assert (
-            sim.leisure.leisure_distributors["pubs"].female_probabilities
-            == original_female_pub_probabilities
+                sim.activity_manager.leisure.leisure_distributors["pubs"].female_probabilities
+                == original_female_pub_probabilities
         )
-
-
-"""
-class TestSocialDistancing:
-    def test__social_distancing(self, selector):
-        beta_factor = {
-                    'box': 0.5,
-                    'pub': 0.5,
-                    'grocery': 0.5,
-                    'cinema': 0.5,
-                    'commute_unit': 0.5,
-                    'commute_city_unit': 0.5,
-                    'hospital': 0.5,
-                    'care_home': 0.5,
-                    'company': 0.5,
-                    'school': 0.5,
-                    'university': 0.5,
-                }
-        social_distance = SocialDistancing(start_time='2020-03-10', end_time='2020-03-12',
-            beta_factor = beta_factor)
-        interaction = ContactAveraging.from_file(selector=selector,
-                policies=Policies([social_distance]))
-        initial_betas = interaction.beta
-        for group in interaction.beta.keys():
-            if group in social_distance.beta_factor.keys(): 
-                assert interaction.beta[group]*interaction.policies.get_beta_factors(group) == initial_betas[group] * 0.5
-            else:
-                assert interaction.beta[group]*interaction.policies.social_distance_beta_factor(group) == initial_betas[group]
-"""

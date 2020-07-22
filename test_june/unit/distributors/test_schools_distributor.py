@@ -14,11 +14,6 @@ default_config_filename = (
     / "configs/defaults/distributors/school_distributor.yaml"
 )
 
-default_config = {
-    "age_range": (0, 19),
-    "employee_per_clients": {"primary": 30, "secondary": 30},
-}
-
 default_mandatory_age_range = (5, 18)
 
 

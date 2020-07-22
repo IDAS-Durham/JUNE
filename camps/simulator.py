@@ -25,6 +25,7 @@ from june.world import World
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
 from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+from june.activity import ActivityManager, activity_hierarchy
 
 from camps import paths
 
@@ -34,18 +35,22 @@ sim_logger = logging.getLogger(__name__)
 
 
 class CampSimulator(Simulator):
+    #ActivityManager = ActivityManager
+    
     def __init__(
         self,
         world: World,
         interaction: Interaction,
-        selector: InfectionSelector,
-        activity_to_groups: dict,
-        time_config: dict,
+        #selector: InfectionSelector,
+        #activity_to_groups: dict,
+        timer: Timer,
+        activity_manager: ActivityManager,    
+        #time_config: dict,
         infection_seed: Optional["InfectionSeed"] = None,
-        leisure: Optional[Leisure] = None,
-        min_age_home_alone: int = 15,
-        stay_at_home_complacency: float = 0.95,
-        policies=Policies(),
+        #leisure: Optional["Leisure"] = None,
+        #min_age_home_alone: int = 15,
+        #stay_at_home_complacency: float = 0.95,
+        #policies=Policies(),
         save_path: str = "results",
         output_filename: str = "logger.hdf5",
         light_logger: bool = False,
@@ -53,13 +58,15 @@ class CampSimulator(Simulator):
         super().__init__(
             world=world,
             interaction=interaction,
-            selector=selector,
-            activity_to_groups=activity_to_groups,
-            time_config=time_config,
+            #selector=selector,
+            #activity_to_groups=activity_to_groups,
+            #time_config=time_config,
+            timer=timer,
+            activity_manager=activity_manager,
             infection_seed=infection_seed,
-            leisure=leisure,
-            min_age_home_alone=min_age_home_alone,
-            policies=policies,
+            #leisure=leisure,
+            #min_age_home_alone=min_age_home_alone,
+            #policies=policies,
             save_path=save_path,
             output_filename=output_filename,
             light_logger=light_logger,
