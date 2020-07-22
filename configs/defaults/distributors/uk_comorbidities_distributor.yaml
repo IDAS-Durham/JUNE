@@ -26,7 +26,7 @@ male:
   10-14:
     cardiovascular: 0.001
     chronic_kidney: 0.004
-    chronic respiratory:0.016
+    chronic respiratory: 0.016
     chronic_liver disease: 0.003
     diabetes_mellitus: 0.004
     cancers_w_direct_immunosuppression: 0.003
@@ -93,7 +93,7 @@ male:
     cancers_w_possible_immunosuppression: 0.006
     HIV/AIDS: 0.004
     tuberculosis: 0.
-    chronic_neurological:0.006
+    chronic_neurological: 0.006
     sickle_cell: 0.
   40-44:
     cardiovascular: 0.042
