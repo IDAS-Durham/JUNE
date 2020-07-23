@@ -1,6 +1,7 @@
 title: Covid configuration example
 
 activity_to_groups:
+  medical_facility: ['hospitals']
   primary_activity: ['schools', 'companies', 'universities']
   leisure: ['pubs','cinemas']
   residence: ['households', ]
@@ -16,8 +17,8 @@ time:
           0: 24
   step_activities:
       weekday:
-          0: ['hospital', 'leisure','residence'] 
-          1: ['hospital', 'primary_activity', 'residence']
+          0: ['medical_facility', 'leisure','residence'] 
+          1: ['medical_facility', 'primary_activity', 'residence']
       weekend:
-          0: ['hospital', 'residence']
+          0: ['medical_facility', 'residence']
 
