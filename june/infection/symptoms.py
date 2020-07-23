@@ -15,7 +15,7 @@ class Symptoms:
         self.stage = 0
         self.tag = self.trajectory[self.stage][1]
 
-    def time_symptoms_onset(self):
+    def time_from_infection_to_symptoms(self):
         symptoms_onset = 0
         for completion_time, tag in self.trajectory:
             symptoms_onset += completion_time
