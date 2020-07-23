@@ -1,4 +1,4 @@
-male:
+m:
   0-4:
     cardiovascular: 0.001
     chronic_kidney: 0.001
@@ -50,7 +50,7 @@ male:
   20-24:
     cardiovascular: 0.003
     chronic_kidney: 0.012
-    chronic respiratory: 0.026
+    chronic_respiratory: 0.026
     chronic_liver disease: 0.006
     diabetes_mellitus: 0.034
     cancers_w_direct_immunosuppression: 0.003
@@ -62,7 +62,7 @@ male:
   25-29:
     cardiovascular: 0.007
     chronic_kidney: 0.021
-    chronic respiratory: 0.03
+    chronic_respiratory: 0.03
     chronic_liver disease: 0.011
     diabetes_mellitus: 0.046
     cancers_w_direct_immunosuppression: 0.005
@@ -74,7 +74,7 @@ male:
   30-34:
     cardiovascular: 0.011
     chronic_kidney: 0.029
-    chronic respiratory: 0.035
+    chronic_respiratory: 0.035
     chronic_liver disease: 0.021
     diabetes_mellitus: 0.051
     cancers_w_direct_immunosuppression: 0.008
@@ -86,7 +86,7 @@ male:
   35-39:
     cardiovascular: 0.018
     chronic_kidney: 0.036
-    chronic respiratory: 0.043
+    chronic_respiratory: 0.043
     chronic_liver disease: 0.031
     diabetes_mellitus: 0.056
     cancers_w_direct_immunosuppression: 0.008
@@ -98,7 +98,7 @@ male:
   40-44:
     cardiovascular: 0.042
     chronic_kidney: 0.042
-    chronic respiratory: 0.056
+    chronic_respiratory: 0.056
     chronic_liver disease: 0.034
     diabetes_mellitus: 0.064
     cancers_w_direct_immunosuppression: 0.008
@@ -110,7 +110,7 @@ male:
   45-49:
     cardiovascular: 0.064
     chronic_kidney: 0.048
-    chronic respiratory: 0.074
+    chronic_respiratory: 0.074
     chronic_liver disease: 0.033
     diabetes_mellitus: 0.086
     cancers_w_direct_immunosuppression: 0.012
@@ -122,7 +122,7 @@ male:
   50-54:
     cardiovascular: 0.102
     chronic_kidney: 0.057
-    chronic respiratory: 0.099
+    chronic_respiratory: 0.099
     chronic_liver disease: 0.032
     diabetes_mellitus: 0.120
     cancers_w_direct_immunosuppression: 0.011
@@ -134,7 +134,7 @@ male:
   55-59:
     cardiovascular: 0.163
     chronic_kidney: 0.074
-    chronic respiratory: 0.144
+    chronic_respiratory: 0.144
     chronic_liver disease: 0.031
     diabetes_mellitus: 0.155
     cancers_w_direct_immunosuppression: 0.014
@@ -146,7 +146,7 @@ male:
   60-64:
     cardiovascular: 0.247
     chronic_kidney: 0.100
-    chronic respiratory: 0.182
+    chronic_respiratory: 0.182
     chronic_liver disease: 0.029
     diabetes_mellitus: 0.188
     cancers_w_direct_immunosuppression: 0.019
@@ -158,7 +158,7 @@ male:
   65-69:
     cardiovascular: 0.341
     chronic_kidney: 0.138
-    chronic respiratory: 0.225
+    chronic_respiratory: 0.225
     chronic_liver disease: 0.026
     diabetes_mellitus: 0.212
     cancers_w_direct_immunosuppression: 0.024
@@ -170,7 +170,7 @@ male:
   70-74:
     cardiovascular: 0.440
     chronic_kidney: 0.191
-    chronic respiratory: 0.272
+    chronic_respiratory: 0.272
     chronic_liver disease: 0.024
     diabetes_mellitus: 0.238
     cancers_w_direct_immunosuppression: 0.030
@@ -182,7 +182,7 @@ male:
   75-79:
     cardiovascular: 0.521
     chronic_kidney: 0.263
-    chronic respiratory: 0.320
+    chronic_respiratory: 0.320
     chronic_liver disease: 0.022
     diabetes_mellitus: 0.293
     cancers_w_direct_immunosuppression: 0.040
@@ -194,7 +194,7 @@ male:
   80-84:
     cardiovascular: 0.574
     chronic_kidney: 0.347
-    chronic respiratory: 0.358
+    chronic_respiratory: 0.358
     chronic_liver disease: 0.019
     diabetes_mellitus: 0.364
     cancers_w_direct_immunosuppression: 0.042
@@ -206,7 +206,7 @@ male:
   85-89:
     cardiovascular: 0.592
     chronic_kidney: 0.427
-    chronic respiratory: 0.391
+    chronic_respiratory: 0.391
     chronic_liver disease: 0.016
     diabetes_mellitus: 0.399
     cancers_w_direct_immunosuppression: 0.051
@@ -218,7 +218,7 @@ male:
   90-94:
     cardiovascular: 0.580
     chronic_kidney: 0.496
-    chronic respiratory: 0.435
+    chronic_respiratory: 0.435
     chronic_liver disease: 0.014
     diabetes_mellitus: 0.396
     cancers_w_direct_immunosuppression: 0.051
@@ -230,7 +230,7 @@ male:
   95-100:
     cardiovascular: 0.540
     chronic_kidney: 0.562
-    chronic respiratory: 0.507
+    chronic_respiratory: 0.507
     chronic_liver disease: 0.018
     diabetes_mellitus: 0.383
     cancers_w_direct_immunosuppression: 0.019
@@ -240,11 +240,11 @@ male:
     chronic_neurological: 0.322
     sickle_cell: 0.000
 
-female:
+f:
   0-4:
     cardiovascular: 0.000
     chronic_kidney: 0.001
-    chronic respiratory: 0.008
+    chronic_respiratory: 0.008
     chronic_liver disease: 0.002
     diabetes_mellitus: 0.000
     cancers_w_direct_immunosuppression: 0.004
@@ -256,7 +256,7 @@ female:
   5-9:
     cardiovascular: 0.000
     chronic_kidney: 0.002
-    chronic respiratory: 0.015
+    chronic_respiratory: 0.015
     chronic_liver disease: 0.002
     diabetes_mellitus: 0.001
     cancers_w_direct_immunosuppression: 0.004
@@ -268,7 +268,7 @@ female:
   10-14:
     cardiovascular: 0.002
     chronic_kidney: 0.004
-    chronic respiratory: 0.016
+    chronic_respiratory: 0.016
     chronic_liver disease: 0.003
     diabetes_mellitus: 0.006
     cancers_w_direct_immunosuppression: 0.002
@@ -280,7 +280,7 @@ female:
   15-19:
     cardiovascular: 0.007
     chronic_kidney: 0.009
-    chronic respiratory: 0.022
+    chronic_respiratory: 0.022
     chronic_liver disease: 0.005
     diabetes_mellitus: 0.021
     cancers_w_direct_immunosuppression: 0.002
@@ -292,7 +292,7 @@ female:
   20-24:
     cardiovascular: 0.009
     chronic_kidney: 0.018
-    chronic respiratory: 0.032
+    chronic_respiratory: 0.032
     chronic_liver disease: 0.007
     diabetes_mellitus: 0.037
     cancers_w_direct_immunosuppression: 0.002
@@ -304,7 +304,7 @@ female:
   25-29:
     cardiovascular: 0.016
     chronic_kidney: 0.033
-    chronic respiratory: 0.037
+    chronic_respiratory: 0.037
     chronic_liver disease: 0.010
     diabetes_mellitus: 0.044
     cancers_w_direct_immunosuppression: 0.005
@@ -316,7 +316,7 @@ female:
   30-34:
     cardiovascular: 0.020
     chronic_kidney: 0.046
-    chronic respiratory: 0.044
+    chronic_respiratory: 0.044
     chronic_liver disease: 0.017
     diabetes_mellitus: 0.047
     cancers_w_direct_immunosuppression: 0.007
@@ -328,7 +328,7 @@ female:
   35-39:
     cardiovascular: 0.022
     chronic_kidney: 0.054
-    chronic respiratory: 0.055
+    chronic_respiratory: 0.055
     chronic_liver disease: 0.020
     diabetes_mellitus: 0.050
     cancers_w_direct_immunosuppression: 0.006
@@ -340,7 +340,7 @@ female:
   40-44:
     cardiovascular: 0.049
     chronic_kidney: 0.059
-    chronic respiratory: 0.071
+    chronic_respiratory: 0.071
     chronic_liver disease: 0.021
     diabetes_mellitus: 0.056
     cancers_w_direct_immunosuppression: 0.007
@@ -352,7 +352,7 @@ female:
   45-49:
     cardiovascular: 0.064
     chronic_kidney: 0.066
-    chronic respiratory: 0.091
+    chronic_respiratory: 0.091
     chronic_liver disease: 0.021
     diabetes_mellitus: 0.070
     cancers_w_direct_immunosuppression: 0.008
@@ -364,7 +364,7 @@ female:
   50-54:
     cardiovascular: 0.081
     chronic_kidney: 0.077
-    chronic respiratory: 0.114
+    chronic_respiratory: 0.114
     chronic_liver disease: 0.021
     diabetes_mellitus: 0.092
     cancers_w_direct_immunosuppression: 0.008
@@ -376,7 +376,7 @@ female:
   55-59:
     cardiovascular: 0.112
     chronic_kidney: 0.098
-    chronic respiratory: 0.157
+    chronic_respiratory: 0.157
     chronic_liver disease: 0.020
     diabetes_mellitus: 0.116
     cancers_w_direct_immunosuppression: 0.010
@@ -388,7 +388,7 @@ female:
   60-64:
     cardiovascular: 0.160
     chronic_kidney: 0.131
-    chronic respiratory: 0.188
+    chronic_respiratory: 0.188
     chronic_liver disease: 0.019
     diabetes_mellitus: 0.138
     cancers_w_direct_immunosuppression: 0.012
@@ -400,7 +400,7 @@ female:
   65-69:
     cardiovascular: 0.229
     chronic_kidney: 0.179
-    chronic respiratory: 0.226
+    chronic_respiratory: 0.226
     chronic_liver disease: 0.017
     diabetes_mellitus: 0.158
     cancers_w_direct_immunosuppression: 0.015
@@ -412,7 +412,7 @@ female:
   70-74:
     cardiovascular: 0.309
     chronic_kidney: 0.252
-    chronic respiratory: 0.268
+    chronic_respiratory: 0.268
     chronic_liver disease: 0.016
     diabetes_mellitus: 0.183
     cancers_w_direct_immunosuppression: 0.019
@@ -424,7 +424,7 @@ female:
   75-79:
     cardiovascular: 0.393
     chronic_kidney: 0.360
-    chronic respiratory: 0.306
+    chronic_respiratory: 0.306
     chronic_liver disease: 0.014
     diabetes_mellitus: 0.232
     cancers_w_direct_immunosuppression: 0.023
@@ -436,7 +436,7 @@ female:
   80-84:
     cardiovascular: 0.451
     chronic_kidney: 0.482
-    chronic respiratory: 0.331
+    chronic_respiratory: 0.331
     chronic_liver disease: 0.012
     diabetes_mellitus: 0.294
     cancers_w_direct_immunosuppression: 0.023
@@ -448,7 +448,7 @@ female:
   85-89:
     cardiovascular: 0.483
     chronic_kidney: 0.585
-    chronic respiratory: 0.350
+    chronic_respiratory: 0.350
     chronic_liver disease: 0.010
     diabetes_mellitus: 0.325
     cancers_w_direct_immunosuppression: 0.029
@@ -460,7 +460,7 @@ female:
   90-94:
     cardiovascular: 0.485
     chronic_kidney: 0.674
-    chronic respiratory: 0.378
+    chronic_respiratory: 0.378
     chronic_liver disease: 0.007
     diabetes_mellitus: 0.324
     cancers_w_direct_immunosuppression: 0.030
@@ -472,7 +472,7 @@ female:
   95-100:
     cardiovascular: 0.454
     chronic_kidney: 0.757
-    chronic respiratory: 0.434
+    chronic_respiratory: 0.434
     chronic_liver disease: 0.005
     diabetes_mellitus: 0.313
     cancers_w_direct_immunosuppression: 0.009
