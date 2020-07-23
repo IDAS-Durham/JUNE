@@ -15,6 +15,9 @@ default_areas_map_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
+default_config_path = (
+    paths.configs_path
+)
 
 def parse_age_bin(age_bin: str):
     pairs = list(map(int, age_bin.split("-")))
@@ -203,7 +206,7 @@ class Population:
 
 
 class Demography:
-    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator]):
+    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator], comorbidity_data):
         """
         Tool to generate population for a certain geographical regin.
 
@@ -215,8 +218,36 @@ class Demography:
         """
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
+        self.comorbidity_data = comorbidity_data
 
-    def populate(self, area_name: str, ethnicity=True, socioecon_index=True) -> Population:
+    def generate_comorbidity(self, person):
+        if self.comorbidity_data is not None:
+            age, age_ranges, config = self.comorbidity_data
+            config_index = 0
+            for idx, i in enumerate(ages):
+                if person.age <= i:
+                    break
+                else:
+                    config_index = idx
+            if config_index !=0:
+                config_index += 1
+
+
+            config_to_check = config[person.sex][age_ranges[config_index]]
+            comorbidities = []
+            probs = []
+            for comorbidity in config_to_check:
+                comorbidities.append(comorbidity)
+                probs.append(config_to_check[comorbidity])
+            probs.append(1-np.sum(probs))
+            comorbidities.append(None)
+            return np.random.choice(comorbidities,1,p=probs)
+        
+        else:
+            return None
+        
+
+    def populate(self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=False) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -247,6 +278,8 @@ class Demography:
                 ethnicity=ethnicity_value,
                 socioecon_index=socioecon_index_value,
             )
+            if comorbidity:
+                person.comorbidity = generate_comorbidity(person)
             people.append(person)  # add person to population
         return Population(people=people)
 
@@ -303,6 +336,7 @@ class Demography:
         area_names: List[str],
         data_path: str = default_data_path,
         config: Optional[dict] = None,
+        config_path: str = default_config_path,
     ) -> "Demography":
         """
         Load data from files and construct classes capable of generating demographic
@@ -327,6 +361,7 @@ class Demography:
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
         ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
         socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
+        comorbidity_path = config_path / "defaults/distributors/uk_comorbidities_distributor.yaml"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path,
             female_fraction_path,
@@ -334,7 +369,8 @@ class Demography:
             socioecon_structure_path,
             area_names,
         )
-        return Demography(age_sex_generators=age_sex_generators, area_names=area_names)
+        comorbidity_data = _load_comorbidity_data(comorbidity_path)
+        return Demography(age_sex_generators=age_sex_generators, area_names=area_names, comorbidity_data=comorbidity_data)
 
 
 def _load_age_and_sex_generators(
@@ -399,6 +435,24 @@ def _load_age_and_sex_generators(
         )
 
     return ret
+
+def _load_comorbidity_data(
+        comorbidity_path: str = None
+):
+    if cormobidity_path is not None:
+        with open(comorbidities_path) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+            
+        age_ranges = []
+        ages = []
+        for key in config['m']:
+            age_ranges.append(key)
+            ages.append(int(key.split('-')[-1]))
+        
+        return [ages, age_ranges,config] 
+        
+    else:
+        return None
 
 
 def load_age_and_sex_generators_for_bins(
