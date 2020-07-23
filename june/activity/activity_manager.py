@@ -160,10 +160,7 @@ class ActivityManager:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-        print("activities")
-        print(activities)
         for activity in activities:
-            print(activity)
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
@@ -171,7 +168,6 @@ class ActivityManager:
             else:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
-                print(subgroup.group.spec)
                 subgroup.append(person)
                 return
         raise SimulatorError(
@@ -219,8 +215,6 @@ class ActivityManager:
             policies=self.policies, date=date
         )
         activities = self.apply_activity_hierarchy(activities)
-        print(activities)
-        print(self.world.people.members)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
