@@ -28,7 +28,6 @@ class SimulatorBox(Simulator):
             activity_manager,
             infection_seed: Optional["InfectionSeed"] = None,
             save_path: str = "results",
-            output_filename: str = "logger.hdf5",
             light_logger: bool = False,
     ):
         """
@@ -65,7 +64,6 @@ class SimulatorBox(Simulator):
             activity_manager=activity_manager,
             infection_seed=infection_seed,
             save_path=save_path,
-            output_filename=output_filename,
             light_logger=light_logger,
         )
 
