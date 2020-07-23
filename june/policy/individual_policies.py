@@ -15,13 +15,11 @@ class IndividualPolicy(Policy):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.policy_type = "individual"
-        self.min_age_home_alone = 15
 
 
 class IndividualPolicies(PolicyCollection):
-    def __init__(self, policies: List[IndividualPolicy]):
-        super().__init__(policies=policies)
-        self.policy_type = "individual"
+    policy_type = "individual"
+    min_age_home_alone = 15
 
     def apply(self, person: Person, days_from_start: float, activities: List[str]):
         """
@@ -64,7 +62,7 @@ class StayHome(IndividualPolicy):
     Template for policies that will force someone to stay at home
     """
 
-    def __init__(self, start_time, end_time):
+    def __init__(self, start_time="1900-01-01", end_time="2100-01-01"):
         super().__init__(start_time=start_time, end_time=end_time)
 
     def apply(self, person: Person, days_from_start: float, activities: List[str]):
@@ -93,10 +91,9 @@ class StayHome(IndividualPolicy):
 
 
 class SevereSymptomsStayHome(StayHome):
-    def __init__(self, start_time="1900-01-01", end_time="9999-01-01"):
-        super().__init__(start_time=start_time, end_time=end_time)
 
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
+        print(person)
         return (
             person.health_information is not None
             and person.health_information.tag is SymptomTag.severe
