@@ -18,6 +18,7 @@ class HealthInformation:
         "time_of_symptoms_onset",
         "length_of_infection",
         "infecter",
+        "time_of_testing"
     )
 
     def __init__(self):
@@ -34,6 +35,7 @@ class HealthInformation:
         self.time_of_infection = -1
         self.length_of_infection = -1
         self.infecter = None
+        self.time_of_testing = None
 
     def set_infection(self, infection):
         self.infection = infection

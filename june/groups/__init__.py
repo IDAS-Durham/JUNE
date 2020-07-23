@@ -3,7 +3,7 @@ from .boundary import Boundary
 from .carehome import CareHome, CareHomes
 from .cemetery import Cemetery, Cemeteries
 from .company import Company, Companies
-from .hospital import Hospital, Hospitals
+from .hospital import Hospital, Hospitals, MedicalFacility, MedicalFacilities
 from .household import Household, Households
 from .school import School, Schools
 from .commute import CommuteCity, CommuteCities, CommuteCityDistributor, CommuteHub, CommuteHubs, CommuteHubDistributor, CommuteUnit, CommuteUnits, CommuteUnitDistributor, CommuteCityUnit, CommuteCityUnits, CommuteCityUnitDistributor
