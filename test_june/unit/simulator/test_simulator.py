@@ -74,6 +74,7 @@ def setup_sim(dummy_world, selector):
     city = CommuteCity()
     hub = CommuteHub(None, None)
     commuter = Person.from_attributes(sex="m", age=30)
+    world.households[0].add(commuter)
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
     commuter.mode_of_transport = "public"
     world.people.people.append(commuter)
@@ -281,7 +282,6 @@ def test__clear_world(sim: Simulator):
         if group_name in ["household_visits", "care_home_visits"]:
             continue
         grouptype = getattr(sim.world, group_name)
-        print(group_name)
         for group in grouptype.members:
             for subgroup in group.subgroups:
                 assert len(subgroup.people) == 0
@@ -354,38 +354,10 @@ def test__move_people_to_commute(sim: Simulator):
     assert n_commuters > 0
     sim.clear_world()
 
-
-def test__kid_at_home_is_supervised(sim: Simulator, selector):
-    kids_at_school = []
-    for person in sim.world.people.members:
-        if person.primary_activity is not None and person.age < 15:
-            kids_at_school.append(person)
-
-    for kid in kids_at_school:
-
-        selector.infect_person_at_time(kid, 0.0)
-        kid.health_information.infection.symptoms.tag = getattr(SymptomTag, "severe")
-        kid.health_information.infection.symptoms.tag = SymptomTag.severe
-    sim.activity_manager.move_people_to_active_subgroups(
-        ["primary_activity", "residence"]
-    )
-
-    for kid in kids_at_school:
-        assert kid in kid.residence.people
-        guardians_at_home = [
-            person for person in kid.residence.group.people if person.age >= 18
-        ]
-        assert len(guardians_at_home) != 0
-
-    sim.clear_world()
-
-
-
-
 def test__bury_the_dead(sim: Simulator):
     dummy_person = sim.world.people.members[0]
+    sim.interaction.selector.infect_person_at_time(dummy_person, 0.0)
     sim.bury_the_dead(dummy_person, 0.0)
-
     assert dummy_person in sim.world.cemeteries.members[0].people
     assert dummy_person.health_information.dead
     assert dummy_person.health_information.infection is None
