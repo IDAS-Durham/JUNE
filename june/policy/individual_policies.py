@@ -46,7 +46,7 @@ class IndividualPolicies(PolicyCollection):
                             if guardian is not None:
                                 if guardian.busy:
                                     for subgroup in guardian.subgroups.iter():
-                                        if guardian in subgroup:
+                                        if subgroup is not None and guardian in subgroup:
                                             subgroup.remove(guardian)
                                             break
                                 guardian.residence.append(guardian)
@@ -93,7 +93,6 @@ class StayHome(IndividualPolicy):
 class SevereSymptomsStayHome(StayHome):
 
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
-        print(person)
         return (
             person.health_information is not None
             and person.health_information.tag is SymptomTag.severe

@@ -265,7 +265,6 @@ class Leisure:
         if person.residence.group.spec != "household":
             return
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
-        print(prob_age_sex)
         if self.get_random_number() < prob_age_sex["does_activity"]:
             activity_idx = random_choice_numba(
                 arr=np.arange(0, len(prob_age_sex["activities"])),
