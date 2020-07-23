@@ -15,9 +15,7 @@ class InteractionPolicy(Policy):
         self.policy_type = "interaction"
 
 class InteractionPolicies(PolicyCollection):
-    def __init__(self, policies: List[InteractionPolicy]):
-        super().__init__(policies=policies)
-        self.policy_type = "interaction"
+    policy_type = "interaction"
 
     def apply(self, date: datetime, interaction: Interaction):
         # order matters, first deactivate all policies that expire in this day.
@@ -58,11 +56,13 @@ class SocialDistancing(InteractionPolicy):
         - Implement structure for people to adhere to social distancing with a certain compliance
         - Check per group in config file
         """
+        print(date)
         if self.end_time == date:  # deactivate policy, restore betas.
             for key, value in self.original_betas.items():
                 interaction.beta[key] = value
 
         if self.start_time == date:  # activate policy, save current betas.
+            print("changing...")
             for key, value in self.beta_factors.items():
                 self.original_betas[key] = interaction.beta[key]
                 interaction.beta[key] = interaction.beta[key] * value

@@ -33,7 +33,6 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_seed: Optional["InfectionSeed"] = None,
         save_path: str = "results",
-        output_filename: str = "logger.hdf5",
         light_logger: bool = False,
     ):
         """
@@ -52,8 +51,8 @@ class Simulator:
         self.infection_seed = infection_seed
         self.light_logger = light_logger
         self.timer = timer
-        if not self.world.box_mode:
-            self.logger = Logger(save_path=save_path, file_name=output_filename)
+        if not self.world.box_mode and save_path is not None:
+            self.logger = Logger(save_path=save_path)
         else:
             self.logger = None
 
@@ -244,7 +243,7 @@ class Simulator:
                 self.recover(person, time)
             elif health_information.is_dead:
                 self.bury_the_dead(person, time)
-        if self.logger:
+        if self.logger is not None:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )

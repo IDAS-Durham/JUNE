@@ -81,22 +81,6 @@ class Policy(ABC):
         return self.start_time <= date < self.end_time
 
 
-class PolicyCollection(ABC):
-    def __init__(self, policies: List[Policy]):
-        """
-        A collection of like policies active on the same date
-        """
-        self.policies = policies
-
-    @classmethod
-    def get_active_policies(cls, policies: Policies, date: datetime):
-        policies = policies.get_active_policies_for_type(
-            policy_type=cls.policy_type, date=date
-        )
-        return cls(policies)
-
-    def apply(self):
-        raise NotImplementedError()
 
 
 class Policies:
@@ -133,3 +117,20 @@ class Policies:
 
     def __iter__(self):
         return iter(self.policies)
+
+class PolicyCollection(ABC):
+    def __init__(self, policies: List[Policy]):
+        """
+        A collection of like policies active on the same date
+        """
+        self.policies = policies
+
+    @classmethod
+    def get_active_policies(cls, policies: Policies, date: datetime):
+        policies = policies.get_active_policies_for_type(
+            policy_type=cls.policy_type, date=date
+        )
+        return cls(policies)
+
+    def apply(self):
+        raise NotImplementedError()
