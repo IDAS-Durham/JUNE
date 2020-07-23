@@ -302,3 +302,4 @@ class CloseCompanies(SkipActivity):
                 if np.random.rand() > self.random_work_probability:
                     return True
         return False
+

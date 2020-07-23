@@ -620,3 +620,21 @@ class TestQuarantine:
         )
         worker.health_information = None
         sim.clear_world()
+
+def test__kid_at_home_is_supervised(setup_policy_world, selector):
+    world, pupil, student, worker, sim = setup_policy_world
+    policies = Policies([SevereSymptomsStayHome()])
+    sim.activity_manager.policies = policies
+    assert pupil.primary_activity is not None
+    infect_person(pupil, selector, "severe")
+    assert pupil.health_information.tag == SymptomTag.severe
+    sim.activity_manager.move_people_to_active_subgroups(
+        ["primary_activity", "residence"]
+    )
+    assert pupil in pupil.residence.people
+    guardians_at_home = [
+        person for person in pupil.residence.group.people if person.age >= 18
+    ]
+    assert len(guardians_at_home) != 0
+    sim.clear_world()
+
