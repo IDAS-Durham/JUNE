@@ -12,3 +12,14 @@ social_distancing:
           household: 0.5
           shelter: 0.5
 
+hospitalisation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+isolation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  testing_mean_time: 3
+  testing_std_time: 1
+  n_quarantine_days: 7
+
