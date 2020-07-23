@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import h5py
 import time
+import yaml
 
 from june import paths
 from june.demography import Person
@@ -222,7 +223,7 @@ class Demography:
 
     def generate_comorbidity(self, person):
         if self.comorbidity_data is not None:
-            age, age_ranges, config = self.comorbidity_data
+            ages, age_ranges, config = self.comorbidity_data
             config_index = 0
             for idx, i in enumerate(ages):
                 if person.age <= i:
@@ -240,6 +241,7 @@ class Demography:
                 comorbidities.append(comorbidity)
                 probs.append(config_to_check[comorbidity])
             probs.append(1-np.sum(probs))
+            print ('Probabilities are = {}'.format(probs))
             comorbidities.append(None)
             return np.random.choice(comorbidities,1,p=probs)
         
@@ -247,7 +249,7 @@ class Demography:
             return None
         
 
-    def populate(self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=False) -> Population:
+    def populate(self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=True) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -279,7 +281,7 @@ class Demography:
                 socioecon_index=socioecon_index_value,
             )
             if comorbidity:
-                person.comorbidity = generate_comorbidity(person)
+                person.comorbidity = self.generate_comorbidity(person)
             people.append(person)  # add person to population
         return Population(people=people)
 
@@ -436,11 +438,10 @@ def _load_age_and_sex_generators(
 
     return ret
 
-def _load_comorbidity_data(
-        comorbidity_path: str = None
-):
-    if cormobidity_path is not None:
-        with open(comorbidities_path) as f:
+def _load_comorbidity_data(comorbidity_path = None):
+    print ('Comorbidity path = {}'.format(comorbidity_path))
+    if comorbidity_path is not None:
+        with open(comorbidity_path) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
             
         age_ranges = []
@@ -449,7 +450,7 @@ def _load_comorbidity_data(
             age_ranges.append(key)
             ages.append(int(key.split('-')[-1]))
         
-        return [ages, age_ranges,config] 
+        return [ages, age_ranges, config] 
         
     else:
         return None
