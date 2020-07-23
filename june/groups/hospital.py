@@ -21,8 +21,13 @@ default_data_filename = (
 )
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
 
+class MedicalFacility:
+    pass
 
-class Hospital(Group):
+class MedicalFacilities:
+    pass
+
+class Hospital(Group, MedicalFacility):
     """
     The Hospital class represents a hospital and contains information about
     its patients and workers - the latter being the usual "people".
@@ -129,7 +134,7 @@ class Hospital(Group):
     def release_as_patient(self, person):
         person.subgroups.medical_facility = None
 
-class Hospitals(Supergroup):
+class Hospitals(Supergroup, MedicalFacilities):
     def __init__(
         self,
         hospitals: List["Hospital"],

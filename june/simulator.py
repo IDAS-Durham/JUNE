@@ -9,6 +9,7 @@ from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
+from june.groups import MedicalFacilities
 from june.infection.symptom_tag import SymptomTag
 from june.infection_seed import InfectionSeed
 from june.interaction import ContactAveraging
@@ -51,6 +52,7 @@ class Simulator:
         self.infection_seed = infection_seed
         self.light_logger = light_logger
         self.timer = timer
+        self.medical_facilities = self._get_medical_facilities()
         if not self.world.box_mode and save_path is not None:
             self.logger = Logger(save_path=save_path)
         else:
@@ -148,6 +150,17 @@ class Simulator:
             person.busy = False
             person.subgroups.leisure = None
 
+    def _get_medical_facilities(self):
+        medical_facilities = []
+        for group_name in self.activity_manager.all_groups:
+            if group_name in ["care_home_visits", "household_visits"]:
+                continue
+            grouptype = getattr(self.world, group_name)
+            if grouptype is not None:
+                if isinstance(grouptype, MedicalFacilities):
+                    medical_facilities.append(grouptype)
+        return medical_facilities
+
     @staticmethod
     def check_inputs(time_config: dict):
         """
@@ -238,7 +251,11 @@ class Simulator:
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
-            medical_care_policies.apply(person=person, medical_facilities=self.world.hospitals)
+            medical_care_policies.apply(
+                person=person,
+                medical_facilities=self.medical_facilities,
+                days_from_start=self.timer.now,
+            )
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:

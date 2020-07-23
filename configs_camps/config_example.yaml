@@ -4,6 +4,7 @@ activity_to_groups:
   #primary_activity: ['schools']
   leisure: ['distribution_centers', 'communals', 'female_communals', 'pump_latrines', 'religiouss'] 
   residence: ['shelters']
+  medical_facility: ['hospitals', 'isolation_units']
 
 time:
   initial_day: '2020-05-24'
@@ -25,16 +26,16 @@ time:
           5: 13
   step_activities:
       weekday:
-          0: ['hospital', 'residence']
-          1: ['hospital', 'leisure', 'residence'] # school
-          2: ['hospital', 'leisure', 'residence'] # school
-          3: ['hospital', 'leisure', 'residence'] # school
-          4: ['hospital', 'leisure', 'residence'] # school
-          5: ['hospital', 'residence']
+          0: ['medical_facility', 'residence']
+          1: ['medical_facility', 'leisure', 'residence'] # school
+          2: ['medical_facility', 'leisure', 'residence'] # school
+          3: ['medical_facility', 'leisure', 'residence'] # school
+          4: ['medical_facility', 'leisure', 'residence'] # school
+          5: ['medical_facility', 'residence']
       weekend:
-          0: ['hospital', 'residence']
-          1: ['hospital', 'leisure', 'residence']
-          2: ['hospital', 'leisure', 'residence']
-          3: ['hospital', 'leisure', 'residence']
-          4: ['hospital', 'leisure', 'residence']
-          5: ['hospital', 'residence']
+          0: ['medical_facility', 'residence']
+          1: ['medical_facility', 'leisure', 'residence']
+          2: ['medical_facility', 'leisure', 'residence']
+          3: ['medical_facility', 'leisure', 'residence']
+          4: ['medical_facility', 'leisure', 'residence']
+          5: ['medical_facility', 'residence']

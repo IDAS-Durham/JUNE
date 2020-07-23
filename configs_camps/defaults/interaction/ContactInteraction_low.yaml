@@ -9,6 +9,7 @@ beta:
   hospital: 0.005
   household: 0.05
   shelter: 0.05
+  isolation_unit: 0.00
 
 contact_matrices:
   communal:
@@ -43,3 +44,7 @@ contact_matrices:
     contacts: [[5, 2], [2, 5]]
     proportion_physical: [[0.8, 0.3], [0.8, 0.3]]
     characteristic_time: 12
+  isolation_unit:
+    contacts: [[0,0], [0,0]]
+    proportion_physical: [[0,0], [0,0]]
+    characteristic_time: 24
