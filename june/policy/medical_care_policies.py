@@ -44,11 +44,11 @@ class Hospitalisation(MedicalCarePolicy):
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.patients
                 ]
-            elif person.health_information == SymptomTag.intensive_care:
-                person.subgroups.hospital = person.hospital.group[
+            elif person.health_information.tag == SymptomTag.intensive_care:
+                person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.icu_patients
                 ]
             else:
                 raise ValueError(
-                    f"Person with health information {person.health_information} cannot go to hospital."
+                    f"Person with health information {person.health_information.tag} cannot go to hospital."
                 )

@@ -228,10 +228,12 @@ def setup_world(dummy_world, policy_simulator):
     student.lockdown_status = None
     worker.lockdown_status = None
     policy_simulator.timer.reset()
+    policy_simulator.clear_world()
     for household in world.households:
         household.quarantine_starting_date = None
     for person in [pupil, student, worker]:
         person.health_information = None
         person.susceptibility = 1.0
         person.dead = False
+        person.subgroups.medical_facility = None
     return world, pupil, student, worker, policy_simulator
