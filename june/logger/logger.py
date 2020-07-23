@@ -9,7 +9,7 @@ from pathlib import Path
 nan_integer = -999
 
 class Logger:
-    def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
+    def __init__(self, save_path: str = "results"):
         """
         Logger used by the simulator to store the relevant information.
 
@@ -22,7 +22,7 @@ class Logger:
         """
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.save_path / file_name
+        self.file_path = self.save_path / "logger.hdf5"
         self.infection_location = []
         # Remove if exists
         try:
