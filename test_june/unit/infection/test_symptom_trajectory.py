@@ -159,8 +159,8 @@ class TestSymptoms:
             (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
             (pytest.approx(25, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
         ]
-        assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[1][0]
-        assert symptoms_trajectories.time_symptoms_onset() > 0
+        assert symptoms_trajectories.time_of_symptoms_onset() == symptoms_trajectories.trajectory[1][0]
+        assert symptoms_trajectories.time_of_symptoms_onset() > 0
         symptoms_trajectories.max_severity = 0.45
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
@@ -171,11 +171,11 @@ class TestSymptoms:
             (pytest.approx(24, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
             (pytest.approx(30, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
-        assert symptoms_trajectories.time_symptoms_onset() == symptoms_trajectories.trajectory[1][0]
-        assert symptoms_trajectories.time_symptoms_onset() > 0
+        assert symptoms_trajectories.time_of_symptoms_onset() == symptoms_trajectories.trajectory[1][0]
+        assert symptoms_trajectories.time_of_symptoms_onset() > 0
         symptoms_trajectories.max_severity = 0.05
         symptoms_trajectories.update_trajectory()
-        assert symptoms_trajectories.time_symptoms_onset() is None
+        assert symptoms_trajectories.time_of_symptoms_onset() is None
 
     def test__symptoms_progression(self):
         selector = infect.InfectionSelector(transmission_type='constant')

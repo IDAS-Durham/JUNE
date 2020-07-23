@@ -18,10 +18,7 @@ class LeisurePolicy(Policy):
         self.policy_type = "leisure"
 
 class LeisurePolicies(PolicyCollection):
-    def __init__(self, policies: List[LeisurePolicy]):
-        super().__init__(policies=policies)
-        self.policy_type = "leisure"
-
+    policy_type = "leisure"
     def apply(self, date: datetime, leisure: Leisure):
         for policy in self.policies:
             policy.apply(date=date, leisure=leisure)

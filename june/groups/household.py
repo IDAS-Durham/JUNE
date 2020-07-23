@@ -107,12 +107,15 @@ class Household(Group):
     def quarantine(self, time, quarantine_days, household_compliance):
         if self.type == "communal":
             return False
+        print("hi")
         if self.quarantine_starting_date:
+            print("really?")
             if (
                 self.quarantine_starting_date
                 < time
                 < self.quarantine_starting_date + quarantine_days
             ):
+                print("for real?")
                 return np.random.rand() < household_compliance
         return False
 
