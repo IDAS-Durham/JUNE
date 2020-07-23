@@ -56,13 +56,11 @@ class SocialDistancing(InteractionPolicy):
         - Implement structure for people to adhere to social distancing with a certain compliance
         - Check per group in config file
         """
-        print(date)
         if self.end_time == date:  # deactivate policy, restore betas.
             for key, value in self.original_betas.items():
                 interaction.beta[key] = value
 
         if self.start_time == date:  # activate policy, save current betas.
-            print("changing...")
             for key, value in self.beta_factors.items():
                 self.original_betas[key] = interaction.beta[key]
                 interaction.beta[key] = interaction.beta[key] * value
