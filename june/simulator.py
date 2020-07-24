@@ -333,8 +333,11 @@ class Simulator:
             )
             self.logger.log_hospital_characteristics(self.world.hospitals)
             self.logger.log_parameters(
-                self.interaction,self.infection_seed,self.activity_manager
+                interaction = self.interaction,
+                infection_seed = self.infection_seed,
+                activity_manager = self.activity_manager
             )
+
         for time in self.timer:
             if time > self.timer.final_date:
                 break
