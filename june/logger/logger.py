@@ -317,47 +317,52 @@ class Logger:
     
     def log_parameters(
         self,
-        interaction: "Interaction",
-        infection_seed: "InfectionSeed",
-        activity_manager: "ActivityManager"
+        interaction: "Interaction" = None,
+        infection_seed: "InfectionSeed" = None,
+        activity_manager: "ActivityManager" = None
     ):
         with h5py.File(self.file_path, "a", libver="latest") as f:
             params = f.require_group("parameters")
 
             # interaction params
-            for key,data in interaction.beta.items():
-                beta_path = f"parameters/beta/{key}"
-                f.create_dataset(beta_path,data=data)
+            if interaction is not None:
+                for key,data in interaction.beta.items():
+                    beta_path = f"parameters/beta/{key}"
+                    f.create_dataset(beta_path,data=data)
 
-            f.create_dataset("parameters/alpha_physical",data=interaction.alpha_physical)
+                f.create_dataset("parameters/alpha_physical",data=interaction.alpha_physical)
 
-            for key,data in interaction.contact_matrices.items():
-                dset_path = f'parameters/contact_matrices/{key}'
-                f.create_dataset(dset_path,data=data)
+                for key,data in interaction.contact_matrices.items():
+                    dset_path = f'parameters/contact_matrices/{key}'
+                    f.create_dataset(dset_path,data=data)
 
-            # selector params
-            f.create_dataset("parameters/asymptomatic_ratio",
-                data=interaction.selector.health_index_generator.asymptomatic_ratio) # 
-            f.create_dataset("parameters/seed_strength",data=infection_seed.seed_strength)
+                # selector params
+                f.create_dataset("parameters/asymptomatic_ratio",
+                    data=interaction.selector.health_index_generator.asymptomatic_ratio) #
+
+            if infection_seed is not None:
+                f.create_dataset("parameters/seed_strength",data=infection_seed.seed_strength)
 
             # policies
-            policy_types = defaultdict(int)
-            for pol in activity_manager.policies.policies:
-                policy_types[pol.get_spec()] +=1 # How many of each type of policy?
+            if activity_manager is not None:
+                if activity_manager.policies:
+                    policy_types = defaultdict(int)
+                    for pol in activity_manager.policies.policies:
+                        policy_types[pol.get_spec()] +=1 # How many of each type of policy?
 
-            for pol in activity_manager.policies.policies:
-                pol_spec = pol.get_spec()
-                n_instances = policy_types[pol_spec]
+                    for pol in activity_manager.policies.policies:
+                        pol_spec = pol.get_spec()
+                        n_instances = policy_types[pol_spec]
 
-                if n_instances > 1:
-                    for i in range(1,n_instances+1):
-                        policy_path = f"parameters/policies/{pol_spec}/{i}"
-                        # Loop through until we find a path that doesn't exist, then make it
-                        if policy_path not in f:
-                            break 
-                else:
-                    i = None
-                    policy_path = f"parameters/policies/{pol_spec}"
+                        if n_instances > 1:
+                            for i in range(1,n_instances+1):
+                                policy_path = f"parameters/policies/{pol_spec}/{i}"
+                                # Loop through until we find a path that doesn't exist, then make it
+                                if policy_path not in f:
+                                    break 
+                        else:
+                            i = None
+                            policy_path = f"parameters/policies/{pol_spec}"
 
-                self.unpack_dict(f,pol.__dict__,policy_path,depth=0)
+                        self.unpack_dict(f,pol.__dict__,policy_path,depth=0)
 

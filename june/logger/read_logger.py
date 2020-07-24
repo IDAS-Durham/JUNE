@@ -478,7 +478,7 @@ class ReadLogger:
                 dset_path = f'{base_path}/{obj_name}'
                 self.repack_dict(
                     hdf5_obj,output_dict[output_name],dset_path,depth=depth+1,max_depth=max_depth
-                )
+                ) # Recursion!
 
     def get_parameters(
         self,
