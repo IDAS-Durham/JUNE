@@ -8,8 +8,10 @@ import pytest
 import june.infection.symptoms
 import june.interaction as inter
 from june import paths
-from june.demography.geography import Geography
-from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries
+from june.demography.geography import Geography, Areas, SuperAreas
+from june.groups import *
+from june.groups.leisure import *
+from june.demography import Person, Population
 from june.infection import Infection
 from june.infection import InfectionSelector
 from june.infection import infection as infect
@@ -17,7 +19,7 @@ from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
 from june.simulator import Simulator
 from june.simulator_box import SimulatorBox
-from june.world import generate_world_from_geography
+from june.world import generate_world_from_geography, World
 
 constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 
@@ -143,3 +145,95 @@ def make_super_areas():
     geo.care_homes = CareHomes.for_geography(geo)
     world = generate_world_from_geography(geo, include_households=True)
     return world
+
+# policy dummy world
+@pytest.fixture(name="dummy_world", scope="session")
+def make_dummy_world():
+    g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
+    super_area = g.super_areas.members[0]
+    company = Company(super_area=super_area, n_workers_max=100, sector="Q")
+    school = School(
+        coordinates=super_area.coordinates,
+        n_pupils_max=100,
+        age_min=4,
+        age_max=10,
+        sector="primary",
+    )
+    household = Household()
+    household.area = super_area.areas[0]
+    hospital = Hospital(
+        n_beds=40,
+        n_icu_beds=5,
+        super_area=super_area.name,
+        coordinates=super_area.coordinates,
+    )
+    worker = Person.from_attributes(age=40)
+    worker.area = super_area
+    household.add(worker, subgroup_type=household.SubgroupType.adults)
+    worker.sector = "Q"
+    company.add(worker)
+
+    pupil = Person.from_attributes(age=6)
+    pupil.area = super_area
+    household.add(pupil, subgroup_type=household.SubgroupType.kids)
+    household.area = super_area
+    school.add(pupil)
+
+    student = Person.from_attributes(age=21)
+    student.area = super_area
+    household.add(student, subgroup_type=household.SubgroupType.adults)
+    university = University(coordinates=super_area.coordinates, n_students_max=100,)
+    university.add(student)
+
+    world = World()
+    world.schools = Schools([school])
+    world.hospitals = Hospitals([hospital])
+    world.households = Households([household])
+    world.universities = Universities([])
+    world.companies = Companies([company])
+    world.universities = Universities([university])
+    world.people = Population([pupil, student, worker])
+    world.areas = Areas([super_area.areas[0]])
+    world.super_areas = SuperAreas([super_area])
+    cinema = Cinema()
+    cinema.coordinates = super_area.coordinates
+    world.cinemas = Cinemas([cinema])
+    pub = Pub()
+    pub.coordinates = super_area.coordinates
+    world.pubs = Pubs([pub])
+    grocery = Grocery()
+    grocery.coordinates = super_area.coordinates
+    world.groceries = Groceries([grocery])
+    return world
+
+@pytest.fixture(name="policy_simulator", scope="session")
+def make_policy_simulator(dummy_world, interaction):
+    config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
+    sim = Simulator.from_file(
+        dummy_world,
+        interaction,
+        config_filename=config_name,
+        save_path = None,
+        policies=None,
+        leisure=None,
+    )
+    return sim
+
+@pytest.fixture(name="setup_policy_world")
+def setup_world(dummy_world, policy_simulator):
+    world = dummy_world
+    pupil = world.people[0]
+    student = world.people[1]
+    worker  = world.people[2]
+    student.lockdown_status = None
+    worker.lockdown_status = None
+    policy_simulator.timer.reset()
+    policy_simulator.clear_world()
+    for household in world.households:
+        household.quarantine_starting_date = None
+    for person in [pupil, student, worker]:
+        person.health_information = None
+        person.susceptibility = 1.0
+        person.dead = False
+        person.subgroups.medical_facility = None
+    return world, pupil, student, worker, policy_simulator
