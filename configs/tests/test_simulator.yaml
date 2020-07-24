@@ -5,6 +5,7 @@ activity_to_groups:
   leisure: ['pubs', 'cinemas', 'groceries', 'household_visits', "care_home_visits"] 
   residence: ['households', 'care_homes']
   commute: ['commuteunits', 'commutecityunits']
+  medical_facility: ['hospitals']
 
 time:
   total_days: 10
@@ -17,8 +18,8 @@ time:
           0: 24
   step_activities:
       weekday:
-          0: ['hospital', 'commute', 'residence'] 
-          1: ['hospital', 'primary_activity', 'residence']
+          0: ['medical_facility', 'commute', 'residence'] 
+          1: ['medical_facility', 'primary_activity', 'residence']
       weekend:
-          0: ['hospital', 'leisure', 'residence']
+          0: ['medical_facility', 'leisure', 'residence']
 

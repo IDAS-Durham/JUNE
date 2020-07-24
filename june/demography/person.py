@@ -11,7 +11,7 @@ from june.commute import ModeOfTransport
 class Activities(dataobject):
     residence: None
     primary_activity: None
-    hospital: None
+    medical_facility: None
     commute: None
     rail_travel: None
     leisure: None
@@ -20,7 +20,9 @@ class Activities(dataobject):
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
 
+
 person_ids = count()
+
 
 class Person(dataobject):
     _id = count()
@@ -50,7 +52,13 @@ class Person(dataobject):
 
     @classmethod
     def from_attributes(
-        cls, sex="f", age=27, ethnicity=None, socioecon_index=None, id=None, comorbidity=None
+        cls,
+        sex="f",
+        age=27,
+        ethnicity=None,
+        socioecon_index=None,
+        id=None,
+        comorbidity=None,
     ):
         if id is None:
             id = next(Person._id)
@@ -93,8 +101,8 @@ class Person(dataobject):
         return self.subgroups.primary_activity
 
     @property
-    def hospital(self):
-        return self.subgroups.hospital
+    def medical_facility(self):
+        return self.subgroups.medical_facility
 
     @property
     def commute(self):
@@ -114,12 +122,16 @@ class Person(dataobject):
 
     @property
     def hospitalised(self):
-        if (
-            self.hospital is not None
-            and self.hospital.subgroup_type == self.hospital.group.SubgroupType.patients
-        ):
-            return True
-        return False
+        try:
+            return all(
+                [
+                    self.medical_facility.group.spec == "hospital",
+                    self.medical_facility.subgroup_type
+                    == self.medical_facility.group.SubgroupType.patients,
+                ]
+            )
+        except AttributeError:
+            return False
 
     @property
     def intensive_care(self):

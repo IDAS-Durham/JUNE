@@ -42,7 +42,7 @@ def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
 @fixture(name="leisure")
 def make_leisure(world_visits):
     leisure = generate_leisure_for_world(["household_visits"], world_visits)
-    leisure.generate_leisure_probabilities_for_timestep(0.1, True, [])
+    leisure.generate_leisure_probabilities_for_timestep(0.1, True)
     return leisure
 
 
