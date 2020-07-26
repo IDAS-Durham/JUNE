@@ -115,6 +115,11 @@ class InfectionSeed:
                 (self.msoa_region.region == "North East")
                 | (self.msoa_region.region == "Yorkshire and The Humber")
             ]
+        elif "Midlands" in region:
+            msoa_region_filtered = self.msoa_region[
+                (self.msoa_region.region == "West Midlands")
+                | (self.msoa_region.region == "East Midlands")
+            ]
         else:
             msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
         filter_region = list(
