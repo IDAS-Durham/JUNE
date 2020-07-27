@@ -3,71 +3,53 @@ import time
 from june.world import generate_world_from_hdf5
 from june.hdf5_savers import load_geography_from_hdf5
 from june.demography.geography import Geography
-from june.interaction import ContactAveraging
+from june.interaction import Interaction, ContactAveraging
 from june.infection import Infection
-from june.infection.symptoms import SymptomsConstant
+from june.infection.health_index import HealthIndexGenerator
 from june.infection.transmission import TransmissionConstant
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
-from june.groups.leisure import Cinemas, Pubs, Groceries
+from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
-from june.seed import Seed
+from june.infection_seed import InfectionSeed
+from june.policy import Policies
 from june import paths
 from june.infection.infection import InfectionSelector
 from june.groups.commute import *
 
-world_file = "world.hdf5"
+world_file = "./tests.hdf5"
+config_path = "./config.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
-geography = load_geography_from_hdf5(world_file)
 
-world.pubs = Pubs.for_geography(geography)
-world.cinemas = Cinemas.for_geography(geography)
-world.groceries = Groceries.for_super_areas(geography.super_areas)
-print("leisure good")
+# regenerate lesiure
+leisure = generate_leisure_for_config(world, config_path)
 
-#cemeteries
-world.cemeteries = Cemeteries()
-
-# commute
-world.initialise_commuting()
-print("commute OK")
-######
+# health index and infection selecctor 
+health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
 # interaction
-# select path to infection configuration
-selector = InfectionSelector.from_file()
-interaction = ContactAveraging.from_file(selector=selector)
-
-print("interaction OK")
+interaction = ContactAveraging.from_file(selector=infection_selector)
 
 # initial infection seeding
-seed = Seed.from_file(super_areas=world.super_areas, 
-        selector=selector,)
-# two options, randomly, or one specific area.
+infection_seed = InfectionSeed(
+    world.super_areas, infection_selector,
+)
 
-# 1. specific area
-#seed_area = "E02000001" # area to start seed
-#for super_area in world.super_areas:
-#    if super_area.name == seed_area:
-#        print("super area found")
-#        break
-#seed.infect_super_area(super_area, 99) # seed 99 infections in seed_area
+infection_seed.unleash_virus(50) # number of initial cases
 
-# 2. randomly distribute
-# this will put 500 infected randomly
+# policies
+policies = Policies.from_file()
 
-print("seeding OK")
-
-# path to main simulation config file
-CONFIG_PATH = "../configs/config_example.yaml"
+# create simulator
 
 simulator = Simulator.from_file(
-    world,
-    interaction,
-    selector,
-    seed=seed,
-    config_filename=CONFIG_PATH,
+    world=world,
+    policies=policies,
+    interaction=interaction,
+    leisure=leisure,
+    config_filename=config_path,
     save_path="results",
 )
 print("simulator ready to go")
