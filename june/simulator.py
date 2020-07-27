@@ -130,6 +130,7 @@ class Simulator:
             world=world,
             activity_manager=activity_manager,
             timer=timer,
+            infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
             interaction=interaction,
@@ -287,7 +288,6 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
-        n_people = 0
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -301,6 +301,7 @@ class Simulator:
                         self.logger.accumulate_infection_location(
                             group.spec, n_infected
                         )
+                        # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in list(chain(*int_group.infector_ids)):
                             infector = self.world.people[infector_id]
@@ -316,7 +317,7 @@ class Simulator:
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-
+        # infect people
         if self.infection_selector:
             for person in people_to_infect:
                 self.infection_selector.infect_person_at_time(person, self.timer.now)

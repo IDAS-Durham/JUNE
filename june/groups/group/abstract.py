@@ -10,11 +10,6 @@ class AbstractGroup(ABC):
 
     @property
     @abstractmethod
-    def people(self):
-        pass
-
-    @property
-    @abstractmethod
     def susceptible(self):
         pass
 
