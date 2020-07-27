@@ -194,6 +194,7 @@ def make_dummy_world():
     world.universities = Universities([university])
     world.people = Population([pupil, student, worker])
     world.areas = Areas([super_area.areas[0]])
+    world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
