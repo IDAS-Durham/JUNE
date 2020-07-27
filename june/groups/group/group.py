@@ -15,8 +15,7 @@ from .subgroup import Subgroup
 logger = logging.getLogger(__name__)
 
 
-# class Group(AbstractGroup):
-class Group:
+class Group(AbstractGroup):
     """
     A group of people enjoying social interactions.  It contains three lists,
     all people in the group, the healthy ones and the infected ones (we may
@@ -45,7 +44,7 @@ class Group:
 
         default = 0
 
-    __slots__ = ("id", "subgroups", "spec", "size", "contact_matrices")
+    __slots__ = ("id", "subgroups", "spec")
 
     __id_generators = defaultdict(count)
 
@@ -66,13 +65,8 @@ class Group:
         """
         self.id = self._next_id()
         self.spec = self.get_spec()
-        self.size = 0
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
-        self.contact_matrices = {
-            "contacts": np.array([[1]]),
-            "proportion_physical": np.array([[0]]),
-        }
 
     @property
     def name(self) -> str:
@@ -207,4 +201,3 @@ class Group:
     def clear(self):
         for subgroup in self.subgroups:
             subgroup.clear()
-        self.size = 0
