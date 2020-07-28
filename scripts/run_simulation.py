@@ -40,7 +40,7 @@ infection_seed = InfectionSeed(
 infection_seed.unleash_virus(50) # number of initial cases
 
 # policies
-policies = Policies.from_file("./policy_test.yaml")
+policies = Policies.from_file()
 
 # create simulator
 
