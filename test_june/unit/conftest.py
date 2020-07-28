@@ -9,6 +9,7 @@ import june.infection.symptoms
 import june.interaction as inter
 from june import paths
 from june.demography.geography import Geography, Areas, SuperAreas
+from june.commute import ModeOfTransport
 from june.groups import *
 from june.groups.leisure import *
 from june.demography import Person, Population
@@ -185,6 +186,11 @@ def make_dummy_world():
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
 
+    commuter = Person.from_attributes(sex="m", age=30)
+    commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
+    commuter.mode_of_transport = "public"
+    household.add(commuter)
+
     world = World()
     world.schools = Schools([school])
     world.hospitals = Hospitals([hospital])
@@ -192,6 +198,7 @@ def make_dummy_world():
     world.universities = Universities([])
     world.companies = Companies([company])
     world.universities = Universities([university])
+    world.care_homes = CareHomes([CareHome()])
     world.people = Population([pupil, student, worker])
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
@@ -205,6 +212,20 @@ def make_dummy_world():
     grocery = Grocery()
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
+    # commute 
+    city = CommuteCity()
+    hub = CommuteHub(None, None)
+    world.people.people.append(commuter)
+    city.commutehubs = [hub]
+    world.commutehubs = CommuteHubs([city])
+    world.commutehubs.members = [hub]
+    world.commutecities = CommuteCities()
+    world.commutecities.members = [city]
+    world.commutehubs[0].add(commuter)
+    world.commuteunits = CommuteUnits(world.commutehubs.members)
+    world.commuteunits.init_units()
+    world.commutecityunits = CommuteCityUnits(world.commutecities)
+    world.cemeteries = Cemeteries()
     return world
 
 @pytest.fixture(name="policy_simulator", scope="session")

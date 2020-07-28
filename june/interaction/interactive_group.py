@@ -65,26 +65,3 @@ class InteractiveGroup:
             self.school_years = group.years
         else:
             self.school_years = None
-
-
-if __name__ == "__main__":
-    import time
-    from june.groups import Household
-    from june.demography import Person
-    from june.infection import InfectionSelector
-
-    selector = InfectionSelector.from_file()
-    household = Household()
-    i = 0
-    for i in range(0, 10):
-        p = Person.from_attributes()
-        household.add(p, subgroup_type=i % len(household.subgroups))
-        if i % 2 == 0:
-            selector.infect_person_at_time(p, 0)
-            p.health_information.update_health_status(5, 5)
-    # household.clear()
-    t1 = time.time()
-    for _ in range(300_000):
-        interactive_group = InteractiveGroup(household)
-    t2 = time.time()
-    print(f"took {t2-t1} seconds")
