@@ -117,7 +117,7 @@ def create_simulator(world, interaction, infection_constant):
 @pytest.fixture(name="world_box", scope="session")
 def create_box_world():
     geography = Geography.from_file(
-        {"super_area": ["E02001697"]}
+        {"area": ["E00000697"]}
     )
     return generate_world_from_geography(geography, box_mode=True)
 

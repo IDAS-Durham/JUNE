@@ -298,9 +298,10 @@ class Simulator:
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
-                        self.logger.accumulate_infection_location(
-                            group.spec, n_infected
-                        )
+                        if self.logger is not None:
+                            self.logger.accumulate_infection_location(
+                                group.spec, n_infected
+                            )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in list(chain(*int_group.infector_ids)):
