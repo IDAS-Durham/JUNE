@@ -32,7 +32,7 @@ from june.groups import (
     CommuteCity,
     CommuteCities,
     CommuteUnits,
-    CommuteCityUnits
+    CommuteCityUnits,
 )
 from june.groups import (
     Hospitals,
@@ -58,42 +58,34 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
 def test__full_run(dummy_world, selector):
-   world = dummy_world
-   leisure_instance = leisure.generate_leisure_for_world(
-       world=world, list_of_leisure_groups=["pubs", "cinemas", "groceries"]
-   )
-   city = CommuteCity()
-   hub = CommuteHub(None, None)
-   commuter = Person.from_attributes(sex="m", age=30)
-   world.households[0].add(commuter)
-   commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
-   commuter.mode_of_transport = "public"
-   world.people.people.append(commuter)
-   city.commutehubs = [hub]
-   world.commutehubs = CommuteHubs([city])
-   world.commutehubs.members = [hub]
-   world.commutecities = CommuteCities()
-   world.commutecities.members = [city]
-   world.commutehubs[0].add(commuter)
-   world.commuteunits = CommuteUnits(world.commutehubs.members)
-   world.commuteunits.init_units()
-   world.commutecityunits = CommuteCityUnits(world.commutecities)
-   world.cemeteries = Cemeteries()
-   care_home = CareHome()
-   world.care_homes = CareHomes([care_home])
-   leisure_instance.distribute_social_venues_to_households(world.households)
-   interaction = Interaction.from_file()
-   interaction.selector = selector
-   policies = Policies.from_file()
-   sim = Simulator.from_file(
-       world=world,
-       interaction=interaction,
-       infection_selector = selector,
-       config_filename=test_config,
-       leisure=leisure_instance,
-       policies=policies,
-       save_path = None
-   )
-   seed = InfectionSeed(sim.world.super_areas, selector,)
-   seed.unleash_virus(1)
-   sim.run()
+    world = dummy_world
+    # restore health status of people
+    for person in world.people:
+        person.health_information = None
+        person.susceptibility = 1.0
+        person.dead = False
+    leisure_instance = leisure.generate_leisure_for_world(
+        world=world,
+        list_of_leisure_groups=[
+            "pubs",
+            "cinemas",
+            "groceries",
+            "household_visits",
+            "care_home_visits",
+        ],
+    )
+    leisure_instance.distribute_social_venues_to_households(world.households)
+    interaction = Interaction.from_file()
+    policies = Policies.from_file()
+    sim = Simulator.from_file(
+        world=world,
+        interaction=interaction,
+        infection_selector=selector,
+        config_filename=test_config,
+        leisure=leisure_instance,
+        policies=policies,
+        save_path=None,
+    )
+    seed = InfectionSeed(sim.world.super_areas, selector)
+    seed.unleash_virus(1)
+    sim.run()

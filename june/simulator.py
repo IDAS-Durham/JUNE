@@ -1,6 +1,7 @@
 import logging
 from itertools import chain
 from typing import Optional
+import numpy as np
 
 import yaml
 
@@ -55,6 +56,7 @@ class Simulator:
         self.infection_seed = infection_seed
         self.light_logger = light_logger
         self.timer = timer
+        self.sort_people_world()
         if not self.world.box_mode and save_path is not None:
             self.logger = Logger(save_path=save_path)
         else:
@@ -135,6 +137,14 @@ class Simulator:
             save_path=save_path,
             interaction=interaction,
         )
+
+    def sort_people_world(self):
+        """
+        Sorts world population by id so it is easier to find them later.
+        """
+        people_ids = np.array([person.id for person in self.world.people])
+        ids_sorted_idx = np.argsort(people_ids)
+        self.world.people.people = list(np.array(self.world.people)[ids_sorted_idx])
 
     def clear_world(self):
         """
@@ -288,6 +298,7 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
+        first_person_id = self.world.people[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -305,14 +316,15 @@ class Simulator:
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in list(chain(*int_group.infector_ids)):
-                            infector = self.world.people[infector_id]
+                            infector = self.world.people[infector_id - first_person_id]
+                            assert infector.id == infector_id
                             infector.health_information.number_of_infected += (
                                 n_infected
                                 * infector.health_information.infection.transmission.probability
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.people[idx] for idx in infected_ids]
+        people_to_infect = [self.world.people[idx-first_person_id] for idx in infected_ids]
         if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -320,7 +332,8 @@ class Simulator:
             )
         # infect people
         if self.infection_selector:
-            for person in people_to_infect:
+            for i, person in enumerate(people_to_infect):
+                assert infected_ids[i] == person.id
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
