@@ -104,16 +104,16 @@ class Household(Group):
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
 
-    def quarantine(self, time, quarantine_days, household_complacency):
+    def quarantine(self, time, quarantine_days, household_compliance):
         if self.type == "communal":
             return False
-        if self.quarantine_starting_date and self.household_complacency < household_complacency:
+        if self.quarantine_starting_date:
             if (
                 self.quarantine_starting_date
                 < time
                 < self.quarantine_starting_date + quarantine_days
             ):
-                return True
+                return np.random.rand() < household_compliance
         return False
 
 

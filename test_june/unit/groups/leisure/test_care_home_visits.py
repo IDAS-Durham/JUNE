@@ -72,7 +72,7 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
 def make_leisure(world_visits):
     leisure = generate_leisure_for_world(["care_home_visits"], world_visits)
     leisure.distribute_social_venues_to_households(world_visits.households)
-    leisure.generate_leisure_probabilities_for_timestep(0.1, True, [])
+    leisure.generate_leisure_probabilities_for_timestep(0.1, True)
     return leisure
 
 
