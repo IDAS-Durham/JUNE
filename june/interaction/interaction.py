@@ -71,9 +71,9 @@ def compute_effective_transmission(
 @nb.jit(nopython=True)
 def infect_susceptibles(effective_transmission_probability, susceptible_ids):
     infected_ids = []
-    for i in susceptible_ids:
+    for id in susceptible_ids:
         if np.random.rand() < effective_transmission_probability:
-            infected_ids.append(i)
+            infected_ids.append(id)
     return infected_ids
 
 
