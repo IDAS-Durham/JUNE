@@ -367,8 +367,8 @@ class Demography:
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
         ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
         socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
-        m_comorbidity_path = config_path / "defaults/distributors/uk_male_comorbidities.csv"
-        f_comorbidity_path = config_path / "defaults/distributors/uk_female_comorbidities.csv"
+        m_comorbidity_path = data_path / "uk_male_comorbidities.csv"
+        f_comorbidity_path = data_path / "uk_female_comorbidities.csv"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path,
             female_fraction_path,
