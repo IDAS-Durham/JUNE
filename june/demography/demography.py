@@ -223,28 +223,32 @@ class Demography:
 
     def generate_comorbidity(self, person):
         if self.comorbidity_data is not None:
-            ages, age_ranges, config = self.comorbidity_data
-            config_index = 0
+
+            male_co = self.comorbidity_data[0]
+            female_co = self.comorbidity_data[1]
+            ages = np.array(male_co.columns).astype(int)
+            
+            column_index = 0
             for idx, i in enumerate(ages):
                 if person.age <= i:
                     break
                 else:
-                    config_index = idx
-            if config_index !=0:
-                config_index += 1
+                    column_index = idx
+            if column_index !=0:
+                column_index += 1
 
-
-            config_to_check = config[person.sex][age_ranges[config_index]]
-            comorbidities = []
-            probs = []
-            for comorbidity in config_to_check:
-                comorbidities.append(comorbidity)
-                probs.append(config_to_check[comorbidity])
-            probs.append(1-np.sum(probs))
-            print ('Probabilities are = {}'.format(probs))
-            comorbidities.append(None)
-            return np.random.choice(comorbidities,1,p=probs)
-        
+            if person.sex == 'm':
+                comorbidity = np.random.choice(list(male_co.index),1,p=list(male_co[columns_index]))
+                if comorbidity == 'no_condition':
+                    comorbidity = None
+                return comorbidity
+            
+            if person.sex == 'f':
+                comorbidity = np.random.choice(list(female_co.index),1,p=list(female_co[columns_index]))
+                if comorbidity == 'no_condition':
+                    comorbidity = None
+                return comorbidity
+          
         else:
             return None
         
@@ -363,7 +367,8 @@ class Demography:
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
         ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
         socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
-        comorbidity_path = config_path / "defaults/distributors/uk_comorbidities_distributor.yaml"
+        m_comorbidity_path = config_path / "defaults/distributors/uk_male_comorbidities.csv"
+        f_comorbidity_path = config_path / "defaults/distributors/uk_female_comorbidities.csv"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path,
             female_fraction_path,
@@ -371,8 +376,9 @@ class Demography:
             socioecon_structure_path,
             area_names,
         )
-        comorbidity_data = _load_comorbidity_data(comorbidity_path)
-        return Demography(age_sex_generators=age_sex_generators, area_names=area_names, comorbidity_data=comorbidity_data)
+        comorbidity_data = _load_comorbidity_data(m_comorbidity_path, f_comorbidity_path)
+        return Demography(age_sex_generators=age_sex_generators, area_names=area_names, \
+                          comorbidity_data=comorbidity_data)
 
 
 def _load_age_and_sex_generators(
@@ -438,20 +444,31 @@ def _load_age_and_sex_generators(
 
     return ret
 
-def _load_comorbidity_data(comorbidity_path = None):
-    print ('Comorbidity path = {}'.format(comorbidity_path))
-    if comorbidity_path is not None:
-        with open(comorbidity_path) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+def _load_comorbidity_data(m_comorbidity_path = None, f_comorbidity_path = None):
+    print ('Male comorbidity path = {}'.format(m_comorbidity_path))
+    print ('Female comorbidity path = {}'.format(f_comorbidity_path))
+    if m_comorbidity_path is not None and f_comorbidity_path is not None:
+        male_co = pd.read_csv(m_comorbidity_path)
+        female_co = pd.read_csv(f_comorbidity_path)
+
+        male_co = male_co.set_index('comorbidity')
+        female_co = female_co.set_index('comorbidity')
+
+        for column in male_co.columns:
+            m_nc = male_co[column].loc['no_condition']
+            m_norm_1 = 1 - m_nc
+            m_norm_2 = np.sum(male_co[column]) - m_nc
             
-        age_ranges = []
-        ages = []
-        for key in config['m']:
-            age_ranges.append(key)
-            ages.append(int(key.split('-')[-1]))
-        
-        return [ages, age_ranges, config] 
-        
+            f_nc = female_co[column].loc['no_condition']
+            f_norm_1 = 1 - f_nc
+            f_norm_2 = np.sum(female_co[column]) - f_nc
+            
+            for idx in list(male_co.index)[:-1]:
+                male_co[column].loc[idx] = male_co[column].loc[idx]/m_norm_2 * m_norm_1
+                female_co[column].loc[idx] = female_co[column].loc[idx]/f_norm_2 * f_norm_1
+
+        return [male_co, female_co]
+
     else:
         return None
 
