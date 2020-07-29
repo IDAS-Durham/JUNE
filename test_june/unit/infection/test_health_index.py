@@ -1,6 +1,8 @@
 import numpy as np
+import pytest
+from june import paths
 from june.demography import Person
-from june.infection.health_index import HealthIndexGenerator
+from june.infection.health_index import HealthIndexGenerator, convert_comorbidities_prevalence_to_dict, read_comorbidity_csv
 
 
 def test__smaller_than_one():
@@ -43,19 +45,31 @@ def test__growing_index():
 
     assert increasing_count == 0
 
+def test__parse_comorbidity_prevalence():
+    male_filename = paths.data_path / 'input/demography/uk_male_comorbidities.csv'
+    female_filename = paths.data_path / 'input/demography/uk_female_comorbidities.csv'
+    prevalence_female = read_comorbidity_csv(female_filename)
+    prevalence_male = read_comorbidity_csv(male_filename)
+    for value in prevalence_female.sum(axis=1):
+        assert value == pytest.approx(1.)
+    for value in prevalence_male.sum(axis=1):
+        assert value == pytest.approx(1.)
+
+    prevalence_dict =  convert_comorbidities_prevalence_to_dict(prevalence_female, prevalence_male)
+    assert prevalence_dict['sickle_cell']['m']['0-4'] == pytest.approx(3.92152E-05, rel=0.2)
+    assert prevalence_dict['tuberculosis']['f']['4-9'] == pytest.approx(5.99818E-05, rel=0.2)
+    assert prevalence_dict['tuberculosis']['f']['4-9'] == pytest.approx(5.99818E-05, rel=0.2)
+
 
 def test__comorbidities_effect():
-    comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_comorbidity": 1.0}
+    comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
     prevalence_reference_population = {
-        "feo": {
-            "f": {"0-10": 0.2, "10-100": 0.4},
-            "m": {"0-10": 0.6, "10-100": 0.5},
-        },
+        "feo": {"f": {"0-10": 0.2, "10-100": 0.4}, "m": {"0-10": 0.6, "10-100": 0.5},},
         "guapo": {
             "f": {"0-10": 0.1, "10-100": 0.1},
             "m": {"0-10": 0.05, "10-100": 0.2},
         },
-        "no_comorbidity": {
+        "no_condition": {
             "f": {"0-10": 0.7, "10-100": 0.5},
             "m": {"0-10": 0.35, "10-100": 0.3},
         },
@@ -66,7 +80,7 @@ def test__comorbidities_effect():
         prevalence_reference_population=prevalence_reference_population,
     )
 
-    dummy = Person.from_attributes(sex="f", age=40, )
+    dummy = Person.from_attributes(sex="f", age=40,)
     feo = Person.from_attributes(sex="f", age=40, comorbidity="feo")
     guapo = Person.from_attributes(sex="f", age=40, comorbidity="guapo")
 
@@ -79,21 +93,29 @@ def test__comorbidities_effect():
         * comorbidity_multipliers["feo"]
         + prevalence_reference_population["guapo"]["f"]["10-100"]
         * comorbidity_multipliers["guapo"]
-        + prevalence_reference_population["no_comorbidity"]["f"][
-            "10-100"
-        ]
-        * comorbidity_multipliers["no_comorbidity"]
+        + prevalence_reference_population["no_condition"]["f"]["10-100"]
+        * comorbidity_multipliers["no_condition"]
     )
     assert (
-        health_index.get_multiplier_from_reference_prevalence(prevalence_reference_population, dummy)
+        health_index.get_multiplier_from_reference_prevalence(
+            prevalence_reference_population, dummy
+        )
         == mean_multiplier_uk
     )
 
-    np.testing.assert_allclose(feo_health[:2], dummy_health[:2] * (2-comorbidity_multipliers['feo'] / mean_multiplier_uk))
-    np.testing.assert_allclose(feo_health[3:], dummy_health[3:] * comorbidity_multipliers['feo'] / mean_multiplier_uk)
     np.testing.assert_allclose(
-        guapo_health[:2], dummy_health[:2] * (2-comorbidity_multipliers['guapo'] / mean_multiplier_uk
-    ))
+        feo_health[:2],
+        dummy_health[:2] * (2 - comorbidity_multipliers["feo"] / mean_multiplier_uk),
+    )
     np.testing.assert_allclose(
-        guapo_health[3:], dummy_health[3:] * comorbidity_multipliers['guapo'] / mean_multiplier_uk
+        feo_health[3:],
+        dummy_health[3:] * comorbidity_multipliers["feo"] / mean_multiplier_uk,
+    )
+    np.testing.assert_allclose(
+        guapo_health[:2],
+        dummy_health[:2] * (2 - comorbidity_multipliers["guapo"] / mean_multiplier_uk),
+    )
+    np.testing.assert_allclose(
+        guapo_health[3:],
+        dummy_health[3:] * comorbidity_multipliers["guapo"] / mean_multiplier_uk,
     )
