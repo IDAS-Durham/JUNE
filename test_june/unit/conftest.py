@@ -6,9 +6,10 @@ import numpy as np
 import pytest
 
 import june.infection.symptoms
-import june.interaction as inter
+from june.interaction import Interaction
 from june import paths
 from june.demography.geography import Geography, Areas, SuperAreas
+from june.commute import ModeOfTransport
 from june.groups import *
 from june.groups.leisure import *
 from june.demography import Person, Population
@@ -84,16 +85,16 @@ def create_infection_constant(transmission, symptoms_constant):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    interaction = inter.ContactAveraging.from_file()
-    interaction.selector = infect.InfectionSelector.from_file(config_filename=constant_config)
+    interaction = Interaction.from_file()
+    interaction.selector = infect.InfectionSelector.from_file(
+        config_filename=constant_config
+    )
     return interaction
 
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
-    geography = Geography.from_file(
-        {"super_area": ["E02002512", "E02001697"]}
-    )
+    geography = Geography.from_file({"super_area": ["E02002512", "E02001697"]})
     return geography
 
 
@@ -109,33 +110,32 @@ def create_world(geography):
     return world
 
 
-@pytest.fixture(name="simulator", scope="session")
-def create_simulator(world, interaction, infection_constant):
-    return Simulator.from_file(world, interaction, infection_constant)
+# @pytest.fixture(name="simulator", scope="session")
+# def create_simulator(world, interaction, infection_constant, selector):
+#    return Simulator.from_file(world=world, interaction=interaction, infection_constant, infection_selector=selector)
+#
 
 
 @pytest.fixture(name="world_box", scope="session")
 def create_box_world():
-    geography = Geography.from_file(
-        {"super_area": ["E02001697"]}
-    )
+    geography = Geography.from_file({"area": ["E00000697"]})
     return generate_world_from_geography(geography, box_mode=True)
 
 
-@pytest.fixture(
-    name="selector",
-    scope="session"
-)
+@pytest.fixture(name="selector", scope="session")
 def make_selector():
     selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
-    return  InfectionSelector.from_file(config_filename=selector_file)
+    return InfectionSelector.from_file(config_filename=selector_file)
 
 
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(world_box, interaction):
+def create_simulator_box(world_box, interaction, selector):
     config_file = paths.configs_path / "config_boxmode_example.yaml"
     return SimulatorBox.from_file(
-        world_box, interaction, config_filename=config_file
+        world=world_box,
+        interaction=interaction,
+        config_filename=config_file,
+        infection_selector=selector,
     )
 
 
@@ -145,6 +145,7 @@ def make_super_areas():
     geo.care_homes = CareHomes.for_geography(geo)
     world = generate_world_from_geography(geo, include_households=True)
     return world
+
 
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
@@ -185,6 +186,11 @@ def make_dummy_world():
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
 
+    commuter = Person.from_attributes(sex="m", age=30)
+    commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
+    commuter.mode_of_transport = "public"
+    household.add(commuter)
+
     world = World()
     world.schools = Schools([school])
     world.hospitals = Hospitals([hospital])
@@ -192,8 +198,10 @@ def make_dummy_world():
     world.universities = Universities([])
     world.companies = Companies([company])
     world.universities = Universities([university])
-    world.people = Population([pupil, student, worker])
+    world.care_homes = CareHomes([CareHome()])
+    world.people = Population([worker, pupil, student, commuter])
     world.areas = Areas([super_area.areas[0]])
+    world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
@@ -204,27 +212,43 @@ def make_dummy_world():
     grocery = Grocery()
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
+    # commute
+    city = CommuteCity()
+    hub = CommuteHub(None, None)
+    city.commutehubs = [hub]
+    world.commutehubs = CommuteHubs([city])
+    world.commutehubs.members = [hub]
+    world.commutecities = CommuteCities()
+    world.commutecities.members = [city]
+    world.commutehubs[0].add(commuter)
+    world.commuteunits = CommuteUnits(world.commutehubs.members)
+    world.commuteunits.init_units()
+    world.commutecityunits = CommuteCityUnits(world.commutecities)
+    world.cemeteries = Cemeteries()
     return world
 
+
 @pytest.fixture(name="policy_simulator", scope="session")
-def make_policy_simulator(dummy_world, interaction):
+def make_policy_simulator(dummy_world, interaction, selector):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
     sim = Simulator.from_file(
         dummy_world,
         interaction,
+        infection_selector=selector,
         config_filename=config_name,
-        save_path = None,
+        save_path=None,
         policies=None,
         leisure=None,
     )
     return sim
 
+
 @pytest.fixture(name="setup_policy_world")
 def setup_world(dummy_world, policy_simulator):
     world = dummy_world
-    pupil = world.people[0]
-    student = world.people[1]
-    worker  = world.people[2]
+    worker = world.people[0]
+    pupil = world.people[1]
+    student = world.people[2]
     student.lockdown_status = None
     worker.lockdown_status = None
     policy_simulator.timer.reset()

@@ -445,8 +445,6 @@ def _load_age_and_sex_generators(
     return ret
 
 def _load_comorbidity_data(m_comorbidity_path = None, f_comorbidity_path = None):
-    print ('Male comorbidity path = {}'.format(m_comorbidity_path))
-    print ('Female comorbidity path = {}'.format(f_comorbidity_path))
     if m_comorbidity_path is not None and f_comorbidity_path is not None:
         male_co = pd.read_csv(m_comorbidity_path)
         female_co = pd.read_csv(f_comorbidity_path)
