@@ -22,8 +22,18 @@ class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
 
     def apply(self, person: Person, medical_facilities, days_from_start: float):
-        for policy in self.policies:
-            policy.apply(person, medical_facilities, days_from_start)
+        """
+        Applies medical care policies. Hospitalisation takes preference over all.
+        """
+        hospitalisation_policies = [policy for policy in self.policies if isinstance(policy, Hospitalisation)]
+        for policy in hospitalisation_policies:
+            activates = policy.apply(person, medical_facilities, days_from_start)
+            if activates:
+                return
+        for policy in [policy for policy in self.policies if policy not in hospitalisation_policies]:
+            activates = policy.apply(person, medical_facilities, days_from_start)
+            if activates:
+                return 
 
 
 class Hospitalisation(MedicalCarePolicy):
@@ -72,3 +82,5 @@ class Hospitalisation(MedicalCarePolicy):
                     raise ValueError(
                         f"Person with health information {person.health_information.tag} cannot go to hospital."
                     )
+            return True
+        return False

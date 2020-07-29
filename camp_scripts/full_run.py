@@ -47,7 +47,8 @@ from june.groups.leisure import HouseholdVisitsDistributor
 #=============== world creation =========================#
 
 # create empty world's geography
-world = generate_empty_world({"super_area": ["CXB-219-C"]})
+#world = generate_empty_world({"super_area": ["CXB-219-C"]})
+world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -92,7 +93,7 @@ for area in world.areas:
 policies = Policies.from_file(
     camp_configs_path / "defaults/policy/policy.yaml",
     base_policy_modules=("june.policy", "camps.policy"),
-)  # no policies for now
+)
 
 # ============================================================================#
 
