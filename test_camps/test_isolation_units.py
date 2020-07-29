@@ -108,4 +108,4 @@ def test__isolation_compliance(selector):
             else:
                 assert person not in isolation_units[0].people
             isolation_units[0].clear()
-    assert np.isclose(len(go_isolation), 500, atol=10)
+    assert np.isclose(len(go_isolation), 500, rtol=0.1)

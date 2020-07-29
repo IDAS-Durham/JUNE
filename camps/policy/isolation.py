@@ -68,4 +68,4 @@ class Isolation(MedicalCarePolicy):
                         isolation_unit = isolation_units.get_closest()
                         isolation_unit.add(person)
                     else:
-                        isolation_units.refused_to_go_ids.append(person.id)
+                        isolation_units.refused_to_go_ids.add(person.id)
