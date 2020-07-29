@@ -3,7 +3,7 @@ import time
 from june.world import generate_world_from_hdf5
 from june.hdf5_savers import load_geography_from_hdf5
 from june.demography.geography import Geography
-from june.interaction import Interaction, ContactAveraging
+from june.interaction import Interaction
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.infection.transmission import TransmissionConstant
@@ -30,7 +30,7 @@ health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
 # interaction
-interaction = ContactAveraging.from_file(selector=infection_selector)
+interaction = Interaction.from_file()
 
 # initial infection seeding
 infection_seed = InfectionSeed(
@@ -49,6 +49,7 @@ simulator = Simulator.from_file(
     policies=policies,
     interaction=interaction,
     leisure=leisure,
+    infection_selector=infection_selector,
     config_filename=config_path,
     save_path="results",
 )

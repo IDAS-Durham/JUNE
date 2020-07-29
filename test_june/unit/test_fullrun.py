@@ -8,10 +8,40 @@ from june.simulator import Simulator
 from june import world
 from june.time import Timer
 from june.demography.geography import Geography
-from june.demography import Demography
-import june.interaction as inter
+from june.demography import Demography, Person
+from june.interaction import Interaction
 from june.infection import InfectionSelector
-from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Universities
+from june.commute import ModeOfTransport
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    CareHomes,
+    Cemeteries,
+    Universities,
+)
+from june.groups import (
+    Hospital,
+    School,
+    Company,
+    Household,
+    University,
+    CareHome,
+    CommuteHub,
+    CommuteHubs,
+    CommuteCity,
+    CommuteCities,
+    CommuteUnits,
+    CommuteCityUnits,
+)
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    Universities,
+    Cemeteries,
+)
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.infection import transmission as trans
 from june.infection import symptoms as sym
@@ -27,32 +57,35 @@ selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yam
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
-def test_full_run():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02004314"]})
-                
-    geography.hospitals = Hospitals.for_geography(geography)
-    geography.companies = Companies.for_geography(geography)
-    geography.schools = Schools.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
-    geography.care_homes = CareHomes.for_geography(geography)
-    geography.cemeteries = Cemeteries()
-    world = generate_world_from_geography(
-        geography, include_commute=True, include_households=True
-    )
-    world.cinemas = Cinemas.for_geography(geography)
-    world.pubs = Pubs.for_geography(geography)
-    world.groceries = Groceries.for_geography(geography)
-    leisure_instance = leisure.generate_leisure_for_config(
-        world=world, config_filename = test_config 
+def test__full_run(dummy_world, selector):
+    world = dummy_world
+    # restore health status of people
+    for person in world.people:
+        person.health_information = None
+        person.susceptibility = 1.0
+        person.dead = False
+    leisure_instance = leisure.generate_leisure_for_world(
+        world=world,
+        list_of_leisure_groups=[
+            "pubs",
+            "cinemas",
+            "groceries",
+            "household_visits",
+            "care_home_visits",
+        ],
     )
     leisure_instance.distribute_social_venues_to_households(world.households)
-    selector = InfectionSelector.from_file(config_filename=selector_config)
-    interaction = inter.ContactAveraging.from_file(selector=selector)
+    interaction = Interaction.from_file()
     policies = Policies.from_file()
-    simulator = Simulator.from_file(
-        world, interaction, config_filename=test_config, leisure=leisure_instance,
-        policies=policies
+    sim = Simulator.from_file(
+        world=world,
+        interaction=interaction,
+        infection_selector=selector,
+        config_filename=test_config,
+        leisure=leisure_instance,
+        policies=policies,
+        save_path=None,
     )
-    seed = InfectionSeed(simulator.world.super_areas, selector,)
-    seed.unleash_virus(100)
-    simulator.run()
+    seed = InfectionSeed(sim.world.super_areas, selector)
+    seed.unleash_virus(1)
+    sim.run()
