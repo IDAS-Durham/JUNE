@@ -206,9 +206,8 @@ def test__infection_is_isolated(selector):
                 break
         if infected:
             infected_households.append(household)
+    assert len(infected_households) <= 5
     simulator.run()
     for person in world.people:
-        if person.residence.group in infected_households:
-            assert person.infected or not person.susceptible
-        else:
+        if not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible

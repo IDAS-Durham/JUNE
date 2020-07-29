@@ -99,6 +99,7 @@ class InfectionSeed:
             msoa_region.drop_duplicates(),
             dates,
             seed_strength=seed_strength,
+            age_profile=age_profile,
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
