@@ -285,6 +285,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         how many units of supergroups to process at a time.
         It is advise to keep it around 1e6
     """
+    print("loading world data ...")
     geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World()
     world.areas = geography.areas
