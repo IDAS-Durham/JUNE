@@ -16,6 +16,10 @@ hospitalisation:
   start_time: 1000-01-01
   end_time: 9999-01-01
 
+severe_symptoms_stay_home:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
 isolation:
   start_time: 1000-01-01
   end_time: 9999-01-01
