@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import chain
 
-def parse_age_probabilites(age_dict: dict):
+def parse_age_probabilities(age_dict: dict):
     """
     Parses the age probability dictionaries into an array.
     """

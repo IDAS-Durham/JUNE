@@ -2,7 +2,7 @@ import numpy as np
 import yaml
 from june.infection.symptom_tag import SymptomTag
 from june import paths
-
+from june.utils.parse_probabilities import parse_age_probabilities
 from typing import Optional
 
 default_polinom_filename = paths.configs_path / "defaults/health_index_ratios.txt"
@@ -59,7 +59,7 @@ class HealthIndexGenerator:
         poli_deaths: dict,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
-        comorbidity_prevalences: Optional[dict] = None,
+        prevalence_reference_population: Optional[dict] = None,
     ):
         """
         Parameters:
@@ -89,14 +89,18 @@ class HealthIndexGenerator:
                 tag.value for tag in SymptomTag if tag.name == "severe"
             ][0]
             self.comorbidity_multipliers = comorbidity_multipliers
-            parsed_comorbidity_prevalences = {}
-            for comorbidity in comorbidity_prevalences.keys():
-                parsed_comorbidity_prevalences[comorbidity] = {
-                        'f': parse_age_probabilities(comorbidity_prevalences[comorbidity]['f']),
-                        'm': parse_age_probabilities(comorbidity_prevalences[comorbidity]['m']),
-                        }
+            parsed_prevalence_reference_population = {}
+            for comorbidity in prevalence_reference_population.keys():
+                parsed_prevalence_reference_population[comorbidity] = {
+                    "f": parse_age_probabilities(
+                        prevalence_reference_population[comorbidity]["f"]
+                    ),
+                    "m": parse_age_probabilities(
+                        prevalence_reference_population[comorbidity]["m"]
+                    ),
+                }
 
-            self.comorbidity_prevalences = parsed_comorbidity_prevalences 
+            self.prevalence_reference_population = parsed_prevalence_reference_population
 
     @classmethod
     def from_file(
@@ -104,7 +108,7 @@ class HealthIndexGenerator:
         polinome_filename: str = default_polinom_filename,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
-        comorbidity_prevalences=None,
+        prevalence_reference_population=None,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -127,13 +131,13 @@ class HealthIndexGenerator:
             poli_deaths,
             asymptomatic_ratio,
             comorbidity_multipliers,
-            comorbidity_prevalences,
+            prevalence_reference_population,
         )
 
     @classmethod
     def comorbidities_from_file(
         cls,
-        comorbidity_filename: str ,
+        comorbidity_filename: str,
         polinome_filename: str = default_polinom_filename,
         asymptomatic_ratio: float = 0.2,
     ) -> "HealthIndexGenerator":
@@ -149,9 +153,9 @@ class HealthIndexGenerator:
         with open(comorbidity_filename) as f:
             comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
         return cls.from_file(
-                polinome_filename=polinome_filename,
-                asymptomatic_ratio=asymptomatic_ratio,
-                comorbidity_multipliers=comorbidity_multipliers
+            polinome_filename=polinome_filename,
+            asymptomatic_ratio=asymptomatic_ratio,
+            comorbidity_multipliers=comorbidity_multipliers,
         )
 
     def model(self, age, poli):
@@ -324,19 +328,28 @@ class HealthIndexGenerator:
             sex = 0
         roundage = int(round(person.age))
         health_index = np.cumsum(self.prob_lists[sex][roundage])
-        if hasattr(self, "comorbidity_multipliers"):
+        if person.comorbidity is not None:
             health_index = self.adjust_for_comorbidities(health_index, person)
         return health_index
 
-    def get_mean_multiplier_reference_population(self, comorbidity_prevalences, person):
-        weighted_multiplier = 0.
-        for comorbidity in comorbidity_prevalences.keys():
-            weighted_multiplier += self.comorbidity_multipliers[comorbidity] * self.comorbidity_prevalences[comorbidity][person.sex][person.age]
-        return weighted_multiplier 
+    def get_multiplier_from_reference_prevalence(self, prevalence_reference_population, person):
+        weighted_multiplier = 0.0
+        for comorbidity in prevalence_reference_population.keys():
+            weighted_multiplier += (
+                self.comorbidity_multipliers[comorbidity]
+                * self.prevalence_reference_population[comorbidity][person.sex][person.age]
+            )
+        return weighted_multiplier
 
     def adjust_for_comorbidities(self, health_index, person):
         multiplier = self.comorbidity_multipliers.get(person.comorbidity, 1.0)
-        weighted_multiplier= self.get_mean_multiplier_reference_population(self.comorbidity_prevalences, person)
-        health_index[: self.max_mild_symptom_tag] *= 2.0 - multiplier/mean_multiplier_reference_population
-        health_index[self.max_mild_symptom_tag + 1 :] *= multiplier/mean_multiplier_reference_population
+        reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
+            self.prevalence_reference_population, person
+        )
+        health_index[: self.max_mild_symptom_tag] *= (
+            2.0 - multiplier / reference_weighted_multiplier
+        )
+        health_index[self.max_mild_symptom_tag + 1 :] *= (
+            multiplier / reference_weighted_multiplier
+        )
         return health_index

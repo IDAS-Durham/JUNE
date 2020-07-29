@@ -6,7 +6,7 @@ import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 from june.groups import Household
-from june.utils import parse_age_probabilities
+from june.utils.parse_probabilities import parse_age_probabilities
 
 
 @jit(nopython=True)
@@ -53,8 +53,8 @@ class SocialVenueDistributor:
             boosting factor for the weekend probability
         """
         self.social_venues = social_venues
-        self.male_probabilities = parse_age_probabilites(male_age_probabilities)
-        self.female_probabilities = parse_age_probabilites(female_age_probabilities)
+        self.male_probabilities = parse_age_probabilities(male_age_probabilities)
+        self.female_probabilities = parse_age_probabilities(female_age_probabilities)
         self.weekend_boost = weekend_boost
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
