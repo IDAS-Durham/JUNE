@@ -2,11 +2,11 @@ import numpy as np
 from typing import List
 from numba import jit
 from numba import typed
-from itertools import chain
 import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 from june.groups import Household
+from june.utils import parse_age_probabilities
 
 
 @jit(nopython=True)
@@ -15,39 +15,6 @@ def random_choice_numba(arr, prob):
     Fast implementation of np.random.choice
     """
     return arr[np.searchsorted(np.cumsum(prob), np.random.rand(), side="right")]
-
-
-def parse_age_probabilites(age_dict):
-    """
-    Parses the age probability dictionaries into two arrays.
-    Example: {18-35: 0.2, 40-60: 0.1} get converted to
-    [18, 35, 40, 60] [0, 0.2, 0.1, 0]
-    """
-    if age_dict is None:
-        return [0], [0]
-    bins = []
-    probabilities = []
-    for age_range in age_dict:
-        age_range_split = age_range.split("-")
-        if len(age_range_split) == 1:
-            raise SocialVenueError("Please give age ranges as intervals")
-        else:
-            bins.append(int(age_range_split[0]))
-            bins.append(int(age_range_split[1]))
-        probabilities.append(age_dict[age_range])
-    sorting_idx = np.argsort(bins[::2])
-    bins = list(chain(*[[bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx]))
-    probabilities = np.array(probabilities)[sorting_idx]
-    probabilities_binned = []
-    for prob in probabilities:
-        probabilities_binned.append(0.0)
-        probabilities_binned.append(prob)
-    probabilities_binned.append(0.0)
-    probabilities_per_age = []
-    for age in range(100):
-        idx = np.searchsorted(bins, age + 1)  # we do +1 to include the lower boundary
-        probabilities_per_age.append(probabilities_binned[idx])
-    return probabilities_per_age
 
 
 class SocialVenueDistributor:
