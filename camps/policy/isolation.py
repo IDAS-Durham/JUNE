@@ -53,9 +53,13 @@ class Isolation(MedicalCarePolicy):
         ][0]
         if person.infected:
             if person.health_information.time_of_testing is None:
+                if np.random.rand() > self.compliance:
+                    isolation_units.refused_to_go_ids.add(person.id)
                 person.health_information.time_of_testing = self._generate_time_of_testing(
                     person
                 )
+        else:
+            return False
         if not person.hospitalised and person.id not in isolation_units.refused_to_go_ids:
             if person.symptoms.tag.value >= SymptomTag.mild.value:  # mild or more
                 if (
@@ -64,8 +68,7 @@ class Isolation(MedicalCarePolicy):
                     <= person.health_information.time_of_testing
                     + self.n_quarantine_days
                 ):
-                    if (np.random.rand() < self.compliance):
                         isolation_unit = isolation_units.get_closest()
                         isolation_unit.add(person)
-                    else:
-                        isolation_units.refused_to_go_ids.add(person.id)
+                        return True
+        return False

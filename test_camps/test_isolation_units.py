@@ -4,6 +4,7 @@ import pytest
 from june.demography import Person
 from june.infection import InfectionSelector
 from june.infection.symptoms import SymptomTag
+from june.policy.medical_facilities import Hospitalisation
 from june import paths
 from june.groups.hospital import MedicalFacility, MedicalFacilities
 
@@ -109,3 +110,10 @@ def test__isolation_compliance(selector):
                 assert person not in isolation_units[0].people
             isolation_units[0].clear()
     assert np.isclose(len(go_isolation), 500, rtol=0.1)
+
+def test__hospitalisation_takes_preference(selector):
+    isolation = Isolation(
+        testing_mean_time=3, testing_std_time=1, n_quarantine_days=7, compliance=0.5
+    )
+    hospitalisation = Hospitalisation()
+    policies = Policies([isolation, hospitalisation])
