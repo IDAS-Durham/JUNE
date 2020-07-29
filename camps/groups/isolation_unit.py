@@ -16,6 +16,7 @@ class IsolationUnits(Supergroup, MedicalFacilities):
     def __init__(self, isolation_units: List[IsolationUnit]):
         super().__init__()
         self.members = isolation_units
+        self.refused_to_go_ids = set()
 
     def get_closest(self):
         return self[0]

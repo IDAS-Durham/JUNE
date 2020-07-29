@@ -22,4 +22,5 @@ isolation:
   testing_mean_time: 3
   testing_std_time: 1
   n_quarantine_days: 7
+  compliance: 0.6
 
