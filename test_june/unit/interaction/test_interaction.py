@@ -3,10 +3,18 @@ from june.infection.infection import InfectionSelector
 from june.groups import School
 from june.demography import Person
 from june import paths
+from june.demography.geography import Geography
 from june.interaction.interactive_group import InteractiveGroup
+from june.world import generate_world_from_geography
+from june.groups import Hospital, Hospitals
+from june.infection_seed import InfectionSeed
+from june.policy import Policies
+from june.simulator import Simulator
 
 import pytest
 import numpy as np
+import os
+import pathlib
 
 test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
 
@@ -61,27 +69,27 @@ def test__school_contact_matrices():
     n_contacts_same_year = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 4
     )
-    assert n_contacts_same_year == 2.875*3
+    assert n_contacts_same_year == 2.875 * 3
 
     n_contacts_year_above = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 5
     )
-    assert n_contacts_year_above == xi*2.875 * 3
+    assert n_contacts_year_above == xi * 2.875 * 3
 
     n_contacts_teacher_teacher = interaction._get_contacts_in_school(
         contact_matrix, school_years, 0, 0
     )
-    assert n_contacts_teacher_teacher == 5.25*3
+    assert n_contacts_teacher_teacher == 5.25 * 3
 
     n_contacts_teacher_student = interaction._get_contacts_in_school(
         contact_matrix, school_years, 0, 4
     )
-    np.isclose(n_contacts_teacher_student, (16.2*3 / len(school_years)), rtol=1e-6)
+    np.isclose(n_contacts_teacher_student, (16.2 * 3 / len(school_years)), rtol=1e-6)
 
     n_contacts_student_teacher = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 0
     )
-    assert n_contacts_student_teacher == 0.81*3
+    assert n_contacts_student_teacher == 0.81 * 3
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
@@ -130,12 +138,7 @@ def create_school(n_students, n_teachers):
 
 
 @pytest.mark.parametrize(
-    "n_teachers,mode",
-    [
-        [2, "average"],
-        [4, "average"],
-        [6, "average"],
-    ],
+    "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"],],
 )
 def test__average_time_to_infect(n_teachers, mode):
     selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
@@ -170,3 +173,42 @@ def test__average_time_to_infect(n_teachers, mode):
     np.testing.assert_allclose(
         np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1,
     )
+
+
+def test__infection_is_isolated(selector):
+    geography = Geography.from_file({"area": ["E00002559"]})
+    world = generate_world_from_geography(geography, include_households=True)
+    interaction = Interaction.from_file()
+    infection_seed = InfectionSeed(world.super_areas, selector)
+    n_cases = 5
+    infection_seed.unleash_virus(
+        n_cases
+    )  # play around with the initial number of cases
+    policies = Policies([])#None#Policies.from_file()
+    simulator = Simulator.from_file(
+        world=world,
+        interaction=interaction,
+        infection_selector=selector,
+        config_filename=pathlib.Path(__file__).parent.absolute()
+        / "interaction_test_config.yaml",
+        leisure=None,
+        policies=policies,
+        save_path=None,
+    )
+    infected_people = [person for person in world.people if person.infected]
+    assert len(infected_people) == 5
+    infected_households = []
+    for household in world.households:
+        infected = False
+        for person in household.people:
+            if person.infected:
+                infected = True
+                break
+        if infected:
+            infected_households.append(household)
+    simulator.run()
+    for person in world.people:
+        if person.residence.group in infected_households:
+            assert person.infected or not person.susceptible
+        else:
+            assert not person.infected and person.susceptible

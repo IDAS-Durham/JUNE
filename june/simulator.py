@@ -337,7 +337,8 @@ class Simulator:
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
-            self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+            if self.world.hospitals is not None:
+                self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
     def run(self):
@@ -355,7 +356,8 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
-            self.logger.log_hospital_characteristics(self.world.hospitals)
+            if self.world.hospitals is not None:
+                self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
                 break
