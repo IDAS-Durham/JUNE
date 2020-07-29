@@ -32,6 +32,8 @@ pytest
 
 # Setup
 
+Install Python3 header files. In Ubuntu and variants, this is the ``python3-dev`` package.
+
 To install the package, install requisites
 
 ``pip install -r requirements.txt``
