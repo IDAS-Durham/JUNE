@@ -8,6 +8,7 @@ import pytest
 from june import paths
 from june.demography import Person, Population
 from june.demography.geography import Geography
+from june.interaction import Interaction
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -20,7 +21,6 @@ from june.groups import (
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
 from june.infection.infection import InfectionSelector
-from june.interaction import ContactAveraging
 from june.policy import (
     Policy,
     SevereSymptomsStayHome,
@@ -57,8 +57,8 @@ def create_selector():
 
 
 @pytest.fixture(name="interaction", scope="module")
-def create_interaction(selector):
-    interaction = ContactAveraging.from_file(selector=selector)
+def create_interaction():
+    interaction = Interaction.from_file()
     return interaction
 
 
