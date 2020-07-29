@@ -37,7 +37,7 @@ class InteractiveGroup:
             if len(sus_ids) != 0:
                 self.has_susceptible = True
                 self.subgroups_susceptible.append(i)
-                susceptible_ids.append(np.array(sus_ids))
+                susceptible_ids.append(sus_ids)
 
             inf_ids = [person.id for person in subgroup_infected]
             if len(inf_ids) != 0:
@@ -48,19 +48,19 @@ class InteractiveGroup:
                 self.has_infector = True
                 self.subgroups_infector.append(i)
                 trans_prob.append(tprob)
-                infector_ids.append(np.array(inf_ids))
+                infector_ids.append(inf_ids)
                 infector_subgroup_sizes.append(subgroup_size)
 
         self.must_timestep = self.has_susceptible and self.has_infector
         if self.must_timestep is False:
             return
         self.spec = group.spec
-        self.infector_ids = tuple(infector_ids)
-        self.transmission_probabilities = tuple(trans_prob)
-        self.susceptible_ids = tuple(susceptible_ids)
-        self.subgroups_susceptible = tuple(self.subgroups_susceptible)
-        self.subgroups_infector = tuple(self.subgroups_infector)
-        self.infector_subgroup_sizes = tuple(infector_subgroup_sizes)
+        self.infector_ids = infector_ids
+        self.transmission_probabilities = trans_prob
+        self.susceptible_ids = susceptible_ids
+        #self.subgroups_susceptible = self.subgroups_susceptible
+        #self.subgroups_infector = self.subgroups_infector
+        self.infector_subgroup_sizes = infector_subgroup_sizes
         if self.spec == "school":
             self.school_years = group.years
         else:
