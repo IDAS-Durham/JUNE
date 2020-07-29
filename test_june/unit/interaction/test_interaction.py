@@ -184,7 +184,7 @@ def test__infection_is_isolated(selector):
     infection_seed.unleash_virus(
         n_cases
     )  # play around with the initial number of cases
-    policies = Policies([])#None#Policies.from_file()
+    policies = Policies([])
     simulator = Simulator.from_file(
         world=world,
         interaction=interaction,
