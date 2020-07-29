@@ -148,6 +148,16 @@ class TestDemography:
             men_counts / women_counts, [10 / 15, 20 / 10, 5 / 10], atol=0, rtol=0.05
         )
 
+    def test__comorbidities_for_areas(self):
+        geography = Geography.from_file({"area": ["E00088544"]})
+        area = list(geography.areas)[0]
+        demography = d.Demography.for_areas(area_names=[area.name])
+        area.populate(demography)
+        comorbidities = []
+        for person in area.people:
+            if person.comorbidity is not None:
+                comorbidities.append(person.comorbidity)
+        assert len(np.unique(comorbidities)) > 0
 
 class TestPopulation:
     def test__create_population_from_demography(self, geography_demography_test):
