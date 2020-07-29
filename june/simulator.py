@@ -1,6 +1,7 @@
 import logging
 from itertools import chain
 from typing import Optional
+import numpy as np
 
 import yaml
 
@@ -10,8 +11,9 @@ from june.demography import Person, Activities
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
 from june.infection.symptom_tag import SymptomTag
+from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
-from june.interaction import ContactAveraging
+from june.interaction import Interaction, InteractiveGroup
 from june.logger.logger import Logger
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
@@ -28,9 +30,10 @@ class Simulator:
     def __init__(
         self,
         world: World,
-        interaction,
+        interaction: Interaction,
         timer: Timer,
         activity_manager: ActivityManager,
+        infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
         save_path: str = "results",
         light_logger: bool = False,
@@ -48,9 +51,11 @@ class Simulator:
         self.activity_manager = activity_manager
         self.world = world
         self.interaction = interaction
+        self.infection_selector = infection_selector
         self.infection_seed = infection_seed
         self.light_logger = light_logger
         self.timer = timer
+        self.sort_people_world()
         if not self.world.box_mode and save_path is not None:
             self.logger = Logger(save_path=save_path)
         else:
@@ -60,7 +65,8 @@ class Simulator:
     def from_file(
         cls,
         world: World,
-        interaction: ContactAveraging,
+        interaction: Interaction,
+        infection_selector = None,
         policies: Optional[Policies] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
@@ -125,10 +131,19 @@ class Simulator:
             world=world,
             activity_manager=activity_manager,
             timer=timer,
+            infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
             interaction=interaction,
         )
+
+    def sort_people_world(self):
+        """
+        Sorts world population by id so it is easier to find them later.
+        """
+        people_ids = np.array([person.id for person in self.world.people])
+        ids_sorted_idx = np.argsort(people_ids)
+        self.world.people.people = list(np.array(self.world.people)[ids_sorted_idx])
 
     def clear_world(self):
         """
@@ -281,25 +296,49 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
+        infected_ids = []
+        first_person_id = self.world.people[0].id
         for group_type in group_instances:
-            n_people_group = 0
             for group in group_type.members:
-                self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group, self.logger,
-                )
-                n_people += group.size
-                n_people_group += group.size
-
-        if n_people != len(self.world.people.members):
+                int_group = InteractiveGroup(group)
+                n_people += int_group.size
+                if int_group.must_timestep:
+                    new_infected_ids = self.interaction.time_step_for_group(
+                        self.timer.duration, int_group
+                    )
+                    if new_infected_ids:
+                        n_infected = len(new_infected_ids)
+                        if self.logger is not None:
+                            self.logger.accumulate_infection_location(
+                                group.spec, n_infected
+                            )
+                        # assign blame of infections
+                        tprob_norm = sum(int_group.transmission_probabilities)
+                        for infector_id in list(chain(*int_group.infector_ids)):
+                            infector = self.world.people[infector_id - first_person_id]
+                            assert infector.id == infector_id
+                            infector.health_information.number_of_infected += (
+                                n_infected
+                                * infector.health_information.infection.transmission.probability
+                                / tprob_norm
+                            )
+                    infected_ids += new_infected_ids
+        people_to_infect = [self.world.people[idx-first_person_id] for idx in infected_ids]
+        if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-
+        # infect people
+        if self.infection_selector:
+            for i, person in enumerate(people_to_infect):
+                assert infected_ids[i] == person.id
+                self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
-            self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+            if self.world.hospitals is not None:
+                self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
 
     def run(self):
@@ -317,7 +356,8 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
-            self.logger.log_hospital_characteristics(self.world.hospitals)
+            if self.world.hospitals is not None:
+                self.logger.log_hospital_characteristics(self.world.hospitals)
         for time in self.timer:
             if time > self.timer.final_date:
                 break

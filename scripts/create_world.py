@@ -26,7 +26,7 @@ t1 = time.time()
 config_path = "../configs/config_example.yaml"
 
 # define geography, let's run the first 20 super areas of london
-geography = Geography.from_file({"super_area": london_areas[:60]})
+geography = Geography.from_file({"super_area": london_areas[40:60]})
 
 # add buildings
 geography.hospitals = Hospitals.for_geography(geography)
