@@ -16,11 +16,13 @@ class Isolation(MedicalCarePolicy):
         testing_mean_time=None,
         testing_std_time=None,
         n_quarantine_days=None,
+        compliance=1.0,
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.testing_mean_time = testing_mean_time
         self.testing_std_time = testing_std_time
         self.n_quarantine_days = n_quarantine_days
+        self.compliance = compliance
 
     def _generate_time_from_symptoms_to_testing(self):
         return max(
@@ -54,7 +56,7 @@ class Isolation(MedicalCarePolicy):
                 person.health_information.time_of_testing = self._generate_time_of_testing(
                     person
                 )
-        if not person.hospitalised:
+        if not person.hospitalised and person.id not in isolation_units.refused_to_go_ids:
             if person.symptoms.tag.value >= SymptomTag.mild.value:  # mild or more
                 if (
                     person.health_information.time_of_testing
@@ -62,5 +64,8 @@ class Isolation(MedicalCarePolicy):
                     <= person.health_information.time_of_testing
                     + self.n_quarantine_days
                 ):
-                    isolation_unit = isolation_units.get_closest()
-                    isolation_unit.add(person)
+                    if (np.random.rand() < self.compliance):
+                        isolation_unit = isolation_units.get_closest()
+                        isolation_unit.add(person)
+                    else:
+                        isolation_units.refused_to_go_ids.append(person.id)
