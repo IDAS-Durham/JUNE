@@ -30,7 +30,7 @@ def get_contact_matrix(alpha, contacts, physical):
     return contacts * (1.0 + (alpha - 1.0) * physical)
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def compute_effective_transmission(
     subgroup_transmission_probabilities: np.array,
     susceptibles_group_idx: np.array,
@@ -68,7 +68,7 @@ def compute_effective_transmission(
     return 1.0 - np.exp(-poisson_exponent)
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def infect_susceptibles(effective_transmission_probability, susceptible_ids):
     infected_ids = []
     for id in susceptible_ids:
@@ -89,7 +89,7 @@ def _get_contacts_in_school(
     return n_contacts
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def _subgroup_to_subgroup_transmission(
     contact_matrix,
     subgroup_transmission_probabilities,
@@ -242,7 +242,7 @@ class Interaction:
         delta_time,
         subgroup_idx,
         school_years,
-    ):
+    ) -> List[int]:
         effective_transmission_probability = compute_effective_transmission(
             subgroup_transmission_probabilities=subgroup_transmission_probabilities,
             susceptibles_group_idx=subgroup_idx,
