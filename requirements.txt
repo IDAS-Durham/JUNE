@@ -24,7 +24,6 @@ ipython-genutils==0.2.0
 Jinja2==2.11.2
 joblib==0.16.0
 jsonschema==3.2.0
--e git+git@github.com:IDAS-Durham/JUNE.git@4fbbe674eb33036026754cb52c4fc7c3753ae4f4#egg=june
 jupyter-core==4.6.3
 kiwisolver==1.2.0
 llvmlite==0.33.0
