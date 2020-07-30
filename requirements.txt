@@ -47,6 +47,8 @@ pyparsing==2.4.7
 pyprojroot==0.2.0
 pyrsistent==0.16.0
 pyswarms==1.1.0
+pytest>=5.4.2
+pytest-cov>=2.8.1
 python-dateutil==2.8.1
 pytz==2020.1
 PyYAML==5.3.1
