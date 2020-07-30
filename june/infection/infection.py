@@ -43,7 +43,7 @@ class InfectionSelector:
         """
         self.transmission_type = transmission_type
         self.trajectory_maker = TrajectoryMakers.from_file(
-            configs_path=trajectories_config_path
+            config_path=trajectories_config_path
         )
         self.health_index_generator = health_index_generator
 
