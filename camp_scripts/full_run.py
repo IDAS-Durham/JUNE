@@ -91,7 +91,7 @@ for area in world.areas:
 # =================================== policies ===============================#
 
 policies = Policies.from_file(
-    camp_configs_path / "defaults/policy/policy.yaml",
+    camp_configs_path / "defaults/policy/home_care_policy.yaml",
     base_policy_modules=("june.policy", "camps.policy"),
 )
 
@@ -104,7 +104,7 @@ selector = InfectionSelector.from_file(health_index_generator=health_index_gener
 
 interaction = ContactAveraging.from_file(
     config_filename=camp_configs_path
-    / "defaults/interaction/ContactInteraction_low.yaml",
+    / "defaults/interaction/ContactInteraction_med_low_low.yaml",
     selector=selector,
 )
 
