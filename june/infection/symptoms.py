@@ -41,7 +41,10 @@ class Symptoms:
         return SymptomTag(index)
 
     def update_severity_from_delta_time(self, time_from_infection):
+<<<<<<< HEAD
         print('time from infection = ', time_from_infection)
+=======
+>>>>>>> master
         if time_from_infection > self.trajectory[self.stage + 1][0]:
             self.stage += 1
             self.tag = self.trajectory[self.stage][1]

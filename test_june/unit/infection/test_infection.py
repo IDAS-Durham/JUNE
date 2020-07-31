@@ -45,25 +45,6 @@ class TestInfection:
         assert isinstance(victim.health_information.infection.transmission,
                           transxnexp.TransmissionXNExp)
 
-    def test__infect_person_random_start_develops_right_symptoms(self):
-        selector = InfectionSelector.from_file()
-        victim = person.Person(sex='f', age=26)
-        victim.health_information = HealthInformation()
-        start_time_mild = -1.
-        selector.infect_person_at_time(person=victim, time=start_time_mild)
-        victim.health_information.infection.symptoms = Symptoms(health_index=[0.,0.,1.,1.,1.])
-        victim.health_information.update_health_status(time=0., delta_time=1)
-        assert victim.health_information.infection.symptoms.tag == SymptomTag.mild 
-        start_time_severe = -15.
-        selector.infect_person_at_time(person=victim, time=start_time_severe)
-        print(victim.health_information.infection.symptoms.trajectory)
-        victim.health_information.infection.symptoms = Symptoms(health_index=[0.,0.,1.,1.,1.])
-        victim.health_information.update_health_status(time=-10., delta_time=1)
-        assert victim.health_information.infection.symptoms.tag == SymptomTag.mild
-        victim.health_information.update_health_status(time=5., delta_time=1)
-        assert victim.health_information.infection.symptoms.tag == SymptomTag.severe
-        
- 
     def test__update_to_time__calls_transmission_symptoms_methods(self, transmission,
                                                                   symptoms):
         infection = Infection(start_time=0.1,

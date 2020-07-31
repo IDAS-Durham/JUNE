@@ -118,7 +118,6 @@ def test__comorbidities_effect():
     dummy = Person.from_attributes(sex="f", age=60,)
     feo = Person.from_attributes(sex="f", age=60, comorbidity="feo")
     guapo = Person.from_attributes(sex="f", age=60, comorbidity="guapo")
-
     dummy_health = health_index(dummy)
     feo_health = health_index(feo)
     guapo_health = health_index(guapo)
@@ -156,5 +155,4 @@ def test__comorbidities_effect():
         guapo_probabilities[2:].sum(),
         comorbidity_multipliers['guapo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
     )
- 
  
