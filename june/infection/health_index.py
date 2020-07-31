@@ -1,7 +1,9 @@
 import numpy as np
+import pandas as pd
 import yaml
 from june.infection.symptom_tag import SymptomTag
 from june import paths
+from june.utils.parse_probabilities import parse_age_probabilities
 from typing import Optional
 
 default_polinom_filename = paths.configs_path / "defaults/health_index_ratios.txt"
@@ -58,6 +60,7 @@ class HealthIndexGenerator:
         poli_deaths: dict,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
+        prevalence_reference_population: Optional[dict] = None,
     ):
         """
         Parameters:
@@ -87,6 +90,20 @@ class HealthIndexGenerator:
                 tag.value for tag in SymptomTag if tag.name == "severe"
             ][0]
             self.comorbidity_multipliers = comorbidity_multipliers
+            parsed_prevalence_reference_population = {}
+            for comorbidity in prevalence_reference_population.keys():
+                parsed_prevalence_reference_population[comorbidity] = {
+                    "f": parse_age_probabilities(
+                        prevalence_reference_population[comorbidity]["f"]
+                    ),
+                    "m": parse_age_probabilities(
+                        prevalence_reference_population[comorbidity]["m"]
+                    ),
+                }
+
+            self.prevalence_reference_population = (
+                parsed_prevalence_reference_population
+            )
 
     @classmethod
     def from_file(
@@ -94,6 +111,7 @@ class HealthIndexGenerator:
         polinome_filename: str = default_polinom_filename,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
+        prevalence_reference_population=None,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -115,13 +133,16 @@ class HealthIndexGenerator:
             poli_icu,
             poli_deaths,
             asymptomatic_ratio,
-            comorbidity_multipliers,
+            comorbidity_multipliers=comorbidity_multipliers,
+            prevalence_reference_population=prevalence_reference_population,
         )
 
     @classmethod
-    def comorbidities_from_file(
+    def from_file_with_comorbidities(
         cls,
-        comorbidity_filename: str ,
+        multipliers_path: str,
+        male_prevalence_path: str,
+        female_prevalence_path: str,
         polinome_filename: str = default_polinom_filename,
         asymptomatic_ratio: float = 0.2,
     ) -> "HealthIndexGenerator":
@@ -134,12 +155,18 @@ class HealthIndexGenerator:
         Returns:
           Interaction instance
         """
-        with open(comorbidity_filename) as f:
+        with open(multipliers_path) as f:
             comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
+        female_prevalence = read_comorbidity_csv(female_prevalence_path)
+        male_prevalence = read_comorbidity_csv(male_prevalence_path)
+        prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
+            female_prevalence, male_prevalence
+        )
         return cls.from_file(
-                polinome_filename=polinome_filename,
-                asymptomatic_ratio=asymptomatic_ratio,
-                comorbidity_multipliers=comorbidity_multipliers
+            polinome_filename=polinome_filename,
+            asymptomatic_ratio=asymptomatic_ratio,
+            comorbidity_multipliers=comorbidity_multipliers,
+            prevalence_reference_population=prevalence_reference_population,
         )
 
     def model(self, age, poli):
@@ -312,12 +339,78 @@ class HealthIndexGenerator:
             sex = 0
         roundage = int(round(person.age))
         health_index = np.cumsum(self.prob_lists[sex][roundage])
-        if hasattr(self, "comorbidity_multipliers"):
+        if hasattr(self,'comorbidity_multipliers') and person.comorbidity is not None:
             health_index = self.adjust_for_comorbidities(health_index, person)
         return health_index
 
+    def get_multiplier_from_reference_prevalence(
+        self, prevalence_reference_population, person
+    ):
+        weighted_multiplier = 0.0
+        for comorbidity in prevalence_reference_population.keys():
+            weighted_multiplier += (
+                self.comorbidity_multipliers[comorbidity]
+                * self.prevalence_reference_population[comorbidity][person.sex][
+                    person.age
+                ]
+            )
+        return weighted_multiplier
+
     def adjust_for_comorbidities(self, health_index, person):
         multiplier = self.comorbidity_multipliers.get(person.comorbidity, 1.0)
-        health_index[: self.max_mild_symptom_tag] *= 2.0 - multiplier
-        health_index[self.max_mild_symptom_tag + 1 :] *= multiplier
-        return health_index
+        reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
+            self.prevalence_reference_population, person
+        )
+        effective_multiplier = multiplier / reference_weighted_multiplier
+        probabilities = np.diff(health_index, prepend=0.0, append=1.0)
+        modified_probabilities = self.adjust_probabilities_for_comorbidities(
+            probabilities, effective_multiplier
+        )
+        return np.cumsum(modified_probabilities)[:-1] 
+
+    def adjust_probabilities_for_comorbidities(
+        self, probabilities, effective_multiplier
+    ):
+        probabilities_with_comorbidity = np.zeros_like(probabilities)
+        p_mild = probabilities[: self.max_mild_symptom_tag].sum()
+        p_severe = probabilities[self.max_mild_symptom_tag:].sum()
+        p_severe_with_comorbidity = p_severe * effective_multiplier
+        p_mild_with_comorbidity = 1 - p_severe_with_comorbidity
+        probabilities_with_comorbidity[: self.max_mild_symptom_tag] = (
+            probabilities[: self.max_mild_symptom_tag]
+            * p_mild_with_comorbidity
+            / p_mild
+        )
+        probabilities_with_comorbidity[self.max_mild_symptom_tag:] = (
+            probabilities[self.max_mild_symptom_tag:]
+            * p_severe_with_comorbidity
+            / p_severe
+        )
+        return probabilities_with_comorbidity
+
+
+def read_comorbidity_csv(filename: str):
+    comorbidity_df = pd.read_csv(filename, index_col=0)
+    column_names = [f"0-{comorbidity_df.columns[0]}"]
+    for i in range(len(comorbidity_df.columns) - 1):
+        column_names.append(
+            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i+1]}"
+        )
+    comorbidity_df.columns = column_names
+    for column in comorbidity_df.columns:
+        no_comorbidity = comorbidity_df[column].loc["no_condition"]
+        should_have_comorbidity = 1 - no_comorbidity
+        has_comorbidity = np.sum(comorbidity_df[column]) - no_comorbidity
+        comorbidity_df[column].iloc[:-1] *= should_have_comorbidity / has_comorbidity
+
+    return comorbidity_df.T
+
+
+def convert_comorbidities_prevalence_to_dict(prevalence_female, prevalence_male):
+    prevalence_reference_population = {}
+    for comorbidity in prevalence_female.columns:
+        prevalence_reference_population[comorbidity] = {
+            "f": prevalence_female[comorbidity].to_dict(),
+            "m": prevalence_male[comorbidity].to_dict(),
+        }
+    return prevalence_reference_population
