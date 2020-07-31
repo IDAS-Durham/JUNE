@@ -21,9 +21,9 @@ from june.groups import (
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
+from june.interaction import Interaction
 from june.infection.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
-from june.interaction import ContactAveraging
 from june.policy import (
     Policy,
     Quarantine,
@@ -57,8 +57,8 @@ def create_selector():
 
 
 @pytest.fixture(name="interaction", scope="module")
-def create_interaction(selector):
-    interaction = ContactAveraging.from_file(selector=selector)
+def create_interaction():
+    interaction = Interaction.from_file()
     interaction.beta['school'] = 0.8
     interaction.beta['cinema'] = 0.0
     interaction.beta['pub'] = 0.0
@@ -139,7 +139,7 @@ def make_dummy_world(geog):
     return world
 
 @pytest.fixture(name="sim", scope="module")
-def create_sim(world,interaction):
+def create_sim(world,interaction,selector):
 
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
@@ -156,7 +156,7 @@ def create_sim(world,interaction):
         ]
     )
     infection_seed = InfectionSeed(
-        super_areas=world.super_areas, selector=interaction.selector,
+        super_areas=world.super_areas,selector=selector
     )
     n_cases = 2
     infection_seed.unleash_virus(n_cases)
@@ -164,6 +164,7 @@ def create_sim(world,interaction):
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
+        infection_selector=selector,
         config_filename=test_config,
         leisure=leisure_instance,
         policies=policies
