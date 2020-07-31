@@ -12,6 +12,9 @@ from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 
 default_config_filename = paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
+default_trajectories_config_path = (
+    paths.configs_path / "defaults/symptoms/trajectories.yaml"
+)
 
 
 class SymptomsType(IntEnum):
@@ -22,7 +25,12 @@ class SymptomsType(IntEnum):
 
 
 class InfectionSelector:
-    def __init__(self, transmission_type: str, health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3)):
+    def __init__(
+        self,
+        transmission_type: str,
+        trajectories_config_path: str = default_trajectories_config_path,
+        health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3),
+    ):
         """
         Selects the type of infection a person is given
 
@@ -34,14 +42,19 @@ class InfectionSelector:
             proportion of infected people that are asymptomatic
         """
         self.transmission_type = transmission_type
-        self.trajectory_maker = TrajectoryMakers.from_file()
+        self.trajectory_maker = TrajectoryMakers.from_file(
+            config_path=trajectories_config_path
+        )
         self.health_index_generator = health_index_generator
 
     @classmethod
     def from_file(
         cls,
         config_filename: str = default_config_filename,
-        health_index_generator: HealthIndexGenerator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.3)
+        trajectories_config_path: str = default_trajectories_config_path,
+        health_index_generator: HealthIndexGenerator = HealthIndexGenerator.from_file(
+            asymptomatic_ratio=0.3
+        ),
     ) -> "InfectionSelector":
         """
         Generate infection selector from default config file
@@ -55,7 +68,11 @@ class InfectionSelector:
         """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return InfectionSelector(config["transmission_type"], health_index_generator=health_index_generator)
+        return InfectionSelector(
+            config["transmission_type"],
+            trajectories_config_path=trajectories_config_path,
+            health_index_generator=health_index_generator,
+        )
 
     def infect_person_at_time(self, person: "Person", time: float):
         """
@@ -87,7 +104,9 @@ class InfectionSelector:
         symptoms = self.select_symptoms(person)
         incubation_period = symptoms.time_exposed()
         transmission = self.select_transmission(
-            person=person, incubation_period=incubation_period, max_symptoms_tag=symptoms.max_tag()
+            person=person,
+            incubation_period=incubation_period,
+            max_symptoms_tag=symptoms.max_tag(),
         )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
 
@@ -178,8 +197,12 @@ class Infection:
         if self.last_time_updated <= time:
             time_from_infection = time - self.start_time
             self.last_time_updated = time
-            self.transmission.update_probability_from_delta_time(time_from_infection=time_from_infection)
-            self.symptoms.update_severity_from_delta_time(time_from_infection=time_from_infection)
+            self.transmission.update_probability_from_delta_time(
+                time_from_infection=time_from_infection
+            )
+            self.symptoms.update_severity_from_delta_time(
+                time_from_infection=time_from_infection
+            )
             self.infection_probability = self.transmission.probability
 
     @property
