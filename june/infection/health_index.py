@@ -1,15 +1,9 @@
 import numpy as np
-<<<<<<< HEAD
 import pandas as pd
 import yaml
 from june.infection.symptom_tag import SymptomTag
 from june import paths
 from june.utils.parse_probabilities import parse_age_probabilities
-=======
-import yaml
-from june.infection.symptom_tag import SymptomTag
-from june import paths
->>>>>>> master
 from typing import Optional
 
 default_polinom_filename = paths.configs_path / "defaults/health_index_ratios.txt"
@@ -66,10 +60,7 @@ class HealthIndexGenerator:
         poli_deaths: dict,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
-<<<<<<< HEAD
         prevalence_reference_population: Optional[dict] = None,
-=======
->>>>>>> master
     ):
         """
         Parameters:
@@ -99,7 +90,6 @@ class HealthIndexGenerator:
                 tag.value for tag in SymptomTag if tag.name == "severe"
             ][0]
             self.comorbidity_multipliers = comorbidity_multipliers
-<<<<<<< HEAD
             parsed_prevalence_reference_population = {}
             for comorbidity in prevalence_reference_population.keys():
                 parsed_prevalence_reference_population[comorbidity] = {
@@ -114,8 +104,6 @@ class HealthIndexGenerator:
             self.prevalence_reference_population = (
                 parsed_prevalence_reference_population
             )
-=======
->>>>>>> master
 
     @classmethod
     def from_file(
@@ -123,10 +111,7 @@ class HealthIndexGenerator:
         polinome_filename: str = default_polinom_filename,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
-<<<<<<< HEAD
         prevalence_reference_population=None,
-=======
->>>>>>> master
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -149,7 +134,6 @@ class HealthIndexGenerator:
             poli_deaths,
             asymptomatic_ratio,
             comorbidity_multipliers,
-<<<<<<< HEAD
             prevalence_reference_population,
         )
 
@@ -159,14 +143,6 @@ class HealthIndexGenerator:
         multipliers_path: str,
         male_prevalence_path: str,
         female_prevalence_path: str,
-=======
-        )
-
-    @classmethod
-    def comorbidities_from_file(
-        cls,
-        comorbidity_filename: str ,
->>>>>>> master
         polinome_filename: str = default_polinom_filename,
         asymptomatic_ratio: float = 0.2,
     ) -> "HealthIndexGenerator":
@@ -179,7 +155,6 @@ class HealthIndexGenerator:
         Returns:
           Interaction instance
         """
-<<<<<<< HEAD
         with open(multipliers_path) as f:
             comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
         female_prevalence = read_comorbidity_csv(female_prevalence_path)
@@ -192,14 +167,6 @@ class HealthIndexGenerator:
             asymptomatic_ratio=asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
-=======
-        with open(comorbidity_filename) as f:
-            comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
-        return cls.from_file(
-                polinome_filename=polinome_filename,
-                asymptomatic_ratio=asymptomatic_ratio,
-                comorbidity_multipliers=comorbidity_multipliers
->>>>>>> master
         )
 
     def model(self, age, poli):
@@ -372,7 +339,6 @@ class HealthIndexGenerator:
             sex = 0
         roundage = int(round(person.age))
         health_index = np.cumsum(self.prob_lists[sex][roundage])
-<<<<<<< HEAD
         if person.comorbidity is not None:
             health_index = self.adjust_for_comorbidities(health_index, person)
         return health_index
@@ -448,14 +414,3 @@ def convert_comorbidities_prevalence_to_dict(prevalence_female, prevalence_male)
             "m": prevalence_male[comorbidity].to_dict(),
         }
     return prevalence_reference_population
-=======
-        if hasattr(self, "comorbidity_multipliers"):
-            health_index = self.adjust_for_comorbidities(health_index, person)
-        return health_index
-
-    def adjust_for_comorbidities(self, health_index, person):
-        multiplier = self.comorbidity_multipliers.get(person.comorbidity, 1.0)
-        health_index[: self.max_mild_symptom_tag] *= 2.0 - multiplier
-        health_index[self.max_mild_symptom_tag + 1 :] *= multiplier
-        return health_index
->>>>>>> master
