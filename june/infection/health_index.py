@@ -361,13 +361,32 @@ class HealthIndexGenerator:
         reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
             self.prevalence_reference_population, person
         )
-        health_index[: self.max_mild_symptom_tag] *= (
-            2.0 - multiplier / reference_weighted_multiplier
+        effective_multiplier = multiplier / reference_weighted_multiplier
+        probabilities = np.diff(health_index, prepend=0.0, append=1.0)
+        modified_probabilities = self.adjust_probabilities_for_comorbidities(
+            probabilities, effective_multiplier
         )
-        health_index[self.max_mild_symptom_tag + 1 :] *= (
-            multiplier / reference_weighted_multiplier
+        return np.cumsum(modified_probabilities)[:-1] 
+
+    def adjust_probabilities_for_comorbidities(
+        self, probabilities, effective_multiplier
+    ):
+        probabilities_with_comorbidity = np.zeros_like(probabilities)
+        p_mild = probabilities[: self.max_mild_symptom_tag].sum()
+        p_severe = probabilities[self.max_mild_symptom_tag:].sum()
+        p_severe_with_comorbidity = p_severe * effective_multiplier
+        p_mild_with_comorbidity = 1 - p_severe_with_comorbidity
+        probabilities_with_comorbidity[: self.max_mild_symptom_tag] = (
+            probabilities[: self.max_mild_symptom_tag]
+            * p_mild_with_comorbidity
+            / p_mild
         )
-        return health_index
+        probabilities_with_comorbidity[self.max_mild_symptom_tag:] = (
+            probabilities[self.max_mild_symptom_tag:]
+            * p_severe_with_comorbidity
+            / p_severe
+        )
+        return probabilities_with_comorbidity
 
 
 def read_comorbidity_csv(filename: str):
@@ -379,10 +398,10 @@ def read_comorbidity_csv(filename: str):
         )
     comorbidity_df.columns = column_names
     for column in comorbidity_df.columns:
-        no_comorbidity = comorbidity_df[column].loc['no_condition']
+        no_comorbidity = comorbidity_df[column].loc["no_condition"]
         should_have_comorbidity = 1 - no_comorbidity
         has_comorbidity = np.sum(comorbidity_df[column]) - no_comorbidity
-        comorbidity_df[column].iloc[:-1] *= should_have_comorbidity/has_comorbidity
+        comorbidity_df[column].iloc[:-1] *= should_have_comorbidity / has_comorbidity
 
     return comorbidity_df.T
 
