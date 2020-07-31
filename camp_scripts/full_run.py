@@ -48,7 +48,8 @@ from june.groups.leisure import HouseholdVisitsDistributor
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-world = generate_empty_world()
+world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+#world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
