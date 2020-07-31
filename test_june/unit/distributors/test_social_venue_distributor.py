@@ -5,7 +5,7 @@ from scipy.stats import poisson
 
 from june.groups.leisure import SocialVenueDistributor
 from june.groups.leisure import SocialVenue, SocialVenues
-from june.groups.leisure.social_venue_distributor import parse_age_probabilites
+from june.utils.parse_probabilities import parse_age_probabilites
 from june.demography import Person
 
 

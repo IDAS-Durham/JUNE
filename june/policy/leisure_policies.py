@@ -4,7 +4,7 @@ from typing import Union, Optional, List, Dict
 
 from .policy import Policy, Policies, PolicyCollection
 from june.exc import PolicyError
-from june.groups.leisure.social_venue_distributor import parse_age_probabilites
+from june.utils.parse_probabilities import parse_age_probabilites
 from june.groups.leisure import Leisure
 
 
