@@ -62,7 +62,7 @@ class ReadLogger:
             time_stamps = [
                 key
                 for key in f.keys()
-                if key not in ("population", "hospitals", "locations")
+                if key not in ("population", "hospitals", "locations", "parameters")
             ]
             ids = []
             symptoms = []
@@ -456,3 +456,46 @@ class ReadLogger:
             estimated_cases_df.index < self.end_date
         )
         self.estimated_cases_df = estimated_cases_df[mask]
+
+    def repack_dict(
+        self,hdf5_obj,output_dict,base_path,output_name=None,depth=0,max_depth=8
+    ):
+
+        if output_name is None:
+            output_name = base_path.split('/')[-1]
+
+        if depth > max_depth:
+            output_dict[output_name] = (
+                f"increase get_parameters max_depth, exceeded at max_depth={max_depth}"
+            )
+            return None
+
+        if isinstance(hdf5_obj[base_path],h5py.Dataset):
+            output_dict[output_name] = hdf5_obj[base_path][()]
+        elif isinstance(hdf5_obj[base_path], h5py.Group):
+            output_dict[output_name] = {}
+            for obj_name in hdf5_obj[base_path]:
+                dset_path = f'{base_path}/{obj_name}'
+                self.repack_dict(
+                    hdf5_obj,output_dict[output_name],dset_path,depth=depth+1,max_depth=max_depth
+                ) # Recursion!
+
+    def get_parameters(
+        self,
+        parameters=['beta','alpha_physical'],
+        max_depth=8
+    ):
+        if isinstance(parameters,list):
+            parameters = {p:p for p in parameters}
+
+        output_params = {}
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:            
+            for input_name,output_name in parameters.items():
+                dset_path = f'parameters/{input_name}'
+                self.repack_dict(
+                    f,output_params,dset_path,output_name=output_name,depth=0,max_depth=max_depth
+                )
+
+        return output_params
+
+            

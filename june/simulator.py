@@ -356,8 +356,17 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
+            
+            self.logger.log_parameters(
+                interaction = self.interaction,
+                infection_seed = self.infection_seed,
+                infection_selector = self.infection_selector,
+                activity_manager = self.activity_manager
+            )
+
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
+
         for time in self.timer:
             if time > self.timer.final_date:
                 break
