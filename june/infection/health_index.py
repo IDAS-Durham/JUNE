@@ -133,8 +133,8 @@ class HealthIndexGenerator:
             poli_icu,
             poli_deaths,
             asymptomatic_ratio,
-            comorbidity_multipliers,
-            prevalence_reference_population,
+            comorbidity_multipliers=comorbidity_multipliers,
+            prevalence_reference_population=prevalence_reference_population,
         )
 
     @classmethod
@@ -339,7 +339,7 @@ class HealthIndexGenerator:
             sex = 0
         roundage = int(round(person.age))
         health_index = np.cumsum(self.prob_lists[sex][roundage])
-        if person.comorbidity is not None:
+        if hasattr(self,'comorbidity_multipliers') and person.comorbidity is not None:
             health_index = self.adjust_for_comorbidities(health_index, person)
         return health_index
 
