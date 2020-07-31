@@ -360,6 +360,7 @@ class Simulator:
             self.logger.log_parameters(
                 interaction = self.interaction,
                 infection_seed = self.infection_seed,
+                infection_selector = self.infection_selector,
                 activity_manager = self.activity_manager
             )
 

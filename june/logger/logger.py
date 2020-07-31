@@ -319,6 +319,7 @@ class Logger:
         self,
         interaction: "Interaction" = None,
         infection_seed: "InfectionSeed" = None,
+        infection_selector: "InfectionSelector" = None,
         activity_manager: "ActivityManager" = None
     ):
         with h5py.File(self.file_path, "a", libver="latest") as f:
@@ -336,7 +337,7 @@ class Logger:
                     dset_path = f'parameters/contact_matrices/{key}'
                     f.create_dataset(dset_path,data=data)
 
-                # selector params
+            if infection_selector is not None:
                 f.create_dataset("parameters/asymptomatic_ratio",
                     data=interaction.selector.health_index_generator.asymptomatic_ratio) #
 

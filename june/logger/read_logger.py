@@ -466,7 +466,7 @@ class ReadLogger:
 
         if depth > max_depth:
             output_dict[output_name] = (
-                f"increase get_parameters max_depth=2, exceeded at max_depth={max_depth}"
+                f"increase get_parameters max_depth, exceeded at max_depth={max_depth}"
             )
             return None
 
