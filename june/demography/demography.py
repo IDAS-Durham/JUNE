@@ -239,14 +239,10 @@ class Demography:
 
             if person.sex == 'm':
                 comorbidity = np.random.choice(list(male_co.index),1,p=list(male_co[male_co.columns[column_index]]))[0]
-                if comorbidity == 'no_condition':
-                    comorbidity = None
                 return comorbidity
             
             if person.sex == 'f':
                 comorbidity = np.random.choice(list(female_co.index),1,p=list(female_co[female_co.columns[column_index]]))[0]
-                if comorbidity == 'no_condition':
-                    comorbidity = None
                 return comorbidity
           
         else:
