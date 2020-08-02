@@ -19,3 +19,12 @@ hospitalisation:
 severe_symptoms_stay_home:
   start_time: 1000-01-01
   end_time: 9999-01-01
+
+quarantine:
+  n_days: 7 # for the symptomatic person
+  n_days_household: 7 # for the housemates
+  compliance: 0.6
+  household_compliance: 0.2
+  start_time: 1000-03-16 
+  end_time: 9999-03-23 
+

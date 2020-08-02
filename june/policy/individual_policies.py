@@ -106,6 +106,7 @@ class Quarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         n_days: int = 7,
         n_days_household: int = 14,
+        compliance: float = 1.0,
         household_compliance: float = 1.0,
     ):
         """
@@ -128,6 +129,7 @@ class Quarantine(StayHome):
         self.n_days = n_days
         self.n_days_household = n_days_household
         self.household_compliance = household_compliance
+        self.compliance = compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start):
         self_quarantine = False
@@ -138,7 +140,8 @@ class Quarantine(StayHome):
                 )
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
-                    self_quarantine = True
+                    if np.random.rand() < self.compliance:
+                        self_quarantine = True
         except AttributeError:
             pass
         housemates_quarantine = person.residence.group.quarantine(
