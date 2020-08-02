@@ -78,12 +78,12 @@ interaction = ContactAveraging.from_file(config_filename='../configs_camps/defau
 policies = Policies.from_file(camp_configs_path / 'defaults/policy/policy.yaml') # no policies for now
 
 cases_detected =  {
-        'CXB-202': 3, 
-        'CXB-204': 6, 
-        'CXB-208': 8, 
-        'CXB-203': 1,
-        'CXB-207':2, 
-        'CXB-213': 2,
+        'CXB-202': 3, # camp 1W
+        'CXB-204': 6, # camp 2W
+        'CXB-208': 8, # Camp 6
+        'CXB-203': 1,# Camp 2E
+        'CXB-207':2, # Camp 7
+        'CXB-213': 2, # Camp  9
         } # By the 24th May
 
 print('Detected cases = ', sum(cases_detected.values()))
