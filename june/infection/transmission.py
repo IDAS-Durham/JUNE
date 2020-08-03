@@ -3,6 +3,7 @@ import yaml
 import numpy as np
 from scipy.stats import gamma
 import sys
+from typing import Optional
 
 from june.infection.trajectory_maker import CompletionTime
 from june.infection.symptom_tag import SymptomTag
@@ -53,16 +54,40 @@ class TransmissionConstant(Transmission):
 
 
 class TransmissionGamma(Transmission):
+    """
+    Module to simulate the infectiousness profiles found in :
+        - https://www.nature.com/articles/s41591-020-0869-5
+        - https://arxiv.org/pdf/2007.06602.pdf
+    """
     def __init__(
         self,
-        max_infectiousness=1.0,
-        shape=2.0,
-        rate=3.0,
-        shift=-2.0,
-        max_symptoms=None,
-        asymptomatic_infectious_factor=None,
-        mild_infectious_factor=None,
+        max_infectiousness: float=1.0,
+        shape: float =2.0,
+        rate: float =3.0,
+        shift: float =-2.0,
+        max_symptoms: Optional["SymptomTag"] =None,
+        asymptomatic_infectious_factor: Optional[float]=None,
+        mild_infectious_factor: Optional[float] =None,
     ):
+        '''
+        Parameters
+        ----------
+        max_infectiousness:
+            value of the infectiousness at its peak
+        shape:
+            shape parameter of the gamma distribution (a for scipy stats)
+        rate:
+            rate parameter of the gamma distribution (1/rate = scale for scipy stats)
+        shift:
+            location parameter of the gamma distribution
+        max_symptoms:
+            maximum symptoms the individual will develop, used to reduce the infectiousness
+            of asymptomatic and mild individuals if wanted
+        asymptomatic_infectious_factor:
+            factor to reduce the infectiousness of asymptomatic individuals
+        mild_infectious_factor:
+            factor to reduce the infectiousness of mild individuals
+        '''
         self.max_infectiousness = max_infectiousness
         self.shape = shape
         self.rate = rate
@@ -86,6 +111,22 @@ class TransmissionGamma(Transmission):
         max_symptoms: "SymptomTag" = None,
         config_path: str = default_gamma_config_path,
     ) -> "TransmissionGamma":
+        """
+        Generate transmission class reading parameters from config file
+
+        Parameters
+        ----------
+        max_symptoms:
+            maximum symptoms the individual will develop, used to reduce the infectiousness
+            of asymptomatic and mild individuals if wanted
+        config_path:
+            path to config parameters
+
+        Returns
+        -------
+            TransmissionGamma instance
+
+        """
         with open(config_path) as f:
             config = yaml.safe_load(f)
         max_infectiousness = CompletionTime.from_dict(config["max_infectiousness"])()
@@ -116,6 +157,26 @@ class TransmissionGamma(Transmission):
         max_symptoms: "SymptomTag" = None,
         config_path: str = default_gamma_config_path,
     ) -> "TransmissionGamma":
+        """
+        Generate transmission class reading parameters from config file, linked to
+        the time of symptoms onset
+
+        Parameters
+        ----------
+        time_to_symptoms_onset:
+            time (from infection) at which the person becomes symptomatic
+        max_symptoms:
+            maximum symptoms the individual will develop, used to reduce the infectiousness
+            of asymptomatic and mild individuals if wanted
+        config_path:
+            path to config parameters
+
+        Returns
+        -------
+            TransmissionGamma instance
+
+        """
+
         with open(config_path) as f:
             config = yaml.safe_load(f)
         max_infectiousness = CompletionTime.from_dict(config["max_infectiousness"])()
