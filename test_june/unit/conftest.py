@@ -22,7 +22,7 @@ from june.simulator import Simulator
 from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography, World
 
-constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
 
 
 @pytest.fixture(autouse=True)
@@ -87,7 +87,8 @@ def create_infection_constant(transmission, symptoms_constant):
 def create_interaction():
     interaction = Interaction.from_file()
     interaction.selector = infect.InfectionSelector.from_file(
-        config_filename=constant_config
+        transmission_type='constant',
+        transmission_config_path=constant_config
     )
     return interaction
 
@@ -125,7 +126,12 @@ def create_box_world():
 @pytest.fixture(name="selector", scope="session")
 def make_selector():
     selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
-    return InfectionSelector.from_file(config_filename=selector_file)
+    return InfectionSelector.from_file(
+                    transmission_type='constant',
+        transmission_config_path=constant_config
+    )
+
+
 
 
 @pytest.fixture(name="simulator_box", scope="session")
