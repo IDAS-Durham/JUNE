@@ -11,7 +11,7 @@ from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 
-default_config_filename = paths.configs_path / "defaults/infection/InfectionXNExp.yaml"
+default_transmission_config_path = paths.configs_path / "defaults/transmission/XNExp.yaml"
 default_trajectories_config_path = (
     paths.configs_path / "defaults/symptoms/trajectories.yaml"
 )
@@ -27,8 +27,9 @@ class SymptomsType(IntEnum):
 class InfectionSelector:
     def __init__(
         self,
-        transmission_type: str,
-        trajectories_config_path: str = default_trajectories_config_path,
+        transmission_config_path: str,
+        transmission_type: str = 'xnexp',
+        trajectory_maker= TrajectoryMakers.from_file(default_trajectories_config_path),
         health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3),
     ):
         """
@@ -36,21 +37,21 @@ class InfectionSelector:
 
         Parameters
         ----------
-        transmission_type:
+        transmission_config_path:
             either constant or xnexp, controls the person's infectiousness profile over time
         asymptomatic_ratio:
             proportion of infected people that are asymptomatic
         """
-        self.transmission_type = transmission_type
-        self.trajectory_maker = TrajectoryMakers.from_file(
-            config_path=trajectories_config_path
-        )
+        self.transmission_type = transmission_type 
+        self.transmission_config_path = transmission_config_path 
+        self.trajectory_maker = trajectory_maker
         self.health_index_generator = health_index_generator
 
     @classmethod
     def from_file(
         cls,
-        config_filename: str = default_config_filename,
+        transmission_type='xnexp',
+        transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
         health_index_generator: HealthIndexGenerator = HealthIndexGenerator.from_file(
             asymptomatic_ratio=0.3
@@ -66,11 +67,11 @@ class InfectionSelector:
         config_filename: 
             path to config file 
         """
-        with open(config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+        trajectory_maker= TrajectoryMakers.from_file(trajectories_config_path)
         return InfectionSelector(
-            config["transmission_type"],
-            trajectories_config_path=trajectories_config_path,
+            transmission_type=transmission_type,
+            transmission_config_path=transmission_config_path,
+            trajectory_maker=trajectory_maker,
             health_index_generator=health_index_generator,
         )
 
@@ -140,9 +141,12 @@ class InfectionSelector:
                 n=n,
                 alpha=alpha,
                 max_symptoms=max_symptoms_tag,
+                config_path = self.transmission_config_path
             )
         elif self.transmission_type == "constant":
-            return TransmissionConstant.from_file()
+            return TransmissionConstant.from_file(
+                    config_path = self.transmission_config_path
+                    )
         else:
             raise NotImplementedError("This transmission type has not been implemented")
 
