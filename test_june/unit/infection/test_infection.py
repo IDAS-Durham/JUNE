@@ -10,6 +10,7 @@ from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission_xnexp as transxnexp
 from june.infection.health_information import HealthInformation
 from june.infection.symptom_tag import SymptomTag
+from june import paths
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -62,7 +63,8 @@ class TestInfectionSelector:
         assert selector.transmission_type == 'xnexp'
 
     def test__constant_filename(self):
-        selector = InfectionSelector.from_file(config_filename=constant_config)
+        selector = InfectionSelector.from_file(transmission_type='constant', 
+            transmission_config_path=paths.configs_path / 'defaults/transmission/TransmissionConstant.yaml')
         assert selector.transmission_type == 'constant'
 
     def test__lognormal_in_maxprob(self):
