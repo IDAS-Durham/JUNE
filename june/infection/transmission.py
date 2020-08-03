@@ -89,7 +89,7 @@ class TransmissionGamma(Transmission):
             config["mild_infectious_factor"]
         )()
 
-        return TransmissionGamma(
+        return cls(
             max_infectiousness=max_infectiousness,
             shape=shape,
             rate=rate,
@@ -111,7 +111,7 @@ class TransmissionGamma(Transmission):
         max_infectiousness = CompletionTime.from_dict(config["max_infectiousness"])()
         shape = CompletionTime.from_dict(config["shape"])()
         rate = CompletionTime.from_dict(config["rate"])()
-        shift = CompletionTime.from_dict(config["shift"])() - time_to_symptoms_onset
+        shift = CompletionTime.from_dict(config["shift"])() + time_to_symptoms_onset
         asymptomatic_infectious_factor = CompletionTime.from_dict(
             config["asymptomatic_infectious_factor"]
         )()
@@ -119,7 +119,7 @@ class TransmissionGamma(Transmission):
             config["mild_infectious_factor"]
         )()
 
-        return TransmissionGamma(
+        return cls(
             max_infectiousness=max_infectiousness,
             shape=shape,
             rate=rate,

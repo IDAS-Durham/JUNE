@@ -6,14 +6,17 @@ max_infectiousness:
         loc: 0.0
         scale: 1. 
 shape:
-        type: constant 
-        value: 1.56
+        type: normal 
+        loc: 1.56
+        scale: 0.08
 rate:
-        type: constant 
-        value: 0.53
+        type: normal 
+        loc: 0.53
+        scale: 0.03
 shift:
-        type: constant 
-        value: -2.12
+        type: normal 
+        loc: -2.12
+        scale: 0.1
 asymptomatic_infectious_factor:
         type: constant
         value: 0.29
