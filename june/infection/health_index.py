@@ -339,13 +339,15 @@ class HealthIndexGenerator:
             sex = 0
         round_age = int(round(person.age))
         probabilities = self.prob_lists[sex][round_age]
-        if hasattr(self,'comorbidity_multipliers') and person.comorbidity is not None:
-            probabilities = self.adjust_for_comorbidities(probabilities, person.comorbidity, person.age, person.sex)
+        if hasattr(self, "comorbidity_multipliers") and person.comorbidity is not None:
+            probabilities = self.adjust_for_comorbidities(
+                probabilities, person.comorbidity, person.age, person.sex
+            )
         return np.cumsum(probabilities)
 
     def get_multiplier_from_reference_prevalence(
-            self, prevalence_reference_population: dict, age: int, sex: str 
-    )->float:
+        self, prevalence_reference_population: dict, age: int, sex: str
+    ) -> float:
         """
         Compute mean comorbidity multiplier given the prevalence of the different comorbidities
         in the reference population (for example the UK). It will be used to remove effect of comorbidities
@@ -371,13 +373,13 @@ class HealthIndexGenerator:
         for comorbidity in prevalence_reference_population.keys():
             weighted_multiplier += (
                 self.comorbidity_multipliers[comorbidity]
-                * self.prevalence_reference_population[comorbidity][sex][
-                    age
-                ]
+                * self.prevalence_reference_population[comorbidity][sex][age]
             )
         return weighted_multiplier
 
-    def adjust_for_comorbidities(self, probabilities: list, comorbidity: str, age: int, sex: str):
+    def adjust_for_comorbidities(
+        self, probabilities: list, comorbidity: str, age: int, sex: str
+    ):
         """
         Compute adjusted probabilities for a person with given comorbidity, age and sex.
 
@@ -403,7 +405,7 @@ class HealthIndexGenerator:
 
         multiplier = self.comorbidity_multipliers.get(comorbidity, 1.0)
         reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
-            self.prevalence_reference_population, age=age, sex=sex 
+            self.prevalence_reference_population, age=age, sex=sex
         )
         effective_multiplier = multiplier / reference_weighted_multiplier
         return self.adjust_probabilities_for_comorbidities(
@@ -430,10 +432,11 @@ class HealthIndexGenerator:
             adjusted probabilities
         """
 
-
         probabilities_with_comorbidity = np.zeros_like(probabilities)
-        p_mild = probabilities[:self.max_mild_symptom_tag].sum()
-        p_severe = probabilities[self.max_mild_symptom_tag:].sum() + (1-probabilities.sum())
+        p_mild = probabilities[: self.max_mild_symptom_tag].sum()
+        p_severe = probabilities[self.max_mild_symptom_tag :].sum() + (
+            1 - probabilities.sum()
+        )
         p_severe_with_comorbidity = p_severe * effective_multiplier
         p_mild_with_comorbidity = 1 - p_severe_with_comorbidity
         probabilities_with_comorbidity[: self.max_mild_symptom_tag] = (
@@ -441,8 +444,8 @@ class HealthIndexGenerator:
             * p_mild_with_comorbidity
             / p_mild
         )
-        probabilities_with_comorbidity[self.max_mild_symptom_tag:] = (
-            probabilities[self.max_mild_symptom_tag:]
+        probabilities_with_comorbidity[self.max_mild_symptom_tag :] = (
+            probabilities[self.max_mild_symptom_tag :]
             * p_severe_with_comorbidity
             / p_severe
         )
