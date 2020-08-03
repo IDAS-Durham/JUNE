@@ -12,7 +12,8 @@ from june.demography.demography import (
     load_age_and_sex_generators_for_bins,
     Demography,
     Population,
-    _load_comorbidity_data
+    load_comorbidity_data,
+    generate_comorbidity,
 )
 from june.paths import data_path
 from june.infection import Infection, HealthIndexGenerator
@@ -34,7 +35,6 @@ from camp_creation import (
     generate_empty_world,
     populate_world,
     distribute_people_to_households,
-    generate_comorbidity,
 )  # this is loaded from the ../camp_scripts folder
 
 from camps.groups import PumpLatrines, PumpLatrineDistributor
@@ -94,7 +94,7 @@ for area in world.areas:
 # =================================== comorbidities ===============================#
 
 
-comorbidity_data = _load_comorbidity_data(camp_data_path / "input/demography/myanmar_male_comorbidities.csv",\
+comorbidity_data = load_comorbidity_data(camp_data_path / "input/demography/myanmar_male_comorbidities.csv",\
                                           camp_data_path / "input/demography/myanmar_female_comorbidities.csv"
 )
 for person in world.people:
