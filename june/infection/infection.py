@@ -137,8 +137,8 @@ class InfectionSelector:
         elif self.transmission_type == "gamma":
             return TransmissionGamma.from_file_linked_symptoms(
                 time_to_symptoms_onset=time_to_symptoms_onset,
-                #max_symptoms=None,
-                #config_path = self.transmission_config_path
+                max_symptoms=max_symptoms_tag,
+                config_path = self.transmission_config_path
             )
  
         elif self.transmission_type == "constant":
