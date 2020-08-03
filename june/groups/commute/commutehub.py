@@ -29,10 +29,8 @@ class CommuteHub(Group):
         """
         super().__init__()
         
-        #self.id = commutehub_id -> don't need this due to Group inheritence
         self.lat_lon = lat_lon
         self.city = city # station the hub is affiliated to
-        #self.passengers = [] # passengers flowing through commute hub -> people in form Group inheritence
         self.commuteunits = []
 
     def add(self, person):
@@ -61,8 +59,6 @@ class CommuteHubs(Supergroup):
         super().__init__()
         
         self.commutecities = commutecities
-        #self.msoa_coordinates = msoa_coordinates
-        #self.init = init
         self.members = []
 
     def _get_msoa_lat_lon(self, msoa):
@@ -101,16 +97,26 @@ class CommuteHubs(Supergroup):
             # handle London separately
             # give London 8 hubs
             if commutecity.city == 'London':
-                # for now give London 4 hubs, but correct this later
+                # for now give London 8 hubs, but correct this later
 
-                hubs = np.zeros(4*2).reshape(4,2)
+                hubs = np.zeros(8*2).reshape(8,2)
                 hubs[:,0] = metro_centroid[0]
                 hubs[:,1] = metro_centroid[1]
 
+                # north, south, east, west hubs
                 hubs[0][1] += distance_away
                 hubs[1][1] -= distance_away
                 hubs[2][0] += distance_away
                 hubs[3][0] -= distance_away
+                # diagonal hubs
+                hubs[4][0] += distance_away/np.sqrt(2)
+                hubs[4][1] += distance_away/np.sqrt(2)
+                hubs[5][0] += distance_away/np.sqrt(2)
+                hubs[5][1] -= distance_away/np.sqrt(2)
+                hubs[6][0] -= distance_away/np.sqrt(2)
+                hubs[6][1] -= distance_away/np.sqrt(2)
+                hubs[7][0] -= distance_away/np.sqrt(2)
+                hubs[7][1] += distance_away/np.sqrt(2)
                 
             # give non-London stations 4 hubs
             else:

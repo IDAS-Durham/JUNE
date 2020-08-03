@@ -11,7 +11,7 @@ from june.commute import ModeOfTransport
 class Activities(dataobject):
     residence: None
     primary_activity: None
-    hospital: None
+    medical_facility: None
     commute: None
     rail_travel: None
     leisure: None
@@ -37,6 +37,7 @@ class Person(dataobject):
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
+    comorbidity: str = None
     # commute
     home_city: str = None
     mode_of_transport: ModeOfTransport = None
@@ -51,7 +52,13 @@ class Person(dataobject):
 
     @classmethod
     def from_attributes(
-        cls, sex="f", age=27, ethnicity=None, socioecon_index=None, id=None
+        cls,
+        sex="f",
+        age=27,
+        ethnicity=None,
+        socioecon_index=None,
+        id=None,
+        comorbidity=None,
     ):
         if id is None:
             id = next(Person._id)
@@ -63,6 +70,7 @@ class Person(dataobject):
             socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
+            comorbidity=comorbidity,
             subgroups=Activities(None, None, None, None, None, None, None),
         )
 
@@ -93,8 +101,8 @@ class Person(dataobject):
         return self.subgroups.primary_activity
 
     @property
-    def hospital(self):
-        return self.subgroups.hospital
+    def medical_facility(self):
+        return self.subgroups.medical_facility
 
     @property
     def commute(self):
@@ -114,12 +122,16 @@ class Person(dataobject):
 
     @property
     def hospitalised(self):
-        if (
-            self.hospital is not None
-            and self.hospital.subgroup_type == self.hospital.group.SubgroupType.patients
-        ):
-            return True
-        return False
+        try:
+            return all(
+                [
+                    self.medical_facility.group.spec == "hospital",
+                    self.medical_facility.subgroup_type
+                    == self.medical_facility.group.SubgroupType.patients,
+                ]
+            )
+        except AttributeError:
+            return False
 
     @property
     def intensive_care(self):
@@ -163,11 +175,3 @@ class Person(dataobject):
             return None
         else:
             return self.health_information.infection.symptoms
-
-    @property
-    def kid_of_key_worker(self):
-        for mate in self.housemates:
-            if mate.lockdown_status in ["key_worker"]:
-                return True
-        return False
-

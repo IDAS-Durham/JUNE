@@ -6,9 +6,10 @@ from typing import List
 from june.demography import Population
 from pathlib import Path
 
+nan_integer = -999
 
 class Logger:
-    def __init__(self, save_path: str = "results", file_name: str = "logger.hdf5"):
+    def __init__(self, save_path: str = "results"):
         """
         Logger used by the simulator to store the relevant information.
 
@@ -21,7 +22,7 @@ class Logger:
         """
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.save_path / file_name
+        self.file_path = self.save_path / "logger.hdf5"
         self.infection_location = []
         # Remove if exists
         try:
@@ -62,21 +63,30 @@ class Logger:
                     ids = []
                     ages = []
                     sexes = []
+                    ethnicities = []
+                    socioeconomic_indcs = []
                     super_areas = []
 
                     for person in population.people[idx1:idx2]:
                         ids.append(person.id)
                         ages.append(person.age)
-                        sexes.append(person.sex.encode("ascii", "ignore"))
-                        if person.area.super_area is not None:
-                            super_areas.append(person.area.super_area.name)
+                        if person.ethnicity is None:
+                            ethnicities.append("X")
                         else:
-                            super_areas.append(nan_integer)
+                            ethnicities.append(person.ethnicity.encode("ascii", "ignore"))
+                        if person.socioecon_index is None:
+                            socioeconomic_indcs.append(-1)
+                        else:
+                            socioeconomic_indcs.append(person.socioecon_index)
+                        sexes.append(person.sex.encode("ascii", "ignore"))
+                        super_areas.append(person.area.super_area.name)
 
                     ids = np.array(ids, dtype=np.int)
                     ages = np.array(ages, dtype=np.int16)
                     sexes = np.array(sexes, dtype="S10")
                     super_areas = np.array(super_areas, dtype="S10")
+                    ethnicities = np.array(ethnicities, dtype="S10")
+                    socioeconomic_indcs = np.array(socioeconomic_indcs, dtype=np.int8)
 
                     if chunk == 0:
                         people_dset.create_dataset(
@@ -87,6 +97,12 @@ class Logger:
                         )
                         people_dset.create_dataset(
                             "sex", data=sexes, maxshape=(None,), compression="gzip"
+                        )
+                        people_dset.create_dataset(
+                            "ethnicity", data=ethnicities, maxshape=(None,), compression="gzip"
+                        )
+                        people_dset.create_dataset(
+                            "socioeconomic_index", data=socioeconomic_indcs, maxshape=(None,), compression="gzip"
                         )
                         people_dset.create_dataset(
                             "super_area",
@@ -104,6 +120,10 @@ class Logger:
                         people_dset["sex"][idx1:idx2] = sexes
                         people_dset["super_area"].resize(newshape)
                         people_dset["super_area"][idx1:idx2] = super_areas
+                        people_dset["ethnicity"].resize(newshape)
+                        people_dset["ethnicity"][idx1:idx2] = ethnicities
+                        people_dset["socioeconomic_index"].resize(newshape)
+                        people_dset["socioeconomic_index"][idx1:idx2] = socioeconomic_indcs
 
     def log_infected(
         self,

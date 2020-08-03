@@ -195,6 +195,13 @@ class ContactAveraging(Interaction):
                 susceptibles_idx,
                 infecters_idx,
             )
+        elif susceptibles_subgroup.group.spec == "commute":
+            # decreasing not peak commute contacts by 20%
+            peak_not_peak = np.random.choice(2,1,[0.8,0.2])
+            if peak_not_peak == 1:
+                n_contacts = contact_matrix[susceptibles_idx][infecters_idx] * 0.8
+            else:
+                n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
         else:
             n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
         return (

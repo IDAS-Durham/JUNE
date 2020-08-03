@@ -36,9 +36,7 @@ def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index)
         hospitals_df[["latitude", "longitude"]].iloc[index].values, k=10
     )
 
-    print(closest_idx)
     closest_hospital_idx = closest_idx[0]
-    print(index)
     assert hospitals.members[closest_hospital_idx] == hospitals.members[index]
 
 
@@ -59,7 +57,7 @@ def test__add_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
-    assert dummy_person.hospital is None
+    assert dummy_person.medical_facility is None
     hospitals.members[0].add_as_patient(dummy_person)
     if health_info == "hospitalised":
         assert hospitals.members[0][Hospital.SubgroupType.patients][0] == dummy_person
@@ -67,10 +65,10 @@ def test__add_patient_release_patient(hospitals, health_info, selector):
         assert (
             hospitals.members[0][Hospital.SubgroupType.icu_patients][0] == dummy_person
         )
-    assert dummy_person.hospital is not None
+    assert dummy_person.medical_facility is not None
 
     hospitals.members[0].release_as_patient(dummy_person)
-    assert dummy_person.hospital is None
+    assert dummy_person.medical_facility is None
 
 
 class MockArea:
@@ -83,7 +81,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.area = MockArea(hospitals.members[-1].coordinates)
-    assert dummy_person.hospital is None
+    assert dummy_person.medical_facility is None
     dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
     hospitals.allocate_patient(dummy_person)
     if health_info == "hospitalised":
@@ -95,10 +93,10 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
             dummy_person
             in hospitals.members[-1][Hospital.SubgroupType.icu_patients].people
         )
-    selected_hospital = dummy_person.hospital
-    assert dummy_person.hospital is not None
-    dummy_person.hospital.group.release_as_patient(dummy_person)
-    assert dummy_person.hospital is None
+    selected_hospital = dummy_person.medical_facility
+    assert dummy_person.medical_facility is not None
+    dummy_person.medical_facility.group.release_as_patient(dummy_person)
+    assert dummy_person.medical_facility is None
 
 
 @pytest.mark.parametrize("health_info", ["hospitalised", "intensive_care"])
@@ -115,9 +113,9 @@ def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector)
 
     hospitals.allocate_patient(dummy_person) 
     if health_info == 'hospitalised':
-        assert len(dummy_person.hospital.people) > dummy_person.hospital.group.n_beds
+        assert len(dummy_person.medical_facility.people) > dummy_person.medical_facility.group.n_beds
     elif health_info == 'intensive_care':
-        assert len(dummy_person.hospital.people) > dummy_person.hospital.group.n_icu_beds
+        assert len(dummy_person.medical_facility.people) > dummy_person.medical_facility.group.n_icu_beds
 
     for hospital in hospitals.members:
         for _ in range(int(hospital.n_beds)):

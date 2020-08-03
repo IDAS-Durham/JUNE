@@ -50,7 +50,7 @@ def test_full_run():
     interaction = inter.ContactAveraging.from_file(selector=selector)
     policies = Policies.from_file()
     simulator = Simulator.from_file(
-        world, interaction, selector, config_filename=test_config, leisure=leisure_instance,
+        world, interaction, config_filename=test_config, leisure=leisure_instance,
         policies=policies
     )
     seed = InfectionSeed(simulator.world.super_areas, selector,)

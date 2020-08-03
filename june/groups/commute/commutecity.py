@@ -80,9 +80,6 @@ class CommuteCities(Supergroup):
         Note: London must be initialised after the other stations
         """
         
-        #self.uk_pcs_coordinates = uk_pcs_coordinates
-        #self.msoa_coordinates = msoa_coordinates
-
         super().__init__()
         self.members = []
         
@@ -161,7 +158,6 @@ class CommuteCities(Supergroup):
             city_metro_msoas, city_metro_centroid = self._get_nearest_msoas(lat_lon_stat)
 
             commute_city = CommuteCity(
-                #commutecity_id = idx,
                 city = stations[idx],
                 metro_msoas = city_metro_msoas,
                 metro_centroid = city_metro_centroid,
@@ -204,7 +200,6 @@ class CommuteCities(Supergroup):
         city_metro_centroid = [np.mean(city_metro_centroid_all[:,0]), np.mean(city_metro_centroid_all[:,1])]
 
         commute_city = CommuteCity(
-            #commutecity_id = len(self.members),
             city = 'London',
             metro_msoas = city_metro_msoas_all,
             metro_centroid = city_metro_centroid,
