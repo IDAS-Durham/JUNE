@@ -1,0 +1,23 @@
+title: Covid configuration example
+
+activity_to_groups:
+  residence: ['households']
+
+time:
+  total_days: 60
+  initial_day: "2020-03-01" 
+  step_duration: 
+      weekday:
+          0: 12
+          1: 12
+      weekend:
+          0: 12
+          1: 12
+  step_activities:
+      weekday:
+          0: ['residence'] 
+          1: ['residence'] 
+      weekend:
+          0: ['residence'] 
+          1: ['residence'] 
+

@@ -2,6 +2,10 @@ hospitalisation:
   start_time: 1000-01-01
   end_time: 9999-01-01
 
+severe_symptoms_stay_home:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
 quarantine:
     1:
         n_days: 7 # for the symptomatic person
