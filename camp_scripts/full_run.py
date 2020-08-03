@@ -105,7 +105,7 @@ selector = InfectionSelector.from_file(health_index_generator=health_index_gener
 
 interaction = ContactAveraging.from_file(
     config_filename=camp_configs_path
-    / "defaults/interaction/ContactInteraction_med_low_low.yaml",
+    / "defaults/interaction/ContactInteraction_med_low_low_low.yaml",
     selector=selector,
 )
 
