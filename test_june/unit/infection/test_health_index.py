@@ -90,7 +90,7 @@ def test__mean_multiplier_reference():
     )
     assert (
         health_index.get_multiplier_from_reference_prevalence(
-            prevalence_reference_population, dummy
+            prevalence_reference_population, dummy.age, dummy.sex
         )
         == mean_multiplier_uk
     )
@@ -123,7 +123,7 @@ def test__comorbidities_effect():
     guapo_health = health_index(guapo)
     
     mean_multiplier_uk =  health_index.get_multiplier_from_reference_prevalence(
-            prevalence_reference_population, dummy
+            prevalence_reference_population, dummy.age, dummy.sex
             )
 
     dummy_probabilities = np.diff(dummy_health, prepend=0.,append=1.)
@@ -132,11 +132,11 @@ def test__comorbidities_effect():
 
     np.testing.assert_allclose(
         feo_probabilities[:2].sum(),
-        1-comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
+        1-comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum(),
     )
     np.testing.assert_allclose(
         feo_probabilities[2:].sum(),
-        comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
+        comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum(),
     )
 
     np.testing.assert_allclose(
