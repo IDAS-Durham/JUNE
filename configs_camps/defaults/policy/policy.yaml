@@ -23,8 +23,8 @@ severe_symptoms_stay_home:
 isolation:
   start_time: 1000-01-01
   end_time: 9999-01-01
-  testing_mean_time: 1
-  testing_std_time: 0.5
+  testing_mean_time: 3
+  testing_std_time: 1
   n_quarantine_days: 7
   compliance: 0.6
 
