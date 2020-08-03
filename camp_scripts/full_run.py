@@ -15,7 +15,7 @@ from june.demography.demography import (
     load_comorbidity_data,
     generate_comorbidity,
 )
-from june.paths import data_path
+from june.paths import data_path, configs_path
 from june.infection import Infection, HealthIndexGenerator
 from june.infection_seed import InfectionSeed
 from june.infection.infection import InfectionSelector
@@ -100,6 +100,18 @@ comorbidity_data = load_comorbidity_data(camp_data_path / "input/demography/myan
 for person in world.people:
     person.comorbidity = generate_comorbidity(person, comorbidity_data)
 
+health_index_generator = HealthIndexGenerator.from_file_with_comorbidities(
+    camp_configs_path / 'defaults/comorbidities.yaml',
+    camp_data_path / 'input/demography/uk_male_comorbidities.csv',
+    camp_data_path / 'input/demography/uk_female_comorbidities.csv',
+    asymptomatic_ratio=0.2
+)
+
+
+### UNCOMMENT THE BELOW AND COMMENT THE ABOVE TO REMOVE COMORBIDITIES
+
+#health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+
 # ============================================================================#
 
 # =================================== policies ===============================#
@@ -113,7 +125,7 @@ policies = Policies.from_file(
 
 # =================================== infection ===============================#
 
-health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+
 selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
 interaction = Interaction.from_file(
@@ -181,6 +193,7 @@ simulator = Simulator.from_file(
     policies=policies,
     config_filename=CONFIG_PATH,
     infection_selector=selector,
+    save_path="results_no_comorbidities"
 )
 
 leisure_instance.leisure_distributors
