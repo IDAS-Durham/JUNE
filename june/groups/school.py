@@ -89,7 +89,7 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.years = list(range(age_min, age_max+1))
+        self.years = tuple(range(age_min, age_max+1))
         
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:

@@ -20,7 +20,6 @@ from june.groups import (
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
 from june.infection.infection import InfectionSelector
-from june.interaction import ContactAveraging
 from june.policy import (
     Policy,
     SevereSymptomsStayHome,
@@ -103,16 +102,17 @@ class TestSevereSymptomsStayHome:
             ["primary_activity", "residence"],
         )
         date = datetime(2019, 2, 1)
-        assert worker in worker.primary_activity.people
         assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
         sim.clear_world()
         infect_person(pupil, selector, "severe")
         sim.update_health_status(0.0, 0.0)
+        assert pupil.health_information.tag == SymptomTag.severe
         sim.activity_manager.move_people_to_active_subgroups(
             ["primary_activity", "residence"],
         )
-        assert worker in worker.residence.people
         assert pupil in pupil.residence.people
+        assert worker in worker.residence.people
         pupil.health_information = None
         sim.clear_world()
 

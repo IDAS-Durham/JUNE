@@ -4,7 +4,7 @@ from typing import Union, Optional, List, Dict
 
 from .policy import Policy, Policies, PolicyCollection
 from june.exc import PolicyError
-from june.groups.leisure.social_venue_distributor import parse_age_probabilites
+from june.utils.parse_probabilities import parse_age_probabilities
 from june.groups.leisure import Leisure
 
 
@@ -78,10 +78,10 @@ class ChangeLeisureProbability(LeisurePolicy):
         self.original_leisure_probabilities = {}
         for activity in leisure_activities_probabilities:
             self.leisure_probabilities[activity] = {}
-            self.leisure_probabilities[activity]["men"] = parse_age_probabilites(
+            self.leisure_probabilities[activity]["men"] = parse_age_probabilities(
                 leisure_activities_probabilities[activity]["men"]
             )
-            self.leisure_probabilities[activity]["women"] = parse_age_probabilites(
+            self.leisure_probabilities[activity]["women"] = parse_age_probabilities(
                 leisure_activities_probabilities[activity]["women"]
             )
             self.original_leisure_probabilities[

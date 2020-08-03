@@ -282,6 +282,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         how many units of supergroups to process at a time.
         It is advise to keep it around 1e6
     """
+    print("loading world data ...")
     geography = load_geography_from_hdf5(file_path, chunk_size)
     world = World()
     world.areas = geography.areas
@@ -346,9 +347,8 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     # restore person -> subgroups
     first_area_id = world.areas[0].id
     first_person_idx = world.people[0].id
-    pbar = tqdm(total=len(world.people))
+    print("restoring people...")
     for person in world.people:
-        pbar.update(1)
         # add to geography
         person.area = world.areas[person.area - first_area_id]
         person.area.people.append(person)
@@ -365,11 +365,14 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             subgroup.append(person)
             setattr(subgroups_instances, activities[i], subgroup)
         person.subgroups = subgroups_instances
+    print("done")
 
     # add people in super areas
+    print("restoring areas...")
     for super_area in world.super_areas:
         for area in super_area.areas:
             super_area.people.extend(area.people)
+    print("done")
 
     # households and care homes in areas
     social_venues_spec_mapper = {
@@ -380,6 +383,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         "groceries": "groceries",
     }
     if world.households is not None:
+        print("restoring households...")
         for household in world.households:
             area = world.areas[household.area - first_area_id]
             household.area = area
@@ -403,15 +407,20 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                 for id in ids:
                     group = supergroup.members[id - first_group_id]
                     household.social_venues[spec].append(group)
+        print("done")
 
     if world.care_homes is not None:
+        print("restoring care homes...")
         for care_home in world.care_homes:
             area = world.areas[care_home.area - first_area_id]
             care_home.area = area
             area.care_home = care_home
+        print("done")
+
 
     # commute
     if world.commutehubs is not None and world.commutecities is not None:
+        print("restoring commute...")
         first_hub_idx = world.commutehubs[0].id
         for city in world.commutecities:
             commute_hubs = [
@@ -422,6 +431,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
                 world.people[idx - first_person_idx] for idx in city.commute_internal
             ]
             city.commute_internal = commute_internal_people
+        print("done")
 
     world.cemeteries = Cemeteries()
     return world
