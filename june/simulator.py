@@ -57,6 +57,7 @@ class Simulator:
         self.light_logger = light_logger
         self.timer = timer
         self.sort_people_world()
+        self.medical_facilities = self._get_medical_facilities()
         if not self.world.box_mode and save_path is not None:
             self.logger = Logger(save_path=save_path)
         else:
