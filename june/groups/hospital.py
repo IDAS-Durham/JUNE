@@ -21,8 +21,13 @@ default_data_filename = (
 )
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
 
+class MedicalFacility:
+    pass
 
-class Hospital(Group):
+class MedicalFacilities:
+    pass
+
+class Hospital(Group, MedicalFacility):
     """
     The Hospital class represents a hospital and contains information about
     its patients and workers - the latter being the usual "people".
@@ -89,7 +94,7 @@ class Hospital(Group):
             self.SubgroupType.icu_patients,
         ]:
             super().add(
-                person, activity="hospital", subgroup_type=subgroup_type,
+                person, activity="medical_facility", subgroup_type=subgroup_type,
             )
         else:
             super().add(
@@ -127,24 +132,9 @@ class Hospital(Group):
             )
 
     def release_as_patient(self, person):
-        person.subgroups.hospital = None
+        person.subgroups.medical_facility = None
 
-    def move_patient_within_hospital(self, person):
-        if person.health_information.tag == SymptomTag.intensive_care:
-            person.subgroups.hospital = person.hospital.group[
-                self.SubgroupType.icu_patients
-            ]
-        elif person.health_information.tag == SymptomTag.hospitalised:
-            person.subgroups.hospital = person.hospital.group[
-                self.SubgroupType.patients
-            ]
-        else:
-            raise AssertionError(
-                "ERROR: This person shouldn't be trying to get to a hospital"
-            )
-
-
-class Hospitals(Supergroup):
+class Hospitals(Supergroup, MedicalFacilities):
     def __init__(
         self,
         hospitals: List["Hospital"],

@@ -1,5 +1,6 @@
 from june.infection.symptom_tag import SymptomTag
 
+dead_tags = (SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu)
 
 class HealthInformation:
     __slots__ = (
@@ -17,6 +18,7 @@ class HealthInformation:
         "time_of_symptoms_onset",
         "length_of_infection",
         "infecter",
+        "time_of_testing"
     )
 
     def __init__(self):
@@ -33,6 +35,7 @@ class HealthInformation:
         self.time_of_infection = -1
         self.length_of_infection = -1
         self.infecter = None
+        self.time_of_testing = None
 
     def set_infection(self, infection):
         self.infection = infection
@@ -40,20 +43,17 @@ class HealthInformation:
         self.susceptible = False
         self.susceptibility = 0.0
         self.time_of_infection = infection.start_time
-        if infection.symptoms.time_symptoms_onset():
-            self.time_of_symptoms_onset = self.time_of_infection + infection.symptoms.time_symptoms_onset()
-
-        else:
+        time_to_symptoms = infection.symptoms.time_from_infection_to_symptoms()
+        if time_to_symptoms is None:
             self.time_of_symptoms_onset = None
+        else:
+            self.time_of_symptoms_onset = self.time_of_infection + time_to_symptoms
+
     @property
     def tag(self):
         if self.infection is not None:
             return self.infection.symptoms.tag
         return None
-
-    @property
-    def must_stay_at_home(self) -> bool:
-        return self.tag is SymptomTag.pneumonia
 
     @property
     def should_be_in_hospital(self) -> bool:
@@ -65,7 +65,7 @@ class HealthInformation:
 
     @property
     def is_dead(self) -> bool:
-        return self.tag in [SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu]
+        return self.tag in dead_tags
 
     def update_health_status(self, time, delta_time):
         self.infection.update_at_time(time + delta_time)

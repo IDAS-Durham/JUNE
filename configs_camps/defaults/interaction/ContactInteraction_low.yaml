@@ -1,0 +1,50 @@
+alpha_physical: 4. # double UK alpha
+
+beta:
+  communal: 0.01
+  female_communal: 0.01
+  religious: 0.01
+  distribution_center: 0.01
+  pump_latrine: 0.005
+  hospital: 0.005
+  household: 0.05
+  shelter: 0.05
+  isolation_unit: 0.00
+
+contact_matrices:
+  communal:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 2
+  female_communal:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 2
+  religious:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 2
+  distribution_center:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 2
+  pump_latrine:
+    contacts: [[5]]
+    proportion_physical: [[0.02]]
+    characteristic_time: 2
+  hospital:
+    contacts: [[5.00, 10., 10.], [1., 0., 0.], [1., 0., 0.]]
+    proportion_physical: [[0.05, 1., 1.], [1.0, 0., 0.], [1., 0., 0.]]
+    characteristic_time: 8 # in hours
+  household:
+    contacts: [[1.2,1.27,1.27,1.27],[1.69,1.34,1.3,1.3],[1.69,1.47,1.34,1.34],[1.69,1.47,1.34,2.00]]
+    proportion_physical: [[0.79,0.7,0.7,0.7],[0.7,0.34,0.4,0.4],[0.7,0.4,0.62,0.62],[0.7,0.62,0.62,0.45]] 
+    characteristic_time: 12
+  shelter:
+    contacts: [[5, 2], [2, 5]]
+    proportion_physical: [[0.8, 0.3], [0.8, 0.3]]
+    characteristic_time: 12
+  isolation_unit:
+    contacts: [[0,0], [0,0]]
+    proportion_physical: [[0,0], [0,0]]
+    characteristic_time: 24
