@@ -11,7 +11,7 @@ from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 
-default_transmission_config_path = paths.configs_path / "defaults/transmission/XNExp.yaml"
+default_transmission_config_path = paths.configs_path / "defaults/transmission/nature.yaml"
 default_trajectories_config_path = (
     paths.configs_path / "defaults/symptoms/trajectories.yaml"
 )
@@ -103,10 +103,10 @@ class InfectionSelector:
         """
 
         symptoms = self.select_symptoms(person)
-        incubation_period = symptoms.time_exposed()
+        time_to_symptoms_onset = symptoms.time_exposed()
         transmission = self.select_transmission(
             person=person,
-            incubation_period=incubation_period,
+            time_to_symptoms_onset=time_to_symptoms_onset,
             max_symptoms_tag=symptoms.max_tag(),
         )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
@@ -114,7 +114,7 @@ class InfectionSelector:
     def select_transmission(
         self,
         person: "Person",
-        incubation_period: float,
+        time_to_symptoms_onset: float,
         max_symptoms_tag: "SymptomsTag",
     ) -> "Transmission":
         """
@@ -126,20 +126,12 @@ class InfectionSelector:
         ----------
         person:
             person that will be infected
-        incubation_period:
+        time_to_symptoms_onset:
             time of symptoms onset for person
         """
         if self.transmission_type == "xnexp":
-            time_first_infectious = incubation_period - np.random.normal(2.0, 0.5)
-            peak_position = (
-                incubation_period - np.random.normal(0.7, 0.4) - time_first_infectious
-            )
-            alpha = 1.5
-            n = peak_position / alpha
-            return TransmissionXNExp.from_file(
-                time_first_infectious=time_first_infectious,
-                n=n,
-                alpha=alpha,
+            return TransmissionXNExp.from_file_linked_symptoms(
+                time_to_symptoms_onset=time_to_symptoms_onset,
                 max_symptoms=max_symptoms_tag,
                 config_path = self.transmission_config_path
             )
