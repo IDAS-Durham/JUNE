@@ -54,8 +54,9 @@ parser = argparse.ArgumentParser(description='Full run of the camp')
 parser.add_argument('-c', '--comorbidities', help="True to include comorbidities", required=False, default="True")
 parser.add_argument('-p', '--parameters', help="Parameter file", required=False, default="ContactInteraction_med_low_low_low.yaml")
 parser.add_argument('-u', '--isolation_units', help="True to include isolation units", required=False, default="False")
-parser.add_argument('-t', '--testing_time', help="Model weights in HDF5 format", required=False, default=3)
+parser.add_argument('-t', '--isolation_testing', help="Model weights in HDF5 format", required=False, default=3)
 parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=False, default=7)
+parser.add_argument('-a', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
 parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 args = parser.parse_args()
 
@@ -73,8 +74,9 @@ else:
 print ('Comorbidities set to: {}'.format(args.comorbidities))
 print ('Parameters path set to: {}'.format(args.parameters))
 print ('Isolation units set to: {}'.format(args.isolation_units))
-print ('Testing time set to: {}'.format(args.testing_time))
+print ('Testing time set to: {}'.format(args.isolation_testing))
 print ('Isolation time set to: {}'.format(args.isolation_time))
+print ('Isolation compliance set to: {}'.format(args.isolation_compliance))
 print ('Save path set to: {}'.format(args.save_path))
 
 #=============== world creation =========================#
@@ -154,7 +156,8 @@ if args.isolation_units:
     )
 
     policies.policies[3].n_quarantine_days = args.isolation_time
-    policies.policies[3].testing_mean_time = args.testing_time
+    policies.policies[3].testing_mean_time = args.isolation_testing
+    policies.policies[3].compliance = args.isolation_compliance
     
 else:
     policies = Policies.from_file(
