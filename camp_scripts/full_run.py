@@ -12,12 +12,13 @@ from june.demography.demography import (
     load_age_and_sex_generators_for_bins,
     Demography,
     Population,
+    _load_comorbidity_data
 )
 from june.paths import data_path
 from june.infection import Infection, HealthIndexGenerator
 from june.infection_seed import InfectionSeed
 from june.infection.infection import InfectionSelector
-from june.interaction import ContactAveraging
+from june.interaction import Interaction
 from june.groups import Hospital, Hospitals
 from june.distributors import HospitalDistributor
 from june.world import generate_world_from_hdf5
@@ -33,6 +34,7 @@ from camp_creation import (
     generate_empty_world,
     populate_world,
     distribute_people_to_households,
+    generate_comorbidity,
 )  # this is loaded from the ../camp_scripts folder
 
 from camps.groups import PumpLatrines, PumpLatrineDistributor
@@ -89,6 +91,17 @@ for area in world.areas:
 
 # ============================================================================#
 
+# =================================== comorbidities ===============================#
+
+
+comorbidity_data = _load_comorbidity_data(camp_data_path / "input/demography/myanmar_male_comorbidities.csv",\
+                                          camp_data_path / "input/demography/myanmar_female_comorbidities.csv"
+)
+for person in world.people:
+    person.comorbidity = generate_comorbidity(person, comorbidity_data)
+
+# ============================================================================#
+
 # =================================== policies ===============================#
 
 policies = Policies.from_file(
@@ -103,10 +116,9 @@ policies = Policies.from_file(
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
-interaction = ContactAveraging.from_file(
+interaction = Interaction.from_file(
     config_filename=camp_configs_path
     / "defaults/interaction/ContactInteraction_med_low_low_low.yaml",
-    selector=selector,
 )
 
 
@@ -168,6 +180,7 @@ simulator = Simulator.from_file(
     leisure=leisure_instance,
     policies=policies,
     config_filename=CONFIG_PATH,
+    infection_selector=selector,
 )
 
 leisure_instance.leisure_distributors
