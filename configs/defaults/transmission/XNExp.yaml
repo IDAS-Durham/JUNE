@@ -8,7 +8,7 @@ norm_time:
         value: 1.
 asymptomatic_infectious_factor:
         type: constant
-        value: 0.29
+        value: 1.
 mild_infectious_factor:
         type: constant
-        value: 0.48
+        value: 1.
