@@ -8,13 +8,16 @@ from june.infection.trajectory_maker import CompletionTime
 from june.infection.symptom_tag import SymptomTag
 from june import paths
 
-default_config_path = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+default_config_path = (
+    paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+)
 default_gamma_config_path = paths.configs_path / "defaults/transmission/nature.yaml"
+
 
 class Transmission:
     def __init__(self):
         self.probability = 0.0
-        
+
     def update_probability_from_delta_time(self, time_from_infection):
         raise NotImplementedError()
 
@@ -25,33 +28,37 @@ class Transmission:
         returns the class as object (not as an instance). This is used to set up the 
         epidemiology model in world.py via configs if an input is not provided.
         """
-        classname_str = af.conf.instance.general.get("epidemiology", "transmission_class", str)
+        classname_str = af.conf.instance.general.get(
+            "epidemiology", "transmission_class", str
+        )
         return getattr(sys.modules[__name__], classname_str)
-    
+
+
 class TransmissionConstant(Transmission):
     def __init__(self, probability=0.3):
         super().__init__()
         self.probability = probability
 
     @classmethod
-    def from_file(cls, config_path: str  = default_config_path) -> "TransmissionConstant":
+    def from_file(
+        cls, config_path: str = default_config_path
+    ) -> "TransmissionConstant":
         with open(config_path) as f:
             config = yaml.safe_load(f)
-        probability = CompletionTime.from_dict(config['probability'])()
+        probability = CompletionTime.from_dict(config["probability"])()
         return TransmissionConstant(probability=probability)
 
-
- 
     def update_probability_from_delta_time(self, time_from_infection):
         pass
+
 
 class TransmissionGamma(Transmission):
     def __init__(
         self,
         max_infectiousness=1.0,
-        shape = 2.,
-        rate = 3.,
-        shift = -2.,
+        shape=2.0,
+        rate=3.0,
+        shift=-2.0,
         max_symptoms=None,
         asymptomatic_infectious_factor=None,
         mild_infectious_factor=None,
@@ -60,16 +67,19 @@ class TransmissionGamma(Transmission):
         self.shape = shape
         self.rate = rate
         self.shift = shift
-        self.scale = 1./self.rate
-        time_at_max = (self.shape - 1)*self.scale +  self.shift
+        self.scale = 1.0 / self.rate
+        time_at_max = (self.shape - 1) * self.scale + self.shift
         self.gamma = gamma(a=self.shape, scale=self.scale, loc=self.shift)
-        self.norm = self.max_infectiousness / self.gamma.pdf(time_at_max) 
+        self.norm = self.max_infectiousness / self.gamma.pdf(time_at_max)
         self.asymptomatic_infectious_factor = asymptomatic_infectious_factor
         self.mild_infectious_factor = mild_infectious_factor
-        if asymptomatic_infectious_factor is not None and mild_infectious_factor is not None:
+        if (
+            asymptomatic_infectious_factor is not None
+            and mild_infectious_factor is not None
+        ):
             self.modify_infectiousness_for_symptoms(max_symptoms=max_symptoms)
-        self.probability = 0.
- 
+        self.probability = 0.0
+
     @classmethod
     def from_file(
         cls,
@@ -102,7 +112,7 @@ class TransmissionGamma(Transmission):
     @classmethod
     def from_file_linked_symptoms(
         cls,
-        time_to_symptoms_onset: float, 
+        time_to_symptoms_onset: float,
         max_symptoms: "SymptomTag" = None,
         config_path: str = default_gamma_config_path,
     ) -> "TransmissionGamma":
@@ -146,11 +156,9 @@ class TransmissionGamma(Transmission):
         ):
             self.norm *= self.asymptomatic_infectious_factor
         elif (
-            self.mild_infectious_factor is not None
-            and max_symptoms == SymptomTag.mild
+            self.mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
         ):
             self.norm *= self.mild_infectious_factor
-
 
     def update_probability_from_delta_time(self, time_from_infection: float):
         """
@@ -161,4 +169,4 @@ class TransmissionGamma(Transmission):
         time_from_infection:
             time elapsed since person became infected
         """
-        self.probability = self.norm * self.gamma.pdf(time_from_infection) 
+        self.probability = self.norm * self.gamma.pdf(time_from_infection)

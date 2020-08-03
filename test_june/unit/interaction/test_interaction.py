@@ -141,9 +141,9 @@ def create_school(n_students, n_teachers):
     "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"],],
 )
 def test__average_time_to_infect(n_teachers, mode):
-    selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+    selector_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
     transmission_probability = 0.1
-    selector = InfectionSelector.from_file(config_filename=selector_config)
+    selector = InfectionSelector.from_file(transmission_config_path=selector_config)
     n_students = 1
     contact_matrices = {
         "contacts": [[n_teachers - 1, 1], [1, 0]],
