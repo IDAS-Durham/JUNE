@@ -132,11 +132,11 @@ def test__comorbidities_effect():
 
     np.testing.assert_allclose(
         feo_probabilities[:2].sum(),
-        1-comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
+        1-comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum(),
     )
     np.testing.assert_allclose(
         feo_probabilities[2:].sum(),
-        comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
+        comorbidity_multipliers['feo']/mean_multiplier_uk * dummy_probabilities[2:].sum(),
     )
 
     np.testing.assert_allclose(

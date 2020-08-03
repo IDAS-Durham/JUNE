@@ -330,50 +330,110 @@ class HealthIndexGenerator:
         And for male and female 
         
         Retruns:
-             3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 6 
-             outcomes for 120 ages and the 2 sex.
+             3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 8 
+             outcomes for 120 ages and the 2 sex (last outcome inferred from 1-sum(probabilities)).
         """
         if person.sex == "m":
             sex = 1
         else:
             sex = 0
-        roundage = int(round(person.age))
-        health_index = np.cumsum(self.prob_lists[sex][roundage])
+        round_age = int(round(person.age))
+        probabilities = self.prob_lists[sex][round_age]
         if hasattr(self,'comorbidity_multipliers') and person.comorbidity is not None:
-            health_index = self.adjust_for_comorbidities(health_index, person)
-        return health_index
+            probabilities = self.adjust_for_comorbidities(probabilities, person.comorbidity, person.age, person.sex)
+        return np.cumsum(probabilities)
 
     def get_multiplier_from_reference_prevalence(
-        self, prevalence_reference_population, person
-    ):
+            self, prevalence_reference_population: dict, age: int, sex: str 
+    )->float:
+        """
+        Compute mean comorbidity multiplier given the prevalence of the different comorbidities
+        in the reference population (for example the UK). It will be used to remove effect of comorbidities
+        in the reference population
+
+        Parameters
+        ----------
+        prevalence_reference_population:
+            nested dictionary with prevalence of comorbidity by comorbodity, age and sex cohort
+
+        age:
+            age group to compute average multiplier
+
+        sex:
+            sex group to compute average multiplier
+
+        Returns
+        -------
+            weighted_multiplier:
+                weighted mean of the multipliers given prevalence
+        """
         weighted_multiplier = 0.0
         for comorbidity in prevalence_reference_population.keys():
             weighted_multiplier += (
                 self.comorbidity_multipliers[comorbidity]
-                * self.prevalence_reference_population[comorbidity][person.sex][
-                    person.age
+                * self.prevalence_reference_population[comorbidity][sex][
+                    age
                 ]
             )
         return weighted_multiplier
 
-    def adjust_for_comorbidities(self, health_index, person):
-        multiplier = self.comorbidity_multipliers.get(person.comorbidity, 1.0)
+    def adjust_for_comorbidities(self, probabilities: list, comorbidity: str, age: int, sex: str):
+        """
+        Compute adjusted probabilities for a person with given comorbidity, age and sex.
+
+        Parameters
+        ----------
+        probabilities:
+            list with probability values for the 8 different outcomes (has len 7, but 8th value
+            can be inferred from 1 - probabilities.sum())
+
+        comorbidity:
+            comorbidty type that the person has
+
+        age:
+            age group to compute average multiplier
+
+        sex:
+            sex group to compute average multiplier
+
+        Returns
+        -------
+            probabilities adjusted for comorbidity 
+        """
+
+        multiplier = self.comorbidity_multipliers.get(comorbidity, 1.0)
         reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
-            self.prevalence_reference_population, person
+            self.prevalence_reference_population, age=age, sex=sex 
         )
         effective_multiplier = multiplier / reference_weighted_multiplier
-        probabilities = np.diff(health_index, prepend=0.0, append=1.0)
-        modified_probabilities = self.adjust_probabilities_for_comorbidities(
+        return self.adjust_probabilities_for_comorbidities(
             probabilities, effective_multiplier
         )
-        return np.cumsum(modified_probabilities)[:-1] 
 
     def adjust_probabilities_for_comorbidities(
         self, probabilities, effective_multiplier
     ):
+        """
+        Compute adjusted probabilities given an effective multiplier
+
+        Parameters
+        ----------
+        probabilities:
+            list with probability values for the 8 different outcomes (has len 7, but 8th value
+            can be inferred from 1 - probabilities.sum())
+
+        effective_multiplier:
+            factor that amplifies severe outcomes
+
+        Returns
+        -------
+            adjusted probabilities
+        """
+
+
         probabilities_with_comorbidity = np.zeros_like(probabilities)
-        p_mild = probabilities[: self.max_mild_symptom_tag].sum()
-        p_severe = probabilities[self.max_mild_symptom_tag:].sum()
+        p_mild = probabilities[:self.max_mild_symptom_tag].sum()
+        p_severe = probabilities[self.max_mild_symptom_tag:].sum() + (1-probabilities.sum())
         p_severe_with_comorbidity = p_severe * effective_multiplier
         p_mild_with_comorbidity = 1 - p_severe_with_comorbidity
         probabilities_with_comorbidity[: self.max_mild_symptom_tag] = (
