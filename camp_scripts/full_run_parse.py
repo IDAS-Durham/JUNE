@@ -75,7 +75,7 @@ else:
 if args.infectiousness_path == 'nature':
     transmission_config_path = configs_path / 'defaults/transmission/nature.yaml'
 elif args.infectiousness_path == 'correction_nature':
-    transmission_config_path = configs_path / 'defaults/transmission/corretion_nature.yaml'
+    transmission_config_path = configs_path / 'defaults/transmission/correction_nature.yaml'
 elif args.infectiousness_path == 'nature_larger':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature_larger_presymptomatic_transmission.yaml'
 elif args.infectiousness_path == 'nature_lower':
