@@ -252,7 +252,7 @@ trajectories:
           type: lognormal
           s: 0.713
           loc: 0.0
-          scale: 7.75
+          scale: 7.
 
       - symptom_tag: dead_icu
         completion_time:
