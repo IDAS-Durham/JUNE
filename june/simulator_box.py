@@ -1,11 +1,14 @@
 import logging
 from typing import Optional
+from itertools import chain
+from june.interaction import Interaction, InteractiveGroup
 
 from june import paths
 from june.activity import ActivityManagerBox
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import World
+from june.infection import InfectionSelector
 from june.policy import MedicalCarePolicies
 
 default_config_filename = paths.configs_path / "config_example.yaml"
@@ -26,6 +29,7 @@ class SimulatorBox(Simulator):
             interaction: Interaction,
             timer,
             activity_manager,
+            infection_selector: InfectionSelector =None,
             infection_seed: Optional["InfectionSeed"] = None,
             save_path: str = "results",
             light_logger: bool = False,
@@ -62,6 +66,7 @@ class SimulatorBox(Simulator):
             interaction=interaction,
             timer=timer,
             activity_manager=activity_manager,
+            infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
             light_logger=light_logger,
@@ -110,21 +115,41 @@ class SimulatorBox(Simulator):
         sim_logger.info(
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
-
+        infected_ids = []
         for group_type in group_instances:
-            n_people_group = 0
             for group in group_type.members:
-                self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group, self.logger,
-                )
-                n_people += group.size
-                n_people_group += group.size
-
-        if n_people != len(self.world.people.members):
+                int_group = InteractiveGroup(group)
+                n_people += int_group.size
+                if int_group.must_timestep:
+                    new_infected_ids = self.interaction.time_step_for_group(
+                        self.timer.duration, int_group
+                    )
+                    if new_infected_ids:
+                        n_infected = len(new_infected_ids)
+                        if self.logger is not None:
+                            self.logger.accumulate_infection_location(
+                                group.spec, n_infected
+                            )
+                        # assign blame of infections
+                        tprob_norm = sum(int_group.transmission_probabilities)
+                        for infector_id in list(chain(*int_group.infector_ids)):
+                            infector = self.world.people[infector_id]
+                            infector.health_information.number_of_infected += (
+                                n_infected
+                                * infector.health_information.infection.transmission.probability
+                                / tprob_norm
+                            )
+                    infected_ids += new_infected_ids
+        people_to_infect = [self.world.people[idx] for idx in infected_ids]
+        if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
+        # infect people
+        if self.infection_selector:
+            for person in people_to_infect:
+                self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
