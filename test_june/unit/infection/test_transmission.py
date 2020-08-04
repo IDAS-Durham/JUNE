@@ -1,4 +1,4 @@
-from june.infection import transmission as trans
+from june.infection import transmission as trans 
 
 import autofit as af
 import os
@@ -28,6 +28,20 @@ class TestTransmission:
 
 
 
+class TestTransmissionGamma:
 
-
-
+    def test__update_probability_at_time(self):
+        max_infectiousness = 4.
+        shift = 3.
+        shape = 3.
+        rate = 2.
+        transmission = trans.TransmissionGamma(
+               max_infectiousness = max_infectiousness, 
+               shape = shape,
+               rate=rate,
+               shift=shift
+            )
+        transmission.update_probability_from_delta_time((shape-1)/rate + shift)
+        assert transmission.probability == pytest.approx(max_infectiousness,
+                rel=0.01)
+                

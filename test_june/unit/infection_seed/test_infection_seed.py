@@ -13,7 +13,7 @@ from june.time import Timer
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+    dir_pwd.parent.parent.parent / "configs/defaults/transmission/TransmissionConstant.yaml"
 )
 
 
@@ -45,7 +45,9 @@ def get_demography(geography):
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file(config_filename=constant_config)
+    selector = InfectionSelector.from_file(
+            transmission_config_path=constant_config
+            )
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector

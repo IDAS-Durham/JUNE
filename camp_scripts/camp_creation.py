@@ -64,7 +64,7 @@ def populate_world(world: CampWorld):
     )
     for super_area in world.super_areas:
         population = demography.populate(
-            super_area.name, ethnicity=False, socioecon_index=False
+            super_area.name, ethnicity=False, socioecon_index=False, comorbidity=False
         )
         np.random.shuffle(population.people)
         world.people.extend(population)
