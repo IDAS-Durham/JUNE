@@ -1,6 +1,7 @@
 import numpy as np
 from numba import jit
 import yaml
+import logging
 from typing import List, Dict
 from june.demography import Person
 from june.demography.geography import Geography
@@ -18,6 +19,7 @@ from june import paths
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
+logger = logging.getLogger(__name__)
 
 @jit(nopython=True)
 def random_choice_numba(arr, prob):
@@ -162,7 +164,10 @@ class Leisure:
             return self.random_integers.pop()
 
     def distribute_social_venues_to_households(self, households: List[Household]):
-        for household in households:
+        logger.info("Distributing social venues to households")
+        for i, household in enumerate(households):
+            if i % 1_000_000 == 0:
+                logger.info(f"Distributed in {i} of {len(households)} households.")
             household.social_venues = {}
             for activity, distributor in self.leisure_distributors.items():
                 social_venues = distributor.get_possible_venues_for_household(household)

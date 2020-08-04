@@ -1,3 +1,5 @@
+type:
+        "constant"
 probability:
         type: constant
         value: 0.1

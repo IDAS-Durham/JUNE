@@ -1,5 +1,6 @@
 import pytest
 
+from june import paths
 import june.infection.symptom_tag
 from june.demography.person import Person
 from june.infection import infection as infect, SymptomTag
@@ -178,7 +179,7 @@ class TestSymptoms:
         assert symptoms_trajectories.time_from_infection_to_symptoms() is None
 
     def test__symptoms_progression(self):
-        selector = infect.InfectionSelector(transmission_type='constant')
+        selector = infect.InfectionSelector.from_file(transmission_config_path=paths.configs_path / 'defaults/transmission/TransmissionConstant.yaml')
         dummy = Person(sex='f', age=65)
         infection = selector.make_infection(person=dummy, time=0.1)
         fixed_severity = 0.97

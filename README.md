@@ -38,7 +38,9 @@ pytest
 
 # Setup
 
-1. Clone the repo.
+
+1. Clone the repo and install Python3 header files. In Ubuntu and variants, this is the ``python3-dev`` package.
+
 
 2. To install the package, install requisites
 

@@ -8,5 +8,5 @@ from june.infection_seed import InfectionSeed
 
 def test_box_full_run(simulator_box, selector):
     seed = InfectionSeed(simulator_box.world.boxes, selector, )
-    seed.unleash_virus(1000, box_mode=True)
+    seed.unleash_virus(10, box_mode=True)
     simulator_box.run()

@@ -1,0 +1,12 @@
+cardiovascular: 3.
+chronic_kidney: 3.
+chronic_respiratory: 1.5
+chronic_liver: 1.5
+diabetes_mellitus: 3.
+cancers_w_direct_immunosuppression: 1.5
+cancers_w_possible_immunosuppression: 1.5
+HIV/AIDS: 1.5
+tuberculosis: 1.5
+chronic_neurological: 1.5
+sickle_cell: 1.5
+no_condition: 1.
