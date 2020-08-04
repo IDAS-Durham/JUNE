@@ -45,6 +45,8 @@ class CompletionTime(ABC):
             return BetaCompletionTime
         if type_string == "lognormal":
             return LognormalCompletionTime
+        if type_string == "normal":
+            return NormalCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
         )
@@ -126,6 +128,21 @@ class LognormalCompletionTime(DistributionCompletionTime):
             )
         )
         self.s = s
+        self.loc = loc
+        self.scale = scale
+
+class NormalCompletionTime(DistributionCompletionTime):
+    def __init__(
+            self,
+            loc,
+            scale
+    ):
+        super().__init__(
+            stats.norm(
+                loc,
+                scale
+            )
+        )
         self.loc = loc
         self.scale = scale
 
