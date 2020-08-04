@@ -99,6 +99,7 @@ class InfectionSeed:
             msoa_region.drop_duplicates(),
             dates,
             seed_strength=seed_strength,
+            age_profile=age_profile,
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
@@ -114,6 +115,11 @@ class InfectionSeed:
             msoa_region_filtered = self.msoa_region[
                 (self.msoa_region.region == "North East")
                 | (self.msoa_region.region == "Yorkshire and The Humber")
+            ]
+        elif "Midlands" in region:
+            msoa_region_filtered = self.msoa_region[
+                (self.msoa_region.region == "West Midlands")
+                | (self.msoa_region.region == "East Midlands")
             ]
         else:
             msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]

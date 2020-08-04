@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 import sys
+import argparse
 
 from june.demography.geography import Geography
 from june.demography.demography import (
@@ -45,6 +46,38 @@ from camps.groups import Religiouss, ReligiousDistributor
 from camps.groups import Shelter, Shelters, ShelterDistributor
 from camps.groups import IsolationUnit, IsolationUnits
 from june.groups.leisure import HouseholdVisitsDistributor
+
+#=============== Argparse =========================#
+
+parser = argparse.ArgumentParser(description='Full run of the camp')
+
+parser.add_argument('-c', '--comorbidities', help="True to include comorbidities", required=False, default="True")
+parser.add_argument('-p', '--parameters', help="Parameter file", required=False, default="ContactInteraction_med_low_low_low.yaml")
+parser.add_argument('-u', '--isolation_units', help="True to include isolation units", required=False, default="False")
+parser.add_argument('-t', '--isolation_testing', help="Model weights in HDF5 format", required=False, default=3)
+parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=False, default=7)
+parser.add_argument('-a', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
+parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
+args = parser.parse_args()
+
+if args.comorbidities == "True":
+    args.comorbidities = True
+else:
+    args.comorbidities = False
+
+
+if args.isolation_units == "True":
+    args.isolation_units = True
+else:
+    args.isolation_units = False
+
+print ('Comorbidities set to: {}'.format(args.comorbidities))
+print ('Parameters path set to: {}'.format(args.parameters))
+print ('Isolation units set to: {}'.format(args.isolation_units))
+print ('Testing time set to: {}'.format(args.isolation_testing))
+print ('Isolation time set to: {}'.format(args.isolation_time))
+print ('Isolation compliance set to: {}'.format(args.isolation_compliance))
+print ('Save path set to: {}'.format(args.save_path))
 
 #=============== world creation =========================#
 
@@ -93,33 +126,44 @@ for area in world.areas:
 
 # =================================== comorbidities ===============================#
 
+if args.comorbidities:
 
-comorbidity_data = load_comorbidity_data(camp_data_path / "input/demography/myanmar_male_comorbidities.csv",\
-                                          camp_data_path / "input/demography/myanmar_female_comorbidities.csv"
-)
-for person in world.people:
-    person.comorbidity = generate_comorbidity(person, comorbidity_data)
+    comorbidity_data = load_comorbidity_data(camp_data_path / "input/demography/myanmar_male_comorbidities.csv",\
+                                              camp_data_path / "input/demography/myanmar_female_comorbidities.csv"
+    )
+    for person in world.people:
+        person.comorbidity = generate_comorbidity(person, comorbidity_data)
 
-health_index_generator = HealthIndexGenerator.from_file_with_comorbidities(
-    camp_configs_path / 'defaults/comorbidities.yaml',
-    camp_data_path / 'input/demography/uk_male_comorbidities.csv',
-    camp_data_path / 'input/demography/uk_female_comorbidities.csv',
-    asymptomatic_ratio=0.2
-)
+    health_index_generator = HealthIndexGenerator.from_file_with_comorbidities(
+        camp_configs_path / 'defaults/comorbidities.yaml',
+        camp_data_path / 'input/demography/uk_male_comorbidities.csv',
+        camp_data_path / 'input/demography/uk_female_comorbidities.csv',
+        asymptomatic_ratio=0.2
+    )
 
 
-### UNCOMMENT THE BELOW AND COMMENT THE ABOVE TO REMOVE COMORBIDITIES
-
-#health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+else:
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 
 # ============================================================================#
 
 # =================================== policies ===============================#
 
-policies = Policies.from_file(
-    camp_configs_path / "defaults/policy/home_care_policy.yaml",
-    base_policy_modules=("june.policy", "camps.policy"),
-)
+if args.isolation_units:
+    policies = Policies.from_file(
+        camp_configs_path / "defaults/policy/policy.yaml",
+        base_policy_modules=("june.policy", "camps.policy"),
+    )
+
+    policies.policies[3].n_quarantine_days = args.isolation_time
+    policies.policies[3].testing_mean_time = args.isolation_testing
+    policies.policies[3].compliance = args.isolation_compliance
+    
+else:
+    policies = Policies.from_file(
+        camp_configs_path / "defaults/policy/home_care_policy.yaml",
+        base_policy_modules=("june.policy", "camps.policy"),
+    )
 
 # ============================================================================#
 
@@ -130,7 +174,7 @@ selector = InfectionSelector.from_file(health_index_generator=health_index_gener
 
 interaction = Interaction.from_file(
     config_filename=camp_configs_path
-    / "defaults/interaction/ContactInteraction_med_low_low_low.yaml",
+    / "defaults/interaction/" + args.parameters,
 )
 
 
@@ -193,7 +237,7 @@ simulator = Simulator.from_file(
     policies=policies,
     config_filename=CONFIG_PATH,
     infection_selector=selector,
-    save_path="results_no_comorbidities"
+    save_path=args.save_path
 )
 
 leisure_instance.leisure_distributors
