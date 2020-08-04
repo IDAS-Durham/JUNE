@@ -143,10 +143,10 @@ trajectories:
       - symptom_tag: intensive_care
         completion_time:
           type: exponweib
-          a: 4.15 
-          c: 0.453
+          a: 1.06 
+          c: 0.89
           loc: 0.0
-          scale: 3.01
+          scale: 12 
 
       - symptom_tag: hospitalised
         completion_time:
@@ -257,10 +257,12 @@ trajectories:
 
       - symptom_tag: intensive_care
         completion_time:
-          type: lognormal
-          s: 0.856
-          loc: 0.
-          scale: 8.99
+          type: exponweib
+          a: 1.23 
+          c: 1.10
+          loc: 0.0
+          scale: 9.69
+
 
       - symptom_tag: dead_icu
         completion_time:
