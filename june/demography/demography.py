@@ -253,7 +253,7 @@ class Demography:
                 socioecon_index=socioecon_index_value,
             )
             if comorbidity:
-                person.comorbidity = self.generate_comorbidity(person, self.comorbidity_data)
+                person.comorbidity = generate_comorbidity(person, self.comorbidity_data)
             people.append(person)  # add person to population
         return Population(people=people)
 

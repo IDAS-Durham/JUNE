@@ -40,17 +40,13 @@ from june.demography import Demography
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
-constant_config = (
-        dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionXNExp.yaml"
-)
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
-print("config: ",constant_config)
 
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file(config_filename=constant_config)
+    selector = InfectionSelector.from_file()
     selector.recovery_rate = 1.0
     selector.transmission_probability = 1.0
     return selector

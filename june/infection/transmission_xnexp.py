@@ -168,6 +168,61 @@ class TransmissionXNExp(Transmission):
             mild_infectious_factor=mild_infectious_factor,
         )
 
+    @classmethod
+    def from_file_linked_symptoms(
+        cls,
+        time_to_symptoms_onset: float, 
+        max_symptoms: "SymptomTag" = None,
+        config_path: str = default_config_path,
+    ) -> "TransmissionXNExp":
+        """
+        Generates transmission class from config file
+
+        Parameters
+        ----------
+        time_first_infectious:
+            time at which the person becomes infectious
+        n:
+            exponent of x in the x^n exp(-x/alpha) function
+        alpha:
+            denominator in exponential
+        max_symptoms:
+            maximum symptoms that the person will ever have, used to lower the infectiousness of
+            asymptomatic and mild cases
+
+
+        Returns
+        -------
+            class instance
+        """
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        smearing_time_first_infectious = CompletionTime.from_dict(config['smearing_time_first_infectious'])()
+        time_first_infectious = time_to_symptoms_onset + smearing_time_first_infectious 
+        smearing_peak_position = CompletionTime.from_dict(config['smearing_peak_position'])()
+        alpha = CompletionTime.from_dict(config["alpha"])()
+        peak_position = time_to_symptoms_onset - time_first_infectious + smearing_peak_position
+        n = peak_position/alpha
+        max_probability = CompletionTime.from_dict(config["max_probability"])()
+        norm_time = CompletionTime.from_dict(config["norm_time"])()
+        asymptomatic_infectious_factor = CompletionTime.from_dict(
+            config["asymptomatic_infectious_factor"]
+        )()
+        mild_infectious_factor = CompletionTime.from_dict(
+            config["mild_infectious_factor"]
+        )()
+        return TransmissionXNExp(
+            max_probability=max_probability,
+            time_first_infectious=time_first_infectious,
+            norm_time=norm_time,
+            n=n,
+            alpha=alpha,
+            max_symptoms=max_symptoms,
+            asymptomatic_infectious_factor=asymptomatic_infectious_factor,
+            mild_infectious_factor=mild_infectious_factor,
+        )
+
+
     def modify_infectiousness_for_symptoms(self, max_symptoms: "SymptomTag"):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying
