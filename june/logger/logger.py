@@ -339,7 +339,7 @@ class Logger:
 
             if infection_selector is not None:
                 f.create_dataset("parameters/asymptomatic_ratio",
-                    data=interaction.selector.health_index_generator.asymptomatic_ratio) #
+                    data=infection_selector.health_index_generator.asymptomatic_ratio) #
 
             if infection_seed is not None:
                 f.create_dataset("parameters/seed_strength",data=infection_seed.seed_strength)

@@ -207,7 +207,7 @@ class Population:
 
 
 class Demography:
-    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator], comorbidity_data):
+    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator], comorbidity_data = None):
         """
         Tool to generate population for a certain geographical regin.
 
@@ -220,38 +220,6 @@ class Demography:
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
         self.comorbidity_data = comorbidity_data
-
-    def generate_comorbidity(self, person):
-        if self.comorbidity_data is not None:
-
-            male_co = self.comorbidity_data[0]
-            female_co = self.comorbidity_data[1]
-            ages = np.array(male_co.columns).astype(int)
-            
-            column_index = 0
-            for idx, i in enumerate(ages):
-                if person.age <= i:
-                    break
-                else:
-                    column_index = idx
-            if column_index !=0:
-                column_index += 1
-
-            if person.sex == 'm':
-                comorbidity = np.random.choice(list(male_co.index),1,p=list(male_co[male_co.columns[column_index]]))[0]
-                if comorbidity == 'no_condition':
-                    comorbidity = None
-                return comorbidity
-            
-            if person.sex == 'f':
-                comorbidity = np.random.choice(list(female_co.index),1,p=list(female_co[female_co.columns[column_index]]))[0]
-                if comorbidity == 'no_condition':
-                    comorbidity = None
-                return comorbidity
-          
-        else:
-            return None
-        
 
     def populate(self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=True) -> Population:
         """
@@ -285,7 +253,7 @@ class Demography:
                 socioecon_index=socioecon_index_value,
             )
             if comorbidity:
-                person.comorbidity = self.generate_comorbidity(person)
+                person.comorbidity = generate_comorbidity(person, self.comorbidity_data)
             people.append(person)  # add person to population
         return Population(people=people)
 
@@ -376,7 +344,7 @@ class Demography:
             socioecon_structure_path,
             area_names,
         )
-        comorbidity_data = _load_comorbidity_data(m_comorbidity_path, f_comorbidity_path)
+        comorbidity_data = load_comorbidity_data(m_comorbidity_path, f_comorbidity_path)
         return Demography(age_sex_generators=age_sex_generators, area_names=area_names, \
                           comorbidity_data=comorbidity_data)
 
@@ -444,7 +412,7 @@ def _load_age_and_sex_generators(
 
     return ret
 
-def _load_comorbidity_data(m_comorbidity_path = None, f_comorbidity_path = None):
+def load_comorbidity_data(m_comorbidity_path = None, f_comorbidity_path = None):
     if m_comorbidity_path is not None and f_comorbidity_path is not None:
         male_co = pd.read_csv(m_comorbidity_path)
         female_co = pd.read_csv(f_comorbidity_path)
@@ -466,6 +434,37 @@ def _load_comorbidity_data(m_comorbidity_path = None, f_comorbidity_path = None)
                 female_co[column].loc[idx] = female_co[column].loc[idx]/f_norm_2 * f_norm_1
 
         return [male_co, female_co]
+
+    else:
+        return None
+
+def generate_comorbidity(person, comorbidity_data):
+    if comorbidity_data is not None:
+
+        male_co = comorbidity_data[0]
+        female_co = comorbidity_data[1]
+        ages = np.array(male_co.columns).astype(int)
+
+        column_index = 0
+        for idx, i in enumerate(ages):
+            if person.age <= i:
+                break
+            else:
+                column_index = idx
+        if column_index !=0:
+            column_index += 1
+
+        if person.sex == 'm':
+            comorbidity = np.random.choice(list(male_co.index),1,p=list(male_co[male_co.columns[column_index]]))[0]
+            if comorbidity == 'no_condition':
+                comorbidity = None
+            return comorbidity
+
+        if person.sex == 'f':
+            comorbidity = np.random.choice(list(female_co.index),1,p=list(female_co[female_co.columns[column_index]]))[0]
+            if comorbidity == 'no_condition':
+                comorbidity = None
+            return comorbidity
 
     else:
         return None
