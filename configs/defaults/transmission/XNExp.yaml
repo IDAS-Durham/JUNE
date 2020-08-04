@@ -1,3 +1,5 @@
+type:
+        "xnexp"
 max_probability:
         type: lognormal
         s: 0.5 
