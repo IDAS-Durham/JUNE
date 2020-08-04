@@ -250,9 +250,9 @@ trajectories:
       - symptom_tag: intensive_care
         completion_time:
           type: lognormal
-          s: 0.713
-          loc: 0.0
-          scale: 7.
+          s: 0.75
+          loc: 2.5
+          scale: 5.
 
       - symptom_tag: dead_icu
         completion_time:
