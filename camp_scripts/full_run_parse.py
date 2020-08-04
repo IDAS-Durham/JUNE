@@ -57,6 +57,7 @@ parser.add_argument('-u', '--isolation_units', help="True to include isolation u
 parser.add_argument('-t', '--isolation_testing', help="Model weights in HDF5 format", required=False, default=3)
 parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=False, default=7)
 parser.add_argument('-a', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
+parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
 parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 args = parser.parse_args()
 
@@ -70,6 +71,17 @@ if args.isolation_units == "True":
     args.isolation_units = True
 else:
     args.isolation_units = False
+
+if args.infectiousness_path == 'nature':
+    transmission_config_path = configs_path / 'defaults/transmission/nature.yaml'
+elif args.infectiousness_path == 'correction_nature':
+    transmission_config_path = configs_path / 'defaults/transmission/corretion_nature.yaml'
+elif args.infectiousness_path == 'nature_larger':
+    transmission_config_path = camp_configs_path / 'defaults/transmission/nature_larger_presymptomatic_transmission.yaml'
+elif args.infectiousness_path == 'nature_lower':
+    transmission_config_path = camp_configs_path / 'defaults/transmission/nature_lower_presymptomatic_transmission.yaml'
+else:
+    raise NotImplementedError
 
 print ('Comorbidities set to: {}'.format(args.comorbidities))
 print ('Parameters path set to: {}'.format(args.parameters))
@@ -170,11 +182,12 @@ else:
 # =================================== infection ===============================#
 
 
-selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
+selector = InfectionSelector.from_file(health_index_generator=health_index_generator,
+        transmission_config_path=transmission_config_path)
 
 interaction = Interaction.from_file(
     config_filename=camp_configs_path
-    / "defaults/interaction/" + args.parameters,
+    / "defaults/interaction/" / args.parameters,
 )
 
 
