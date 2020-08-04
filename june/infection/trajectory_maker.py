@@ -47,6 +47,8 @@ class CompletionTime(ABC):
             return LognormalCompletionTime
         if type_string == "normal":
             return NormalCompletionTime
+        if type_string == "exponweib":
+            return ExponweibCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
         )
@@ -147,7 +149,26 @@ class NormalCompletionTime(DistributionCompletionTime):
         self.scale = scale
 
 
-
+class ExponweibCompletionTime(DistributionCompletionTime):
+    def __init__(
+            self,
+            a,
+            c,
+            loc=0.0,
+            scale=1.0
+    ):
+        super().__init__(
+            stats.exponweib(
+                a,
+                c,
+                loc=loc,
+                scale=scale
+            )
+        )
+        self.a = a
+        self.c = c
+        self.loc = loc
+        self.scale = scale
 
 
 class Stage:
