@@ -48,7 +48,7 @@ class CompletionTime(ABC):
         if type_string == "normal":
             return NormalCompletionTime
         if type_string == "exponweib":
-            return ExponweibComletionTime
+            return ExponweibCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
         )
