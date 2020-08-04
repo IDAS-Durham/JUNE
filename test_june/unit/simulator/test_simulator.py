@@ -44,13 +44,13 @@ from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub, Grocery, Gr
 from june.simulator import Simulator, activity_hierarchy
 from june.world import generate_world_from_geography, generate_world_from_hdf5
 
-constant_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
+constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
 @pytest.fixture(name="selector", scope="module")
 def make_selector():
-    selector = InfectionSelector.from_file(config_filename=constant_config)
+    selector = InfectionSelector.from_file(transmission_config_path=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
