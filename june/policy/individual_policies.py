@@ -15,6 +15,7 @@ class IndividualPolicy(Policy):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.policy_type = "individual"
+        self.policy_subtype = None
 
 
 class IndividualPolicies(PolicyCollection):
@@ -28,7 +29,7 @@ class IndividualPolicies(PolicyCollection):
         IF a person is below 15 years old, then we look for a guardian to stay with that person at home.
         """
         for policy in self.policies:
-            if isinstance(policy, StayHome):
+            if policy.policy_subtype is "stay_home":
                 if policy.check_stay_home_condition(person, days_from_start):
                     activities = policy.apply(
                         person=person,
@@ -51,7 +52,7 @@ class IndividualPolicies(PolicyCollection):
                                             break
                                 guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
-            elif isinstance(policy, SkipActivity):
+            elif policy.policy_subtype is "skip_activity":
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
         return activities
@@ -64,6 +65,7 @@ class StayHome(IndividualPolicy):
 
     def __init__(self, start_time="1900-01-01", end_time="2100-01-01"):
         super().__init__(start_time=start_time, end_time=end_time)
+        self.policy_subtype = "stay_home"
 
     def apply(self, person: Person, days_from_start: float, activities: List[str]):
         """
@@ -181,6 +183,7 @@ class SkipActivity(IndividualPolicy):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.activities_to_remove = activities_to_remove
+        self.policy_subtype = "skip_activity"
 
     def check_skips_activity(self, person: "Person") -> bool:
         """
