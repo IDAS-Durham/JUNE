@@ -8,9 +8,22 @@ max_probability:
 norm_time:       
         type: constant
         value: 1.
+alpha:       
+        type: constant
+        value: 1.5
+
+smearing_time_first_infectious:
+        type: normal
+        loc: -2.
+        scale: 0.5
+smearing_peak_position:
+        type: normal
+        loc: -0.7
+        scale: 0.4
 asymptomatic_infectious_factor:
         type: constant
-        value: 1.
+        value: 0.29
 mild_infectious_factor:
         type: constant
-        value: 1.
+        value: 0.48
+
