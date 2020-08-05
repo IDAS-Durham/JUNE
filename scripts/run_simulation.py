@@ -17,7 +17,7 @@ from june.infection.infection import InfectionSelector
 from june.groups.commute import *
 
 world_file = "./tests.hdf5"
-config_path = "./config.yaml"
+config_path = "./config_nocommute.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
