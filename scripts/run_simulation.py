@@ -1,4 +1,7 @@
 import time
+import numpy as np
+import numba as nb
+import random
 
 from june.world import generate_world_from_hdf5
 from june.hdf5_savers import load_geography_from_hdf5
@@ -16,8 +19,24 @@ from june import paths
 from june.infection.infection import InfectionSelector
 from june.groups.commute import *
 
+def set_random_seed(seed=999):
+    """
+    Sets global seeds for testing in numpy, random, and numbaized numpy.
+    """
+
+    @nb.njit(cache=True)
+    def set_seed_numba(seed):
+        return np.random.seed(seed)
+
+    np.random.seed(seed)
+    set_seed_numba(seed)
+    random.seed(seed)
+    return
+
+set_random_seed()
+
 world_file = "./tests.hdf5"
-config_path = "./config.yaml"
+config_path = "./config_nocommute.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
