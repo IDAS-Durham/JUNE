@@ -158,7 +158,7 @@ class TestSymptoms:
             (pytest.approx(3.4, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
             (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
             (pytest.approx(6.8, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(25, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
+            (pytest.approx(20, rel=0.5), june.infection.symptom_tag.SymptomTag.dead_icu)
         ]
         assert symptoms_trajectories.time_from_infection_to_symptoms() == symptoms_trajectories.trajectory[1][0]
         assert symptoms_trajectories.time_from_infection_to_symptoms() > 0
@@ -166,11 +166,12 @@ class TestSymptoms:
         symptoms_trajectories.update_trajectory()
         assert symptoms_trajectories.trajectory == [
             (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(1, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (pytest.approx(10, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
             (pytest.approx(13, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
             (pytest.approx(15, rel=0.5), june.infection.symptom_tag.SymptomTag.intensive_care),
-            (pytest.approx(24, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
-            (pytest.approx(30, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
+            (pytest.approx(20, rel=0.5), june.infection.symptom_tag.SymptomTag.hospitalised),
+            (pytest.approx(34, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (pytest.approx(40, rel=0.5), june.infection.symptom_tag.SymptomTag.recovered)
         ]
         assert symptoms_trajectories.time_from_infection_to_symptoms() == symptoms_trajectories.trajectory[1][0]
         assert symptoms_trajectories.time_from_infection_to_symptoms() > 0
