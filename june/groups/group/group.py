@@ -103,11 +103,7 @@ class Group(AbstractGroup):
         return self.subgroups[item]
 
     def add(
-        self,
-        person: Person,
-        activity: str,
-        subgroup_type: SubgroupType,
-        dynamic=False
+        self, person: Person, activity: str, subgroup_type: SubgroupType, dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -130,7 +126,7 @@ class Group(AbstractGroup):
         """
         All the people in this group
         """
-        return self._collate_from_subgroups("people")
+        return [person for subgroup in self.subgroups for person in subgroup.people]
 
     @property
     def contains_people(self) -> bool:
@@ -157,10 +153,12 @@ class Group(AbstractGroup):
         -------
         The union of all the sets with the given attribute name in all of the sub groups.
         """
-        collection = list()
-        for grouping in self.subgroups:
-            collection.extend(getattr(grouping, attribute))
-        return collection
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if getattr(person, attribute)
+        ]
 
     @property
     def susceptible(self):
