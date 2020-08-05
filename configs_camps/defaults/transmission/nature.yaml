@@ -15,7 +15,7 @@ rate:
         scale: 0.03
 shift:
         type: normal 
-        loc: -2.6
+        loc: -2.12
         scale: 0.1
 asymptomatic_infectious_factor:
         type: constant
