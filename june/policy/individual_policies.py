@@ -29,7 +29,7 @@ class IndividualPolicies(PolicyCollection):
         IF a person is below 15 years old, then we look for a guardian to stay with that person at home.
         """
         for policy in self.policies:
-            if policy.policy_subtype is "stay_home":
+            if policy.policy_subtype == "stay_home":
                 if policy.check_stay_home_condition(person, days_from_start):
                     activities = policy.apply(
                         person=person,
@@ -52,7 +52,7 @@ class IndividualPolicies(PolicyCollection):
                                             break
                                 guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
-            elif policy.policy_subtype is "skip_activity":
+            elif policy.policy_subtype == "skip_activity":
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
         return activities
