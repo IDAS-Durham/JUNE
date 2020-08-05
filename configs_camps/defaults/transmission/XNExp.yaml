@@ -22,8 +22,8 @@ smearing_peak_position:
         scale: 0.4
 asymptomatic_infectious_factor:
         type: constant
-        value: 0.29
+        value: 1.
 mild_infectious_factor:
         type: constant
-        value: 0.48
+        value: 1. 
 
