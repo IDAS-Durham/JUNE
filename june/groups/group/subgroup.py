@@ -20,11 +20,7 @@ class Subgroup(AbstractGroup):
         self.people = []
 
     def _collate(self, attribute: str) -> List[Person]:
-        collection = list()
-        for person in self.people:
-            if getattr(person, attribute):
-                collection.append(person)
-        return collection
+        return [person for person in self.people if getattr(person, attribute)]
 
     @property
     def infected(self):
