@@ -132,26 +132,34 @@ trajectories:
           loc: 0.0
           scale: 5.727
 
-
       - symptom_tag: hospitalised
         completion_time:
-          type: lognormal
-          s: 1.412
+          type: exponweib 
+          a: 0.085 
+          c: 4.14
           loc: 0.0
-          scale: 0.907
+          scale: 6.8
 
       - symptom_tag: intensive_care
         completion_time:
-          type: lognormal
-          s: 0.8967
+          type: exponweib
+          a: 1.06 
+          c: 0.89
           loc: 0.0
-          scale: 9.811
+          scale: 12 
 
+      - symptom_tag: hospitalised
+        completion_time:
+          type: exponweib 
+          a: 15.95
+          c: 0.4
+          loc: 0.0
+          scale: 0.41
 
       - symptom_tag: mild
         completion_time:
           type: constant 
-          value: 8 
+          value: 3 
 
       - symptom_tag: recovered
         completion_time:
@@ -249,10 +257,12 @@ trajectories:
 
       - symptom_tag: intensive_care
         completion_time:
-          type: lognormal
-          s: 0.713
+          type: exponweib
+          a: 1.23 
+          c: 1.10
           loc: 0.0
-          scale: 7.75
+          scale: 9.69
+
 
       - symptom_tag: dead_icu
         completion_time:
