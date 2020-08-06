@@ -80,7 +80,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     house = households_super_area[house_idx]
                     if house.id == household.id:
                         continue
-                    if len(house.people) == 0:
+                    if not house.people:
                         continue
                     person_idx = np.random.randint(len(house.people))
                     relatives_to_visit.append(house.people[person_idx])
