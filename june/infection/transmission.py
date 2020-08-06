@@ -74,6 +74,8 @@ def gamma_pdf(x: float, a: float, loc: float, scale: float) -> float:
     -------
         evaluation fo gamma pdf 
     """
+    if x < loc:
+        return 0.
     return (
         1.0
         / gamma(a)
@@ -82,6 +84,34 @@ def gamma_pdf(x: float, a: float, loc: float, scale: float) -> float:
         / scale
     )
 
+@nb.jit(nopython=True)
+def gamma_pdf_vectorized(x: float, a: float, loc: float, scale: float) -> float:
+    """
+    Implementation of gamma PDF in numba
+
+    Parameters
+    ----------
+    x:
+        x variable
+    a:
+        shape factor 
+    loc:
+        denominator in exponential
+    scale:
+
+
+    Returns
+    -------
+        evaluation fo gamma pdf 
+    """
+    return np.where(x < loc, 0. , 
+        1.0
+        / gamma(a)
+        * ((x - loc) / scale) ** (a - 1)
+        * np.exp(-(x - loc) / scale)
+        / scale
+    
+    )
 
 class TransmissionGamma(Transmission):
     """
