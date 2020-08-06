@@ -42,7 +42,7 @@ class Simulator:
         light_logger: bool = False,
     ):
         """
-        Class to run an epidemic spread simulation on the world
+        Class to run an epidemic spread simulation on the world.
 
         Parameters
         ----------
@@ -193,9 +193,10 @@ class Simulator:
         first_person_id = simulator.world.people[0].id
         for dead_id in checkpoint_data["dead_ids"]:
             person = simulator.world.people[dead_id - first_person_id]
-            simulator.bury_the_dead(
-                world=simulator.world, person=person, time=simulator.timer.now
-            )
+            person.dead = True
+            cemetery = world.cemeteries.get_nearest(person)
+            cemetery.add(person)
+            person.subgroups = Activities(None, None, None, None, None, None, None)
         for recovered_id in checkpoint_data["recovered_ids"]:
             person = simulator.world.people[recovered_id - first_person_id]
             person.susceptibility = 0.0
@@ -204,6 +205,12 @@ class Simulator:
         ):
             person = simulator.world.people[infected_id - first_person_id]
             person.health_information = health_information
+        # restore timer
+        checkpoint_timer = checkpoint_data["timer"]
+        simulator.timer.initial_date = checkpoint_timer.initial_date
+        simulator.timer.date = checkpoint_timer.date
+        simulator.timer.delta_time = checkpoint_timer.delta_time
+        simulator.timer.shift = checkpoint_timer.shift
         return simulator
 
     def sort_people_world(self):
@@ -218,7 +225,6 @@ class Simulator:
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
         to False.
-
         """
         for group_name in self.activity_manager.all_groups:
             if group_name in ["care_home_visits", "household_visits"]:
@@ -337,8 +343,13 @@ class Simulator:
 
     def do_timestep(self):
         """
-        Perform a time step in the simulation
-
+        Perform a time step in the simulation. First, ActivityManager is called
+        to send people to the corresponding subgroups according to the current daytime.
+        Then we iterate over all the groups and create an InteractiveGroup object, which
+        extracts the relevant information of each group to carry the interaction in it.
+        We then pass the interactive group to the interaction module, which returns the ids 
+        of the people who got infected. We record the infection locations, update the health
+        status of the population, and distribute scores among the infectors to calculate R0.
         """
         if self.activity_manager.policies is not None:
             interaction_policies = InteractionPolicies.get_active_policies(
@@ -450,11 +461,17 @@ class Simulator:
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_dates
-                and self.timer.now % 24 == 0
+                and int(self.timer.now) == self.timer.now
             ):
+                logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
                 self.save_checkpoint(self.timer.date.date())
 
     def save_checkpoint(self, date: datetime):
+        """
+        Saves a checkpoint at the given date. We save all the health information of the
+        population. We can then load the world back to the checkpoint state using the
+        from_checkpoint class method of this class.
+        """
         recovered_people_ids = [
             person.id for person in self.world.people if person.recovered
         ]
@@ -473,6 +490,7 @@ class Simulator:
             "susceptible_ids": susceptible_people_ids,
             "infected_ids": infected_people_ids,
             "health_information_list": health_information_list,
+            "timer" : self.timer,
         }
         with open(self.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
             pickle.dump(checkpoint_data, f)
