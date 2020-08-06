@@ -143,7 +143,7 @@ class MatrixInteraction(Interaction):
             np.arange(len(matrix)), [person.age for person in group.people]
         )
         # if no age empty
-        if len(not_in_group) == 0:
+        if not not_in_group.size:
             return matrix
         else:
             return self.remove_distribute_matrix(matrix, not_in_group)

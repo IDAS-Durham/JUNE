@@ -300,7 +300,7 @@ class Demography:
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
         area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["area"]
-        if not area_names:
+        if not area_names.size:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)
 
