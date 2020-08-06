@@ -740,7 +740,7 @@ class HouseholdDistributor:
         age:
             age to check if empty.
         """
-        if len(people_dict[age]) == 0:
+        if not people_dict[age]:
             del people_dict[age]
             return True
         return False
@@ -788,12 +788,12 @@ class HouseholdDistributor:
         compatible_ages = compatible_ages[
             (min_age <= compatible_ages) & (compatible_ages <= max_age)
         ]
-        if len(compatible_ages) == 0:
+        if not compatible_ages.size:
             compatible_ages = np.array(list(second_dict.keys()))
             compatible_ages = compatible_ages[
                 (min_age <= compatible_ages) & (compatible_ages <= max_age)
             ]
-            if len(compatible_ages) == 0:
+            if not compatible_ages.size:
                 return
             first_dict = second_dict
         closest_age = get_closest_element_in_array(compatible_ages, age)
@@ -930,7 +930,7 @@ class HouseholdDistributor:
         """
         sampled_age_difference = self._second_kid_parent_age_diff_list.pop()
         target_age = min(max(parent.age - sampled_age_difference, 0), self.kid_max_age)
-        if len(men_by_age) == 0:
+        if not men_by_age:
             closest_male = np.inf
         else:
             closest_male = (
@@ -939,7 +939,7 @@ class HouseholdDistributor:
                 )
                 - target_age
             )
-        if len(women_by_age) == 0:
+        if not women_by_age:
             closest_female = np.inf
         else:
             closest_female = (
@@ -1426,7 +1426,7 @@ class HouseholdDistributor:
 
         index = 0
         while people_left > 0:
-            if len(communal_houses) == 0:
+            if not communal_houses:
                 # this extreme case happens in area E00174453 (only case in England!!!)
                 person = self._get_random_person_in_age_bracket(
                     men_by_age, women_by_age, min_age=15
@@ -1651,7 +1651,7 @@ class HouseholdDistributor:
         """
         for lis in priority_lists:
             list2 = [household for household in lis if household.size > 0]
-            if len(list2) == 0:
+            if not list2:
                 continue
             household = np.random.choice(list2)
             return household
@@ -1667,7 +1667,7 @@ class HouseholdDistributor:
             list of lists of households. The list should be sorted according to priority allocation.
         """
         for lis in priority_lists:
-            if len(lis) == 0:
+            if not lis:
                 continue
             household = np.random.choice(lis)
             return household
