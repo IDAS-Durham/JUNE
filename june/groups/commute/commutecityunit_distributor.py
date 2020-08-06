@@ -18,7 +18,7 @@ class CommuteCityUnitDistributor:
 
     def distribute_people(self):
         for city in self.commutecities:
-            if len(city.commute_internal) > 0:
+            if city.commute_internal:
                 # Clear all units of passengers before running
                 possible_units = city.commutecityunits
                 commuting_people = city.commute_internal
