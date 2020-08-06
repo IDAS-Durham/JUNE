@@ -1,5 +1,6 @@
 from june.infection import transmission as trans 
 import scipy.stats
+import numpy as np
 import autofit as af
 import os
 import pytest
@@ -52,6 +53,16 @@ class TestTransmissionGamma:
     def test__gamma_pdf_implementation(self, x, a, loc, scale):
         scipy_gamma = scipy.stats.gamma(a=a, loc=loc, scale=scale)
         assert  trans.gamma_pdf(x, a=a, loc=loc, scale=scale) == pytest.approx(scipy_gamma.pdf(x), rel=0.001)
+
+    def test__gamma_pdf_vectorized(self,): 
+        x = np.linspace(0.,10.,100)
+        a = 1.
+        loc = 1.
+        scale = 1.
+        scipy_gamma = scipy.stats.gamma(a=a, loc=loc, scale=scale)
+        np.testing.assert_allclose(trans.gamma_pdf_vectorized(x, a=a, loc=loc, scale=scale), scipy_gamma.pdf(x))
+
+
 
 
                 
