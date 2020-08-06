@@ -190,6 +190,6 @@ class SocialVenues(Supergroup):
             return_distance=True,
         )
         venue_idxs = venue_idxs[0]
-        if len(venue_idxs) == 0:
+        if not venue_idxs.size:
             return None
         return [self[idx] for idx in venue_idxs]
