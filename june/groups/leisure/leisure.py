@@ -119,22 +119,22 @@ class Leisure:
         self.closed_venues = set()
 
     def refresh_random_numbers(self):
-        self.random_integers = list(np.random.randint(0, 2000, 10_000_000))
-        self.random_numbers = list(np.random.rand(10_000_000))
+        self.random_integers = np.random.randint(0, 2000, 10_000_000)
+        self.random_numbers = np.random.rand(10_000_000)
 
     def get_random_number(self):
         try:
-            return self.random_numbers.pop()
+            return self.random_numbers[-1]
         except IndexError:
             self.refresh_random_numbers()
-            return self.random_numbers.pop()
+            return self.random_numbers[-1]
 
     def get_random_integer(self):
         try:
-            return self.random_integers.pop()
+            return self.random_integers[-1]
         except IndexError:
             self.refresh_random_numbers()
-            return self.random_integers.pop()
+            return self.random_integers[-1]
 
     def distribute_social_venues_to_households(self, households: List[Household]):
         logger.info("Distributing social venues to households")
