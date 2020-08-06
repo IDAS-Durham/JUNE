@@ -176,7 +176,7 @@ class WorkerDistributor:
             for super_area in self.super_areas
             if super_area.name == work_location
         ]
-        if len(super_area) != 0:
+        if super_area:
             super_area = super_area[0]
             super_area.add_worker(person)
         elif work_location in list(self.non_geographical_work_location.keys()):
@@ -268,7 +268,7 @@ class WorkerDistributor:
             an instance of the geography class
         """
         area_names = [super_area.name for super_area in geography.super_areas]
-        if len(area_names) == 0:
+        if not area_names:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
             area_names,
@@ -306,7 +306,7 @@ class WorkerDistributor:
         area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)][
             "super_area"
         ]
-        if len(area_names) == 0:
+        if not area_names:
             raise CompanyError("Region returned empty area list.")
         return cls.for_super_areas(
             area_names,
@@ -383,7 +383,7 @@ def load_workflow_df(
         usecols=[0, 1, 3, 4],
         names=["super_area", "work_super_area", "n_man", "n_woman"],
     )
-    if len(area_names) != 0:
+    if area_names:
         wf_df = wf_df[wf_df["super_area"].isin(area_names)]
     # convert into ratios
     wf_df = wf_df.groupby(["super_area", "work_super_area"]).agg(
@@ -418,7 +418,7 @@ def load_sex_per_sector(
         uni_columns + ["m all", "m R S T U", "f all", "f R S T U"], axis=1,
     )
 
-    if len(area_names) != 0:
+    if area_names:
         geo_hierarchy = pd.read_csv(default_areas_map_path)
         area_names = geo_hierarchy[geo_hierarchy["super_area"].isin(area_names)]["area"]
         sector_by_sex_df = sector_by_sex_df.loc[area_names]

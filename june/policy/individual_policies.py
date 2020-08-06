@@ -42,7 +42,7 @@ class IndividualPolicies(PolicyCollection):
                             for housemate in person.residence.group.people
                             if housemate.age >= 18
                         ]
-                        if len(possible_guardians) == 0:
+                        if not possible_guardians:
                             guardian = person.find_guardian()
                             if guardian is not None:
                                 if guardian.busy:

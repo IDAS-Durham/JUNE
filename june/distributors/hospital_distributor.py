@@ -131,7 +131,7 @@ class HospitalDistributor:
             super area to distribute medics
         """
         hospitals_in_super_area = self.get_hospitals_in_super_area(super_area)
-        if len(hospitals_in_super_area) == 0:
+        if not hospitals_in_super_area:
             return
         medics = [
             person
@@ -140,7 +140,7 @@ class HospitalDistributor:
             and person.age > self.medic_min_age
             and person.primary_activity is None
         ]
-        if len(medics) == 0:
+        if not medics:
             logger.info(
                 f"\n The SuperArea {super_area.name} has no people that work in it!"
             )
