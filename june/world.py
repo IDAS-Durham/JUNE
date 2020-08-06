@@ -420,7 +420,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             area.care_home = care_home
         print("done")
 
-
     # commute
     if world.commutehubs is not None and world.commutecities is not None:
         print("restoring commute...")
@@ -438,5 +437,3 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
 
     world.cemeteries = Cemeteries()
     return world
-
-

@@ -2,11 +2,10 @@ import logging
 import datetime
 import numpy as np
 import pickle
+import yaml
 from itertools import chain
 from typing import Optional, List
 from pathlib import Path
-
-import yaml
 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
@@ -64,8 +63,9 @@ class Simulator:
         else:
             self.checkpoint_dates = checkpoint_dates
         self.sort_people_world()
-        self.save_path = Path(save_path)
-        self.save_path.mkdir(exist_ok=True, parents=True)
+        if save_path is not None:
+            self.save_path = Path(save_path)
+            self.save_path.mkdir(exist_ok=True, parents=True)
         if not self.world.box_mode and save_path is not None:
             self.logger = Logger(save_path=self.save_path)
         else:
@@ -109,7 +109,7 @@ class Simulator:
         else:
             activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
-        if config["checkpoint_dates"]:
+        if "checkpoint_dates" in config:
             if isinstance(config["checkpoint_dates"], datetime.date):
                 checkpoint_dates = [config["checkpoint_dates"]]
             else:
@@ -172,6 +172,12 @@ class Simulator:
         config_filename: str = default_config_filename,
         save_path: str = "results",
     ):
+        """
+        Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
+        initialisation but with the additional path to where the checkpoint pickle file is located.
+        The checkpoint saves information about the infection status of all the people in the world as well as the timings.
+        Note, nonetheless, that all the past infections / deaths will have the checkpoint date as date.
+        """
         simulator = cls.from_file(
             world=world,
             interaction=interaction,
@@ -187,7 +193,9 @@ class Simulator:
         first_person_id = simulator.world.people[0].id
         for dead_id in checkpoint_data["dead_ids"]:
             person = simulator.world.people[dead_id - first_person_id]
-            simulator.bury_the_dead(person=person, time=simulator.timer.now)
+            simulator.bury_the_dead(
+                world=simulator.world, person=person, time=simulator.timer.now
+            )
         for recovered_id in checkpoint_data["recovered_ids"]:
             person = simulator.world.people[recovered_id - first_person_id]
             person.susceptibility = 0.0
@@ -321,7 +329,7 @@ class Simulator:
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:
-                self.bury_the_dead(person, time)
+                self.bury_the_dead(self.world, person, time)
         if self.logger is not None:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
