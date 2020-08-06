@@ -104,3 +104,11 @@ def test__checkpoints_are_saved(selector):
             assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
             assert person1.recovered == person2.recovered
+
+    # check timer is correct
+    assert sim_recovered.timer.initial_date == sim.timer.initial_date
+    assert sim_recovered.timer.final_date == sim.timer.final_date
+    assert int(sim_recovered.timer.now) == sim.timer.now - 0.5
+    assert sim_recovered.timer.date == datetime.datetime(2020, 3, 25)
+    assert sim_recovered.timer.shift == sim.timer.shift - 1
+    assert sim_recovered.timer.delta_time == sim.timer.delta_time
