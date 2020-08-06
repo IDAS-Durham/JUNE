@@ -288,7 +288,7 @@ class Schools(Supergroup):
                 (school_df["age_min"] <= age) & (school_df["age_max"] >= age)
             ]
             schools_coords = _school_df_agegroup[["latitude", "longitude"]].values
-            if len(schools_coords) == 0:
+            if not schools_coords.size:
                 logger.info(f"No school for the age {age} in this world.")
                 continue
             school_trees[age] = Schools._create_school_tree(schools_coords)
