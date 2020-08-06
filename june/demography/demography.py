@@ -272,7 +272,7 @@ class Demography:
         geography
             an instance of the geography class
         """
-        if len(geography.areas) == 0:
+        if not geography.areas:
             raise DemographyError("Empty geography!")
         area_names = [area.name for area in geography.areas]
         return cls.for_areas(area_names, data_path, config)
@@ -300,7 +300,7 @@ class Demography:
         geo_hierarchy = pd.read_csv(areas_maps_path)
         zone_type, zone_list = filter_key.popitem()
         area_names = geo_hierarchy[geo_hierarchy[zone_type].isin(zone_list)]["area"]
-        if len(area_names) == 0:
+        if not area_names:
             raise DemographyError("Region returned empty area list.")
         return cls.for_areas(area_names, data_path, config)
 

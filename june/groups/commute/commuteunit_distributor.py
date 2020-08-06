@@ -17,7 +17,7 @@ class CommuteUnitDistributor:
 
     def distribute_people(self):
         for hub in self.commutehubs:
-            if len(hub.people) > 0:
+            if hub.people:
                 possible_units = hub.commuteunits
                 commuting_people = hub.people
                 indices = list(range(len(commuting_people)))

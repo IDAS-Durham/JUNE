@@ -103,7 +103,7 @@ class CareHomes(Supergroup):
         Initializes care homes from geography.
         """
         areas = geography.areas
-        if len(areas) == 0:
+        if not areas:
             raise CareHomeError("Empty geography!")
         return cls.for_areas(areas, data_file, config_file)
 
@@ -126,7 +126,7 @@ class CareHomes(Supergroup):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         care_home_df = pd.read_csv(data_file, index_col=0)
-        if len(areas) != 0:
+        if areas:
             area_names = [area.name for area in areas]
             # filter out carehomes that are in the area of interest
             care_home_df = care_home_df.loc[area_names]

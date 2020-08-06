@@ -212,7 +212,7 @@ class InfectionSeed:
         if date.date() not in self.dates_seeded:
             for region, n_cases in n_cases_region.iteritems():
                 super_areas = self._filter_region(region=region)
-                if len(super_areas) > 0:
+                if super_areas.size:
                     self.infect_super_areas(
                         super_areas, int(self.seed_strength * n_cases)
                     )
@@ -247,7 +247,7 @@ class InfectionSeed:
         proportionally place more cases in the more populated super areas.
         """
         super_areas = self._filter_region(region=region)
-        if len(super_areas) > 0:
+        if super_areas.size:
             self.infect_super_areas(
                 super_areas, int(self.seed_strength * n_cases)
             )
