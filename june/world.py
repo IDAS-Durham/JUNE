@@ -438,3 +438,5 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
 
     world.cemeteries = Cemeteries()
     return world
+
+
