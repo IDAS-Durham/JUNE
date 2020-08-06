@@ -1,9 +1,10 @@
 import autofit as af
 import yaml
 import numpy as np
-from scipy.stats import gamma
+import numba as nb
 import sys
 from typing import Optional
+from math import gamma
 
 from june.infection.trajectory_maker import CompletionTime
 from june.infection.symptom_tag import SymptomTag
@@ -53,23 +54,83 @@ class TransmissionConstant(Transmission):
         pass
 
 
+@nb.jit(nopython=True)
+def gamma_pdf(x: float, a: float, loc: float, scale: float) -> float:
+    """
+    Implementation of gamma PDF in numba
+
+    Parameters
+    ----------
+    x:
+        x variable
+    a:
+        shape factor 
+    loc:
+        denominator in exponential
+    scale:
+
+
+    Returns
+    -------
+        evaluation fo gamma pdf 
+    """
+    if x < loc:
+        return 0.
+    return (
+        1.0
+        / gamma(a)
+        * ((x - loc) / scale) ** (a - 1)
+        * np.exp(-(x - loc) / scale)
+        / scale
+    )
+
+@nb.jit(nopython=True)
+def gamma_pdf_vectorized(x: float, a: float, loc: float, scale: float) -> float:
+    """
+    Implementation of gamma PDF in numba
+
+    Parameters
+    ----------
+    x:
+        x variable
+    a:
+        shape factor 
+    loc:
+        denominator in exponential
+    scale:
+
+
+    Returns
+    -------
+        evaluation fo gamma pdf 
+    """
+    return np.where(x < loc, 0. , 
+        1.0
+        / gamma(a)
+        * ((x - loc) / scale) ** (a - 1)
+        * np.exp(-(x - loc) / scale)
+        / scale
+    
+    )
+
 class TransmissionGamma(Transmission):
     """
     Module to simulate the infectiousness profiles found in :
         - https://www.nature.com/articles/s41591-020-0869-5
         - https://arxiv.org/pdf/2007.06602.pdf
     """
+
     def __init__(
         self,
-        max_infectiousness: float=1.0,
-        shape: float =2.0,
-        rate: float =3.0,
-        shift: float =-2.0,
-        max_symptoms: Optional["SymptomTag"] =None,
-        asymptomatic_infectious_factor: Optional[float]=None,
-        mild_infectious_factor: Optional[float] =None,
+        max_infectiousness: float = 1.0,
+        shape: float = 2.0,
+        rate: float = 3.0,
+        shift: float = -2.0,
+        max_symptoms: Optional["SymptomTag"] = None,
+        asymptomatic_infectious_factor: Optional[float] = None,
+        mild_infectious_factor: Optional[float] = None,
     ):
-        '''
+        """
         Parameters
         ----------
         max_infectiousness:
@@ -87,15 +148,16 @@ class TransmissionGamma(Transmission):
             factor to reduce the infectiousness of asymptomatic individuals
         mild_infectious_factor:
             factor to reduce the infectiousness of mild individuals
-        '''
+        """
         self.max_infectiousness = max_infectiousness
         self.shape = shape
         self.rate = rate
         self.shift = shift
         self.scale = 1.0 / self.rate
         time_at_max = (self.shape - 1) * self.scale + self.shift
-        self.gamma = gamma(a=self.shape, scale=self.scale, loc=self.shift)
-        self.norm = self.max_infectiousness / self.gamma.pdf(time_at_max)
+        self.norm = self.max_infectiousness / gamma_pdf(
+            x=time_at_max, a=self.shape, loc=self.shift, scale=self.scale
+        )
         self.asymptomatic_infectious_factor = asymptomatic_infectious_factor
         self.mild_infectious_factor = mild_infectious_factor
         if (
@@ -230,4 +292,6 @@ class TransmissionGamma(Transmission):
         time_from_infection:
             time elapsed since person became infected
         """
-        self.probability = self.norm * self.gamma.pdf(time_from_infection)
+        self.probability = self.norm * gamma_pdf(
+            x=time_from_infection, a=self.shape, loc=self.shift, scale=self.scale
+        )
