@@ -22,7 +22,7 @@ def save_pubs_to_hdf5(pubs: Pubs, file_path: str):
 
 
 def load_pubs_from_hdf5(file_path: str):
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         pubs = f["pubs"]
         pubs_list = list()
         n_pubs = pubs.attrs["n_pubs"]
@@ -53,7 +53,7 @@ def save_groceries_to_hdf5(groceries: Groceries, file_path: str):
 
 
 def load_groceries_from_hdf5(file_path: str):
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         groceries = f["groceries"]
         groceries_list = list()
         n_groceries = groceries.attrs["n_groceries"]
@@ -85,7 +85,7 @@ def save_cinemas_to_hdf5(cinemas: Cinemas, file_path: str):
 
 
 def load_cinemas_from_hdf5(file_path: str):
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         cinemas = f["cinemas"]
         cinemas_list = list()
         n_cinemas = cinemas.attrs["n_cinemas"]
