@@ -201,16 +201,12 @@ class Simulator:
         for recovered_id in checkpoint_data["recovered_ids"]:
             person = simulator.world.people[recovered_id - first_person_id]
             person.susceptibility = 0.0
-            if person.id == 83:
-                print("FOUND IT IN RECOVERED!")
         for infected_id, health_information in zip(
             checkpoint_data["infected_ids"], checkpoint_data["health_information_list"]
         ):
             person = simulator.world.people[infected_id - first_person_id]
             person.health_information = health_information
             person.susceptibility = 0.0
-            if person.id == 83:
-                print("FOUND IT IN infected!")
         # restore timer
         checkpoint_timer = checkpoint_data["timer"]
         simulator.timer.initial_date = checkpoint_timer.initial_date
@@ -306,7 +302,6 @@ class Simulator:
         """
         # TODO: seems to be only used to set the infection length at the moment, but this is not logged
         # anywhere, so we could get rid of this potentially
-        print(f"recovering {person.id}")
         person.health_information.set_recovered(time)
         person.susceptibility = 0.0
         person.health_information = None
@@ -466,25 +461,26 @@ class Simulator:
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
-        for time in self.timer:
-            if time > self.timer.final_date:
-                break
+        while self.timer.date < self.timer.final_date:
             if self.infection_seed:
-                if self.infection_seed.max_date >= time >= self.infection_seed.min_date:
-                    self.infection_seed.unleash_virus_per_region(time)
+                if (
+                    self.infection_seed.max_date
+                    >= self.timer.date
+                    >= self.infection_seed.min_date
+                ):
+                    self.infection_seed.unleash_virus_per_region(self.timer.date)
             self.do_timestep()
-            print(self.checkpoint_dates)
-            print("now")
-            print(self.timer.now)
-            print("current date")
-            print(self.timer.date.date())
-            print(self.timer.now + self.timer.duration)
             if (
                 self.timer.date.date() in self.checkpoint_dates
                 and (self.timer.now + self.timer.duration).is_integer() 
             ):# this saves in the last time step of the day
+                saving_date = self.timer.date.date()
+                next(self.timer) # we want to save at the next time step so that
+                # we can resume consistenly
                 logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
-                self.save_checkpoint(self.timer.date.date())
+                self.save_checkpoint(saving_date)
+                continue
+            next(self.timer)
 
     def save_checkpoint(self, date: datetime):
         """
@@ -495,7 +491,6 @@ class Simulator:
         recovered_people_ids = [
             person.id for person in self.world.people if person.recovered
         ]
-        print(recovered_people_ids)
         dead_people_ids = [person.id for person in self.world.people if person.dead]
         susceptible_people_ids = [
             person.id for person in self.world.people if person.susceptible
