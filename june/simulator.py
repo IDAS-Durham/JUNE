@@ -194,17 +194,23 @@ class Simulator:
         for dead_id in checkpoint_data["dead_ids"]:
             person = simulator.world.people[dead_id - first_person_id]
             person.dead = True
+            person.susceptibility = 0.0
             cemetery = world.cemeteries.get_nearest(person)
             cemetery.add(person)
             person.subgroups = Activities(None, None, None, None, None, None, None)
         for recovered_id in checkpoint_data["recovered_ids"]:
             person = simulator.world.people[recovered_id - first_person_id]
             person.susceptibility = 0.0
+            if person.id == 83:
+                print("FOUND IT IN RECOVERED!")
         for infected_id, health_information in zip(
             checkpoint_data["infected_ids"], checkpoint_data["health_information_list"]
         ):
             person = simulator.world.people[infected_id - first_person_id]
             person.health_information = health_information
+            person.susceptibility = 0.0
+            if person.id == 83:
+                print("FOUND IT IN infected!")
         # restore timer
         checkpoint_timer = checkpoint_data["timer"]
         simulator.timer.initial_date = checkpoint_timer.initial_date
@@ -250,16 +256,22 @@ class Simulator:
             dictionary with time steps configuration
         """
 
-        assert sum(time_config["step_duration"]["weekday"].values()) == 24
-        assert sum(time_config["step_duration"]["weekend"].values()) == 24
+        try:
+            assert sum(time_config["step_duration"]["weekday"].values()) == 24
+            assert sum(time_config["step_duration"]["weekend"].values()) == 24
+        except AssertionError:
+            raise SimulatorError("Daily activity durations in config do not add to 24 hours.")
 
         # Check that all groups given in time_config file are in the valid group hierarchy
         all_groups = activity_hierarchy
-        for step, activities in time_config["step_activities"]["weekday"].items():
-            assert all(group in all_groups for group in activities)
+        try:
+            for step, activities in time_config["step_activities"]["weekday"].items():
+                assert all(group in all_groups for group in activities)
 
-        for step, activities in time_config["step_activities"]["weekend"].items():
-            assert all(group in all_groups for group in activities)
+            for step, activities in time_config["step_activities"]["weekend"].items():
+                assert all(group in all_groups for group in activities)
+        except AssertionError:
+            raise SimulatorError("Config file contains unsupported activity name.")
 
     @staticmethod
     def bury_the_dead(world: World, person: "Person", time: float):
@@ -274,6 +286,7 @@ class Simulator:
             person to send to cemetery
         """
         person.dead = True
+        person.susceptibility = 0.0
         cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
@@ -293,6 +306,7 @@ class Simulator:
         """
         # TODO: seems to be only used to set the infection length at the moment, but this is not logged
         # anywhere, so we could get rid of this potentially
+        print(f"recovering {person.id}")
         person.health_information.set_recovered(time)
         person.susceptibility = 0.0
         person.health_information = None
@@ -459,10 +473,16 @@ class Simulator:
                 if self.infection_seed.max_date >= time >= self.infection_seed.min_date:
                     self.infection_seed.unleash_virus_per_region(time)
             self.do_timestep()
+            print(self.checkpoint_dates)
+            print("now")
+            print(self.timer.now)
+            print("current date")
+            print(self.timer.date.date())
+            print(self.timer.now + self.timer.duration)
             if (
                 self.timer.date.date() in self.checkpoint_dates
-                and int(self.timer.now) == self.timer.now
-            ):
+                and (self.timer.now + self.timer.duration).is_integer() 
+            ):# this saves in the last time step of the day
                 logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
                 self.save_checkpoint(self.timer.date.date())
 
@@ -475,6 +495,7 @@ class Simulator:
         recovered_people_ids = [
             person.id for person in self.world.people if person.recovered
         ]
+        print(recovered_people_ids)
         dead_people_ids = [person.id for person in self.world.people if person.dead]
         susceptible_people_ids = [
             person.id for person in self.world.people if person.susceptible
