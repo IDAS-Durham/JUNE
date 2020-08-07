@@ -80,7 +80,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         carehomes = f["care_homes"]
         carehomes_list = list()
         n_carehomes = carehomes.attrs["n_care_homes"]

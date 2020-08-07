@@ -72,9 +72,7 @@ class TestSocialDistancing:
         sim.timer.reset()
         initial_betas = copy.deepcopy(sim.interaction.beta)
         sim.clear_world()
-        for time in sim.timer:
-            if time > sim.timer.final_date:
-                break
+        while sim.timer.date <= sim.timer.final_date:
             sim.do_timestep()
             if sim.timer.date >= start_date and sim.timer.date < end_date:
                 for group in sim.interaction.beta:
@@ -82,6 +80,7 @@ class TestSocialDistancing:
                         assert sim.interaction.beta[group] == initial_betas[group] * 0.5
                     else:
                         assert sim.interaction.beta[group] == initial_betas[group]
+                next(sim.timer)
                 continue
             if sim.timer.date >= start_date2 and sim.timer.date < end_date2:
                 for group in sim.interaction.beta:
@@ -89,7 +88,9 @@ class TestSocialDistancing:
                         assert sim.interaction.beta == 4.0
                     else:
                         assert sim.interaction.beta[group] == initial_betas[group]
+                next(sim.timer)
                 continue
             assert sim.interaction.beta == initial_betas
+            next(sim.timer)
 
 

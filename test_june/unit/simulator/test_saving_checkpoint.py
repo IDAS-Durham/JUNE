@@ -88,8 +88,8 @@ def test__checkpoints_are_saved(selector):
     assert sim_recovered.timer.initial_date == sim.timer.initial_date
     assert sim_recovered.timer.final_date == sim.timer.final_date
     assert sim_recovered.timer.now == sim.timer.now
-    assert sim_recovered.timer.date.date() == datetime.datetime(2020, 3, 25).date()
-    assert sim_recovered.timer.shift == sim.timer.shift# - 1
+    assert sim_recovered.timer.date.date() == datetime.datetime(2020, 3, 26).date()
+    assert sim_recovered.timer.shift == sim.timer.shift
     assert sim_recovered.timer.delta_time == sim.timer.delta_time
     for person1, person2 in zip(sim.world.people, sim_recovered.world.people):
         assert person1.id == person2.id
