@@ -163,7 +163,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
     This function should be rarely be called oustide world.py
     """
     print("loading households from hdf5 ", end="")
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
         households_list = list()
         n_households = households.attrs["n_households"]

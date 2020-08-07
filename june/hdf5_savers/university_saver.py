@@ -58,7 +58,7 @@ def load_universities_from_hdf5(file_path: str, chunk_size: int = 50000):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]
         universities_list = list()
         n_universities = universities.attrs["n_universities"]
