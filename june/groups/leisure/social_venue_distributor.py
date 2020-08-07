@@ -119,7 +119,7 @@ class SocialVenueDistributor:
             venue = self.social_venues.get_closest_venues(house_location, k=1)[0]
             return (venue,)
 
-        potential_venues = random.choice(
+        potential_venues = np.random.choice(
             potential_venues[: min(len(potential_venues), self.neighbours_to_consider)],
             size=self.neighbours_to_consider,
         )
