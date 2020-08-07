@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Union, Optional, List, Dict
 import datetime
+import random
 
 from .policy import Policy, PolicyCollection, Policies
 from june.infection.symptom_tag import SymptomTag
@@ -15,7 +16,6 @@ class IndividualPolicy(Policy):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.policy_type = "individual"
-        self.policy_subtype = None
 
 
 class IndividualPolicies(PolicyCollection):
@@ -29,7 +29,7 @@ class IndividualPolicies(PolicyCollection):
         IF a person is below 15 years old, then we look for a guardian to stay with that person at home.
         """
         for policy in self.policies:
-            if policy.policy_subtype == "stay_home":
+            if isinstance(policy, StayHome):
                 if policy.check_stay_home_condition(person, days_from_start):
                     activities = policy.apply(
                         person=person,
@@ -42,7 +42,7 @@ class IndividualPolicies(PolicyCollection):
                             for housemate in person.residence.group.people
                             if housemate.age >= 18
                         ]
-                        if not possible_guardians:
+                        if len(possible_guardians) == 0:
                             guardian = person.find_guardian()
                             if guardian is not None:
                                 if guardian.busy:
@@ -52,7 +52,7 @@ class IndividualPolicies(PolicyCollection):
                                             break
                                 guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
-            elif policy.policy_subtype == "skip_activity":
+            elif isinstance(policy, SkipActivity):
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
         return activities
@@ -65,7 +65,6 @@ class StayHome(IndividualPolicy):
 
     def __init__(self, start_time="1900-01-01", end_time="2100-01-01"):
         super().__init__(start_time=start_time, end_time=end_time)
-        self.policy_subtype = "stay_home"
 
     def apply(self, person: Person, days_from_start: float, activities: List[str]):
         """
@@ -165,7 +164,7 @@ class Shielding(StayHome):
 
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         if person.age >= self.min_age:
-            if self.compliance is None or np.random.rand() < self.compliance:
+            if self.compliance is None or random.random() < self.compliance:
                 return True
         return False
 
@@ -183,7 +182,6 @@ class SkipActivity(IndividualPolicy):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.activities_to_remove = activities_to_remove
-        self.policy_subtype = "skip_activity"
 
     def check_skips_activity(self, person: "Person") -> bool:
         """
@@ -301,7 +299,7 @@ class CloseCompanies(SkipActivity):
                 person.lockdown_status == "random"
                 and self.random_work_probability is not None
             ):
-                if np.random.rand() > self.random_work_probability:
+                if random.random() > self.random_work_probability:
                     return True
         return False
 
