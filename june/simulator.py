@@ -66,7 +66,7 @@ class Simulator:
         cls,
         world: World,
         interaction: Interaction,
-        infection_selector = None,
+        infection_selector=None,
         policies: Optional[Policies] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
@@ -253,7 +253,9 @@ class Simulator:
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
-            medical_care_policies.apply(person=person, medical_facilities=self.world.hospitals)
+            medical_care_policies.apply(
+                person=person, medical_facilities=self.world.hospitals
+            )
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:
@@ -323,7 +325,9 @@ class Simulator:
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.people[idx-first_person_id] for idx in infected_ids]
+        people_to_infect = [
+            self.world.people[idx - first_person_id] for idx in infected_ids
+        ]
         if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -356,21 +360,24 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
-            
+
             self.logger.log_parameters(
-                interaction = self.interaction,
-                infection_seed = self.infection_seed,
-                infection_selector = self.infection_selector,
-                activity_manager = self.activity_manager
+                interaction=self.interaction,
+                infection_seed=self.infection_seed,
+                infection_selector=self.infection_selector,
+                activity_manager=self.activity_manager,
             )
 
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
-        for time in self.timer:
-            if time > self.timer.final_date:
-                break
+        while self.timer.date <= self.timer.final_date:
             if self.infection_seed:
-                if self.infection_seed.max_date >= time >= self.infection_seed.min_date:
-                    self.infection_seed.unleash_virus_per_region(time)
+                if (
+                    self.infection_seed.max_date
+                    >= self.timer.date
+                    >= self.infection_seed.min_date
+                ):
+                    self.infection_seed.unleash_virus_per_region(self.timer.date)
             self.do_timestep()
+            next(self.timer)
