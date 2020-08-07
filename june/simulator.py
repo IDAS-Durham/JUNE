@@ -380,3 +380,4 @@ class Simulator:
                 ):
                     self.infection_seed.unleash_virus_per_region(self.timer.date)
             self.do_timestep()
+            next(self.timer)
