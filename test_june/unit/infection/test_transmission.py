@@ -1,4 +1,5 @@
 from june.infection import transmission as trans 
+from june import paths
 import scipy.stats
 import numpy as np
 import autofit as af
@@ -39,7 +40,18 @@ class TestTransmissionGamma:
                shift=shift
             )
         transmission.update_probability_from_delta_time((shape-1)/rate + shift)
-        assert transmission.probability == pytest.approx(max_infectiousness,
+        avg_gamma = trans.TransmissionGamma(
+               max_infectiousness = 1., 
+               shape = shape,
+               rate=rate,
+               shift=shift
+            )
+        avg_gamma.update_probability_from_delta_time(
+            avg_gamma.time_at_maximum_infectivity()
+        )
+        true_avg_peak_infectivity = avg_gamma.probability
+
+        assert transmission.probability/true_avg_peak_infectivity == pytest.approx(max_infectiousness,
                 rel=0.01)
 
     @pytest.mark.parametrize("x", [0.,1,3,5])
