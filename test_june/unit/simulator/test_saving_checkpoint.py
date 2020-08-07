@@ -2,6 +2,8 @@ import pytest
 import h5py
 import numpy as np
 import datetime
+import logging
+import june.simulator
 
 from june.groups import Hospitals, Hospital
 from june.demography import Geography, Demography, Population
@@ -67,6 +69,7 @@ def run_simulator(selector):
 
 
 def test__checkpoints_are_saved(selector):
+    june.simulator.logger.disabled = True
     sim = run_simulator(selector)
     fresh_world = generate_world_from_hdf5("./checkpoint_world.hdf5")
     interaction = Interaction.from_file()
@@ -81,6 +84,13 @@ def test__checkpoints_are_saved(selector):
         policies=policies,
         save_path="tests",
     )
+    # check timer is correct
+    assert sim_recovered.timer.initial_date == sim.timer.initial_date
+    assert sim_recovered.timer.final_date == sim.timer.final_date
+    assert sim_recovered.timer.now == sim.timer.now
+    assert sim_recovered.timer.date.date() == datetime.datetime(2020, 3, 25).date()
+    assert sim_recovered.timer.shift == sim.timer.shift# - 1
+    assert sim_recovered.timer.delta_time == sim.timer.delta_time
     for person1, person2 in zip(sim.world.people, sim_recovered.world.people):
         assert person1.id == person2.id
         if person1.health_information is not None:
@@ -101,14 +111,9 @@ def test__checkpoints_are_saved(selector):
                 p1_attr = getattr(person1.health_information, slot)
                 p2_attr = getattr(person2.health_information, slot)
                 assert p1_attr == p2_attr
-            assert person1.susceptible == person2.susceptible
-            assert person1.infected == person2.infected
-            assert person1.recovered == person2.recovered
+        assert person1.susceptible == person2.susceptible
+        assert person1.infected == person2.infected
+        assert person1.recovered == person2.recovered
+        assert person1.susceptibility == person2.susceptibility
+        assert person1.dead == person2.dead
 
-    # check timer is correct
-    assert sim_recovered.timer.initial_date == sim.timer.initial_date
-    assert sim_recovered.timer.final_date == sim.timer.final_date
-    assert int(sim_recovered.timer.now) == sim.timer.now - 0.5
-    assert sim_recovered.timer.date == datetime.datetime(2020, 3, 25)
-    assert sim_recovered.timer.shift == sim.timer.shift - 1
-    assert sim_recovered.timer.delta_time == sim.timer.delta_time

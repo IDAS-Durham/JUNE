@@ -86,6 +86,7 @@ class InfectionSelector:
             time at which infection happens
         """
         infection = self.make_infection(person, time)
+        person.susceptibility = 0.0
         person.health_information = HealthInformation()
         person.health_information.set_infection(infection=infection)
 
