@@ -179,8 +179,8 @@ class Companies(Supergroup):
         sizes = np.array([])
         for size_bracket, counts in company_sizes.items():
             size_min, size_max = _get_size_brackets(size_bracket)
-            sizes = np.concatenate(sizes, np.random.randint(max(size_min, 1),
-                                                            size_max, int(counts)))
+            sizes = np.concatenate((sizes, np.random.randint(max(size_min, 1),
+                                                             size_max, int(counts))))
         sectors = []
         for sector, counts in company_sectors.items():
             sectors += [sector] * int(counts)
