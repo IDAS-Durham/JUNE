@@ -25,10 +25,6 @@ class TestTransmission:
 
         assert transission == trans.TransmissionConstant
 
-
-
-
-
 class TestTransmissionGamma:
 
     def test__update_probability_at_time(self):
