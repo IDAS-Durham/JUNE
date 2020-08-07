@@ -80,7 +80,7 @@ class TravelUnitDistributor:
             for dest_city_idx, to_distribute in enumerate(to_distribute_per_city):
 
                 # drawing people from specific msoas
-                if len(travel_msoas) == 0:
+                if not travel_msoas.size:
                     msoas = []
                 else:
                     msoas = travel_msoas[np.random.choice(len(travel_msoas), int(to_distribute))]

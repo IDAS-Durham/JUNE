@@ -151,7 +151,7 @@ class Person(dataobject):
 
     def find_guardian(self):
         possible_guardians = [person for person in self.housemates if person.age >= 18]
-        if len(possible_guardians) == 0:
+        if not possible_guardians:
             return None
         guardian = random.choice(possible_guardians)
         if (
