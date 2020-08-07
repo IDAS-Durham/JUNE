@@ -225,11 +225,15 @@ def test__log_infected(sim):
 def test__log_infected_in_timestep(sim):
     ### the log_infected function is always called inside do_timestep. So test this too!
     time_steps = []
-    for i,time in enumerate(sim.timer):
+    i = 0
+    while sim.timer.date <= sim.timer.final_date:
+        time = sim.timer.date
         time_steps.append(time.strftime("%Y-%m-%dT%H:%M:%S.%f"))
         sim.do_timestep()
         if i > 10:
             break
+        i += 1
+        next(sim.timer)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         keys = list(f.keys())
