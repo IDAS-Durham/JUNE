@@ -76,11 +76,6 @@ class Timer:
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
         self.previous_date = self.initial_date
 
-
-
-    def __iter__(self):
-        return self
-
     def __next__(self):
         self.previous_date = self.date
         self.date += self.delta_time
