@@ -78,7 +78,7 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        if len(self.social_venues) == 0:
+        if not self.social_venues:
             return 0
         if sex == "m":
             probability = self.male_probabilities[age]

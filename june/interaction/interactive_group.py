@@ -34,13 +34,13 @@ class InteractiveGroup:
                 and person.health_information.infection.transmission.probability > 0
             ]
             sus_ids = [person.id for person in subgroup.people if person.susceptible]
-            if len(sus_ids) != 0:
+            if sus_ids:
                 self.has_susceptible = True
                 self.subgroups_susceptible.append(i)
                 susceptible_ids.append(sus_ids)
 
             inf_ids = [person.id for person in subgroup_infected]
-            if len(inf_ids) != 0:
+            if inf_ids:
                 tprob = sum(
                     person.health_information.infection.transmission.probability
                     for person in subgroup_infected
