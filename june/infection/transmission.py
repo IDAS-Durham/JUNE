@@ -149,22 +149,19 @@ class TransmissionGamma(Transmission):
         mild_infectious_factor:
             factor to reduce the infectiousness of mild individuals
         """
-        self.max_infectiousness = max_infectiousness
         self.shape = shape
         self.rate = rate
         self.shift = shift
         self.scale = 1.0 / self.rate
-        time_at_max = (self.shape - 1) * self.scale + self.shift
-        self.norm = self.max_infectiousness / gamma_pdf(
-            x=time_at_max, a=self.shape, loc=self.shift, scale=self.scale
-        )
+        self.max_infectiousness = max_infectiousness
         self.asymptomatic_infectious_factor = asymptomatic_infectious_factor
         self.mild_infectious_factor = mild_infectious_factor
+        self.norm = self.max_infectiousness
         if (
             asymptomatic_infectious_factor is not None
             and mild_infectious_factor is not None
         ):
-            self.modify_infectiousness_for_symptoms(max_symptoms=max_symptoms)
+            self.norm *= self.modify_infectiousness_for_symptoms(max_symptoms=max_symptoms)
         self.probability = 0.0
 
     @classmethod
@@ -262,10 +259,22 @@ class TransmissionGamma(Transmission):
             mild_infectious_factor=mild_infectious_factor,
         )
 
+    def time_at_maximum_infectivity(self,)->float:
+        """
+        Computes the time at which the individual is maximally infectious (in this case for
+        a gamma distribution
+
+        Returns
+        -------
+        t_max:
+            time at maximal infectiousness
+        """
+        return (self.shape - 1) * self.scale + self.shift
+
     def modify_infectiousness_for_symptoms(self, max_symptoms: "SymptomTag"):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying
-        self.norm
+        the norm of the distribution 
 
         Parameters
         ----------
@@ -277,11 +286,12 @@ class TransmissionGamma(Transmission):
             self.asymptomatic_infectious_factor is not None
             and max_symptoms == SymptomTag.asymptomatic
         ):
-            self.norm *= self.asymptomatic_infectious_factor
+            return self.asymptomatic_infectious_factor
         elif (
             self.mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
         ):
-            self.norm *= self.mild_infectious_factor
+            return self.mild_infectious_factor
+        return 1.
 
     def update_probability_from_delta_time(self, time_from_infection: float):
         """
