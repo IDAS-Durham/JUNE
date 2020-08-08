@@ -18,7 +18,7 @@ quarantine:
         n_days_household: 14 # for the housemates
         household_compliance: 0.9
         start_time: 2020-03-16 
-        end_time: 2020-03-23
+        end_time: 2021-07-04
 
 shielding:
     1:
