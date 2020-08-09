@@ -2,7 +2,7 @@ import statistics
 from pathlib import Path
 
 import numpy as np
-
+import pytest
 import june.infection.symptoms
 from june.demography import person
 from june.infection import Infection, InfectionSelector
@@ -80,37 +80,101 @@ class TestInfectionSelector:
         )
         assert selector.transmission_type == "constant"
 
-    def test__lognormal_in_maxprob(self):
+    def test__position_max_infectivity(self):
         selector = InfectionSelector.from_file()
-        dummy = person.Person(sex="f", age=26)
-        maxprobs = []
-        for i in range(1_000):
-            infection = selector.make_infection(time=0.1, person=dummy)
-            maxprobs.append(infection.transmission.max_infectiousness)
-        np.testing.assert_allclose(
-            statistics.mean(maxprobs), 1.13, rtol=0.02, atol=0.02
-        )
-        np.testing.assert_allclose(
-            statistics.median(maxprobs), 1.00, rtol=0.02, atol=0.02
-        )
-
-    def test__xnexp_in_transmission(self):
-        selector = InfectionSelector.from_file()
-        dummy = person.Person(sex="f", age=26)
+        dummy = person.Person.from_attributes(sex="f", age=26)
         infection = infect_person(
             person=dummy, selector=selector, max_symptom_tag="severe"
         )
-        ratio = 1.0 / infection.transmission.max_infectiousness
-        max_t = (
-            infection.transmission.shape - 1
-        ) * infection.transmission.scale + infection.transmission.shift
-        infection.update_at_time(max_t)
-        max_prob = ratio * infection.transmission.probability
+        true_max_t = infection.transmission.time_at_maximum_infectivity()
+        infectivity = []
+        time_steps = np.linspace(0.0, 30.0, 60)
+        for time in time_steps:
+            infection.transmission.update_probability_from_delta_time(
+                time_from_infection=time
+            )
+            infectivity.append(infection.transmission.probability)
+        max_t = time_steps[np.argmax(np.array(infectivity))]
+        assert max_t == pytest.approx(true_max_t, rel=0.01)
 
-        np.testing.assert_allclose(max_prob, 1.00, rtol=0.02, atol=0.02)
+    def test__avg_peak_value(self):
+        selector = InfectionSelector.from_file(
+            transmission_config_path=paths.configs_path
+            / "tests/transmission/test_transmission_constant.yaml"
+        )
+        dummy = person.Person.from_attributes(sex="f", age=26)
+        infection = infect_person(
+            person=dummy, selector=selector, max_symptom_tag="severe"
+        )
+        avg_gamma = transmission.TransmissionGamma.from_file(
+            config_path=paths.configs_path
+            / "tests/transmission/test_transmission_constant.yaml"
+        )
+        avg_gamma.update_probability_from_delta_time(
+            avg_gamma.time_at_maximum_infectivity()
+        )
+        true_avg_peak_infectivity = avg_gamma.probability
+        peak_infectivity = []
+        for i in range(100):
+            infection = selector.make_infection(time=0.1, person=dummy)
+            max_t = infection.transmission.time_at_maximum_infectivity()
+            infection.transmission.update_probability_from_delta_time(
+                time_from_infection=max_t
+            )
+            peak_infectivity.append(infection.transmission.probability)
+        assert np.mean(peak_infectivity) == pytest.approx(
+            true_avg_peak_infectivity, rel=0.05
+        )
 
-    def test__xnexp_in_asymptomatic_transmission(self):
-        selector = InfectionSelector.from_file()
+    def test__lognormal_in_maxprob(self):
+        selector = InfectionSelector.from_file(
+            transmission_config_path=paths.configs_path
+            / "tests/transmission/test_transmission_lognormal.yaml"
+        )
+        avg_gamma = transmission.TransmissionGamma.from_file(
+            config_path=paths.configs_path
+            / "tests/transmission/test_transmission_constant.yaml"
+        )
+
+        avg_gamma.update_probability_from_delta_time(
+            avg_gamma.time_at_maximum_infectivity()
+        )
+        true_avg_peak_infectivity = avg_gamma.probability
+        dummy = person.Person.from_attributes(sex="f", age=26)
+        norms, maxprobs = [], []
+        for i in range(1_000):
+            infection = selector.make_infection(time=0.1, person=dummy)
+            norms.append(infection.transmission.max_infectiousness)
+            max_t = infection.transmission.time_at_maximum_infectivity()
+            infection.transmission.update_probability_from_delta_time(
+                time_from_infection=max_t
+            )
+            maxprobs.append(infection.transmission.probability)
+
+        np.testing.assert_allclose(
+            statistics.mean(norms), 1.13, rtol=0.05,
+        )
+        np.testing.assert_allclose(
+            statistics.median(norms), 1.00, rtol=0.05,
+        )
+        np.testing.assert_allclose(
+            statistics.median(maxprobs) / true_avg_peak_infectivity, 1.0, rtol=0.06
+        )
+
+    def test__infectivity_for_asymptomatic_carriers(self):
+        avg_gamma = transmission.TransmissionGamma.from_file(
+            config_path=paths.configs_path
+            / "tests/transmission/test_transmission_constant.yaml"
+        )
+        avg_gamma.update_probability_from_delta_time(
+            avg_gamma.time_at_maximum_infectivity()
+        )
+        true_avg_peak_infectivity = avg_gamma.probability
+
+        selector = InfectionSelector.from_file(
+            transmission_config_path=paths.configs_path
+            / "tests/transmission/test_transmission_symptoms.yaml"
+        )
         dummy = person.Person(sex="f", age=26)
         infection = infect_person(
             person=dummy, selector=selector, max_symptom_tag="asymptomatic"
@@ -121,10 +185,25 @@ class TestInfectionSelector:
         ) * infection.transmission.scale + infection.transmission.shift
         infection.update_at_time(max_t)
         max_prob = ratio * infection.transmission.probability
-        np.testing.assert_allclose(max_prob, 0.29, rtol=0.02, atol=0.02)
+        np.testing.assert_allclose(
+            max_prob / true_avg_peak_infectivity, 0.3, rtol=0.05,
+        )
 
-    def test__xnexp_in_mild_transmission(self):
-        selector = InfectionSelector.from_file()
+    def test__infectivity_for_mild_carriers(self):
+        avg_gamma = transmission.TransmissionGamma.from_file(
+            config_path=paths.configs_path
+            / "tests/transmission/test_transmission_constant.yaml"
+        )
+        avg_gamma.update_probability_from_delta_time(
+            avg_gamma.time_at_maximum_infectivity()
+        )
+        true_avg_peak_infectivity = avg_gamma.probability
+
+        selector = InfectionSelector.from_file(
+            transmission_config_path=paths.configs_path
+            / "tests/transmission/test_transmission_symptoms.yaml"
+        )
+
         dummy = person.Person(sex="f", age=26)
         infection = infect_person(
             person=dummy, selector=selector, max_symptom_tag="mild"
@@ -135,4 +214,6 @@ class TestInfectionSelector:
         ) * infection.transmission.scale + infection.transmission.shift
         infection.update_at_time(max_t)
         max_prob = ratio * infection.transmission.probability
-        np.testing.assert_allclose(max_prob, 0.48, rtol=0.02, atol=0.02)
+        np.testing.assert_allclose(
+            max_prob / true_avg_peak_infectivity, 0.48, rtol=0.05,
+        )

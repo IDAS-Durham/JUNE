@@ -98,7 +98,7 @@ class Observed2Cases:
     def find_regions_for_super_areas(self, super_areas):
         regions = []
         for region in self.all_regions:
-            if len(self._filter_region(super_areas,region)) > 0:
+            if self._filter_region(super_areas,region).size:
                 regions.append(region)
         return regions
 
