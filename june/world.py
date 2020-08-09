@@ -290,7 +290,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     super_areas_first_id = world.super_areas[
         0
     ].id  # in case some super areas were created before
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         f_keys = list(f.keys()).copy()
     if "population" in f_keys:
         world.people = load_population_from_hdf5(file_path, chunk_size)
@@ -416,7 +416,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             care_home.area = area
             area.care_home = care_home
         print("done")
-
 
     # commute
     if world.commutehubs is not None and world.commutecities is not None:

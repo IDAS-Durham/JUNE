@@ -1,8 +1,9 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 from itertools import chain
-from june.interaction import Interaction, InteractiveGroup
+import datetime
 
+from june.interaction import Interaction, InteractiveGroup
 from june import paths
 from june.activity import ActivityManagerBox
 from june.interaction import Interaction
@@ -31,6 +32,7 @@ class SimulatorBox(Simulator):
             activity_manager,
             infection_selector: InfectionSelector =None,
             infection_seed: Optional["InfectionSeed"] = None,
+            checkpoint_dates: List[datetime.date] = None,
             save_path: str = "results",
             light_logger: bool = False,
     ):
@@ -70,6 +72,7 @@ class SimulatorBox(Simulator):
             infection_seed=infection_seed,
             save_path=save_path,
             light_logger=light_logger,
+            checkpoint_dates=checkpoint_dates,
         )
 
     def do_timestep(self):

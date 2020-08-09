@@ -88,7 +88,7 @@ class CareHomeDistributor:
 
     def _get_person_of_age(self, people_dict: dict, age: int):
         person = people_dict[age].pop()
-        if len(people_dict[age]) == 0:  # delete age key if empty list
+        if not people_dict[age]:  # delete age key if empty list
             del people_dict[age]
         return person
 
@@ -149,7 +149,7 @@ class CareHomeDistributor:
             and person.primary_activity is None
             and person.sub_sector is None)
         ]
-        if len(carers) == 0:
+        if not carers:
             logger.info(
                 f"\n The SuperArea {area.super_area.name} has no health-care workers in it!"
             )
