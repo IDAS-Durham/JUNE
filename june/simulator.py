@@ -146,7 +146,6 @@ class Simulator:
             leisure=leisure,
             policies=policies,
             timer=timer,
-            interaction=interaction,
         )
         return cls(
             world=world,
