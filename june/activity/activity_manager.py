@@ -39,12 +39,10 @@ class ActivityManager:
         policies,
         timer,
         all_activities,
-        interaction,
         activity_to_groups: dict,
         leisure: Optional[Leisure] = None,
         min_age_home_alone: int = 15,
     ):
-        self.interaction = interaction
         self.logger = logger
         self.policies = policies
         self.world = world
@@ -166,13 +164,29 @@ class ActivityManager:
                     person=person,
                 )
             else:
-                subgroup = getattr(person, activity)
+                subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
                 subgroup.append(person)
                 return
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
+
+    def get_personal_subgroup(self, person: "Person", activity: str)->"Subgroup":
+        '''
+        Find the subgroup a person belongs to for a particular activity.
+        
+        Parameters
+        ----------
+        person:
+            person that is looking for a subgroup 
+        activity:
+            the activity the person wants to find a subgroup for
+        Returns
+        -------
+        Subgroup for activity
+        '''
+        return getattr(person, activity)
 
     def do_timestep(self):
         activities = self.timer.activities
