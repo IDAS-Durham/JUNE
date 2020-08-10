@@ -6,8 +6,12 @@ import random
 import yaml
 from scipy import stats
 
-from june import paths
+from camps import paths
 from june.utils import parse_age_probabilities
+
+default_config_path = (
+    paths.configs_path / "defaults/distributors/learning_centers_distributor.yaml"
+)
 
 
 class LearningCenterDistributor:
@@ -39,11 +43,16 @@ class LearningCenterDistributor:
         self.learning_centers = learning_centers
         self.female_enrollment_rates = parse_age_probabilities(female_enrollment_rates)
         self.male_enrollment_rates = parse_age_probabilities(male_enrollment_rates)
+        self.teacher_min_age = teacher_min_age
         self.neighbour_centers = neighbour_centers
         self.n_shifts = n_shifts
 
     @classmethod
-    def from_file(cls, learning_centers: "LearningCenters", config_path: str = default_config_path,)->LearningCenterDistributor:
+    def from_file(
+        cls,
+        learning_centers: "LearningCenters",
+        config_path: str = default_config_path,
+    ) -> "LearningCenterDistributor":
         """
         Initialize LearningCenterDistributor from path to its config file
 
@@ -61,16 +70,15 @@ class LearningCenterDistributor:
         with open(config_path) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return LearningCenterDistributor(
-                learning_centers=learning_centers,
-                female_enrollment_rates=config['female_enrollment_rates'],
-                male_enrollment_rates=config['male_enrollment_rates'],
-                teacher_min_age=config['teacher_min_age'],
-                neighbour_centers=config['neighbour_centers'],
-                n_shifts=config['n_shifts']
-                )
+            learning_centers=learning_centers,
+            female_enrollment_rates=config["female_enrollment_rates"],
+            male_enrollment_rates=config["male_enrollment_rates"],
+            teacher_min_age=config["teacher_min_age"],
+            neighbour_centers=config["neighbour_centers"],
+            n_shifts=config["n_shifts"],
+        )
 
-
-    def distribute_kids(self, areas: List["Area"]):
+    def distribute_kids_to_learning_centers(self, areas: "Areas"):
         """
         Given a list of areas, distribute kids in the area to the ```self.neighbour_centers``` closest
         learning centers. Kids will be distributed according to the enrollment rates of their sex and age cohort.
@@ -80,10 +88,10 @@ class LearningCenterDistributor:
         Parameters
         ----------
         areas:
-            list of areas where people to be distributed live
+            areas object where people to be distributed live
         """
 
-        for area in areas:
+        for area in areas.members:
             closest_centers_idx = self.learning_centers.get_closest(
                 coordinates=area.coordinates, k=self.neighbour_centers
             )
@@ -137,15 +145,24 @@ class LearningCenterDistributor:
             )
             return
 
-    def distribute_teachers_to_learning_centers(
-            self, people: List["Person"]
-        ):
-        teachers = random.sample(people, k=len(self.learning_centers.members))
-        for i, learning_center in enumerate(learning_centers.members):
-            for shift in self.n_shifts:
-                learning_center.add(person=teachers[i],
-                        shift=shift,
-                        subgroup_type=learning_center.SubgroupType.teachers
+    def distribute_teachers_to_learning_centers(self, areas: "Areas"):
+        for learning_center in self.learning_centers.members:
+            # Find closest area to learning center
+            area = areas.get_closest_areas(
+                coordinates=learning_center.coordinates, k=1, return_distance=False
+            )[0]
+            # get someone in working age
+            old_people = [
+                person for person in area.people if person.age >= self.teacher_min_age
+            ]
+            teacher = random.choice(old_people)
+            # check whether this person already has a job
+            while teacher.primary_activity is not None:
+                teacher = random.choice(old_people)
+            # add the teacher to all shifts in the school
+            for shift in range(self.n_shifts):
+                learning_center.add(
+                    person=teacher,
+                    shift=shift,
+                    subgroup_type=learning_center.SubgroupType.teachers,
                 )
-
-            
