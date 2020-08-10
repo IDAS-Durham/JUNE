@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Union, Optional, List, Dict
 import datetime
-import random
+from random import random
 
 from .policy import Policy, PolicyCollection, Policies
 from june.infection.symptom_tag import SymptomTag
@@ -166,7 +166,7 @@ class Shielding(StayHome):
 
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         if person.age >= self.min_age:
-            if self.compliance is None or random.random() < self.compliance:
+            if self.compliance is None or random() < self.compliance:
                 return True
         return False
 
@@ -302,7 +302,7 @@ class CloseCompanies(SkipActivity):
                 person.lockdown_status == "random"
                 and self.random_work_probability is not None
             ):
-                if random.random() > self.random_work_probability:
+                if random() > self.random_work_probability:
                     return True
         return False
 

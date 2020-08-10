@@ -1,5 +1,5 @@
 import numpy as np
-import random
+from random import choice, random
 from typing import List
 from numba import jit
 from numba import typed
@@ -16,7 +16,7 @@ def random_choice_numba(arr, prob):
     """
     Fast implementation of np.random.choice
     """
-    return arr[np.searchsorted(np.cumsum(prob), random.random(), side="right")]
+    return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
 
@@ -144,7 +144,7 @@ class SocialVenueDistributor:
             venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
             return venue
         else:
-            venue_candidates = random.choice(
+            venue_candidates = choice(
                 potential_venues[
                     : min(len(potential_venues), self.neighbours_to_consider)
                 ],
@@ -162,4 +162,4 @@ class SocialVenueDistributor:
         if self.drags_household_probability == 0.0:
             return False
         else:
-            return random.random() < self.drags_household_probability
+            return random() < self.drags_household_probability

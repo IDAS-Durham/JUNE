@@ -2,7 +2,7 @@ from enum import IntEnum
 
 
 import numpy as np
-import random
+from random import random
 import h5py
 import time
 
@@ -42,7 +42,7 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf, household_complacency=random.random()):
+    def __init__(self, type=None, area=None, max_size=np.inf, household_complacency=random()):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
@@ -113,7 +113,7 @@ class Household(Group):
                 < time
                 < self.quarantine_starting_date + quarantine_days
             ):
-                return random.random() < household_compliance
+                return random() < household_compliance
         return False
 
 

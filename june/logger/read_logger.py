@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-import random
+from random import sample, shuffle
 import pandas as pd
 import datetime
 from pathlib import Path
@@ -271,7 +271,7 @@ class ReadLogger:
         -------
             data frame summarising people's trajectories identified by their id
         """
-        starting_id = np.random.randint(0, high=len(self.infections_df))
+        starting_id = randint(0, len(self.infections_df) - 1)
         starting_time = self.infections_df.index[starting_id]
         end_date = starting_time + datetime.timedelta(days=window_length)
         mask = (self.infections_df.index > starting_time) & (
@@ -279,7 +279,7 @@ class ReadLogger:
         )
         random_trajectories = self.infections_df.loc[mask]
         random_trajectories = random_trajectories.apply(pd.Series.explode)
-        random_ids = random.sample(
+        random_ids = sample(
             list(random_trajectories.infected_id.unique()), n_people
         )
         return [

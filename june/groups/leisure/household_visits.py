@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaml
+from random import randint, random, shuffle
 from typing import List, Optional
 from june.demography.geography import Areas, SuperAreas
 from june.groups import Households
@@ -69,20 +70,20 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                         "young_adults",
                     ]
                 ]
-                np.random.shuffle(households_super_area)
+                shuffle(households_super_area)
             for household in households_super_area:
                 if household.size == 0:
                     continue
-                households_to_link_n = np.random.randint(0, 4)
+                households_to_link_n = randint(0, 3)
                 relatives_to_visit = []
                 for _ in range(households_to_link_n):
-                    house_idx = np.random.randint(0, len(households_super_area))
+                    house_idx = randint(0, len(households_super_area) - 1)
                     house = households_super_area[house_idx]
                     if house.id == household.id:
                         continue
                     if not house.people:
                         continue
-                    person_idx = np.random.randint(len(house.people))
+                    person_idx = randint(0, len(house.people) - 1)
                     relatives_to_visit.append(house.people[person_idx])
                 household.relatives_in_households = tuple(relatives_to_visit)
 
@@ -101,7 +102,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             return None
         alive_relatives = [relative for relative in relatives if relative.dead is False]
         return alive_relatives[
-            np.random.randint(0, len(alive_relatives))
+            randint(0, len(alive_relatives) - 1)
         ].residence.group
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
