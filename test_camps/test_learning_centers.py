@@ -124,6 +124,7 @@ def test__shift_manager_moving_people():
     assert pupil_shift_1 in learning_center.people
     assert pupil_shift_2 not in learning_center.people
     assert pupil_shift_3 not in learning_center.people
+    assert len(learning_center.people) == 2
 
     learning_center.clear()
     for person in world.people.members:
@@ -134,6 +135,7 @@ def test__shift_manager_moving_people():
     assert pupil_shift_1 not in learning_center.people
     assert pupil_shift_2 in learning_center.people
     assert pupil_shift_3 not in learning_center.people
+    assert len(learning_center.people) == 2
 
     learning_center.clear()
     for person in world.people.members:
@@ -143,6 +145,7 @@ def test__shift_manager_moving_people():
     assert pupil_shift_1 not in learning_center.people
     assert pupil_shift_2 not in learning_center.people
     assert pupil_shift_3 in learning_center.people
+    assert len(learning_center.people) == 2
 
     learning_center.clear()
     for person in world.people.members:
@@ -152,6 +155,7 @@ def test__shift_manager_moving_people():
     assert pupil_shift_1 in learning_center.people
     assert pupil_shift_2 not in learning_center.people
     assert pupil_shift_3 not in learning_center.people
+    assert len(learning_center.people) == 2
 
 
 def test__get_closest_learning_center():
