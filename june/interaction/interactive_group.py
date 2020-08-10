@@ -25,6 +25,7 @@ class InteractiveGroup:
         self.has_susceptible = False
         self.has_infector = False
         self.size = group.size
+        self.must_timestep = False
         for i, subgroup in enumerate(group.subgroups):
             subgroup_size = len(subgroup.people)
             subgroup_infected = [
@@ -34,24 +35,22 @@ class InteractiveGroup:
                 and person.health_information.infection.transmission.probability > 0
             ]
             sus_ids = [person.id for person in subgroup.people if person.susceptible]
-            if sus_ids:
-                self.has_susceptible = True
+            inf_ids = [person.id for person in subgroup_infected]
+
+            if sus_ids and inf_ids:
+                self.must_timestep = True
                 self.subgroups_susceptible.append(i)
                 susceptible_ids.append(sus_ids)
 
-            inf_ids = [person.id for person in subgroup_infected]
-            if inf_ids:
                 tprob = sum(
                     person.health_information.infection.transmission.probability
                     for person in subgroup_infected
                 )
-                self.has_infector = True
                 self.subgroups_infector.append(i)
                 trans_prob.append(tprob)
                 infector_ids.append(inf_ids)
                 infector_subgroup_sizes.append(subgroup_size)
 
-        self.must_timestep = self.has_susceptible and self.has_infector
         if self.must_timestep is False:
             return
         self.spec = group.spec
