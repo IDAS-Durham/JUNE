@@ -35,7 +35,7 @@ def make_dummy_world():
     learning_center.add(person=pupil_shift_2, shift=1)
     learning_center.add(person=pupil_shift_3, shift=2)
     world = World()
-    world.learning_centers = LearningCenters([learning_center],)
+    world.learning_centers = LearningCenters([learning_center],learning_centers_tree=False)
     world.households = Households([household])
     world.people = Population([teacher,pupil_shift_1, pupil_shift_2, pupil_shift_3])
     for person in world.people.members:
@@ -164,11 +164,9 @@ def test__get_closest_learning_center():
     learning_center_1 = LearningCenter(coordinates=coordinates_1, n_pupils_max=20)
     coordinates_2 = (120.3, 150.6)
     learning_center_2 = LearningCenter(coordinates=coordinates_2, n_pupils_max=20)
-    coordinates = np.vstack((np.array(coordinates_1), np.array(coordinates_2))).T
-    tree = BallTree(np.deg2rad(coordinates), metric="haversine")
     learning_centers = LearningCenters(
         learning_centers=[learning_center_1, learning_center_2],
-        learning_centers_tree=tree,
+        learning_centers_tree=True,
     )
 
     closest = learning_centers.get_closest(coordinates=(121.5, 130.2), k=1)
