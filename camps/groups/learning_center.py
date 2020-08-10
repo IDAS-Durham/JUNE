@@ -1,5 +1,6 @@
 from typing import List, Tuple, Optional
 import numpy as np
+import pandas as pd
 import yaml
 import collections
 from enum import IntEnum
@@ -34,6 +35,45 @@ class LearningCenter(Group):
             person=person, activity="primary_activity", subgroup_type=subgroup_type
         )
         self.ids_per_shift[shift].append(person.id)
+
+
+    @property
+    def n_pupils(self):
+        return len(self.students)
+
+    @property
+    def n_teachers(self):
+        return len(self.teachers)
+
+    @property
+    def teachers(self):
+        return self.subgroups[self.SubgroupType.teachers]
+
+    @property
+    def students(self):
+        return self.subgroups[self.SubgroupType.students]
+
+
+class LearningCenters(Supergroup):
+    def __init__(
+        self,
+        learning_centers: List[LearningCenter],
+        learning_centers_tree: bool = True,
+    ):
+        super().__init__()
+        self.members = learning_centers
+        if learning_centers_tree:
+            coordinates = np.vstack([np.array(lc.coordinates) for lc in self.members])
+            self.learning_centers_tree = self._create_learning_center_tree(coordinates)
+        self.has_shifts = True
+
+    @classmethod
+    def from_config(
+        cls, learning_centers: "LearningCenters", config_path: str = default_config_path
+    ):
+        with open(config_path) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return cls(learning_centers, **config)
 
     @classmethod
     def for_areas(
@@ -81,48 +121,9 @@ class LearningCenter(Group):
             coordinates = coordinates[distances_close]
         learning_centers = list()
         for coord in coordinates:
-            lc = LearningCenter(coordinates=coordinates)
+            lc = LearningCenter(coordinates=coord)
             learning_centers.append(lc)
         return cls(learning_centers, **kwargs)
-
-    @property
-    def n_pupils(self):
-        return len(self.students)
-
-    @property
-    def n_teachers(self):
-        return len(self.teachers)
-
-    @property
-    def teachers(self):
-        return self.subgroups[self.SubgroupType.teachers]
-
-    @property
-    def students(self):
-        return self.subgroups[self.SubgroupType.students]
-
-
-class LearningCenters(Supergroup):
-    def __init__(
-        self,
-        learning_centers: List[LearningCenter],
-        learning_centers_tree: bool = True,
-    ):
-        super().__init__()
-        self.members = learning_centers
-        if learning_centers_tree:
-            coordinates = np.vstack([np.array(lc.coordinates) for lc in self.members]).T
-            print(coordinates)
-            self.learning_centers_tree = self._create_learning_center_tree(coordinates)
-        self.has_shifts = True
-
-    @classmethod
-    def from_config(
-        cls, learning_centers: "LearningCenters", config_path: str = default_config_path
-    ):
-        with open(config_path) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(learning_centers, **config)
 
     @staticmethod
     def _create_learning_center_tree(
