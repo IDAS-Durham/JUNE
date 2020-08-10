@@ -7,7 +7,7 @@ from typing import Optional
 from math import gamma
 
 from june.infection.trajectory_maker import CompletionTime
-from june.infection.symptom_tag import SymptomTag
+rom june.infection.symptom_tag import SymptomTag
 from june import paths
 
 default_config_path = (
