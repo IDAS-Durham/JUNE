@@ -42,6 +42,34 @@ class LearningCenterDistributor:
         self.neighbour_centers = neighbour_centers
         self.n_shifts = n_shifts
 
+    @classmethod
+    def from_file(cls, learning_centers: "LearningCenters", config_path: str = default_config_path,)->LearningCenterDistributor:
+        """
+        Initialize LearningCenterDistributor from path to its config file
+
+        Parameters
+        ----------
+        learning_centers:
+            instance of LearningCenters, containing all learning centers in the world
+        config_path:
+            path to config dictionary
+
+        Returns
+        -------
+        LearningCenterDistributor instance
+        """
+        with open(config_path) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return LearningCenterDistributor(
+                learning_centers=learning_centers,
+                female_enrollment_rates=config['female_enrollment_rates'],
+                male_enrollment_rates=config['male_enrollment_rates'],
+                teacher_min_age=config['teacher_min_age'],
+                neighbour_centers=config['neighbour_centers'],
+                n_shifts=config['n_shifts']
+                )
+
+
     def distribute_kids(self, areas: List["Area"]):
         """
         Given a list of areas, distribute kids in the area to the ```self.neighbour_centers``` closest
@@ -108,3 +136,16 @@ class LearningCenterDistributor:
                 subgroup_type=center.SubgroupType.students,
             )
             return
+
+    def distribute_teachers_to_learning_centers(
+            self, people: List["Person"]
+        ):
+        teachers = random.sample(people, k=len(self.learning_centers.members))
+        for i, learning_center in enumerate(learning_centers.members):
+            for shift in self.n_shifts:
+                learning_center.add(person=teachers[i],
+                        shift=shift,
+                        subgroup_type=learning_center.SubgroupType.teachers
+                )
+
+            
