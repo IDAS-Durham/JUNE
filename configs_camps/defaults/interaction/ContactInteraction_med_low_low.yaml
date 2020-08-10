@@ -10,6 +10,7 @@ beta:
   household: 0.25
   shelter: 0.25
   isolation_unit: 0.00
+  learning_center: 0.05
 
 contact_matrices:
   communal:

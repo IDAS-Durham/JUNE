@@ -10,6 +10,7 @@ beta:
   household: 0.2
   shelter: 0.2
   isolation_unit: 0.00
+  learning_center: 0.04
 
 contact_matrices:
   communal:
@@ -44,6 +45,10 @@ contact_matrices:
     contacts: [[5, 2], [2, 5]]
     proportion_physical: [[0.8, 0.3], [0.8, 0.3]]
     characteristic_time: 12
+  learning_center:
+    contacts: [[1,1],[1,5]]
+    proportion_physical: [[0.12,0.12],[0.12,0.12]]
+    characteristic_time: 2
   isolation_unit:
     contacts: [[0,0], [0,0]]
     proportion_physical: [[0,0], [0,0]]

@@ -28,6 +28,7 @@ from june.policy import Policy, Policies
 from june.logger.read_logger import ReadLogger
 from june.simulator import Simulator
 
+from camps.activity import CampActivityManager
 from camps.paths import camp_data_path, camp_configs_path
 from camps.world import World
 from camps.groups.leisure import generate_leisure_for_world, generate_leisure_for_config
@@ -44,6 +45,8 @@ from camps.groups import FemaleCommunals, FemaleCommunalDistributor
 from camps.groups import Religiouss, ReligiousDistributor
 from camps.groups import Shelter, Shelters, ShelterDistributor
 from camps.groups import IsolationUnit, IsolationUnits
+from camps.groups import LearningCenters 
+from camps.distributors import LearningCenterDistributor
 from june.groups.leisure import HouseholdVisitsDistributor
 
 #=============== world creation =========================#
@@ -71,6 +74,14 @@ world.isolation_units = IsolationUnits([IsolationUnit()])
 
 hospital_distributor.distribute_medics_from_world(world.people)
 
+world.learning_centers = LearningCenters.for_areas(
+                    world.areas
+)
+learning_center_distributor = LearningCenterDistributor.from_file(
+learning_centers=world.learning_centers
+)
+learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
+learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
 world.pump_latrines = PumpLatrines.for_areas(world.areas)
 world.distribution_centers = DistributionCenters.for_areas(world.areas)
 world.communals = Communals.for_areas(world.areas)
@@ -186,6 +197,7 @@ leisure_instance.distribute_social_venues_to_households(world.shelters)
 # ==================================================================================#
 
 # =================================== simulator ===============================#
+Simulator.ActivityManager = CampActivityManager
 simulator = Simulator.from_file(
     world=world,
     interaction=interaction,

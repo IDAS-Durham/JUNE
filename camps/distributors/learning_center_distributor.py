@@ -10,7 +10,7 @@ from camps import paths
 from june.utils import parse_age_probabilities
 
 default_config_path = (
-    paths.configs_path / "defaults/distributors/learning_centers_distributor.yaml"
+    paths.camp_configs_path / "defaults/distributors/learning_center_distributor.yaml"
 )
 
 
