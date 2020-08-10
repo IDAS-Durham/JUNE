@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-import random
+from random import random
 from typing import List, Dict
 from june.demography import Person
 from june.demography.geography import Geography
@@ -27,13 +27,13 @@ def random_choice_numba(arr, prob):
     """
     Fast implementation of np.random.choice
     """
-    return arr[np.searchsorted(np.cumsum(prob), random.random(), side="right")]
+    return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
 @jit(nopython=True)
 def roll_activity_dice(poisson_parameters, delta_time, n_activities):
     total_poisson_parameter = np.sum(poisson_parameters)
-    does_activity = random.random() < (
+    does_activity = random() < (
         1.0 - np.exp(-total_poisson_parameter * delta_time)
     )
     if does_activity:
@@ -200,7 +200,7 @@ class Leisure:
         prob = self.probabilities_by_age_sex[person.sex][person.age]["drags_household"][
             activity
         ]
-        return random.random() < prob
+        return random() < prob
 
     def send_household_with_person_if_necessary(
         self, person, subgroup, probability,
@@ -215,7 +215,7 @@ class Leisure:
             or person.residence.group.type in ["communal", "other", "student"]
         ):
             return
-        if random.random() < probability:
+        if random() < probability:
             for mate in person.residence.group.residents:
                 if mate != person:
                     if mate.busy:
@@ -252,7 +252,7 @@ class Leisure:
         if person.residence.group.spec != "household":
             return
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
-        if random.random() < prob_age_sex["does_activity"]:
+        if random() < prob_age_sex["does_activity"]:
             activity_idx = random_choice_numba(
                 arr=np.arange(0, len(prob_age_sex["activities"])),
                 prob=np.array(list(prob_age_sex["activities"].values())),
@@ -265,7 +265,7 @@ class Leisure:
             if candidates_length == 1:
                 subgroup = candidates[0].get_leisure_subgroup(person)
             else:
-                idx = random.randint(0, 2000) % candidates_length
+                idx = 2000 % candidates_length
                 subgroup = candidates[idx].get_leisure_subgroup(person)
             self.send_household_with_person_if_necessary(
                 person, subgroup, prob_age_sex["drags_household"][activity]
