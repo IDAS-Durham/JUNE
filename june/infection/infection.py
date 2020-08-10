@@ -10,6 +10,7 @@ from june.infection.symptoms import Symptoms
 from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant, TransmissionGamma
 from june.infection.transmission_xnexp import TransmissionXNExp
+from june.infection.trajectory_maker import CompletionTime
 
 default_transmission_config_path = paths.configs_path / "defaults/transmission/nature.yaml"
 default_trajectories_config_path = (
@@ -42,9 +43,6 @@ class InfectionSelector:
             proportion of infected people that are asymptomatic
         """
         self.transmission_config_path = transmission_config_path 
-        with open(self.transmission_config_path) as f:
-            transmission_config = yaml.safe_load(f)
-        self.transmission_type = transmission_config['type']
         self.trajectory_maker = trajectory_maker
         self.health_index_generator = health_index_generator
 
@@ -110,6 +108,26 @@ class InfectionSelector:
             max_symptoms_tag=symptoms.max_tag(),
         )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
+    
+    def load_transmission(
+            self,
+            ):
+        with open(self.transmission_config_path) as f:
+            transmission_config = yaml.safe_load(f)
+        self.transmission_type = transmission_config['type']
+        if self.transmission_type == 'gamma':
+            self.max_infectiousness = CompletionTime.from_dict(transmission_config["max_infectiousness"])
+            self.shape = CompletionTime.from_dict(transmission_config["shape"])
+            self.rate = CompletionTime.from_dict(transmission_config["rate"])
+            self.shift = CompletionTime.from_dict(transmission_config["shift"]) 
+            self.asymptomatic_infectious_factor = CompletionTime.from_dict(
+            transmission_config["asymptomatic_infectious_factor"]
+            )
+            self.mild_infectious_factor = CompletionTime.from_dict(
+                transmission_config["mild_infectious_factor"]
+            )
+
+
 
     def select_transmission(
         self,
@@ -136,10 +154,14 @@ class InfectionSelector:
                 config_path = self.transmission_config_path
             )
         elif self.transmission_type == "gamma":
-            return TransmissionGamma.from_file_linked_symptoms(
-                time_to_symptoms_onset=time_to_symptoms_onset,
+            return TransmissionGamma(
+                max_infectiousness=self.max_infectiousness(),
+                shape = self.shape(),
+                rate = self.rate(),
+                shift = self.shift() + time_to_symptoms_onset,
                 max_symptoms=max_symptoms_tag,
-                config_path = self.transmission_config_path
+                asymptomatic_infectious_factor=self.asymptomatic_infectious_factor(),
+                mild_infectious_factor=self.mild_infectious_factor(),
             )
  
         elif self.transmission_type == "constant":
