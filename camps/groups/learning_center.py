@@ -16,6 +16,10 @@ default_config_path = paths.camp_configs_path / "defaults/groups/learning_center
 
 
 class LearningCenter(Group):
+    """
+    One learning center is equivalent to one room that kids go to during weekdays in 
+    different shifts. There are two subgroups, students and teachers
+    """
     class SubgroupType(IntEnum):
         teachers = 0
         students = 1
@@ -23,6 +27,14 @@ class LearningCenter(Group):
     def __init__(
         self, coordinates: Tuple[float, float], n_pupils_max: int = 35,
     ):
+        """
+        Parameters
+        ----------
+        coordinates:
+            latitude and longitude for the learning center
+        n_pupils_max:
+            maximum number of pupils in the classroom
+        """
         super().__init__()
         self.coordinates = coordinates
         self.n_pupils_max = n_pupils_max
@@ -31,11 +43,22 @@ class LearningCenter(Group):
         self.ids_per_shift = collections.defaultdict(list)
 
     def add(self, person: Person, shift: int, subgroup_type=SubgroupType.students):
+        """
+        Add a person to the learning center
+
+        Parameters
+        ----------
+        person:
+            person to add
+        shift:
+           shift that the person will attend 
+        subgroup_type:
+            subgroup to which the person is added
+        """
         super().add(
             person=person, activity="primary_activity", subgroup_type=subgroup_type
         )
         self.ids_per_shift[shift].append(person.id)
-
 
     @property
     def n_pupils(self):
@@ -59,13 +82,27 @@ class LearningCenters(Supergroup):
         self,
         learning_centers: List[LearningCenter],
         learning_centers_tree: bool = True,
+        n_shifts: int = 3,
     ):
+        """
+        Collection of learning centers.
+
+        Parameters
+        ----------
+        learning_centers: 
+            list of learning centers
+        learning_centers_tree:
+            whether to build a tree with the learning center coordinates, for quick querying
+        n_shifts:
+            number of daily shifts 
+        """
         super().__init__()
         self.members = learning_centers
         if learning_centers_tree:
             coordinates = np.vstack([np.array(lc.coordinates) for lc in self.members])
             self.learning_centers_tree = self._create_learning_center_tree(coordinates)
         self.has_shifts = True
+        self.n_shifts = n_shifts
 
     @classmethod
     def from_config(
@@ -82,11 +119,12 @@ class LearningCenters(Supergroup):
         coordinates_path: str = default_learning_centers_coordinates_path,
         max_distance_to_area=5,
         max_size=np.inf,
+        **kwargs
     ):
         learning_centers_df = pd.read_csv(coordinates_path)
         coordinates = learning_centers_df.loc[:, ["latitude", "longitude"]].values
         return cls.from_coordinates(
-            coordinates, max_size, areas, max_distance_to_area=max_distance_to_area,
+            coordinates, max_size, areas, max_distance_to_area=max_distance_to_area,**kwargs
         )
 
     @classmethod
@@ -99,7 +137,7 @@ class LearningCenters(Supergroup):
     ):
         return cls.for_areas(
             areas=geography.areas,
-            coordinates_path=coordinates - path,
+            coordinates_path=coordinates_path,
             max_size=max_size,
             max_distance_to_area=max_distance_to_area,
         )
@@ -167,6 +205,14 @@ class LearningCenters(Supergroup):
         return neighbours[0]
 
     def activate_next_shift(self, n_shifts):
+        """
+        Activate next shift in all learning centers
+
+        Paramters
+        ---------
+        n_shifts:
+            number of total daily shifts
+        """
         for learning_center in self.members:
             learning_center.active_shift += 1
             if learning_center.active_shift == n_shifts:

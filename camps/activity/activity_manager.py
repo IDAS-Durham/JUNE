@@ -9,21 +9,24 @@ from june.policy import (
     InteractionPolicies,
 )
 
+
 class CampActivityManager(ActivityManager):
-    '''
+    """
     Class that overrides the get_personal_subgroup method of ActivityManager, to allow
     for shifts in certain groups
-    '''
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.n_school_shifts = 3 # TODO: read from config
 
     def activate_next_shift(self,):
         for super_group in self.active_groups:
             super_group_instance = getattr(self.world, super_group)
-            try: 
+            try:
                 if super_group_instance.has_shifts:
-                    super_group_instance.activate_next_shift(n_shifts=self.n_school_shifts)
+                    super_group_instance.activate_next_shift(
+                        n_shifts=super_group_instance.n_shifts
+                    )
             except AttributeError:
                 continue
 
@@ -31,7 +34,10 @@ class CampActivityManager(ActivityManager):
         subgroup = getattr(person, activity)
         try:
             if subgroup.group.has_shifts:
-                if person.id not in subgroup.group.ids_per_shift[subgroup.group.active_shift]:
+                if (
+                    person.id
+                    not in subgroup.group.ids_per_shift[subgroup.group.active_shift]
+                ):
                     return None
             return subgroup
         except AttributeError:
@@ -40,5 +46,3 @@ class CampActivityManager(ActivityManager):
     def do_timestep(self):
         super().do_timestep()
         self.activate_next_shift()
-
-
