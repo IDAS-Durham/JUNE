@@ -1,0 +1,15 @@
+female_enrollment_rates:
+        '0-3': 0.
+        '3-7': 0.9 
+        '7-15': 0.8 
+        '16-21': 0.6
+        '21-100': 0.
+male_enrollment_rates:
+        '0-3': 0.
+        '3-7': 0.9 
+        '7-15': 0.8 
+        '16-21': 0.6
+        '21-100': 0.
+
+teacher_min_age: 21
+neighbour_centers: 10
