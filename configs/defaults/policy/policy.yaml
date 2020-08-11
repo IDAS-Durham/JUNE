@@ -36,15 +36,49 @@ shielding:
 close_companies:
     1:
         start_time: 2020-03-16
-        end_time: 2020-03-23 
+        end_time: 2020-03-20
         full_closure: False 
-        random_work_probability: 0.85
-
+        random_work_probability: 0.85 # 20%
     2:
-        start_time: 2020-03-23
-        end_time: 2020-07-04
+        start_time: 2020-03-20
+        end_time: 2020-03-27
         full_closure: False 
-        random_work_probability: 0.25
+        random_work_probability: 0.25 # 29%
+    3:
+        start_time: 2020-03-27
+        end_time: 2020-04-17
+        full_closure: False 
+        random_work_probability: 0.25 # 38%
+    4:
+        start_time: 2020-04-17
+        end_time: 2020-05-01
+        full_closure: False 
+        random_work_probability: 0.25 # 36%
+    5:
+        start_time: 2020-05-01
+        end_time: 2020-05-15
+        full_closure: False 
+        random_work_probability: 0.25 # 35%
+    6:
+        start_time: 2020-05-15
+        end_time: 2020-06-16
+        full_closure: False 
+        random_work_probability: 0.25 # 31%
+    7:
+        start_time: 2020-06-16
+        end_time: 2020-07-12
+        full_closure: False 
+        random_work_probability: 0.25 # 25%
+    8:
+        start_time: 2020-07-12
+        end_time: 2020-07-26
+        full_closure: False 
+        random_work_probability: 0.25 # 21%
+    9:
+        start_time: 2020-07-26
+        end_time: 2020-08-07
+        full_closure: False 
+        random_work_probability: 0.25 # 20%
 
 social_distancing:
     1: 
