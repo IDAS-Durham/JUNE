@@ -135,7 +135,8 @@ class SimulatorBox(Simulator):
                             )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
-                        for infector_id in chain(*int_group.infector_ids):
+                        for infector_id in chain.from_iterable(
+                                int_group.infector_ids):
                             infector = self.world.people[infector_id]
                             infector.health_information.number_of_infected += (
                                 n_infected
