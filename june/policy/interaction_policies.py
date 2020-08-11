@@ -65,3 +65,43 @@ class SocialDistancing(InteractionPolicy):
                 self.original_betas[key] = interaction.beta[key]
                 interaction.beta[key] = interaction.beta[key] * value
 
+
+class MaskWearing(InteractionPolicy):
+    def __init__(
+        self,
+        start_time: str,
+        end_time: str,
+        beta_factors: dict = None,
+    ):
+        super().__init__(start_time, end_time)
+        self.original_betas = {}
+        self.beta_factors = beta_factors
+        for key in beta_factors:
+            self.original_betas[key] = None  # to be filled when coupled to interaction
+
+    def apply(self, date: datetime, interaction: Interaction):
+        """
+        Implement mask wearing policy
+        
+        -----------
+        Parameters:
+        betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
+
+        Assumptions:
+        - Currently we assume that mask wearing is implemented in a similar way to social distanding
+          but with a mean field effect in beta reduction
+        - Currently we assume that the changes are not group dependent
+        TODO:
+        - Implement structure for people to adhere to mask wearing with a certain compliance
+          - Note: this would require a change in the mean field effect set up
+        - Check per group in config file
+        """
+        if self.end_time == date:  # deactivate policy, restore betas.
+            for key, value in self.original_betas.items():
+                interaction.beta[key] = value
+
+        if self.start_time == date:  # activate policy, save current betas.
+            for key, value in self.beta_factors.items():
+                self.original_betas[key] = interaction.beta[key]
+                interaction.beta[key] = interaction.beta[key] * value
+
