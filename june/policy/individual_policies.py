@@ -299,7 +299,7 @@ class CloseCompanies(SkipActivity):
         self.furlough_probability = furlough_probability
         self.key_probability - key_probability
 
-    def check_skips_activity(self, person: "Person", furlough_ratio, key_ratio, random_ratio) -> bool:
+    def check_skips_activity(self, person: "Person", furlough_ratio=None, key_ratio=None, random_ratio=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -314,31 +314,50 @@ class CloseCompanies(SkipActivity):
             # if companies closed skip
             if self.full_closure:
                 return True
-            # if furlough_ratio < furlough_probability then all furloughed skip
+            
             elif person.lockdown_status == "furlough":
                 if (furlough_ratio is not None
                     and self.furlough_probability is not None
             ):
+                    # if there are too few furloughed people then always furlough all
                     if furlough_ratio < self.furlough_probability:
                         return True
-                    elif furlough_ratio > self.furlough_probability:
+                    # if there are too many or correct number of furloughed people then furlough with a probability
+                    elif furlough_ratio >= self.furlough_probability:
                         if np.random.rand() < self.furlough_probability/furlough_ratio:
                             return True
                 else:
                     return True
             
-            #if there are too many key workers, scale them down
             elif (person.lockdown_status == "key_worker"
-                  and key_ratio > self.key_probability
+                  and key_ratio is not None
+                  and self.key_probability is not None
             ):
-                if np.random.rand() > self.key_probability/key_ratio:
+                #if there are too many key workers, scale them down - otherwise sent all to work
+                if (key_ratio > self.key_probability
+                    and np.random.rand() > self.key_probability/key_ratio
+                ):
                     return True
 
             elif (
                 person.lockdown_status == "random"
-                and self.avoid_work is not None
+                and self.avoid_work_probability is not None
             ):
-                if np.random.rand() > self.random_work_probability:
-                    return True
+                if random_ratio is not None:
+                    # if there are too few key workers
+                    if key_ratio < self.key_probability:
+                        # randomly boost
+                        if np.random.rand() > self.key_probability/key_ratio:
+                            return True
+                        # if random boost fails then default to random working
+                        elif np.random.rand() < self.avoid_work_probability:
+                            return True
+                    # if there are the right number of key workers then send someone to work randomly
+                    elif np.random.rand() < self.avoid_work_probability:
+                        return True
+                else:
+                    if np.random.rand() < self.avoid_work_probability:
+                        return True
+                    
         return False
 
