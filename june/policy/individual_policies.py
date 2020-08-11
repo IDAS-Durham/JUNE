@@ -295,23 +295,48 @@ class CloseCompanies(SkipActivity):
         """
         super().__init__(start_time, end_time, ["primary_activity", "commute"])
         self.full_closure = full_closure
-        self.random_work_probability = random_work_probability
-        self.furlough_pro
+        self.avoid_work_probability = avoid_work_probability
+        self.furlough_probability = furlough_probability
+        self.key_probability - key_probability
 
     def check_skips_activity(self, person: "Person", furlough_ratio, key_ratio, random_ratio) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
+
+        
+        
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
         ):
 
-            if self.full_closure or person.lockdown_status == "furlough":
+            # if companies closed skip
+            if self.full_closure:
                 return True
+            # if furlough_ratio < furlough_probability then all furloughed skip
+            elif person.lockdown_status == "furlough":
+                if (furlough_ratio is not None
+                    and self.furlough_probability is not None
+            ):
+                    if furlough_ratio < self.furlough_probability:
+                        return True
+                    elif furlough_ratio > self.furlough_probability:
+                        if np.random.rand() < self.furlough_probability/furlough_ratio:
+                            return True
+                else:
+                    return True
+            
+            #if there are too many key workers, scale them down
+            elif (person.lockdown_status == "key_worker"
+                  and key_ratio > self.key_probability
+            ):
+                if np.random.rand() > self.key_probability/key_ratio:
+                    return True
+
             elif (
                 person.lockdown_status == "random"
-                and self.random_work_probability is not None
+                and self.avoid_work is not None
             ):
                 if np.random.rand() > self.random_work_probability:
                     return True
