@@ -139,6 +139,8 @@ mask_wearing:
     1: 
         start_time: 2020-03-27
         end_time: 2020-04-24
+	compliance: 0.09
+	beta_factor: XX
         beta_factors: # 9%
             box: 0.75
             pub: 0.75
