@@ -26,7 +26,6 @@ class LearningCenterDistributor:
         male_enrollment_rates: Dict[str, float],
         teacher_min_age: int = 21,
         neighbour_centers: int = 5,
-        n_shifts: int = 3,
     ):
         """
         Parameters
@@ -45,7 +44,7 @@ class LearningCenterDistributor:
         self.male_enrollment_rates = parse_age_probabilities(male_enrollment_rates)
         self.teacher_min_age = teacher_min_age
         self.neighbour_centers = neighbour_centers
-        self.n_shifts = n_shifts
+        self.n_shifts = self.learning_centers.n_shifts
 
     @classmethod
     def from_file(
@@ -69,14 +68,7 @@ class LearningCenterDistributor:
         """
         with open(config_path) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(
-            learning_centers=learning_centers,
-            female_enrollment_rates=config["female_enrollment_rates"],
-            male_enrollment_rates=config["male_enrollment_rates"],
-            teacher_min_age=config["teacher_min_age"],
-            neighbour_centers=config["neighbour_centers"],
-            n_shifts=config["n_shifts"],
-        )
+        return cls(learning_centers, **config)
 
     def distribute_kids_to_learning_centers(self, areas: "Areas"):
         """
@@ -146,6 +138,10 @@ class LearningCenterDistributor:
             return
 
     def distribute_teachers_to_learning_centers(self, areas: "Areas"):
+        """
+        Distribute teachers from closest area to the learning center. There is only
+        one teacher per learning center currently
+        """
         for learning_center in self.learning_centers.members:
             # Find closest area to learning center
             area = areas.get_closest_areas(
@@ -153,12 +149,9 @@ class LearningCenterDistributor:
             )[0]
             # get someone in working age
             old_people = [
-                person for person in area.people if person.age >= self.teacher_min_age
+                person for person in area.people if person.age >= self.teacher_min_age and person.primary_activity is None
             ]
             teacher = random.choice(old_people)
-            # check whether this person already has a job
-            while teacher.primary_activity is not None:
-                teacher = random.choice(old_people)
             # add the teacher to all shifts in the school
             for shift in range(self.n_shifts):
                 learning_center.add(
