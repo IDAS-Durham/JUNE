@@ -1,9 +1,11 @@
 import logging
-from itertools import chain
-from typing import Optional
+import datetime
 import numpy as np
-
+import pickle
 import yaml
+from itertools import chain
+from typing import Optional, List
+from pathlib import Path
 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
@@ -37,10 +39,11 @@ class Simulator:
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
         save_path: str = "results",
+        checkpoint_dates: List[datetime.date] = None,
         light_logger: bool = False,
     ):
         """
-        Class to run an epidemic spread simulation on the world
+        Class to run an epidemic spread simulation on the world.
 
         Parameters
         ----------
@@ -56,10 +59,17 @@ class Simulator:
         self.infection_seed = infection_seed
         self.light_logger = light_logger
         self.timer = timer
+        if checkpoint_dates is None:
+            self.checkpoint_dates = ()
+        else:
+            self.checkpoint_dates = checkpoint_dates
         self.sort_people_world()
         self.medical_facilities = self._get_medical_facilities()
+        if save_path is not None:
+            self.save_path = Path(save_path)
+            self.save_path.mkdir(exist_ok=True, parents=True)
         if not self.world.box_mode and save_path is not None:
-            self.logger = Logger(save_path=save_path)
+            self.logger = Logger(save_path=self.save_path)
         else:
             self.logger = None
 
@@ -68,7 +78,7 @@ class Simulator:
         cls,
         world: World,
         interaction: Interaction,
-        infection_selector = None,
+        infection_selector=None,
         policies: Optional[Policies] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
@@ -101,6 +111,17 @@ class Simulator:
         else:
             activity_to_groups = config["activity_to_groups"]
         time_config = config["time"]
+        if "checkpoint_dates" in config:
+            if isinstance(config["checkpoint_dates"], datetime.date):
+                checkpoint_dates = [config["checkpoint_dates"]]
+            else:
+                checkpoint_dates = []
+                for date_str in config["checkpoint_dates"].split():
+                    checkpoint_dates.append(
+                        datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+                    )
+        else:
+            checkpoint_dates = None
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]
@@ -127,7 +148,6 @@ class Simulator:
             leisure=leisure,
             policies=policies,
             timer=timer,
-            interaction=interaction,
         )
         return cls(
             world=world,
@@ -137,7 +157,64 @@ class Simulator:
             infection_seed=infection_seed,
             save_path=save_path,
             interaction=interaction,
+            checkpoint_dates=checkpoint_dates,
         )
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        world: World,
+        checkpoint_path: str,
+        interaction: Interaction,
+        infection_selector: Optional[InfectionSelector] = None,
+        policies: Optional[Policies] = None,
+        infection_seed: Optional[InfectionSeed] = None,
+        leisure: Optional[Leisure] = None,
+        config_filename: str = default_config_filename,
+        save_path: str = "results",
+    ):
+        """
+        Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
+        initialisation but with the additional path to where the checkpoint pickle file is located.
+        The checkpoint saves information about the infection status of all the people in the world as well as the timings.
+        Note, nonetheless, that all the past infections / deaths will have the checkpoint date as date.
+        """
+        simulator = cls.from_file(
+            world=world,
+            interaction=interaction,
+            infection_selector=infection_selector,
+            policies=policies,
+            infection_seed=infection_seed,
+            leisure=leisure,
+            config_filename=config_filename,
+            save_path=save_path,
+        )
+        with open(checkpoint_path, "rb") as f:
+            checkpoint_data = pickle.load(f)
+        first_person_id = simulator.world.people[0].id
+        for dead_id in checkpoint_data["dead_ids"]:
+            person = simulator.world.people[dead_id - first_person_id]
+            person.dead = True
+            person.susceptibility = 0.0
+            cemetery = world.cemeteries.get_nearest(person)
+            cemetery.add(person)
+            person.subgroups = Activities(None, None, None, None, None, None, None)
+        for recovered_id in checkpoint_data["recovered_ids"]:
+            person = simulator.world.people[recovered_id - first_person_id]
+            person.susceptibility = 0.0
+        for infected_id, health_information in zip(
+            checkpoint_data["infected_ids"], checkpoint_data["health_information_list"]
+        ):
+            person = simulator.world.people[infected_id - first_person_id]
+            person.health_information = health_information
+            person.susceptibility = 0.0
+        # restore timer
+        checkpoint_timer = checkpoint_data["timer"]
+        simulator.timer.initial_date = checkpoint_timer.initial_date
+        simulator.timer.date = checkpoint_timer.date
+        simulator.timer.delta_time = checkpoint_timer.delta_time
+        simulator.timer.shift = checkpoint_timer.shift
+        return simulator
 
     def sort_people_world(self):
         """
@@ -151,7 +228,6 @@ class Simulator:
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
         to False.
-
         """
         for group_name in self.activity_manager.all_groups:
             if group_name in ["care_home_visits", "household_visits"]:
@@ -188,18 +264,25 @@ class Simulator:
             dictionary with time steps configuration
         """
 
-        assert sum(time_config["step_duration"]["weekday"].values()) == 24
-        assert sum(time_config["step_duration"]["weekend"].values()) == 24
+        try:
+            assert sum(time_config["step_duration"]["weekday"].values()) == 24
+            assert sum(time_config["step_duration"]["weekend"].values()) == 24
+        except AssertionError:
+            raise SimulatorError("Daily activity durations in config do not add to 24 hours.")
 
         # Check that all groups given in time_config file are in the valid group hierarchy
         all_groups = activity_hierarchy
-        for step, activities in time_config["step_activities"]["weekday"].items():
-            assert all(group in all_groups for group in activities)
+        try:
+            for step, activities in time_config["step_activities"]["weekday"].items():
+                assert all(group in all_groups for group in activities)
 
-        for step, activities in time_config["step_activities"]["weekend"].items():
-            assert all(group in all_groups for group in activities)
+            for step, activities in time_config["step_activities"]["weekend"].items():
+                assert all(group in all_groups for group in activities)
+        except AssertionError:
+            raise SimulatorError("Config file contains unsupported activity name.")
 
-    def bury_the_dead(self, person: "Person", time: float):
+    @staticmethod
+    def bury_the_dead(world: World, person: "Person", time: float):
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! 
@@ -211,7 +294,8 @@ class Simulator:
             person to send to cemetery
         """
         person.dead = True
-        cemetery = self.world.cemeteries.get_nearest(person)
+        person.susceptibility = 0.0
+        cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.health_information.set_dead(time)
         person.subgroups = Activities(None, None, None, None, None, None, None)
@@ -274,7 +358,7 @@ class Simulator:
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:
-                self.bury_the_dead(person, time)
+                self.bury_the_dead(self.world, person, time)
         if self.logger is not None:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
@@ -282,8 +366,13 @@ class Simulator:
 
     def do_timestep(self):
         """
-        Perform a time step in the simulation
-
+        Perform a time step in the simulation. First, ActivityManager is called
+        to send people to the corresponding subgroups according to the current daytime.
+        Then we iterate over all the groups and create an InteractiveGroup object, which
+        extracts the relevant information of each group to carry the interaction in it.
+        We then pass the interactive group to the interaction module, which returns the ids 
+        of the people who got infected. We record the infection locations, update the health
+        status of the population, and distribute scores among the infectors to calculate R0.
         """
         if self.activity_manager.policies is not None:
             interaction_policies = InteractionPolicies.get_active_policies(
@@ -340,7 +429,9 @@ class Simulator:
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.people[idx-first_person_id] for idx in infected_ids]
+        people_to_infect = [
+            self.world.people[idx - first_person_id] for idx in infected_ids
+        ]
         if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -373,21 +464,63 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
-            
+
             self.logger.log_parameters(
-                interaction = self.interaction,
-                infection_seed = self.infection_seed,
-                infection_selector = self.infection_selector,
-                activity_manager = self.activity_manager
+                interaction=self.interaction,
+                infection_seed=self.infection_seed,
+                infection_selector=self.infection_selector,
+                activity_manager=self.activity_manager,
             )
 
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
-        for time in self.timer:
-            if time > self.timer.final_date:
-                break
+        while self.timer.date < self.timer.final_date:
             if self.infection_seed:
-                if self.infection_seed.max_date >= time >= self.infection_seed.min_date:
-                    self.infection_seed.unleash_virus_per_region(time)
+                if (
+                    self.infection_seed.max_date
+                    >= self.timer.date
+                    >= self.infection_seed.min_date
+                ):
+                    self.infection_seed.unleash_virus_per_region(self.timer.date)
             self.do_timestep()
+            if (
+                self.timer.date.date() in self.checkpoint_dates
+                and (self.timer.now + self.timer.duration).is_integer() 
+            ):# this saves in the last time step of the day
+                saving_date = self.timer.date.date()
+                next(self.timer) # we want to save at the next time step so that
+                # we can resume consistenly
+                logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
+                self.save_checkpoint(saving_date)
+                continue
+            next(self.timer)
+
+    def save_checkpoint(self, date: datetime):
+        """
+        Saves a checkpoint at the given date. We save all the health information of the
+        population. We can then load the world back to the checkpoint state using the
+        from_checkpoint class method of this class.
+        """
+        recovered_people_ids = [
+            person.id for person in self.world.people if person.recovered
+        ]
+        dead_people_ids = [person.id for person in self.world.people if person.dead]
+        susceptible_people_ids = [
+            person.id for person in self.world.people if person.susceptible
+        ]
+        infected_people_ids = []
+        health_information_list = []
+        for person in self.world.people.infected:
+            infected_people_ids.append(person.id)
+            health_information_list.append(person.health_information)
+        checkpoint_data = {
+            "recovered_ids": recovered_people_ids,
+            "dead_ids": dead_people_ids,
+            "susceptible_ids": susceptible_people_ids,
+            "infected_ids": infected_people_ids,
+            "health_information_list": health_information_list,
+            "timer" : self.timer,
+        }
+        with open(self.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
+            pickle.dump(checkpoint_data, f)

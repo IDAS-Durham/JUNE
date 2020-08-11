@@ -4,9 +4,10 @@ import pytest
 from june.demography import Person
 from june.infection import InfectionSelector
 from june.infection.symptoms import SymptomTag
-from june.policy.medical_facilities import Hospitalisation
+from june.policy.medical_care_policies import Hospitalisation
 from june import paths
 from june.groups.hospital import MedicalFacility, MedicalFacilities
+from june.policy import Policies
 
 from camps.groups import IsolationUnit, IsolationUnits
 from camps.policy import Isolation
@@ -14,8 +15,8 @@ from camps.policy import Isolation
 
 @pytest.fixture(name="selector")
 def make_selector():
-    selector_file = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
-    return InfectionSelector.from_file(config_filename=selector_file)
+    selector_file = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+    return InfectionSelector.from_file(transmission_config_path=selector_file)
 
 
 @pytest.fixture(name="isolation")
