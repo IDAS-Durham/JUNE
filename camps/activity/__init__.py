@@ -1,0 +1,1 @@
+from .activity_manager import CampActivityManager

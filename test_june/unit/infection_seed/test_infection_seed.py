@@ -112,11 +112,11 @@ def test__n_infected_total_region_seeds_only_once_per_day(selector,):
             selector=selector,
             n_cases_region=n_cases_region)
     timer = Timer(initial_day='2020-02-29',total_days=7,)
-    for time in timer:
-        if time > timer.final_date:
-            break
+    while timer.date <= timer.final_date:
+        time = timer.date
         if (time >= seed.min_date) and (time <= seed.max_date):
             seed.unleash_virus_per_region(time)
+        next(timer)
     n_infected = 0
     for super_area in geography.super_areas:
         for person in super_area.people:
@@ -147,11 +147,11 @@ def test__seed_strength(selector,):
             n_cases_region=n_cases_region,
             seed_strength=0.2)
     timer = Timer(initial_day='2020-02-29',total_days=7,)
-    for time in timer:
-        if time > timer.final_date:
-            break
+    while timer.date <= timer.final_date:
+        time = timer.date
         if (time >= seed.min_date) and (time <= seed.max_date):
             seed.unleash_virus_per_region(time)
+        next(timer)
     n_infected = 0
     for super_area in geography.super_areas:
         for person in super_area.people:

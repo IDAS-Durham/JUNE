@@ -28,7 +28,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         for city in commute_cities:
             ids.append(city.id)
             cities_names_list.append(city.city.encode("ascii", "ignore"))
-            if len(city.commutehubs) == 0:
+            if not city.commutehubs:
                 hubs = np.array([-999, -999], dtype=np.int)
             else:
                 hubs = np.array([hub.id for hub in city.commutehubs], dtype=np.int)
@@ -84,7 +84,7 @@ def load_commute_cities_from_hdf5(file_path: str):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         commute_cities = f["commute_cities"]
         commute_cities_list = list()
         n_commute_cities = commute_cities.attrs["n_commute_cities"]
@@ -153,7 +153,7 @@ def load_commute_hubs_from_hdf5(file_path: str):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    with h5py.File(file_path, "r") as f:
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         commute_hubs = f["commute_hubs"]
         commute_hubs_list = list()
         n_commute_hubs = commute_hubs.attrs["n_commute_hubs"]

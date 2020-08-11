@@ -106,7 +106,7 @@ class Companies(Supergroup):
         compsec_per_msoa_filename: 
             Nr. of companies per sector sector per SuperArea.
         """
-        if len(geography.super_areas) == 0:
+        if not geography.super_areas:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
             geography.super_areas, size_nr_file, sector_nr_per_msoa_file, default_config_filename

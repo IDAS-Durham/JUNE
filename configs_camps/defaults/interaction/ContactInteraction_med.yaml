@@ -48,3 +48,8 @@ contact_matrices:
     contacts: [[0,0], [0,0]]
     proportion_physical: [[0,0], [0,0]]
     characteristic_time: 24
+  learning_center:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 2
+
