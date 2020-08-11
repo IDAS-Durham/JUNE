@@ -253,7 +253,7 @@ change_leisure_probability:
 
 close_schools:
     start_time: 2020-03-20
-    end_time: 2020-07-04 #TODO: end time?
+    end_time: 2020-07-04 #TODO: end time? - this needs to be fixed as schools were partially opening before this
     years_to_close: all
     full_closure: False
 
