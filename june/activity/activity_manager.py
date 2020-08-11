@@ -86,13 +86,19 @@ class ActivityManager:
                     self.world.travelcities.members, self.world.travelunits.members
                 )
 
-        self.no_furlough = 0
-        self.no_key = 0
+        self.furlough_ratio = 0
+        self.key_ratio = 0
+        self.random_ratio = 0
         for person in self.world.people:
             if person.lockdown_status == "furlough":
-                self.no_furlough += 1
+                self.furlough_ratio += 1
             elif person.lockdown_status == "key_worker":
-                self.no_key += 1
+                self.key_ratio += 1
+            elif person.lockdown_status == "random":
+                self.random_ratio += 1
+        self.furlough_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
+        self.key_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
+        self.random_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
 
     @property
     def all_groups(self):
@@ -241,6 +247,6 @@ class ActivityManager:
             if person.dead or person.busy:
                 continue
             allowed_activities = individual_policies.apply(
-                person=person, activities=activities, days_from_start=days_from_start, no_furlough=self.no_furlough, no_key=self.no_key
+                person=person, activities=activities, days_from_start=days_from_start, furlough_ratio=self.furlough_ratio, key_ratio=self.key_ratio, random_ratio=self.random_ratio
             )
             self.move_to_active_subgroup(allowed_activities, person)

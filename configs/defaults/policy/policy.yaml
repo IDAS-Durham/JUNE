@@ -10,14 +10,14 @@ quarantine:
     1:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-	compliance: 0.5 
+        compliance: 0.5 
         household_compliance: 0.2
         start_time: 2020-03-16 
         end_time: 2020-03-23 
     2:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-	compliance: 0.95 # for the symptomatic individual - needs to be checked
+        compliance: 0.95 # for the symptomatic individual - needs to be checked
         household_compliance: 0.9
         start_time: 2020-03-23
         end_time: 2021-07-04
@@ -40,196 +40,214 @@ close_companies:
         start_time: 2020-03-16
         end_time: 2020-03-20
         full_closure: False 
-        random_work_probability: 0.85 # 20%
+        avoid_work_probability: 0.20
+        furlough_probability: 0.04
+        key_probability: 0.22
     2:
         start_time: 2020-03-20
         end_time: 2020-03-27
         full_closure: False 
-        random_work_probability: 0.25 # 29%
+        avoid_work_probability: 0.29
+	furlough_probability: 0.04
+        key_probability: 0.22
     3:
         start_time: 2020-03-27
         end_time: 2020-04-17
         full_closure: False 
-        random_work_probability: 0.25 # 38%
+        avoid_work_probability: 0.38
+	furlough_probability: 0.04
+        key_probability: 0.22
     4:
         start_time: 2020-04-17
         end_time: 2020-05-01
         full_closure: False 
-        random_work_probability: 0.25 # 36%
+        avoid_work_probability: 0.36
+	furlough_probability: 0.1
+        key_probability: 0.22
     5:
         start_time: 2020-05-01
         end_time: 2020-05-15
         full_closure: False 
-        random_work_probability: 0.25 # 35%
+        avoid_work_probability: 0.35
+	furlough_probability: 0.25
+        key_probability: 0.22
     6:
         start_time: 2020-05-15
         end_time: 2020-06-16
         full_closure: False 
-        random_work_probability: 0.25 # 31%
+        avoid_work_probability: 0.31
+	furlough_probability: 0.30
+        key_probability: 0.22
     7:
         start_time: 2020-06-16
         end_time: 2020-07-12
         full_closure: False 
-        random_work_probability: 0.25 # 25%
+        avoid_work_probability: 0.25
+	furlough_probability: 0.33
+        key_probability: 0.22
     8:
         start_time: 2020-07-12
         end_time: 2020-07-26
         full_closure: False 
-        random_work_probability: 0.25 # 21%
+        avoid_work_probability: 0.21
+	furlough_probability: 0.34
+        key_probability: 0.22
     9:
         start_time: 2020-07-26
         end_time: 2020-08-07
         full_closure: False 
-        random_work_probability: 0.25 # 20%
+        avoid_work_probability: 0.20
+	furlough_probability: 0.34
+        key_probability: 0.22
 
 social_distancing:
     1: 
         start_time: 2020-03-16
-	end_time: 2020-03-23 
-	beta_factors:
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-03-23 
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            commute_unit: 0.875
+            commute_city_unit: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
 
     2:
         start_time: 2020-03-23
         end_time: 2020-07-04 
         beta_factors:
-	    box: 0.75
-	    pub: 0.75
-	    grocery: 0.75
-	    cinema: 0.75
-	    commute_unit: 0.75
-	    commute_city_unit: 0.75
-	    hospital: 0.75
-	    care_home: 0.75
-	    company: 0.75
-	    school: 0.75
-	    household: 1.0
-	    university: 0.75
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
 
 mask_wearing:
     1: 
         start_time: 2020-03-27
-	end_time: 2020-04-24
-	beta_factors: # 9%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-04-24
+        beta_factors: # 9%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
     2: 
         start_time: 2020-04-24
-	end_time: 2020-05-21
-	beta_factors: # 17%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-05-21
+        beta_factors: # 17%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
     3: 
         start_time: 2020-05-21
-	end_time: 2020-06-16
-	beta_factors: # 23%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-06-16
+        beta_factors: # 23%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
     4: 
         start_time: 2020-06-16
-	end_time: 2020-06-25
-	beta_factors: # 29%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-06-25
+        beta_factors: # 29%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
     5: 
         start_time: 2020-06-25
-	end_time: 2020-07-12
-	beta_factors: # 35%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-07-12
+        beta_factors: # 35%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
     6: 
         start_time: 2020-07-12
-	end_time: 2020-07-26
-	beta_factors: # 48%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-07-26
+        beta_factors: # 48%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
     7: 
         start_time: 2020-07-26
-	end_time: 2020-07-31
-	beta_factors: # 63%
-	    box: 0.875
-	    pub: 0.875
-	    grocery: 0.875
-	    cinema: 0.875
-	    commute_unit: 0.875
-	    commute_city_unit: 0.875
-	    hospital: 0.875
-	    care_home: 0.875
-	    company: 0.875
-	    school: 0.875
-	    household: 1.0
-	    university: 0.875
+        end_time: 2020-07-31
+        beta_factors: # 63%
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
 
 close_leisure_venue:
     start_time: 2020-03-21
@@ -241,17 +259,17 @@ change_leisure_probability:
     end_time: 2020-07-04
     leisure_activities_probabilities:
         household_visits:
-	    men: 
-	        0-64: 0.50
-	        65-100: 0.25
-	    women: 
-	        0-64: 0.50
-	        65-100: 0.25
+            men: 
+                0-64: 0.50
+                65-100: 0.25
+            women: 
+                0-64: 0.50
+                65-100: 0.25
         care_home_visits:
-	    men:
-	        0-100: 0.05
-	    women:
-	        0-100: 0.05
+            men:
+                0-100: 0.05
+            women:
+                0-100: 0.05
 
 close_schools:
     start_time: 2020-03-20
