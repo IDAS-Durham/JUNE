@@ -22,7 +22,7 @@ class IndividualPolicies(PolicyCollection):
     policy_type = "individual"
     min_age_home_alone = 15
 
-    def apply(self, person: Person, days_from_start: float, activities: List[str]):
+    def apply(self, person: Person, days_from_start: float, activities: List[str], no_furlough: int, no_key: int):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
         since if the person stays home we don't need to check for the others.
