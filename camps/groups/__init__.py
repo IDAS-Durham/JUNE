@@ -6,3 +6,4 @@ from .religious import Religious, Religiouss, ReligiousDistributor
 from .shelter import Shelter, Shelters, ShelterDistributor
 from .isolation_unit import IsolationUnit, IsolationUnits
 from .learning_center import LearningCenter, LearningCenters
+from .play_group import PlayGroup
