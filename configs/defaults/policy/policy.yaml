@@ -1,10 +1,10 @@
 hospitalisation:
-  start_time: 1000-01-01
-  end_time: 9999-01-01
+    start_time: 1000-01-01
+    end_time: 9999-01-01
 
 severe_symptoms_stay_home:
-  start_time: 1000-01-01
-  end_time: 9999-01-01
+    start_time: 1000-01-01
+    end_time: 9999-01-01
 
 quarantine:
     1:
@@ -34,81 +34,81 @@ shielding:
 
 
 close_companies:
-  1:
-    start_time: 2020-03-16
-    end_time: 2020-03-23 
-    full_closure: False 
-    random_work_probability: 0.85
+    1:
+        start_time: 2020-03-16
+        end_time: 2020-03-23 
+        full_closure: False 
+        random_work_probability: 0.85
 
-  2:
-    start_time: 2020-03-23
-    end_time: 2020-07-04
-    full_closure: False 
-    random_work_probability: 0.25
-
-social_distancing:
-        1: 
-          start_time: 2020-03-16
-          end_time: 2020-03-23 
-          beta_factors:
-                  box: 0.875
-                  pub: 0.875
-                  grocery: 0.875
-                  cinema: 0.875
-                  commute_unit: 0.875
-                  commute_city_unit: 0.875
-                  hospital: 0.875
-                  care_home: 0.875
-                  company: 0.875
-                  school: 0.875
-                  household: 1.0
-                  university: 0.875
-
-        2:
-          start_time: 2020-03-23
-          end_time: 2020-07-04 
-          beta_factors:
-                  box: 0.75
-                  pub: 0.75
-                  grocery: 0.75
-                  cinema: 0.75
-                  commute_unit: 0.75
-                  commute_city_unit: 0.75
-                  hospital: 0.75
-                  care_home: 0.75
-                  company: 0.75
-                  school: 0.75
-                  household: 1.0
-                  university: 0.75
-
-close_leisure_venue:
-        start_time: 2020-03-21
-        end_time: 2020-07-04 
-        venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
-
-change_leisure_probability:
+    2:
         start_time: 2020-03-23
         end_time: 2020-07-04
-        leisure_activities_probabilities:
-          household_visits:
-            men: 
-              0-64: 0.50
-              65-100: 0.25
-            women: 
-              0-64: 0.50
-              65-100: 0.25
-          care_home_visits:
-            men:
-              0-100: 0.05
-            women:
-              0-100: 0.05
+        full_closure: False 
+        random_work_probability: 0.25
+
+social_distancing:
+    1: 
+        start_time: 2020-03-16
+	end_time: 2020-03-23 
+	beta_factors:
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+
+    2:
+        start_time: 2020-03-23
+        end_time: 2020-07-04 
+        beta_factors:
+	    box: 0.75
+	    pub: 0.75
+	    grocery: 0.75
+	    cinema: 0.75
+	    commute_unit: 0.75
+	    commute_city_unit: 0.75
+	    hospital: 0.75
+	    care_home: 0.75
+	    company: 0.75
+	    school: 0.75
+	    household: 1.0
+	    university: 0.75
+
+close_leisure_venue:
+    start_time: 2020-03-21
+    end_time: 2020-07-04 
+    venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
+
+change_leisure_probability:
+    start_time: 2020-03-23
+    end_time: 2020-07-04
+    leisure_activities_probabilities:
+        household_visits:
+	    men: 
+	        0-64: 0.50
+	        65-100: 0.25
+	    women: 
+	        0-64: 0.50
+	        65-100: 0.25
+        care_home_visits:
+	    men:
+	        0-100: 0.05
+	    women:
+	        0-100: 0.05
 
 close_schools:
-        start_time: 2020-03-20
-        end_time: 2020-07-04 #TODO: end time?
-        years_to_close: all
-        full_closure: False
+    start_time: 2020-03-20
+    end_time: 2020-07-04 #TODO: end time?
+    years_to_close: all
+    full_closure: False
 
 close_universities:
-        start_time: 2020-03-20
-        end_time: 2020-10-01
+    start_time: 2020-03-20
+    end_time: 2020-10-01
