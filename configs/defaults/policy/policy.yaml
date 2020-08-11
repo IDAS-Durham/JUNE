@@ -81,6 +81,120 @@ social_distancing:
 	    household: 1.0
 	    university: 0.75
 
+mask_wearing:
+    1: 
+        start_time: 2020-03-27
+	end_time: 2020-04-24
+	beta_factors: # 9%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+    2: 
+        start_time: 2020-04-24
+	end_time: 2020-05-21
+	beta_factors: # 17%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+    3: 
+        start_time: 2020-05-21
+	end_time: 2020-06-16
+	beta_factors: # 23%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+    4: 
+        start_time: 2020-06-16
+	end_time: 2020-06-25
+	beta_factors: # 29%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+    5: 
+        start_time: 2020-06-25
+	end_time: 2020-07-12
+	beta_factors: # 35%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+    6: 
+        start_time: 2020-07-12
+	end_time: 2020-07-26
+	beta_factors: # 48%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+    7: 
+        start_time: 2020-07-26
+	end_time: 2020-07-31
+	beta_factors: # 63%
+	    box: 0.875
+	    pub: 0.875
+	    grocery: 0.875
+	    cinema: 0.875
+	    commute_unit: 0.875
+	    commute_city_unit: 0.875
+	    hospital: 0.875
+	    care_home: 0.875
+	    company: 0.875
+	    school: 0.875
+	    household: 1.0
+	    university: 0.875
+
 close_leisure_venue:
     start_time: 2020-03-21
     end_time: 2020-07-04 
