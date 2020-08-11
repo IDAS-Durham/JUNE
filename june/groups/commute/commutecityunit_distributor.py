@@ -1,5 +1,5 @@
 import numpy as np
-import random
+from random import shuffle
 
 class CommuteCityUnitDistributor:
     """
@@ -23,7 +23,7 @@ class CommuteCityUnitDistributor:
                 possible_units = city.commutecityunits
                 commuting_people = city.commute_internal
                 indices = list(range((len(commuting_people))))
-                random.shuffle(indices)
+                shuffle(indices)
                 people_per_unit = len(commuting_people)//len(possible_units)
                 for unit in possible_units:
                     unit.no_passengers = 0
