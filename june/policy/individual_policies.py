@@ -22,7 +22,7 @@ class IndividualPolicies(PolicyCollection):
     policy_type = "individual"
     min_age_home_alone = 15
 
-    def apply(self, person: Person, days_from_start: float, activities: List[str], no_furlough: int, no_key: int):
+    def apply(self, person: Person, days_from_start: float, activities: List[str], furlough_ratio: float, key_ratio: float):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
         since if the person stays home we don't need to check for the others.
@@ -53,8 +53,12 @@ class IndividualPolicies(PolicyCollection):
                                 guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
-                if policy.check_skips_activity(person):
-                    activities = policy.apply(activities=activities)
+                if policy.spec == "close_companies":
+                    if policy.check_skips_activity(person, furlough_ratio, key_ratio, random_ratio):
+                        activities = policy.apply(activities=activities)
+                else:
+                    if policy.check_skips_activity(person):
+                        activities = policy.apply(activities=activities)
         return activities
 
 
@@ -281,7 +285,9 @@ class CloseCompanies(SkipActivity):
         start_time: str,
         end_time: str,
         full_closure=False,
-        random_work_probability=None,
+        avoid_work_probability=None,
+        furlough_probability=None,
+        key_probability=None,
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -290,8 +296,9 @@ class CloseCompanies(SkipActivity):
         super().__init__(start_time, end_time, ["primary_activity", "commute"])
         self.full_closure = full_closure
         self.random_work_probability = random_work_probability
+        self.furlough_pro
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", furlough_ratio, key_ratio, random_ratio) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
