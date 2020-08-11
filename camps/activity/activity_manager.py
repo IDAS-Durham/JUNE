@@ -24,7 +24,7 @@ class CampActivityManager(ActivityManager):
             try: 
                 if super_group_instance.has_shifts:
                     super_group_instance.activate_next_shift(n_shifts=self.n_school_shifts)
-            except:
+            except AttributeError:
                 continue
 
     def get_personal_subgroup(self, person: "Person", activity: str):
@@ -34,7 +34,7 @@ class CampActivityManager(ActivityManager):
                 if person.id not in subgroup.group.ids_per_shift[subgroup.group.active_shift]:
                     return None
             return subgroup
-        except: 
+        except AttributeError:
             return subgroup
 
     def do_timestep(self):

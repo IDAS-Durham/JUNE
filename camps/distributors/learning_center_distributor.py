@@ -69,7 +69,7 @@ class LearningCenterDistributor:
         """
         with open(config_path) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return LearningCenterDistributor(
+        return cls(
             learning_centers=learning_centers,
             female_enrollment_rates=config["female_enrollment_rates"],
             male_enrollment_rates=config["male_enrollment_rates"],
