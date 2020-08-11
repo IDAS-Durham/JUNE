@@ -60,7 +60,7 @@ def load_universities_from_hdf5(file_path: str, chunk_size: int = 50000):
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]
-        universities_list = list()
+        universities_list = []
         n_universities = universities.attrs["n_universities"]
         ids = universities["id"]
         n_students_max = universities["n_students_max"]
