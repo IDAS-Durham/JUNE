@@ -347,8 +347,8 @@ class CloseCompanies(SkipActivity):
                     # if there are too few key workers
                     if key_ratio < self.key_probability:
                         # randomly boost
-                        if np.random.rand() > self.key_probability/key_ratio:
-                            return True
+                        if np.random.rand() > key_ratio/self.key_probability:
+                            pass
                         # if random boost fails then default to random working
                         elif np.random.rand() < self.avoid_work_probability:
                             return True
