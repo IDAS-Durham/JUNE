@@ -86,7 +86,7 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
-        hospitals_list = list()
+        hospitals_list = []
         chunk_size = 50000
         n_hospitals = hospitals.attrs["n_hospitals"]
         n_chunks = int(np.ceil(n_hospitals / chunk_size))

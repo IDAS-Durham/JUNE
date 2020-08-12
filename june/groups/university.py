@@ -94,7 +94,7 @@ class Universities(Supergroup):
         coordinates = coordinates[distances_close]
         n_students = n_students[distances_close]
         ukprn_values = ukprn_values[distances_close]
-        universities = list()
+        universities = []
         for coord, n_stud, ukprn in zip(
             coordinates, n_students, ukprn_values
         ):

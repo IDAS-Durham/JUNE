@@ -247,7 +247,7 @@ class TrajectoryMaker:
         describing what symptoms the person should display at a given
         time.
         """
-        trajectory = list()
+        trajectory = []
         cumulative = 0.
         for stage in self.stages:
             time = stage.completion_time()

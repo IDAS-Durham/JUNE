@@ -299,7 +299,7 @@ class HouseholdDistributor:
         n_communal_df = pd.read_csv(n_people_in_communal_filename, index_col=0).loc[
             area_names
         ]
-        households_total = list()
+        households_total = []
         counter = 0
         for area, (_, number_households), (_, n_students), (_, n_communal) in zip(
             areas,
