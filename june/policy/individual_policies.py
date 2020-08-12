@@ -22,7 +22,7 @@ class IndividualPolicies(PolicyCollection):
     policy_type = "individual"
     min_age_home_alone = 15
 
-    def apply(self, person: Person, days_from_start: float, activities: List[str], furlough_ratio=None, key_ratio=None, random_ratio=None):
+    def apply(self, person: Person, days_from_start: float, activities: List[str], furlough_ratio=None, key_ratio=None):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
         since if the person stays home we don't need to check for the others.
@@ -54,7 +54,7 @@ class IndividualPolicies(PolicyCollection):
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
                 if policy.spec == "close_companies":
-                    if policy.check_skips_activity(person, furlough_ratio, key_ratio, random_ratio):
+                    if policy.check_skips_activity(person, furlough_ratio, key_ratio):
                         activities = policy.apply(activities=activities)
                 else:
                     if policy.check_skips_activity(person):
@@ -299,7 +299,7 @@ class CloseCompanies(SkipActivity):
         self.furlough_probability = furlough_probability
         self.key_probability = key_probability
 
-    def check_skips_activity(self, person: "Person", furlough_ratio=None, key_ratio=None, random_ratio=None) -> bool:
+    def check_skips_activity(self, person: "Person", furlough_ratio=None, key_ratio=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -333,7 +333,7 @@ class CloseCompanies(SkipActivity):
                   and key_ratio is not None
                   and self.key_probability is not None
             ):
-                #if there are too many key workers, scale them down - otherwise sent all to work
+                #if there are too many key workers, scale them down - otherwise send all to work
                 if (key_ratio > self.key_probability
                     and np.random.rand() > self.key_probability/key_ratio
                 ):

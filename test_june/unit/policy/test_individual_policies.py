@@ -496,7 +496,7 @@ class TestClosure:
         )
         # Move the person 1_0000 times for five days
 
-        # Testing key_ratio and key_worker feature in random_ratio
+        # Testing key_ratio feature in random_ratio
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -528,7 +528,7 @@ class TestClosure:
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(4.0, rel=0.1)
 
-        # Testing key_ratio and key_worker feature in random_ratio
+        # Testing furlough_ratio feature in random_ratio
         n_days_in_week = []
         for i in range(500):
             n_days = 0
