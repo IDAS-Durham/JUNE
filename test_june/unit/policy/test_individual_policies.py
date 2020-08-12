@@ -435,7 +435,7 @@ class TestClosure:
 #             n_days = 0
 #             for j in range(5):
 #                 if "primary_activity" in individual_policies.apply(
-#                     person=worker, activities=activities, days_from_start=0, key_ratio=0.1, random_ratio=1.
+#                     person=worker, activities=activities, days_from_start=0, key_ratio=0.1,
 #                 ):
 #                     n_days += 1.0
 #             n_days_in_week.append(n_days)
@@ -445,7 +445,7 @@ class TestClosure:
 #             n_days = 0
 #             for j in range(5):
 #                 if "primary_activity" in individual_policies.apply(
-#                     person=worker, activities=activities, days_from_start=0, key_ratio=0.2, random_ratio=1.
+#                     person=worker, activities=activities, days_from_start=0, key_ratio=0.2,
 #                 ):
 #                     n_days += 1.0
 #             n_days_in_week.append(n_days)
@@ -502,7 +502,7 @@ class TestClosure:
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, key_ratio=0., random_ratio=1.
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0.,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -512,7 +512,7 @@ class TestClosure:
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                    person=worker, activities=activities, days_from_start=0, key_ratio=0.1, random_ratio=1.
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0.1,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -522,7 +522,7 @@ class TestClosure:
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                    person=worker, activities=activities, days_from_start=0, key_ratio=0.2, random_ratio=1.
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0.2,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
