@@ -96,9 +96,17 @@ class ActivityManager:
                 self.key_ratio += 1
             elif person.lockdown_status == "random":
                 self.random_ratio += 1
-        self.furlough_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
-        self.key_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
-        self.random_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
+        if (self.furlough_ratio != 0
+            and self.key_ratio != 0
+            and self.random_ratio !=0
+        ):
+            self.furlough_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
+            self.key_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio)
+            self.random_ratio /= (self.furlough_ratio + self.key_ratio + self.random_ratio) 
+        else:
+            self.furlough_ratio = None
+            self.key_ratio = None
+            self.random_ratio = None
 
     @property
     def all_groups(self):
