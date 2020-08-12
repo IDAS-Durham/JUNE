@@ -2,6 +2,7 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
+from random import random
 from typing import List, Dict
 from june.demography import Person
 from june.demography.geography import Geography
@@ -26,13 +27,13 @@ def random_choice_numba(arr, prob):
     """
     Fast implementation of np.random.choice
     """
-    return arr[np.searchsorted(np.cumsum(prob), np.random.rand(), side="right")]
+    return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
 @jit(nopython=True)
 def roll_activity_dice(poisson_parameters, delta_time, n_activities):
     total_poisson_parameter = np.sum(poisson_parameters)
-    does_activity = np.random.rand() < (
+    does_activity = random() < (
         1.0 - np.exp(-total_poisson_parameter * delta_time)
     )
     if does_activity:
@@ -115,26 +116,7 @@ class Leisure:
         self.probabilities_by_age_sex = None
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
-        self.refresh_random_numbers()
         self.closed_venues = set()
-
-    def refresh_random_numbers(self):
-        self.random_integers = list(np.random.randint(0, 2000, 10_000_000))
-        self.random_numbers = list(np.random.rand(10_000_000))
-
-    def get_random_number(self):
-        try:
-            return self.random_numbers.pop()
-        except IndexError:
-            self.refresh_random_numbers()
-            return self.random_numbers.pop()
-
-    def get_random_integer(self):
-        try:
-            return self.random_integers.pop()
-        except IndexError:
-            self.refresh_random_numbers()
-            return self.random_integers.pop()
 
     def distribute_social_venues_to_households(self, households: List[Household]):
         logger.info("Distributing social venues to households")
@@ -218,7 +200,7 @@ class Leisure:
         prob = self.probabilities_by_age_sex[person.sex][person.age]["drags_household"][
             activity
         ]
-        return self.get_random_number() < prob
+        return random() < prob
 
     def send_household_with_person_if_necessary(
         self, person, subgroup, probability,
@@ -233,7 +215,7 @@ class Leisure:
             or person.residence.group.type in ["communal", "other", "student"]
         ):
             return
-        if self.get_random_number() < probability:
+        if random() < probability:
             for mate in person.residence.group.residents:
                 if mate != person:
                     if mate.busy:
@@ -270,7 +252,7 @@ class Leisure:
         if person.residence.group.spec != "household":
             return
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
-        if self.get_random_number() < prob_age_sex["does_activity"]:
+        if random() < prob_age_sex["does_activity"]:
             activity_idx = random_choice_numba(
                 arr=np.arange(0, len(prob_age_sex["activities"])),
                 prob=np.array(list(prob_age_sex["activities"].values())),
@@ -283,7 +265,7 @@ class Leisure:
             if candidates_length == 1:
                 subgroup = candidates[0].get_leisure_subgroup(person)
             else:
-                idx = self.get_random_integer() % candidates_length
+                idx = 2000 % candidates_length
                 subgroup = candidates[idx].get_leisure_subgroup(person)
             self.send_household_with_person_if_necessary(
                 person, subgroup, prob_age_sex["drags_household"][activity]

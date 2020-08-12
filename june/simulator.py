@@ -220,7 +220,7 @@ class Simulator:
         """
         people_ids = np.array([person.id for person in self.world.people])
         ids_sorted_idx = np.argsort(people_ids)
-        self.world.people.people = list(np.array(self.world.people)[ids_sorted_idx])
+        self.world.people.people = np.array(self.world.people)[ids_sorted_idx]
 
     def clear_world(self):
         """

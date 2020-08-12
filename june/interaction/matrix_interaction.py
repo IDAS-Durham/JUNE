@@ -1,4 +1,4 @@
-import random
+from random import random
 
 import numpy as np
 
@@ -47,7 +47,7 @@ class MatrixInteraction(Interaction):
             and not (recipient.is_infected())
             and recipient.susceptibility > 0.0
         ):
-            if random.random() <= 1.0 - np.exp(
+            if random() <= 1.0 - np.exp(
                 -self.transmission_probability * recipient.susceptibility()
             ):
                 infecter.infection.infect_person_at_time(person=recipient, time=time)
@@ -74,7 +74,7 @@ class MatrixInteraction(Interaction):
                 if recipient and (
                     not (recipient.is_infected()) and recipient.susceptibility > 0.0
                 ):
-                    if random.random() <= 1.0 - np.exp(
+                    if random() <= 1.0 - np.exp(
                         -self.transmission_probability * recipient.susceptibility()
                     ):
                         infecter.infection.infect_person_at_time(recipient)
@@ -176,6 +176,6 @@ class MatrixInteraction(Interaction):
         N = np.random.poisson(Nave)
         Nint = int(N)
         Nover = N - Nint
-        if np.random.random() < Nover:
+        if random() < Nover:
             Nint += 1
         return Nint
