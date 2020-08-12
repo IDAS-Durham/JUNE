@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import pandas as pd
 import yaml
-from scipy import stats
+from scipy.stats import rv_discrete
 
 from june import paths
 from june.demography import Person
@@ -147,25 +147,25 @@ class HouseholdDistributor:
                 ">=0 >=0 >=0 >=0 >=0",
             ]
 
-        self._first_kid_parent_age_diff_rv = stats.rv_discrete(
+        self._first_kid_parent_age_diff_rv = rv_discrete(
             values=(
                 list(first_kid_parent_age_differences.keys()),
                 list(first_kid_parent_age_differences.values()),
             ),
         )
-        self._second_kid_parent_age_diff_rv = stats.rv_discrete(
+        self._second_kid_parent_age_diff_rv = rv_discrete(
             values=(
                 list(second_kid_parent_age_differences.keys()),
                 list(second_kid_parent_age_differences.values()),
             ),
         )
-        self._couples_age_rv = stats.rv_discrete(
+        self._couples_age_rv = rv_discrete(
             values=(
                 list(couples_age_differences.keys()),
                 list(couples_age_differences.values()),
             )
         )
-        self._random_sex_rv = stats.rv_discrete(values=((0, 1), (0.5, 0.5)))
+        self._random_sex_rv = rv_discrete(values=((0, 1), (0.5, 0.5)))
         self._refresh_random_numbers_list(number_of_random_numbers)
 
     @classmethod
