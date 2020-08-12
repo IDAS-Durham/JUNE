@@ -9,6 +9,7 @@ def test__comoposition_play_groups():
     kid_young = Person.from_attributes(age=3)
     kid_middle = Person.from_attributes(age=8)
     kid_old = Person.from_attributes(age=13)
+    kid_very_old = Person.from_attributes(age=16)
     play_group = PlayGroup()
     subgroup = play_group.get_leisure_subgroup(person=kid_young)
     assert subgroup.subgroup_type == 0
@@ -16,11 +17,13 @@ def test__comoposition_play_groups():
     assert subgroup.subgroup_type == 1
     subgroup = play_group.get_leisure_subgroup(person=kid_old)
     assert subgroup.subgroup_type == 2
+    subgroup = play_group.get_leisure_subgroup(person=kid_very_old)
+    assert subgroup.subgroup_type == 2
     not_kid = Person.from_attributes(age=50)
     subgroup = play_group.get_leisure_subgroup(person=not_kid)
     assert subgroup is None
 
-@pytest.mark.parametrize("n_people", [20,40])
+@pytest.mark.parametrize("n_people", [20,50])
 def test__play_group_per_area(n_people):
 
     people = [Person.from_attributes(age=age) for age in np.random.randint(low=3,high=16,size=n_people)]
