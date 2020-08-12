@@ -25,7 +25,7 @@ class LearningCenterDistributor:
         female_enrollment_rates: Dict[str, float],
         male_enrollment_rates: Dict[str, float],
         teacher_min_age: int = 21,
-        neighbour_centers: int = 5,
+        neighbour_centers: int = 20,
     ):
         """
         Parameters
@@ -129,13 +129,13 @@ class LearningCenterDistributor:
                 )
                 return
 
-            center = self.learning_centers[random.choice(closest_centers_idx)]
-            center.add(
-                person=person,
-                shift=random.randint(0, self.n_shifts - 1),
-                subgroup_type=center.SubgroupType.students,
-            )
-            return
+        center = self.learning_centers[random.choice(closest_centers_idx)]
+        center.add(
+            person=person,
+            shift=random.randint(0, self.n_shifts - 1),
+            subgroup_type=center.SubgroupType.students,
+        )
+        return
 
     def distribute_teachers_to_learning_centers(self, areas: "Areas"):
         """
