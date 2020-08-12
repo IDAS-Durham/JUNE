@@ -74,21 +74,34 @@ class ConstantCompletionTime(CompletionTime):
 class DistributionCompletionTime(CompletionTime, ABC):
     def __init__(
             self,
-            distribution
+            distribution,
+            *args,
+            **kwargs
     ):
         self.distribution = distribution
+        self.args = args
+        self.kwargs = kwargs
 
     def __call__(self):
-        return self.distribution.rvs()
+        # Note that we are using:
+        #     self.distribution.rvs(*args, **kwargs)
+        # rather than:
+        #     self.distribution(*args, **kwargs).rvs()
+        # or:
+        #     self.distribution(*some_args, **some_kwargs).rvs(
+        #         *remaining_args, **remaining_kwargs)
+        # because the second and third cases are "frozen" distributions,
+        # and frequent freezing of dists can become very time consuming.
+        # See for example: https://github.com/scipy/scipy/issues/9394.
+        return self.distribution.rvs(*self.args, **self.kwargs)
 
 
 class ExponentialCompletionTime(DistributionCompletionTime):
     def __init__(self, loc: float, scale):
         super().__init__(
-            stats.expon(
-                loc=loc,
-                scale=scale
-            )
+            stats.expon,
+            loc=loc,
+            scale=scale
         )
         self.loc = loc
         self.scale = scale
@@ -103,12 +116,11 @@ class BetaCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.beta(
-                a,
-                b,
-                loc=loc,
-                scale=scale
-            )
+            stats.beta,
+            a,
+            b,
+            loc=loc,
+            scale=scale
         )
         self.a = a
         self.b = b
@@ -123,11 +135,10 @@ class LognormalCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.lognorm(
-                s,
-                loc=loc,
-                scale=scale
-            )
+            stats.lognorm,
+            s,
+            loc=loc,
+            scale=scale
         )
         self.s = s
         self.loc = loc
@@ -140,10 +151,9 @@ class NormalCompletionTime(DistributionCompletionTime):
             scale
     ):
         super().__init__(
-            stats.norm(
-                loc,
-                scale
-            )
+            stats.norm,
+            loc=loc,
+            scale=scale
         )
         self.loc = loc
         self.scale = scale
@@ -158,12 +168,11 @@ class ExponweibCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.exponweib(
-                a,
-                c,
-                loc=loc,
-                scale=scale
-            )
+            stats.exponweib,
+            a,
+            c,
+            loc=loc,
+            scale=scale
         )
         self.a = a
         self.c = c
