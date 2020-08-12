@@ -10,6 +10,7 @@ class CampArea(Area):
     ):
         super().__init__(name, super_area, coordinates)
         self.pump_latrines = list()
+        self.play_groups = list()
         self.shelters = list()
 
 class CampGeography(Geography):
