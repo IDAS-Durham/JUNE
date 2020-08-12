@@ -19,12 +19,12 @@ class PlayGroup(SocialVenue):
         old = 2
 
     def __init__(
-        self, age_group_limits: List[int] = [3, 7, 12, 16], max_size: int = 10
+        self, age_group_limits: List[int] = [3, 7, 12, 17], max_size: int = 10
     ):
         super().__init__()
         self.age_group_limits = age_group_limits
         self.min_age = age_group_limits[0]
-        self.max_age = age_group_limits[-1]
+        self.max_age = age_group_limits[-1]-1
         self.max_size = max_size
 
     def get_leisure_subgroup(self, person: "Person"):
