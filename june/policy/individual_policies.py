@@ -353,6 +353,8 @@ class CloseCompanies(SkipActivity):
                         # if random furluoghing fails then default to random working
                         elif np.random.rand() < self.avoid_work_probability:
                             return True
+                    elif np.random.rand() < self.avoid_work_probability:
+                        return True
 
                 if (key_ratio is not None
                     and self.key_probability is not None
