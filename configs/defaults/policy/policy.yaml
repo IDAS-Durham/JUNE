@@ -139,117 +139,129 @@ mask_wearing:
     1: 
         start_time: 2020-03-27
         end_time: 2020-04-24
-	compliance: 0.09
-	beta_factor: XX
-        beta_factors: # 9%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.09
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
     2: 
         start_time: 2020-04-24
         end_time: 2020-05-21
-        beta_factors: # 17%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.17
+        beta_factor: 0.5
+        mask_probabilities:
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
     3: 
         start_time: 2020-05-21
         end_time: 2020-06-16
-        beta_factors: # 23%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.23
+        beta_factor: 0.5	
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
     4: 
         start_time: 2020-06-16
         end_time: 2020-06-25
-        beta_factors: # 29%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.29
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
     5: 
         start_time: 2020-06-25
         end_time: 2020-07-12
-        beta_factors: # 35%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.35
+        beta_factor: 0.5	
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
     6: 
         start_time: 2020-07-12
         end_time: 2020-07-26
-        beta_factors: # 48%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.48
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
     7: 
         start_time: 2020-07-26
         end_time: 2020-07-31
-        beta_factors: # 63%
-            box: 0.75
-            pub: 0.75
-            grocery: 0.75
-            cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
-            hospital: 0.75
-            care_home: 0.75
-            company: 0.75
-            school: 0.75
-            household: 1.0
-            university: 0.75
+        compliance: 0.63
+        beta_factor: 0.5	
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
 
 close_leisure_venue:
     start_time: 2020-03-21
