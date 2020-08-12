@@ -48,56 +48,56 @@ close_companies:
         end_time: 2020-03-27
         full_closure: False 
         avoid_work_probability: 0.29
-	furlough_probability: 0.04
+        furlough_probability: 0.04
         key_probability: 0.22
     3:
         start_time: 2020-03-27
         end_time: 2020-04-17
         full_closure: False 
         avoid_work_probability: 0.38
-	furlough_probability: 0.04
+        furlough_probability: 0.04
         key_probability: 0.22
     4:
         start_time: 2020-04-17
         end_time: 2020-05-01
         full_closure: False 
         avoid_work_probability: 0.36
-	furlough_probability: 0.1
+        furlough_probability: 0.1
         key_probability: 0.22
     5:
         start_time: 2020-05-01
         end_time: 2020-05-15
         full_closure: False 
         avoid_work_probability: 0.35
-	furlough_probability: 0.25
+        furlough_probability: 0.25
         key_probability: 0.22
     6:
         start_time: 2020-05-15
         end_time: 2020-06-16
         full_closure: False 
         avoid_work_probability: 0.31
-	furlough_probability: 0.30
+        furlough_probability: 0.30
         key_probability: 0.22
     7:
         start_time: 2020-06-16
         end_time: 2020-07-12
         full_closure: False 
         avoid_work_probability: 0.25
-	furlough_probability: 0.33
+        furlough_probability: 0.33
         key_probability: 0.22
     8:
         start_time: 2020-07-12
         end_time: 2020-07-26
         full_closure: False 
         avoid_work_probability: 0.21
-	furlough_probability: 0.34
+        furlough_probability: 0.34
         key_probability: 0.22
     9:
         start_time: 2020-07-26
         end_time: 2020-08-07
         full_closure: False 
         avoid_work_probability: 0.20
-	furlough_probability: 0.34
+        furlough_probability: 0.34
         key_probability: 0.22
 
 social_distancing:
@@ -176,7 +176,7 @@ mask_wearing:
         start_time: 2020-05-21
         end_time: 2020-06-16
         compliance: 0.23
-        beta_factor: 0.5	
+        beta_factor: 0.5
         mask_probabilities: 
             box: 1.
             pub: 0.
@@ -212,7 +212,7 @@ mask_wearing:
         start_time: 2020-06-25
         end_time: 2020-07-12
         compliance: 0.35
-        beta_factor: 0.5	
+        beta_factor: 0.5
         mask_probabilities: 
             box: 1.
             pub: 0.
@@ -248,7 +248,7 @@ mask_wearing:
         start_time: 2020-07-26
         end_time: 2020-07-31
         compliance: 0.63
-        beta_factor: 0.5	
+        beta_factor: 0.5
         mask_probabilities: 
             box: 1.
             pub: 0.
