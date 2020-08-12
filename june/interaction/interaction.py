@@ -1,6 +1,7 @@
 import numpy as np
 import yaml
 import numba as nb
+from random import random
 from typing import List
 from functools import partial
 from multiprocessing import get_context
@@ -72,7 +73,7 @@ def compute_effective_transmission(
 def infect_susceptibles(effective_transmission_probability, susceptible_ids):
     infected_ids = []
     for id in susceptible_ids:
-        if np.random.rand() < effective_transmission_probability:
+        if random() < effective_transmission_probability:
             infected_ids.append(id)
     return infected_ids
 

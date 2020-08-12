@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Union, Optional, List, Dict
 import datetime
+from random import random
 
 from .policy import Policy, PolicyCollection, Policies
 from june.infection.symptom_tag import SymptomTag
@@ -148,7 +149,7 @@ class Quarantine(StayHome):
                 )
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
-                    if np.random.rand() < self.compliance:
+                    if random() < self.compliance:
                         self_quarantine = True
         except AttributeError:
             pass
@@ -174,7 +175,7 @@ class Shielding(StayHome):
 
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         if person.age >= self.min_age:
-            if self.compliance is None or np.random.rand() < self.compliance:
+            if self.compliance is None or random() < self.compliance:
                 return True
         return False
 
@@ -324,7 +325,7 @@ class CloseCompanies(SkipActivity):
                         return True
                     # if there are too many or correct number of furloughed people then furlough with a probability
                     elif furlough_ratio >= self.furlough_probability:
-                        if np.random.rand() < self.furlough_probability/furlough_ratio:
+                        if random() < self.furlough_probability/furlough_ratio:
                             return True
                 else:
                     return True
@@ -335,7 +336,7 @@ class CloseCompanies(SkipActivity):
             ):
                 #if there are too many key workers, scale them down - otherwise send all to work
                 if (key_ratio > self.key_probability
-                    and np.random.rand() > self.key_probability/key_ratio
+                    and random() > self.key_probability/key_ratio
                 ):
                     return True
 
@@ -348,7 +349,7 @@ class CloseCompanies(SkipActivity):
                 ):
                     # if there are too few furloughed people then random stop extra people from going to work
                     if furlough_ratio < self.furlough_probability:
-                        if np.random.rand() > furlough_ratio/self.furlough_probability:
+                        if random() > furlough_ratio/self.furlough_probability:
                             return True
 
                 if (key_ratio is not None
@@ -357,10 +358,10 @@ class CloseCompanies(SkipActivity):
                     # if there are too few key workers
                     if key_ratio < self.key_probability:
                         # randomly boost
-                        if np.random.rand() > key_ratio/self.key_probability:
+                        if random() > key_ratio/self.key_probability:
                             return False
 
-                if np.random.rand() < self.avoid_work_probability:
+                if random() < self.avoid_work_probability:
                     return True
                 
         return False
