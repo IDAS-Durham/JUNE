@@ -343,7 +343,20 @@ class CloseCompanies(SkipActivity):
                 person.lockdown_status == "random"
                 and self.avoid_work_probability is not None
             ):
-                if random_ratio is not None:
+                if (furlough_ratio is not None
+                    and self.furlough_probability is not None
+                ):
+                    # if there are too few furloughed people then random stop extra people from going to work
+                    if furlough_ratio < self.furlough_probability:
+                        if np.random.rand() > furlough_ratio/self.furlough_probability:
+                            return True
+                        # if random furluoghing fails then default to random working
+                        elif np.random.rand() < self.avoid_work_probability:
+                            return True
+
+                if (key_ratio is not None
+                    and self.key_probability is not None
+                ):
                     # if there are too few key workers
                     if key_ratio < self.key_probability:
                         # randomly boost
@@ -355,9 +368,9 @@ class CloseCompanies(SkipActivity):
                     # if there are the right number of key workers then send someone to work randomly
                     elif np.random.rand() < self.avoid_work_probability:
                         return True
-                else:
-                    if np.random.rand() < self.avoid_work_probability:
-                        return True
+                    
+                if np.random.rand() < self.avoid_work_probability:
+                    return True
                     
         return False
 
