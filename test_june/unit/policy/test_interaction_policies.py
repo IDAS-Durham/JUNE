@@ -119,13 +119,7 @@ class TestMaskWearing:
         mask_wearing = MaskWearing(
             start_time="2020-03-10", end_time="2020-03-12", beta_factor=beta_factor, mask_probabilities=mask_probabilities, compliance=compliance
         )
-        #mask_probabilities2 = {"cinema": 4}
-        #start_date2 = datetime(2020, 3, 12)
-        #end_date2 = datetime(2020, 3, 15)
-        #mask_wearing2 = MaskWearing(
-        #    start_time="2020-03-12", end_time="2020-03-15", beta_factor=beta_factors, mask_probabilities=mask_probabilities2, compliance=compliance
-        #)
-        policies = Policies([mask_wearing])#, mask_wearing2])
+        policies = Policies([mask_wearing])
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
@@ -145,14 +139,6 @@ class TestMaskWearing:
                         assert sim.interaction.beta[group] == initial_betas[group]
                 next(sim.timer)
                 continue
-            # if sim.timer.date >= start_date2 and sim.timer.date < end_date2:
-            #     for group in sim.interaction.beta:
-            #         if group != "cinema":
-            #             assert sim.interaction.beta == 4.0
-            #         else:
-            #             assert sim.interaction.beta[group] == initial_betas[group]
-            #     next(sim.timer)
-            #     continue
             assert sim.interaction.beta == initial_betas
             next(sim.timer)
 
