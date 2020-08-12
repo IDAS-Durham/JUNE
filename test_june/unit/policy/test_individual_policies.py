@@ -466,6 +466,81 @@ class TestClosure:
         assert worker in worker.primary_activity.people
         sim.clear_world()
 
+    def test__close_companies_frequency_of_key_ratio(
+        self, setup_policy_world
+    ):
+        world, pupil, student, worker, sim = setup_policy_world
+        super_area = world.super_areas[0]
+        company_closure = CloseCompanies(
+            start_time="2020-1-1",
+            end_time="2020-10-1",
+            key_probability=0.2
+        )
+        policies = Policies([company_closure])
+        sim.activity_manager.policies = policies
+        sim.clear_world()
+        activities = ["commute", "primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        worker.lockdown_status = "key_worker"
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_before_policy
+        )
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        individual_policies = IndividualPolicies.get_active_policies(
+            policies, date=time_during_policy
+        )
+        # Move the person 1_0000 times for five days
+
+        # Testing key_ratio and key_worker feature in random_ratio
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0.,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0.1,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0.4,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(2.5, rel=0.1)
+
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        individual_policies = IndividualPolicies.get_active_policies(
+            policies, date=time_after_policy
+        )
+        assert individual_policies.apply(
+            person=worker, activities=activities, days_from_start=0
+        ) == ["commute", "primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
     def test__close_companies_frequency_of_random_ratio(
         self, setup_policy_world
     ):
