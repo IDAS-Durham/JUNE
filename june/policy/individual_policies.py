@@ -369,8 +369,13 @@ class CloseCompanies(SkipActivity):
                     elif np.random.rand() < self.avoid_work_probability:
                         return True
                     
-                if np.random.rand() < self.avoid_work_probability:
-                    return True
+                if (furlough_ratio is None
+                    and self.furlough_probability is None
+                    and key_ratio is None
+                    and self.key_probability is None
+                ):
+                    if np.random.rand() < self.avoid_work_probability:
+                        return True
                     
         return False
 
