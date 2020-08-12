@@ -39,6 +39,7 @@ from camp_creation import (
 )  # this is loaded from the ../camp_scripts folder
 
 from camps.groups import PumpLatrines, PumpLatrineDistributor
+from camps.groups import PlayGroups, PlayGroupDistributor 
 from camps.groups import DistributionCenters, DistributionCenterDistributor
 from camps.groups import Communals, CommunalDistributor
 from camps.groups import FemaleCommunals, FemaleCommunalDistributor
@@ -84,6 +85,7 @@ learning_centers=world.learning_centers
 learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
 learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
 world.pump_latrines = PumpLatrines.for_areas(world.areas)
+world.play_groups = PlayGroups.for_areas(world.areas)
 world.distribution_centers = DistributionCenters.for_areas(world.areas)
 world.communals = Communals.for_areas(world.areas)
 world.female_communals = FemaleCommunals.for_areas(world.areas)
@@ -170,7 +172,7 @@ infection_seed.unleash_virus(n_cases=100)
 
 print("Infected people in seed = ", len(world.people.infected))
 
-CONFIG_PATH = camp_configs_path / "config_example.yaml"
+CONFIG_PATH = camp_configs_path / "my_config.yaml"
 
 # ==================================================================================#
 
@@ -180,6 +182,9 @@ leisure_instance.leisure_distributors = {}
 leisure_instance.leisure_distributors[
     "pump_latrines"
 ] = PumpLatrineDistributor.from_config(pump_latrines=world.pump_latrines)
+leisure_instance.leisure_distributors[
+    "play_groups"
+] = PlayGroupDistributor.from_config(play_groups=world.play_groups)
 leisure_instance.leisure_distributors[
     "distribution_centers"
 ] = DistributionCenterDistributor.from_config(

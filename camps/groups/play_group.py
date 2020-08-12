@@ -97,3 +97,7 @@ class PlayGroupDistributor(SocialVenueDistributor):
         """
         venue = np.random.choice(person.area.play_groups)
         return venue
+
+    def get_possible_venues_for_household(self, household: "Household"):
+        venue = np.random.choice(household.area.play_groups)
+        return [venue]
