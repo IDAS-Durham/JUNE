@@ -475,7 +475,8 @@ class TestClosure:
             start_time="2020-1-1",
             end_time="2020-10-1",
             avoid_work_probability=0.2,
-            key_probability=0.2
+            key_probability=0.2,
+            furlough_probability=0.2
         )
         policies = Policies([company_closure])
         sim.activity_manager.policies = policies
@@ -527,6 +528,29 @@ class TestClosure:
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(4.0, rel=0.1)
 
+        # Testing key_ratio and key_worker feature in random_ratio
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(0., rel=0.1)
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.1,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(2.0, rel=0.1)
+
+        
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
         individual_policies = IndividualPolicies.get_active_policies(
