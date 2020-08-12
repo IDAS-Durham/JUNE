@@ -327,6 +327,10 @@ class CloseCompanies(SkipActivity):
                     elif furlough_ratio >= self.furlough_probability:
                         if random() < self.furlough_probability/furlough_ratio:
                             return True
+                        # otherwise treat them as random
+                        elif self.avoid_work_probability is not None:
+                            if random() < self.avoid_work_probability:
+                                return True
                 else:
                     return True
             
@@ -335,30 +339,42 @@ class CloseCompanies(SkipActivity):
                   and self.key_probability is not None
             ):
                 #if there are too many key workers, scale them down - otherwise send all to work
-                if (key_ratio > self.key_probability
-                    and random() > self.key_probability/key_ratio
-                ):
-                    return True
+                if key_ratio > self.key_probability:
+                    if random() > self.key_probability/key_ratio:
+                        return True
 
             elif (
                 person.lockdown_status == "random"
                 and self.avoid_work_probability is not None
             ):
+
                 if (furlough_ratio is not None
                     and self.furlough_probability is not None
-                ):
-                    # if there are too few furloughed people then random stop extra people from going to work
-                    if furlough_ratio < self.furlough_probability:
-                        if random() > furlough_ratio/self.furlough_probability:
-                            return True
-
-                if (key_ratio is not None
+                    and key_ratio is not None
                     and self.key_probability is not None
                 ):
-                    # if there are too few key workers
+                    # if there are too few furloughed people and too few key workers
+                    if furlough_ratio < self.furlough_probability and key_ratio < self.key_probability:
+                        if random() > ((furlough_ratio/self.furlough_probability)*(furlough_ratio/random_ratio) + (key_ratio/self.key_probability)*(key_ratio/random_ratio)):
+                            return True
+                    elif furlough_ratio < self.furlough_probability:
+                        ## TODO
+                    elif key_ratio < self.key_probability:
+                
+                elif (furlough_ratio is not None
+                    and self.furlough_probability is not None
+                ):
+                    # if there are too few furloughed people then randomly stop extra people from going to work
+                    if furlough_ratio < self.furlough_probability:
+                        if random() > (furlough_ratio/self.furlough_probability)*(furlough_ratio/random_ratio):
+                            return True
+
+                elif (key_ratio is not None
+                    and self.key_probability is not None
+                ):
+                    # if there are too few key workers then randomly boost more people going to work
                     if key_ratio < self.key_probability:
-                        # randomly boost
-                        if random() > key_ratio/self.key_probability:
+                        if random() > (key_ratio/self.key_probability)*(key_ratio/random_ratio):
                             return False
 
                 if random() < self.avoid_work_probability:
