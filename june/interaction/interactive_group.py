@@ -26,6 +26,8 @@ class InteractiveGroup:
         self.has_infector = False
         self.size = group.size
         for i, subgroup in enumerate(group.subgroups):
+            if not subgroup.people:
+                continue
             subgroup_size = len(subgroup.people)
             subgroup_infected = [
                 person
