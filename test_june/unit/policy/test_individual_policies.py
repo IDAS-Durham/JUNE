@@ -560,6 +560,37 @@ class TestClosure:
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(4.0, rel=0.1)
 
+        # Testing furlough_ratio and key_ratio mixing feature in random_ratio
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0., furlough_ratio=0.,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(0., rel=0.1)
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0., furlough_ratio=0.1,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(2.5, rel=0.1)
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in individual_policies.apply(
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0.1, furlough_ratio=0.1,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(2.0, rel=0.1)
         
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
