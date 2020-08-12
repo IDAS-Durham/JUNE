@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 import yaml
-from scipy import stats
+from scipy.stats import expon, beta, lognorm, norm, expon, exponweib
 
 from june import paths
 from june.infection.symptom_tag import SymptomTag
@@ -39,15 +39,15 @@ class CompletionTime(ABC):
         """
         if type_string == "constant":
             return ConstantCompletionTime
-        if type_string == "exponential":
+        elif type_string == "exponential":
             return ExponentialCompletionTime
-        if type_string == "beta":
+        elif type_string == "beta":
             return BetaCompletionTime
-        if type_string == "lognormal":
+        elif type_string == "lognormal":
             return LognormalCompletionTime
-        if type_string == "normal":
+        elif type_string == "normal":
             return NormalCompletionTime
-        if type_string == "exponweib":
+        elif type_string == "exponweib":
             return ExponweibCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
@@ -99,7 +99,7 @@ class DistributionCompletionTime(CompletionTime, ABC):
 class ExponentialCompletionTime(DistributionCompletionTime):
     def __init__(self, loc: float, scale):
         super().__init__(
-            stats.expon,
+            expon,
             loc=loc,
             scale=scale
         )
@@ -116,7 +116,7 @@ class BetaCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.beta,
+            beta,
             a,
             b,
             loc=loc,
@@ -135,7 +135,7 @@ class LognormalCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.lognorm,
+            lognorm,
             s,
             loc=loc,
             scale=scale
@@ -151,7 +151,7 @@ class NormalCompletionTime(DistributionCompletionTime):
             scale
     ):
         super().__init__(
-            stats.norm,
+            norm,
             loc=loc,
             scale=scale
         )
@@ -168,7 +168,7 @@ class ExponweibCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.exponweib,
+            exponweib,
             a,
             c,
             loc=loc,
