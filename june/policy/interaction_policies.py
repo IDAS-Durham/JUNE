@@ -71,12 +71,16 @@ class MaskWearing(InteractionPolicy):
         self,
         start_time: str,
         end_time: str,
-        beta_factors: dict = None,
+        compliance: float,
+        beta_factor: float,    
+        mask_probabilities: dict = None,
     ):
         super().__init__(start_time, end_time)
         self.original_betas = {}
-        self.beta_factors = beta_factors
-        for key in beta_factors:
+        self.compliance = compliance
+        self.beta_factor = beta_factor
+        self.mask_probabilities = mask_probabilities
+        for key in mask_probabilities:
             self.original_betas[key] = None  # to be filled when coupled to interaction
 
     def apply(self, date: datetime, interaction: Interaction):
@@ -101,7 +105,7 @@ class MaskWearing(InteractionPolicy):
                 interaction.beta[key] = value
 
         if self.start_time == date:  # activate policy, save current betas.
-            for key, value in self.beta_factors.items():
+            for key, value in self.mask_probabilities.items():
                 self.original_betas[key] = interaction.beta[key]
-                interaction.beta[key] = interaction.beta[key] * value
+                interaction.beta[key] = interaction.beta[key] * value * self.compliance * self.beta_factor
 
