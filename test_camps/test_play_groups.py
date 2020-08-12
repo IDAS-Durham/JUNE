@@ -6,7 +6,6 @@ from camps.geography import CampArea
 
 
 def test__comoposition_play_groups():
-
     kid_young = Person.from_attributes(age=3)
     kid_middle = Person.from_attributes(age=8)
     kid_old = Person.from_attributes(age=13)
