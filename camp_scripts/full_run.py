@@ -77,7 +77,7 @@ hospital_distributor.distribute_medics_from_world(world.people)
 
 world.learning_centers = LearningCenters.for_areas(
                     world.areas,
-                    n_shifts=3
+                    n_shifts=4
 )
 learning_center_distributor = LearningCenterDistributor.from_file(
 learning_centers=world.learning_centers

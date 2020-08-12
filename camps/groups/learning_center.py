@@ -82,7 +82,7 @@ class LearningCenters(Supergroup):
         self,
         learning_centers: List[LearningCenter],
         learning_centers_tree: bool = True,
-        n_shifts: int = 3,
+        n_shifts: int = 4,
     ):
         """
         Collection of learning centers.
