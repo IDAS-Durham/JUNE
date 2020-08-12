@@ -350,11 +350,6 @@ class CloseCompanies(SkipActivity):
                     if furlough_ratio < self.furlough_probability:
                         if np.random.rand() > furlough_ratio/self.furlough_probability:
                             return True
-                        # if random furluoghing fails then default to random working
-                        #elif np.random.rand() < self.avoid_work_probability:
-                        #    return True
-                    #elif np.random.rand() < self.avoid_work_probability:
-                    #    return True
 
                 if (key_ratio is not None
                     and self.key_probability is not None
@@ -364,22 +359,9 @@ class CloseCompanies(SkipActivity):
                         # randomly boost
                         if np.random.rand() > key_ratio/self.key_probability:
                             return False
-                        # if random boost fails then default to random working
-                        #elif np.random.rand() < self.avoid_work_probability:
-                        #    return True
-                    # if there are the right number of key workers then send someone to work randomly
-                    #elif np.random.rand() < self.avoid_work_probability:
-                    #    return True
 
                 if np.random.rand() < self.avoid_work_probability:
                     return True
-                # if (furlough_ratio is None
-                #     and self.furlough_probability is None
-                #     and key_ratio is None
-                #     and self.key_probability is None
-                # ):
-                #     if np.random.rand() < self.avoid_work_probability:
-                #         return True
-                    
+                
         return False
 
