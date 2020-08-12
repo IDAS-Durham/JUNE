@@ -336,8 +336,7 @@ class TestClosure:
         company_closure = CloseCompanies(
             start_time="2020-1-1",
             end_time="2020-10-1",
-            random_work_probability=0.2
-            # go for 8 hours per week (one week has 168 hours)
+            avoid_work_probability=0.2
         )
         policies = Policies([company_closure])
         sim.activity_manager.policies = policies
@@ -365,7 +364,7 @@ class TestClosure:
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(4.0, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -375,7 +374,7 @@ class TestClosure:
                 ):
                     n_days += 0.5
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(1.0, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(4.0, rel=0.1)
 
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
