@@ -27,6 +27,7 @@ from june.policy import (
     SocialDistancing,
     Hospitalisation,
     InteractionPolicies,
+    MaskWearing
 )
 from june.simulator import Simulator
 from june.world import World
@@ -90,6 +91,68 @@ class TestSocialDistancing:
                         assert sim.interaction.beta[group] == initial_betas[group]
                 next(sim.timer)
                 continue
+            assert sim.interaction.beta == initial_betas
+            next(sim.timer)
+
+class TestMaskWearing:
+    def test__mask_wearing(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        world.cemeteries = Cemeteries()
+        start_date = datetime(2020, 3, 10)
+        end_date = datetime(2020, 3, 12)
+        compliance = 1.
+        beta_factor = 0.5
+        mask_probabilities = {
+            "box": 0.5,
+            "pub": 0.5,
+            "grocery": 0.5,
+            "cinema": 0.5,
+            "commute_unit": 0.5,
+            "commute_city_unit": 0.5,
+            "hospital": 0.5,
+            "care_home": 0.5,
+            "company": 0.5,
+            "school": 0.5,
+            "household": 0.,
+            "university": 0.5,
+        }
+        mask_wearing = MaskWearing(
+            start_time="2020-03-10", end_time="2020-03-12", beta_factor=beta_factor, mask_probabilities=mask_probabilities, compliance=compliance
+        )
+        #mask_probabilities2 = {"cinema": 4}
+        #start_date2 = datetime(2020, 3, 12)
+        #end_date2 = datetime(2020, 3, 15)
+        #mask_wearing2 = MaskWearing(
+        #    start_time="2020-03-12", end_time="2020-03-15", beta_factor=beta_factors, mask_probabilities=mask_probabilities2, compliance=compliance
+        #)
+        policies = Policies([mask_wearing])#, mask_wearing2])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        leisure_instance.distribute_social_venues_to_households(world.households)
+        sim.activity_manager.policies = policies
+        sim.activity_manager.leisure = leisure_instance
+        sim.timer.reset()
+        initial_betas = copy.deepcopy(sim.interaction.beta)
+        sim.clear_world()
+        while sim.timer.date <= sim.timer.final_date:
+            sim.do_timestep()
+            if sim.timer.date >= start_date and sim.timer.date < end_date:
+                for group in sim.interaction.beta:
+                    if group != "household":
+                        assert sim.interaction.beta[group] == initial_betas[group] * (1 - (0.5 * 1. * (1 - 0.5)))
+                    else:
+                        assert sim.interaction.beta[group] == initial_betas[group]
+                next(sim.timer)
+                continue
+            # if sim.timer.date >= start_date2 and sim.timer.date < end_date2:
+            #     for group in sim.interaction.beta:
+            #         if group != "cinema":
+            #             assert sim.interaction.beta == 4.0
+            #         else:
+            #             assert sim.interaction.beta[group] == initial_betas[group]
+            #     next(sim.timer)
+            #     continue
             assert sim.interaction.beta == initial_betas
             next(sim.timer)
 
