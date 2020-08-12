@@ -18,7 +18,9 @@ def parse_age_probabilities(age_dict: dict):
             bins.append(int(age_range_split[1]))
         probabilities.append(age_dict[age_range])
     sorting_idx = np.argsort(bins[::2])
-    bins = list(chain(*[[bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx]))
+    bins = list(chain.from_iterable(
+        [bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx
+    ))
     probabilities = np.array(probabilities)[sorting_idx]
     probabilities_binned = []
     for prob in probabilities:

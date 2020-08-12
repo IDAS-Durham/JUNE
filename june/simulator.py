@@ -126,7 +126,8 @@ class Simulator:
         weekend_activities = [
             activity for activity in time_config["step_activities"]["weekend"].values()
         ]
-        all_activities = set(chain(*(weekday_activities + weekend_activities)))
+        all_activities = set(
+            chain.from_iterable(weekday_activities + weekend_activities))
 
         cls.check_inputs(time_config)
 
@@ -405,7 +406,8 @@ class Simulator:
                             )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
-                        for infector_id in list(chain(*int_group.infector_ids)):
+                        for infector_id in chain.from_iterable(
+                                int_group.infector_ids):
                             infector = self.world.people[infector_id - first_person_id]
                             assert infector.id == infector_id
                             infector.health_information.number_of_infected += (

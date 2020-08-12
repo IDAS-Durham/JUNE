@@ -156,7 +156,7 @@ class SuperArea:
 
     @property
     def people(self):
-        return list(chain(*[area.people for area in self.areas]))
+        return list(chain.from_iterable(area.people for area in self.areas))
 
 
 class SuperAreas:
@@ -208,9 +208,9 @@ class SuperAreas:
                 k=k,
                 sort_results=True,
             )
-            indcs = list(chain(*indcs))
+            indcs = chain.from_iterable(indcs)
             super_areas = [self[idx] for idx in indcs]
-            distances = np.array(list(chain(*distances)))
+            distances = distances.flatten()
             return super_areas, distances * earth_radius
         else:
             indcs = self.ball_tree.query(
@@ -219,7 +219,7 @@ class SuperAreas:
                 k=k,
                 sort_results=True,
             )
-            indcs = list(chain(*indcs))
+            indcs = chain.from_iterable(indcs)
             super_areas = [self[idx] for idx in indcs]
             return super_areas
 

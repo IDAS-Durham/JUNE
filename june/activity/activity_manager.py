@@ -139,7 +139,7 @@ class ActivityManager:
         """
 
         groups = [self.activity_to_group_dict[activity] for activity in activities]
-        return list(chain(*groups))
+        return list(chain.from_iterable(groups))
 
     def move_to_active_subgroup(
         self, activities: List[str], person: Person
