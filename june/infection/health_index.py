@@ -61,6 +61,7 @@ class HealthIndexGenerator:
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
+        adjust_hospitalisation_adults: bool = False,
     ):
         """
         Parameters:
@@ -84,6 +85,7 @@ class HealthIndexGenerator:
         self.poli_deaths = poli_deaths
         self.asymptomatic_ratio = asymptomatic_ratio
         self.max_age = 90
+        self.adjust_hospitalisation_adults = adjust_hospitalisation_adults
         self.make_list()
         if comorbidity_multipliers is not None:
             self.max_mild_symptom_tag = [
@@ -112,6 +114,7 @@ class HealthIndexGenerator:
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
+        adjust_hospitalisation_adults=False,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -135,6 +138,7 @@ class HealthIndexGenerator:
             asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
+            adjust_hospitalisation_adults=adjust_hospitalisation_adults,
         )
 
     @classmethod
@@ -339,15 +343,27 @@ class HealthIndexGenerator:
             sex = 0
         round_age = int(round(person.age))
         probabilities = self.prob_lists[sex][round_age]
+        if self.adjust_hospitalisation_adults:
+            probabilities = self.adjust_hospitalisation(probabilities, person.age)
         if hasattr(self, "comorbidity_multipliers") and person.comorbidity is not None:
             probabilities = self.adjust_for_comorbidities(
                 probabilities, person.comorbidity, person.age, person.sex
             )
         return np.cumsum(probabilities)
 
-    def get_multiplier_from_reference_prevalence(
-        self, prevalence_reference_population: dict, age: int, sex: str
-    ) -> float:
+    def _hospitalisation_correction_factor(self, age):
+        return age / 69 + 5.0 / 69
+
+    def adjust_hospitalisation(self, probabilities, age):
+        if age >= 18 and age < 65:
+            last_probability = 1 - sum(probabilities)
+            probabilities[[3, 4]] *= self._hospitalisation_correction_factor(age)
+            probabilities[:3] *= (1 - sum(probabilities[3:]) - last_probability) / sum(
+                probabilities[:3]
+            )
+        return probabilities
+
+    def get_multiplier_from_reference_prevalence(self, age: int, sex: str) -> float:
         """
         Compute mean comorbidity multiplier given the prevalence of the different comorbidities
         in the reference population (for example the UK). It will be used to remove effect of comorbidities
@@ -370,7 +386,7 @@ class HealthIndexGenerator:
                 weighted mean of the multipliers given prevalence
         """
         weighted_multiplier = 0.0
-        for comorbidity in prevalence_reference_population.keys():
+        for comorbidity in self.prevalence_reference_population.keys():
             weighted_multiplier += (
                 self.comorbidity_multipliers[comorbidity]
                 * self.prevalence_reference_population[comorbidity][sex][age]
@@ -405,7 +421,7 @@ class HealthIndexGenerator:
 
         multiplier = self.comorbidity_multipliers.get(comorbidity, 1.0)
         reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
-            self.prevalence_reference_population, age=age, sex=sex
+            age=age, sex=sex
         )
         effective_multiplier = multiplier / reference_weighted_multiplier
         return self.adjust_probabilities_for_comorbidities(
