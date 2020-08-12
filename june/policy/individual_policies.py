@@ -297,7 +297,7 @@ class CloseCompanies(SkipActivity):
         self.full_closure = full_closure
         self.avoid_work_probability = avoid_work_probability
         self.furlough_probability = furlough_probability
-        self.key_probability - key_probability
+        self.key_probability = key_probability
 
     def check_skips_activity(self, person: "Person", furlough_ratio=None, key_ratio=None, random_ratio=None) -> bool:
         """
