@@ -103,7 +103,7 @@ class Observed2Cases:
         return regions
 
     def get_population(self, super_areas, regions):
-        population = dict()
+        population = {}
         for region in regions:
             population[region] = self.get_population_for_region(super_areas, region)
         return population

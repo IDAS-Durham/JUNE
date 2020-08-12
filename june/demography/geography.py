@@ -58,9 +58,9 @@ class Area:
         self.care_home = None
         self.coordinates = coordinates
         self.super_area = super_area
-        self.people = list()
-        self.schools = list()
-        self.households = list()
+        self.people = []
+        self.schools = []
+        self.households = []
 
     def add(self, person: Person):
         self.people.append(person)
@@ -145,10 +145,10 @@ class SuperArea:
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
-        self.areas = areas or list()
-        self.workers = list()
-        self.companies = list()
-        self.groceries = list()
+        self.areas = areas or []
+        self.workers = []
+        self.companies = []
+        self.groceries = []
 
     def add_worker(self, person: Person):
         self.workers.append(person)
