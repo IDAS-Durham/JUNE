@@ -107,5 +107,5 @@ class MaskWearing(InteractionPolicy):
         if self.start_time == date:  # activate policy, save current betas.
             for key, value in self.mask_probabilities.items():
                 self.original_betas[key] = interaction.beta[key]
-                interaction.beta[key] = interaction.beta[key] * value * self.compliance * self.beta_factor
+                interaction.beta[key] = interaction.beta[key] * (1 - (value * self.compliance * (1-self.beta_factor)))
 
