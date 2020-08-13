@@ -300,7 +300,7 @@ class CloseCompanies(SkipActivity):
         self.furlough_probability = furlough_probability
         self.key_probability = key_probability
 
-    def check_skips_activity(self, person: "Person", furlough_ratio=None, key_ratio=None) -> bool:
+    def check_skips_activity(self, person: "Person", furlough_ratio=None, key_ratio=None, random_ratio=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -352,6 +352,7 @@ class CloseCompanies(SkipActivity):
                     and self.furlough_probability is not None
                     and key_ratio is not None
                     and self.key_probability is not None
+                    and random_ratio is not None
                 ):
                     # if there are too few furloughed people and too few key workers
                     if furlough_ratio < self.furlough_probability and key_ratio < self.key_probability:
@@ -371,6 +372,7 @@ class CloseCompanies(SkipActivity):
                         
                 elif (furlough_ratio is not None
                     and self.furlough_probability is not None
+                    and random_ratio is not None
                 ):
                     # if there are too few furloughed people then randomly stop extra people from going to work
                     if furlough_ratio < self.furlough_probability:
@@ -379,6 +381,7 @@ class CloseCompanies(SkipActivity):
 
                 elif (key_ratio is not None
                     and self.key_probability is not None
+                    and random_ratio is not None
                 ):
                     # if there are too few key workers then randomly boost more people going to work and do not subject them to the random choice
                     if key_ratio < self.key_probability:
