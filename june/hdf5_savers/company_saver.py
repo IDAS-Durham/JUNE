@@ -86,7 +86,7 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         print("loading companies from hdf5 ", end="")
         companies = f["companies"]
-        companies_list = list()
+        companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
