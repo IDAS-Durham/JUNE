@@ -3,7 +3,6 @@ import logging
 import numpy as np
 from random import shuffle
 import yaml
-from scipy import stats
 from typing import List, Optional
 
 from june import paths
