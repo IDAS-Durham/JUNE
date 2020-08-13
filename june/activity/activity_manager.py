@@ -255,6 +255,6 @@ class ActivityManager:
             if person.dead or person.busy:
                 continue
             allowed_activities = individual_policies.apply(
-                person=person, activities=activities, days_from_start=days_from_start, furlough_ratio=self.furlough_ratio, key_ratio=self.key_ratio
+                person=person, activities=activities, days_from_start=days_from_start, furlough_ratio=self.furlough_ratio, key_ratio=self.key_ratio, random_ratio=self.random_ratio
             )
             self.move_to_active_subgroup(allowed_activities, person)

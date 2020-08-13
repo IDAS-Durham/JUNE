@@ -449,7 +449,7 @@ class TestClosure:
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(2.5, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(2.0, rel=0.1)
 
         sim.clear_world()
         time_after_policy = datetime(2030, 2, 2)
@@ -577,27 +577,27 @@ class TestClosure:
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, key_ratio=0.,
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0., random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(4.2, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                    person=worker, activities=activities, days_from_start=0, key_ratio=0.1,
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0.1, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(4.5, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(4.1, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                    person=worker, activities=activities, days_from_start=0, key_ratio=0.2,
+                    person=worker, activities=activities, days_from_start=0, key_ratio=0.2, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -609,27 +609,27 @@ class TestClosure:
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.,
+                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0., random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(0., rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(3.2, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.1,
+                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.1, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(2.0, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(4.1, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.3,
+                        person=worker, activities=activities, days_from_start=0, furlough_ratio=0.3, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -641,37 +641,37 @@ class TestClosure:
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, key_ratio=0., furlough_ratio=0.,
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0., furlough_ratio=0., random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(0., rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(3.4, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, key_ratio=0., furlough_ratio=0.1,
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0., furlough_ratio=0.1, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(2.5, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(3.8, rel=0.1)
         n_days_in_week = []
         for i in range(1000):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, key_ratio=0.1, furlough_ratio=0.1,
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0.1, furlough_ratio=0.1, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(2.25, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(3.7, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
             for j in range(5):
                 if "primary_activity" in individual_policies.apply(
-                        person=worker, activities=activities, days_from_start=0, key_ratio=0.3, furlough_ratio=0.3,
+                        person=worker, activities=activities, days_from_start=0, key_ratio=0.3, furlough_ratio=0.3, random_ratio=1.
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
