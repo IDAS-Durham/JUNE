@@ -78,7 +78,7 @@ class DistributionCompletionTime(CompletionTime, ABC):
             *args,
             **kwargs
     ):
-        self.distribution = distribution
+        self._distribution = distribution
         self.args = args
         self.kwargs = kwargs
 
@@ -93,7 +93,11 @@ class DistributionCompletionTime(CompletionTime, ABC):
         # because the second and third cases are "frozen" distributions,
         # and frequent freezing of dists can become very time consuming.
         # See for example: https://github.com/scipy/scipy/issues/9394.
-        return self.distribution.rvs(*self.args, **self.kwargs)
+        return self._distribution.rvs(*self.args, **self.kwargs)
+
+    @property
+    def distribution(self):
+        return self._distribution(*self.args, **self.kwargs)
 
 
 class ExponentialCompletionTime(DistributionCompletionTime):
