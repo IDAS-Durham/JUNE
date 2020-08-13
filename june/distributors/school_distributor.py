@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 import numpy as np
 import yaml
-from scipy import stats
 
 from june import paths
 from june.demography.geography import Area, SuperArea, Geography
