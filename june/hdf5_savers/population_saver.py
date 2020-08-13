@@ -221,7 +221,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
     """
     print("loading population from hdf5 ", end="")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        people = list()
+        people = []
         population = f["population"]
         # read in chunks of 100k people
         n_people = population.attrs["n_people"]

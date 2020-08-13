@@ -58,9 +58,9 @@ class Area:
         self.care_home = None
         self.coordinates = coordinates
         self.super_area = super_area
-        self.people = list()
-        self.schools = list()
-        self.households = list()
+        self.people = []
+        self.schools = []
+        self.households = []
 
     def add(self, person: Person):
         self.people.append(person)
@@ -145,10 +145,10 @@ class SuperArea:
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
-        self.areas = areas or list()
-        self.workers = list()
-        self.companies = list()
-        self.groceries = list()
+        self.areas = areas or []
+        self.workers = []
+        self.companies = []
+        self.groceries = []
 
     def add_worker(self, person: Person):
         self.workers.append(person)
@@ -156,7 +156,7 @@ class SuperArea:
 
     @property
     def people(self):
-        return list(chain(*[area.people for area in self.areas]))
+        return list(chain.from_iterable(area.people for area in self.areas))
 
 
 class SuperAreas:
@@ -208,9 +208,9 @@ class SuperAreas:
                 k=k,
                 sort_results=True,
             )
-            indcs = list(chain(*indcs))
+            indcs = chain.from_iterable(indcs)
             super_areas = [self[idx] for idx in indcs]
-            distances = np.array(list(chain(*distances)))
+            distances = distances.flatten()
             return super_areas, distances * earth_radius
         else:
             indcs = self.ball_tree.query(
@@ -219,7 +219,7 @@ class SuperAreas:
                 k=k,
                 sort_results=True,
             )
-            indcs = list(chain(*indcs))
+            indcs = chain.from_iterable(indcs)
             super_areas = [self[idx] for idx in indcs]
             return super_areas
 

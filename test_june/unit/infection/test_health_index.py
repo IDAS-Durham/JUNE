@@ -90,7 +90,7 @@ def test__mean_multiplier_reference():
     )
     assert (
         health_index.get_multiplier_from_reference_prevalence(
-            prevalence_reference_population, dummy.age, dummy.sex
+            dummy.age, dummy.sex
         )
         == mean_multiplier_uk
     )
@@ -123,7 +123,7 @@ def test__comorbidities_effect():
     guapo_health = health_index(guapo)
     
     mean_multiplier_uk =  health_index.get_multiplier_from_reference_prevalence(
-            prevalence_reference_population, dummy.age, dummy.sex
+            dummy.age, dummy.sex
             )
 
     dummy_probabilities = np.diff(dummy_health, prepend=0.,append=1.)
@@ -155,4 +155,37 @@ def test__comorbidities_effect():
         guapo_probabilities[2:].sum(),
         comorbidity_multipliers['guapo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
     )
+
+def test__apply_hospitalisation_correction():
  
+    health_index = HealthIndexGenerator.from_file(
+            adjust_hospitalisation_adults=False
+    )
+    adjusted_health_index = HealthIndexGenerator.from_file(
+            adjust_hospitalisation_adults=True
+    )
+
+    dummy = Person.from_attributes(sex="f", age=65,)
+    hi = health_index(dummy)
+    adjusted_hi = adjusted_health_index(dummy)
+    np.testing.assert_allclose(adjusted_hi, hi)
+    
+    dummy = Person.from_attributes(sex="f", age=18,)
+    hi = np.diff(health_index(dummy), prepend=0., append=1.)
+    adjusted_hi = np.diff(adjusted_health_index(dummy), prepend=0., append=1.)
+    assert sum(adjusted_hi) == 1.
+    assert adjusted_hi[3] == pytest.approx(hi[3]/3., rel=0.01)
+    assert adjusted_hi[4] == pytest.approx(hi[4]/3., rel=0.01)
+    assert adjusted_hi[5] == hi[5]
+    assert adjusted_hi[6] == pytest.approx(hi[6], rel=0.01)
+    assert adjusted_hi[7] == pytest.approx(hi[7], rel=0.01)
+
+    dummy = Person.from_attributes(sex="f", age=40,)
+    hi = np.diff(health_index(dummy), prepend=0., append=1.)
+    adjusted_hi = np.diff(adjusted_health_index(dummy), prepend=0., append=1.)
+    assert sum(adjusted_hi) == 1.
+    assert adjusted_hi[3] == pytest.approx(hi[3]*0.65, rel=0.01)
+    assert adjusted_hi[4] == pytest.approx(hi[4]*0.65, rel=0.01)
+    assert adjusted_hi[5] == hi[5]
+    assert adjusted_hi[6] == pytest.approx(hi[6], rel=0.01)
+    assert adjusted_hi[7] == pytest.approx(hi[7], rel=0.01)
