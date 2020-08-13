@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.demography import Person, Population
@@ -15,22 +16,30 @@ def test__age_distribution():
         person.area = dummy_area
     dummy_area.people = people
     male_enrollment_rates = {
+        "dummy_region":
+        {
         "0-4": 0.0,
         "4-6": 0.5,
         "6-12": 0.3,
         "12-16": 0.2,
         "16-21": 0.1,
         "21-100": 0.0,
+        }
     }
 
     female_enrollment_rates = {
+        "dummy_region":
+        {
         "0-4": 0.0,
         "4-6": 0.0,
         "6-12": 1.0,
         "12-16": 0.0,
         "16-21": 0.0,
         "21-100": 0.0,
+        }
     }
+
+    area_region_df = pd.DataFrame({'area': ['dummy'], 'region': ['dummy_region']})
 
     coordinates_1 = (12.3, 15.6)
     learning_center_1 = LearningCenter(coordinates=coordinates_1, n_pupils_max=20)
@@ -48,6 +57,7 @@ def test__age_distribution():
         learning_centers=learning_centers,
         female_enrollment_rates=female_enrollment_rates,
         male_enrollment_rates=male_enrollment_rates,
+        area_region_df=area_region_df
     )
     learning_center_distributor.distribute_kids_to_learning_centers(areas=dummy_areas)
 
@@ -66,23 +76,32 @@ def test__distribute_teachers():
         person.area = dummy_area
     dummy_area.people = people
     male_enrollment_rates = {
+        "dummy_region":
+        {
         "0-4": 0.0,
         "4-6": 0.5,
         "6-12": 0.3,
         "12-16": 0.2,
         "16-21": 0.1,
         "21-100": 0.0,
+        }
     }
 
     female_enrollment_rates = {
+        "dummy_region":
+        {
         "0-4": 0.0,
         "4-6": 0.0,
         "6-12": 1.0,
         "12-16": 0.0,
         "16-21": 0.0,
         "21-100": 0.0,
+        }
     }
 
+    area_region_df = pd.DataFrame({'area': ['dummy'], 'region': ['dummy_region']})
+
+ 
     coordinates_1 = (12.3, 15.6)
     learning_center_1 = LearningCenter(coordinates=coordinates_1, n_pupils_max=20)
     coordinates_2 = (120.3, 150.6)
@@ -93,12 +112,14 @@ def test__distribute_teachers():
     learning_centers = LearningCenters(
         learning_centers=[learning_center_1, learning_center_2],
         learning_centers_tree=learning_centers_tree,
+        n_shifts=3
     )
 
     learning_center_distributor = LearningCenterDistributor(
         learning_centers=learning_centers,
         female_enrollment_rates=female_enrollment_rates,
         male_enrollment_rates=male_enrollment_rates,
+        area_region_df = area_region_df
     )
     learning_center_distributor.distribute_teachers_to_learning_centers(
         areas=dummy_areas
