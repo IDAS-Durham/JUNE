@@ -23,7 +23,7 @@ class IndividualPolicies(PolicyCollection):
     policy_type = "individual"
     min_age_home_alone = 15
 
-    def apply(self, person: Person, days_from_start: float, activities: List[str], furlough_ratio=None, key_ratio=None):
+    def apply(self, person: Person, days_from_start: float, activities: List[str], furlough_ratio=None, key_ratio=None, random_ratio=None):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
         since if the person stays home we don't need to check for the others.
@@ -55,7 +55,7 @@ class IndividualPolicies(PolicyCollection):
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
                 if policy.spec == "close_companies":
-                    if policy.check_skips_activity(person, furlough_ratio, key_ratio):
+                    if policy.check_skips_activity(person, furlough_ratio, key_ratio, random_ratio):
                         activities = policy.apply(activities=activities)
                 else:
                     if policy.check_skips_activity(person):
