@@ -623,7 +623,7 @@ class TestClosure:
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(4.1, rel=0.1)
+        assert np.mean(n_days_in_week) == pytest.approx(3.6, rel=0.1)
         n_days_in_week = []
         for i in range(500):
             n_days = 0
