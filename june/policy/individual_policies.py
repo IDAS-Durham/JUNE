@@ -355,27 +355,35 @@ class CloseCompanies(SkipActivity):
                 ):
                     # if there are too few furloughed people and too few key workers
                     if furlough_ratio < self.furlough_probability and key_ratio < self.key_probability:
-                        if random() > ((furlough_ratio/self.furlough_probability)*(furlough_ratio/random_ratio) + (key_ratio/self.key_probability)*(key_ratio/random_ratio)):
+                        if random() < (self.furlough_probability-furlough_ratio)/random_ratio:
                             return True
+                        # correct for some random workers now being treated as furloughed
+                        elif random() < (self.key_probability-key_ratio)/(random_ratio - (self.furlough_probability-furlough_ratio)):
+                            return False
+                    # if there are too few furloughed people
                     elif furlough_ratio < self.furlough_probability:
-                        ## TODO
+                        if random() < (self.furlough_probability-furlough_ratio)/random_ratio:
+                            return True
+                    # if there are too few kew workers
                     elif key_ratio < self.key_probability:
-                
+                        if random() < (self.key_probability-key_ratio)/random_ratio:
+                            return False
+                        
                 elif (furlough_ratio is not None
                     and self.furlough_probability is not None
                 ):
                     # if there are too few furloughed people then randomly stop extra people from going to work
                     if furlough_ratio < self.furlough_probability:
-                        if random() > (furlough_ratio/self.furlough_probability)*(furlough_ratio/random_ratio):
+                        if random() < (self.furlough_probability-furlough_ratio)/random_ratio:
                             return True
 
                 elif (key_ratio is not None
                     and self.key_probability is not None
                 ):
-                    # if there are too few key workers then randomly boost more people going to work
+                    # if there are too few key workers then randomly boost more people going to work and do not subject them to the random choice
                     if key_ratio < self.key_probability:
-                        if random() > (key_ratio/self.key_probability)*(key_ratio/random_ratio):
-                            return False
+                        if random() < (self.key_probability-key_ratio)/random_ratio:
+                            return False 
 
                 if random() < self.avoid_work_probability:
                     return True
