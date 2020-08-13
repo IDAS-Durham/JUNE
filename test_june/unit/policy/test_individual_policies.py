@@ -399,7 +399,8 @@ class TestClosure:
         company_closure = CloseCompanies(
             start_time="2020-1-1",
             end_time="2020-10-1",
-            furlough_probability=0.2
+            furlough_probability=0.2,
+            avoid_work_probability=0.2
         )
         policies = Policies([company_closure])
         sim.activity_manager.policies = policies
@@ -419,7 +420,6 @@ class TestClosure:
         )
         # Move the person 1_0000 times for five days
 
-        # Testing key_ratio and key_worker feature in random_ratio
         n_days_in_week = []
         for i in range(500):
             n_days = 0
