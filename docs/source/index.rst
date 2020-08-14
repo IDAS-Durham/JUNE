@@ -1,20 +1,26 @@
-.. JUNE documentation master file, created by
-   sphinx-quickstart on Sat Aug 15 15:43:09 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+JUNE, a COVID-19 modelling code
+===============================
 
-Welcome to JUNE's documentation!
-================================
+Repository for data and models built, named after
+`June Almeida <https://en.wikipedia.org/wiki/June_Almeida>`_. June was the
+female Scottish virologist that first identified the coronavirus group of
+viruses.
+
+
+Contents
+--------
+
+
+Sections
+^^^^^^^^
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Sections:
 
 
-
-Indices and tables
-==================
+Navigation
+^^^^^^^^^^
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
