@@ -2,6 +2,7 @@ import logging
 from typing import List, Tuple, Dict
 
 import numpy as np
+import pandas as pd
 import random
 import yaml
 from scipy import stats
@@ -9,8 +10,12 @@ from scipy import stats
 from camps import paths
 from june.utils import parse_age_probabilities
 
+default_data_path = paths.camp_data_path / "input/learning_centers/enrollment_rates.csv"
 default_config_path = (
     paths.camp_configs_path / "defaults/distributors/learning_center_distributor.yaml"
+)
+default_area_region_path = (
+    paths.camp_data_path / "input/geography/area_super_area_region.csv"
 )
 
 
@@ -24,8 +29,9 @@ class LearningCenterDistributor:
         learning_centers: "LearningCenters",
         female_enrollment_rates: Dict[str, float],
         male_enrollment_rates: Dict[str, float],
+        area_region_df: pd.DataFrame,
         teacher_min_age: int = 21,
-        neighbour_centers: int = 5,
+        neighbour_centers: int = 20,
     ):
         """
         Parameters
@@ -40,8 +46,9 @@ class LearningCenterDistributor:
             minimum age of teachers
         """
         self.learning_centers = learning_centers
-        self.female_enrollment_rates = parse_age_probabilities(female_enrollment_rates)
-        self.male_enrollment_rates = parse_age_probabilities(male_enrollment_rates)
+        self.female_enrollment_rates = self.parse_dictionaries(female_enrollment_rates)
+        self.male_enrollment_rates = self.parse_dictionaries(male_enrollment_rates)
+        self.area_region_df = area_region_df
         self.teacher_min_age = teacher_min_age
         self.neighbour_centers = neighbour_centers
         self.n_shifts = self.learning_centers.n_shifts
@@ -50,7 +57,9 @@ class LearningCenterDistributor:
     def from_file(
         cls,
         learning_centers: "LearningCenters",
+        data_path: str = default_data_path,
         config_path: str = default_config_path,
+        area_region_path: str = default_area_region_path,
     ) -> "LearningCenterDistributor":
         """
         Initialize LearningCenterDistributor from path to its config file
@@ -59,16 +68,42 @@ class LearningCenterDistributor:
         ----------
         learning_centers:
             instance of LearningCenters, containing all learning centers in the world
-        config_path:
+        data_path:
             path to config dictionary
 
         Returns
         -------
         LearningCenterDistributor instance
         """
+        enrollment_df = pd.read_csv(data_path, index_col=0)
+        enrollment_df = enrollment_df[["Gender", "CampID", "Age", "Enrollment"]]
+        female_enrollment_df = enrollment_df[enrollment_df["Gender"] == "Female"]
+        female_enrollment_dict = cls.convert_df_to_nested_dict(
+            cls, female_enrollment_df
+        )
+        male_enrollment_df = enrollment_df[enrollment_df["Gender"] == "Male"]
+        male_enrollment_dict = cls.convert_df_to_nested_dict(cls, male_enrollment_df)
+        area_region_df = pd.read_csv(area_region_path, index_col=0)
         with open(config_path) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(learning_centers, **config)
+        return cls(
+            learning_centers,
+            female_enrollment_rates=female_enrollment_dict,
+            male_enrollment_rates=male_enrollment_dict,
+            area_region_df=area_region_df,
+            **config
+        )
+
+    def parse_dictionaries(self, dct):
+        for key in dct.keys():
+            dct[key] = parse_age_probabilities(dct[key])
+        return dct
+
+    def convert_df_to_nested_dict(self, df):
+        return {
+            k: f.groupby("Age")["Enrollment"].apply(lambda x: x.iloc[0]).to_dict()
+            for k, f in df.groupby("CampID")
+        }
 
     def distribute_kids_to_learning_centers(self, areas: "Areas"):
         """
@@ -84,19 +119,32 @@ class LearningCenterDistributor:
         """
 
         for area in areas.members:
+            region = self.area_region_df[self.area_region_df["area"] == area.name][
+                "region"
+            ].iloc[0]
             closest_centers_idx = self.learning_centers.get_closest(
                 coordinates=area.coordinates, k=self.neighbour_centers
             )
             for person in area.people:
-                if person.sex == "m" and self.male_enrollment_rates[person.age] != 0:
-                    if random.random() <= self.male_enrollment_rates[person.age]:
+                if (
+                    person.sex == "m"
+                    and self.male_enrollment_rates[region][person.age] != 0
+                ):
+                    if (
+                        random.random()
+                        <= self.male_enrollment_rates[region][person.age]
+                    ):
                         self.send_kid_to_closest_center_with_availability(
                             person, closest_centers_idx
                         )
                 elif (
-                    person.sex == "f" and self.female_enrollment_rates[person.age] != 0
+                    person.sex == "f"
+                    and self.female_enrollment_rates[region][person.age] != 0
                 ):
-                    if random.random() <= self.female_enrollment_rates[person.age]:
+                    if (
+                        random.random()
+                        <= self.female_enrollment_rates[region][person.age]
+                    ):
                         self.send_kid_to_closest_center_with_availability(
                             person, closest_centers_idx
                         )
@@ -129,13 +177,13 @@ class LearningCenterDistributor:
                 )
                 return
 
-            center = self.learning_centers[random.choice(closest_centers_idx)]
-            center.add(
-                person=person,
-                shift=random.randint(0, self.n_shifts - 1),
-                subgroup_type=center.SubgroupType.students,
-            )
-            return
+        center = self.learning_centers[random.choice(closest_centers_idx)]
+        center.add(
+            person=person,
+            shift=random.randint(0, self.n_shifts - 1),
+            subgroup_type=center.SubgroupType.students,
+        )
+        return
 
     def distribute_teachers_to_learning_centers(self, areas: "Areas"):
         """
@@ -149,7 +197,10 @@ class LearningCenterDistributor:
             )[0]
             # get someone in working age
             old_people = [
-                person for person in area.people if person.age >= self.teacher_min_age and person.primary_activity is None
+                person
+                for person in area.people
+                if person.age >= self.teacher_min_age
+                and person.primary_activity is None
             ]
             teacher = random.choice(old_people)
             # add the teacher to all shifts in the school
