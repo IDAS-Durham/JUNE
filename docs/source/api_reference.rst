@@ -1,19 +1,113 @@
 API reference
 =============
 
-
 Modules
 -------
 
+.. autosummary::
+   :toctree: _autosummary
+   :template: module.rst
 
-
-
-Classes
--------
-
-
-
-Functions
----------
-
-
+   june.activity.activity_manager_box
+   june.activity.activity_manager
+   june.activity
+   june.box.box_mode
+   june.box
+   june.commute_rail_travel
+   june.commute
+   june.demography.demography
+   june.demography.geography
+   june.demography.person
+   june.demography
+   june.distributors.carehome_distributor
+   june.distributors.company_distributor
+   june.distributors.hospital_distributor
+   june.distributors.household_distributor
+   june.distributors
+   june.distributors.school_distributor
+   june.distributors.university_distributor
+   june.distributors.worker_distributor
+   june.exc
+   june.groups.boundary
+   june.groups.carehome
+   june.groups.cemetery
+   june.groups.commute.commutecity_distributor
+   june.groups.commute.commutecity
+   june.groups.commute.commutecityunit_distributor
+   june.groups.commute.commutecityunit
+   june.groups.commute.commutehub_distributor
+   june.groups.commute.commutehub
+   june.groups.commute.commuteunit_distributor
+   june.groups.commute.commuteunit
+   june.groups.commute
+   june.groups.company
+   june.groups.group.abstract
+   june.groups.group.group
+   june.groups.group
+   june.groups.group.subgroup
+   june.groups.group.supergroup
+   june.groups.hospital
+   june.groups.household
+   june.groups.leisure.care_home_visits
+   june.groups.leisure.cinema
+   june.groups.leisure.grocery
+   june.groups.leisure.household_visits
+   june.groups.leisure.leisure
+   june.groups.leisure.pub
+   june.groups.leisure
+   june.groups.leisure.social_venue_distributor
+   june.groups.leisure.social_venue
+   june.groups
+   june.groups.school
+   june.groups.travel
+   june.groups.travel.travelcity_distributor
+   june.groups.travel.travelcity
+   june.groups.travel.travelunit_distributor
+   june.groups.travel.travelunit
+   june.groups.university
+   june.hdf5_savers.carehome_saver
+   june.hdf5_savers.commute_saver
+   june.hdf5_savers.company_saver
+   june.hdf5_savers.geography_saver
+   june.hdf5_savers.hospital_saver
+   june.hdf5_savers.household_saver
+   june.hdf5_savers.leisure_saver
+   june.hdf5_savers.population_saver
+   june.hdf5_savers
+   june.hdf5_savers.school_saver
+   june.hdf5_savers.university_saver
+   june.infection.health_index
+   june.infection.health_information
+   june.infection.infection
+   june.infection
+   june.infection_seed.infection_seed
+   june.infection_seed.observed_to_cases
+   june.infection_seed
+   june.infection.symptoms
+   june.infection.symptoms_trajectory
+   june.infection.symptom_tag
+   june.infection.trajectory_maker
+   june.infection.transmission
+   june.infection.transmission_xnexp
+   june.interaction.contact_sampling
+   june.interaction.interaction
+   june.interaction.interactive_group
+   june.interaction.matrix_interaction
+   june.interaction
+   june.logger.logger
+   june.logger.read_logger
+   june.logger
+   june.paths
+   june.policy.individual_policies
+   june.policy.interaction_policies
+   june.policy.leisure_policies
+   june.policy.medical_care_policies
+   june.policy.policy
+   june.policy
+   june.simulator_box
+   june.simulator
+   june.time
+   june.utils.parse_probabilities
+   june.utils
+   june.visualization
+   june.world

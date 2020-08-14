@@ -1,0 +1,5 @@
+﻿june.groups.leisure.grocery
+===========================
+
+.. automodule:: june.groups.leisure.grocery
+    :members:
