@@ -5,7 +5,7 @@ from typing import List, Dict, Optional
 import numpy as np
 import pandas as pd
 import yaml
-from scipy import stats
+from scipy.stats import rv_discrete
 
 from june import paths
 from june.demography import Person, Population
@@ -118,14 +118,14 @@ class WorkerDistributor:
         of work.
         """
         # work msoa area/flow data
-        work_msoa_man_rv = stats.rv_discrete(
+        work_msoa_man_rv = rv_discrete(
             values=(
                 np.arange(0, len(wf_area_df.index.values)),
                 wf_area_df["n_man"].values,
             )
         )
         self.work_msoa_man_rnd = work_msoa_man_rv.rvs(size=n_workers)
-        work_msoa_woman_rv = stats.rv_discrete(
+        work_msoa_woman_rv = rv_discrete(
             values=(
                 np.arange(0, len(wf_area_df.index.values)),
                 wf_area_df["n_woman"].values,
@@ -145,7 +145,7 @@ class WorkerDistributor:
             distribution_female = (
                 self.sex_per_sector_df.loc[area_name][f_col].fillna(0).values
             )
-            self.sector_distribution_female = stats.rv_discrete(
+            self.sector_distribution_female = rv_discrete(
                 values=(numbers, distribution_female)
             )
             self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
@@ -156,7 +156,7 @@ class WorkerDistributor:
             distribution_male = (
                 self.sex_per_sector_df.loc[area_name][m_col].fillna(0).values
             )
-            self.sector_distribution_male = stats.rv_discrete(
+            self.sector_distribution_male = rv_discrete(
                 values=(numbers, distribution_male)
             )
             self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
@@ -217,7 +217,7 @@ class WorkerDistributor:
         ratio = self.sub_sector_ratio[person.sector][person.sex]
         distr = self.sub_sector_distr[person.sector][person.sex]
         if MC_random < ratio:
-            sub_sector_idx = stats.rv_discrete(
+            sub_sector_idx = rv_discrete(
                 values=(np.arange(len(distr)), distr)
             ).rvs()
             person.sub_sector = self.sub_sector_distr[person.sector]["label"][
