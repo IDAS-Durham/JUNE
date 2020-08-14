@@ -172,7 +172,7 @@ infection_seed.unleash_virus(n_cases=100)
 
 print("Infected people in seed = ", len(world.people.infected))
 
-CONFIG_PATH = camp_configs_path / "my_config.yaml"
+CONFIG_PATH = camp_configs_path / "learning_center_config.yaml"
 
 # ==================================================================================#
 

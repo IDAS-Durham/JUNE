@@ -26,10 +26,10 @@ time:
           5: 13
   step_activities:
       weekday:
-          0: ['medical_facility', 'residence']
-          1: ['medical_facility', 'leisure', 'residence'] 
-          2: ['medical_facility', 'leisure', 'residence'] 
-          3: ['medical_facility', 'leisure', 'residence'] 
+          0: ['medical_facility', 'primary_activity', 'residence']
+          1: ['medical_facility', 'primary_activity', 'leisure', 'residence'] 
+          2: ['medical_facility', 'primary_activity', 'leisure', 'residence'] 
+          3: ['medical_facility', 'primary_activity', 'leisure', 'residence'] 
           4: ['medical_facility', 'leisure', 'residence'] 
           5: ['medical_facility', 'residence']
       weekend:
