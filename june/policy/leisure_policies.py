@@ -1,5 +1,6 @@
 import datetime
 import numpy as np
+from collections import defaultdict
 from typing import Union, Optional, List, Dict
 
 from .policy import Policy, Policies, PolicyCollection
@@ -93,6 +94,7 @@ class ChangeLeisureProbability(LeisurePolicy):
         time span. Keep this in mind when trying to stack policies that modify the same social venue.
         """
         if self.original_leisure_probabilities is None:
+            self.original_leisure_probabilities = defaultdict(dict)
             for activity in self.leisure_probabilities:
                 if activity not in leisure.leisure_distributors:
                     raise PolicyError(
@@ -106,16 +108,18 @@ class ChangeLeisureProbability(LeisurePolicy):
                     "women"
                 ] = activity_distributor.female_probabilities
         if self.is_active(date):
-            activity_distributor.male_probabilities = self.leisure_probabilities[
-                activity
-            ][
-                "men"
-            ]
-            activity_distributor.female_probabilities = self.leisure_probabilities[
-                activity
-            ][
-                "women"
-            ]
+            for activity in self.leisure_probabilities:
+                activity_distributor = leisure.leisure_distributors[activity]
+                activity_distributor.male_probabilities = self.leisure_probabilities[
+                    activity
+                ][
+                    "men"
+                ]
+                activity_distributor.female_probabilities = self.leisure_probabilities[
+                    activity
+                ][
+                    "women"
+                ]
         else:
             # use original probabilities
             for activity in self.leisure_probabilities:
