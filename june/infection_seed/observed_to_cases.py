@@ -134,9 +134,9 @@ class Observed2Cases:
                 filtered_trajectories.append(trajectory)
         return filtered_trajectories
 
-    def get_mean_completion_time(self, stage):
+    def get_median_completion_time(self, stage):
         if hasattr(stage.completion_time, "distribution"):
-            return stage.completion_time.distribution.mean()
+            return stage.completion_time.distribution.median()
         else:
             return stage.completion_time.value
 
@@ -147,7 +147,7 @@ class Observed2Cases:
             for stage in trajectory.stages:
                 if stage.symptoms_tag.name in symptoms_tags:
                     break
-                time += self.get_mean_completion_time(stage)
+                time += self.get_median_completion_time(stage)
             time_to_symptoms.append(time)
         return time_to_symptoms
 
