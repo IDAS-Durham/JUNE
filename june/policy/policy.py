@@ -81,11 +81,21 @@ class Policy(ABC):
         return self.start_time <= date < self.end_time
 
 
-
-
 class Policies:
     def __init__(self, policies=None):
         self.policies = policies
+        # Note (Arnau): This import here is ugly, but I couldn't
+        # find a way to get around a redundant import loop.
+        from june.policy import (
+            IndividualPolicies,
+            InteractionPolicies,
+            MedicalCarePolicies,
+            LeisurePolicies,
+        )
+        self.individual_policies = IndividualPolicies.from_policies(self)
+        self.interaction_policies = InteractionPolicies.from_policies(self)
+        self.medical_care_policies = MedicalCarePolicies.from_policies(self)
+        self.leisure_policies = LeisurePolicies.from_policies(self)
 
     @classmethod
     def from_file(
@@ -108,17 +118,14 @@ class Policies:
                 policies.append(str_to_class(camel_case_key)(**policy_data))
         return Policies(policies=policies)
 
-    def get_active_policies_for_type(self, policy_type, date):
-        return [
-            policy
-            for policy in self.policies
-            if policy.policy_type == policy_type and policy.is_active(date)
-        ]
+    def get_policies_for_type(self, policy_type):
+        return [policy for policy in self.policies if policy.policy_type == policy_type]
 
     def __iter__(self):
         return iter(self.policies)
 
-class PolicyCollection(ABC):
+
+class PolicyCollection:
     def __init__(self, policies: List[Policy]):
         """
         A collection of like policies active on the same date
@@ -126,11 +133,17 @@ class PolicyCollection(ABC):
         self.policies = policies
 
     @classmethod
-    def get_active_policies(cls, policies: Policies, date: datetime):
-        policies = policies.get_active_policies_for_type(
-            policy_type=cls.policy_type, date=date
-        )
-        return cls(policies)
+    def from_policies(cls, policies: Policies):
+        return cls(policies.get_policies_for_type(policy_type=cls.policy_type))
 
-    def apply(self):
+    def get_active(self, date: datetime):
+        return [policy for policy in self.policies if policy.is_active(date)]
+
+    def apply(self, active_policies):
         raise NotImplementedError()
+
+    def __iter__(self):
+        return iter(self.policies)
+
+    def __getitem__(self, index):
+        return self.policies[index]

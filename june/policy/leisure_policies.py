@@ -47,11 +47,12 @@ class CloseLeisureVenue(LeisurePolicy):
         self.venues_to_close = venues_to_close
 
     def apply(self, date: datetime.datetime, leisure: Leisure):
-        for venue in self.venues_to_close:
-            leisure.closed_venues.add(venue)
-        if self.end_time == date:
+        if self.is_active(date):
             for venue in self.venues_to_close:
-                leisure.closed_venues.remove(venue)
+                leisure.closed_venues.add(venue)
+            if self.end_time == date:
+                for venue in self.venues_to_close:
+                    leisure.closed_venues.remove(venue)
 
 
 
@@ -75,7 +76,7 @@ class ChangeLeisureProbability(LeisurePolicy):
         """
         super().__init__(start_time, end_time)
         self.leisure_probabilities = {}
-        self.original_leisure_probabilities = {}
+        self.original_leisure_probabilities = None
         for activity in leisure_activities_probabilities:
             self.leisure_probabilities[activity] = {}
             self.leisure_probabilities[activity]["men"] = parse_age_probabilities(
@@ -84,15 +85,6 @@ class ChangeLeisureProbability(LeisurePolicy):
             self.leisure_probabilities[activity]["women"] = parse_age_probabilities(
                 leisure_activities_probabilities[activity]["women"]
             )
-            self.original_leisure_probabilities[
-                activity
-            ] = {}  # this will be filled when coupled to leisure
-
-    def is_active(self, date: datetime.datetime) -> bool:
-        """
-        This is modified in this policy to include the end date.
-        """
-        return self.start_time <= date <= self.end_time
 
     def apply(self, date: datetime.datetime, leisure: Leisure):
         """
@@ -100,10 +92,7 @@ class ChangeLeisureProbability(LeisurePolicy):
         The current probabilities are stored in the policies, and restored at the end of the policy 
         time span. Keep this in mind when trying to stack policies that modify the same social venue.
         """
-        #active_policies = self.get_change_leisure_probabilities_policies(date)
-        #for policy in active_policies:
-        if self.start_time == date:
-            # activate policy
+        if self.original_leisure_probabilities is None:
             for activity in self.leisure_probabilities:
                 if activity not in leisure.leisure_distributors:
                     raise PolicyError(
@@ -116,18 +105,19 @@ class ChangeLeisureProbability(LeisurePolicy):
                 self.original_leisure_probabilities[activity][
                     "women"
                 ] = activity_distributor.female_probabilities
-                activity_distributor.male_probabilities = self.leisure_probabilities[
-                    activity
-                ][
-                    "men"
-                ]
-                activity_distributor.female_probabilities = self.leisure_probabilities[
-                    activity
-                ][
-                    "women"
-                ]
-        elif self.end_time == date:
-            # restore policy
+        if self.is_active(date):
+            activity_distributor.male_probabilities = self.leisure_probabilities[
+                activity
+            ][
+                "men"
+            ]
+            activity_distributor.female_probabilities = self.leisure_probabilities[
+                activity
+            ][
+                "women"
+            ]
+        else:
+            # use original probabilities
             for activity in self.leisure_probabilities:
                 if activity not in leisure.leisure_distributors:
                     raise PolicyError(
