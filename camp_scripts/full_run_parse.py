@@ -29,6 +29,7 @@ from june.policy import Policy, Policies
 from june.logger.read_logger import ReadLogger
 from june.simulator import Simulator
 
+from camps.activity import CampActivityManager
 from camps.paths import camp_data_path, camp_configs_path
 from camps.world import World
 from camps.groups.leisure import generate_leisure_for_world, generate_leisure_for_config
@@ -266,6 +267,7 @@ leisure_instance.distribute_social_venues_to_households(world.shelters)
 # ==================================================================================#
 
 # =================================== simulator ===============================#
+Simulator.ActivityManager = CampActivityManager
 simulator = Simulator.from_file(
     world=world,
     interaction=interaction,
