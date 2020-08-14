@@ -7,8 +7,11 @@ female Scottish virologist that first identified the coronavirus group of
 viruses.
 
 
+Version |version|
+-----------------
+
 Contents
---------
+^^^^^^^^
 
 .. toctree::
    :maxdepth: 2
