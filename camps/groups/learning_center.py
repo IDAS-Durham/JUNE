@@ -10,7 +10,7 @@ from june.groups import Group, Supergroup
 from june.demography import Person
 
 default_learning_centers_coordinates_path = (
-    paths.camp_data_path / "input/learning_centers/learning_centers.csv"
+    paths.camp_data_path / "input/activities/learning_center.csv"
 )
 default_config_path = paths.camp_configs_path / "defaults/groups/learning_center.yaml"
 
@@ -82,7 +82,7 @@ class LearningCenters(Supergroup):
         self,
         learning_centers: List[LearningCenter],
         learning_centers_tree: bool = True,
-        n_shifts: int = 3,
+        n_shifts: int = 4,
     ):
         """
         Collection of learning centers.

@@ -11,6 +11,7 @@ beta:
   shelter: 0.2
   isolation_unit: 0.00
   learning_center: 0.04
+  play_group: 0.02
 
 contact_matrices:
   communal:
@@ -53,3 +54,8 @@ contact_matrices:
     contacts: [[0,0], [0,0]]
     proportion_physical: [[0,0], [0,0]]
     characteristic_time: 24
+  play_group:
+    contacts: [[5,0,0],[0,5,0],[0,0,5]]
+    proportion_physical: [[0.6,0,0],[0,0.3,0],[0,0,0.15]]
+    characteristic_time: 2
+
