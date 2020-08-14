@@ -2,10 +2,11 @@ import numpy as np
 from typing import Union, Optional, List, Dict
 import datetime
 from random import random
+import june.policy
 
-from .policy import Policy, PolicyCollection, Policies
 from june.infection.symptom_tag import SymptomTag
 from june.demography.person import Person
+from june.policy import Policy, PolicyCollection
 
 
 class IndividualPolicy(Policy):
@@ -23,13 +24,27 @@ class IndividualPolicies(PolicyCollection):
     policy_type = "individual"
     min_age_home_alone = 15
 
-    def apply(self, person: Person, days_from_start: float, activities: List[str]):
+    def get_active(self, date: datetime.date):
+        return IndividualPolicies(
+            [policy for policy in self.policies if policy.is_active(date)]
+        )
+
+    def apply(
+        self,
+        active_policies,
+        person: Person,
+        days_from_start: float,
+        activities: List[str],
+        furlough_ratio=None,
+        key_ratio=None,
+        random_ratio=None,
+    ):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
         since if the person stays home we don't need to check for the others.
         IF a person is below 15 years old, then we look for a guardian to stay with that person at home.
         """
-        for policy in self.policies:
+        for policy in active_policies:
             if policy.policy_subtype == "stay_home":
                 if policy.check_stay_home_condition(person, days_from_start):
                     activities = policy.apply(
@@ -48,14 +63,23 @@ class IndividualPolicies(PolicyCollection):
                             if guardian is not None:
                                 if guardian.busy:
                                     for subgroup in guardian.subgroups.iter():
-                                        if subgroup is not None and guardian in subgroup:
+                                        if (
+                                            subgroup is not None
+                                            and guardian in subgroup
+                                        ):
                                             subgroup.remove(guardian)
                                             break
                                 guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
-                if policy.check_skips_activity(person):
-                    activities = policy.apply(activities=activities)
+                if policy.spec == "close_companies":
+                    if policy.check_skips_activity(
+                        person, furlough_ratio, key_ratio, random_ratio
+                    ):
+                        activities = policy.apply(activities=activities)
+                else:
+                    if policy.check_skips_activity(person):
+                        activities = policy.apply(activities=activities)
         return activities
 
 
@@ -94,7 +118,6 @@ class StayHome(IndividualPolicy):
 
 
 class SevereSymptomsStayHome(StayHome):
-
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
         return (
             person.health_information is not None
@@ -109,6 +132,7 @@ class Quarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         n_days: int = 7,
         n_days_household: int = 14,
+        compliance: float = 1.0,
         household_compliance: float = 1.0,
     ):
         """
@@ -124,12 +148,15 @@ class Quarantine(StayHome):
             days for which the person has to stay at home if they show symtpoms
         n_days_household:
             days for which the person has to stay at home if someone in their household shows symptoms
+        compliance:
+            percentage of symptomatic people that will adhere to the quarantine policy
         household_compliance:
             percentage of people that will adhere to the hoseuhold quarantine policy
         """
         super().__init__(start_time, end_time)
         self.n_days = n_days
         self.n_days_household = n_days_household
+        self.compliance = compliance
         self.household_compliance = household_compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start):
@@ -141,7 +168,8 @@ class Quarantine(StayHome):
                 )
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
-                    self_quarantine = True
+                    if random() < self.compliance:
+                        self_quarantine = True
         except AttributeError:
             pass
         housemates_quarantine = person.residence.group.quarantine(
@@ -277,7 +305,9 @@ class CloseCompanies(SkipActivity):
         start_time: str,
         end_time: str,
         full_closure=False,
-        random_work_probability=None,
+        avoid_work_probability=None,
+        furlough_probability=None,
+        key_probability=None,
     ):
         """
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
@@ -285,24 +315,118 @@ class CloseCompanies(SkipActivity):
         """
         super().__init__(start_time, end_time, ["primary_activity", "commute"])
         self.full_closure = full_closure
-        self.random_work_probability = random_work_probability
+        self.avoid_work_probability = avoid_work_probability
+        self.furlough_probability = furlough_probability
+        self.key_probability = key_probability
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(
+        self, person: "Person", furlough_ratio=None, key_ratio=None, random_ratio=None
+    ) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
+
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
         ):
 
-            if self.full_closure or person.lockdown_status == "furlough":
+            # if companies closed skip
+            if self.full_closure:
                 return True
+
+            elif person.lockdown_status == "furlough":
+                if furlough_ratio is not None and self.furlough_probability is not None:
+                    # if there are too few furloughed people then always furlough all
+                    if furlough_ratio < self.furlough_probability:
+                        return True
+                    # if there are too many or correct number of furloughed people then furlough with a probability
+                    elif furlough_ratio >= self.furlough_probability:
+                        if random() < self.furlough_probability / furlough_ratio:
+                            return True
+                        # otherwise treat them as random
+                        elif self.avoid_work_probability is not None:
+                            if random() < self.avoid_work_probability:
+                                return True
+                else:
+                    return True
+
+            elif (
+                person.lockdown_status == "key_worker"
+                and key_ratio is not None
+                and self.key_probability is not None
+            ):
+                # if there are too many key workers, scale them down - otherwise send all to work
+                if key_ratio > self.key_probability:
+                    if random() > self.key_probability / key_ratio:
+                        return True
+
             elif (
                 person.lockdown_status == "random"
-                and self.random_work_probability is not None
+                and self.avoid_work_probability is not None
             ):
-                if random() > self.random_work_probability:
-                    return True
-        return False
 
+                if (
+                    furlough_ratio is not None
+                    and self.furlough_probability is not None
+                    and key_ratio is not None
+                    and self.key_probability is not None
+                    and random_ratio is not None
+                ):
+                    # if there are too few furloughed people and too few key workers
+                    if (
+                        furlough_ratio < self.furlough_probability
+                        and key_ratio < self.key_probability
+                    ):
+                        if (
+                            random()
+                            < (self.furlough_probability - furlough_ratio)
+                            / random_ratio
+                        ):
+                            return True
+                        # correct for some random workers now being treated as furloughed
+                        elif random() < (self.key_probability - key_ratio) / (
+                            random_ratio - (self.furlough_probability - furlough_ratio)
+                        ):
+                            return False
+                    # if there are too few furloughed people
+                    elif furlough_ratio < self.furlough_probability:
+                        if (
+                            random()
+                            < (self.furlough_probability - furlough_ratio)
+                            / random_ratio
+                        ):
+                            return True
+                    # if there are too few kew workers
+                    elif key_ratio < self.key_probability:
+                        if random() < (self.key_probability - key_ratio) / random_ratio:
+                            return False
+
+                elif (
+                    furlough_ratio is not None
+                    and self.furlough_probability is not None
+                    and random_ratio is not None
+                ):
+                    # if there are too few furloughed people then randomly stop extra people from going to work
+                    if furlough_ratio < self.furlough_probability:
+                        if (
+                            random()
+                            < (self.furlough_probability - furlough_ratio)
+                            / random_ratio
+                        ):
+                            return True
+
+                elif (
+                    key_ratio is not None
+                    and self.key_probability is not None
+                    and random_ratio is not None
+                ):
+                    # if there are too few key workers then randomly boost more people going to work and do not subject them to the random choice
+                    if key_ratio < self.key_probability:
+                        if random() < (self.key_probability - key_ratio) / random_ratio:
+                            return False
+
+                if random() < self.avoid_work_probability:
+                    return True
+
+        return False

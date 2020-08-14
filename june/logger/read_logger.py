@@ -16,7 +16,7 @@ class ReadLogger:
         output_path: str = "results",
         output_file_name: str = "logger.hdf5",
         light_logger: bool = False,
-        load_real=True,
+        load_real: bool = True,
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames

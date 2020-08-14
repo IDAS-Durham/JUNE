@@ -27,11 +27,13 @@ from june.policy import (
     SocialDistancing,
     Hospitalisation,
     InteractionPolicies,
+    MaskWearing,
 )
 from june.simulator import Simulator
 from june.world import World
 
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
+
 
 class TestSocialDistancing:
     def test__social_distancing(self, setup_policy_world):
@@ -40,18 +42,18 @@ class TestSocialDistancing:
         start_date = datetime(2020, 3, 10)
         end_date = datetime(2020, 3, 12)
         beta_factors = {
-            "box": 0.5,
-            "pub": 0.5,
-            "grocery": 0.5,
-            "cinema": 0.5,
-            "commute_unit": 0.5,
-            "commute_city_unit": 0.5,
-            "hospital": 0.5,
-            "care_home": 0.5,
-            "company": 0.5,
-            "school": 0.5,
+            "box": 0.7,
+            "pub": 0.7,
+            "grocery": 0.7,
+            "cinema": 0.7,
+            "commute_unit": 0.7,
+            "commute_city_unit": 0.7,
+            "hospital": 0.7,
+            "care_home": 0.7,
+            "company": 0.7,
+            "school": 0.7,
             "household": 1.0,
-            "university": 0.5,
+            "university": 0.7,
         }
         social_distance = SocialDistancing(
             start_time="2020-03-10", end_time="2020-03-12", beta_factors=beta_factors
@@ -77,7 +79,10 @@ class TestSocialDistancing:
             if sim.timer.date >= start_date and sim.timer.date < end_date:
                 for group in sim.interaction.beta:
                     if group != "household":
-                        assert sim.interaction.beta[group] == initial_betas[group] * 0.5
+                        print(group)
+                        print(initial_betas[group])
+                        print(sim.interaction.beta[group])
+                        assert sim.interaction.beta[group] == initial_betas[group] * 0.7
                     else:
                         assert sim.interaction.beta[group] == initial_betas[group]
                 next(sim.timer)
@@ -94,3 +99,56 @@ class TestSocialDistancing:
             next(sim.timer)
 
 
+class TestMaskWearing:
+    def test__mask_wearing(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        world.cemeteries = Cemeteries()
+        start_date = datetime(2020, 3, 10)
+        end_date = datetime(2020, 3, 12)
+        compliance = 1.0
+        beta_factor = 0.5
+        mask_probabilities = {
+            "box": 0.5,
+            "pub": 0.5,
+            "grocery": 0.5,
+            "cinema": 0.5,
+            "commute_unit": 0.5,
+            "commute_city_unit": 0.5,
+            "hospital": 0.5,
+            "care_home": 0.5,
+            "company": 0.5,
+            "school": 0.5,
+            "household": 0.0,
+            "university": 0.5,
+        }
+        mask_wearing = MaskWearing(
+            start_time="2020-03-10",
+            end_time="2020-03-12",
+            beta_factor=beta_factor,
+            mask_probabilities=mask_probabilities,
+            compliance=compliance,
+        )
+        policies = Policies([mask_wearing])
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        leisure_instance.distribute_social_venues_to_households(world.households)
+        sim.activity_manager.policies = policies
+        sim.activity_manager.leisure = leisure_instance
+        sim.timer.reset()
+        initial_betas = copy.deepcopy(sim.interaction.beta)
+        sim.clear_world()
+        while sim.timer.date <= sim.timer.final_date:
+            sim.do_timestep()
+            if sim.timer.date >= start_date and sim.timer.date < end_date:
+                for group in sim.interaction.beta:
+                    if group != "household":
+                        assert sim.interaction.beta[group] == initial_betas[group] * (
+                            1 - (0.5 * 1.0 * (1 - 0.5))
+                        )
+                    else:
+                        assert sim.interaction.beta[group] == initial_betas[group]
+                next(sim.timer)
+                continue
+            assert sim.interaction.beta == initial_betas
+            next(sim.timer)
