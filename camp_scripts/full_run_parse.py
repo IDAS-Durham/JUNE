@@ -45,6 +45,10 @@ from camps.groups import FemaleCommunals, FemaleCommunalDistributor
 from camps.groups import Religiouss, ReligiousDistributor
 from camps.groups import Shelter, Shelters, ShelterDistributor
 from camps.groups import IsolationUnit, IsolationUnits
+from camps.groups import LearningCenters 
+from camps.distributors import LearningCenterDistributor
+from camps.groups import PlayGroups, PlayGroupDistributor 
+
 from june.groups.leisure import HouseholdVisitsDistributor
 
 #=============== Argparse =========================#
@@ -59,6 +63,7 @@ parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=F
 parser.add_argument('-a', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
 parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
 parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
+parser.add_argument('-lc', '--learning_centers' ,help="Add learning centers", required=False, default=False)
 args = parser.parse_args()
 
 if args.comorbidities == "True":
@@ -92,6 +97,7 @@ print ('Isolation compliance set to: {}'.format(args.isolation_compliance))
 print ('Save path set to: {}'.format(args.save_path))
 
 #=============== world creation =========================#
+CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
@@ -116,7 +122,22 @@ world.isolation_units = IsolationUnits([IsolationUnit()])
 
 hospital_distributor.distribute_medics_from_world(world.people)
 
+if args.learning_centers:
+    world.learning_centers = LearningCenters.for_areas(
+                        world.areas,
+                        n_shifts=4
+    )
+    learning_center_distributor = LearningCenterDistributor.from_file(
+    learning_centers=world.learning_centers
+    )
+    learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
+    learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
+    CONFIG_PATH = camp_configs_path / "learning_center_config.yaml"
+
+
+
 world.pump_latrines = PumpLatrines.for_areas(world.areas)
+world.play_groups = PlayGroups.for_areas(world.areas)
 world.distribution_centers = DistributionCenters.for_areas(world.areas)
 world.communals = Communals.for_areas(world.areas)
 world.female_communals = FemaleCommunals.for_areas(world.areas)
@@ -215,7 +236,6 @@ infection_seed.unleash_virus(n_cases=100)
 
 print("Infected people in seed = ", len(world.people.infected))
 
-CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # ==================================================================================#
 
@@ -225,6 +245,9 @@ leisure_instance.leisure_distributors = {}
 leisure_instance.leisure_distributors[
     "pump_latrines"
 ] = PumpLatrineDistributor.from_config(pump_latrines=world.pump_latrines)
+leisure_instance.leisure_distributors[
+    "play_groups"
+] = PlayGroupDistributor.from_config(play_groups=world.play_groups)
 leisure_instance.leisure_distributors[
     "distribution_centers"
 ] = DistributionCenterDistributor.from_config(
