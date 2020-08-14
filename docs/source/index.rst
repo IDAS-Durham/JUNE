@@ -1,7 +1,7 @@
 JUNE, a COVID-19 modelling code
 ===============================
 
-Repository for data and models built, named after
+JUNE, a COVID-19 modelling code named after
 `June Almeida <https://en.wikipedia.org/wiki/June_Almeida>`_. June was the
 female Scottish virologist that first identified the coronavirus group of
 viruses.
@@ -10,17 +10,14 @@ viruses.
 Contents
 --------
 
-
-Sections
-^^^^^^^^
-
 .. toctree::
    :maxdepth: 2
    :caption: Sections:
 
+   api_reference
+   system_diagrams
 
-Navigation
-^^^^^^^^^^
+Navigation:
 
 * :ref:`genindex`
 * :ref:`search`
