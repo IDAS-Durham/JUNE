@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from random import randint
 from typing import List
 from enum import IntEnum
 
@@ -42,7 +43,7 @@ class University(Group):
     def add(self, person, subgroup="student"):
         if subgroup == "student":
             if person.age not in age_to_years:
-                year = np.random.randint(0, len(self.subgroups))
+                year = randint(0, len(self.subgroups) - 1)
             else:
                 year = age_to_years[person.age]
             self.subgroups[year].append(person)
@@ -93,7 +94,7 @@ class Universities(Supergroup):
         coordinates = coordinates[distances_close]
         n_students = n_students[distances_close]
         ukprn_values = ukprn_values[distances_close]
-        universities = list()
+        universities = []
         for coord, n_stud, ukprn in zip(
             coordinates, n_students, ukprn_values
         ):
