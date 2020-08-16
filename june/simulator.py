@@ -128,7 +128,9 @@ class Simulator:
         weekend_activities = [
             activity for activity in time_config["step_activities"]["weekend"].values()
         ]
-        all_activities = set(chain(*(weekday_activities + weekend_activities)))
+        all_activities = set(
+            chain.from_iterable(weekday_activities + weekend_activities)
+        )
 
         cls.check_inputs(time_config)
 
@@ -222,7 +224,7 @@ class Simulator:
         """
         people_ids = np.array([person.id for person in self.world.people])
         ids_sorted_idx = np.argsort(people_ids)
-        self.world.people.people = list(np.array(self.world.people)[ids_sorted_idx])
+        self.world.people.people = np.array(self.world.people)[ids_sorted_idx]
 
     def clear_world(self):
         """
@@ -268,7 +270,9 @@ class Simulator:
             assert sum(time_config["step_duration"]["weekday"].values()) == 24
             assert sum(time_config["step_duration"]["weekend"].values()) == 24
         except AssertionError:
-            raise SimulatorError("Daily activity durations in config do not add to 24 hours.")
+            raise SimulatorError(
+                "Daily activity durations in config do not add to 24 hours."
+            )
 
         # Check that all groups given in time_config file are in the valid group hierarchy
         all_groups = activity_hierarchy
@@ -334,9 +338,6 @@ class Simulator:
         ids = []
         symptoms = []
         n_secondary_infections = []
-        medical_care_policies = MedicalCarePolicies.get_active_policies(
-            policies=self.activity_manager.policies, date=self.timer.date
-        )
         for person in self.world.people.infected:
             health_information = person.health_information
             previous_tag = health_information.tag
@@ -350,10 +351,8 @@ class Simulator:
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
-            medical_care_policies.apply(
-                person=person,
-                medical_facilities=self.medical_facilities,
-                days_from_start=self.timer.now,
+            self.activity_manager.policies.medical_care_policies.apply(
+                person=person, medical_facilities=self.world.hospitals
             )
             if health_information.recovered:
                 self.recover(person, time)
@@ -375,11 +374,8 @@ class Simulator:
         status of the population, and distribute scores among the infectors to calculate R0.
         """
         if self.activity_manager.policies is not None:
-            interaction_policies = InteractionPolicies.get_active_policies(
-                policies=self.activity_manager.policies, date=self.timer.date
-            )
-            interaction_policies.apply(
-                date=self.timer.date, interaction=self.interaction
+            self.activity_manager.policies.interaction_policies.apply(
+                date=self.timer.date, interaction=self.interaction,
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
@@ -420,7 +416,7 @@ class Simulator:
                             )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
-                        for infector_id in list(chain(*int_group.infector_ids)):
+                        for infector_id in chain.from_iterable(int_group.infector_ids):
                             infector = self.world.people[infector_id - first_person_id]
                             assert infector.id == infector_id
                             infector.health_information.number_of_infected += (
@@ -486,10 +482,10 @@ class Simulator:
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_dates
-                and (self.timer.now + self.timer.duration).is_integer() 
-            ):# this saves in the last time step of the day
+                and (self.timer.now + self.timer.duration).is_integer()
+            ):  # this saves in the last time step of the day
                 saving_date = self.timer.date.date()
-                next(self.timer) # we want to save at the next time step so that
+                next(self.timer)  # we want to save at the next time step so that
                 # we can resume consistenly
                 logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
                 self.save_checkpoint(saving_date)
@@ -520,7 +516,7 @@ class Simulator:
             "susceptible_ids": susceptible_people_ids,
             "infected_ids": infected_people_ids,
             "health_information_list": health_information_list,
-            "timer" : self.timer,
+            "timer": self.timer,
         }
         with open(self.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
             pickle.dump(checkpoint_data, f)

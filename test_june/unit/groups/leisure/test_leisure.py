@@ -79,7 +79,7 @@ def test__probability_of_leisure(leisure):
                 raise ValueError
             times.append(counter)
             break
-    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0.1, rtol=0)
+    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0.2, rtol=0)
     assert np.isclose(times_goes_pub / times_goes_cinema, 0.5 / 0.2, atol=0, rtol=0.25)
 
 
@@ -134,4 +134,4 @@ def test__generate_leisure_from_world():
                 n_groceries += 1
     assert 0 < n_pubs < 100
     assert 0 < n_cinemas < 100
-    assert 0 < n_groceries < 100
+    assert 0 < n_groceries < 107

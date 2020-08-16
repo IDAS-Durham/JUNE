@@ -3,6 +3,7 @@ from .interaction_policies import (
     InteractionPolicy,
     InteractionPolicies,
     SocialDistancing,
+    MaskWearing,
 )
 from .leisure_policies import (
     LeisurePolicy,

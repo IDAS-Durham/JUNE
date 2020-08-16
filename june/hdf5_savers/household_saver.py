@@ -165,7 +165,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
     print("loading households from hdf5 ", end="")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
-        households_list = list()
+        households_list = []
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):

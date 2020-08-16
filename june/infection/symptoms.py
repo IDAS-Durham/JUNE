@@ -1,4 +1,4 @@
-import random
+from random import random
 
 import numpy as np
 from june.infection.symptom_tag import SymptomTag
@@ -7,9 +7,9 @@ from june.infection.trajectory_maker import TrajectoryMakers
 
 class Symptoms:
     def __init__(self, health_index=None):
-        self.health_index = list() if health_index is None else health_index
+        self.health_index = [] if health_index is None else health_index
         self.tag = SymptomTag.exposed
-        self.max_severity = random.random()
+        self.max_severity = random()
         self.trajectory = None
         self.update_trajectory()
         self.stage = 0

@@ -57,7 +57,7 @@ class Groceries(SocialVenues):
 
     @classmethod
     def from_coordinates(cls, coordinates: List[np.array], **kwargs):
-        social_venues = list()
+        social_venues = []
         for coord in coordinates:
             sv = Grocery()
             sv.coordinates = coord

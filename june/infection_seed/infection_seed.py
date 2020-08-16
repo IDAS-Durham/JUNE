@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import random
+from random import shuffle
 import datetime
 from collections import Counter
 from june import paths
@@ -181,7 +181,7 @@ class InfectionSeed:
         if age_profile is None:
             return np.random.choice(len(susceptibles), n_cases, replace=False)
         else:
-            random.shuffle(susceptibles)
+            shuffle(susceptibles)
             n_per_age_group = n_cases*np.array(list(self.age_profile.values()))
             choices = []
             for idx, age_group in enumerate(self.age_profile.keys()):

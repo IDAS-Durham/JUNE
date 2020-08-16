@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 import yaml
-from scipy import stats
+from scipy.stats import expon, beta, lognorm, norm, expon, exponweib
 
 from june import paths
 from june.infection.symptom_tag import SymptomTag
@@ -39,15 +39,15 @@ class CompletionTime(ABC):
         """
         if type_string == "constant":
             return ConstantCompletionTime
-        if type_string == "exponential":
+        elif type_string == "exponential":
             return ExponentialCompletionTime
-        if type_string == "beta":
+        elif type_string == "beta":
             return BetaCompletionTime
-        if type_string == "lognormal":
+        elif type_string == "lognormal":
             return LognormalCompletionTime
-        if type_string == "normal":
+        elif type_string == "normal":
             return NormalCompletionTime
-        if type_string == "exponweib":
+        elif type_string == "exponweib":
             return ExponweibCompletionTime
         raise AssertionError(
             f"Unrecognised variation type {type_string}"
@@ -74,21 +74,38 @@ class ConstantCompletionTime(CompletionTime):
 class DistributionCompletionTime(CompletionTime, ABC):
     def __init__(
             self,
-            distribution
+            distribution,
+            *args,
+            **kwargs
     ):
-        self.distribution = distribution
+        self._distribution = distribution
+        self.args = args
+        self.kwargs = kwargs
 
     def __call__(self):
-        return self.distribution.rvs()
+        # Note that we are using:
+        #     self.distribution.rvs(*args, **kwargs)
+        # rather than:
+        #     self.distribution(*args, **kwargs).rvs()
+        # or:
+        #     self.distribution(*some_args, **some_kwargs).rvs(
+        #         *remaining_args, **remaining_kwargs)
+        # because the second and third cases are "frozen" distributions,
+        # and frequent freezing of dists can become very time consuming.
+        # See for example: https://github.com/scipy/scipy/issues/9394.
+        return self._distribution.rvs(*self.args, **self.kwargs)
+
+    @property
+    def distribution(self):
+        return self._distribution(*self.args, **self.kwargs)
 
 
 class ExponentialCompletionTime(DistributionCompletionTime):
     def __init__(self, loc: float, scale):
         super().__init__(
-            stats.expon(
-                loc=loc,
-                scale=scale
-            )
+            expon,
+            loc=loc,
+            scale=scale
         )
         self.loc = loc
         self.scale = scale
@@ -103,12 +120,11 @@ class BetaCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.beta(
-                a,
-                b,
-                loc=loc,
-                scale=scale
-            )
+            beta,
+            a,
+            b,
+            loc=loc,
+            scale=scale
         )
         self.a = a
         self.b = b
@@ -123,11 +139,10 @@ class LognormalCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.lognorm(
-                s,
-                loc=loc,
-                scale=scale
-            )
+            lognorm,
+            s,
+            loc=loc,
+            scale=scale
         )
         self.s = s
         self.loc = loc
@@ -140,10 +155,9 @@ class NormalCompletionTime(DistributionCompletionTime):
             scale
     ):
         super().__init__(
-            stats.norm(
-                loc,
-                scale
-            )
+            norm,
+            loc=loc,
+            scale=scale
         )
         self.loc = loc
         self.scale = scale
@@ -158,12 +172,11 @@ class ExponweibCompletionTime(DistributionCompletionTime):
             scale=1.0
     ):
         super().__init__(
-            stats.exponweib(
-                a,
-                c,
-                loc=loc,
-                scale=scale
-            )
+            exponweib,
+            a,
+            c,
+            loc=loc,
+            scale=scale
         )
         self.a = a
         self.c = c
@@ -247,7 +260,7 @@ class TrajectoryMaker:
         describing what symptoms the person should display at a given
         time.
         """
-        trajectory = list()
+        trajectory = []
         cumulative = 0.
         for stage in self.stages:
             time = stage.completion_time()
