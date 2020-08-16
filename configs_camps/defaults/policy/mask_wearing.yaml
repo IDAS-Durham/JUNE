@@ -1,0 +1,44 @@
+# needs more thinking
+social_distancing:
+    start_time: 2021-03-16
+    end_time: 2021-07-04
+    beta_factors:
+        communal: 0.5
+        female_communal: 0.5
+        religious: 0.5
+        distribution_center: 0.5
+        pump_latrine: 0.5
+        hospital: 0.5
+        household: 0.5
+        shelter: 0.5
+
+hospitalisation:
+    start_time: 1000-01-01
+    end_time: 9999-01-01
+
+severe_symptoms_stay_home:
+    start_time: 1000-01-01
+    end_time: 9999-01-01
+
+quarantine:
+    n_days: 7 # for the symptomatic person
+    n_days_household: 7 # for the housemates
+    compliance: 0.3
+    household_compliance: 0.2
+    start_time: 1000-03-16 
+    end_time: 9999-03-23
+
+mask_wearing:
+    start_time: 2020-03-27
+    end_time: 2020-04-24
+    compliance: 0.1 
+    beta_factor: 0.5 # overall beta reducion if mask wearing
+    mask_probabilities: # given a mask is work, probability of where it is worn
+        communal: 1.0
+        female_communal: 1.0
+        religious: 1.0
+        distribution_center: 1.0
+        pump_latrine: 1.0
+        hospital: 1.0
+        household: 0.
+        shelter: 0.
