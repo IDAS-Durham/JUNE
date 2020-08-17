@@ -272,28 +272,6 @@ class Logger:
             time_dset.create_dataset("infection_counts", data=counts)
         self.infection_location = []
 
-    def log_number_of_locations(self, world: "World"):
-        """
-        Log relevant information on where did people get infected
-
-        Parameters
-        ----------
-        world:
-            world instance
-        """
-        # TODO : might want to log this over time, once the policies are in place could be interestingi,
-        # might be better to combine it with infections information
-        group_sizes = []
-        for group in unique_locations:
-            group_sizes.append(self.get_number_group_instances(world, group))
-        unique_locations = np.array(unique_locations, dtype="S10")
-        group_sizes = np.array(group_sizes, dtype=np.int16)
-        counts = np.array(counts, dtype=np.int16)
-        with h5py.File(self.file_path, "a", libver="latest") as f:
-            locations_dset = f.create_group("locations")
-            locations_dset.create_dataset("n_locations", data=group_sizes)
-
-
     def unpack_dict(self,hdf5_obj,data,base_path,depth=0,max_depth=5):
         if depth>max_depth:
             return None
