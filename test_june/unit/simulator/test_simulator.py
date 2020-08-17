@@ -30,7 +30,7 @@ from june.groups import (
     CommuteCity,
     CommuteCities,
     CommuteUnits,
-    CommuteCityUnits
+    CommuteCityUnits,
 )
 from june.groups import (
     Hospitals,
@@ -42,7 +42,7 @@ from june.groups import (
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub, Grocery, Groceries
 from june.simulator import Simulator, activity_hierarchy
-from june.world import generate_world_from_geography, generate_world_from_hdf5
+from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
@@ -70,12 +70,14 @@ def setup_sim(dummy_world, selector):
     leisure_instance = leisure.generate_leisure_for_world(
         world=world, list_of_leisure_groups=["pubs", "cinemas", "groceries"]
     )
-    leisure_instance.distribute_social_venues_to_households(world.households)
+    leisure_instance.distribute_social_venues_to_households(
+        world.households, super_areas=world.super_areas
+    )
     interaction = Interaction.from_file()
     policies = Policies.from_file()
     sim = Simulator.from_file(
         world=world,
-        infection_selector = selector,
+        infection_selector=selector,
         interaction=interaction,
         config_filename=test_config,
         leisure=leisure_instance,
@@ -91,6 +93,7 @@ def create_health_index():
         return [0.1, 0.3, 0.5, 0.7, 0.9]
 
     return dummy_health_index
+
 
 def test__everyone_has_an_activity(sim: Simulator):
     for person in sim.world.people.members:
@@ -211,6 +214,7 @@ def test__move_people_to_commute(sim: Simulator):
             assert person in person.commute.people
     assert n_commuters > 0
     sim.clear_world()
+
 
 def test__bury_the_dead(sim: Simulator):
     dummy_person = sim.world.people.members[0]
