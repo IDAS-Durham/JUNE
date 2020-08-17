@@ -78,7 +78,7 @@ def save_companies_to_hdf5(
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 
-def load_companies_from_hdf5(file_path: str, chunk_size=50000):
+def load_companies_from_hdf5(file_path: str, chunk_size=50000, for_simulation=True):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -103,7 +103,10 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
             n_workers_maxs = np.empty(length, dtype=int)
             companies["n_workers_max"].read_direct(n_workers_maxs, np.s_[idx1:idx2], np.s_[0:length])
             for k in range(length):
-                company = Company(super_area=None, n_workers_max=n_workers_maxs[k], sector=sectors[k].decode())
+                if for_simulation:
+                    company = Company(super_area=None, n_workers_max=None, sector=None)
+                else:
+                    company = Company(super_area=None, n_workers_max=n_workers_maxs[k], sector=sectors[k].decode())
                 company.id = ids[k]
                 companies_list.append(company)
     print("\n", end="")
