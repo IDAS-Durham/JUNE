@@ -90,7 +90,9 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
         save_groceries_to_hdf5(world.groceries, file_path)
 
 
-def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
+def generate_world_from_hdf5(
+    file_path: str, chunk_size=500000, for_simulation=False
+) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
     by actual references to the relevant instances.
@@ -101,14 +103,14 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     chunk_size
         how many units of supergroups to process at a time.
         It is advise to keep it around 1e6
+    for_simulation
+        Does not initialize some attributes to save memory (eg household max size)
     """
     print("loading world data ...")
     world = World()
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         f_keys = list(f.keys()).copy()
-    geography = load_geography_from_hdf5(
-        file_path=file_path, chunk_size=chunk_size
-    )
+    geography = load_geography_from_hdf5(file_path=file_path, chunk_size=chunk_size)
     world.areas = geography.areas
     world.super_areas = geography.super_areas
     if "hospitals" in f_keys:
@@ -121,7 +123,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         )
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size
+            file_path=file_path, chunk_size=chunk_size, for_simulation=for_simulation
         )
     if "care_homes" in f_keys:
         world.care_homes = load_care_homes_from_hdf5(
@@ -144,9 +146,13 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if "groceries" in f_keys:
         world.groceries = load_groceries_from_hdf5(file_path)
     if "households" in f_keys:
-        world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size)
+        world.households = load_households_from_hdf5(
+            file_path, chunk_size=chunk_size, for_simulation=for_simulation
+        )
     if "population" in f_keys:
-        world.people = load_population_from_hdf5(file_path, chunk_size=chunk_size)
+        world.people = load_population_from_hdf5(
+            file_path, chunk_size=chunk_size, for_simulation=for_simulation
+        )
 
     # restore world
     print("restoring world...")

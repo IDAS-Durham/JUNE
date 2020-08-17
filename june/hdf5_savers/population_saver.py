@@ -226,7 +226,7 @@ def save_population_to_hdf5(
                 people_dset["lockdown_status"][idx1:idx2] = lockdown_status
 
 
-def load_population_from_hdf5(file_path: str, chunk_size=100000):
+def load_population_from_hdf5(file_path: str, chunk_size=100000, for_simulation=True):
     """
     Loads the population from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -302,7 +302,7 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                 mode_of_transport_description = mode_of_transport_description_list[k]
                 mode_of_transport_is_public = mode_of_transport_is_public_list[k]
                 # mode of transport
-                if mode_of_transport_description.decode() == " ":
+                if mode_of_transport_description.decode() == " " or for_simulation:
                     person.mode_of_transport = None
                 else:
                     person.mode_of_transport = ModeOfTransport(
@@ -310,15 +310,15 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                         is_public=mode_of_transport_is_public,
                     )
                 hc = home_city[k]
-                if hc == nan_integer:
+                if hc == nan_integer or for_simulation:
                     person.home_city = None
                 else:
                     person.home_city = hc
-                if sectors[k].decode() == " ":
+                if sectors[k].decode() == " " or for_simulation:
                     person.sector = None
                 else:
                     person.sector = sectors[k].decode()
-                if sub_sectors[k].decode() == " ":
+                if sub_sectors[k].decode() == " " or for_simulation:
                     person.sub_sector = None
                 else:
                     person.sub_sector = sub_sectors[k].decode()
