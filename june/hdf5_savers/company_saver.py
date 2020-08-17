@@ -1,6 +1,8 @@
 import h5py
 import numpy as np
+
 from june.groups import Company, Companies
+from june.world import World
 
 nan_integer = -999
 
@@ -93,16 +95,46 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
             print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
-            ids = companies["id"][idx1:idx2]
-            super_areas = companies["super_area"][idx1:idx2]
-            sectors = companies["sector"][idx1:idx2]
-            n_workers_maxs = companies["n_workers_max"][idx1:idx2]
-            for k in range(idx2 - idx1):
-                super_area = super_areas[k]
-                if super_area == nan_integer:
-                    super_area = None
-                company = Company(super_area, n_workers_maxs[k], sectors[k].decode())
+            length = idx2-idx1
+            ids = np.empty(length, dtype=int)
+            companies["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
+            sectors = np.empty(length, dtype="S20")
+            companies["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
+            n_workers_maxs = np.empty(length, dtype=int)
+            companies["n_workers_max"].read_direct(n_workers_maxs, np.s_[idx1:idx2], np.s_[0:length])
+            for k in range(length):
+                company = Company(super_area=None, n_workers_max=n_workers_maxs[k], sector=sectors[k].decode())
                 company.id = ids[k]
                 companies_list.append(company)
     print("\n", end="")
     return Companies(companies_list)
+
+def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_size):
+    super_areas_first_id = world.super_areas[
+        0
+    ].id  # in case some super areas were created before
+    first_company_id = world.companies[0].id
+    print("restoring companies from hdf5 ", end="")
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
+        companies = f["companies"]
+        companies_list = []
+        n_companies = companies.attrs["n_companies"]
+        n_chunks = int(np.ceil(n_companies / chunk_size))
+        for chunk in range(n_chunks):
+            print(".", end="")
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_companies)
+            length = idx2 - idx1
+            ids = np.empty(length, dtype=int)
+            companies["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
+            super_areas = np.empty(length, dtype=int)
+            companies["super_area"].read_direct(super_areas, np.s_[idx1:idx2], np.s_[0:length])
+            for k in range(length):
+                company = world.companies[ids[k] - first_company_id]
+                if super_areas[k] == nan_integer:
+                    company.super_area = None
+                else:
+                    company.super_area = world.super_areas[
+                        super_areas[k] - super_areas_first_id
+                    ]
+    print("done")

@@ -11,6 +11,7 @@ from enum import IntEnum
 from typing import List
 from recordclass import dataobject
 
+
 class Household(Group):
     """
     The Household class represents a household and contains information about 

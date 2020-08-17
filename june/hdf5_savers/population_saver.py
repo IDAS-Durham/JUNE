@@ -5,8 +5,22 @@ from collections import OrderedDict
 from june.groups.commute import CommuteCity
 from june.commute import ModeOfTransport
 from june.demography import Population, Person
+from june.demography.person import Activities
+from june.world import World
 
 nan_integer = -999  # only used to store/load hdf5 integer arrays with inf/nan values
+spec_mapper = {
+    "hospital": "hospitals",
+    "company": "companies",
+    "school": "schools",
+    "household": "households",
+    "care_home": "care_homes",
+    "commute_hub": "commutehubs",
+    "university": "universities",
+    "pub": "pubs",
+    "grocery": "groceries",
+    "cinema": "cinemas",
+}
 
 
 def save_population_to_hdf5(
@@ -209,9 +223,7 @@ def save_population_to_hdf5(
                     idx1:idx2
                 ] = mode_of_transport_is_public
                 people_dset["lockdown_status"].resize(newshape)
-                people_dset["lockdown_status"][
-                    idx1:idx2
-                ] = lockdown_status
+                people_dset["lockdown_status"][idx1:idx2] = lockdown_status
 
 
 def load_population_from_hdf5(file_path: str, chunk_size=100000):
@@ -222,9 +234,9 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
     This function should be rarely be called oustide world.py
     """
     print("loading population from hdf5 ", end="")
-    population_dictionary = OrderedDict()
+    people = []
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        #people = []
+        # people = []
         population = f["population"]
         # read in chunks of 100k people
         n_people = population.attrs["n_people"]
@@ -233,78 +245,147 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
-            ids = population["id"][idx1:idx2]
-            ages = population["age"][idx1:idx2]
-            sexes = population["sex"][idx1:idx2]
-            ethns = population["ethnicity"][idx1:idx2]
-            socioecon_indices = population["socioecon_index"][idx1:idx2]
-            home_city = population["home_city"][idx1:idx2]
-            group_ids = population["group_ids"][idx1:idx2]
-            group_specs = population["group_specs"][idx1:idx2]
-            subgroup_types = population["subgroup_types"][idx1:idx2]
-            sectors = population["sector"][idx1:idx2]
-            sub_sectors = population["sub_sector"][idx1:idx2]
-            lockdown_status = population["lockdown_status"][idx1:idx2]
-            mode_of_transport_is_public_list = population[
-                "mode_of_transport_is_public"
-            ][idx1:idx2]
-            mode_of_transport_description_list = population[
-                "mode_of_transport_description"
-            ][idx1:idx2]
-            areas = population["area"][idx1:idx2]
+            length = idx2 - idx1
+            ids = np.empty(length, dtype=int)
+            population["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
+            ages = np.empty(length, dtype=int)
+            population["age"].read_direct(ages, np.s_[idx1:idx2], np.s_[0:length])
+            sexes = np.empty(length, dtype="S10")
+            population["sex"].read_direct(sexes, np.s_[idx1:idx2], np.s_[0:length])
+            ethns = np.empty(length, dtype="S20")
+            population["ethnicity"].read_direct(
+                ethns, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            socioecon_indices = np.empty(length, dtype=int)
+            population["socioecon_index"].read_direct(
+                socioecon_indices, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            home_city = np.empty(length, dtype=int)
+            population["home_city"].read_direct(
+                home_city, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            sectors = np.empty(length, dtype="S20")
+            population["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
+            sub_sectors = np.empty(length, dtype="S20")
+            population["sub_sector"].read_direct(
+                sub_sectors, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            lockdown_status = np.empty(length, dtype="S20")
+            population["lockdown_status"].read_direct(
+                lockdown_status, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            mode_of_transport_is_public_list = np.empty(length, dtype=bool)
+            population["mode_of_transport_is_public"].read_direct(
+                mode_of_transport_is_public_list, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            mode_of_transport_description_list = np.empty(length, dtype="S100")
+            population["mode_of_transport_description"].read_direct(
+                mode_of_transport_description_list, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(idx2 - idx1):
-                id=ids[k]
-                person_data = {}
-                population_dictionary[id] = person_data
-                person_data["age"] = ages[k]
-                person_data["sex"] = sexes[k].decode()
                 if ethns[k].decode() == " ":
-                    person_data["ethnicity"] = None
+                    ethn = None
                 else:
-                    person_data["ethnicity"] = ethns[k].decode()
+                    ethn = ethns[k].decode()
                 if socioecon_indices[k] == nan_integer:
-                    person_data["socioecon_index"] = None
+                    socioecon_index = None
                 else:
-                    person_data["socioecon_index"] = socioecon_indices[k]
+                    socioecon_index = socioecon_indices[k]
+                person = Person.from_attributes(
+                    id=ids[k],
+                    age=ages[k],
+                    sex=sexes[k].decode(),
+                    ethnicity=ethn,
+                    socioecon_index=socioecon_index,
+                )
+                people.append(person)
                 mode_of_transport_description = mode_of_transport_description_list[k]
                 mode_of_transport_is_public = mode_of_transport_is_public_list[k]
                 # mode of transport
                 if mode_of_transport_description.decode() == " ":
-                    person_data["mode_of_transport"] = None
+                    person.mode_of_transport = None
                 else:
-                    person_data["mode_of_transport"] = ModeOfTransport(
+                    person.mode_of_transport = ModeOfTransport(
                         description=mode_of_transport_description.decode(),
                         is_public=mode_of_transport_is_public,
                     )
                 hc = home_city[k]
                 if hc == nan_integer:
-                    person_data["home_city"] = None
+                    person.home_city = None
                 else:
-                    person_data["home_city"] = hc
-                subgroups = []
-                for group_id, subgroup_type, group_spec in zip(
-                    group_ids[k], subgroup_types[k], group_specs[k]
+                    person.home_city = hc
+                if sectors[k].decode() == " ":
+                    person.sector = None
+                else:
+                    person.sector = sectors[k].decode()
+                if sub_sectors[k].decode() == " ":
+                    person.sub_sector = None
+                else:
+                    person.sub_sector = sub_sectors[k].decode()
+                if lockdown_status[k].decode() == " ":
+                    person.lockdown_status = None
+                else:
+                    person.lockdown_status = lockdown_status[k].decode()
+    print("\n", end="")
+    return Population(people)
+
+
+def restore_population_properties_from_hdf5(
+    world: World, file_path: str, chunk_size=50000
+):
+    print("restoring population from hdf5 ", end="")
+    first_person_id = world.people[0].id
+    first_area_id = world.areas[0].id
+    activities_fields = Activities.__fields__
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
+        # people = []
+        population = f["population"]
+        # read in chunks of 100k people
+        n_people = population.attrs["n_people"]
+        n_chunks = int(np.ceil(n_people / chunk_size))
+        for chunk in range(n_chunks):
+            print(".", end="")
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_people)
+            length = idx2 - idx1
+            ids = np.empty(length, dtype=int)
+            population["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
+            group_ids = np.empty((length, len(activities_fields)), dtype=int)
+            population["group_ids"].read_direct(
+                group_ids, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            group_specs = np.empty((length, len(activities_fields)), dtype="S20")
+            population["group_specs"].read_direct(
+                group_specs, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            subgroup_types = np.empty((length, len(activities_fields)), dtype=int)
+            population["subgroup_types"].read_direct(
+                subgroup_types, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            areas = np.empty(length, dtype=int)
+            population["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
+            for k in range(length):
+                person = world.people[ids[k] - first_person_id]
+                # restore area
+                person.area = world.areas[areas[k] - first_area_id]
+                person.area.people.append(person)
+                person.area.super_area.people.append(person)
+                # restore groups and subgroups
+                subgroups_instances = Activities(
+                    None, None, None, None, None, None, None
+                )
+                for i, (group_id, subgroup_type, group_spec) in enumerate(
+                    zip(group_ids[k], subgroup_types[k], group_specs[k])
                 ):
                     if group_id == nan_integer:
-                        group_id = None
-                        subgroup_type = None
-                        group_spec = None
-                    else:
-                        group_spec = group_spec.decode()
-                    subgroups.append([group_spec, group_id, subgroup_type])
-                person_data["subgroups"] = subgroups
-                person_data["area"] = areas[k]
-                if sectors[k].decode() == " ":
-                    person_data["sector"] = None
-                else:
-                    person_data["sector"] = sectors[k].decode()
-                if sub_sectors[k].decode() == " ":
-                    person_data["sub_sector"] = None
-                else:
-                    person_data["sub_sector"] = sub_sectors[k].decode()
-                if lockdown_status[k].decode() == " ":
-                    person_data["lockdown_status"] = None
-                else:
-                    person_data["lockdown_status"] = lockdown_status[k].decode()
+                        continue
+                    group_spec = group_spec.decode()
+                    supergroup = getattr(world, spec_mapper[group_spec])
+                    first_group_id = supergroup.members[0].id
+                    group = supergroup.members[group_id - first_group_id]
+                    assert group_id == group.id
+                    subgroup = group[subgroup_type]
+                    subgroup.append(person)
+                    setattr(subgroups_instances, activities_fields[i], subgroup)
+                    person.subgroups = subgroups_instances
     print("\n", end="")
-    return population_dictionary #Population(people)

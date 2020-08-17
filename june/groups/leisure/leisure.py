@@ -120,14 +120,6 @@ class Leisure:
     def distribute_social_venues_to_households(
         self, households: List[Household], super_areas: SuperAreas
     ):
-        logger.info("Distributing social venues to households")
-        for i, household in enumerate(households):
-            if i % 1_000_000 == 0:
-                logger.info(f"Distributed in {i} of {len(households)} households.")
-            household.social_venues = {}
-            for activity, distributor in self.leisure_distributors.items():
-                social_venues = distributor.get_possible_venues_for_household(household)
-                household.social_venues[activity] = social_venues
         if "household_visits" in self.leisure_distributors:
             self.leisure_distributors["household_visits"].link_households_to_households(
                 super_areas
@@ -136,6 +128,14 @@ class Leisure:
             self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
                 super_areas
             )
+        logger.info("Distributing social venues to households")
+        for i, household in enumerate(households):
+            if i % 1_000_000 == 0:
+                logger.info(f"Distributed in {i} of {len(households)} households.")
+            household.social_venues = {}
+            for activity, distributor in self.leisure_distributors.items():
+                social_venues = distributor.get_possible_venues_for_household(household)
+                household.social_venues[activity] = social_venues
 
     def update_household_and_care_home_visits_targets(self, people: List[Person]):
         """

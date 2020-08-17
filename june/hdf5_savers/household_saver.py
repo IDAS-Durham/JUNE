@@ -127,24 +127,12 @@ def save_households_to_hdf5(
             social_venues_specs_list, dtype=str_vlen_type
         )
         social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-        try:
-            households_dset.create_dataset(
-                "relatives_in_households", data=relatives_in_households,
-            )
-        except:
-            relatives_in_households = np.array(relatives_in_households, dtype=np.int)
-            households_dset.create_dataset(
-                "relatives_in_households", data=relatives_in_households,
-            )
-        try:
-            households_dset.create_dataset(
-                "relatives_in_care_homes", data=relatives_in_care_homes,
-            )
-        except:
-            relatives_in_care_homes = np.array(relatives_in_care_homes, dtype=np.int)
-            households_dset.create_dataset(
-                "relatives_in_care_homes", data=relatives_in_care_homes,
-            )
+        households_dset.create_dataset(
+            "relatives_in_households", data=relatives_in_households,
+        )
+        households_dset.create_dataset(
+            "relatives_in_care_homes", data=relatives_in_care_homes,
+        )
         households_dset.create_dataset(
             "social_venues_specs", data=social_venues_specs_list,
         )
@@ -171,7 +159,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
-            ids = np.zeros(length, dtype=int)
+            ids = np.empty(length, dtype=int)
             types = np.empty(length, dtype="S20")
             max_sizes = np.empty(length, dtype=float)
             households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
@@ -180,7 +168,9 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 max_sizes, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
-                household = Household(area=None, type=types[k], max_size=max_sizes[k])
+                household = Household(
+                    area=None, type=types[k].decode(), max_size=max_sizes[k]
+                )
                 households_list.append(household)
                 household.id = ids[k]
     print("\n", end="")
@@ -209,12 +199,12 @@ def restore_households_properties_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
-            ids = np.zeros(length, dtype=int)
-            relatives_in_households_list = np.zeros(length, dtype=int_vlen_type)
-            relatives_in_care_homes_list = np.zeros(length, dtype=int_vlen_type)
-            areas = np.zeros(length, dtype=np.int)
+            ids = np.empty(length, dtype=int)
+            relatives_in_households_list = np.empty(length, dtype=int_vlen_type)
+            relatives_in_care_homes_list = np.empty(length, dtype=int_vlen_type)
+            areas = np.empty(length, dtype=np.int)
             social_venues_specs = np.empty(length, dtype=str_vlen_type)
-            social_venues_ids = np.zeros(length, dtype=int_vlen_type)
+            social_venues_ids = np.empty(length, dtype=int_vlen_type)
             households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             households["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
             households["relatives_in_households"].read_direct(
