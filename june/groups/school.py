@@ -1,5 +1,4 @@
 import logging
-import os
 import yaml
 from enum import IntEnum
 from itertools import count

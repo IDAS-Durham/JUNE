@@ -1,5 +1,4 @@
 import logging
-import pickle
 import h5py
 from collections import defaultdict
 from tqdm import tqdm

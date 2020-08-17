@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 class BoundaryError(BaseException):
     """Class for throwing boundary related errors."""
-    pass
 
 
 class Boundary(Group):

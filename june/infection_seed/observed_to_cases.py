@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List, Tuple, Optional
+from typing import List, Optional
 import yaml
 import numpy as np
 from datetime import timedelta

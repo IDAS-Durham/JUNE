@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import yaml
 from random import randint, shuffle
-from typing import List, Optional
 from june.demography.geography import Areas, SuperAreas
 from june.groups import CareHomes, Households, Household
 
