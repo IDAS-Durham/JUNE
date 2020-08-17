@@ -2,6 +2,7 @@
 {{ underline }}
 
 .. autoclass:: {{ fullname }}
+   :noindex:
    :members:
    :undoc-members:
    :special-members:
