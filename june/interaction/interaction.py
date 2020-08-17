@@ -10,6 +10,8 @@ from june import paths
 from june.interaction.interactive_group import InteractiveGroup
 from itertools import chain
 
+import concurrent.futures
+
 default_config_filename = (
     paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
 )
@@ -218,7 +220,7 @@ class Interaction:
         school_years = group.school_years
         infected_ids = []
         if len(group.subgroups_susceptible) == 1:
-            infected_ids = self.time_step_for_subgroup(
+            infected_ids = time_step_for_subgroup(
                 contact_matrix=contact_matrix,
                 subgroup_transmission_probabilities=group.transmission_probabilities,
                 susceptible_ids=group.susceptible_ids[0],
@@ -230,44 +232,67 @@ class Interaction:
                 school_years=school_years,
             )
         else:
-            for i, subgroup_id in enumerate(group.subgroups_susceptible):
-                susceptible_ids = group.susceptible_ids[i]
-                infected_ids += self.time_step_for_subgroup(
-                    contact_matrix=contact_matrix,
-                    subgroup_transmission_probabilities=group.transmission_probabilities,
-                    susceptible_ids=susceptible_ids,
-                    infector_subgroups=group.subgroups_infector,
-                    infector_subgroup_sizes=group.infector_subgroup_sizes,
-                    beta=beta,
-                    delta_time=delta_time,
-                    subgroup_idx=subgroup_id,
-                    school_years=school_years,
-                )
+            group_list = []
+            contact_matrix_list = []
+            beta_list = []
+            school_years_list = []
+            delta_time_list = []
+            for i, _ in enumerate(group.subgroups_susceptible):
+                group_list.append(group)
+                contact_matrix_list.append(contact_matrix)
+                beta_list.append(beta)
+                school_years_list.append(school_years)
+                delta_time_list.append(delta_time)
+            iter_pack = zip(contact_matrix_list,
+                            beta_list,
+                            school_years_list,
+                            delta_time_list,
+                            group_list,
+                            enumerate(group.subgroups_susceptible))
+            with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+                for inf_ids in executor.map(inf_ids_procedure, iter_pack):
+                    infected_ids += inf_ids
         return infected_ids
 
-    def time_step_for_subgroup(
-        self,
-        subgroup_transmission_probabilities,
-        susceptible_ids,
-        infector_subgroups,
-        infector_subgroup_sizes,
-        contact_matrix,
-        beta,
-        delta_time,
-        subgroup_idx,
-        school_years,
-    ) -> List[int]:
-        effective_transmission_probability = compute_effective_transmission(
-            subgroup_transmission_probabilities=subgroup_transmission_probabilities,
-            susceptibles_group_idx=subgroup_idx,
-            infector_subgroups=infector_subgroups,
-            infector_subgroup_sizes=infector_subgroup_sizes,
-            contact_matrix=contact_matrix,
-            beta=beta,
-            delta_time=delta_time,
-            school_years=school_years,
-        )
-        infected_ids = infect_susceptibles(
-            effective_transmission_probability, susceptible_ids
-        )
-        return infected_ids
+
+def inf_ids_procedure(enum_obj):
+    contact_matrix, beta, school_years, delta_time, group, (i, subgroup_id) = enum_obj
+    susceptible_ids = group.susceptible_ids[i]
+    inf_ids = time_step_for_subgroup(
+        contact_matrix=contact_matrix,
+        subgroup_transmission_probabilities=group.transmission_probabilities,
+        susceptible_ids=susceptible_ids,
+        infector_subgroups=group.subgroups_infector,
+        infector_subgroup_sizes=group.infector_subgroup_sizes,
+        beta=beta,
+        delta_time=delta_time,
+        subgroup_idx=subgroup_id,
+        school_years=school_years,
+    )
+    return inf_ids
+
+def time_step_for_subgroup(
+    subgroup_transmission_probabilities,
+    susceptible_ids,
+    infector_subgroups,
+    infector_subgroup_sizes,
+    contact_matrix,
+    beta,
+    delta_time,
+    subgroup_idx,
+    school_years,
+) -> List[int]:
+    effective_transmission_probability = compute_effective_transmission(
+        subgroup_transmission_probabilities=subgroup_transmission_probabilities,
+        susceptibles_group_idx=subgroup_idx,
+        infector_subgroups=infector_subgroups,
+        infector_subgroup_sizes=infector_subgroup_sizes,
+        contact_matrix=contact_matrix,
+        beta=beta,
+        delta_time=delta_time,
+        school_years=school_years,
+    )
+    infected_ids = infect_susceptibles(
+        effective_transmission_probability, susceptible_ids
+    )
+    return infected_ids
