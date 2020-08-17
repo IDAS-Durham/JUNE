@@ -3,7 +3,6 @@ from typing import List, Dict, Optional
 import numpy as np
 import pandas as pd
 import h5py
-import time
 import yaml
 
 from june import paths

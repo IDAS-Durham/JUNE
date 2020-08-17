@@ -4,7 +4,6 @@ from enum import IntEnum
 import numpy as np
 from random import random
 import h5py
-import time
 
 from june.groups.group import Group, Supergroup
 from enum import IntEnum

@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from random import randint
 from typing import List
-from enum import IntEnum
 
 from june.groups import Group, Subgroup, Supergroup
 from june.demography.geography import SuperAreas, Areas
