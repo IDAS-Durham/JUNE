@@ -165,7 +165,7 @@ def generate_world_from_hdf5(
         )
     if "households" in f_keys:
         restore_households_properties_from_hdf5(
-            world=world, file_path=file_path, chunk_size=chunk_size
+            world=world, file_path=file_path, chunk_size=chunk_size, for_simulation=for_simulation
         )
     if "care_homes" in f_keys:
         restore_care_homes_properties_from_hdf5(
@@ -175,7 +175,7 @@ def generate_world_from_hdf5(
         restore_commute_properties_from_hdf5(world=world, file_path=file_path)
     if "companies" in f_keys:
         restore_companies_properties_from_hdf5(
-            world=world, file_path=file_path, chunk_size=chunk_size
+            world=world, file_path=file_path, chunk_size=chunk_size,
         )
     world.cemeteries = Cemeteries()
     return world

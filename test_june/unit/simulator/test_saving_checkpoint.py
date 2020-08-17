@@ -8,7 +8,8 @@ import june.simulator
 from june.groups import Hospitals, Hospital
 from june.demography import Geography, Demography, Population
 from june.demography.geography import Areas
-from june.world import generate_world_from_geography, generate_world_from_hdf5
+from june.world import generate_world_from_geography 
+from june.hdf5_savers import generate_world_from_hdf5
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator

@@ -226,7 +226,7 @@ def save_population_to_hdf5(
                 people_dset["lockdown_status"][idx1:idx2] = lockdown_status
 
 
-def load_population_from_hdf5(file_path: str, chunk_size=100000, for_simulation=True):
+def load_population_from_hdf5(file_path: str, chunk_size=100000, for_simulation=False):
     """
     Loads the population from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to

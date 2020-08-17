@@ -74,7 +74,7 @@ def test__full_run(dummy_world, selector):
             "care_home_visits",
         ],
     )
-    leisure_instance.distribute_social_venues_to_households(world.households)
+    leisure_instance.distribute_social_venues_to_households(world.households, super_areas=world.super_areas)
     interaction = Interaction.from_file()
     policies = Policies.from_file()
     sim = Simulator.from_file(

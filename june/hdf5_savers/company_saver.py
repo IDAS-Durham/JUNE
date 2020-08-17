@@ -78,7 +78,7 @@ def save_companies_to_hdf5(
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 
-def load_companies_from_hdf5(file_path: str, chunk_size=50000, for_simulation=True):
+def load_companies_from_hdf5(file_path: str, chunk_size=50000, for_simulation=False):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to

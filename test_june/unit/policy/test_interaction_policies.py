@@ -68,7 +68,9 @@ class TestSocialDistancing:
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
-        leisure_instance.distribute_social_venues_to_households(world.households)
+        leisure_instance.distribute_social_venues_to_households(
+            world.households, super_areas=world.super_areas
+        )
         sim.activity_manager.policies = policies
         sim.activity_manager.leisure = leisure_instance
         sim.timer.reset()
@@ -132,7 +134,9 @@ class TestMaskWearing:
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
-        leisure_instance.distribute_social_venues_to_households(world.households)
+        leisure_instance.distribute_social_venues_to_households(
+            world.households, super_areas=world.super_areas
+        )
         sim.activity_manager.policies = policies
         sim.activity_manager.leisure = leisure_instance
         sim.timer.reset()
