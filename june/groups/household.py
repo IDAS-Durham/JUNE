@@ -1,16 +1,15 @@
 from enum import IntEnum
-
-
+from collections import defaultdict
 import numpy as np
 from random import random
 import h5py
 import time
+from recordclass import dataobject
 
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
 from typing import List
 from recordclass import dataobject
-
 
 class Household(Group):
     """
@@ -32,7 +31,6 @@ class Household(Group):
         "relatives_in_care_homes",
         "relatives_in_households",
         "quarantine_starting_date",
-        "household_complacency",
         "social_venues",
     )
 
@@ -42,7 +40,7 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf, household_complacency=1.0):
+    def __init__(self, type=None, area=None, max_size=np.inf):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
@@ -51,13 +49,12 @@ class Household(Group):
         self.area = area
         self.type = type
         self.quarantine_starting_date = None
-        self.household_complacency = household_complacency
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
         self.max_size = max_size
         self.n_residents = 0
-        self.residents = tuple()
-        self.social_venues = {}
+        self.residents = ()
+        self.social_venues = defaultdict(tuple)
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":

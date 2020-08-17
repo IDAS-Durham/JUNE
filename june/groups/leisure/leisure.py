@@ -5,7 +5,7 @@ import logging
 from random import random
 from typing import List, Dict
 from june.demography import Person
-from june.demography.geography import Geography
+from june.demography.geography import Geography, SuperAreas
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
@@ -22,6 +22,7 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger(__name__)
 
+
 @jit(nopython=True)
 def random_choice_numba(arr, prob):
     """
@@ -33,9 +34,7 @@ def random_choice_numba(arr, prob):
 @jit(nopython=True)
 def roll_activity_dice(poisson_parameters, delta_time, n_activities):
     total_poisson_parameter = np.sum(poisson_parameters)
-    does_activity = random() < (
-        1.0 - np.exp(-total_poisson_parameter * delta_time)
-    )
+    does_activity = random() < (1.0 - np.exp(-total_poisson_parameter * delta_time))
     if does_activity:
         poisson_parameters_normalized = poisson_parameters / total_poisson_parameter
         return random_choice_numba(
@@ -73,13 +72,13 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             raise ValueError("Your world does not have care homes.")
         leisure_distributors[
             "care_home_visits"
-        ] = CareHomeVisitsDistributor.from_config(world.super_areas)
+        ] = CareHomeVisitsDistributor.from_config()
     if "household_visits" in list_of_leisure_groups:
         if not hasattr(world, "households"):
             raise ValueError("Your world does not have households.")
         leisure_distributors[
             "household_visits"
-        ] = HouseholdVisitsDistributor.from_config(world.super_areas)
+        ] = HouseholdVisitsDistributor.from_config()
     if "residence_visits" in list_of_leisure_groups:
         raise NotImplementedError
     leisure = Leisure(leisure_distributors)
@@ -118,7 +117,9 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
         self.closed_venues = set()
 
-    def distribute_social_venues_to_households(self, households: List[Household]):
+    def distribute_social_venues_to_households(
+        self, households: List[Household], super_areas: SuperAreas
+    ):
         logger.info("Distributing social venues to households")
         for i, household in enumerate(households):
             if i % 1_000_000 == 0:
@@ -127,6 +128,14 @@ class Leisure:
             for activity, distributor in self.leisure_distributors.items():
                 social_venues = distributor.get_possible_venues_for_household(household)
                 household.social_venues[activity] = social_venues
+        if "household_visits" in self.leisure_distributors:
+            self.leisure_distributors["household_visits"].link_households_to_households(
+                super_areas
+            )
+        if "care_home_visits" in self.leisure_distributors:
+            self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
+                super_areas
+            )
 
     def update_household_and_care_home_visits_targets(self, people: List[Person]):
         """
@@ -153,9 +162,7 @@ class Leisure:
                     person.residence.group
                 )
 
-    def get_leisure_probability_for_age_and_sex(
-        self, age, sex, delta_time, is_weekend
-    ):
+    def get_leisure_probability_for_age_and_sex(self, age, sex, delta_time, is_weekend):
         """
         Computes the probabilities of going to different leisure activities,
         and dragging the household with the person that does the activity.
@@ -273,9 +280,7 @@ class Leisure:
             person.subgroups.leisure = subgroup
             return subgroup
 
-    def generate_leisure_probabilities_for_timestep(
-        self, delta_time, is_weekend
-    ):
+    def generate_leisure_probabilities_for_timestep(self, delta_time, is_weekend):
         men_probs = [
             self.get_leisure_probability_for_age_and_sex(
                 age, "m", delta_time, is_weekend

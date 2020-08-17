@@ -11,7 +11,7 @@ from june.groups import (
     Universities,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries, generate_leisure_for_config
-from june.world import generate_world_from_hdf5, generate_world_from_geography
+from june.world import generate_world_from_geography
 import pickle
 import sys
 import time
@@ -26,7 +26,7 @@ t1 = time.time()
 config_path = "../configs/config_example.yaml"
 
 # define geography, let's run the first 20 super areas of london
-geography = Geography.from_file({"super_area": london_areas[40:60]})
+geography = Geography.from_file({"super_area": london_areas[40:50]})
 
 # add buildings
 geography.hospitals = Hospitals.for_geography(geography)
@@ -34,10 +34,10 @@ geography.companies = Companies.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
 geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
-# generate world
+## generate world
 world = generate_world_from_geography(geography, include_households=True, include_commute=True)
-
-# some leisure activities
+#
+## some leisure activities
 world.pubs = Pubs.for_geography(geography)
 world.cinemas = Cinemas.for_geography(geography)
 world.groceries = Groceries.for_geography(geography)

@@ -94,10 +94,16 @@ class Logger:
                             "sex", data=sexes, maxshape=(None,), compression="gzip"
                         )
                         people_dset.create_dataset(
-                            "ethnicity", data=ethnicities, maxshape=(None,), compression="gzip"
+                            "ethnicity",
+                            data=ethnicities,
+                            maxshape=(None,),
+                            compression="gzip",
                         )
                         people_dset.create_dataset(
-                            "socioeconomic_index", data=socioeconomic_indcs, maxshape=(None,), compression="gzip"
+                            "socioeconomic_index",
+                            data=socioeconomic_indcs,
+                            maxshape=(None,),
+                            compression="gzip",
                         )
                         people_dset.create_dataset(
                             "super_area",
@@ -118,7 +124,9 @@ class Logger:
                         people_dset["ethnicity"].resize(newshape)
                         people_dset["ethnicity"][idx1:idx2] = ethnicities
                         people_dset["socioeconomic_index"].resize(newshape)
-                        people_dset["socioeconomic_index"][idx1:idx2] = socioeconomic_indcs
+                        people_dset["socioeconomic_index"][
+                            idx1:idx2
+                        ] = socioeconomic_indcs
 
     def log_infected(
         self,
@@ -293,77 +301,88 @@ class Logger:
             locations_dset = f.create_group("locations")
             locations_dset.create_dataset("n_locations", data=group_sizes)
 
-
-    def unpack_dict(self,hdf5_obj,data,base_path,depth=0,max_depth=5):
-        if depth>max_depth:
+    def unpack_dict(self, hdf5_obj, data, base_path, depth=0, max_depth=5):
+        if depth > max_depth:
             return None
-        for key,val in data.items():
-            dset_path = f'{base_path}/{key}'
-            if type(val) in [int,float,str,List[int],List[float],np.ndarray]:
-                hdf5_obj.create_dataset(dset_path,data=val)
-            elif isinstance(val,list):
-                if all( isinstance(x,(int,float)) for x in val):
-                    hdf5_obj.create_dataset(dset_path,data=val)
-                elif all( isinstance(x,str) for x in val):
+        for key, val in data.items():
+            dset_path = f"{base_path}/{key}"
+            if type(val) in [int, float, str, List[int], List[float], np.ndarray]:
+                hdf5_obj.create_dataset(dset_path, data=val)
+            elif isinstance(val, list):
+                if all(isinstance(x, (int, float)) for x in val):
+                    hdf5_obj.create_dataset(dset_path, data=val)
+                elif all(isinstance(x, str) for x in val):
                     asciiList = [x.encode("ascii", "ignore") for x in val]
                     dt = h5py.string_dtype()
-                    hdf5_obj.create_dataset(dset_path,(len(asciiList),),dtype=dt, data=asciiList)
-                    
+                    hdf5_obj.create_dataset(
+                        dset_path, (len(asciiList),), dtype=dt, data=asciiList
+                    )
+
             elif isinstance(val, datetime.datetime):
-                hdf5_obj.create_dataset(dset_path,data=val.strftime("%Y-%m-%dT%H:%M:%S.%f"))
+                hdf5_obj.create_dataset(
+                    dset_path, data=val.strftime("%Y-%m-%dT%H:%M:%S.%f")
+                )
             elif type(val) is dict:
-                self.unpack_dict(hdf5_obj,val,dset_path,depth=depth+1) # Recursion!!
-            
-    
+                self.unpack_dict(
+                    hdf5_obj, val, dset_path, depth=depth + 1
+                )  # Recursion!!
+
     def log_parameters(
         self,
         interaction: "Interaction" = None,
         infection_seed: "InfectionSeed" = None,
         infection_selector: "InfectionSelector" = None,
-        activity_manager: "ActivityManager" = None
+        activity_manager: "ActivityManager" = None,
     ):
         with h5py.File(self.file_path, "a", libver="latest") as f:
             params = f.require_group("parameters")
 
             # interaction params
             if interaction is not None:
-                for key,data in interaction.beta.items():
+                for key, data in interaction.beta.items():
                     beta_path = f"parameters/beta/{key}"
-                    f.create_dataset(beta_path,data=data)
+                    f.create_dataset(beta_path, data=data)
 
-                f.create_dataset("parameters/alpha_physical",data=interaction.alpha_physical)
+                f.create_dataset(
+                    "parameters/alpha_physical", data=interaction.alpha_physical
+                )
 
-                for key,data in interaction.contact_matrices.items():
-                    dset_path = f'parameters/contact_matrices/{key}'
-                    f.create_dataset(dset_path,data=data)
+                for key, data in interaction.contact_matrices.items():
+                    dset_path = f"parameters/contact_matrices/{key}"
+                    f.create_dataset(dset_path, data=data)
 
             if infection_selector is not None:
-                f.create_dataset("parameters/asymptomatic_ratio",
-                    data=infection_selector.health_index_generator.asymptomatic_ratio) #
+                f.create_dataset(
+                    "parameters/asymptomatic_ratio",
+                    data=infection_selector.health_index_generator.asymptomatic_ratio,
+                )  #
 
             if infection_seed is not None:
-                f.create_dataset("parameters/seed_strength",data=infection_seed.seed_strength)
+                f.create_dataset(
+                    "parameters/seed_strength", data=infection_seed.seed_strength
+                )
 
             # policies
             if activity_manager is not None:
                 if activity_manager.policies:
                     policy_types = defaultdict(int)
                     for pol in activity_manager.policies.policies:
-                        policy_types[pol.get_spec()] +=1 # How many of each type of policy?
+                        policy_types[
+                            pol.get_spec()
+                        ] += 1  # How many of each type of policy?
 
                     for pol in activity_manager.policies.policies:
                         pol_spec = pol.get_spec()
                         n_instances = policy_types[pol_spec]
 
                         if n_instances > 1:
-                            for i in range(1,n_instances+1):
+                            for i in range(1, n_instances + 1):
                                 policy_path = f"parameters/policies/{pol_spec}/{i}"
                                 # Loop through until we find a path that doesn't exist, then make it
                                 if policy_path not in f:
-                                    break 
+                                    break
                         else:
                             i = None
                             policy_path = f"parameters/policies/{pol_spec}"
 
-                        self.unpack_dict(f,pol.__dict__,policy_path,depth=0)
-
+                        self.unpack_dict(f, pol.__dict__, policy_path, depth=0)
