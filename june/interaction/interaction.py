@@ -3,9 +3,6 @@ import yaml
 import numba as nb
 from random import random
 from typing import List
-from functools import partial
-from multiprocessing import get_context
-from multiprocessing import Pool, Process
 from june import paths
 from june.interaction.interactive_group import InteractiveGroup
 from itertools import chain

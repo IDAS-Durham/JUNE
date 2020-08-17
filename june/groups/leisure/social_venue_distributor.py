@@ -1,6 +1,5 @@
 import numpy as np
 from random import choice, random
-from typing import List
 from numba import jit
 from numba import typed
 from itertools import chain

@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union, Optional, List, Dict
+from typing import List, Optional, Union
 import datetime
 from random import random
 import june.policy
@@ -218,7 +218,6 @@ class SkipActivity(IndividualPolicy):
         """
         Returns True if the activity is to be skipped, otherwise False
         """
-        pass
 
     def apply(self, activities: List[str]) -> List[str]:
         """

@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-from random import sample, shuffle
+from random import sample
 import pandas as pd
 import datetime
 from pathlib import Path
