@@ -17,7 +17,6 @@ default_config_filename = configs_path / "defaults/groups/leisure/household_visi
 class HouseholdVisitsDistributor(SocialVenueDistributor):
     def __init__(
         self,
-        super_areas: SuperAreas,
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
         neighbours_to_consider=None,
@@ -34,15 +33,14 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             weekend_boost=weekend_boost,
             drags_household_probability=drags_household_probability,
         )
-        self.link_households_to_households(super_areas)
 
     @classmethod
     def from_config(
-        cls, super_areas: SuperAreas, config_filename: str = default_config_filename
+        cls, config_filename: str = default_config_filename
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(super_areas, **config)
+        return cls(**config)
 
     def link_households_to_households(self, super_areas):
         """

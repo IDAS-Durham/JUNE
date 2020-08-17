@@ -16,7 +16,7 @@ from june.groups import (
 )
 from june.distributors import HouseholdDistributor
 from june import World
-from june.world import generate_world_from_hdf5, generate_world_from_geography
+from june.world import generate_world_from_geography
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -31,6 +31,7 @@ from june.hdf5_savers import (
     save_cinemas_to_hdf5,
     save_pubs_to_hdf5,
     save_groceries_to_hdf5,
+    generate_world_from_hdf5
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -89,8 +90,9 @@ class TestSavePeople:
     def test__save_population(self, world_h5):
         population = world_h5.people
         save_population_to_hdf5(population, "test.hdf5")
-        pop_recovered = load_population_from_hdf5("test.hdf5")
-        for person, person2 in zip(population, pop_recovered):
+        pop_recovered_data = load_population_from_hdf5("test.hdf5")
+        for person, person2_key in zip(population, pop_recovered_data):
+            person2_data = pop_recovered_data[person2_key]
             for attribute_name in [
                 "id",
                 "age",
@@ -101,7 +103,10 @@ class TestSavePeople:
                 "lockdown_status",
             ]:
                 attribute = getattr(person, attribute_name)
-                attribute2 = getattr(person2, attribute_name)
+                if attribute_name == "id":
+                    attribute2 = person2_key
+                else:
+                    attribute2 = person2_data[attribute_name]
                 if attribute is None:
                     assert attribute2 == None
                 else:
@@ -126,52 +131,54 @@ class TestSavePeople:
                 ]
             )
             for group_spec, group_id, subgroup_type, group_array in zip(
-                group_specs, group_ids, subgroup_types, person2.subgroups
+                group_specs, group_ids, subgroup_types, person2_data["subgroups"]
             ):
                 assert group_spec == group_array[0]
                 assert group_id == group_array[1]
                 assert subgroup_type == group_array[2]
             if person.area is not None:
-                assert person.area.id == person2.area
+                assert person.area.id == person2_data["area"]
             else:
-                assert person2.area is None
+                assert person2_data["area"] is None
 
             # mode of transport
+
             assert (
                 person.mode_of_transport.description
-                == person2.mode_of_transport.description
+                == person2_data["mode_of_transport"].description
             )
             assert (
                 person.mode_of_transport.is_public
-                == person2.mode_of_transport.is_public
+                == person2_data["mode_of_transport"].is_public
             )
             # home city
             if person.home_city is None:
-                assert person2.home_city is None
+                assert person2_data["home_city"] is None
             else:
-                assert person.home_city.id == person2.home_city
+                assert person.home_city.id == person2_data["home_city"]
 
 
 class TestSaveHouses:
     def test__save_households(self, world_h5):
         households = world_h5.households
         save_households_to_hdf5(households, "test.hdf5")
-        households_recovered = load_households_from_hdf5("test.hdf5")
-        for household, household2 in zip(households, households_recovered):
+        households_recovered_data = load_households_from_hdf5("test.hdf5")
+        for household, household2_id in zip(households, households_recovered_data):
+            household2_data = households_recovered_data[household2_id]
             for attribute_name in ["id", "max_size", "type"]:
-                if attribute_name == "type":
-                    attribute2 = getattr(household2, attribute_name)
+                if attribute_name == "id":
+                    attribute2 = household2_id
                 else:
-                    attribute2 = getattr(household2, attribute_name)
+                    attribute2 = household2_data[attribute_name]
                 attribute = getattr(household, attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
             if household.area is not None:
-                assert household.area.id == household2.area
+                assert household.area.id == household2_data["area"]
             else:
-                assert household2.area is None
+                assert household2_data["area"] is None
 
 
 class TestSaveCompanies:

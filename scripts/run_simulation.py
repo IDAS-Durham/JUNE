@@ -3,8 +3,7 @@ import numpy as np
 import numba as nb
 import random
 
-from june.world import generate_world_from_hdf5
-from june.hdf5_savers import load_geography_from_hdf5
+from june.hdf5_savers import generate_world_from_hdf5
 from june.demography.geography import Geography
 from june.interaction import Interaction
 from june.infection import Infection
@@ -36,7 +35,8 @@ def set_random_seed(seed=999):
 set_random_seed()
 
 world_file = "./tests.hdf5"
-config_path = "./config_simulation.yaml"
+#config_path = "./config_simulation.yaml"
+config_path = "./config_nocommute.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
@@ -45,38 +45,39 @@ print("World loaded succesfully")
 leisure = generate_leisure_for_config(world, config_path)
 
 # health index and infection selecctor 
-health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
-infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
-
-# interaction
-interaction = Interaction.from_file()
-
-# initial infection seeding
-infection_seed = InfectionSeed(
-    world.super_areas, infection_selector,
-)
-
-infection_seed.unleash_virus(50) # number of initial cases
-
-# policies
-policies = Policies.from_file()
-
-# create simulator
-
-simulator = Simulator.from_file(
-    world=world,
-    policies=policies,
-    interaction=interaction,
-    leisure=leisure,
-    infection_selector=infection_selector,
-    config_filename=config_path,
-    save_path="results",
-)
-print("simulator ready to go")
-
-t1 = time.time()
-simulator.run()
-t2 = time.time()
-
-print(f" Simulation took {t2-t1} seconds")
-
+#health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+#infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
+#
+## interaction
+#interaction = Interaction.from_file()
+#
+## initial infection seeding
+#infection_seed = InfectionSeed(
+#    world.super_areas, infection_selector,
+#)
+#
+#infection_seed.unleash_virus(50) # number of initial cases
+#
+## policies
+#policies = Policies.from_file()
+#
+## create simulator
+#
+#simulator = Simulator.from_file(
+#    world=world,
+#    policies=policies,
+#    interaction=interaction,
+#    leisure=leisure,
+#    infection_selector=infection_selector,
+#    config_filename=config_path,
+#    save_path="results",
+#)
+#print("simulator ready to go")
+#
+#t1 = time.time()
+#simulator.run()
+#t2 = time.time()
+#
+#print(f" Simulation took {t2-t1} seconds")
+#
+time.sleep(2)

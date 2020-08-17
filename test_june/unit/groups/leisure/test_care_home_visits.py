@@ -13,10 +13,10 @@ from june.world import generate_world_from_geography
 @fixture(name="visits_distributor")
 def make_dist(world_visits):
     visits_distributor = CareHomeVisitsDistributor(
-        world_visits.super_areas,
         male_age_probabilities={"0-99": 1.0},
         female_age_probabilities={"0-99": 1.0},
     )
+    visits_distributor.link_households_to_care_homes(world_visits.super_areas)
     return visits_distributor
 
 

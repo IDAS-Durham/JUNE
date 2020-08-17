@@ -1,8 +1,10 @@
+import h5py
+import numpy as np
+from collections import OrderedDict
+
 from june.groups.commute import CommuteCity
 from june.commute import ModeOfTransport
 from june.demography import Population, Person
-import h5py
-import numpy as np
 
 nan_integer = -999  # only used to store/load hdf5 integer arrays with inf/nan values
 
@@ -220,8 +222,9 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
     This function should be rarely be called oustide world.py
     """
     print("loading population from hdf5 ", end="")
+    population_dictionary = OrderedDict()
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        people = []
+        #people = []
         population = f["population"]
         # read in chunks of 100k people
         n_people = population.attrs["n_people"]
@@ -250,36 +253,34 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             ][idx1:idx2]
             areas = population["area"][idx1:idx2]
             for k in range(idx2 - idx1):
+                id=ids[k]
+                person_data = {}
+                population_dictionary[id] = person_data
+                person_data["age"] = ages[k]
+                person_data["sex"] = sexes[k].decode()
                 if ethns[k].decode() == " ":
-                    ethnicity = None
+                    person_data["ethnicity"] = None
                 else:
-                    ethnicity = ethns[k].decode()
+                    person_data["ethnicity"] = ethns[k].decode()
                 if socioecon_indices[k] == nan_integer:
-                    socioecon_index = None
+                    person_data["socioecon_index"] = None
                 else:
-                    socioecon_index = socioecon_indices[k]
-                person = Person.from_attributes(
-                    id=ids[k],
-                    age=ages[k],
-                    sex=sexes[k].decode(),
-                    ethnicity=ethnicity,
-                    socioecon_index=socioecon_index,
-                )
+                    person_data["socioecon_index"] = socioecon_indices[k]
                 mode_of_transport_description = mode_of_transport_description_list[k]
                 mode_of_transport_is_public = mode_of_transport_is_public_list[k]
                 # mode of transport
                 if mode_of_transport_description.decode() == " ":
-                    person.mode_of_transport = None
+                    person_data["mode_of_transport"] = None
                 else:
-                    person.mode_of_transport = ModeOfTransport(
+                    person_data["mode_of_transport"] = ModeOfTransport(
                         description=mode_of_transport_description.decode(),
                         is_public=mode_of_transport_is_public,
                     )
                 hc = home_city[k]
                 if hc == nan_integer:
-                    person.home_city = None
+                    person_data["home_city"] = None
                 else:
-                    person.home_city = hc
+                    person_data["home_city"] = hc
                 subgroups = []
                 for group_id, subgroup_type, group_spec in zip(
                     group_ids[k], subgroup_types[k], group_specs[k]
@@ -291,20 +292,19 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     else:
                         group_spec = group_spec.decode()
                     subgroups.append([group_spec, group_id, subgroup_type])
-                person.subgroups = subgroups
-                person.area = areas[k]
+                person_data["subgroups"] = subgroups
+                person_data["area"] = areas[k]
                 if sectors[k].decode() == " ":
-                    person.sector = None
+                    person_data["sector"] = None
                 else:
-                    person.sector = sectors[k].decode()
+                    person_data["sector"] = sectors[k].decode()
                 if sub_sectors[k].decode() == " ":
-                    person.sub_sector = None
+                    person_data["sub_sector"] = None
                 else:
-                    person.sub_sector = sub_sectors[k].decode()
+                    person_data["sub_sector"] = sub_sectors[k].decode()
                 if lockdown_status[k].decode() == " ":
-                    person.lockdown_status = None
+                    person_data["lockdown_status"] = None
                 else:
-                    person.lockdown_status = lockdown_status[k].decode()
-                people.append(person)
+                    person_data["lockdown_status"] = lockdown_status[k].decode()
     print("\n", end="")
-    return Population(people)
+    return population_dictionary #Population(people)
