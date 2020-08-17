@@ -2,4 +2,5 @@
 ================================
 
 .. automodule:: june.groups.leisure.social_venue
-    :members:
+   :members:
+   :undoc-members:

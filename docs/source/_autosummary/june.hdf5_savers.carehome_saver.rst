@@ -2,4 +2,5 @@
 ===============================
 
 .. automodule:: june.hdf5_savers.carehome_saver
-    :members:
+   :members:
+   :undoc-members:

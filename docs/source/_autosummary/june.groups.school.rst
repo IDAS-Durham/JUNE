@@ -2,4 +2,5 @@
 ==================
 
 .. automodule:: june.groups.school
-    :members:
+   :members:
+   :undoc-members:

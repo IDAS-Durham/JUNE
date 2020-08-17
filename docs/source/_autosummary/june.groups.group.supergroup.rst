@@ -2,4 +2,5 @@
 ============================
 
 .. automodule:: june.groups.group.supergroup
-    :members:
+   :members:
+   :undoc-members:

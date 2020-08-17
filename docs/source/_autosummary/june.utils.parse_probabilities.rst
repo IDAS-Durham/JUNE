@@ -2,4 +2,5 @@
 ==============================
 
 .. automodule:: june.utils.parse_probabilities
-    :members:
+   :members:
+   :undoc-members:

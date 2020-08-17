@@ -2,4 +2,5 @@
 ===============================================
 
 .. automodule:: june.groups.commute.commutecityunit_distributor
-    :members:
+   :members:
+   :undoc-members:

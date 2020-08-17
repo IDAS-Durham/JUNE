@@ -2,4 +2,5 @@
 ===============================
 
 .. automodule:: june.infection.trajectory_maker
-    :members:
+   :members:
+   :undoc-members:

@@ -2,4 +2,5 @@
 ================
 
 .. automodule:: june.hdf5_savers
-    :members:
+   :members:
+   :undoc-members:

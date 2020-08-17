@@ -2,4 +2,5 @@
 ============
 
 .. automodule:: june.commute
-    :members:
+   :members:
+   :undoc-members:

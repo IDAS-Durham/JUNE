@@ -2,4 +2,5 @@
 ==========================
 
 .. automodule:: june.infection.symptom_tag
-    :members:
+   :members:
+   :undoc-members:

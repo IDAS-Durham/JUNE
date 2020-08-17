@@ -2,4 +2,5 @@
 ==========
 
 .. automodule:: june.paths
-    :members:
+   :members:
+   :undoc-members:

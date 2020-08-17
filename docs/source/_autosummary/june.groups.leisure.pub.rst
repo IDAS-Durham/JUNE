@@ -2,4 +2,5 @@
 =======================
 
 .. automodule:: june.groups.leisure.pub
-    :members:
+   :members:
+   :undoc-members:

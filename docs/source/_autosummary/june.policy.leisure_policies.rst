@@ -2,4 +2,5 @@
 ============================
 
 .. automodule:: june.policy.leisure_policies
-    :members:
+   :members:
+   :undoc-members:

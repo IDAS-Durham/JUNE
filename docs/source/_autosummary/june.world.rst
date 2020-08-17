@@ -2,4 +2,5 @@
 ==========
 
 .. automodule:: june.world
-    :members:
+   :members:
+   :undoc-members:

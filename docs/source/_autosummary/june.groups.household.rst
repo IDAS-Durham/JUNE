@@ -2,4 +2,5 @@
 =====================
 
 .. automodule:: june.groups.household
-    :members:
+   :members:
+   :undoc-members:

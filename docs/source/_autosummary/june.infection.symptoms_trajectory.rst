@@ -2,4 +2,5 @@
 ==================================
 
 .. automodule:: june.infection.symptoms_trajectory
-    :members:
+   :members:
+   :undoc-members:

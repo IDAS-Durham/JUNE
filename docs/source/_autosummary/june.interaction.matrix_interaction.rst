@@ -2,4 +2,5 @@
 ===================================
 
 .. automodule:: june.interaction.matrix_interaction
-    :members:
+   :members:
+   :undoc-members:

@@ -2,4 +2,5 @@
 =================================
 
 .. automodule:: june.infection.health_information
-    :members:
+   :members:
+   :undoc-members:

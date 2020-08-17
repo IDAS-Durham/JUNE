@@ -2,4 +2,5 @@
 ==========
 
 .. automodule:: june.utils
-    :members:
+   :members:
+   :undoc-members:

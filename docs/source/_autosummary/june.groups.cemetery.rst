@@ -2,4 +2,5 @@
 ====================
 
 .. automodule:: june.groups.cemetery
-    :members:
+   :members:
+   :undoc-members:

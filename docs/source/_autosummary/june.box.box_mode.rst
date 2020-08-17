@@ -2,4 +2,5 @@
 =================
 
 .. automodule:: june.box.box_mode
-    :members:
+   :members:
+   :undoc-members:

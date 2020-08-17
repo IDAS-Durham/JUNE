@@ -2,4 +2,5 @@
 ========================
 
 .. automodule:: june.commute_rail_travel
-    :members:
+   :members:
+   :undoc-members:

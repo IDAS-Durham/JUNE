@@ -2,4 +2,5 @@
 ===============================
 
 .. automodule:: june.hdf5_savers.hospital_saver
-    :members:
+   :members:
+   :undoc-members:

@@ -2,4 +2,5 @@
 {{ underline }}
 
 .. automodule:: {{ fullname }}
-    :members:
+   :members:
+   :undoc-members:

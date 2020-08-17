@@ -2,4 +2,5 @@
 =======================
 
 .. automodule:: june.infection.symptoms
-    :members:
+   :members:
+   :undoc-members:

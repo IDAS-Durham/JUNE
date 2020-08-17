@@ -2,4 +2,5 @@
 =============================
 
 .. automodule:: june.groups.travel.travelunit
-    :members:
+   :members:
+   :undoc-members:
