@@ -2,4 +2,5 @@
 ===================
 
 .. automodule:: june.infection_seed
-    :members:
+   :members:
+   :undoc-members:

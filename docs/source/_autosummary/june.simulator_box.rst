@@ -2,4 +2,5 @@
 ==================
 
 .. automodule:: june.simulator_box
-    :members:
+   :members:
+   :undoc-members:

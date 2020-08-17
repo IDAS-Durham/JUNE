@@ -2,4 +2,5 @@
 ==================
 
 .. automodule:: june.logger.logger
-    :members:
+   :members:
+   :undoc-members:

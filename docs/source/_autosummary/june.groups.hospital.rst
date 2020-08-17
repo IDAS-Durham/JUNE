@@ -2,4 +2,5 @@
 ====================
 
 .. automodule:: june.groups.hospital
-    :members:
+   :members:
+   :undoc-members:

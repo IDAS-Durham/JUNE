@@ -2,4 +2,5 @@
 =======================================
 
 .. automodule:: june.distributors.household_distributor
-    :members:
+   :members:
+   :undoc-members:

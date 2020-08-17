@@ -2,4 +2,5 @@
 =================================
 
 .. automodule:: june.policy.medical_care_policies
-    :members:
+   :members:
+   :undoc-members:

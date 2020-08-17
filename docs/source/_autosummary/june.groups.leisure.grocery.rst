@@ -2,4 +2,5 @@
 ===========================
 
 .. automodule:: june.groups.leisure.grocery
-    :members:
+   :members:
+   :undoc-members:

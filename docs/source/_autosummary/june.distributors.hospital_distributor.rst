@@ -2,4 +2,5 @@
 ======================================
 
 .. automodule:: june.distributors.hospital_distributor
-    :members:
+   :members:
+   :undoc-members:

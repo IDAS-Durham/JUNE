@@ -2,4 +2,5 @@
 ================================
 
 .. automodule:: june.policy.interaction_policies
-    :members:
+   :members:
+   :undoc-members:

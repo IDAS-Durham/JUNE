@@ -2,4 +2,5 @@
 =================================
 
 .. automodule:: june.interaction.contact_sampling
-    :members:
+   :members:
+   :undoc-members:

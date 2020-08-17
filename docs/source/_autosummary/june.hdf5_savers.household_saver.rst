@@ -2,4 +2,5 @@
 ================================
 
 .. automodule:: june.hdf5_savers.household_saver
-    :members:
+   :members:
+   :undoc-members:

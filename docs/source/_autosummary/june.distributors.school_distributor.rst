@@ -2,4 +2,5 @@
 ====================================
 
 .. automodule:: june.distributors.school_distributor
-    :members:
+   :members:
+   :undoc-members:

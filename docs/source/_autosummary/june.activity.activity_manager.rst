@@ -2,4 +2,5 @@
 ==============================
 
 .. automodule:: june.activity.activity_manager
-    :members:
+   :members:
+   :undoc-members:

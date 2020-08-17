@@ -2,4 +2,5 @@
 =========
 
 .. automodule:: june.time
-    :members:
+   :members:
+   :undoc-members:

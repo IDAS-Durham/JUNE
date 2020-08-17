@@ -2,4 +2,5 @@
 ==========================
 
 .. automodule:: june.groups.leisure.cinema
-    :members:
+   :members:
+   :undoc-members:

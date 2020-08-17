@@ -2,4 +2,5 @@
 =================================
 
 .. automodule:: june.infection.transmission_xnexp
-    :members:
+   :members:
+   :undoc-members:

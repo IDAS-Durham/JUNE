@@ -2,4 +2,5 @@
 ====================
 
 .. automodule:: june.groups.carehome
-    :members:
+   :members:
+   :undoc-members:

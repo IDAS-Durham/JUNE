@@ -1,7 +1,6 @@
 ﻿june
 ====
 
-.. currentmodule:: june
-.. default-role:: obj
-
-.. autofunction:: june
+.. automodule:: june
+   :members:
+   :undoc-members:

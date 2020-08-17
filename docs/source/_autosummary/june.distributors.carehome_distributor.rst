@@ -2,4 +2,5 @@
 ======================================
 
 .. automodule:: june.distributors.carehome_distributor
-    :members:
+   :members:
+   :undoc-members:

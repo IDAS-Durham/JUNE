@@ -2,4 +2,5 @@
 ==================
 
 .. automodule:: june.visualization
-    :members:
+   :members:
+   :undoc-members:

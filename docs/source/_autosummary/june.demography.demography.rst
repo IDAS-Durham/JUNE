@@ -2,4 +2,5 @@
 ==========================
 
 .. automodule:: june.demography.demography
-    :members:
+   :members:
+   :undoc-members:

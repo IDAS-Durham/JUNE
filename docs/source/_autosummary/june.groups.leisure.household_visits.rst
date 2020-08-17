@@ -2,4 +2,5 @@
 ====================================
 
 .. automodule:: june.groups.leisure.household_visits
-    :members:
+   :members:
+   :undoc-members:

@@ -2,4 +2,5 @@
 ==========================
 
 .. automodule:: june.groups.group.abstract
-    :members:
+   :members:
+   :undoc-members:
