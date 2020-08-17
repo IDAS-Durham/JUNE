@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import yaml
 import numba as nb
@@ -232,31 +233,26 @@ class Interaction:
                 school_years=school_years,
             )
         else:
-            group_list = []
-            contact_matrix_list = []
-            beta_list = []
-            school_years_list = []
-            delta_time_list = []
-            for i, _ in enumerate(group.subgroups_susceptible):
-                group_list.append(group)
-                contact_matrix_list.append(contact_matrix)
-                beta_list.append(beta)
-                school_years_list.append(school_years)
-                delta_time_list.append(delta_time)
-            iter_pack = zip(contact_matrix_list,
-                            beta_list,
-                            school_years_list,
-                            delta_time_list,
-                            group_list,
-                            enumerate(group.subgroups_susceptible))
+            iter_pack = enumerate(group.subgroups_susceptible)
             with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
-                for inf_ids in executor.map(inf_ids_procedure, iter_pack):
+                for inf_ids in executor.map(inf_ids_procedure,
+                                            iter_pack,
+                                            itertools.repeat(group),
+                                            itertools.repeat(contact_matrix),
+                                            itertools.repeat(beta),
+                                            itertools.repeat(school_years),
+                                            itertools.repeat(delta_time)):
                     infected_ids += inf_ids
         return infected_ids
 
 
-def inf_ids_procedure(enum_obj):
-    contact_matrix, beta, school_years, delta_time, group, (i, subgroup_id) = enum_obj
+def inf_ids_procedure(enum_obj,
+                      group,
+                      contact_matrix,
+                      beta,
+                      school_years,
+                      delta_time):
+    i, subgroup_id = enum_obj
     susceptible_ids = group.susceptible_ids[i]
     inf_ids = time_step_for_subgroup(
         contact_matrix=contact_matrix,
