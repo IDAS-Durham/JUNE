@@ -1,3 +1,11 @@
+.. Note: it is important to keep the current module setting below in
+   this file because it prevents any nameclashes with any imports, e.g.
+   'june.time' vs. Python's in-built 'time', which otherwise would be
+   documented instead.
+
+.. currentmodule:: june
+
+
 Modules
 -------
 
@@ -6,8 +14,8 @@ members of that module (classes, functions, etc.) are shown, including
 those that are not (yet) documented.
 
 
-Top-level (`june`) and package `__init__` based modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package `__init__`-based modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. warning::
    Most of the modules listed in this particular section just contain
@@ -22,7 +30,6 @@ Top-level (`june`) and package `__init__` based modules
    :toctree: _autosummary
    :template: module.rst
 
-   june
    activity
    box
    commute
@@ -298,6 +305,11 @@ Simulator
 
 Time
 ^^^^
+
+.. Note: in this case, to avoid a name clash resulting in the Python time
+   module (imported by the june module in question) being documented
+   instead of june.time, we must specify 'june.time' and then cut off the
+   prepended 'june.' (for consistency) with use of a tweaked template.
 
 .. autosummary::
    :toctree: _autosummary
