@@ -3,6 +3,7 @@ import numpy as np
 from june.world import World
 from june.groups import Household, Households
 from collections import defaultdict, OrderedDict
+from itertools import chain
 
 nan_integer = -999
 
@@ -126,14 +127,14 @@ def save_households_to_hdf5(
             social_venues_specs_list, dtype=str_vlen_type
         )
         social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-        if len(np.unique(relatives_in_households)) > 1:
+        if len(np.unique(list(chain(*relatives_in_households)))) > 1:
             relatives_in_households = np.array(
                 relatives_in_households, dtype=int_vlen_type
             )
             households_dset.create_dataset(
                 "relatives_in_households", data=relatives_in_households,
             )
-        if len(np.unique(relatives_in_care_homes)) > 1:
+        if len(np.unique(list(chain(*relatives_in_care_homes)))) > 1:
             relatives_in_care_homes = np.array(
                 relatives_in_care_homes, dtype=int_vlen_type
             )
