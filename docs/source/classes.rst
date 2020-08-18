@@ -121,23 +121,23 @@ Groups
    groups.boundary.Boundary
    groups.carehome.CareHomeError
    groups.carehome.CareHome
-   groups.carehome.SubgroupType
+   groups.carehome.CareHome.SubgroupType
    groups.carehome.CareHomes
    groups.cemetery.Cemetery
    groups.cemetery.Cemeteries
    groups.company.CompanyError
    groups.company.Company
-   groups.company.SubgroupType
+   groups.company.Company.SubgroupType
    groups.company.Companies
    groups.hospital.Hospital
-   groups.hospital.SubgroupType
+   groups.hospital.Hospital.SubgroupType
    groups.hospital.Hospitals
    groups.household.Household
-   groups.household.SubgroupType
+   groups.household.Household.SubgroupType
    groups.household.Households
    groups.school.SchoolError
    groups.school.School
-   groups.school.SubgroupType
+   groups.school.School.SubgroupType
    groups.school.Schools
    groups.university.University
    groups.university.Universities
@@ -175,7 +175,7 @@ Group Groups
 
    groups.group.abstract.AbstractGroup
    groups.group.group.Group
-   groups.group.group.SubgroupType
+   groups.group.group.Group.SubgroupType
    groups.group.subgroup.Subgroup
    groups.group.supergroup.Supergroup
 
@@ -201,7 +201,7 @@ Leisure Groups
    groups.leisure.social_venue_distributor.SocialVenueDistributor
    groups.leisure.social_venue.SocialVenueError
    groups.leisure.social_venue.SocialVenue
-   groups.leisure.social_venue.SubgroupType
+   groups.leisure.social_venue.SocialVenue.SubgroupType
    groups.leisure.social_venue.SocialVenues
 
 
@@ -341,14 +341,12 @@ Time
    .. time.Timer
 
 
-Visualization
-^^^^^^^^^^^^^
+.. Visualization
+   ^^^^^^^^^^^^^
 
-.. autosummary::
-   :toctree: _autosummary
-   :template: class.rst
-
-   visualization.plotter.DashPlotter
+   Note that 'visualization.plotter.DashPlotter' has been omitted since it
+   has not been added to the june namespace so can't be imported to be
+   processed like the other items here by the Sphinx autosummary extension.
 
 
 World
