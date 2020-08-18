@@ -11,6 +11,7 @@ from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistr
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
 from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
@@ -239,19 +240,29 @@ class ActivityManager:
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
-        they stay at home
+        they stay at home. If they work outside the domain, they are marked
+        as busy.
 
         Parameters
         ----------
 
         """
+
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
         activities = self.apply_activity_hierarchy(activities)
+
+        # first handle any parallelism to get who we need to work with
+        if self.timer.state == 'primary_activity':
+            self.world.parallel_update('am')
+        elif self.timer.state == 'commute' and self.timer.last_state == 'primary_activity':
+            self.world.parallel_update('pm')
+
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
+
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
                 person=person,

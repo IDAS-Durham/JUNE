@@ -9,10 +9,10 @@ class Timer:
         self,
         initial_day: str = "2020-03-01",
         total_days : int = 10,
-        weekday_step_duration: List[int]=[12, 12],
-        weekend_step_duration: List[int]=[24],
-        weekday_activities: List[List[str]]=[["primary_activity", "residence"], ["residence"]],
-        weekend_activities: List[List[str]]=[["residence"]],
+        weekday_step_duration: List[int] = [12, 12],
+        weekend_step_duration: List[int] = [24],
+        weekday_activities: List[List[str]] = [["primary_activity", "residence"], ["residence"]],
+        weekend_activities: List[List[str]] = [["residence"]],
     ):
 
         self.initial_date = datetime.datetime(
@@ -29,6 +29,8 @@ class Timer:
         self.date = datetime.datetime(*[int(value) for value in initial_day.split("-")])
         self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
+        self.last_state = None
+        self.state = None
 
     @property
     def is_weekend(self):
@@ -78,7 +80,9 @@ class Timer:
 
     def __next__(self):
         self.previous_date = self.date
+        self.last_state = self.state
         self.date += self.delta_time
+        self.state = self.activities[1]
         self.shift += 1
         if self.previous_date.day != self.date.day:
             self.shift = 0

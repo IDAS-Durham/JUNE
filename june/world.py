@@ -231,6 +231,20 @@ class World:
         if self.groceries is not None:
             save_groceries_to_hdf5(self.groceries, file_path)
 
+    def parallel_setup(self, *args, **kwargs):
+        """
+        Mixin entry point to setting up any sort of parallelism.
+        If this is ever called in a serial world then it's an error.
+        """
+        raise NotImplementedError
+
+    def parallel_update(self, *args, **kwargs):
+        """
+        Mixin entry point for parallelism.
+        This gets called even a serial world, but in that case we want nothing to happen.
+        """
+        pass
+
 
 def generate_world_from_geography(
     geography: Geography,
@@ -436,4 +450,5 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         print("done")
 
     world.cemeteries = Cemeteries()
+
     return world

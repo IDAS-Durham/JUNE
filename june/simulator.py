@@ -6,6 +6,7 @@ import yaml
 from itertools import chain
 from typing import Optional, List
 from pathlib import Path
+from time import perf_counter
 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
@@ -70,6 +71,7 @@ class Simulator:
             self.logger = Logger(save_path=self.save_path)
         else:
             self.logger = None
+        self.tsnum = 0
 
     @classmethod
     def from_file(
@@ -325,26 +327,40 @@ class Simulator:
         ids = []
         symptoms = []
         n_secondary_infections = []
+        perf1, perf2, perf3, perf4, perf5 =  0., 0., 0, 0., 0.
         for person in self.world.people.infected:
+            tick = perf_counter()
             health_information = person.health_information
             previous_tag = health_information.tag
             health_information.update_health_status(time, duration)
+            tock = perf_counter()
+            perf1 += tock - tick
             if (
                 previous_tag == SymptomTag.exposed
                 and health_information.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
             ids.append(person.id)
+            tick = perf_counter()
+            perf2 += tick - tock
             symptoms.append(person.health_information.tag.value)
             n_secondary_infections.append(person.health_information.number_of_infected)
+            tock = perf_counter()
+            perf3 += tock - tick
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person, medical_facilities=self.world.hospitals
             )
+            tick = perf_counter()
+            perf4 += tick - tock
             if health_information.recovered:
                 self.recover(person, time)
             elif health_information.is_dead:
                 self.bury_the_dead(self.world, person, time)
+            tock = perf_counter()
+            perf5 += tock - tick
+        self.tsnum+= 1
+        print(self.tsnum, perf1, perf2, perf3, perf4, perf5)
         if self.logger is not None:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
@@ -458,7 +474,9 @@ class Simulator:
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
+
         while self.timer.date < self.timer.final_date:
+            tick = perf_counter()
             if self.infection_seed:
                 if (
                     self.infection_seed.max_date
@@ -477,6 +495,7 @@ class Simulator:
                 logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
                 self.save_checkpoint(saving_date)
                 continue
+            print(f'Timestep {self.tsnum} took {perf_counter()-tick}')
             next(self.timer)
 
     def save_checkpoint(self, date: datetime):

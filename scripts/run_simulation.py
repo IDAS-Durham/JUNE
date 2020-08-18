@@ -18,6 +18,8 @@ from june.policy import Policies
 from june import paths
 from june.infection.infection import InfectionSelector
 from june.groups.commute import *
+from june import parallel_setup, parallel_update
+from june import World
 
 def set_random_seed(seed=999):
     """
@@ -40,6 +42,11 @@ config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
+
+# add parallelism
+World.parallel_setup = parallel_setup
+World.parallel_update = parallel_update
+world.parallel_setup(world.super_areas[0:2])
 
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
