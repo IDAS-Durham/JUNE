@@ -3,8 +3,7 @@
 
 .. currentmodule:: june
 
-.. autoclass:: exc.SimulatorError
-   :noindex:
+.. autoexception:: exc.SimulatorError
    :members:
    :undoc-members:
    :special-members:

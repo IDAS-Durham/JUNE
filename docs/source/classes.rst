@@ -103,7 +103,7 @@ Exceptions (`exc`)
 
 .. autosummary::
    :toctree: _autosummary
-   :template: class.rst
+   :template: exception.rst
 
    exc.GroupException
    exc.PolicyError
