@@ -1,3 +1,11 @@
+.. Note: it is important to keep the current module setting below in
+   this file because it prevents any nameclashes with any imports, e.g.
+   'june.time' vs. Python's in-built 'time', which otherwise would be
+   documented instead.
+
+.. currentmodule:: june
+
+
 Functions
 ---------
 
@@ -7,8 +15,8 @@ the corresponding class. Note these functions can also be viewed in the
 API reference page for the module they are defined within.
 
 
-Top-level (under `june`)
-^^^^^^^^^^^^^^^^^^^^^^^^
+`commute_rail_travel`
+^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: _autosummary

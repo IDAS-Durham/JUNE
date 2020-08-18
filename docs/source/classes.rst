@@ -1,3 +1,11 @@
+.. Note: it is important to keep the current module setting below in
+   this file because it prevents any nameclashes with any imports, e.g.
+   'june.time' vs. Python's in-built 'time', which otherwise would be
+   documented instead.
+
+.. currentmodule:: june
+
+
 Classes
 -------
 
@@ -46,17 +54,14 @@ Commute
    commute.CommuteGenerator
 
 
-Data Formatting
-^^^^^^^^^^^^^^^
+.. Data Formatting
+   ^^^^^^^^^^^^^^^
 
-Include these? (If so, uncomment this section.)
-
-.. .. autosummary::
-      :toctree: _autosummary
-      :template: class.rst
-
-      data_formatting.google_api.gmapi.APICall
-      data_formatting.google_api.gmapi.MSOASearch
+   Note that:
+       data_formatting.google_api.gmapi.APICall
+       data_formatting.google_api.gmapi.MSOASearch
+   have been omitted since they are not in the june namespace so can't be
+   imported to be processed by the Sphinx autosummary extension.
 
 
 Demography
@@ -377,11 +382,16 @@ Simulator
 Time
 ^^^^
 
+.. Note: in this case, to avoid a name clash resulting in the Python time
+   module (imported by the june module in question) being documented
+   instead of june.time, we must specify 'june.time' and then cut off the
+   prepended 'june.' (for consistency) with use of a tweaked template.
+
 .. autosummary::
    :toctree: _autosummary
    :template: class.rst
 
-   .. time.Timer
+   time.Timer
 
 
 .. Visualization
