@@ -1,8 +1,6 @@
-import logging, os
-from pathlib import Path
+import logging
 from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
-from collections import defaultdict
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import BallTree

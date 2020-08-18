@@ -3,7 +3,6 @@ from copy import deepcopy
 
 from .policy import Policy, PolicyCollection, Policies
 from june.interaction import Interaction
-from typing import Union, Optional, List, Dict
 from collections import defaultdict
 
 
