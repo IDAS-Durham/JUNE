@@ -1,6 +1,8 @@
 {{ fullname }}
 {{ underline }}
 
+.. currentmodule:: june
+
 .. autoclass:: {{ fullname }}
    :noindex:
    :members:

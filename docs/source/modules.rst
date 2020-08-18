@@ -23,22 +23,22 @@ Top-level (`june`) and package `__init__` based modules
    :template: module.rst
 
    june
-   june.activity
-   june.box
-   june.commute
-   june.demography
-   june.distributors
-   june.groups
-   june.groups.commute
-   june.groups.group
-   june.groups.leisure
-   june.groups.travel
-   june.hdf5_savers
-   june.infection
-   june.interaction
-   june.logger
-   june.policy
-   june.utils
+   activity
+   box
+   commute
+   demography
+   distributors
+   groups
+   groups.commute
+   groups.group
+   groups.leisure
+   groups.travel
+   hdf5_savers
+   infection
+   interaction
+   logger
+   policy
+   utils
    
 
 Activity
@@ -48,8 +48,8 @@ Activity
    :toctree: _autosummary
    :template: module.rst
 
-   june.activity.activity_manager_box
-   june.activity.activity_manager
+   activity.activity_manager_box
+   activity.activity_manager
 
 
 Box
@@ -59,7 +59,7 @@ Box
    :toctree: _autosummary
    :template: module.rst
 
-   june.box.box_mode
+   box.box_mode
 
 
 Commute
@@ -69,7 +69,7 @@ Commute
    :toctree: _autosummary
    :template: module.rst
 
-   june.commute_rail_travel
+   commute_rail_travel
 
 
 Demography
@@ -79,9 +79,9 @@ Demography
    :toctree: _autosummary
    :template: module.rst
 
-   june.demography.demography
-   june.demography.geography
-   june.demography.person
+   demography.demography
+   demography.geography
+   demography.person
 
 
 Distributors
@@ -91,13 +91,13 @@ Distributors
    :toctree: _autosummary
    :template: module.rst
 
-   june.distributors.carehome_distributor
-   june.distributors.company_distributor
-   june.distributors.hospital_distributor
-   june.distributors.household_distributor
-   june.distributors.school_distributor
-   june.distributors.university_distributor
-   june.distributors.worker_distributor
+   distributors.carehome_distributor
+   distributors.company_distributor
+   distributors.hospital_distributor
+   distributors.household_distributor
+   distributors.school_distributor
+   distributors.university_distributor
+   distributors.worker_distributor
 
 
 Exceptions (`exc`)
@@ -107,7 +107,7 @@ Exceptions (`exc`)
    :toctree: _autosummary
    :template: module.rst
 
-   june.exc
+   exc
 
 
 Groups
@@ -117,14 +117,14 @@ Groups
    :toctree: _autosummary
    :template: module.rst
 
-   june.groups.boundary
-   june.groups.carehome
-   june.groups.cemetery
-   june.groups.company
-   june.groups.hospital
-   june.groups.household
-   june.groups.school
-   june.groups.university
+   groups.boundary
+   groups.carehome
+   groups.cemetery
+   groups.company
+   groups.hospital
+   groups.household
+   groups.school
+   groups.university
 
 See also the sub-sections grouping together related types of `Groups`.
 
@@ -136,14 +136,14 @@ Commute Groups
    :toctree: _autosummary
    :template: module.rst
 
-   june.groups.commute.commutecity_distributor
-   june.groups.commute.commutecity
-   june.groups.commute.commutecityunit_distributor
-   june.groups.commute.commutecityunit
-   june.groups.commute.commutehub_distributor
-   june.groups.commute.commutehub
-   june.groups.commute.commuteunit_distributor
-   june.groups.commute.commuteunit
+   groups.commute.commutecity_distributor
+   groups.commute.commutecity
+   groups.commute.commutecityunit_distributor
+   groups.commute.commutecityunit
+   groups.commute.commutehub_distributor
+   groups.commute.commutehub
+   groups.commute.commuteunit_distributor
+   groups.commute.commuteunit
 
 Group Groups
 """"""""""""
@@ -152,10 +152,10 @@ Group Groups
    :toctree: _autosummary
    :template: module.rst
 
-   june.groups.group.abstract
-   june.groups.group.group
-   june.groups.group.subgroup
-   june.groups.group.supergroup
+   groups.group.abstract
+   groups.group.group
+   groups.group.subgroup
+   groups.group.supergroup
 
 
 Leisure Groups
@@ -165,14 +165,14 @@ Leisure Groups
    :toctree: _autosummary
    :template: module.rst
 
-   june.groups.leisure.care_home_visits
-   june.groups.leisure.cinema
-   june.groups.leisure.grocery
-   june.groups.leisure.household_visits
-   june.groups.leisure.leisure
-   june.groups.leisure.pub
-   june.groups.leisure.social_venue_distributor
-   june.groups.leisure.social_venue
+   groups.leisure.care_home_visits
+   groups.leisure.cinema
+   groups.leisure.grocery
+   groups.leisure.household_visits
+   groups.leisure.leisure
+   groups.leisure.pub
+   groups.leisure.social_venue_distributor
+   groups.leisure.social_venue
 
 
 Travel Groups
@@ -182,10 +182,10 @@ Travel Groups
    :toctree: _autosummary
    :template: module.rst
 
-   june.groups.travel.travelcity_distributor
-   june.groups.travel.travelcity
-   june.groups.travel.travelunit_distributor
-   june.groups.travel.travelunit
+   groups.travel.travelcity_distributor
+   groups.travel.travelcity
+   groups.travel.travelunit_distributor
+   groups.travel.travelunit
 
 
 HDF5 Savers
@@ -195,16 +195,16 @@ HDF5 Savers
    :toctree: _autosummary
    :template: module.rst
 
-   june.hdf5_savers.carehome_saver
-   june.hdf5_savers.commute_saver
-   june.hdf5_savers.company_saver
-   june.hdf5_savers.geography_saver
-   june.hdf5_savers.hospital_saver
-   june.hdf5_savers.household_saver
-   june.hdf5_savers.leisure_saver
-   june.hdf5_savers.population_saver
-   june.hdf5_savers.school_saver
-   june.hdf5_savers.university_saver
+   hdf5_savers.carehome_saver
+   hdf5_savers.commute_saver
+   hdf5_savers.company_saver
+   hdf5_savers.geography_saver
+   hdf5_savers.hospital_saver
+   hdf5_savers.household_saver
+   hdf5_savers.leisure_saver
+   hdf5_savers.population_saver
+   hdf5_savers.school_saver
+   hdf5_savers.university_saver
 
 
 Infection
@@ -214,18 +214,18 @@ Infection
    :toctree: _autosummary
    :template: module.rst
 
-   june.infection.health_index
-   june.infection.health_information
-   june.infection.infection
-   june.infection_seed.infection_seed
-   june.infection_seed.observed_to_cases
-   june.infection_seed
-   june.infection.symptoms
-   june.infection.symptoms_trajectory
-   june.infection.symptom_tag
-   june.infection.trajectory_maker
-   june.infection.transmission
-   june.infection.transmission_xnexp
+   infection.health_index
+   infection.health_information
+   infection.infection
+   infection_seed.infection_seed
+   infection_seed.observed_to_cases
+   infection_seed
+   infection.symptoms
+   infection.symptoms_trajectory
+   infection.symptom_tag
+   infection.trajectory_maker
+   infection.transmission
+   infection.transmission_xnexp
 
 
 Interaction
@@ -235,10 +235,10 @@ Interaction
    :toctree: _autosummary
    :template: module.rst
 
-   june.interaction.contact_sampling
-   june.interaction.interaction
-   june.interaction.interactive_group
-   june.interaction.matrix_interaction
+   interaction.contact_sampling
+   interaction.interaction
+   interaction.interactive_group
+   interaction.matrix_interaction
 
 
 Logger
@@ -248,8 +248,8 @@ Logger
    :toctree: _autosummary
    :template: module.rst
 
-   june.logger.logger
-   june.logger.read_logger
+   logger.logger
+   logger.read_logger
 
 
 Paths
@@ -259,7 +259,7 @@ Paths
    :toctree: _autosummary
    :template: module.rst
 
-   june.paths
+   paths
 
 
 Policy
@@ -269,11 +269,11 @@ Policy
    :toctree: _autosummary
    :template: module.rst
 
-   june.policy.individual_policies
-   june.policy.interaction_policies
-   june.policy.leisure_policies
-   june.policy.medical_care_policies
-   june.policy.policy
+   policy.individual_policies
+   policy.interaction_policies
+   policy.leisure_policies
+   policy.medical_care_policies
+   policy.policy
 
 
 Simulator Box
@@ -283,7 +283,7 @@ Simulator Box
    :toctree: _autosummary
    :template: module.rst
 
-   june.simulator_box
+   simulator_box
 
 
 Simulator
@@ -293,7 +293,7 @@ Simulator
    :toctree: _autosummary
    :template: module.rst
 
-   june.simulator
+   simulator
 
 
 Time
@@ -303,7 +303,7 @@ Time
    :toctree: _autosummary
    :template: module.rst
 
-   june.time
+   time
 
 
 Utilities (`utils`)
@@ -313,7 +313,7 @@ Utilities (`utils`)
    :toctree: _autosummary
    :template: module.rst
 
-   june.utils.parse_probabilities
+   utils.parse_probabilities
 
 
 Visualization
@@ -323,7 +323,7 @@ Visualization
    :toctree: _autosummary
    :template: module.rst
 
-   june.visualization
+   visualization
 
 
 World
@@ -333,4 +333,4 @@ World
    :toctree: _autosummary
    :template: module.rst
 
-   june.world
+   world
