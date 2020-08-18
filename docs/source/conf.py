@@ -34,6 +34,7 @@ version = '0.1.0'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx_pyreverse',
 ]
 
 
