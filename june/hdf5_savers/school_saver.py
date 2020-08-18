@@ -21,6 +21,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
         number of people to save at a time. Note that they have to be copied to be saved,
         so keep the number below 1e6.
     """
+    print("loading schools from hdf5")
     n_schools = len(schools)
     n_chunks = int(np.ceil(n_schools / chunk_size))
     with h5py.File(file_path, "a") as f:
@@ -79,7 +80,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["sector"][idx1:idx2] = sectors
                 schools_dset["coordinates"].resize(newshape[0], axis=0)
                 schools_dset["coordinates"][idx1:idx2] = coordinates
-
 
 def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
     """

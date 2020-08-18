@@ -16,7 +16,6 @@ default_config_filename = configs_path / "defaults/groups/leisure/household_visi
 class HouseholdVisitsDistributor(SocialVenueDistributor):
     def __init__(
         self,
-        super_areas: SuperAreas,
         male_age_probabilities: dict = None,
         female_age_probabilities: dict = None,
         neighbours_to_consider=None,
@@ -33,15 +32,12 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             weekend_boost=weekend_boost,
             drags_household_probability=drags_household_probability,
         )
-        self.link_households_to_households(super_areas)
 
     @classmethod
-    def from_config(
-        cls, super_areas: SuperAreas, config_filename: str = default_config_filename
-    ):
+    def from_config(cls, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(super_areas, **config)
+        return cls(**config)
 
     def link_households_to_households(self, super_areas):
         """
@@ -84,15 +80,16 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                         continue
                     person_idx = randint(0, len(house.people) - 1)
                     relatives_to_visit.append(house.people[person_idx])
-                household.relatives_in_households = tuple(relatives_to_visit)
+                if relatives_to_visit:
+                    household.relatives_in_households = tuple(relatives_to_visit)
 
     def get_possible_venues_for_household(self, household: Household):
         if household.relatives_in_households is None:
             return ()
         return tuple(
-                relative.residence.group
-                for relative in household.relatives_in_households
-                if relative.dead is False
+            relative.residence.group
+            for relative in household.relatives_in_households
+            if relative.dead is False
         )
 
     def get_social_venue_for_person(self, person):
@@ -100,9 +97,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         if relatives is None:
             return None
         alive_relatives = [relative for relative in relatives if relative.dead is False]
-        return alive_relatives[
-            randint(0, len(alive_relatives) - 1)
-        ].residence.group
+        return alive_relatives[randint(0, len(alive_relatives) - 1)].residence.group
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """

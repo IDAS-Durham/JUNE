@@ -16,7 +16,7 @@ from june.groups import (
 )
 from june.distributors import HouseholdDistributor
 from june import World
-from june.world import generate_world_from_hdf5, generate_world_from_geography
+from june.world import generate_world_from_geography
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -31,6 +31,7 @@ from june.hdf5_savers import (
     save_cinemas_to_hdf5,
     save_pubs_to_hdf5,
     save_groceries_to_hdf5,
+    generate_world_from_hdf5,
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -57,7 +58,6 @@ from pytest import fixture
 def make_geography():
     geography = Geography.from_file(
         {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
-        # {"super_area": ["E02003282", "E02002559"]}
     )
     return geography
 
@@ -79,9 +79,11 @@ def create_world(geography_h5):
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
     leisure = generate_leisure_for_world(
-        ["pubs", "cinemas", "groceries", "household_visits", "care_home_vists"], world
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
     )
-    leisure.distribute_social_venues_to_households(world.households)
+    leisure.distribute_social_venues_to_households(
+        households=world.households, super_areas=world.super_areas
+    )
     return world
 
 
@@ -106,37 +108,6 @@ class TestSavePeople:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-
-            group_specs = np.array(
-                [
-                    subgroup.group.spec if subgroup is not None else None
-                    for subgroup in person.subgroups.iter()
-                ]
-            )
-            group_ids = np.array(
-                [
-                    subgroup.group.id if subgroup is not None else None
-                    for subgroup in person.subgroups.iter()
-                ]
-            )
-            subgroup_types = np.array(
-                [
-                    subgroup.subgroup_type if subgroup is not None else None
-                    for subgroup in person.subgroups.iter()
-                ]
-            )
-            for group_spec, group_id, subgroup_type, group_array in zip(
-                group_specs, group_ids, subgroup_types, person2.subgroups
-            ):
-                assert group_spec == group_array[0]
-                assert group_id == group_array[1]
-                assert subgroup_type == group_array[2]
-            if person.area is not None:
-                assert person.area.id == person2.area
-            else:
-                assert person2.area is None
-
-            # mode of transport
             assert (
                 person.mode_of_transport.description
                 == person2.mode_of_transport.description
@@ -159,19 +130,12 @@ class TestSaveHouses:
         households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
             for attribute_name in ["id", "max_size", "type"]:
-                if attribute_name == "type":
-                    attribute2 = getattr(household2, attribute_name)
-                else:
-                    attribute2 = getattr(household2, attribute_name)
                 attribute = getattr(household, attribute_name)
+                attribute2 = getattr(household2, attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if household.area is not None:
-                assert household.area.id == household2.area
-            else:
-                assert household2.area is None
 
 
 class TestSaveCompanies:
@@ -187,10 +151,6 @@ class TestSaveCompanies:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if company.super_area is not None:
-                assert company.super_area.id == company2.super_area
-            else:
-                assert company2.super_area is None
 
 
 class TestSaveHospitals:
@@ -259,10 +219,6 @@ class TestSaveCarehomes:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if carehome.area is not None:
-                assert carehome.area.id == carehome2.area
-            else:
-                assert carehome2.area is None
 
 
 class TestSaveGeography:
@@ -280,10 +236,6 @@ class TestSaveGeography:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if area.super_area is not None:
-                assert area.super_area.id == area2.super_area
-            else:
-                assert area2.super_area is None
             assert area.coordinates[0] == area2.coordinates[0]
             assert area.coordinates[1] == area2.coordinates[1]
 
@@ -429,6 +381,8 @@ class TestSaveWorld:
 
     def test__subgroups(self, world_h5, world_h5_loaded):
         for person1, person2 in zip(world_h5.people, world_h5_loaded.people):
+            assert person1.area.id == person2.area.id
+            assert (person1.area.coordinates == person2.area.coordinates).all()
             for subgroup1, subgroup2 in zip(
                 person1.subgroups.iter(), person2.subgroups.iter()
             ):
@@ -438,6 +392,22 @@ class TestSaveWorld:
                 assert subgroup1.group.spec == subgroup2.group.spec
                 assert subgroup1.group.id == subgroup2.group.id
                 assert subgroup1.subgroup_type == subgroup2.subgroup_type
+
+    def test__household_area(self, world_h5, world_h5_loaded):
+        assert len(world_h5_loaded.households) == len(world_h5_loaded.households)
+        for household, household2 in zip(
+            world_h5.households, world_h5_loaded.households
+        ):
+            if household.area is not None:
+                assert household.area.id == household2.area.id
+            else:
+                assert household2.area is None
+
+    def test__care_home_area(self, world_h5, world_h5_loaded):
+        assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
+        for carehome, carehome2 in zip(world_h5.care_homes, world_h5_loaded.care_homes):
+            assert carehome.area.id == carehome2.area.id
+            assert carehome.area.name == carehome2.area.name
 
     def test__company_super_area(self, world_h5, world_h5_loaded):
         for company1, company2 in zip(world_h5.companies, world_h5_loaded.companies):
@@ -482,17 +452,11 @@ class TestSaveWorld:
                     assert np.array_equal(social_venues_id, social_venues_recovered_id)
         for h1, h2 in zip(world_h5.households, world_h5_loaded.households):
             if h1.relatives_in_households is None:
-                assert (
-                    h2.relatives_in_households is None
-                    or len(h2.relatives_in_households) == 0
-                )
+                assert h2.relatives_in_households is None
                 continue
             assert len(h1.relatives_in_households) == len(h2.relatives_in_households)
             if h1.relatives_in_care_homes is None:
-                assert (
-                    h2.relatives_in_care_homes is None
-                    or len(h2.relatives_in_care_homes) == 0
-                )
+                assert h2.relatives_in_care_homes is None
                 continue
             assert len(h1.relatives_in_care_homes) == len(h2.relatives_in_care_homes)
             if len(h1.relatives_in_households) > 0:

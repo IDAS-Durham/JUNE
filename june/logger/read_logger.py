@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-from random import sample
+from random import sample, randint
 import pandas as pd
 import datetime
 from pathlib import Path
@@ -271,7 +271,7 @@ class ReadLogger:
         -------
             data frame summarising people's trajectories identified by their id
         """
-        starting_id = randint(0, len(self.infections_df) - 1)
+        starting_id = randint(0, len(self.infections_df))
         starting_time = self.infections_df.index[starting_id]
         end_date = starting_time + datetime.timedelta(days=window_length)
         mask = (self.infections_df.index > starting_time) & (
