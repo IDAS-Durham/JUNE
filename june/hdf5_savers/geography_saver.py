@@ -111,7 +111,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_super_areas)
-            length = idx2-idx1
+            length = idx2 - idx1
             super_area_ids = np.empty(length, dtype=int)
             geography["super_area_id"].read_direct(
                 super_area_ids, np.s_[idx1:idx2], np.s_[0:length]
@@ -138,9 +138,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
 
 
 def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_size):
-    super_areas_first_id = world.super_areas[
-        0
-    ].id
+    super_areas_first_id = world.super_areas[0].id
     first_area_id = world.areas[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
@@ -152,11 +150,16 @@ def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_s
             idx2 = min((chunk + 1) * chunk_size, n_areas)
             length = idx2 - idx1
             areas_ids = np.empty(length, dtype=int)
-            geography["area_id"].read_direct(areas_ids, np.s_[idx1:idx2], np.s_[0:length])
+            geography["area_id"].read_direct(
+                areas_ids, np.s_[idx1:idx2], np.s_[0:length]
+            )
             super_areas = np.empty(length, dtype=int)
-            geography["area_super_area"].read_direct(super_areas, np.s_[idx1:idx2], np.s_[0:length])
+            geography["area_super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
                 area = world.areas[areas_ids[k] - first_area_id]
-                area.super_area = world.super_areas[super_areas[k] - super_areas_first_id]
+                area.super_area = world.super_areas[
+                    super_areas[k] - super_areas_first_id
+                ]
                 area.super_area.areas.append(area)
-

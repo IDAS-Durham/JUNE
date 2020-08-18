@@ -78,7 +78,7 @@ def save_companies_to_hdf5(
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 
-def load_companies_from_hdf5(file_path: str, chunk_size=50000, for_simulation=False):
+def load_companies_from_hdf5(file_path: str, chunk_size=50000):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -95,22 +95,26 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000, for_simulation=Fa
             print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
-            length = idx2-idx1
+            length = idx2 - idx1
             ids = np.empty(length, dtype=int)
             companies["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             sectors = np.empty(length, dtype="S20")
             companies["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
             n_workers_maxs = np.empty(length, dtype=int)
-            companies["n_workers_max"].read_direct(n_workers_maxs, np.s_[idx1:idx2], np.s_[0:length])
+            companies["n_workers_max"].read_direct(
+                n_workers_maxs, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
-                if for_simulation:
-                    company = Company(super_area=None, n_workers_max=None, sector=None)
-                else:
-                    company = Company(super_area=None, n_workers_max=n_workers_maxs[k], sector=sectors[k].decode())
+                company = Company(
+                    super_area=None,
+                    n_workers_max=n_workers_maxs[k],
+                    sector=sectors[k].decode(),
+                )
                 company.id = ids[k]
                 companies_list.append(company)
     print("\n", end="")
     return Companies(companies_list)
+
 
 def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_size):
     super_areas_first_id = world.super_areas[
@@ -131,7 +135,9 @@ def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_s
             ids = np.empty(length, dtype=int)
             companies["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             super_areas = np.empty(length, dtype=int)
-            companies["super_area"].read_direct(super_areas, np.s_[idx1:idx2], np.s_[0:length])
+            companies["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
                 company = world.companies[ids[k] - first_company_id]
                 if super_areas[k] == nan_integer:

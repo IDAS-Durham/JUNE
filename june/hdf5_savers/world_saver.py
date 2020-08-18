@@ -89,9 +89,8 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if world.groceries is not None:
         save_groceries_to_hdf5(world.groceries, file_path)
 
-
 def generate_world_from_hdf5(
-    file_path: str, chunk_size=500000, for_simulation=False
+    file_path: str, chunk_size=500000
 ) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
@@ -103,8 +102,6 @@ def generate_world_from_hdf5(
     chunk_size
         how many units of supergroups to process at a time.
         It is advise to keep it around 1e6
-    for_simulation
-        Does not initialize some attributes to save memory (eg household max size)
     """
     print("loading world data ...")
     world = World()
@@ -123,7 +120,7 @@ def generate_world_from_hdf5(
         )
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size, for_simulation=for_simulation
+            file_path=file_path, chunk_size=chunk_size
         )
     if "care_homes" in f_keys:
         world.care_homes = load_care_homes_from_hdf5(
@@ -147,11 +144,11 @@ def generate_world_from_hdf5(
         world.groceries = load_groceries_from_hdf5(file_path)
     if "households" in f_keys:
         world.households = load_households_from_hdf5(
-            file_path, chunk_size=chunk_size, for_simulation=for_simulation
+            file_path, chunk_size=chunk_size
         )
     if "population" in f_keys:
         world.people = load_population_from_hdf5(
-            file_path, chunk_size=chunk_size, for_simulation=for_simulation
+            file_path, chunk_size=chunk_size
         )
 
     # restore world
@@ -165,7 +162,7 @@ def generate_world_from_hdf5(
         )
     if "households" in f_keys:
         restore_households_properties_from_hdf5(
-            world=world, file_path=file_path, chunk_size=chunk_size, for_simulation=for_simulation
+            world=world, file_path=file_path, chunk_size=chunk_size
         )
     if "care_homes" in f_keys:
         restore_care_homes_properties_from_hdf5(
