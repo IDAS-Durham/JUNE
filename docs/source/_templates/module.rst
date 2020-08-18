@@ -1,6 +1,8 @@
 {{ fullname }}
 {{ underline }}
 
+.. currentmodule:: june
+
 .. automodule:: {{ fullname }}
    :members:
    :undoc-members:

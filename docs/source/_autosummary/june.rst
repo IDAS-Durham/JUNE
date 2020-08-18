@@ -1,6 +1,8 @@
 ﻿june
 ====
 
+.. currentmodule:: june
+
 .. automodule:: june
    :members:
    :undoc-members:
