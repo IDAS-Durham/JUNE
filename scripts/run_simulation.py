@@ -46,6 +46,7 @@ print("World loaded succesfully")
 # add parallelism
 World.parallel_setup = parallel_setup
 World.parallel_update = parallel_update
+# FIXME: better to do this with a config file ... but this is stub code:
 world.parallel_setup(world.super_areas[0:2])
 
 # regenerate lesiure
