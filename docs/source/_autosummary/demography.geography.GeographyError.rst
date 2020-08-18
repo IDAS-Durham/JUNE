@@ -1,12 +1,6 @@
 ﻿demography.geography.GeographyError
 ===================================
 
-.. currentmodule:: june
+.. currentmodule:: demography.geography
 
-.. autoclass:: demography.geography.GeographyError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: GeographyError

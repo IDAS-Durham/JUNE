@@ -1,12 +1,6 @@
 ﻿groups.school.SchoolError
 =========================
 
-.. currentmodule:: june
+.. currentmodule:: groups.school
 
-.. autoclass:: groups.school.SchoolError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: SchoolError

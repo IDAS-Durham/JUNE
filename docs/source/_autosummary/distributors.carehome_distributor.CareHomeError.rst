@@ -1,12 +1,6 @@
-﻿distributors.carehome_distributor.CareHomeError
-===============================================
+﻿distributors.carehome\_distributor.CareHomeError
+================================================
 
-.. currentmodule:: june
+.. currentmodule:: distributors.carehome_distributor
 
-.. autoclass:: distributors.carehome_distributor.CareHomeError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: CareHomeError

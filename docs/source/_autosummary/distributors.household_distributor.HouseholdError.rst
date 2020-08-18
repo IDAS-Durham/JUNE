@@ -1,12 +1,6 @@
-﻿distributors.household_distributor.HouseholdError
-=================================================
+﻿distributors.household\_distributor.HouseholdError
+==================================================
 
-.. currentmodule:: june
+.. currentmodule:: distributors.household_distributor
 
-.. autoclass:: distributors.household_distributor.HouseholdError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: HouseholdError

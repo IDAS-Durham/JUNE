@@ -1,12 +1,6 @@
 ﻿demography.demography.DemographyError
 =====================================
 
-.. currentmodule:: june
+.. currentmodule:: demography.demography
 
-.. autoclass:: demography.demography.DemographyError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: DemographyError
