@@ -255,9 +255,9 @@ class ActivityManager:
 
         # first handle any parallelism to get who we need to work with
         if self.timer.state == 'primary_activity':
-            self.world.parallel_update('am')
+            self.world.parallel_update('am', self.timer.now)
         elif self.timer.state == 'commute' and self.timer.last_state == 'primary_activity':
-            self.world.parallel_update('pm')
+            self.world.parallel_update('pm', self.timer.now)
 
         for person in self.world.people.members:
             if person.dead or person.busy:

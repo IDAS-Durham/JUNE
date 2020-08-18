@@ -11,21 +11,31 @@
 import json
 
 
-def parallel_setup(self, outside=None):
+def mydomain(super_areas, size):
+    """ Generator to partition world into domains"""
+    for i in range(0, len(super_areas), size):
+        yield super_areas[i:i + size]
+
+
+def parallel_setup(self, rank, size):
     """ Initialise by defining what part of the known world is outside _THIS_ domain."""
-    self.active = outside is not None
-    self.outside_workers = []
-    self.inbound_workers = []
-    # FIXME: will need to be set by configuration
-    self.domain_id = 1
-    self.other_domain_ids = [2,]
-    for super_area in outside:
-        # find people who work outside
-        self.outside_workers += super_area.people
-        # FIXME: really what we want to do is decorate people but we don't want to modify them yet.
-        # now hide the places outside ... (we can delete them for this instance)
-        # FIXME: We probably want to delete stuff in the world so it isn't active here.
-        #        But we'll do that later in the p.o.c.
+
+    # let's just brute force it with MPI for now
+    # partition the list of superareas
+    self.outside_workers = {}
+    self.domain_id = rank
+    # need to find all the people who are in my domain who work elsewhere, and all those who live
+    # elsewhere and work in my domain. All the other people can be deleted in this mpi process.
+    # We could probably delete other parts of the world too, but we can do that in a later iteration.
+
+    for i, super_area in enumerate(mydomain(self.super_areas, size)):
+        if i == self.domain_id:
+
+            # this is me!
+            # who works outside?
+            # who from outside works here?
+            raise NotImplementedError  #FIXME FIRST!
+
 
 
 def parallel_update(self, direction, timestep):

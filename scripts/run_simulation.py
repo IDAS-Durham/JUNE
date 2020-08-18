@@ -21,6 +21,8 @@ from june.groups.commute import *
 from june import parallel_setup, parallel_update
 from june import World
 
+from mpi4py import MPI
+
 def set_random_seed(seed=999):
     """
     Sets global seeds for testing in numpy, random, and numbaized numpy.
@@ -47,7 +49,10 @@ print("World loaded succesfully")
 World.parallel_setup = parallel_setup
 World.parallel_update = parallel_update
 # FIXME: better to do this with a config file ... but this is stub code:
-world.parallel_setup(world.super_areas[0:2])
+comm = MPI.COMM_WORLD
+rank = comm.get_rank()
+size = comm.get_size()
+world.parallel_setup(rank, size)
 
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
