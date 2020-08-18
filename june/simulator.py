@@ -65,6 +65,7 @@ class Simulator:
             self.checkpoint_dates = checkpoint_dates
         self.sort_people_world()
         self.medical_facilities = self._get_medical_facilities()
+        print(self.medical_facilities)
         if save_path is not None:
             self.save_path = Path(save_path)
             self.save_path.mkdir(exist_ok=True, parents=True)
@@ -352,7 +353,9 @@ class Simulator:
             n_secondary_infections.append(person.health_information.number_of_infected)
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
-                person=person, medical_facilities=self.world.hospitals
+                person=person,
+                medical_facilities=self.medical_facilities,
+                days_from_start=time,
             )
             if health_information.recovered:
                 self.recover(person, time)
