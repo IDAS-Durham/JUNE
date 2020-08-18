@@ -3,8 +3,7 @@
 
 .. currentmodule:: june
 
-.. autoclass:: exc.GroupException
-   :noindex:
+.. autoexception:: exc.GroupException
    :members:
    :undoc-members:
    :special-members:

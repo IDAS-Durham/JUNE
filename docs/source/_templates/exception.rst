@@ -1,9 +1,9 @@
-﻿exc.PolicyError
-===============
+{{ fullname }}
+{{ underline }}
 
 .. currentmodule:: june
 
-.. autoexception:: exc.PolicyError
+.. autoexception:: {{ fullname }}
    :members:
    :undoc-members:
    :special-members:
