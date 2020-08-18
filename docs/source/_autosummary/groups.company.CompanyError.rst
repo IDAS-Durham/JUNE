@@ -1,12 +1,6 @@
 ﻿groups.company.CompanyError
 ===========================
 
-.. currentmodule:: june
+.. currentmodule:: groups.company
 
-.. autoclass:: groups.company.CompanyError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: CompanyError

@@ -1,12 +1,6 @@
-﻿simulator_box.SimulatorError
-============================
+﻿simulator\_box.SimulatorError
+=============================
 
-.. currentmodule:: june
+.. currentmodule:: simulator_box
 
-.. autoclass:: simulator_box.SimulatorError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: SimulatorError

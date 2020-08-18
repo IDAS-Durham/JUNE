@@ -1,12 +1,6 @@
-﻿groups.leisure.social_venue.SocialVenueError
-============================================
+﻿groups.leisure.social\_venue.SocialVenueError
+=============================================
 
-.. currentmodule:: june
+.. currentmodule:: groups.leisure.social_venue
 
-.. autoclass:: groups.leisure.social_venue.SocialVenueError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: SocialVenueError

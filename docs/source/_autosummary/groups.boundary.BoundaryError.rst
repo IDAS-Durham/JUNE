@@ -1,12 +1,6 @@
 ﻿groups.boundary.BoundaryError
 =============================
 
-.. currentmodule:: june
+.. currentmodule:: groups.boundary
 
-.. autoclass:: groups.boundary.BoundaryError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: BoundaryError

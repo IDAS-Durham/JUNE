@@ -66,11 +66,9 @@ Demography
    :toctree: _autosummary
    :template: class.rst
 
-   demography.demography.DemographyError
    demography.demography.AgeSexGenerator
    demography.demography.Population
    demography.demography.Demography
-   demography.geography.GeographyError
    demography.geography.Area
    demography.geography.Areas
    demography.geography.SuperArea
@@ -80,6 +78,16 @@ Demography
    demography.person.Person
 
 
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   demography.demography.DemographyError
+   demography.geography.GeographyError
+
+
 Distributors
 ^^^^^^^^^^^^
 
@@ -87,19 +95,29 @@ Distributors
    :toctree: _autosummary
    :template: class.rst
 
-   distributors.carehome_distributor.CareHomeError
    distributors.carehome_distributor.CareHomeDistributor
    distributors.company_distributor.CompanyDistributor
    distributors.hospital_distributor.HospitalDistributor
-   distributors.household_distributor.HouseholdError
    distributors.household_distributor.HouseholdDistributor
    distributors.school_distributor.SchoolDistributor
    distributors.university_distributor.UniversityDistributor
    distributors.worker_distributor.WorkerDistributor
 
 
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   distributors.carehome_distributor.CareHomeError
+   distributors.household_distributor.HouseholdError
+
+
 Exceptions (`exc`)
 ^^^^^^^^^^^^^^^^^^
+
+Exceptions (Exception classes):
 
 .. autosummary::
    :toctree: _autosummary
@@ -117,15 +135,12 @@ Groups
    :toctree: _autosummary
    :template: class.rst
 
-   groups.boundary.BoundaryError
    groups.boundary.Boundary
-   groups.carehome.CareHomeError
    groups.carehome.CareHome
    groups.carehome.CareHome.SubgroupType
    groups.carehome.CareHomes
    groups.cemetery.Cemetery
    groups.cemetery.Cemeteries
-   groups.company.CompanyError
    groups.company.Company
    groups.company.Company.SubgroupType
    groups.company.Companies
@@ -135,12 +150,24 @@ Groups
    groups.household.Household
    groups.household.Household.SubgroupType
    groups.household.Households
-   groups.school.SchoolError
    groups.school.School
    groups.school.School.SubgroupType
    groups.school.Schools
    groups.university.University
    groups.university.Universities
+
+
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   groups.boundary.BoundaryError
+   groups.carehome.CareHomeError
+   groups.company.CompanyError
+   groups.school.SchoolError
+
 
 See also the sub-sections grouping together related types of `Groups`.
 
@@ -199,10 +226,18 @@ Leisure Groups
    groups.leisure.pub.Pubs
    groups.leisure.pub.PubDistributor
    groups.leisure.social_venue_distributor.SocialVenueDistributor
-   groups.leisure.social_venue.SocialVenueError
    groups.leisure.social_venue.SocialVenue
    groups.leisure.social_venue.SocialVenue.SubgroupType
    groups.leisure.social_venue.SocialVenues
+
+
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   groups.leisure.social_venue.SocialVenueError
 
 
 Travel Groups
@@ -317,8 +352,16 @@ Simulator Box
    :toctree: _autosummary
    :template: class.rst
 
-   simulator_box.SimulatorError
    simulator_box.SimulatorBox
+
+
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   simulator_box.SimulatorError
 
 
 Simulator

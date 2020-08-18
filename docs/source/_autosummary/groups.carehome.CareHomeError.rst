@@ -1,12 +1,6 @@
 ﻿groups.carehome.CareHomeError
 =============================
 
-.. currentmodule:: june
+.. currentmodule:: groups.carehome
 
-.. autoclass:: groups.carehome.CareHomeError
-   :noindex:
-   :members:
-   :undoc-members:
-   :special-members:
-   :private-members:
-   :inherited-members:
+.. autoexception:: CareHomeError
