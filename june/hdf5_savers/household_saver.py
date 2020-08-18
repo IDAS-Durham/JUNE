@@ -150,7 +150,7 @@ def save_households_to_hdf5(
             )
 
 
-def load_households_from_hdf5(file_path: str, chunk_size=50000, for_simulation=False):
+def load_households_from_hdf5(file_path: str, chunk_size=50000):
     """
     Loads households from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -177,12 +177,9 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000, for_simulation=F
                 max_sizes, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
-                if for_simulation:
-                    household = Household(area=None, type=None, max_size=None)
-                else:
-                    household = Household(
-                        area=None, type=types[k].decode(), max_size=max_sizes[k]
-                    )
+                household = Household(
+                    area=None, type=types[k].decode(), max_size=max_sizes[k]
+                )
                 households_list.append(household)
                 household.id = ids[k]
     print("\n", end="")
@@ -190,7 +187,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000, for_simulation=F
 
 
 def restore_households_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000, for_simulation=False
+    world: World, file_path: str, chunk_size=50000
 ):
     """
     Loads households from an hdf5 file located at ``file_path``.
@@ -245,10 +242,7 @@ def restore_households_properties_from_hdf5(
                 household.residents = tuple(household.people)
                 # relatives
                 if "relatives_in_households" in households:
-                    if (
-                        relatives_in_households_list[k][0] == nan_integer
-                        or for_simulation
-                    ):
+                    if relatives_in_households_list[k][0] == nan_integer:
                         household.household_relatives = None
                     else:
                         household_relatives = []
@@ -258,10 +252,7 @@ def restore_households_properties_from_hdf5(
                             )
                         household.relatives_in_households = tuple(household_relatives)
                 if "relatives_in_care_homes" in households:
-                    if (
-                        relatives_in_care_homes_list[k][0] == nan_integer
-                        or for_simulation
-                    ):
+                    if relatives_in_care_homes_list[k][0] == nan_integer:
                         household.care_home_relatives = None
                     else:
                         care_home_relatives = []
