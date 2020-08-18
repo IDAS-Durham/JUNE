@@ -1,5 +1,4 @@
 import datetime
-from typing import Union, Optional, List, Dict
 
 from .policy import Policy, Policies, PolicyCollection
 from june.groups import Hospitals

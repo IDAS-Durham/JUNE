@@ -1,6 +1,5 @@
 import yaml
 import logging
-import os
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple, Optional
