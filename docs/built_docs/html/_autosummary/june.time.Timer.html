@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.time.Timer &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.world.World" href="june.world.World.html" />
+    <link rel="prev" title="june.simulator.Simulator" href="june.simulator.Simulator.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.time.Timer</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.simulator.Simulator.html">june.simulator.Simulator</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.world.World.html">june.world.World</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-time-timer">
+<h1>june.time.Timer<a class="headerlink" href="#june-time-timer" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.time.</code><code class="sig-name descname">Timer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">initial_day</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'2020-03-01'</span></em>, <em class="sig-param"><span class="n">total_days</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">weekday_step_duration</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[12, 12]</span></em>, <em class="sig-param"><span class="n">weekend_step_duration</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[24]</span></em>, <em class="sig-param"><span class="n">weekday_activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[['primary_activity', 'residence'], ['residence']]</span></em>, <em class="sig-param"><span class="n">weekend_activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[['residence']]</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">initial_day</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'2020-03-01'</span></em>, <em class="sig-param"><span class="n">total_days</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">weekday_step_duration</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[12, 12]</span></em>, <em class="sig-param"><span class="n">weekend_step_duration</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[24]</span></em>, <em class="sig-param"><span class="n">weekday_activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[['primary_activity', 'residence'], ['residence']]</span></em>, <em class="sig-param"><span class="n">weekend_activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[['residence']]</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">reset_to_new_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">activities</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">day</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">day_of_week</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">duration</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">is_weekend</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">now</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">shift_duration</code></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.simulator.Simulator.html">june.simulator.Simulator</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.world.World.html">june.world.World</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>
