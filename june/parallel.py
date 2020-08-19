@@ -65,10 +65,10 @@ def parallel_setup(self, rank, size):
                         break
         else:
             if work_super_area in my_domain:
-                for i in self.parallel_partitions:
+                for i, p in enumerate(self.parallel_partitions):
                     if i == rank:
                         continue
-                    if home_super_area in self.parallel_partitions[i]:
+                    if home_super_area in p:
                         self.inbound_workers[i].append(person)
                         break
             else:
@@ -76,26 +76,12 @@ def parallel_setup(self, rank, size):
                 # with anyone.
                 del self.people[person]
                 # (but do they exist somewhere else)
+                # need to kill unused households and unused companies etc otherwise each partition will
+                # need all the memory of the entire world.
+
     inbound = sum([len(i) for i in self.inbound_workers])
-    outbound = sum([len(i) or i in self.outside_workers])
-    print(f'Partition {rank} has {self.people.total_people}(of {npeople} - {inbound} in and {outbound} out).')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    outbound = sum([len(i) for i in self.outside_workers])
+    print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
 
 
 def parallel_update(self, direction, timestep):
