@@ -32,10 +32,10 @@ def parallel_setup(self, comm, debug=False):
 
     # let's just brute force it with MPI for now
     # partition the list of superareas
-    # each of the following lists is 2-d, first dimension is number of "other domains" of relevance,
-    # second is workers in those domains.
-    self.outside_workers = [[] for i in range(size)]
-    self.inbound_workers = [[] for i in range(size)]
+    # each of the following dictionaries is a list keyed by the rank associated with that partition
+    self.outside_workers = {i: [] for i in range(size)}
+    self.inbound_workers = {i: [] for i in range(size)}
+    # (of course there will never be anything but an empty list in the the rank of this PE.)
     self.domain_id = rank
     start_time = time.localtime()
     current_time = time.strftime("%H:%M:%S", start_time)
@@ -67,10 +67,9 @@ def parallel_setup(self, comm, debug=False):
             if sa.name in p:
                 super_index[sa.name] = i
 
-    live, inb, oub, gone, np = 0, 0, 0, 0, 0
+    live, inb, oub, gone = 0, 0, 0, 0
     binable  = []
     for person in self.people:
-        np += 1
         home_super_area = person.area.super_area.name
         work_super_area = None
         if person.primary_activity:  # some people are too old to work.
@@ -106,9 +105,9 @@ def parallel_setup(self, comm, debug=False):
     # E.g need to kill unused households and unused companies etc otherwise each partition will
     # need nearly all the memory of the entire world.
 
-    print(rank, npeople, np, live, inb, oub, gone)
-    inbound = sum([len(i) for i in self.inbound_workers])
-    outbound = sum([len(i) for i in self.outside_workers])
+    print(rank, npeople, live, inb, oub, gone)
+    inbound = sum([len(i) for k,i in self.inbound_workers.items()])
+    outbound = sum([len(i) for k,i in self.outside_workers.items()])
     print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
     end_time = time.localtime()
     current_time = time.strftime("%H:%M:%S", end_time)
@@ -150,7 +149,11 @@ def parallel_update(self, direction, timestep):
     if direction == 'am':
         # send people away
         # we need only to pass infection status of infected people, so only some of these folk need writing out
-        for id, outside_domain in enumerate(self.outside_workers):
+        # we need to loop over the _other_ ranks (avoiding puns about NCOs)
+        for other_rank in self.outside_workers:
+            if other_rank == self.domain_id:
+                continue
+            outside_domain = self.outside_workers[other_rank]
             tell_them = []
             for person in outside_domain:
                 if not person.hospitalised:
@@ -158,9 +161,12 @@ def parallel_update(self, direction, timestep):
                 #FIXME: Actually, this is the wrnog place, since policy may keep them at home ...
                 if person.infected:
                     tell_them.append(person)
-            _put_updates(self, id, tell_them, timestep)
+            _put_updates(self, other_rank, tell_them, timestep)
         # pay attention to people who are coming in
-        for id, outside_domain in enumerate(self.inbound_workers):
+        for other_rank in self.inbound_workers:
+            if other_rank == self.domdain_id:
+                continue
+            outside_domain = self.inbound_workers[other_rank]
             for person in outside_domain:
                 person.busy = False
             # we might need to update the infection status of these people
@@ -168,19 +174,24 @@ def parallel_update(self, direction, timestep):
     elif direction == 'pm':
 
         # FIXME: What happens to inbound workers during initialisation?
-        for id, outside_domain in enumerate(self.inbound_workers):
+        for other_rank in self.inbound_workers:
+            if other_rank == self.domain_id:
+                continue
+            outside_domain = self.inbound_workers[other_rank]
             tell_them = []
             for person in outside_domain:
                 person.busy = True
                 if person.infected: # it happened at work!
                     tell_them.append(person)
-            _put_updates(self, id, tell_them, timestep)
+            _put_updates(self, other_rank, tell_them, timestep)
         # now see if any of our workers outside have got infected.
-        for id, outside_domain in enumerate(self.outside_workers):
-            _get_updates(self, id, timestep)
+        for other_rank in self.outside_workers:
+            if other_rank == self.domain_id:
+                continue
+            _get_updates(self, other_rank, timestep)
+            # and do something ...
 
-
-def _put_updates(self, domain_id, tell_them, timestep):
+def _put_updates(self, target_rank, tell_them, timestep):
     """
     Write necessary information about people for infection transmission while they are outside.
     In practice, we only need to tell them about infected people (the list of people called "tell_them").
@@ -194,7 +205,7 @@ def _put_updates(self, domain_id, tell_them, timestep):
     print("Serialisation of person infection properties for parallelisation is not yet working")
     #forget all this gubbins, let's use MPI!
 
-def _get_updates(self, domain_id, timestep):
+def _get_updates(self, target_rank, timestep):
     """" Get necessary information about possible changes which happened to people while outside"""
     #try:
     #    for id in self.other_domain_ids:
