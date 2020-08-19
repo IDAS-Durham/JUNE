@@ -63,7 +63,7 @@ def parallel_setup(self, rank, size):
                     if work_super_area in p:
                         self.outside_workers[i].append(person)
                         break
-        else:
+        elif work_super_area:
             if work_super_area in my_domain:
                 for i, p in enumerate(self.parallel_partitions):
                     if i == rank:
@@ -126,7 +126,7 @@ def parallel_update(self, direction, timestep):
         # FIXME: What happens to inbound workers during initialisation?
         for id, outside_domain in enumerate(self.inbound_workers):
             tell_them = []
-            for person in self.inbound_workers:
+            for person in outside_domain:
                 person.busy = True
                 if person.infected: # it happened at work!
                     tell_them.append(person)
@@ -145,9 +145,9 @@ def _put_updates(self, domain_id, tell_them, timestep):
     data = [set_person_info(p) for p in tell_them]
     # at this point, we do a send/receive in MPI land.
     # after receive would need to do the inverse of set_person_info ...
-    #with open(f'parallel_putter_{self.domain_id}_{domain_id}_{timestep}.json','w') as f:
+    # with open(f'parallel_putter_{self.domain_id}_{domain_id}_{timestep}.json','w') as f:
     #    json.dump(data, f)
-    print(f"Serialisation of person infection properties for parallelisation is not yet working")
+    print("Serialisation of person infection properties for parallelisation is not yet working")
     #forget all this gubbins, let's use MPI!
 
 def _get_updates(self, domain_id, timestep):
@@ -163,7 +163,7 @@ def _get_updates(self, domain_id, timestep):
     # forget all this gubbins, let's use MPI.
 
     #FIXME: Are people indexed in anyway? Then use that index here ...
-    print(f"Unable (yet) to update people from domain {id} for timestep {timestep}")
+    print(f"Unable (yet) to update people from domain {domain_id} for timestep {timestep}")
 
 
 def set_person_info(person):
