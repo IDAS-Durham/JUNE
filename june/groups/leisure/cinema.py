@@ -24,34 +24,9 @@ class Cinema(SocialVenue):
 
 
 class Cinemas(SocialVenues):
+    social_venue_class = Cinema
     default_coordinates_filename = default_cinemas_coordinates_filename
 
 
 class CinemaDistributor(SocialVenueDistributor):
-    def __init__(
-        self,
-        cinemas: Cinemas,
-        male_age_probabilities: dict = None,
-        female_age_probabilities: dict = None,
-        neighbours_to_consider=5,
-        maximum_distance=15,
-        weekend_boost: float = 2.0,
-        drags_household_probability=0.5,
-    ):
-        super().__init__(
-            social_venues=cinemas,
-            male_age_probabilities=male_age_probabilities,
-            female_age_probabilities=female_age_probabilities,
-            neighbours_to_consider=neighbours_to_consider,
-            maximum_distance=maximum_distance,
-            weekend_boost=weekend_boost,
-            drags_household_probability=drags_household_probability,
-        )
-
-    @classmethod
-    def from_config(
-        cls, cinemas: Cinemas, config_filename: str = default_config_filename
-    ):
-        with open(config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(cinemas, **config)
+    default_config_filename = default_config_filename

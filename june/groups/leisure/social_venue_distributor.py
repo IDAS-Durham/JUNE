@@ -3,6 +3,7 @@ from random import choice, random
 from numba import jit
 from numba import typed
 from itertools import chain
+import yaml
 import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
@@ -63,6 +64,14 @@ class SocialVenueDistributor:
         self.drags_household_probability = drags_household_probability
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
+
+    @classmethod
+    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+        if config_filename is None:
+            config_filename = cls.default_config_filename
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return cls(social_venues, **config)
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
