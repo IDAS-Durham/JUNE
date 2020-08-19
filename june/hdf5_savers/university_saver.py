@@ -121,5 +121,5 @@ def restore_universities_properties_from_hdf5(world, file_path: str, chunk_size:
             if super_area == nan_integer:
                 super_area = None
             else:
-                super_area = world.super_areas[super_area - first_uni_id]
+                super_area = world.super_areas[super_area - first_super_area_id]
             university.super_area = super_area
