@@ -1,7 +1,7 @@
 import datetime
 import numpy as np
 from collections import defaultdict
-from typing import Union, Optional, List, Dict
+from typing import Dict, Union
 
 from .policy import Policy, Policies, PolicyCollection
 from june.exc import PolicyError

@@ -118,7 +118,7 @@ def test__generate_leisure_from_world():
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
-    leisure.distribute_social_venues_to_households([household])
+    leisure.distribute_social_venues_to_households([household], super_areas=world.super_areas)
     leisure.generate_leisure_probabilities_for_timestep(0.1, False)
     n_pubs = 0
     n_cinemas = 0

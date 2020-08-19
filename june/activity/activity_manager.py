@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
-from collections import defaultdict
 
 from june.demography import Person
 from june.exc import SimulatorError
