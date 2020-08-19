@@ -22,19 +22,25 @@ def parallel_setup(self, rank, size):
 
     # let's just brute force it with MPI for now
     # partition the list of superareas
-    self.outside_workers = {}
+    # each of the following lists is 2-d, first dimension is number of "other domains" of relevance,
+    # second is workers in those domains.
+    self.outside_workers = []
+    self.inbound_workers = []
     self.domain_id = rank
     # need to find all the people who are in my domain who work elsewhere, and all those who live
     # elsewhere and work in my domain. All the other people can be deleted in this mpi process.
     # We could probably delete other parts of the world too, but we can do that in a later iteration.
 
+    # Currently the person instances in world.people do not have the work_super_area populated when
+    # read back from a file so we have to work this all out from the people in the areas.
+
     for i, super_area in enumerate(mydomain(self.super_areas, size)):
         if i == self.domain_id:
-
+            continue
             # this is me!
             # who works outside?
             # who from outside works here?
-            raise NotImplementedError  #FIXME FIRST!
+
 
 
 
@@ -55,55 +61,62 @@ def parallel_update(self, direction, timestep):
         direction='am': people from outside come in to work or people inside leave to work,
         direction='pm': people return from work or head home to another domain.
     """
-    tell_them = []
+
     # Note that we have to put people before getting people, otherwise we get a deadlock
     if direction == 'am':
         # send people away
         # we need only to pass infection status of infected people, so only some of these folk need writing out
-        for person in self.outside_workers:
-            if not person.hospitalised:
-                person.busy = True
-            if person.infected:
-                tell_them.append(person)
-        _put_updates(self, tell_them, timestep)
+        for id, outside_domain in enumerate(self.outside_workers):
+            tell_them = []
+            for person in outside_domain:
+                if not person.hospitalised:
+                    person.busy = True
+                if person.infected:
+                    tell_them.append(person)
+            _put_updates(self, id, tell_them, timestep)
         # pay attention to people who are coming in
-        for person in self.inbound_workers:
-            person.busy = False
-        # we might need to update the infection status of these people
-        _get_updates(self, timestep)
+        for id, outside_domain in enumerate(self.inbound_workers):
+            for person in outside_domain:
+                person.busy = False
+            # we might need to update the infection status of these people
+            _get_updates(self, id, timestep)
     elif direction == 'pm':
 
         # FIXME: What happens to inbound workers during initialisation?
-        for person in self.inbound_workers:
-            person.busy = True
-            if person.infected: # it happened at work!
-                tell_them.append(person)
-        _put_updates(self, tell_them, timestep)
+        for id, outside_domain in enumerate(self.inbound_workers):
+            tell_them = []
+            for person in self.inbound_workers:
+                person.busy = True
+                if person.infected: # it happened at work!
+                    tell_them.append(person)
+            _put_updates(self, id, tell_them, timestep)
         # now see if any of our workers outside have got infected.
-        _get_updates(self)
+        for id, outside_domain in enumerate(self.outside_workers):
+            _get_updates(self, id, timestep)
 
 
-def _put_updates(self, tell_them, timestep):
+def _put_updates(self, domain_id, tell_them, timestep):
     """
     Write necessary information about people for infection transmission while they are outside.
     In practice, we only need to tell them about infected people (the list of people called "tell_them").
     """
     data = [set_person_info(p) for p in tell_them]
-    with open(f'parallel_putter_{self.domain_id}_{timestep}.json','w') as f:
-        json.dump(data, f)
-    print(f"Serialisation of person infection properties for parallelisation is not yet working")
+    #with open(f'parallel_putter_{self.domain_id}_{domain_id}_{timestep}.json','w') as f:
+    #    json.dump(data, f)
+    #print(f"Serialisation of person infection properties for parallelisation is not yet working")
+    #forget all this gubbins, let's use MPI!
 
-
-def _get_updates(self, timestep):
+def _get_updates(self, domain_id, timestep):
     """" Get necessary information about possible changes which happened to people while outside"""
-    try:
-        for id in self.other_domain_ids:
-            with open(f'parallel_putter_{id}_{timestep}.json','r') as f:
-                updated = json.load(f)
-    except FileNotFoundError:
-        # We'd wait a fraction of a second here in real life, but for now, we'll just skip it
-        # FIXME
-        pass
+    #try:
+    #    for id in self.other_domain_ids:
+    #        with open(f'parallel_putter_{id}_{timestep}.json','r') as f:
+    #            updated = json.load(f)
+    #except FileNotFoundError:
+    #    # We'd wait a fraction of a second here in real life, but for now, we'll just skip it
+    #    # FIXME
+    #    pass
+    # forget all this gubbins, let's use MPI.
 
     #FIXME: Are people indexed in anyway? Then use that index here ...
     print(f"Unable (yet) to update people from domain {id} for timestep {timestep}")
