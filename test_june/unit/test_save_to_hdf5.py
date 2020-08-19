@@ -86,6 +86,7 @@ def create_world(geography_h5):
 class TestSavePeople:
     def test__save_population(self, world_h5):
         population = world_h5.people
+        assert len(population) > 0
         save_population_to_hdf5(population, "test.hdf5")
         pop_recovered = load_population_from_hdf5("test.hdf5")
         for person, person2 in zip(population, pop_recovered):
@@ -122,6 +123,7 @@ class TestSavePeople:
 class TestSaveHouses:
     def test__save_households(self, world_h5):
         households = world_h5.households
+        assert len(households) > 0
         save_households_to_hdf5(households, "test.hdf5")
         households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
@@ -137,6 +139,7 @@ class TestSaveHouses:
 class TestSaveCompanies:
     def test__save_companies(self, world_h5):
         companies = world_h5.companies
+        assert len(companies) > 0
         save_companies_to_hdf5(companies, "test.hdf5")
         companies_recovered = load_companies_from_hdf5("test.hdf5")
         for company, company2 in zip(companies, companies_recovered):
@@ -152,6 +155,7 @@ class TestSaveCompanies:
 class TestSaveHospitals:
     def test__save_hospitals(self, world_h5):
         hospitals = world_h5.hospitals
+        assert len(hospitals) > 0
         save_hospitals_to_hdf5(hospitals, "test.hdf5")
         hospitals_recovered = load_hospitals_from_hdf5("test.hdf5")
         for hospital, hospital2 in zip(hospitals, hospitals_recovered):
@@ -174,6 +178,7 @@ class TestSaveHospitals:
 class TestSaveSchools:
     def test__save_schools(self, world_h5):
         schools = world_h5.schools
+        assert len(schools) > 0
         save_schools_to_hdf5(schools, "test.hdf5")
         schools_recovered = load_schools_from_hdf5("test.hdf5")
         for school, school2 in zip(schools, schools_recovered):
@@ -197,6 +202,7 @@ class TestSaveSchools:
 class TestSaveCarehomes:
     def test__save_carehomes(self, world_h5):
         carehomes = world_h5.care_homes
+        assert len(carehomes) > 0
         save_care_homes_to_hdf5(carehomes, "test.hdf5")
         carehomes_recovered = load_care_homes_from_hdf5("test.hdf5")
         for carehome, carehome2 in zip(carehomes, carehomes_recovered):
@@ -213,6 +219,8 @@ class TestSaveGeography:
     def test__save_geography(self, world_h5):
         areas = world_h5.areas
         super_areas = world_h5.super_areas
+        assert len(areas) > 0
+        assert len(super_areas) > 0
         geography = Geography(areas, super_areas)
         save_geography_to_hdf5(geography, "test.hdf5")
         geography_recovered = load_geography_from_hdf5("test.hdf5")
@@ -245,6 +253,8 @@ class TestSaveCommute:
     def test__save_cities(self, world_h5):
         commute_cities = world_h5.commutecities
         commute_city_units = world_h5.commutecityunits
+        assert len(commute_cities) > 0
+        assert len(commute_city_units) > 0
         save_commute_cities_to_hdf5(commute_cities, "test.hdf5")
         (
             commute_cities_recovered,
@@ -273,6 +283,8 @@ class TestSaveCommute:
     def test__save_hubs(self, world_h5):
         commute_hubs = world_h5.commutehubs
         commute_units = world_h5.commuteunits
+        assert len(commute_hubs) > 0
+        assert len(commute_units) > 0
         save_commute_hubs_to_hdf5(commute_hubs, "test.hdf5")
         commute_hubs_recovered, commute_units_recovered = load_commute_hubs_from_hdf5(
             "test.hdf5"
@@ -293,6 +305,7 @@ class TestSaveCommute:
 class TestSaveUniversities:
     def test__save_universities(self, world_h5):
         universities = world_h5.universities
+        assert len(universities) > 0
         save_universities_to_hdf5(universities, "test.hdf5")
         universities_recovered = load_universities_from_hdf5("test.hdf5")
         for uni, uni2 in zip(universities, universities_recovered):
