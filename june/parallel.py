@@ -164,7 +164,7 @@ def parallel_update(self, direction, timestep):
             _put_updates(self, other_rank, tell_them, timestep)
         # pay attention to people who are coming in
         for other_rank in self.inbound_workers:
-            if other_rank == self.domdain_id:
+            if other_rank == self.domain_id:
                 continue
             outside_domain = self.inbound_workers[other_rank]
             for person in outside_domain:
