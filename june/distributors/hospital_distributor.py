@@ -1,9 +1,8 @@
 import logging
 
 import numpy as np
-import random
+from random import shuffle
 import yaml
-from scipy import stats
 from typing import List, Optional
 
 from june import paths
@@ -82,7 +81,7 @@ class HospitalDistributor:
         medics = [
             person for person in people if person.age >= self.medic_min_age
         ]
-        np.random.shuffle(medics)
+        shuffle(medics)
         for hospital in self.hospitals:
             max_capacity = hospital.n_beds + hospital.n_icu_beds
             if max_capacity == 0:
@@ -146,7 +145,7 @@ class HospitalDistributor:
             )
             return
         else:
-            np.random.shuffle(medics)
+            shuffle(medics)
             for hospital in hospitals_in_super_area:
                 max_capacity = hospital.n_beds + hospital.n_icu_beds
                 if max_capacity == 0:

@@ -86,6 +86,29 @@ class ActivityManager:
                     self.world.travelcities.members, self.world.travelunits.members
                 )
 
+        self.furlough_ratio = 0
+        self.key_ratio = 0
+        self.random_ratio = 0
+        for person in self.world.people:
+            if person.lockdown_status == "furlough":
+                self.furlough_ratio += 1
+            elif person.lockdown_status == "key_worker":
+                self.key_ratio += 1
+            elif person.lockdown_status == "random":
+                self.random_ratio += 1
+        if self.furlough_ratio != 0 and self.key_ratio != 0 and self.random_ratio != 0:
+            self.furlough_ratio /= (
+                self.furlough_ratio + self.key_ratio + self.random_ratio
+            )
+            self.key_ratio /= self.furlough_ratio + self.key_ratio + self.random_ratio
+            self.random_ratio /= (
+                self.furlough_ratio + self.key_ratio + self.random_ratio
+            )
+        else:
+            self.furlough_ratio = None
+            self.key_ratio = None
+            self.random_ratio = None
+
     @property
     def all_groups(self):
         return self.activities_to_groups(self.all_activities)
@@ -139,7 +162,7 @@ class ActivityManager:
         """
 
         groups = [self.activity_to_group_dict[activity] for activity in activities]
-        return list(chain(*groups))
+        return list(chain.from_iterable(groups))
 
     def move_to_active_subgroup(
         self, activities: List[str], person: Person
@@ -172,8 +195,8 @@ class ActivityManager:
             "Attention! Some people do not have an activity in this timestep."
         )
 
-    def get_personal_subgroup(self, person: "Person", activity: str)->"Subgroup":
-        '''
+    def get_personal_subgroup(self, person: "Person", activity: str) -> "Subgroup":
+        """
         Find the subgroup a person belongs to for a particular activity.
         
         Parameters
@@ -185,7 +208,7 @@ class ActivityManager:
         Returns
         -------
         Subgroup for activity
-        '''
+        """
         return getattr(person, activity)
 
     def do_timestep(self):
@@ -198,10 +221,7 @@ class ActivityManager:
             self.distribute_rail_back()
         if self.leisure is not None:
             if self.policies is not None:
-                leisure_policies = LeisurePolicies.get_active_policies(
-                    date=self.timer.date, policies=self.policies
-                )
-                leisure_policies.apply(
+                self.policies.leisure_policies.apply(
                     date=self.timer.date, leisure=self.leisure,
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
@@ -225,14 +245,20 @@ class ActivityManager:
         ----------
 
         """
-        individual_policies = IndividualPolicies.get_active_policies(
-            policies=self.policies, date=date
+        active_individual_policies = self.policies.individual_policies.get_active(
+            date=date
         )
         activities = self.apply_activity_hierarchy(activities)
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = individual_policies.apply(
-                person=person, activities=activities, days_from_start=days_from_start,
+            allowed_activities = self.policies.individual_policies.apply(
+                active_policies=active_individual_policies,
+                person=person,
+                activities=activities,
+                days_from_start=days_from_start,
+                furlough_ratio=self.furlough_ratio,
+                key_ratio=self.key_ratio,
+                random_ratio=self.random_ratio,
             )
             self.move_to_active_subgroup(allowed_activities, person)

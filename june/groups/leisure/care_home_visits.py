@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaml
+from random import randint, shuffle
 from typing import List, Optional
 from june.demography.geography import Areas, SuperAreas
 from june.groups import CareHomes, Households, Household
@@ -61,7 +62,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                     for household in area.households
                     if household.type in ["families", "ya_parents", "nokids"]
                 ]
-                np.random.shuffle(households_super_area)
+                shuffle(households_super_area)
             for area in super_area.areas:
                 if area.care_home is not None:
                     people_in_care_home = [
@@ -93,7 +94,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
             return None
         alive_relatives = [relative for relative in relatives if relative.dead is False]
         return alive_relatives[
-            np.random.randint(0, len(alive_relatives))
+            randint(0, len(alive_relatives) - 1)
         ].residence.group
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):

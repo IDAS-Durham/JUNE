@@ -75,7 +75,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
         n_areas = geography.attrs["n_areas"]
-        area_list = list()
+        area_list = []
         n_super_areas = geography.attrs["n_super_areas"]
         # areas
         n_chunks = int(np.ceil(n_areas / chunk_size))
@@ -91,7 +91,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
                 area.id = ids[k]
                 area_list.append(area)
         # super areas
-        super_area_list = list()
+        super_area_list = []
         n_chunks = int(np.ceil(n_super_areas / chunk_size))
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size

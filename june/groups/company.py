@@ -1,6 +1,7 @@
 import logging
 import os
 from enum import IntEnum
+from random import shuffle
 from june import paths
 from typing import List
 import h5py
@@ -176,14 +177,15 @@ class Companies(Supergroup):
         """
         Crates companies in super area using the sizes and sectors distributions.
         """
-        sizes = []
+        sizes = np.array([])
         for size_bracket, counts in company_sizes.items():
             size_min, size_max = _get_size_brackets(size_bracket)
-            sizes += list(np.random.randint(max(size_min, 1), size_max, int(counts)))
+            sizes = np.concatenate((sizes, np.random.randint(max(size_min, 1),
+                                                             size_max, int(counts))))
         sectors = []
         for sector, counts in company_sectors.items():
             sectors += [sector] * int(counts)
-        np.random.shuffle(sectors)
+        shuffle(sectors)
         companies = list(
             map(
                 lambda company_size, company_sector: cls.create_company(
@@ -195,7 +197,7 @@ class Companies(Supergroup):
         )
         # shuffle and reorder companies
         min_idx = companies[0].id
-        np.random.shuffle(companies)
+        shuffle(companies)
         for i, company in enumerate(companies):
             company.id = min_idx + i
         return companies

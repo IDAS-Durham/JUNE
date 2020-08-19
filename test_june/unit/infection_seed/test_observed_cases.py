@@ -39,8 +39,8 @@ def test__filter_trajectories(oc):
         assert "dead" in symptom_tags[-1]
 
 
-def test__mean_completion_time(oc):
-    assert oc.get_mean_completion_time(oc.trajectories[0].stages[1]) == 14
+def test__median_completion_time(oc):
+    assert oc.get_median_completion_time(oc.trajectories[0].stages[1]) == 14
 
 
 def test__get_time_it_takes_to_symptoms(oc):
