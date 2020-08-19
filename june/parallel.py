@@ -24,8 +24,8 @@ def parallel_setup(self, rank, size):
     # partition the list of superareas
     # each of the following lists is 2-d, first dimension is number of "other domains" of relevance,
     # second is workers in those domains.
-    self.outside_workers = []
-    self.inbound_workers = []
+    self.outside_workers = [[] for i in range(size)]
+    self.inbound_workers = [[] for i in range(size)]
     self.domain_id = rank
     # need to find all the people who are in my domain who work elsewhere, and all those who live
     # elsewhere and work in my domain. All the other people can be deleted in this mpi process.
@@ -34,16 +34,53 @@ def parallel_setup(self, rank, size):
     # Currently the person instances in world.people do not have the work_super_area populated when
     # read back from a file so we have to work this all out from the people in the areas.
 
-    for p in self.people[0:10]:
-        print(p.area.super_area.name, p.work_super_area.name)
+    # First partition information about superareas
+    self.parallel_partitions = []
+    for i, super_areas in enumerate(mydomain(self.super_areas, size)):
+        self.parallel.partitions.append([sa.name for sa in super_areas])
+
+    # Now parse people to see if they are in any of our interesting areas
+    # Note that we can delete people who are not interesting!
+    # We should probably delete other parts of the world that are not interesting too ...
+    my_domain = self.parallel_partitions[rank]
+    for person in self.people:
+        home_super_area = person.area.super_area.name
+        work_super_area = None
+        if person.primary_activity.group.spec == "company":
+            work_super_area = person.primary_activity.group.super_area.name
+        if home_super_area in my_domain:
+            if work_super_area and work_super_area != home_super_area:
+                for i in self.parallel_partitions:
+                    if i == rank:
+                        continue  # we're interested in the others
+                    if work_super_area in self.parallel_partitions[i]:
+                        self.outside_workers[i].append(person)
+                        break
+        else:
+            if work_super_area in my_domain:
+                for i in self.parallel_partitions:
+                    if i == rank:
+                        continue
+                    if home_super_area in self.parallel_partitions[i]:
+                        self.inbound_workers[i].append(person)
+                        break
+            else:
+                # this person is of no interest to this domain, they never spend any time here interacting
+                # with anyone.
+                del self.people[person]
+                # (but do they exist somewhere else)
 
 
-    for i, super_area in enumerate(mydomain(self.super_areas, size)):
-        if i == self.domain_id:
-            continue
-            # this is me!
-            # who works outside?
-            # who from outside works here?
+
+
+
+
+
+
+
+
+
+
 
 
 
