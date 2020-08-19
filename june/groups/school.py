@@ -9,16 +9,12 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.demography.geography import Geography, Areas
+from june.demography.geography import Geography, Areas, Area
 from june.groups.group import Group, Subgroup, Supergroup
 
 
-default_data_filename = (
-    paths.data_path / "input/schools/england_schools.csv"
-)
-default_areas_map_path = (
-    paths.data_path / "input/geography/area_super_area_region.csv"
-)
+default_data_filename = paths.data_path / "input/schools/england_schools.csv"
+default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_filename = paths.configs_path / "defaults/groups/schools.yaml"
 
 logger = logging.getLogger(__name__)
@@ -33,7 +29,6 @@ class School(Group):
     __slots__ = (
         "id",
         "coordinates",
-        "super_area",
         "n_pupils_max",
         "n_teachers_max",
         "age_min",
@@ -49,11 +44,12 @@ class School(Group):
 
     def __init__(
         self,
-        coordinates: Tuple[float, float],
-        n_pupils_max: int,
-        age_min: int,
-        age_max: int,
-        sector: str,
+        coordinates: Tuple[float, float] = None,
+        n_pupils_max: int = None,
+        age_min: int = None,
+        age_max: int = None,
+        sector: str = None,
+        area: Area = None,
     ):
         """
         Create a School given its description.
@@ -82,14 +78,15 @@ class School(Group):
         for i, _ in enumerate(range(age_min, age_max + 2)):
             self.subgroups.append(Subgroup(self, i))
         self.coordinates = coordinates
-        self.super_area = None
+        self.area = area
         self.n_pupils_max = n_pupils_max
         self.n_teachers_max = None
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.years = tuple(range(age_min, age_max+1))
-        
+        if age_min and age_max:
+            self.years = tuple(range(age_min, age_max + 1))
+
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
@@ -124,6 +121,12 @@ class School(Group):
         for subgroup in self.subgroups[1:]:
             ret += subgroup.people
         return ret
+
+    @property
+    def super_area(self):
+        if self.area is None:
+            return None
+        return self.area.super_area
 
 
 class Schools(Supergroup):
@@ -165,7 +168,6 @@ class Schools(Supergroup):
         geography
             an instance of the geography class
         """
-        #area_names = [area.name for area in geography.areas]
         return cls.for_areas(geography.areas, data_file, config_file)
 
     @classmethod
@@ -216,7 +218,7 @@ class Schools(Supergroup):
         logger.info(f"There are {len(school_df)} schools in this geography.")
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls.build_schools_for_areas(areas, school_df)#, **config,)
+        return cls.build_schools_for_areas(areas, school_df)  # , **config,)
 
     @classmethod
     def build_schools_for_areas(
@@ -243,17 +245,21 @@ class Schools(Supergroup):
         for school_name, row in school_df.iterrows():
             n_pupils_max = row["NOR"]
             school_type = row["sector"]
-            if school_type is np.nan: 
+            if school_type is np.nan:
                 school_type = list(employee_per_clients.keys())[0]
+            coordinates = np.array(
+                row[["latitude", "longitude"]].values, dtype=np.float64
+            )
+            area = areas.get_closest_area(coordinates)
             school = School(
-                np.array(row[["latitude", "longitude"]].values, dtype=np.float64),
-                n_pupils_max,
-                int(row["age_min"]),
-                int(row["age_max"]),
-                row["sector"],
+                coordinates=coordinates,
+                n_pupils_max=n_pupils_max,
+                age_min=int(row["age_min"]),
+                age_max=int(row["age_max"]),
+                sector=row["sector"],
+                area=area,
             )
             schools.append(school)
-            area = areas.get_closest_areas(school.coordinates)[0]
             area.schools.append(school)
 
         # link schools

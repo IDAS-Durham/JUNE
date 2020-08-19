@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from june.demography.geography import Geography
 
-from june.groups import *
+from june.groups import Hospital, Hospitals
 from june.demography import Person
 from june.infection import SymptomTag
 from june.infection import InfectionSelector, Infection
@@ -127,6 +127,6 @@ def test__initialize_hospitals_from_geography():
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
     assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 468 + 41 
-    assert hospitals.members[0].super_area == 'E02005560' 
+    assert hospitals.members[0].super_area.name == 'E02005560' 
     assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 2115 + 296 
     assert hospitals.members[1].trust_code == 'RAJ' 

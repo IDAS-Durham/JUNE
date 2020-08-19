@@ -27,7 +27,7 @@ def _populate_areas(areas: Areas, demography):
 
 
 def create_world():
-    geography = Geography.from_file({"area": ["E00003282"]})
+    geography = Geography.from_file({"area": ["E00003282", "E00003283"]})
     demography = Demography.for_geography(geography)
     geography.hospitals = Hospitals(
         [

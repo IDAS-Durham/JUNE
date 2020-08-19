@@ -238,7 +238,7 @@ class Hospitals(Supergroup):
         n_icu_beds = row["icu_beds"] 
         trust_code = row["code"]
         hospital = Hospital(
-            super_area=super_area.name,
+            super_area=super_area,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
