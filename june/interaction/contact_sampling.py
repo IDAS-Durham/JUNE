@@ -1,13 +1,12 @@
 import numpy as np
-import random
+from random import randint, random
 import yaml
 from typing import List, Tuple
 from june.interaction.interaction import Interaction
 
 
 def random_choice(people):
-    n = len(people)
-    idx = np.random.randint(0, high=n)
+    idx = randint(0, len(people) - 1)
     return people[idx]
 
 
@@ -121,7 +120,7 @@ class ContactSampling(Interaction):
         time:
             time at which the infection might happen
         """
-        should_be_infected = np.random.random(len(susceptibles))
+        should_be_infected = random(len(susceptibles))
         # TODO: should add susceptibility somewhere here if needed
         for recipient, luck in zip(susceptibles, should_be_infected):
             if luck < infecter.health_information.infection.transmission.probability:

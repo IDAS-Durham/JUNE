@@ -61,7 +61,10 @@ parser.add_argument('-p', '--parameters', help="Parameter file", required=False,
 parser.add_argument('-u', '--isolation_units', help="True to include isolation units", required=False, default="False")
 parser.add_argument('-t', '--isolation_testing', help="Model weights in HDF5 format", required=False, default=3)
 parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=False, default=7)
-parser.add_argument('-a', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
+parser.add_argument('-ic', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
+parser.add_argument('-m', '--mask_wearing', help="True to include mask wearing", required=False, default="False", default=0.1)
+parser.add_argument('-mc', '--mask_compliance', help="Mask wearing compliance", required=False, default="False")
+parser.add_argument('-mb', '--mask_beta_factor', help="Mask beta factor reduction", required=False, default=0.5)
 parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
 parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 parser.add_argument('-lc', '--learning_centers' ,help="Add learning centers", required=False, default=False)
@@ -72,12 +75,16 @@ if args.comorbidities == "True":
 else:
     args.comorbidities = False
 
-
 if args.isolation_units == "True":
     args.isolation_units = True
 else:
     args.isolation_units = False
 
+if args.mask_wearing == "True":
+    args.mask_wearing = True
+else:
+    args.mask_wearing = False
+    
 if args.infectiousness_path == 'nature':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature.yaml'
 elif args.infectiousness_path == 'correction_nature':
@@ -192,6 +199,15 @@ if args.isolation_units:
     policies.policies[3].n_quarantine_days = args.isolation_time
     policies.policies[3].testing_mean_time = args.isolation_testing
     policies.policies[3].compliance = args.isolation_compliance
+
+elif args.mask_wearing:
+    policies = Policies.from_file(
+        camp_configs_path / "defaults/policy/mask_wearing.yaml",
+        base_policy_modules=("june.policy", "camps.policy"),
+    )
+
+    policies.policies[4].compliance = args.mask_compliance
+    policies.policies[4].beta_factor = args.mask_beta_factor
     
 else:
     policies = Policies.from_file(

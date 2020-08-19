@@ -1,5 +1,5 @@
 from itertools import count
-import random
+from random import choice
 from enum import IntEnum, Enum
 import struct
 from recordclass import dataobject
@@ -153,7 +153,7 @@ class Person(dataobject):
         possible_guardians = [person for person in self.housemates if person.age >= 18]
         if not possible_guardians:
             return None
-        guardian = random.choice(possible_guardians)
+        guardian = choice(possible_guardians)
         if (
             guardian.health_information is not None
             and guardian.health_information.should_be_in_hospital

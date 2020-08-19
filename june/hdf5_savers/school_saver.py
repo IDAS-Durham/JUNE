@@ -90,7 +90,7 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
-        schools_list = list()
+        schools_list = []
         n_schools = schools.attrs["n_schools"]
         n_chunks = int(np.ceil(n_schools / chunk_size))
         for chunk in range(n_chunks):

@@ -4,6 +4,7 @@ import yaml
 import numpy as np
 from datetime import timedelta
 from collections import defaultdict
+from scipy.ndimage import gaussian_filter1d
 
 from june.infection.symptom_tag import SymptomTag
 from june.demography import Person
@@ -25,6 +26,7 @@ class Observed2Cases:
         n_observed_deaths: Optional[pd.DataFrame] = None,
         msoa_region: Optional[pd.DataFrame] = None,
         regions: Optional[List[str]]=None,
+        smoothing=False,
     ):
         self.trajectories = trajectories
         self.msoa_region = msoa_region
@@ -33,6 +35,8 @@ class Observed2Cases:
         if super_areas is not None:
             self.regions = self.find_regions_for_super_areas(super_areas)
             self.population = self.get_population(super_areas, self.regions)
+        if smoothing:
+           n_observed_deaths = self._smooth_time_series(n_observed_deaths) 
         self.n_observed_deaths = n_observed_deaths[self.regions]
         self.health_index = health_index
 
@@ -43,6 +47,7 @@ class Observed2Cases:
         health_index,
         config_path: str = default_config_path,
         msoa_region_filename: str = default_msoa_region_filename,
+        smoothing=False
     ):
         with open(default_config_path) as f:
             trajectories = yaml.safe_load(f)["trajectories"]
@@ -61,6 +66,7 @@ class Observed2Cases:
             health_index=health_index,
             n_observed_deaths=n_observed_deaths,
             msoa_region=msoa_region,
+            smoothing=smoothing
         )
 
     def _filter_region(
@@ -95,6 +101,9 @@ class Observed2Cases:
         )
         return np.array(super_areas.members)[filter_region]
 
+    def _smooth_time_series(self, time_series_df):
+        return time_series_df.apply(lambda x: gaussian_filter1d(x, sigma=2))
+
     def find_regions_for_super_areas(self, super_areas):
         regions = []
         for region in self.all_regions:
@@ -103,7 +112,7 @@ class Observed2Cases:
         return regions
 
     def get_population(self, super_areas, regions):
-        population = dict()
+        population = {}
         for region in regions:
             population[region] = self.get_population_for_region(super_areas, region)
         return population
@@ -125,9 +134,9 @@ class Observed2Cases:
                 filtered_trajectories.append(trajectory)
         return filtered_trajectories
 
-    def get_mean_completion_time(self, stage):
+    def get_median_completion_time(self, stage):
         if hasattr(stage.completion_time, "distribution"):
-            return stage.completion_time.distribution.mean()
+            return stage.completion_time.distribution.median()
         else:
             return stage.completion_time.value
 
@@ -138,7 +147,7 @@ class Observed2Cases:
             for stage in trajectory.stages:
                 if stage.symptoms_tag.name in symptoms_tags:
                     break
-                time += self.get_mean_completion_time(stage)
+                time += self.get_median_completion_time(stage)
             time_to_symptoms.append(time)
         return time_to_symptoms
 

@@ -7,7 +7,7 @@ from june.logger.read_logger import ReadLogger
 
 results_path = sys.argv[1]
 
-read_logger = ReadLogger(output_path = results_path)
+read_logger = ReadLogger(output_path = results_path, load_real = False)
 
 print ('####### Loading super area summary #########')
 super_area_summary = read_logger.super_area_summary()

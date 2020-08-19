@@ -86,7 +86,7 @@ def load_commute_cities_from_hdf5(file_path: str):
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         commute_cities = f["commute_cities"]
-        commute_cities_list = list()
+        commute_cities_list = []
         n_commute_cities = commute_cities.attrs["n_commute_cities"]
         ids = commute_cities["id"]
         city_names = commute_cities["city_names"]
@@ -155,7 +155,7 @@ def load_commute_hubs_from_hdf5(file_path: str):
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         commute_hubs = f["commute_hubs"]
-        commute_hubs_list = list()
+        commute_hubs_list = []
         n_commute_hubs = commute_hubs.attrs["n_commute_hubs"]
         ids = commute_hubs["id"]
         city_names = commute_hubs["city_names"]

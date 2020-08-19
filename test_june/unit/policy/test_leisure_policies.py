@@ -59,10 +59,7 @@ class TestCloseLeisure:
         assert worker in worker.leisure.people
         sim.clear_world()
         time_during_policy = datetime(2020, 3, 14)
-        leisure_policies = LeisurePolicies.get_active_policies(
-            policies=policies, date=time_during_policy
-        )
-        leisure_policies.apply(date=time_during_policy, leisure=leisure_instance)
+        policies.leisure_policies.apply(date=time_during_policy, leisure=leisure_instance)
         assert list(leisure_instance.closed_venues) == ["pub"]
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
             10000, False
@@ -93,10 +90,7 @@ class TestReduceLeisureProbabilities:
         sim.activity_manager.policies = policies
         sim.activity_manager.leisure = leisure_instance
         sim.clear_world()
-        leisure_policies = LeisurePolicies.get_active_policies(
-            policies=policies, date=sim.timer.date
-        )
-        leisure_policies.apply(
+        policies.leisure_policies.apply(
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
@@ -139,10 +133,7 @@ class TestReduceLeisureProbabilities:
         # next day leisure policies are
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
-        leisure_policies = LeisurePolicies.get_active_policies(
-            policies=policies, date=sim.timer.date
-        )
-        leisure_policies.apply(
+        policies.leisure_policies.apply(
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
@@ -180,10 +171,7 @@ class TestReduceLeisureProbabilities:
         # end of policy
         while str(sim.timer.date.date()) != "2020-03-05":
             next(sim.timer)
-        leisure_policies = LeisurePolicies.get_active_policies(
-            policies=policies, date=sim.timer.date
-        )
-        leisure_policies.apply(
+        policies.leisure_policies.apply(
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
