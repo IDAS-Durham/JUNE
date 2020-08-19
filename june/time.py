@@ -86,6 +86,5 @@ class Timer:
         if self.previous_date.day != self.date.day:
             self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
-        print('bnl', self.activities)
         self.state = self.activities[1]
         return self.date
