@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-from random import sample, shuffle
+from random import sample, randint
 import pandas as pd
 import datetime
 from pathlib import Path
@@ -16,7 +16,7 @@ class ReadLogger:
         output_path: str = "results",
         output_file_name: str = "logger.hdf5",
         light_logger: bool = False,
-        load_real=True,
+        load_real: bool = True,
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -271,7 +271,7 @@ class ReadLogger:
         -------
             data frame summarising people's trajectories identified by their id
         """
-        starting_id = randint(0, len(self.infections_df) - 1)
+        starting_id = randint(0, len(self.infections_df))
         starting_time = self.infections_df.index[starting_id]
         end_date = starting_time + datetime.timedelta(days=window_length)
         mask = (self.infections_df.index > starting_time) & (
@@ -346,6 +346,37 @@ class ReadLogger:
         )
         locations["percentage_infections"] = 100 * locations / locations.sum()
         return locations
+
+    def get_location_infections_timeseries(self, start_date=None, end_date=None,):
+        """
+        Get a data frame timeseries with the number of infection happening at each type of place, within the given time
+        period
+
+        Parameters
+        ----------
+        start_date:
+            first date to count
+        end_date:
+            last date to count
+        """
+        if start_date is None:
+            start_date = self.infections_df.index.min()
+        if end_date is None:
+            end_date = self.infections_df.index.max()
+        selected_dates = self.locations_df.loc[start_date:end_date]
+
+        all_locations = selected_dates.sum().location
+        all_counts = selected_dates.sum().counts
+        unique_locations = set(all_locations)
+
+        time_series = pd.DataFrame(0, index=selected_dates.index, columns=unique_locations)
+        for ts, row in selected_dates.iterrows():
+            for location,count in zip(row["location"],row["counts"]):
+                time_series.loc[ts,location] = count
+
+        time_series["total"] = time_series.sum(axis=1)
+
+        return time_series
 
     def load_hospital_characteristics(self) -> pd.DataFrame:
         """

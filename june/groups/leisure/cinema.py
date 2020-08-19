@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List, Optional
+from typing import List
 from june.demography.geography import Areas, SuperArea, SuperAreas, Geography
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
@@ -57,7 +57,7 @@ class Cinemas(SocialVenues):
 
     @classmethod
     def from_coordinates(cls, coordinates: List[np.array], **kwargs):
-        social_venues = list()
+        social_venues = []
         for coord in coordinates:
             sv = Cinema()
             sv.coordinates = coord

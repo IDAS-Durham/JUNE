@@ -1,4 +1,3 @@
-from typing import List
 from june.exc import GroupException
 
 

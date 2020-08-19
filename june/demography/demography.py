@@ -3,7 +3,6 @@ from typing import List, Dict, Optional
 import numpy as np
 import pandas as pd
 import h5py
-import time
 import yaml
 
 from june import paths
@@ -89,7 +88,7 @@ class AgeSexGenerator:
             ethnicity_age_counts, _ = np.histogram(
                 ages, bins=list(map(int, ethnicity_age_bins)) + [100]
             )
-            ethnicities = list()
+            ethnicities = []
             for age_ind, age_count in enumerate(ethnicity_age_counts):
                 ethnicities.extend(
                     np.random.choice(
@@ -171,7 +170,7 @@ class Population:
         people
             A list of people generated to match census data for that area
         """
-        self.people = people or list()
+        self.people = people or []
 
     def __len__(self):
         return len(self.people)
@@ -235,7 +234,7 @@ class Demography:
         -------
         A population of people
         """
-        people = list()
+        people = []
         age_and_sex_generator = self.age_sex_generators[area_name]
         for _ in range(age_and_sex_generator.n_residents):
             if ethnicity:

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaml
-from typing import List, Optional
+from typing import List
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
@@ -58,7 +58,7 @@ class Pubs(SocialVenues):
 
     @classmethod
     def from_coordinates(cls, coordinates: List[np.array], **kwargs):
-        social_venues = list()
+        social_venues = []
         for coord in coordinates:
             sv = Pub()
             sv.coordinates = coord

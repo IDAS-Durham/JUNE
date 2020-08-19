@@ -1,5 +1,4 @@
 import logging
-import os
 from enum import IntEnum
 from random import shuffle
 from june import paths

@@ -12,7 +12,7 @@ default_commute_file = paths.data_path / "input/commute/commute_ew.csv"
 
 
 class ModeOfTransport:
-    __all = dict()
+    __all = {}
 
     def __new__(
             cls,
@@ -285,7 +285,7 @@ class CommuteGenerator:
         -------
         An object used to generate commutes
         """
-        regional_generators = dict()
+        regional_generators = {}
         with open(filename) as f:
             reader = csv.reader(f)
             headers = next(reader)
@@ -294,7 +294,7 @@ class CommuteGenerator:
                 config_filename
             )
             for row in reader:
-                weighted_modes = list()
+                weighted_modes = []
                 for mode in modes_of_transport:
                     weighted_modes.append((
                         int(row[

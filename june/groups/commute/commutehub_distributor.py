@@ -1,8 +1,3 @@
-import logging
-import os
-from enum import IntEnum
-from pathlib import Path
-from typing import List, Dict, Optional
 
 import csv
 import numpy as np
@@ -36,7 +31,7 @@ class CommuteHubDistributor:
 
     def from_file(self):
 
-        coordinates_dict = dict()
+        coordinates_dict = {}
         with open(default_msoa_oa_coordinates) as f:
             reader = csv.reader(f)
             headers = next(reader)

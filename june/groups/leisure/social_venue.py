@@ -49,7 +49,7 @@ class SocialVenues(Supergroup):
             )
             distances_close = np.where(distances < max_distance_to_area)
             coordinates = coordinates[distances_close]
-        social_venues = list()
+        social_venues = []
         for coord in coordinates:
             sv = SocialVenue()
             sv.coordinates = coord

@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from random import randint
 from typing import List
-from enum import IntEnum
 
 from june.groups import Group, Subgroup, Supergroup
 from june.demography.geography import SuperAreas, Areas
@@ -94,7 +93,7 @@ class Universities(Supergroup):
         coordinates = coordinates[distances_close]
         n_students = n_students[distances_close]
         ukprn_values = ukprn_values[distances_close]
-        universities = list()
+        universities = []
         for coord, n_stud, ukprn in zip(
             coordinates, n_students, ukprn_values
         ):

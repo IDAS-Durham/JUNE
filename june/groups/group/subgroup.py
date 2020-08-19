@@ -1,6 +1,6 @@
 from june.demography.person import Person
 from .abstract import AbstractGroup
-from typing import Set, List
+from typing import List
 from itertools import chain
 
 
