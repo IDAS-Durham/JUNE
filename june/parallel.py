@@ -67,8 +67,10 @@ def parallel_setup(self, comm, debug=False):
             if sa.name in p:
                 super_index[sa.name] = i
 
-    live, inb, oub, gone = 0, 0, 0, 0
+    live, inb, oub, gone, np = 0, 0, 0, 0, 0
+    binable  = []
     for person in self.people:
+        np += 1
         home_super_area = person.area.super_area.name
         work_super_area = None
         if person.primary_activity:  # some people are too old to work.
@@ -94,13 +96,17 @@ def parallel_setup(self, comm, debug=False):
         else:
             # Anyone left is not interesting, and we want to bin them from this domain.
             # they never spend any time here interacting with anyone.
-            del self.people[person]
+            binable.append(person)
             gone += 1
-            # (but do they exist somewhere else)
-            # need to kill unused households and unused companies etc otherwise each partition will
-            # need nearly all the memory of the entire world.
 
-    print(rank, npeople, live, inb, oub, gone)
+    # we can't delete them inside the loop, bad things happen if we do that.
+    for p in binable:
+        del self.people[p]
+    # These people probably still exist in other lists, so we need to kill all them too.
+    # E.g need to kill unused households and unused companies etc otherwise each partition will
+    # need nearly all the memory of the entire world.
+
+    print(rank, npeople, np, live, inb, oub, gone)
     inbound = sum([len(i) for i in self.inbound_workers])
     outbound = sum([len(i) for i in self.outside_workers])
     print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
