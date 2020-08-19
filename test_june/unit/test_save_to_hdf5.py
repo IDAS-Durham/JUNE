@@ -28,9 +28,7 @@ from june.hdf5_savers import (
     save_commute_cities_to_hdf5,
     save_commute_hubs_to_hdf5,
     save_universities_to_hdf5,
-    save_cinemas_to_hdf5,
-    save_pubs_to_hdf5,
-    save_groceries_to_hdf5,
+    save_social_venues_to_hdf5,
     generate_world_from_hdf5,
 )
 from june.hdf5_savers import (
@@ -45,9 +43,7 @@ from june.hdf5_savers import (
     load_commute_cities_from_hdf5,
     load_commute_hubs_from_hdf5,
     load_universities_from_hdf5,
-    load_pubs_from_hdf5,
-    load_cinemas_from_hdf5,
-    load_groceries_from_hdf5,
+    load_social_venues_from_hdf5,
 )
 from june import paths
 
@@ -198,10 +194,6 @@ class TestSaveSchools:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if school.super_area is not None:
-                assert school.super_area.id == school2.super_area
-            else:
-                assert school2.super_area is None
             assert school.coordinates[0] == school2.coordinates[0]
             assert school.coordinates[1] == school2.coordinates[1]
 
@@ -324,32 +316,17 @@ class TestSaveUniversities:
 
 
 class TestSaveLeisure:
-    def test__save_pubs(self, world_h5):
-        pubs = world_h5.pubs
-        save_pubs_to_hdf5(pubs, "test.hdf5")
-        pubs_recovered = load_pubs_from_hdf5("test.hdf5")
-        for pub1, pub2 in zip(pubs, pubs_recovered):
-            assert pub1.coordinates[0] == pub2.coordinates[0]
-            assert pub1.coordinates[1] == pub2.coordinates[1]
-            assert pub1.id == pub2.id
-
-    def test__save_groceries(self, world_h5):
-        groceries = world_h5.groceries
-        save_groceries_to_hdf5(groceries, "test.hdf5")
-        groceries_recovered = load_groceries_from_hdf5("test.hdf5")
-        for gr1, gr2 in zip(groceries, groceries_recovered):
-            assert gr1.coordinates[0] == gr2.coordinates[0]
-            assert gr1.coordinates[1] == gr2.coordinates[1]
-            assert gr1.id == gr2.id
-
-    def test__save_cinemas(self, world_h5):
-        cinemas = world_h5.cinemas
-        save_cinemas_to_hdf5(cinemas, "test.hdf5")
-        cinemas_recovered = load_cinemas_from_hdf5("test.hdf5")
-        for cinema1, cinema2 in zip(cinemas, cinemas_recovered):
-            assert cinema1.coordinates[0] == cinema2.coordinates[0]
-            assert cinema1.coordinates[1] == cinema2.coordinates[1]
-            assert cinema1.id == cinema2.id
+    def test__save_social_venues(self, world_h5):
+        save_social_venues_to_hdf5(
+            social_venues_list=[world_h5.pubs, world_h5.groceries, world_h5.cinemas],
+            file_path="test.hdf5",
+        )
+        social_venues_dict = load_social_venues_from_hdf5("test.hdf5")
+        for social_venues_spec, social_venues in social_venues_dict.items():
+            for sv1, sv2 in zip(getattr(world_h5, social_venues_spec), social_venues):
+                assert sv1.coordinates[0] == sv2.coordinates[0]
+                assert sv1.coordinates[1] == sv2.coordinates[1]
+                assert sv1.id == sv2.id
 
 
 class TestSaveWorld:
@@ -403,6 +380,14 @@ class TestSaveWorld:
             else:
                 assert household2.area is None
 
+    def test__school_area(self, world_h5, world_h5_loaded):
+        assert len(world_h5_loaded.schools) == len(world_h5.schools)
+        for school, school2 in zip(world_h5.schools, world_h5_loaded.schools):
+            if school.area is not None:
+                assert school.area.id == school2.area.id
+            else:
+                assert school2.super_area is None
+
     def test__care_home_area(self, world_h5, world_h5_loaded):
         assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
         for carehome, carehome2 in zip(world_h5.care_homes, world_h5_loaded.care_homes):
@@ -412,6 +397,15 @@ class TestSaveWorld:
     def test__company_super_area(self, world_h5, world_h5_loaded):
         for company1, company2 in zip(world_h5.companies, world_h5_loaded.companies):
             assert company1.super_area.id == company2.super_area.id
+
+    def test__social_venues_super_area(self, world_h5, world_h5_loaded):
+        for spec in ["pubs", "groceries", "cinemas"]:
+            social_venues1 = getattr(world_h5, spec)
+            social_venues2 = getattr(world_h5_loaded, spec)
+            assert len(social_venues1) == len(social_venues2)
+            for v1, v2 in zip(social_venues1, social_venues2):
+                assert v1.super_area.id == v2.super_area.id
+                assert v1.super_area.name == v2.super_area.name
 
     def test__commute(self, world_h5, world_h5_loaded):
         for city1, city2 in zip(world_h5.commutecities, world_h5_loaded.commutecities):
