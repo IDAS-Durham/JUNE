@@ -51,9 +51,7 @@ World.parallel_setup = parallel_setup
 World.parallel_update = parallel_update
 # FIXME: better to do this with a config file ... but this is stub code:
 comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-world.parallel_setup(rank, size)
+world.parallel_setup(comm)
 
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)

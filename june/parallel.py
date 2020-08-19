@@ -7,15 +7,13 @@
 #   World.parallel_setup = parallel_setup
 #   World.parallel_update = parallel_update
 #   comm = MPI.COMM_WORLD
-#   rank = comm.Get_rank()
-#   size = comm.Get_size()
-#   world.parallel_setup(rank, size)
+#   world.parallel_setup(comm)
 #
-import json
-import numpy
+
+import numpy, time
 
 
-def mydomain(super_areas, size):
+def make_domains(super_areas, size):
     """ Generator to partition world into domains"""
     indices = numpy.arange(len(super_areas))
     splits = numpy.array_split(indices, size)
@@ -23,8 +21,11 @@ def mydomain(super_areas, size):
         yield super_areas[s[0]:s[-1]+1]
 
 
-def parallel_setup(self, rank, size):
+def parallel_setup(self, comm):
     """ Initialise by defining what part of the known world is outside _THIS_ domain."""
+
+    rank = comm.Get_rank()
+    size = comm.Get_size()
 
     # let's just brute force it with MPI for now
     # partition the list of superareas
@@ -33,6 +34,9 @@ def parallel_setup(self, rank, size):
     self.outside_workers = [[] for i in range(size)]
     self.inbound_workers = [[] for i in range(size)]
     self.domain_id = rank
+    start_time = time.localtime()
+    current_time = time.strftime("%H:%M:%S", start_time)
+    print(f'Starting domain setup for rank {rank} at {current_time}')
     # need to find all the people who are in my domain who work elsewhere, and all those who live
     # elsewhere and work in my domain. All the other people can be deleted in this mpi process.
     # We could probably delete other parts of the world too, but we can do that in a later iteration.
@@ -42,7 +46,7 @@ def parallel_setup(self, rank, size):
 
     # First partition information about superareas
     self.parallel_partitions = []
-    for i, super_areas in enumerate(mydomain(self.super_areas, size)):
+    for i, super_areas in enumerate(make_domains(self.super_areas, size)):
         self.parallel_partitions.append([sa.name for sa in super_areas])
 
     assert len(self.super_areas) == sum([len(i) for i in self.parallel_partitions])
@@ -50,41 +54,71 @@ def parallel_setup(self, rank, size):
     # Now parse people to see if they are in any of our interesting areas
     # Note that we can delete people who are not interesting!
     # We should probably delete other parts of the world that are not interesting too ...
+
     my_domain = self.parallel_partitions[rank]
     npeople = self.people.total_people
+
+    m, inb, oub, gone = 0, 0, 0 , 0
     for person in self.people:
         home_super_area = person.area.super_area.name
         work_super_area = None
         if person.primary_activity:  # some people are too old to work.
             if person.primary_activity.group.spec == "company":
                 work_super_area = person.primary_activity.group.super_area.name
-        if home_super_area in my_domain:
-            if work_super_area and work_super_area != home_super_area:
-                for i, p in enumerate(self.parallel_partitions):
-                    if i == rank:
-                        continue  # we're interested in the others
-                    if work_super_area in p:
-                        self.outside_workers[i].append(person)
-                        break
-        elif work_super_area:
-            if work_super_area in my_domain:
-                for i, p in enumerate(self.parallel_partitions):
-                    if i == rank:
-                        continue
-                    if home_super_area in p:
-                        self.inbound_workers[i].append(person)
-                        break
-            else:
-                # this person is of no interest to this domain, they never spend any time here interacting
-                # with anyone.
-                del self.people[person]
-                # (but do they exist somewhere else)
-                # need to kill unused households and unused companies etc otherwise each partition will
-                # need all the memory of the entire world.
 
+        if home_super_area in my_domain and (
+                work_super_area in my_domain or work_super_area is None):
+            m += 1
+            continue  # these folk live and work in this domain.
+
+        if work_super_area in my_domain:
+            # these folk commute into this domain, but where from?
+            for i, p in enumerate(self.parallel_partitions):
+                if i == rank:
+                    continue  # we're interested in the others
+                if home_super_area in p:
+                    self.inbound_workers[i].append(person)
+                    break
+            inb += 1
+            continue
+
+        if home_super_area in my_domain and work_super_area:
+            # these folk commute out, but where to?
+            for i, p in enumerate(self.parallel_partitions):
+                if i == rank:
+                    continue
+                if work_super_area in p:
+                    self.outside_workers[i].append(person)
+                    break
+            oub += 1
+            continue
+
+        # Anyone left is not interesting, and we want to bin them from this domain.
+        # they never spend any time here interacting with anyone.
+        del self.people[person]
+        gone += 1
+        # (but do they exist somewhere else)
+        # need to kill unused households and unused companies etc otherwise each partition will
+        # need nearly all the memory of the entire world.
+
+    print(rank, npeople, m, inb, oub, gone)
     inbound = sum([len(i) for i in self.inbound_workers])
     outbound = sum([len(i) for i in self.outside_workers])
     print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
+    end_time = time.localtime()
+    current_time = time.strftime("%H:%M:%S", end_time)
+    delta_time = time.mktime(end_time) - time.mktime(start_time)
+    print(f'Domain setup complete for rank {rank} at {current_time} ({delta_time}s)')
+
+    # We'll check everything is covered, and use this as a sync point before integration
+    # the total number of people across the world, and split into domains should be
+    # the sum of the folk who live in each domain. That number should be, for each
+    # domain: the population it knows about, less those people who are commuting in.
+
+    my_population = self.people.total_people - inbound
+    if rank == 0:
+        domain_populations = comm.gather(my_population)
+        assert sum(domain_populations) == npeople
 
 
 def parallel_update(self, direction, timestep):
@@ -172,7 +206,6 @@ def _get_updates(self, domain_id, timestep):
 def set_person_info(person):
     """ set person info that needs to be passed and serialise it"""
     return int(person.id)
-
 
 
 
