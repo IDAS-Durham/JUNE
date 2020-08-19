@@ -6,7 +6,10 @@
 #   # add parallelism
 #   World.parallel_setup = parallel_setup
 #   World.parallel_update = parallel_update
-#   world.parallel_setup(world.super_areas[0:2])
+#   comm = MPI.COMM_WORLD
+#   rank = comm.Get_rank()
+#   size = comm.Get_size()
+#   world.parallel_setup(rank, size)
 #
 import json
 import numpy
