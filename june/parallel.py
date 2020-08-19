@@ -103,7 +103,7 @@ def _put_updates(self, domain_id, tell_them, timestep):
     data = [set_person_info(p) for p in tell_them]
     #with open(f'parallel_putter_{self.domain_id}_{domain_id}_{timestep}.json','w') as f:
     #    json.dump(data, f)
-    #print(f"Serialisation of person infection properties for parallelisation is not yet working")
+    print(f"Serialisation of person infection properties for parallelisation is not yet working")
     #forget all this gubbins, let's use MPI!
 
 def _get_updates(self, domain_id, timestep):
