@@ -32,6 +32,7 @@ class SocialVenue(Group):
 
 
 class SocialVenues(Supergroup):
+    social_venue_class = SocialVenue
     def __init__(self, social_venues: List[SocialVenue], make_tree=True):
         super().__init__()
         self.members = social_venues
@@ -56,7 +57,7 @@ class SocialVenues(Supergroup):
             coordinates = coordinates[distances_close]
         social_venues = []
         for i, coord in enumerate(coordinates):
-            sv = SocialVenue()
+            sv = cls.social_venue_class()
             if super_areas:
                 super_area = super_areas[i]
             else:
@@ -125,14 +126,14 @@ class SocialVenues(Supergroup):
         if venues_per_area is not None:
             for area in areas:
                 for _ in range(venues_per_area):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         else:
@@ -163,14 +164,14 @@ class SocialVenues(Supergroup):
         if venues_per_super_area is not None:
             for area in super_areas:
                 for _ in range(venues_per_super_area):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in super_areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         else:

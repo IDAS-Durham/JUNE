@@ -23,32 +23,10 @@ class Pub(SocialVenue):
 
 
 class Pubs(SocialVenues):
+    social_venue_class = Pub
     default_coordinates_filename = default_pub_coordinates_filename
 
 
 class PubDistributor(SocialVenueDistributor):
-    def __init__(
-        self,
-        pubs: Pubs,
-        male_age_probabilities: dict = None,
-        female_age_probabilities: dict = None,
-        neighbours_to_consider=10,
-        maximum_distance=10,
-        weekend_boost: float = 2.0,
-        drags_household_probability=0.5,
-    ):
-        super().__init__(
-            social_venues=pubs,
-            male_age_probabilities=male_age_probabilities,
-            female_age_probabilities=female_age_probabilities,
-            neighbours_to_consider=neighbours_to_consider,
-            maximum_distance=maximum_distance,
-            weekend_boost=weekend_boost,
-            drags_household_probability=drags_household_probability,
-        )
+    default_config_filename = default_config_filename
 
-    @classmethod
-    def from_config(cls, pubs: Pubs, config_filename: str = default_config_filename):
-        with open(config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(pubs, **config)
