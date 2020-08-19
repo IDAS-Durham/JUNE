@@ -20,49 +20,7 @@ class Grocery(SocialVenue):
 
 
 class Groceries(SocialVenues):
-    def __init__(self, groceries: List[Grocery], make_tree=True):
-        super().__init__(groceries)
-        if make_tree:
-            self.make_tree()
-
-    @classmethod
-    def for_super_areas(
-        cls,
-        super_areas: List[SuperArea],
-        coordinates_filename: str = default_groceries_coordinates_filename,
-    ):
-        groceries_per_super_area = pd.read_csv(coordinates_filename)
-        sa_names = [super_area.name for super_area in super_areas]
-        groceries_coordinates = groceries_per_super_area.loc[
-            groceries_per_super_area.super_area.isin(sa_names), ["lat", "lon"]
-        ]
-        return cls.from_coordinates(groceries_coordinates.values)
-
-    @classmethod
-    def for_areas(
-        cls,
-        areas: Areas,
-        coordinates_filename: str = default_groceries_coordinates_filename,
-    ):
-        super_areas = [area.super_area for area in areas]
-        return cls.for_super_areas(super_areas, coordinates_filename)
-
-    @classmethod
-    def for_geography(
-        cls,
-        geography: Geography,
-        coordinates_filename: str = default_groceries_coordinates_filename,
-    ):
-        return cls.for_super_areas(geography.super_areas, coordinates_filename)
-
-    @classmethod
-    def from_coordinates(cls, coordinates: List[np.array], **kwargs):
-        social_venues = []
-        for coord in coordinates:
-            sv = Grocery()
-            sv.coordinates = coord
-            social_venues.append(sv)
-        return cls(social_venues, **kwargs)
+    default_coordinates_filename = default_groceries_coordinates_filename
 
 
 class GroceryDistributor(SocialVenueDistributor):
