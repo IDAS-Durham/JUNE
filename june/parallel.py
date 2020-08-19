@@ -67,7 +67,7 @@ def parallel_setup(self, comm, debug=False):
             if sa.name in p:
                 super_index[sa.name] = i
 
-    m, inb, oub, gone = 0, 0, 0, 0
+    live, inb, oub, gone = 0, 0, 0, 0
     for person in self.people:
         home_super_area = person.area.super_area.name
         work_super_area = None
@@ -75,37 +75,32 @@ def parallel_setup(self, comm, debug=False):
             if person.primary_activity.group.spec == "company":
                 work_super_area = person.primary_activity.group.super_area.name
 
+        live_here = super_index[home_super_area] == rank
         if work_super_area:
             work_here = super_index[work_super_area] == rank
         else:
-            work_here = True
-        live_here = super_index[home_super_area] == rank
+            work_here = live_here  # well, not working somewhere ...
 
         if live_here and work_here:
-            m += 1
-            continue  # these folk live and work (if they work) in this domain.
-
-        if work_here and not live_here:
+            live += 1
+        elif work_here and not live_here:
             # these folk commute into this domain, but where from?
             self.inbound_workers[super_index[home_super_area]].append(person)
             inb += 1
-            continue
-
-        if live_here and not work_here:
+        elif live_here and not work_here:
             # these folk commute out, but where to?
             self.outside_workers[super_index[work_super_area]].append(person)
             oub += 1
-            continue
+        else:
+            # Anyone left is not interesting, and we want to bin them from this domain.
+            # they never spend any time here interacting with anyone.
+            del self.people[person]
+            gone += 1
+            # (but do they exist somewhere else)
+            # need to kill unused households and unused companies etc otherwise each partition will
+            # need nearly all the memory of the entire world.
 
-        # Anyone left is not interesting, and we want to bin them from this domain.
-        # they never spend any time here interacting with anyone.
-        del self.people[person]
-        gone += 1
-        # (but do they exist somewhere else)
-        # need to kill unused households and unused companies etc otherwise each partition will
-        # need nearly all the memory of the entire world.
-
-    print(rank, npeople, m, inb, oub, gone)
+    print(rank, npeople, live, inb, oub, gone)
     inbound = sum([len(i) for i in self.inbound_workers])
     outbound = sum([len(i) for i in self.outside_workers])
     print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
@@ -113,6 +108,7 @@ def parallel_setup(self, comm, debug=False):
     current_time = time.strftime("%H:%M:%S", end_time)
     delta_time = time.mktime(end_time) - time.mktime(start_time)
     print(f'Domain setup complete for rank {rank} at {current_time} ({delta_time}s)')
+    assert npeople == live + inb + oub + gone
 
     # We'll check everything is covered, and use this as a sync point before integration
     # the total number of people across the world, and split into domains should be
