@@ -28,7 +28,11 @@ from .geography_saver import (
     load_geography_from_hdf5,
     restore_geography_properties_from_hdf5,
 )
-from .hospital_saver import save_hospitals_to_hdf5, load_hospitals_from_hdf5
+from .hospital_saver import (
+    save_hospitals_to_hdf5,
+    load_hospitals_from_hdf5,
+    restore_hospital_properties_from_hdf5,
+)
 from .commute_saver import (
     save_commute_cities_to_hdf5,
     save_commute_hubs_to_hdf5,
@@ -36,10 +40,14 @@ from .commute_saver import (
     load_commute_hubs_from_hdf5,
     restore_commute_properties_from_hdf5,
 )
-from .university_saver import save_universities_to_hdf5, load_universities_from_hdf5
+from .university_saver import (
+    save_universities_to_hdf5,
+    load_universities_from_hdf5,
+    restore_universities_properties_from_hdf5,
+)
 from .leisure_saver import (
     save_social_venues_to_hdf5,
     load_social_venues_from_hdf5,
-    restore_social_venues_properties_from_hdf5
+    restore_social_venues_properties_from_hdf5,
 )
 from .world_saver import generate_world_from_hdf5, save_world_to_hdf5

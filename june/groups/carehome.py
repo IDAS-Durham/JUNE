@@ -84,6 +84,13 @@ class CareHome(Group):
     def quarantine(self, time, quarantine_days, household_compliance):
         return True
 
+    @property
+    def super_area(self):
+        if self.area is None:
+            return None
+        else:
+            return self.area.super_area
+
 
 class CareHomes(Supergroup):
     __slots__ = "members"

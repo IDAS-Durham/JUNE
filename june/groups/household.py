@@ -112,6 +112,13 @@ class Household(Group):
                 return random() < household_compliance
         return False
 
+    @property
+    def super_area(self):
+        if self.area is None:
+            return None
+        else:
+            return self.area.super_area
+
 
 class Households(Supergroup):
     """
