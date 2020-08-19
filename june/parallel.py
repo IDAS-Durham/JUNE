@@ -20,7 +20,8 @@ def mydomain(super_areas, size):
     indices = numpy.arange(len(super_areas))
     splits = numpy.array_split(indices, size)
     for s in splits:
-        yield super_areas[s[0]:s[-1]]
+        yield super_areas[s[0]:s[-1]+1]
+
 
 def parallel_setup(self, rank, size):
     """ Initialise by defining what part of the known world is outside _THIS_ domain."""
@@ -43,6 +44,8 @@ def parallel_setup(self, rank, size):
     self.parallel_partitions = []
     for i, super_areas in enumerate(mydomain(self.super_areas, size)):
         self.parallel_partitions.append([sa.name for sa in super_areas])
+
+    assert len(self.super_areas) == sum([len(i) for i in self.parallel_partitions])
 
     # Now parse people to see if they are in any of our interesting areas
     # Note that we can delete people who are not interesting!
