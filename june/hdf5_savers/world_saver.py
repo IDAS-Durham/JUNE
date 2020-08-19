@@ -38,6 +38,8 @@ from . import (
     restore_companies_properties_from_hdf5,
     restore_school_properties_from_hdf5,
     restore_social_venues_properties_from_hdf5,
+    restore_universities_properties_from_hdf5,
+    restore_hospital_properties_from_hdf5
 )
 from june.demography import Population
 from june.demography.person import Activities, Person
@@ -160,6 +162,10 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         restore_care_homes_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size
         )
+    if "hospitals" in f_keys:
+        restore_hospital_properties_from_hdf5(
+            world=world, file_path=file_path, chunk_size=chunk_size
+        )
     if "commute_hubs" and "commute_cities" in f_keys:
         restore_commute_properties_from_hdf5(world=world, file_path=file_path)
     if "companies" in f_keys:
@@ -170,6 +176,9 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         restore_school_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size,
         )
+    if "universities" in f_keys:
+        restore_universities_properties_from_hdf5(world=world, file_path=file_path)
+
     if "social_venues" in f_keys:
         restore_social_venues_properties_from_hdf5(world=world, file_path=file_path)
     world.cemeteries = Cemeteries()

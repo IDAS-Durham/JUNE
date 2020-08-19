@@ -166,10 +166,6 @@ class TestSaveHospitals:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if hospital.super_area is not None:
-                assert hospital.super_area == hospital2.super_area
-            else:
-                assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
             assert hospital.trust_code == hospital2.trust_code
@@ -397,6 +393,16 @@ class TestSaveWorld:
     def test__company_super_area(self, world_h5, world_h5_loaded):
         for company1, company2 in zip(world_h5.companies, world_h5_loaded.companies):
             assert company1.super_area.id == company2.super_area.id
+
+    def test__university_super_area(self, world_h5, world_h5_loaded):
+        for uni1, uni2 in zip(world_h5.universities, world_h5_loaded.universities):
+            assert uni1.super_area.id == uni2.super_area.id
+            assert uni1.super_area.name == uni2.super_area.name
+
+    def test__hospital_super_area(self, world_h5, world_h5_loaded):
+        for h1, h2 in zip(world_h5.hospitals, world_h5_loaded.hospitals):
+            assert h1.super_area.id == h2.super_area.id
+            assert h1.super_area.name == h2.super_area.name
 
     def test__social_venues_super_area(self, world_h5, world_h5_loaded):
         for spec in ["pubs", "groceries", "cinemas"]:
