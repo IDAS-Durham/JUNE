@@ -117,7 +117,7 @@ class HospitalDistributor:
         hospitals_in_super_area = [
             hospital
             for hospital in self.hospitals.members
-            if hospital.super_area == super_area.name
+            if hospital.super_area.name == super_area.name
         ]
         return hospitals_in_super_area
 
