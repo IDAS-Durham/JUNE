@@ -19,11 +19,13 @@ class University(Group):
         n_students_max=None,
         n_years=5,
         ukprn=None,
+        super_area=None,
     ):
         self.coordinates = coordinates
         self.n_students_max = n_students_max
         self.n_years = n_years
         self.ukprn = ukprn
+        self.super_area = super_area
         super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
 
@@ -94,13 +96,14 @@ class Universities(Supergroup):
         n_students = n_students[distances_close]
         ukprn_values = ukprn_values[distances_close]
         universities = []
-        for coord, n_stud, ukprn in zip(
-            coordinates, n_students, ukprn_values
+        for coord, n_stud, ukprn, super_area in zip(
+            coordinates, n_students, ukprn_values, super_areas
         ):
             university = University(
                 coordinates=coord,
                 n_students_max=n_stud,
-                ukprn =ukprn
+                ukprn =ukprn,
+                super_area = super_area
             )
             universities.append(university)
         return cls(universities)

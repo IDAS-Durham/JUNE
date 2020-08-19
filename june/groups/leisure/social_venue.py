@@ -1,9 +1,11 @@
 import numpy as np
+import pandas as pd
 from typing import List, Optional
 from enum import IntEnum
 from sklearn.neighbors import BallTree
+
 from june.groups import Supergroup, Group, Subgroup
-from june.demography.geography import Area, Areas, SuperArea, SuperAreas
+from june.demography.geography import Area, Areas, SuperArea, SuperAreas, Geography
 
 earth_radius = 6371  # km
 
@@ -19,6 +21,7 @@ class SocialVenue(Group):
     def __init__(self, max_size=np.inf):
         super().__init__()
         self.max_size = max_size
+        self.super_area = None
 
     def add(self, person, activity="leisure"):
         self.subgroups[0].append(person)
@@ -29,35 +32,75 @@ class SocialVenue(Group):
 
 
 class SocialVenues(Supergroup):
-    def __init__(self, social_venues: List[SocialVenue]):
+    social_venue_class = SocialVenue
+    def __init__(self, social_venues: List[SocialVenue], make_tree=True):
         super().__init__()
-        self.ball_tree = None
         self.members = social_venues
+        self.ball_tree = None
+        if make_tree:
+            self.make_tree()
 
     @classmethod
     def from_coordinates(
         cls,
         coordinates: List[np.array],
-        areas: Optional[Areas] = None,
+        super_areas: Optional[Areas],
         max_distance_to_area=5,
         **kwargs
     ):
 
-        if areas is not None:
-            _, distances = areas.get_closest_areas(
+        if super_areas:
+            super_areas, distances = super_areas.get_closest_super_areas(
                 coordinates, k=1, return_distance=True
             )
             distances_close = np.where(distances < max_distance_to_area)
             coordinates = coordinates[distances_close]
         social_venues = []
-        for coord in coordinates:
-            sv = SocialVenue()
+        for i, coord in enumerate(coordinates):
+            sv = cls.social_venue_class()
+            if super_areas:
+                super_area = super_areas[i]
+            else:
+                super_area = None
             sv.coordinates = coord
+            sv.super_area = super_area
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 
     @classmethod
+    def for_super_areas(
+        cls, super_areas: List[SuperArea], coordinates_filename: str = None,
+    ):
+        sv_coordinates = pd.read_csv(coordinates_filename)
+        sa_names = [super_area.name for super_area in super_areas]
+        sv_coordinates_in_super_areas = sv_coordinates.loc[
+            sv_coordinates.super_area.isin(sa_names), ["lat", "lon"]
+        ]
+        if coordinates_filename is None:
+            coordinates_filename = cls.default_coordinates_filename
+        return cls.from_coordinates(
+            sv_coordinates_in_super_areas.values, super_areas=super_areas
+        )
+
+    @classmethod
     def for_areas(
+        cls, areas: Areas, coordinates_filename: str = None,
+    ):
+        if coordinates_filename is None:
+            coordinates_filename = cls.default_coordinates_filename
+        super_areas = [area.super_area for area in areas]
+        return cls.for_super_areas(super_areas, coordinates_filename)
+
+    @classmethod
+    def for_geography(
+        cls, geography: Geography, coordinates_filename: str = None,
+    ):
+        if coordinates_filename is None:
+            coordinates_filename = cls.default_coordinates_filename
+        return cls.for_super_areas(geography.super_areas, coordinates_filename)
+
+    @classmethod
+    def distribute_for_areas(
         cls,
         areas: List[Area],
         venues_per_capita: float = None,
@@ -83,14 +126,14 @@ class SocialVenues(Supergroup):
         if venues_per_area is not None:
             for area in areas:
                 for _ in range(venues_per_area):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         else:
@@ -100,7 +143,7 @@ class SocialVenues(Supergroup):
         return cls(social_venues)
 
     @classmethod
-    def for_super_areas(
+    def distribute_for_super_areas(
         cls, super_areas: List[SuperArea], venues_per_super_area=1, venues_per_capita=1
     ):
         """
@@ -121,14 +164,14 @@ class SocialVenues(Supergroup):
         if venues_per_super_area is not None:
             for area in super_areas:
                 for _ in range(venues_per_super_area):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in super_areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = SocialVenue()
+                    sv = cls.social_venue_class()
                     sv.area = area
                     social_venues.append(sv)
         else:

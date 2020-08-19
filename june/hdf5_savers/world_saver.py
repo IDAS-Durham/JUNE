@@ -18,9 +18,7 @@ from . import (
     load_universities_from_hdf5,
     load_commute_hubs_from_hdf5,
     load_commute_cities_from_hdf5,
-    load_pubs_from_hdf5,
-    load_groceries_from_hdf5,
-    load_cinemas_from_hdf5,
+    load_social_venues_from_hdf5,
     save_geography_to_hdf5,
     save_population_to_hdf5,
     save_schools_to_hdf5,
@@ -30,9 +28,7 @@ from . import (
     save_commute_cities_to_hdf5,
     save_commute_hubs_to_hdf5,
     save_care_homes_to_hdf5,
-    save_pubs_to_hdf5,
-    save_cinemas_to_hdf5,
-    save_groceries_to_hdf5,
+    save_social_venues_to_hdf5,
     save_households_to_hdf5,
     restore_population_properties_from_hdf5,
     restore_households_properties_from_hdf5,
@@ -40,6 +36,10 @@ from . import (
     restore_commute_properties_from_hdf5,
     restore_geography_properties_from_hdf5,
     restore_companies_properties_from_hdf5,
+    restore_school_properties_from_hdf5,
+    restore_social_venues_properties_from_hdf5,
+    restore_universities_properties_from_hdf5,
+    restore_hospital_properties_from_hdf5
 )
 from june.demography import Population
 from june.demography.person import Activities, Person
@@ -82,16 +82,16 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
         save_commute_hubs_to_hdf5(world.commutehubs, file_path)
     if world.universities is not None:
         save_universities_to_hdf5(world.universities, file_path)
-    if world.pubs is not None:
-        save_pubs_to_hdf5(world.pubs, file_path)
-    if world.cinemas is not None:
-        save_cinemas_to_hdf5(world.cinemas, file_path)
-    if world.groceries is not None:
-        save_groceries_to_hdf5(world.groceries, file_path)
+    social_venue_possible_specs = ["pubs", "groceries", "cinemas"]  # TODO: generalise
+    social_venues_list = []
+    for spec in social_venue_possible_specs:
+        if hasattr(world, spec) and getattr(world, spec) is not None:
+            social_venues_list.append(getattr(world, spec))
+    if social_venues_list:
+        save_social_venues_to_hdf5(social_venues_list, file_path)
 
-def generate_world_from_hdf5(
-    file_path: str, chunk_size=500000
-) -> World:
+
+def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
     by actual references to the relevant instances.
@@ -136,20 +136,14 @@ def generate_world_from_hdf5(
         )
     if "commute_hubs" in f_keys:
         world.commutehubs, world.commuteunits = load_commute_hubs_from_hdf5(file_path)
-    if "pubs" in f_keys:
-        world.pubs = load_pubs_from_hdf5(file_path)
-    if "cinemas" in f_keys:
-        world.cinemas = load_cinemas_from_hdf5(file_path)
-    if "groceries" in f_keys:
-        world.groceries = load_groceries_from_hdf5(file_path)
     if "households" in f_keys:
-        world.households = load_households_from_hdf5(
-            file_path, chunk_size=chunk_size
-        )
+        world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size)
     if "population" in f_keys:
-        world.people = load_population_from_hdf5(
-            file_path, chunk_size=chunk_size
-        )
+        world.people = load_population_from_hdf5(file_path, chunk_size=chunk_size)
+    if "social_venues" in f_keys:
+        social_venues_dict = load_social_venues_from_hdf5(file_path)
+        for social_venues_spec, social_venues in social_venues_dict.items():
+            setattr(world, social_venues_spec, social_venues)
 
     # restore world
     print("restoring world...")
@@ -168,11 +162,24 @@ def generate_world_from_hdf5(
         restore_care_homes_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size
         )
+    if "hospitals" in f_keys:
+        restore_hospital_properties_from_hdf5(
+            world=world, file_path=file_path, chunk_size=chunk_size
+        )
     if "commute_hubs" and "commute_cities" in f_keys:
         restore_commute_properties_from_hdf5(world=world, file_path=file_path)
     if "companies" in f_keys:
         restore_companies_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size,
         )
+    if "schools" in f_keys:
+        restore_school_properties_from_hdf5(
+            world=world, file_path=file_path, chunk_size=chunk_size,
+        )
+    if "universities" in f_keys:
+        restore_universities_properties_from_hdf5(world=world, file_path=file_path)
+
+    if "social_venues" in f_keys:
+        restore_social_venues_properties_from_hdf5(world=world, file_path=file_path)
     world.cemeteries = Cemeteries()
     return world
