@@ -34,6 +34,10 @@ def parallel_setup(self, rank, size):
     # Currently the person instances in world.people do not have the work_super_area populated when
     # read back from a file so we have to work this all out from the people in the areas.
 
+    for p in self.people[0:10]:
+        print(p.area.super_area.name, p.work_super_area.name)
+
+
     for i, super_area in enumerate(mydomain(self.super_areas, size)):
         if i == self.domain_id:
             continue
@@ -71,6 +75,7 @@ def parallel_update(self, direction, timestep):
             for person in outside_domain:
                 if not person.hospitalised:
                     person.busy = True
+                #FIXME: Actually, this is the wrnog place, since policy may keep them at home ...
                 if person.infected:
                     tell_them.append(person)
             _put_updates(self, id, tell_them, timestep)
@@ -100,7 +105,10 @@ def _put_updates(self, domain_id, tell_them, timestep):
     Write necessary information about people for infection transmission while they are outside.
     In practice, we only need to tell them about infected people (the list of people called "tell_them").
     """
+    # my domain is self.domain_id, and we are sending to domain_id
     data = [set_person_info(p) for p in tell_them]
+    # at this point, we do a send/receive in MPI land.
+    # after receive would need to do the inverse of set_person_info ...
     #with open(f'parallel_putter_{self.domain_id}_{domain_id}_{timestep}.json','w') as f:
     #    json.dump(data, f)
     print(f"Serialisation of person infection properties for parallelisation is not yet working")
