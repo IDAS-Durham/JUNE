@@ -49,14 +49,15 @@ def parallel_setup(self, rank, size):
     for person in self.people:
         home_super_area = person.area.super_area.name
         work_super_area = None
-        if person.primary_activity.group.spec == "company":
-            work_super_area = person.primary_activity.group.super_area.name
+        if person.primary_activity:  # some people are too old to work.
+            if person.primary_activity.group.spec == "company":
+                work_super_area = person.primary_activity.group.super_area.name
         if home_super_area in my_domain:
             if work_super_area and work_super_area != home_super_area:
-                for i in self.parallel_partitions:
+                for i, p in enumerate(self.parallel_partitions):
                     if i == rank:
                         continue  # we're interested in the others
-                    if work_super_area in self.parallel_partitions[i]:
+                    if work_super_area in p:
                         self.outside_workers[i].append(person)
                         break
         else:
