@@ -9,13 +9,15 @@
 #   world.parallel_setup(world.super_areas[0:2])
 #
 import json
+import numpy
 
 
 def mydomain(super_areas, size):
     """ Generator to partition world into domains"""
-    for i in range(0, len(super_areas), size):
-        yield super_areas[i:i + size]
-
+    indices = numpy.arange(len(super_areas))
+    splits = numpy.array_split(indices, size)
+    for s in splits:
+        yield super_areas[s[0]:s[-1]]
 
 def parallel_setup(self, rank, size):
     """ Initialise by defining what part of the known world is outside _THIS_ domain."""
@@ -37,12 +39,13 @@ def parallel_setup(self, rank, size):
     # First partition information about superareas
     self.parallel_partitions = []
     for i, super_areas in enumerate(mydomain(self.super_areas, size)):
-        self.parallel.partitions.append([sa.name for sa in super_areas])
+        self.parallel_partitions.append([sa.name for sa in super_areas])
 
     # Now parse people to see if they are in any of our interesting areas
     # Note that we can delete people who are not interesting!
     # We should probably delete other parts of the world that are not interesting too ...
     my_domain = self.parallel_partitions[rank]
+    npeople = self.people.total_people
     for person in self.people:
         home_super_area = person.area.super_area.name
         work_super_area = None
@@ -69,6 +72,12 @@ def parallel_setup(self, rank, size):
                 # with anyone.
                 del self.people[person]
                 # (but do they exist somewhere else)
+    inbound = sum([len(i) for i in self.inbound_workers])
+    outbound = sum([len(i) or i in self.outside_workers])
+    print(f'Partition {rank} has {self.people.total_people}(of {npeople} - {inbound} in and {outbound} out).')
+
+
+
 
 
 
