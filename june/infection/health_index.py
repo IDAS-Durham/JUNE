@@ -134,7 +134,7 @@ class HealthIndexGenerator:
 
         age=np.arange(0,121,1)
         
-        hosp_data=np.loadtxt(default_hosp_cases_filename,skiprows=1)
+        hosp_data=np.loadtxt(hosp_filename,skiprows=1)
         age_hosp=hosp_data[:,0]
         female_hosp=hosp_data[:,1]
         male_hosp=hosp_data[:,2]
@@ -146,7 +146,7 @@ class HealthIndexGenerator:
 
         hosp_cases=[interp_female_hosp(age),interp_male_hosp(age)]
 
-        icu_data=np.loadtxt(default_icu_hosp_filename,skiprows=1)
+        icu_data=np.loadtxt(icu_filename,skiprows=1)
         age_icu=icu_data[:,0]
         female_icu=icu_data[:,1]
         male_icu=icu_data[:,2]
@@ -157,7 +157,7 @@ class HealthIndexGenerator:
                                                             fill_value=male_icu[-1])
         icu_hosp=[interp_female_icu(age),interp_male_icu(age)]
 
-        death_data=np.loadtxt(default_death_hosp_filename,skiprows=1)
+        death_data=np.loadtxt(death_filename,skiprows=1)
         age_death=death_data[:,0]
         female_death=death_data[:,1]
         male_death=death_data[:,2]
@@ -247,7 +247,6 @@ class HealthIndexGenerator:
         ratio_icu_female = self.icu_hosp[0]   # Going to ICU
         ratio_death_female = self.death_hosp[0]# Dying in hospital (ICU+hosp)
         
-        print('ratio_hosp_female',ratio_hosp_female_with_icu)
 
 
         ratio_hosp_male_with_icu = self.hosp_cases[1]  # Going to the hospital
@@ -295,8 +294,6 @@ class HealthIndexGenerator:
         icu_deaths_female = ratio_icu_female * (1 - survival_icu)
         icu_deaths_male = ratio_icu_male * (1 - survival_icu)
 
-        # self.prob_lists[0,:,7]=icu_deaths_female
-        # self.prob_lists[1,:,7]=icu_deaths_male
 
         # probability of Survinving  hospital
 
@@ -304,8 +301,8 @@ class HealthIndexGenerator:
         deaths_hosp_noicu_male = ratio_death_male - icu_deaths_male
 
         # If the death rate in icu is around the number of deaths virtually everyone in that age dies in icu.
-        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-6
-        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-6
+        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-3
+        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-3
 
         self.prob_lists[0, :, 3] = (ratio_hosp_female - deaths_hosp_noicu_female)*ratio_hosp_female_with_icu
         self.prob_lists[1, :, 3] = (ratio_hosp_male - deaths_hosp_noicu_male)*ratio_hosp_male_with_icu
