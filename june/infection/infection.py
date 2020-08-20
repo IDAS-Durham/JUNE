@@ -97,11 +97,11 @@ class Infection:
 
     @property
     def tag(self):
-        return self.infection.symptoms.tag
+        return self.symptoms.tag
 
     @property
     def time_of_infection(self):
-        return self.infection.start_time
+        return self.start_time
 
     @property
     def should_be_in_hospital(self) -> bool:
@@ -117,7 +117,7 @@ class Infection:
 
     @property
     def time_of_symptoms_onset(self):
-        return self.infection.symptoms.time_of_symptoms_onset
+        return self.symptoms.time_of_symptoms_onset
 
     @property
     def infection_probability(self):
