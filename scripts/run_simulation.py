@@ -54,7 +54,7 @@ infection_seed = InfectionSeed(
    world.super_areas, infection_selector,
 )
 
-infection_seed.unleash_virus(500) # number of initial cases
+infection_seed.unleash_virus(50) # number of initial cases
 
 # policies
 policies = Policies.from_file()
