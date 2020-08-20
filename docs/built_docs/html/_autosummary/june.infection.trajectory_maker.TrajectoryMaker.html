@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.infection.trajectory_maker.TrajectoryMaker &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.infection.trajectory_maker.TrajectoryMakers" href="june.infection.trajectory_maker.TrajectoryMakers.html" />
+    <link rel="prev" title="june.infection.trajectory_maker.Stage" href="june.infection.trajectory_maker.Stage.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.infection.trajectory_maker.TrajectoryMaker</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.trajectory_maker.Stage.html">june.infection.trajectory_maker.Stage</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.trajectory_maker.TrajectoryMakers.html">june.infection.trajectory_maker.TrajectoryMakers</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-infection-trajectory-maker-trajectorymaker">
+<h1>june.infection.trajectory_maker.TrajectoryMaker<a class="headerlink" href="#june-infection-trajectory-maker-trajectorymaker" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection.trajectory_maker.</code><code class="sig-name descname">TrajectoryMaker</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">stages</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Generate trajectories of a particular kind.</p>
+<p>This defines how a given person moves through a series of symptoms.</p>
+<dl class="simple">
+<dt>stages</dt><dd><p>A list of stages through which the person progresses</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">stages</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Generate trajectories of a particular kind.</p>
+<p>This defines how a given person moves through a series of symptoms.</p>
+<dl class="simple">
+<dt>stages</dt><dd><p>A list of stages through which the person progresses</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectory_dict</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">generate_trajectory</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a><span class="p">]</span><span class="p">]</span></dt>
+<dd><p>Generate a trajectory for a person. This is a list of tuples
+describing what symptoms the person should display at a given
+time.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">_symptoms_tags</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">most_severe_symptoms</code></dt>
+<dd><p>The most severe symptoms experienced at any stage in this trajectory</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.trajectory_maker.Stage.html">june.infection.trajectory_maker.Stage</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.trajectory_maker.TrajectoryMakers.html">june.infection.trajectory_maker.TrajectoryMakers</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

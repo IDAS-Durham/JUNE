@@ -1,0 +1,375 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.demography.geography &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.demography.person" href="june.demography.person.html" />
+    <link rel="prev" title="june.demography.demography" href="june.demography.demography.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.demography.geography</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.demography.demography.html">june.demography.demography</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.demography.person.html">june.demography.person</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.demography.geography">
+<span id="june-demography-geography"></span><h1>june.demography.geography<a class="headerlink" href="#module-june.demography.geography" title="Permalink to this headline">¶</a></h1>
+<dl class="py exception">
+<dt id="june.demography.geography.GeographyError">
+<em class="property">exception </em><code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">GeographyError</code><a class="headerlink" href="#june.demography.geography.GeographyError" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="june.demography.geography.GeographyError.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.GeographyError.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.GeographyError.with_traceback">
+<code class="sig-name descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.GeographyError.with_traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.GeographyError.args">
+<code class="sig-name descname">args</code><a class="headerlink" href="#june.demography.geography.GeographyError.args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.demography.geography.Area">
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">Area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fine geographical resolution.</p>
+<p>Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.</p>
+<dl class="py method">
+<dt id="june.demography.geography.Area.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Area.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Area.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Area.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Area.populate">
+<code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">demography</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Area.populate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area._id">
+<code class="sig-name descname">_id</code><em class="property"> = count(0)</em><a class="headerlink" href="#june.demography.geography.Area._id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.care_home">
+<code class="sig-name descname">care_home</code><a class="headerlink" href="#june.demography.geography.Area.care_home" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.coordinates">
+<code class="sig-name descname">coordinates</code><a class="headerlink" href="#june.demography.geography.Area.coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.households">
+<code class="sig-name descname">households</code><a class="headerlink" href="#june.demography.geography.Area.households" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.id">
+<code class="sig-name descname">id</code><a class="headerlink" href="#june.demography.geography.Area.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#june.demography.geography.Area.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.people">
+<code class="sig-name descname">people</code><a class="headerlink" href="#june.demography.geography.Area.people" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.schools">
+<code class="sig-name descname">schools</code><a class="headerlink" href="#june.demography.geography.Area.schools" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Area.super_area">
+<code class="sig-name descname">super_area</code><a class="headerlink" href="#june.demography.geography.Area.super_area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.demography.geography.Areas">
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">Areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">super_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ball_tree</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Areas" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="june.demography.geography.Areas.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">super_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ball_tree</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Areas.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Areas.construct_ball_tree">
+<code class="sig-name descname">construct_ball_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Areas.construct_ball_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Areas.get_closest_areas">
+<code class="sig-name descname">get_closest_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">return_distance</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Areas.get_closest_areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Areas.ball_tree">
+<code class="sig-name descname">ball_tree</code><a class="headerlink" href="#june.demography.geography.Areas.ball_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Areas.members">
+<code class="sig-name descname">members</code><a class="headerlink" href="#june.demography.geography.Areas.members" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.Areas.super_area">
+<code class="sig-name descname">super_area</code><a class="headerlink" href="#june.demography.geography.Areas.super_area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.demography.geography.Geography">
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">Geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Geography" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate hierachical devision of geography.</p>
+<dl class="simple">
+<dt>hierarchy</dt><dd><p>The different geographical division units from which the
+hierachical structure will be constructed.</p>
+</dd>
+</dl>
+<p>area_coordinates</p>
+<p>Note: It would be nice to find a better way to handle coordinates.</p>
+<dl class="py method">
+<dt id="june.demography.geography.Geography.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Geography.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate hierachical devision of geography.</p>
+<dl class="simple">
+<dt>hierarchy</dt><dd><p>The different geographical division units from which the
+hierachical structure will be constructed.</p>
+</dd>
+</dl>
+<p>area_coordinates</p>
+<p>Note: It would be nice to find a better way to handle coordinates.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Geography._create_areas">
+<em class="property">classmethod </em><code class="sig-name descname">_create_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area_coords</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span><a class="headerlink" href="#june.demography.geography.Geography._create_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the _create_area function throught the area_coords dataframe.
+If area_coords is a series object, then it does not use the apply()
+function as it does not support the axis=1 parameter.</p>
+<dl class="simple">
+<dt>area_coords</dt><dd><p>pandas Dataframe with the area name as index and the coordinates
+X, Y where X is longitude and Y is latitude.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Geography.create_geographical_units">
+<em class="property">classmethod </em><code class="sig-name descname">create_geographical_units</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hierarchy</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">area_coordinates</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">super_area_coordinates</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.Geography.create_geographical_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create geo-graph of the used geographical units.</p>
+<p>Note: This function looks a bit more complicated than need be,
+but it was created with a eye on the future.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.Geography.from_file">
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filter_key</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>list<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hierarchy_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em>, <em class="sig-param"><span class="n">area_coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_coordinates.csv')</span></em>, <em class="sig-param"><span class="n">super_area_coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/super_area_coordinates.csv')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.demography.geography.Geography" title="june.demography.geography.Geography">june.demography.geography.Geography</a><a class="headerlink" href="#june.demography.geography.Geography.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from files and construct classes capable of generating
+hierarchical structure of geographical areas.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">geography</span> <span class="pre">=</span> <span class="pre">Geography.from_file(filter_key={&quot;region&quot;</span> <span class="pre">:</span> <span class="pre">&quot;North</span> <span class="pre">East&quot;})</span>
+<span class="pre">geography</span> <span class="pre">=</span> <span class="pre">Geography.from_file(filter_key={&quot;super_area&quot;</span> <span class="pre">:</span> <span class="pre">[&quot;E02005728&quot;]})</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<dl class="simple">
+<dt>filter_key</dt><dd><p>Filter out geo-units which should enter the world.
+At the moment this can only be one of [area, super_area, region]</p>
+</dd>
+<dt>hierarchy_filename</dt><dd><p>Pandas df file containing the relationships between the different
+geographical units.</p>
+</dd>
+<dt>area_coordinates_filename:</dt><dd><p>coordinates of the area units</p>
+</dd>
+<dt>super_area_coordinates_filename</dt><dd><p>coordinates of the super area units</p>
+</dd>
+<dt>logging_config_filename</dt><dd><p>file path of the logger configuration</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.demography.geography.SuperArea">
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">SuperArea</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperArea" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coarse geographical resolution.</p>
+<dl class="py method">
+<dt id="june.demography.geography.SuperArea.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperArea.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.SuperArea.add_worker">
+<code class="sig-name descname">add_worker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperArea.add_worker" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea._id">
+<code class="sig-name descname">_id</code><em class="property"> = count(0)</em><a class="headerlink" href="#june.demography.geography.SuperArea._id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.areas">
+<code class="sig-name descname">areas</code><a class="headerlink" href="#june.demography.geography.SuperArea.areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.companies">
+<code class="sig-name descname">companies</code><a class="headerlink" href="#june.demography.geography.SuperArea.companies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.coordinates">
+<code class="sig-name descname">coordinates</code><a class="headerlink" href="#june.demography.geography.SuperArea.coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.groceries">
+<code class="sig-name descname">groceries</code><a class="headerlink" href="#june.demography.geography.SuperArea.groceries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.id">
+<code class="sig-name descname">id</code><a class="headerlink" href="#june.demography.geography.SuperArea.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#june.demography.geography.SuperArea.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.SuperArea.people">
+<em class="property">property </em><code class="sig-name descname">people</code><a class="headerlink" href="#june.demography.geography.SuperArea.people" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperArea.workers">
+<code class="sig-name descname">workers</code><a class="headerlink" href="#june.demography.geography.SuperArea.workers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.demography.geography.SuperAreas">
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">SuperAreas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ball_tree</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperAreas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group to aggregate SuperArea objects.</p>
+<dl class="simple">
+<dt>super_areas</dt><dd><p>list of super areas</p>
+</dd>
+<dt>ball_tree</dt><dd><p>whether to construct a NN tree for the super areas</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.demography.geography.SuperAreas.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ball_tree</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperAreas.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group to aggregate SuperArea objects.</p>
+<dl class="simple">
+<dt>super_areas</dt><dd><p>list of super areas</p>
+</dd>
+<dt>ball_tree</dt><dd><p>whether to construct a NN tree for the super areas</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.SuperAreas.construct_ball_tree">
+<code class="sig-name descname">construct_ball_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperAreas.construct_ball_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.demography.geography.SuperAreas.get_closest_super_areas">
+<code class="sig-name descname">get_closest_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">return_distance</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.geography.SuperAreas.get_closest_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperAreas.ball_tree">
+<code class="sig-name descname">ball_tree</code><a class="headerlink" href="#june.demography.geography.SuperAreas.ball_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.demography.geography.SuperAreas.members">
+<code class="sig-name descname">members</code><a class="headerlink" href="#june.demography.geography.SuperAreas.members" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="june.demography.geography._filtering">
+<code class="sig-prename descclassname">june.demography.geography.</code><code class="sig-name descname">_filtering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">filter_key</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>list<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.demography.geography._filtering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter DataFrame for given geo-unit and it’s listed names</p>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.demography.demography.html">june.demography.demography</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.demography.person.html">june.demography.person</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

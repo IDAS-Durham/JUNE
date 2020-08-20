@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.policy.leisure_policies.ChangeLeisureProbability &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.policy.medical_care_policies.MedicalCarePolicy" href="june.policy.medical_care_policies.MedicalCarePolicy.html" />
+    <link rel="prev" title="june.policy.leisure_policies.CloseLeisureVenue" href="june.policy.leisure_policies.CloseLeisureVenue.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.policy.leisure_policies.ChangeLeisureProbability</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.policy.leisure_policies.CloseLeisureVenue.html">june.policy.leisure_policies.CloseLeisureVenue</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.policy.medical_care_policies.MedicalCarePolicy.html">june.policy.medical_care_policies.MedicalCarePolicy</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-policy-leisure-policies-changeleisureprobability">
+<h1>june.policy.leisure_policies.ChangeLeisureProbability<a class="headerlink" href="#june-policy-leisure-policies-changeleisureprobability" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.leisure_policies.</code><code class="sig-name descname">ChangeLeisureProbability</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">leisure_activities_probabilities</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Changes the probability of the specified leisure activities.</p>
+<ul class="simple">
+<li><p>start_time : starting time of the policy.</p></li>
+<li><p>end_time : end time of the policy.</p></li>
+<li><dl class="simple">
+<dt>leisure_activities_probabilities<span class="classifier">dictionary where the first key is an age range, and the second  a</span></dt><dd><p>number with the new probability for the activity in that age. Example:
+* leisure_activities_probabilities = {“pubs” : {“men” :{“0-50” : 0.5, “50-99” : 0.2}, “women” : {“0-70” : 0.2, “71-99” : 0.8}}}</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">leisure_activities_probabilities</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Changes the probability of the specified leisure activities.</p>
+<ul class="simple">
+<li><p>start_time : starting time of the policy.</p></li>
+<li><p>end_time : end time of the policy.</p></li>
+<li><dl class="simple">
+<dt>leisure_activities_probabilities<span class="classifier">dictionary where the first key is an age range, and the second  a</span></dt><dd><p>number with the new probability for the activity in that age. Example:
+* leisure_activities_probabilities = {“pubs” : {“men” :{“0-50” : 0.5, “50-99” : 0.2}, “women” : {“0-70” : 0.2, “71-99” : 0.8}}}</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Changes probabilities of doing leisure activities according to the policies specified.
+The current probabilities are stored in the policies, and restored at the end of the policy 
+time span. Keep this in mind when trying to stack policies that modify the same social venue.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime</dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.policy.leisure_policies.CloseLeisureVenue.html">june.policy.leisure_policies.CloseLeisureVenue</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.policy.medical_care_policies.MedicalCarePolicy.html">june.policy.medical_care_policies.MedicalCarePolicy</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

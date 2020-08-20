@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.distributors.worker_distributor.WorkerDistributor &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.distributors.carehome_distributor.CareHomeError" href="june.distributors.carehome_distributor.CareHomeError.html" />
+    <link rel="prev" title="june.distributors.university_distributor.UniversityDistributor" href="june.distributors.university_distributor.UniversityDistributor.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.distributors.worker_distributor.WorkerDistributor</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.distributors.university_distributor.UniversityDistributor.html">june.distributors.university_distributor.UniversityDistributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.carehome_distributor.CareHomeError.html">june.distributors.carehome_distributor.CareHomeError</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-distributors-worker-distributor-workerdistributor">
+<h1>june.distributors.worker_distributor.WorkerDistributor<a class="headerlink" href="#june-distributors-worker-distributor-workerdistributor" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.distributors.worker_distributor.</code><code class="sig-name descname">WorkerDistributor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">workflow_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">sex_per_sector_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">company_closure</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">age_range</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sub_sector_ratio</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">sub_sector_distr</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">non_geographical_work_location</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span></dt>
+<dd><p>This class distributes people to their work. Work is understood as the main
+activity any individuum pursues during the week, e.g. for pupils it is
+learning in schools and for adults it is their work in companies and
+key sectors for which data was provided.</p>
+<dl class="simple">
+<dt>workflow_df</dt><dd><p>DataFrame that contains information about where man and woman go to work
+with respect to their SuperArea of residence.</p>
+</dd>
+<dt>sector_by_sex_df</dt><dd><p>DataFrame that contains information on the nr. of man and woman working
+in different sectors per Area (note that it is thus not provided for the
+SuperArea).</p>
+</dd>
+<dt>sub_sector_ratio </dt><dd><p>For each region containing the ratio of man and woman respectively that
+work in any key sector type. (e.g. for healthcare, how many man work
+in the key occupations, such as nurses within that sector)</p>
+</dd>
+<dt>sub_sector_distr</dt><dd><p>For each region containing how many of man and woman respectively
+work in any key sector jobs, such as primary teachers or medical
+practitioners.</p>
+</dd>
+<dt>non_geographical_work_location:</dt><dd><p>Special work place locations in dataset that do not correspond to a
+SuperArea name but to special cases such as:
+“home”, “oversea”, “offshore”, …
+They are the key of the dictionary. The value carries the action
+on what should be done with these workers. Currently they are:
+“home”: let them work from home
+“bind”: randomly select a SuperArea to send the worker to work in</p>
+</dd>
+<dt>company_closure:</dt><dd><p>Proportion of each company sector who will be defined as a key worker,
+become furloughed of will randomly assigned to go to work during a lockdown</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">workflow_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">sex_per_sector_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">company_closure</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">age_range</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sub_sector_ratio</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">sub_sector_distr</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">non_geographical_work_location</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="simple">
+<dt>workflow_df</dt><dd><p>DataFrame that contains information about where man and woman go to work
+with respect to their SuperArea of residence.</p>
+</dd>
+<dt>sector_by_sex_df</dt><dd><p>DataFrame that contains information on the nr. of man and woman working
+in different sectors per Area (note that it is thus not provided for the
+SuperArea).</p>
+</dd>
+<dt>sub_sector_ratio </dt><dd><p>For each region containing the ratio of man and woman respectively that
+work in any key sector type. (e.g. for healthcare, how many man work
+in the key occupations, such as nurses within that sector)</p>
+</dd>
+<dt>sub_sector_distr</dt><dd><p>For each region containing how many of man and woman respectively
+work in any key sector jobs, such as primary teachers or medical
+practitioners.</p>
+</dd>
+<dt>non_geographical_work_location:</dt><dd><p>Special work place locations in dataset that do not correspond to a
+SuperArea name but to special cases such as:
+“home”, “oversea”, “offshore”, …
+They are the key of the dictionary. The value carries the action
+on what should be done with these workers. Currently they are:
+“home”: let them work from home
+“bind”: randomly select a SuperArea to send the worker to work in</p>
+</dd>
+<dt>company_closure:</dt><dd><p>Proportion of each company sector who will be defined as a key worker,
+become furloughed of will randomly assigned to go to work during a lockdown</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_assign_lockdown_status</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span></em>, <em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Assign lockdown_status in proportion to definitions in the policy config</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_assign_sub_sector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Assign sub-sector job as defined in config</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_assign_work_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">wf_area_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Employ people in any given sector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_assign_work_sector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Employ people in a given SuperArea.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_lockdown_status_lottery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_workers</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Creates run-once random list for each person in an area for assigning to a lockdown status</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_select_rnd_superarea</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Selects random SuperArea to send a worker to work in</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_work_place_lottery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">wf_area_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">n_workers</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create lottery that randomly assigns people a sector and location
+of work.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">distribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Assign any person within the eligible working age range a location
+(SuperArea) of their work, and the sector (e.g. “P”=education) of
+their work.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Geography" title="june.demography.geography.Geography">june.demography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">workflow_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/work_flow.csv')</span></em>, <em class="sig-param"><span class="n">sex_per_sector_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/industry_by_sex_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/worker_distributor.yaml')</span></em>, <em class="sig-param"><span class="n">policy_config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/policy/company_closure.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor">june.distributors.worker_distributor.WorkerDistributor</a></dt>
+<dd><dl class="simple">
+<dt>geography</dt><dd><p>an instance of the geography class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area_names</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">workflow_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/work_flow.csv')</span></em>, <em class="sig-param"><span class="n">sex_per_sector_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/industry_by_sex_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/worker_distributor.yaml')</span></em>, <em class="sig-param"><span class="n">policy_config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/policy/company_closure.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor">june.distributors.worker_distributor.WorkerDistributor</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_zone</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filter_key</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>list<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">areas_maps_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em>, <em class="sig-param"><span class="n">workflow_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/work_flow.csv')</span></em>, <em class="sig-param"><span class="n">sex_per_sector_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/industry_by_sex_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/worker_distributor.yaml')</span></em>, <em class="sig-param"><span class="n">policy_config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/policy/company_closure.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor">june.distributors.worker_distributor.WorkerDistributor</a></dt>
+<dd><blockquote>
+<div><p>filter_key = {“region” : “North East”}
+filter_key = {“super_area” : [“EXXXX”, “EYYYY”]}</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area_names</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">workflow_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/work_flow.csv')</span></em>, <em class="sig-param"><span class="n">sex_per_sector_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/industry_by_sex_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/worker_distributor.yaml')</span></em>, <em class="sig-param"><span class="n">policy_config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/policy/company_closure.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor">june.distributors.worker_distributor.WorkerDistributor</a></dt>
+<dd><dl class="simple">
+<dt>area_names</dt><dd><p>List of SuperArea names for which to initiate WorkerDistributor</p>
+</dd>
+<dt>workflow_file</dt><dd><p>Filename to data containing information about where man and woman
+go to work with respect to their SuperArea of residence.</p>
+</dd>
+</dl>
+<p>sex_per_sector_file
+education_sector_file
+healthcare_sector_file</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.distributors.university_distributor.UniversityDistributor.html">june.distributors.university_distributor.UniversityDistributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.carehome_distributor.CareHomeError.html">june.distributors.carehome_distributor.CareHomeError</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

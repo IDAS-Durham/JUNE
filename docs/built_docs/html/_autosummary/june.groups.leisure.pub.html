@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.groups.leisure.pub &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.groups.leisure.social_venue_distributor" href="june.groups.leisure.social_venue_distributor.html" />
+    <link rel="prev" title="june.groups.leisure.leisure" href="june.groups.leisure.leisure.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.groups.leisure.pub</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.leisure.leisure.html">june.groups.leisure.leisure</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.leisure.social_venue_distributor.html">june.groups.leisure.social_venue_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.groups.leisure.pub">
+<span id="june-groups-leisure-pub"></span><h1>june.groups.leisure.pub<a class="headerlink" href="#module-june.groups.leisure.pub" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.groups.leisure.pub.Pub">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.pub.</code><code class="sig-name descname">Pub</code><a class="headerlink" href="#june.groups.leisure.pub.Pub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pubs are fun.</p>
+<p>A group of people such as in a hospital or a school.</p>
+<p>If a spec attribute is not defined in the child class then it is generated
+by converting the class name into snakecase.</p>
+<dl class="py class">
+<dt id="june.groups.leisure.pub.Pub.SubgroupType">
+<em class="property">class </em><code class="sig-name descname">SubgroupType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pub.SubgroupType" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="june.groups.leisure.pub.Pub.SubgroupType.default">
+<code class="sig-name descname">default</code><em class="property"> = 0</em><a class="headerlink" href="#june.groups.leisure.pub.Pub.SubgroupType.default" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pub.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A group of people such as in a hospital or a school.</p>
+<p>If a spec attribute is not defined in the child class then it is generated
+by converting the class name into snakecase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub._collate_from_subgroups">
+<code class="sig-name descname">_collate_from_subgroups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attribute</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a><span class="p">]</span><a class="headerlink" href="#june.groups.leisure.pub.Pub._collate_from_subgroups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a set of all of the people in the subgroups with a particular health status</p>
+<dl class="simple">
+<dt>attribute</dt><dd><p>The name of the attribute in the subgroup, e.g. “in_hospital”</p>
+</dd>
+</dl>
+<p>The union of all the sets with the given attribute name in all of the sub groups.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub._next_id">
+<em class="property">classmethod </em><code class="sig-name descname">_next_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#june.groups.leisure.pub.Pub._next_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate an id for this class. Each group class has its own id iterator
+starting at 0</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em>, <em class="sig-param"><span class="n">activity</span><span class="o">=</span><span class="default_value">'leisure'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pub.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a person to a given subgroup. For example, in a school
+a student is added to the subgroup matching their age.</p>
+<dl class="simple">
+<dt>person</dt><dd><p>A person</p>
+</dd>
+</dl>
+<p>group_type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pub.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.get_leisure_subgroup">
+<code class="sig-name descname">get_leisure_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pub.get_leisure_subgroup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.leisure.pub.Pub.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the group.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.remove_person">
+<code class="sig-name descname">remove_person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pub.remove_person" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a person from this group by removing them
+from the subgroup to which they belong</p>
+<dl class="simple">
+<dt>person</dt><dd><p>A person</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.leisure.pub.Pub._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.groups.leisure.pub.Pub._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.contains_people">
+<em class="property">property </em><code class="sig-name descname">contains_people</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.contains_people" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does this group contain at least one person?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.dead">
+<em class="property">property </em><code class="sig-name descname">dead</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.dead" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.leisure.pub.Pub.id">
+<code class="sig-name descname">id</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.in_hospital">
+<em class="property">property </em><code class="sig-name descname">in_hospital</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.in_hospital" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.infected">
+<em class="property">property </em><code class="sig-name descname">infected</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.infected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.must_timestep">
+<em class="property">property </em><code class="sig-name descname">must_timestep</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.must_timestep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name is computed on the fly to reduce memory footprint. It combines
+the name fo the class with the id of the instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.people">
+<em class="property">property </em><code class="sig-name descname">people</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.people" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the people in this group</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.recovered">
+<em class="property">property </em><code class="sig-name descname">recovered</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.recovered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.size">
+<em class="property">property </em><code class="sig-name descname">size</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.size_infected">
+<em class="property">property </em><code class="sig-name descname">size_infected</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.size_infected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.size_recovered">
+<em class="property">property </em><code class="sig-name descname">size_recovered</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.size_recovered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.size_susceptible">
+<em class="property">property </em><code class="sig-name descname">size_susceptible</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.size_susceptible" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.leisure.pub.Pub.spec">
+<code class="sig-name descname">spec</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.leisure.pub.Pub.subgroups">
+<code class="sig-name descname">subgroups</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.subgroups" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pub.susceptible">
+<em class="property">property </em><code class="sig-name descname">susceptible</code><a class="headerlink" href="#june.groups.leisure.pub.Pub.susceptible" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.groups.leisure.pub.PubDistributor">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.pub.</code><code class="sig-name descname">PubDistributor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.groups.leisure.pub.Pubs" title="june.groups.leisure.pub.Pubs">june.groups.leisure.pub.Pubs</a></span></em>, <em class="sig-param"><span class="n">male_age_probabilities</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">female_age_probabilities</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">neighbours_to_consider</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">maximum_distance</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">weekend_boost</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">drags_household_probability</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A sex/age profile for the social venue attendees can be specified as
+male_age_probabilities = {“18-65” : 0.3}
+any non-specified ages in the range (0,99) will have 0 probabilty
+Parameters
+———-
+social_venues</p>
+<blockquote>
+<div><p>A SocialVenues object</p>
+</div></blockquote>
+<dl class="simple">
+<dt>male_age_probabilities</dt><dd><p>a dictionary containg age as keys and the probabilty per day (think of it as
+the Poisson parameter lambda) of a male person of that age going to the social
+venue as value. This probability value is per day. So the
+chance of going to the social venue in a time delta_t is
+1 - exp(- probabilty * delta_t)</p>
+</dd>
+<dt>female_age_probabilities</dt><dd><p>a dictionary containg age as keys and the probabilty of a female person of that age
+going to the social venue as value</p>
+</dd>
+<dt>weekend_boost</dt><dd><p>boosting factor for the weekend probability</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.groups.leisure.pub.Pubs" title="june.groups.leisure.pub.Pubs">june.groups.leisure.pub.Pubs</a></span></em>, <em class="sig-param"><span class="n">male_age_probabilities</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">female_age_probabilities</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">neighbours_to_consider</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">maximum_distance</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">weekend_boost</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">drags_household_probability</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A sex/age profile for the social venue attendees can be specified as
+male_age_probabilities = {“18-65” : 0.3}
+any non-specified ages in the range (0,99) will have 0 probabilty
+Parameters
+———-
+social_venues</p>
+<blockquote>
+<div><p>A SocialVenues object</p>
+</div></blockquote>
+<dl class="simple">
+<dt>male_age_probabilities</dt><dd><p>a dictionary containg age as keys and the probabilty per day (think of it as
+the Poisson parameter lambda) of a male person of that age going to the social
+venue as value. This probability value is per day. So the
+chance of going to the social venue in a time delta_t is
+1 - exp(- probabilty * delta_t)</p>
+</dd>
+<dt>female_age_probabilities</dt><dd><p>a dictionary containg age as keys and the probabilty of a female person of that age
+going to the social venue as value</p>
+</dd>
+<dt>weekend_boost</dt><dd><p>boosting factor for the weekend probability</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.from_config">
+<em class="property">classmethod </em><code class="sig-name descname">from_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.groups.leisure.pub.Pubs" title="june.groups.leisure.pub.Pubs">june.groups.leisure.pub.Pubs</a></span></em>, <em class="sig-param"><span class="n">config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/leisure/pubs.yaml')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.from_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.get_poisson_parameter">
+<code class="sig-name descname">get_poisson_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sex</span></em>, <em class="sig-param"><span class="n">age</span></em>, <em class="sig-param"><span class="n">is_weekend</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.get_poisson_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poisson parameter (lambda) of a person going to one social venue according to their
+age and sex and the distribution of visitors in the venue.</p>
+<dl class="simple">
+<dt>person</dt><dd><p>an instance of Person</p>
+</dd>
+<dt>delta_t</dt><dd><p>interval of time in units of days</p>
+</dd>
+<dt>is_weekend</dt><dd><p>whether it is a weekend or not</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.get_possible_venues_for_household">
+<code class="sig-name descname">get_possible_venues_for_household</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">household</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.household.html#june.groups.household.Household" title="june.groups.household.Household">june.groups.household.Household</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.get_possible_venues_for_household" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.get_social_venue_for_person">
+<code class="sig-name descname">get_social_venue_for_person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.get_social_venue_for_person" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a person to one of the social venues in the distributor. To decide, we select randomly
+from a certain number of neighbours, or the closest venue if the distance is greater than
+the maximum_distance.</p>
+<p>person</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.person_drags_household">
+<code class="sig-name descname">person_drags_household</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.person_drags_household" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether person drags household or not.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.PubDistributor.probability_to_go_to_social_venue">
+<code class="sig-name descname">probability_to_go_to_social_venue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">is_weekend</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.PubDistributor.probability_to_go_to_social_venue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probabilty of a person going to one social venue according to their
+age and sex and the distribution of visitors in the venue.</p>
+<dl class="simple">
+<dt>person</dt><dd><p>an instance of Person</p>
+</dd>
+<dt>delta_t</dt><dd><p>interval of time in units of days</p>
+</dd>
+<dt>is_weekend</dt><dd><p>whether it is a weekend or not</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.groups.leisure.pub.Pubs">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.pub.</code><code class="sig-name descname">Pubs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.leisure.pub.Pub" title="june.groups.leisure.pub.Pub">june.groups.leisure.pub.Pub</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.leisure.pub.Pub" title="june.groups.leisure.pub.Pub">june.groups.leisure.pub.Pub</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.add_to_super_areas">
+<code class="sig-name descname">add_to_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.add_to_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds all venues to the closest super area</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.for_areas">
+<em class="property">classmethod </em><code class="sig-name descname">for_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/leisure/pubs_per_super_area.csv')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.for_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates social venues in the given areas.</p>
+<dl class="simple">
+<dt>areas</dt><dd><p>list of areas to generate the venues in</p>
+</dd>
+<dt>venues_per_capita</dt><dd><p>number of venues per person in each area.</p>
+</dd>
+<dt>venues_per_area</dt><dd><p>number of venues in each area.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.for_box_mode">
+<em class="property">classmethod </em><code class="sig-name descname">for_box_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.for_box_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.for_geography">
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Geography" title="june.demography.geography.Geography">june.demography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/leisure/pubs_per_super_area.csv')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.for_geography" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.for_super_areas">
+<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/leisure/pubs_per_super_area.csv')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.for_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates social venues in the given super areas.</p>
+<dl class="simple">
+<dt>super_areas</dt><dd><p>list of areas to generate the venues in</p>
+</dd>
+<dt>venues_per_super_area</dt><dd><p>how many venus per super_area to generate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.from_coordinates">
+<em class="property">classmethod </em><code class="sig-name descname">from_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">List<span class="p">[</span>numpy.array<span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.from_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.from_file">
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.get_closest_venues">
+<code class="sig-name descname">get_closest_venues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.get_closest_venues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queries the ball tree for the closests venues.</p>
+<dl class="simple">
+<dt>coordinates</dt><dd><p>coordinates in the format [Latitude, Longitude]</p>
+</dd>
+<dt>k</dt><dd><p>number of neighbours desired</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.get_venues_in_radius">
+<code class="sig-name descname">get_venues_in_radius</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.get_venues_in_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queries the ball tree for the closests venues.</p>
+<dl class="simple">
+<dt>coordinates</dt><dd><p>coordinates in the format [Latitude, Longitude]</p>
+</dd>
+<dt>radius</dt><dd><p>radius in km to query</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.pub.Pubs.make_tree">
+<code class="sig-name descname">make_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.pub.Pubs.make_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.leisure.leisure.html">june.groups.leisure.leisure</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.leisure.social_venue_distributor.html">june.groups.leisure.social_venue_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

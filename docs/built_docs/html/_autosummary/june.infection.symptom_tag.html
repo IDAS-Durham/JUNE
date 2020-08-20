@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.infection.symptom_tag &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.infection.trajectory_maker" href="june.infection.trajectory_maker.html" />
+    <link rel="prev" title="june.infection.symptoms_trajectory" href="june.infection.symptoms_trajectory.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.infection.symptom_tag</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.symptoms_trajectory.html">june.infection.symptoms_trajectory</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.trajectory_maker.html">june.infection.trajectory_maker</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.infection.symptom_tag">
+<span id="june-infection-symptom-tag"></span><h1>june.infection.symptom_tag<a class="headerlink" href="#module-june.infection.symptom_tag" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.infection.symptom_tag.SymptomTag">
+<em class="property">class </em><code class="sig-prename descclassname">june.infection.symptom_tag.</code><code class="sig-name descname">SymptomTag</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tag for the symptoms exhibited by a person.</p>
+<p>Higher numbers are more severe.
+0 - 5 correspond to indices in the health index array.</p>
+<dl class="py method">
+<dt id="june.infection.symptom_tag.SymptomTag.from_string">
+<em class="property">classmethod </em><code class="sig-name descname">from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.from_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.asymptomatic">
+<code class="sig-name descname">asymptomatic</code><em class="property"> = 0</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.asymptomatic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.dead_home">
+<code class="sig-name descname">dead_home</code><em class="property"> = 5</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.dead_home" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.dead_hospital">
+<code class="sig-name descname">dead_hospital</code><em class="property"> = 6</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.dead_hospital" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.dead_icu">
+<code class="sig-name descname">dead_icu</code><em class="property"> = 7</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.dead_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.exposed">
+<code class="sig-name descname">exposed</code><em class="property"> = -1</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.exposed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.healthy">
+<code class="sig-name descname">healthy</code><em class="property"> = -2</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.healthy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.hospitalised">
+<code class="sig-name descname">hospitalised</code><em class="property"> = 3</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.hospitalised" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.intensive_care">
+<code class="sig-name descname">intensive_care</code><em class="property"> = 4</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.intensive_care" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.mild">
+<code class="sig-name descname">mild</code><em class="property"> = 1</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.mild" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.recovered">
+<code class="sig-name descname">recovered</code><em class="property"> = -3</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.recovered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptom_tag.SymptomTag.severe">
+<code class="sig-name descname">severe</code><em class="property"> = 2</em><a class="headerlink" href="#june.infection.symptom_tag.SymptomTag.severe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.symptoms_trajectory.html">june.infection.symptoms_trajectory</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.trajectory_maker.html">june.infection.trajectory_maker</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>
