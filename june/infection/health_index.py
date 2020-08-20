@@ -304,11 +304,11 @@ class HealthIndexGenerator:
         deaths_hosp_noicu_male = ratio_death_male - icu_deaths_male
 
         # If the death rate in icu is around the number of deaths virtually everyone in that age dies in icu.
-        #deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-6
-        #deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-6
+        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-6
+        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-6
 
         self.prob_lists[0, :, 3] = (ratio_hosp_female - deaths_hosp_noicu_female)*ratio_hosp_female_with_icu
-        self.prob_lists[1, :, 3] = (ratio_hosp_male - deaths_hosp_noicu_male)*ratio_hosp_female_with_icu
+        self.prob_lists[1, :, 3] = (ratio_hosp_male - deaths_hosp_noicu_male)*ratio_hosp_male_with_icu
 
         # probability of dying in hospital Without icu
         self.prob_lists[0, :, 6] = deaths_hosp_noicu_female*ratio_hosp_female_with_icu
@@ -344,6 +344,7 @@ class HealthIndexGenerator:
 
         self.prob_lists[0, :, 2] = prob_home_severe_female - deaths_at_home_female
         self.prob_lists[1, :, 2] = prob_home_severe_male - deaths_at_home_male
+        
 
     def __call__(self, person):
         """
