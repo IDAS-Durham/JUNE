@@ -17,6 +17,7 @@ default_gamma_config_path = paths.configs_path / "defaults/transmission/nature.y
 
 
 class Transmission:
+    __slots__ = ("probability")
     def __init__(self):
         self.probability = 0.0
 

@@ -70,6 +70,15 @@ def update_probability(
 
 
 class TransmissionXNExp(Transmission):
+    __slots__ = (
+        "time_first_infectious",
+        "norm_time",
+        "n",
+        "alpha",
+        "norm",
+        "probability",
+    )
+
     def __init__(
         self,
         max_probability=1.0,
@@ -105,17 +114,18 @@ class TransmissionXNExp(Transmission):
             multiplier that lowers the infectiousness of mild cases
 
         """
-        self.max_probability = max_probability
         self.time_first_infectious = time_first_infectious
         self.norm_time = norm_time
         self.n = n
         self.alpha = alpha
-        self.asymptomatic_infectious_factor = asymptomatic_infectious_factor
-        self.mild_infectious_factor = mild_infectious_factor
         max_delta_time = self.n * self.alpha * self.norm_time
         max_tau = max_delta_time / self.norm_time
-        self.norm = self.max_probability / xnexp(max_tau, self.n, self.alpha)
-        self.modify_infectiousness_for_symptoms(max_symptoms=max_symptoms)
+        self.norm = max_probability / xnexp(max_tau, self.n, self.alpha)
+        self.modify_infectiousness_for_symptoms(
+            max_symptoms=max_symptoms,
+            asymptomatic_infectious_factor=asymptomatic_infectious_factor,
+            mild_infectious_factor=mild_infectious_factor,
+        )
         self.probability = 0.0
 
     @classmethod
@@ -171,7 +181,7 @@ class TransmissionXNExp(Transmission):
     @classmethod
     def from_file_linked_symptoms(
         cls,
-        time_to_symptoms_onset: float, 
+        time_to_symptoms_onset: float,
         max_symptoms: "SymptomTag" = None,
         config_path: str = default_config_path,
     ) -> "TransmissionXNExp":
@@ -197,12 +207,18 @@ class TransmissionXNExp(Transmission):
         """
         with open(config_path) as f:
             config = yaml.safe_load(f)
-        smearing_time_first_infectious = CompletionTime.from_dict(config['smearing_time_first_infectious'])()
-        time_first_infectious = time_to_symptoms_onset + smearing_time_first_infectious 
-        smearing_peak_position = CompletionTime.from_dict(config['smearing_peak_position'])()
+        smearing_time_first_infectious = CompletionTime.from_dict(
+            config["smearing_time_first_infectious"]
+        )()
+        time_first_infectious = time_to_symptoms_onset + smearing_time_first_infectious
+        smearing_peak_position = CompletionTime.from_dict(
+            config["smearing_peak_position"]
+        )()
         alpha = CompletionTime.from_dict(config["alpha"])()
-        peak_position = time_to_symptoms_onset - time_first_infectious + smearing_peak_position
-        n = peak_position/alpha
+        peak_position = (
+            time_to_symptoms_onset - time_first_infectious + smearing_peak_position
+        )
+        n = peak_position / alpha
         max_probability = CompletionTime.from_dict(config["max_probability"])()
         norm_time = CompletionTime.from_dict(config["norm_time"])()
         asymptomatic_infectious_factor = CompletionTime.from_dict(
@@ -222,8 +238,30 @@ class TransmissionXNExp(Transmission):
             mild_infectious_factor=mild_infectious_factor,
         )
 
+    def update_infection_probability(self, time_from_infection: float):
+        """
+        Performs a probability update given time from infection
 
-    def modify_infectiousness_for_symptoms(self, max_symptoms: "SymptomTag"):
+        Parameters
+        ----------
+        time_from_infection:
+            time elapsed since person became infected (in days).
+        """
+        self.probability = update_probability(
+            time_from_infection,
+            self.time_first_infectious,
+            self.norm,
+            self.norm_time,
+            self.alpha,
+            self.n,
+        )
+
+    def _modify_infectiousness_for_symptoms(
+        self,
+        max_symptoms: "SymptomTag",
+        asymptomatic_infectious_factor,
+        mild_infectious_factor,
+    ):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying
         self.norm
@@ -238,27 +276,9 @@ class TransmissionXNExp(Transmission):
             self.asymptomatic_infectious_factor is not None
             and max_symptoms == SymptomTag.asymptomatic
         ):
-            self.norm *= self.asymptomatic_infectious_factor
+            self.norm *= asymptomatic_infectious_factor
         elif (
-            self.mild_infectious_factor is not None
-            and max_symptoms == SymptomTag.mild
+            self.mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
         ):
-            self.norm *= self.mild_infectious_factor
+            self.norm *= mild_infectious_factor
 
-    def update_probability_from_delta_time(self, time_from_infection: float):
-        """
-        Performs a probability update given time from infection
-
-        Parameters
-        ----------
-        time_from_infection:
-            time elapsed since person became infected
-        """
-        self.probability = update_probability(
-            time_from_infection,
-            self.time_first_infectious,
-            self.norm,
-            self.norm_time,
-            self.alpha,
-            self.n,
-        )
