@@ -265,12 +265,7 @@ class Leisure:
                 prob=np.array(list(prob_age_sex["activities"].values())),
             )
             activity = list(prob_age_sex["activities"].keys())[activity_idx]
-            print("----")
-            print(activity)
-            print(person.residence.group.social_venues)
             candidates = person.residence.group.social_venues[activity]
-            print("candidates")
-            print(candidates)
             candidates_length = len(candidates)
             if candidates_length == 0:
                 return

@@ -6,7 +6,16 @@ from june.infection.trajectory_maker import TrajectoryMakers
 
 dead_tags = (SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu)
 
+
 class Symptoms:
+    __slots__ = (
+        "tag",
+        "max_tag",
+        "max_severity",
+        "trajectory",
+        "stage",
+        "time_of_symptoms_onset",
+    )
     """
     Class to represent the symptoms of a person. The symptoms class composes the
     ``Infection`` class alongside with the ``Transmission`` class. Once infected,
@@ -14,12 +23,14 @@ class Symptoms:
     by the ``HealthIndexGenerator``. A trajectory is a collection of symptom tags with
     characteristic timings.
     """
+
     def __init__(self, health_index=None):
+        self.max_tag = None
+        self.tag = SymptomTag.exposed
         self.max_severity = random()
-        self.trajectory = self._make_symptom_trajectory(health_index)
+        self.trajectory = self._make_symptom_trajectory(health_index) # this also sets max_tag
         self.stage = 0
-        self.tag = self.trajectory[self.stage][1]
-        self.time_of_symptoms_onset = self._time_from_infection_to_symptoms()
+        self.time_of_symptoms_onset = self._compute_time_from_infection_to_symptoms()
 
     def _compute_time_from_infection_to_symptoms(self):
         symptoms_onset = 0
@@ -35,9 +46,9 @@ class Symptoms:
         if health_index is None:
             return SymptomTag(0)
         trajectory_maker = TrajectoryMakers.from_file()
-        index_max_symptoms_tag = np.searchsorted(self.health_index, self.max_severity)
-        max_symptoms_tag = SymptomTag(index_max_symptoms_tag)
-        return trajectory_maker[max_symptoms_tag]
+        index_max_symptoms_tag = np.searchsorted(health_index, self.max_severity)
+        self.max_tag = SymptomTag(index_max_symptoms_tag)
+        return trajectory_maker[self.max_tag]
 
     def update_trajectory_stage(self, time_from_infection):
         """
@@ -60,10 +71,6 @@ class Symptoms:
     @property
     def recovered(self):
         return self.tag == SymptomTag.recovered
-
-    @property
-    def max_tag(self):
-        self.trajectory[-1][1]
 
     @property
     def dead(self):
