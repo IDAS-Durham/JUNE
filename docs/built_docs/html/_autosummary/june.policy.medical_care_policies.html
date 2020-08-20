@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.policy.medical_care_policies &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.policy.policy" href="june.policy.policy.html" />
+    <link rel="prev" title="june.policy.leisure_policies" href="june.policy.leisure_policies.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.policy.medical_care_policies</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.policy.leisure_policies.html">june.policy.leisure_policies</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.policy.policy.html">june.policy.policy</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.policy.medical_care_policies">
+<span id="june-policy-medical-care-policies"></span><h1>june.policy.medical_care_policies<a class="headerlink" href="#module-june.policy.medical_care_policies" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.policy.medical_care_policies.Hospitalisation">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.medical_care_policies.</code><code class="sig-name descname">Hospitalisation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hospitalisation policy. When applied to a sick person, allocates that person to a hospital, if the symptoms are severe
+enough. When the person recovers, releases the person from the hospital.</p>
+<p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.Hospitalisation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.Hospitalisation.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals">june.groups.hospital.Hospitals</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation.apply" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.Hospitalisation.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.Hospitalisation.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.Hospitalisation.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.medical_care_policies.Hospitalisation._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.medical_care_policies.Hospitalisation._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicies">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.medical_care_policies.</code><code class="sig-name descname">MedicalCarePolicies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policy" title="june.policy.policy.Policy">june.policy.policy.Policy</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicies" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of like policies active on the same date</p>
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicies.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policy" title="june.policy.policy.Policy">june.policy.policy.Policy</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicies.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of like policies active on the same date</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicies.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">medical_facilities</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicies.apply" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicies.from_policies">
+<em class="property">classmethod </em><code class="sig-name descname">from_policies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policies" title="june.policy.policy.Policies">june.policy.policy.Policies</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicies.from_policies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicies.get_active">
+<code class="sig-name descname">get_active</code><span class="sig-paren">(</span><em class="sig-param">date: &lt;module 'datetime' from '/home/sadie/anaconda3/envs/june/lib/python3.8/datetime.py'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicies.get_active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicies.policy_type">
+<code class="sig-name descname">policy_type</code><em class="property"> = 'medical_care'</em><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicies.policy_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicy">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.medical_care_policies.</code><code class="sig-name descname">MedicalCarePolicy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicy.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicy.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicy.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicy.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicy.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicy.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicy.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicy.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.medical_care_policies.MedicalCarePolicy._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.medical_care_policies.MedicalCarePolicy._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.policy.leisure_policies.html">june.policy.leisure_policies</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.policy.policy.html">june.policy.policy</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>
