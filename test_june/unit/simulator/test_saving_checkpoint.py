@@ -49,7 +49,7 @@ def run_simulator(selector):
     world.to_hdf5("./checkpoint_world.hdf5")
     # restore health status of people
     for person in world.people:
-        person.health_information = None
+        person.infection = None
         person.susceptibility = 1.0
         person.dead = False
     interaction = Interaction.from_file()
@@ -94,24 +94,16 @@ def test__checkpoints_are_saved(selector):
     assert sim_recovered.timer.delta_time == sim.timer.delta_time
     for person1, person2 in zip(sim.world.people, sim_recovered.world.people):
         assert person1.id == person2.id
-        if person1.health_information is not None:
-            assert person2.health_information is not None
-            h1 = person1.health_information
-            h2 = person2.health_information
-            for slot in h1.__slots__:
-                if slot == "infection":
-                    inf1 = h1.infection
-                    inf2 = h2.infection
-                    assert inf1.start_time == inf1.start_time
-                    assert inf1.last_time_updated == inf1.last_time_updated
-                    assert inf1.infection_probability == inf2.infection_probability
-                    assert inf1.transmission.probability == inf2.transmission.probability
-                    assert inf1.symptoms.tag == inf2.symptoms.tag
-                    assert inf1.symptoms.max_severity == inf2.symptoms.max_severity
-                    continue
-                p1_attr = getattr(person1.health_information, slot)
-                p2_attr = getattr(person2.health_information, slot)
-                assert p1_attr == p2_attr
+        if person1.infection is not None:
+            assert person2.infection is not None
+            inf1 = person1.infection
+            inf2 = person2.infection
+            assert inf1.start_time == inf1.start_time
+            assert inf1.infection_probability == inf2.infection_probability
+            assert inf1.number_of_infected == inf2.number_of_infected
+            assert inf1.transmission.probability == inf2.transmission.probability
+            assert inf1.symptoms.tag == inf2.symptoms.tag
+            continue
         assert person1.susceptible == person2.susceptible
         assert person1.infected == person2.infected
         assert person1.recovered == person2.recovered

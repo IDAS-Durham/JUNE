@@ -7,6 +7,7 @@ from june.infection.symptom_tag import SymptomTag
 
 hospitalised_tags = (SymptomTag.hospitalised, SymptomTag.intensive_care)
 
+
 class MedicalCarePolicy(Policy):
     def __init__(self, start_time="1900-01-01", end_time="2500-01-01"):
         super().__init__(start_time, end_time)

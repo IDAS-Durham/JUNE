@@ -22,7 +22,7 @@ class Transmission:
     def __init__(self):
         self.probability = 0.0
 
-    def update_probability_from_delta_time(self, time_from_infection):
+    def update_infection_probability(self, time_from_infection):
         raise NotImplementedError()
 
     @classmethod
@@ -52,7 +52,7 @@ class TransmissionConstant(Transmission):
         probability = CompletionTime.from_dict(config["probability"])()
         return TransmissionConstant(probability=probability)
 
-    def update_probability_from_delta_time(self, time_from_infection):
+    def update_infection_probability(self, time_from_infection):
         pass
 
 
@@ -266,7 +266,7 @@ class TransmissionGamma(Transmission):
             mild_infectious_factor=mild_infectious_factor,
         )
 
-    def update_probability_from_delta_time(self, time_from_infection: float):
+    def update_infection_probability(self, time_from_infection: float):
         """
         Performs a probability update given time from infection
 
@@ -279,7 +279,8 @@ class TransmissionGamma(Transmission):
             x=time_from_infection, a=self.shape, loc=self.shift, scale=self.scale
         )
 
-    def time_at_maximum_infectivity(self,) -> float:
+    @property
+    def time_at_maximum_infectivity(self) -> float:
         """
         Computes the time at which the individual is maximally infectious (in this case for
         a gamma distribution
@@ -291,7 +292,12 @@ class TransmissionGamma(Transmission):
         """
         return (self.shape - 1) * self.scale + self.shift
 
-    def _modify_infectiousness_for_symptoms(self, max_symptoms: "SymptomTag", asymptomatic_infectious_factor=None, mild_infectious_factor=None):
+    def _modify_infectiousness_for_symptoms(
+        self,
+        max_symptoms: "SymptomTag",
+        asymptomatic_infectious_factor=None,
+        mild_infectious_factor=None,
+    ):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying
         the norm of the distribution 
@@ -310,8 +316,6 @@ class TransmissionGamma(Transmission):
             and max_symptoms == SymptomTag.asymptomatic
         ):
             return asymptomatic_infectious_factor
-        elif (
-            mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
-        ):
+        elif mild_infectious_factor is not None and max_symptoms == SymptomTag.mild:
             return mild_infectious_factor
         return 1.0

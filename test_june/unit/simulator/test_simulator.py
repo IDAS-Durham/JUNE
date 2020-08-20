@@ -219,7 +219,7 @@ def test__move_people_to_commute(sim: Simulator):
 def test__bury_the_dead(sim: Simulator):
     dummy_person = sim.world.people.members[0]
     sim.infection_selector.infect_person_at_time(dummy_person, 0.0)
-    sim.bury_the_dead(sim.world, dummy_person, 0.0)
+    sim.bury_the_dead(sim.world, dummy_person)
     assert dummy_person in sim.world.cemeteries.members[0].people
-    assert dummy_person.health_information.dead
-    assert dummy_person.health_information.infection is None
+    assert dummy_person.dead
+    assert dummy_person.infection is None

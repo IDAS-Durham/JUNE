@@ -100,6 +100,10 @@ class Infection:
         return self.symptoms.tag
 
     @property
+    def max_tag(self):
+        return self.symptoms.max_tag
+
+    @property
     def time_of_infection(self):
         return self.start_time
 
