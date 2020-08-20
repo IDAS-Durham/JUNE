@@ -338,7 +338,7 @@ class Simulator:
             if new_status == "recovered":
                 self.recover(person)
             elif new_status == "dead":
-                self.bury_the_dead(self.world, person, time)
+                self.bury_the_dead(self.world, person)
         if self.logger is not None:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
