@@ -184,6 +184,9 @@ class Population:
     def extend(self, people):
         self.people.extend(people)
 
+    def __delitem__(self, key):
+        self.people.remove(key)
+
     @property
     def members(self):
         return self.people

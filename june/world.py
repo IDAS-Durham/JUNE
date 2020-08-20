@@ -203,6 +203,20 @@ class World:
         from june.hdf5_savers import save_world_to_hdf5
         save_world_to_hdf5(world=self, file_path=file_path, chunk_size=chunk_size)
 
+    def parallel_setup(self, *args, **kwargs):
+        """
+        Mixin entry point to setting up any sort of parallelism.
+        If this is ever called in a serial world then it's an error.
+        """
+        raise NotImplementedError
+
+    def parallel_update(self, *args, **kwargs):
+        """
+        Mixin entry point for parallelism.
+        This gets called even a serial world, but in that case we want nothing to happen.
+        """
+        pass
+
 
 def generate_world_from_geography(
     geography: Geography,
@@ -243,5 +257,3 @@ def generate_world_from_geography(
     )
     world.cemeteries = Cemeteries()
     return world
-
-

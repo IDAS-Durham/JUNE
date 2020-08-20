@@ -22,7 +22,11 @@ class Logger:
         """
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.save_path / "logger.hdf5"
+        timestamp1 = datetime.datetime.utcnow()
+        timestamp_format = "%Y-%m-%d-%H-%M-%S.%f"
+
+        self.file_path = os.path.join(self.save_path,
+                                      "logger_" + timestamp1.strftime(timestamp_format) + ".hdf5")
         self.infection_location = []
         # Remove if exists
         try:
