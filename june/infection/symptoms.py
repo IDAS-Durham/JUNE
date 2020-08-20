@@ -4,6 +4,7 @@ import numpy as np
 from june.infection.symptom_tag import SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
 
+dead_tags = (SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu)
 
 class Symptoms:
     """
@@ -38,18 +39,6 @@ class Symptoms:
         max_symptoms_tag = SymptomTag(index_max_symptoms_tag)
         return trajectory_maker[max_symptoms_tag]
 
-    @property
-    def time_exposed(self):
-        return self.trajectory[1][0]
-
-    @property
-    def is_recovered(self):
-        return self.tag == SymptomTag.recovered
-
-    @property
-    def max_tag(self):
-        self.trajectory[-1][1]
-
     def update_trajectory_stage(self, time_from_infection):
         """
         Updates the current symptom tag from the symptoms trajectory,
@@ -63,3 +52,20 @@ class Symptoms:
         if time_from_infection > self.trajectory[self.stage + 1][0]:
             self.stage += 1
             self.tag = self.trajectory[self.stage][1]
+
+    @property
+    def time_exposed(self):
+        return self.trajectory[1][0]
+
+    @property
+    def recovered(self):
+        return self.tag == SymptomTag.recovered
+
+    @property
+    def max_tag(self):
+        self.trajectory[-1][1]
+
+    @property
+    def dead(self):
+        return self.tag in dead_tags
+
