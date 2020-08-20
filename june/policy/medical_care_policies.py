@@ -31,23 +31,23 @@ class Hospitalisation(MedicalCarePolicy):
     """
 
     def apply(self, person: Person, hospitals: Hospitals):
-        if person.health_information.recovered:
+        if person.recovered:
             if person.medical_facility is not None:
                 person.medical_facility.group.release_as_patient(person)
             return
-        symptoms_tag = person.health_information.tag
+        symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
             if person.medical_facility is None:
                 hospitals.allocate_patient(person)
-            elif person.health_information.tag == SymptomTag.hospitalised:
+            elif symptoms_tag == SymptomTag.hospitalised:
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.patients
                 ]
-            elif person.health_information.tag == SymptomTag.intensive_care:
+            elif symptoms_tag == SymptomTag.intensive_care:
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.icu_patients
                 ]
             else:
                 raise ValueError(
-                    f"Person with health information {person.health_information.tag} cannot go to hospital."
+                    f"Person with symptoms tag {person.infection.tag} cannot go to hospital."
                 )
