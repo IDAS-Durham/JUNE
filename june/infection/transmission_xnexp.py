@@ -121,7 +121,7 @@ class TransmissionXNExp(Transmission):
         max_delta_time = self.n * self.alpha * self.norm_time
         max_tau = max_delta_time / self.norm_time
         self.norm = max_probability / xnexp(max_tau, self.n, self.alpha)
-        self.modify_infectiousness_for_symptoms(
+        self._modify_infectiousness_for_symptoms(
             max_symptoms=max_symptoms,
             asymptomatic_infectious_factor=asymptomatic_infectious_factor,
             mild_infectious_factor=mild_infectious_factor,
@@ -273,12 +273,12 @@ class TransmissionXNExp(Transmission):
 
         """
         if (
-            self.asymptomatic_infectious_factor is not None
+            asymptomatic_infectious_factor is not None
             and max_symptoms == SymptomTag.asymptomatic
         ):
             self.norm *= asymptomatic_infectious_factor
         elif (
-            self.mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
+            mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
         ):
             self.norm *= mild_infectious_factor
 
