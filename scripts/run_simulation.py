@@ -17,6 +17,10 @@ from june.policy import Policies
 from june import paths
 from june.infection.infection import InfectionSelector
 from june.groups.commute import *
+from june import parallel_setup, parallel_update
+from june import World
+
+from mpi4py import MPI
 
 
 def set_random_seed(seed=999):
@@ -41,6 +45,13 @@ config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
+
+# add parallelism
+World.parallel_setup = parallel_setup
+World.parallel_update = parallel_update
+# FIXME: better to do this with a config file ... but this is stub code:
+comm = MPI.COMM_WORLD
+world.parallel_setup(comm)
 
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
