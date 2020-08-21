@@ -207,6 +207,8 @@ class Population:
     def recovered(self):
         return [person for person in self.people if person.recovered]
 
+    def to_list(self):
+        return list(self.people)
 
 class Demography:
     def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator], comorbidity_data = None):
