@@ -108,7 +108,7 @@ def parallel_setup(self, comm, debug=False):
             gone += 1
     print("RR", rank, live, inb, oub, gone)
     # we can't delete them inside the loop, bad things happen if we do that.
-    # FIXME takes a LONG time for many people
+    # FIXME takes a LONG time for many people eg 1000s for 67000 peeps
     #for p in binable:
     #    del self.people[p]
     # These people probably still exist in other lists, so we need to kill all them too.
@@ -195,6 +195,8 @@ def parallel_update(self, direction, timestep):
                        p_to_update[0].health_information = infec
 
         # people out and people in; keep children and elderly constant
+        # TODO this should be built at the top of the module in setup
+        # only once but I don't know how to do it (VP)
         children_old = [
             p for p in self.residents[self.domain_id]
             if not p in self.local_workers[self.domain_id]]
