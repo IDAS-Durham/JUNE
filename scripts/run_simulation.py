@@ -6,16 +6,13 @@ import random
 from june.hdf5_savers import generate_world_from_hdf5
 from june.demography.geography import Geography
 from june.interaction import Interaction
-from june.infection import Infection
-from june.infection.health_index import HealthIndexGenerator
-from june.infection.transmission import TransmissionConstant
+from june.infection import Infection, InfectionSelector, HealthIndexGenerator
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
 from june import paths
-from june.infection.infection import InfectionSelector
 from june.groups.commute import *
 
 

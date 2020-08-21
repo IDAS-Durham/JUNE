@@ -116,9 +116,9 @@ class Hospital(Group):
             person instance to add as patient
         """
 
-        if person.health_information.tag == SymptomTag.intensive_care:
+        if person.infection.tag == SymptomTag.intensive_care:
             self.add(person, self.SubgroupType.icu_patients)
-        elif person.health_information.tag == SymptomTag.hospitalised:
+        elif person.infection.tag == SymptomTag.hospitalised:
             self.add(person, self.SubgroupType.patients)
         else:
             raise AssertionError(
@@ -306,8 +306,8 @@ class Hospitals(Supergroup):
         hospital with availability
 
         """
-        assign_icu = person.health_information.tag == SymptomTag.intensive_care
-        assign_patient = person.health_information.tag == SymptomTag.hospitalised
+        assign_icu = person.infection.tag == SymptomTag.intensive_care
+        assign_patient = person.infection.tag == SymptomTag.hospitalised
 
         if self.box_mode:
             for hospital in self.members:
