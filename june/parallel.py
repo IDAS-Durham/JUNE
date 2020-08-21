@@ -25,11 +25,9 @@ def make_domains(super_areas, size):
 def parallel_setup(self, comm, debug=False):
     """ Initialise by defining what part of the known world is outside _THIS_ domain."""
 
-    if debug:
-        rank, size = 0, 2
-    else:
-        rank = comm.Get_rank()
-        size = comm.Get_size()
+    # get comms info
+    rank = comm.Get_rank()
+    size = comm.Get_size()
 
     # let's just brute force it with MPI for now
     # partition the list of superareas
