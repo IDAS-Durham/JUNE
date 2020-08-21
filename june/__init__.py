@@ -19,6 +19,7 @@ from .demography import geography
 from .exc import GroupException
 from .time import Timer
 from .world import World
+from .parallel import parallel_setup, parallel_update
 
 default_logging_config_filename = (
         paths.configs_path /

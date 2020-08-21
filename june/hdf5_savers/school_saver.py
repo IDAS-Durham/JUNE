@@ -92,7 +92,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["area"].resize(newshape[0], axis=0)
                 schools_dset["area"][idx1:idx2] = areas
 
-
 def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
     """
     Loads schools from an hdf5 file located at ``file_path``.

@@ -29,4 +29,3 @@ class Pubs(SocialVenues):
 
 class PubDistributor(SocialVenueDistributor):
     default_config_filename = default_config_filename
-

@@ -39,7 +39,7 @@ from . import (
     restore_school_properties_from_hdf5,
     restore_social_venues_properties_from_hdf5,
     restore_universities_properties_from_hdf5,
-    restore_hospital_properties_from_hdf5
+    restore_hospital_properties_from_hdf5,
 )
 from june.demography import Population
 from june.demography.person import Activities, Person
@@ -144,7 +144,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         social_venues_dict = load_social_venues_from_hdf5(file_path)
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(world, social_venues_spec, social_venues)
-
     # restore world
     print("restoring world...")
     restore_geography_properties_from_hdf5(

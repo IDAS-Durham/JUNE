@@ -85,4 +85,3 @@ def restore_social_venues_properties_from_hdf5(
                 else:
                     super_area = world.super_areas[super_area - first_super_area_id]
                 social_venue.super_area = super_area
-

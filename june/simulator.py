@@ -6,6 +6,7 @@ import yaml
 from itertools import chain
 from typing import Optional, List
 from pathlib import Path
+from time import perf_counter
 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
@@ -70,6 +71,7 @@ class Simulator:
             self.logger = Logger(save_path=self.save_path)
         else:
             self.logger = None
+        self.tsnum = 0
 
     @classmethod
     def from_file(
@@ -293,7 +295,7 @@ class Simulator:
     @staticmethod
     def recover(person: "Person"):
         """
-        When someone recovers, erase the health information they carry and change their susceptibility.
+        When someone recovers, erase the infection they carry. 
 
         Parameters
         ----------
@@ -320,9 +322,20 @@ class Simulator:
         ids = []
         symptoms = []
         n_secondary_infections = []
-        for person in self.world.people.infected:
-            previous_tag = person.infection.tag
-            new_status = person.infection.update_health_status(time, duration)
+        perf1, perf2, perf3, perf4, perf5 =  0., 0., 0, 0., 0.
+        # replaces the call to infected property
+        # to be sure we are doing the health update only on the people
+        # within each partition
+        domain_infected = [
+            p for p in self.world.people.to_list if p.infected == True
+        ]
+        for person in domain_infected:
+            infection = person.infection
+            tick = perf_counter()
+            previous_tag = infection.tag
+            new_status = infection.update_health_status(time, duration)
+            tock = perf_counter()
+            perf1 += tock - tick
             if (
                 previous_tag == SymptomTag.exposed
                 and person.infection.tag == SymptomTag.mild
@@ -331,14 +344,26 @@ class Simulator:
             ids.append(person.id)
             symptoms.append(person.infection.tag.value)
             n_secondary_infections.append(person.infection.number_of_infected)
+            tick = perf_counter()
+            perf2 += tick - tock
+            symptoms.append(person.infection.tag.value)
+            n_secondary_infections.append(person.infection.number_of_infected)
+            tock = perf_counter()
+            perf3 += tock - tick
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person, medical_facilities=self.world.hospitals
             )
+            tick = perf_counter()
+            perf4 += tick - tock
             if new_status == "recovered":
                 self.recover(person)
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
+            tock = perf_counter()
+            perf5 += tock - tick
+        self.tsnum+= 1
+        print(self.tsnum, perf1, perf2, perf3, perf4, perf5)
         if self.logger is not None:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
@@ -374,13 +399,16 @@ class Simulator:
 
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
+
+        domain_infected = [p for p in self.world.people.to_list if p.infected == True]
+
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
-            f"number of infected = {len(self.world.people.infected)}"
+            f"number of infected = {len(domain_infected)}"
         )
         infected_ids = []
-        first_person_id = self.world.people[0].id
+        first_person_id = self.world.people.to_list[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -398,7 +426,7 @@ class Simulator:
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(int_group.infector_ids):
-                            infector = self.world.people[infector_id - first_person_id]
+                            infector = self.world.people.to_list[infector_id - first_person_id] # why this?
                             assert infector.id == infector_id
                             infector.infection.number_of_infected += (
                                 n_infected
@@ -407,12 +435,13 @@ class Simulator:
                             )
                     infected_ids += new_infected_ids
         people_to_infect = [
-            self.world.people[idx - first_person_id] for idx in infected_ids
+            self.world.people.to_list[idx - first_person_id] for idx in infected_ids
         ]
-        if n_people != len(self.world.people):
+        print("Current people in partition", n_people)
+        if n_people != len(self.world.people.to_list):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
-                f"the total people number {len(self.world.people.members)}"
+                f"the total people number {len(self.world.people.to_list)}"
             )
         # infect people
         if self.infection_selector:
@@ -452,7 +481,9 @@ class Simulator:
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
+
         while self.timer.date < self.timer.final_date:
+            tick = perf_counter()
             if self.infection_seed:
                 if (
                     self.infection_seed.max_date
@@ -471,6 +502,7 @@ class Simulator:
                 logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
                 self.save_checkpoint(saving_date)
                 continue
+            print(f'Timestep {self.tsnum} took {perf_counter()-tick}')
             next(self.timer)
 
     def save_checkpoint(self, date: datetime):
