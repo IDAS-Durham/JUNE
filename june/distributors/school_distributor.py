@@ -38,7 +38,7 @@ class SchoolDistributor:
         teacher_student_ratio_primary = 21,
         teacher_student_ratio_secondary = 16,
         teacher_min_age=21,
-        max_classroom_size=35,
+        max_classroom_size=40,
     ):
         """
         Get closest schools to this output area, per age group
@@ -95,7 +95,8 @@ class SchoolDistributor:
             config["neighbour_schools"],
             config["age_range"],
             config["mandatory_age_range"],
-            config["teacher_min_age"]
+            config["teacher_min_age"],
+            config["max_classroom_size"]
         )
 
     @classmethod

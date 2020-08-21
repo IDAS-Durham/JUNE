@@ -108,8 +108,7 @@ class World:
         if self.schools is not None:
             school_distributor = SchoolDistributor(self.schools)
             school_distributor.distribute_kids_to_school(self.areas)
-            # TODO: Add 
-            #school_distributor.limit_classroom_sizes()
+            school_distributor.limit_classroom_sizes()
             school_distributor.distribute_teachers_to_schools_in_super_areas(
                 self.super_areas
             )

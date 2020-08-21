@@ -3,6 +3,7 @@ import yaml
 from enum import IntEnum
 import math
 from itertools import count
+from copy import deepcopy
 from june import paths
 from typing import List, Tuple, Dict, Optional
 
@@ -85,7 +86,7 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.years = list(range(age_min, age_max + 1))
+        self.years = tuple(range(age_min, age_max + 1))
 
     # add_to_age_group, add_to_class_room and modify school years
     def add(self, person, subgroup_type=SubgroupType.students):
@@ -107,27 +108,29 @@ class School(Group):
         max_classroom_size:
            maximum number of students per classroom (subgroup)
         """
-        old_subgroups = self.subgroups.copy()
-        old_years = self.years.copy()
-        self.subgroups = [old_subgroups[0]]
+        age_subgroups = self.subgroups.copy()
+        year_age_group = deepcopy(self.years)
+        self.subgroups = [age_subgroups[0]] # keep teachers
         self.years = []
-        counter = 0
-        for idx, subgroup in enumerate(old_subgroups[1:]):
+        counter = 1
+        for idx, subgroup in enumerate(age_subgroups[1:]):
             if len(subgroup.people) > max_classroom_size:
                 n_classrooms = math.ceil(len(subgroup.people)/max_classroom_size)
-                self.years += [old_years[idx]]*n_classrooms
+                self.years += [year_age_group[idx]]*n_classrooms
                 pupils_in_classroom = np.array_split(subgroup.people, n_classrooms)
                 for i in range(n_classrooms):
-                    classroom = Subgroup(self, counter+1)
+                    classroom = Subgroup(self, counter)
                     for pupil in pupils_in_classroom[i]:
                         classroom.append(pupil)
                         pupil.subgroups.primary_activity = classroom 
                     self.subgroups.append(classroom)
                     counter += 1
             else:
+                subgroup.subgroup_type = counter
                 self.subgroups.append(subgroup)
                 counter += 1
-                self.years.append(self.years[idx]) 
+                self.years.append(year_age_group[idx]) 
+        self.years = tuple(self.years)
 
     @property
     def is_full(self):
