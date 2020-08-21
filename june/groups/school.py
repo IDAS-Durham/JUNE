@@ -110,26 +110,26 @@ class School(Group):
         """
         age_subgroups = self.subgroups.copy()
         year_age_group = deepcopy(self.years)
-        self.subgroups = [age_subgroups[0]] # keep teachers
+        self.subgroups = [age_subgroups[0]]  # keep teachers
         self.years = []
         counter = 1
         for idx, subgroup in enumerate(age_subgroups[1:]):
             if len(subgroup.people) > max_classroom_size:
-                n_classrooms = math.ceil(len(subgroup.people)/max_classroom_size)
-                self.years += [year_age_group[idx]]*n_classrooms
+                n_classrooms = math.ceil(len(subgroup.people) / max_classroom_size)
+                self.years += [year_age_group[idx]] * n_classrooms
                 pupils_in_classroom = np.array_split(subgroup.people, n_classrooms)
                 for i in range(n_classrooms):
                     classroom = Subgroup(self, counter)
                     for pupil in pupils_in_classroom[i]:
                         classroom.append(pupil)
-                        pupil.subgroups.primary_activity = classroom 
+                        pupil.subgroups.primary_activity = classroom
                     self.subgroups.append(classroom)
                     counter += 1
             else:
                 subgroup.subgroup_type = counter
                 self.subgroups.append(subgroup)
                 counter += 1
-                self.years.append(year_age_group[idx]) 
+                self.years.append(year_age_group[idx])
         self.years = tuple(self.years)
 
     @property
@@ -383,5 +383,3 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
-
-
