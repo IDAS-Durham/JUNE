@@ -243,25 +243,25 @@ class HealthIndexGenerator:
         self.prob_lists[:, :, 0] = self.asymptomatic_ratio
         # hosp,ICU,death ratios
 
-        ratio_hosp_female_with_icu = self.hosp_cases[0]  # Going to the hospital
-        ratio_icu_female = self.icu_hosp[0]   # Going to ICU
-        ratio_death_female = self.death_hosp[0]# Dying in hospital (ICU+hosp)
+        ratio_hosp_cases_female = self.hosp_cases[0]  # hospital/cases rate
+        ratio_icu_hosp_female = self.icu_hosp[0]   # ICU/hosp rate
+        ratio_death_hosp_female = self.death_hosp[0]# deaths in hosp/hosp rate
         
 
 
-        ratio_hosp_male_with_icu = self.hosp_cases[1]  # Going to the hospital
-        ratio_icu_male = self.icu_hosp[1]   # Going to ICU
-        ratio_death_male = self.death_hosp[1]# Dying in hospital (ICU+hosp)
+        ratio_hosp_cases_male = self.hosp_cases[1]  # hospital/cases rate
+        ratio_icu_hosp_male = self.icu_hosp[1]   # ICU/hosp rate
+        ratio_death_hosp_male = self.death_hosp[1]# deaths in hosp/hosp rate
         
 
 
-        # Going to the hospital but not to ICU
-        ratio_hosp_female = 1.0 - ratio_icu_female
-        ratio_hosp_male = 1.0 - ratio_icu_male
+        # Going to the hospital but not to ICU/hosp
+        hosp_noicu_female = 1.0 - ratio_icu_hosp_female
+        hosp_noicu_male = 1.0 - ratio_icu_hosp_male
 
         # Probability of being simptomatic but not going to hospital
-        no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_female_with_icu
-        no_hosp_male = 1.0 - self.asymptomatic_ratio - ratio_hosp_male_with_icu
+        no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_cases_female
+        no_hosp_male = 1.0 - self.asymptomatic_ratio - ratio_hosp_cases_male
 
         # Probability of getting severe
         prob_severe = np.ones(121)
@@ -287,29 +287,29 @@ class HealthIndexGenerator:
             len(survival_rate_icu) - 1
         ][1]
 
-        self.prob_lists[0, :, 4] = (ratio_hosp_female_with_icu*ratio_icu_female) * survival_icu
-        self.prob_lists[1, :, 4] = (ratio_hosp_male_with_icu*ratio_icu_male) * survival_icu
+        self.prob_lists[0, :, 4] = (ratio_hosp_cases_female*ratio_icu_hosp_female) * survival_icu #computes icu_survivors/cases
+        self.prob_lists[1, :, 4] = (ratio_hosp_cases_male*ratio_icu_hosp_male) * survival_icu
 
         # probavility of Dying in icu
-        icu_deaths_female = ratio_icu_female * (1 - survival_icu)
-        icu_deaths_male = ratio_icu_male * (1 - survival_icu)
+        icu_deaths_female = ratio_icu_hosp_female * (1 - survival_icu)
+        icu_deaths_male = ratio_icu_hosp_male * (1 - survival_icu)
 
 
         # probability of Survinving  hospital
 
-        deaths_hosp_noicu_female = ratio_death_female - icu_deaths_female #deaths/hosp in hospital not in icu
-        deaths_hosp_noicu_male = ratio_death_male - icu_deaths_male
+        deaths_hosp_noicu_female = ratio_death_hosp_female - icu_deaths_female #deaths in hospital but not in icu/hosp
+        deaths_hosp_noicu_male = ratio_death_hosp_male - icu_deaths_male
 
         # If the death rate in icu is around the number of deaths virtually everyone in that age dies in icu.
         deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-3
         deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-3
 
-        self.prob_lists[0, :, 3] = (ratio_hosp_female - deaths_hosp_noicu_female)*ratio_hosp_female_with_icu
-        self.prob_lists[1, :, 3] = (ratio_hosp_male - deaths_hosp_noicu_male)*ratio_hosp_male_with_icu
+        self.prob_lists[0, :, 3] = (hosp_noicu_female - deaths_hosp_noicu_female)*ratio_hosp_cases_female #surviving hosp outside of icu/cases
+        self.prob_lists[1, :, 3] = (hosp_noicu_male - deaths_hosp_noicu_male)*ratio_hosp_cases_male
 
         # probability of dying in hospital Without icu
-        self.prob_lists[0, :, 6] = deaths_hosp_noicu_female*ratio_hosp_female_with_icu
-        self.prob_lists[1, :, 6] = deaths_hosp_noicu_male*ratio_hosp_male_with_icu
+        self.prob_lists[0, :, 6] = deaths_hosp_noicu_female*ratio_hosp_cases_female
+        self.prob_lists[1, :, 6] = deaths_hosp_noicu_male*ratio_hosp_cases_male
         """
         probability of dying in your home is the same as the number of deths above the mean of previous years
         that do not have covid 19 in the death certificate it is 23% according to 
@@ -328,8 +328,8 @@ class HealthIndexGenerator:
         excess_death_female[ages >= excess_deaths[-1][0]] = excess_deaths[-1][1]
         excess_death_male[ages >= excess_deaths[-1][0]] = excess_deaths[-1][2]
 
-        deaths_at_home_female = (ratio_death_female*ratio_hosp_female_with_icu) * (1 - excess_death_female)
-        deaths_at_home_male = (ratio_death_male*ratio_hosp_male_with_icu)* (1 - excess_death_male)
+        deaths_at_home_female = (ratio_death_hosp_female*ratio_hosp_cases_female) * (1 - excess_death_female)
+        deaths_at_home_male = (ratio_death_hosp_male*ratio_hosp_cases_male)* (1 - excess_death_male)
 
         self.prob_lists[0, :, 5] = deaths_at_home_female
         self.prob_lists[1, :, 5] = deaths_at_home_male
