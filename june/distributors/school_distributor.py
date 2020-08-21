@@ -362,4 +362,6 @@ class SchoolDistributor:
         Limit subgroup sizes that represent class rooms to a maximum number of students.
         If maximum number is exceeded create new subgroups to distribute students homogeneously
         '''
-        pass
+        for school in self.schools:
+            school.limit_classroom_sizes(self.max_classroom_size)
+

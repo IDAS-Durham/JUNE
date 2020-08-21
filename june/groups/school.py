@@ -1,6 +1,7 @@
 import logging
 import yaml
 from enum import IntEnum
+import math
 from itertools import count
 from june import paths
 from typing import List, Tuple, Dict, Optional
@@ -96,6 +97,35 @@ class School(Group):
             subgroup = self.subgroups[self.SubgroupType.teachers]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
+
+    def limit_classroom_sizes(self, max_classroom_size: int):
+        """
+        Make all subgroups smaller than ```max_classroom_size```
+
+        Parameters
+        ----------
+        max_classroom_size:
+           maximum number of students per classroom (subgroup)
+        """
+        old_subgroups = self.subgroups.copy()
+        old_years = self.years.copy()
+        self.subgroups = [old_subgroups[0]]
+        self.years = []
+        counter = 0
+        for idx, subgroup in enumerate(old_subgroups[1:]):
+            if len(subgroup.people) > max_classroom_size:
+                n_classrooms = math.ceil(len(subgroup.people)/max_classroom_size)
+                self.years += [self.years[idx]]*n_classrooms
+                pupils_in_classroom = [subgroup.people[i:i + n_classrooms] for i in range(0, len(subgroup.people), n_clsasrooms)]
+                for i in range(n_classrooms):
+                    classroom = Subgroup(self, counter+1)
+                    classroom.people = pupils_in_classroom[i]
+                    self.subgroups.append(classroom)
+                    counter += 1
+            else:
+                self.subgroups.append(subgroup)
+                counter += 1
+                self.years.append(self.years[idx]) 
 
     @property
     def is_full(self):
@@ -348,3 +378,5 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
+
+
