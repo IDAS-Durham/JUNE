@@ -53,6 +53,7 @@ class School(Group):
         sector: str = None,
         area: Area = None,
         n_classrooms: Optional[int] = None,
+        years: Optional[int] = None,
     ):
         """
         Create a School given its description.
@@ -73,6 +74,8 @@ class School(Group):
             area the school belongs to
         n_classrooms:
             number of classrooms in the school
+        years:
+            age group year per classroom
 
         number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
         0 - teachers
@@ -95,9 +98,11 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.years = tuple(range(age_min, age_max + 1))
+        if years is None:
+            self.years = tuple(range(age_min, age_max + 1))
+        else:
+            self.years = years
 
-    # add_to_age_group, add_to_class_room and modify school years
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]

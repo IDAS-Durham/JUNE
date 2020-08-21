@@ -6,6 +6,7 @@ from june.world import World
 
 nan_integer = -999
 
+int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 
 def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 50000):
     """
@@ -39,6 +40,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             coordinates = []
             areas = []
             n_classrooms = []
+            years = []
             for school in schools[idx1:idx2]:
                 ids.append(school.id)
                 n_pupils_max.append(school.n_pupils_max)
@@ -54,6 +56,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                     areas.append(school.area.id)
                 coordinates.append(np.array(school.coordinates))
                 n_classrooms.append(school.n_classrooms)
+                years.append(np.array(school.years))
 
             ids = np.array(ids, dtype=np.int)
             n_pupils_max = np.array(n_pupils_max, dtype=np.int)
@@ -63,6 +66,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             areas = np.array(areas, dtype=np.int)
             coordinates = np.array(coordinates, dtype=np.float)
             n_classrooms = np.array(n_classrooms, dtype=np.int)
+            years = np.array(years, dtype=int_vlen_type)
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -79,6 +83,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 )
                 schools_dset.create_dataset("area", data=areas, maxshape=(None,))
                 schools_dset.create_dataset("n_classrooms", data=n_classrooms, maxshape=(None,))
+                schools_dset.create_dataset("years", data=years) 
             else:
                 newshape = (schools_dset["id"].shape[0] + ids.shape[0],)
                 schools_dset["id"].resize(newshape)
@@ -97,6 +102,9 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["area"][idx1:idx2] = areas
                 schools_dset["n_classrooms"].resize(newshape[0], axis=0)
                 schools_dset["n_classrooms"][idx1:idx2] = n_classrooms 
+                schools_dset["years"].resize(newshape[0], axis=0)
+                schools_dset["years"][idx1:idx2] = years 
+
 
 
 
@@ -134,6 +142,11 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             schools["n_classrooms"].read_direct(
                 n_classrooms, np.s_[idx1:idx2], np.s_[0:length]
             )
+            years = np.empty(length, dtype=int_vlen_type)
+            schools["years"].read_direct(
+                years, np.s_[idx1:idx2], np.s_[0:length]
+            )
+
             sectors = np.empty(length, dtype="S20")
             schools["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
             for k in range(idx2 - idx1):
@@ -149,6 +162,7 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
                     age_max=age_max[k],
                     sector=sector,
                     n_classrooms=n_classrooms[k],
+                    years=years[k],
                 )
                 school.id = ids[k]
                 schools_list.append(school)
