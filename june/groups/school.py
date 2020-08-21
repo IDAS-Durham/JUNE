@@ -85,11 +85,10 @@ class School(Group):
         """
         super().__init__()
         self.subgroups = []
-        #for i, _ in enumerate(range(age_min, age_max + 2)):
+        # for i, _ in enumerate(range(age_min, age_max + 2)):
         if n_classrooms is None:
             n_classrooms = age_max - age_min
-        for i in range(n_classrooms + 2):
-            self.subgroups.append(Subgroup(self, i))
+        self.subgroups = [Subgroup(self, i) for i in range(n_classrooms + 2)]
         self.n_classrooms = n_classrooms
         self.coordinates = coordinates
         self.area = area
@@ -101,7 +100,7 @@ class School(Group):
         if years is None:
             self.years = tuple(range(age_min, age_max + 1))
         else:
-            self.years = years
+            self.years = tuple(years)
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
@@ -145,7 +144,7 @@ class School(Group):
                 counter += 1
                 self.years.append(year_age_group[idx])
         self.years = tuple(self.years)
-        self.n_classrooms = len(self.subgroups)-1
+        self.n_classrooms = len(self.subgroups) - 1
 
     @property
     def is_full(self):
