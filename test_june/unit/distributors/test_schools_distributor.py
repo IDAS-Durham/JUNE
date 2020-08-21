@@ -34,6 +34,25 @@ def make_and_populate_schools(geography_school):
     world = generate_world_from_geography(geography_school, include_households=False)
     return world 
 
+
+def test__years_mapping(school_world):
+    for school in school_world.schools:
+        print(school.age_min)
+        print(school.age_max)
+        print(school.years)
+        for subgroup in school.subgroups:
+            if subgroup.subgroup_type != 0:
+                print('subgroup type = ', subgroup.subgroup_type)
+                print('subgroup year = ', school.years[subgroup.subgroup_type - 1])
+                for person in subgroup.people:
+                    print(person.age)
+
+        for subgroup in school.subgroups:
+            if subgroup.subgroup_type != 0:
+                for person in subgroup.people:
+                    assert person.age == school.years[subgroup.subgroup_type-1]
+
+
 def test__all_kids_mandatory_school(school_world):
     """
     Check that all kids in mandatory school ages are assigned a school 
@@ -101,13 +120,6 @@ def test__non_mandatory_dont_go_if_school_full(school_world):
 
     assert non_mandatory_added == 0
 
-def test__years_mapping(school_world):
-    for school in school_world.schools:
-        for subgroup in school.subgroups:
-            if subgroup.subgroup_type != 0:
-                for person in subgroup.people:
-                    assert person.age == school.years[subgroup.subgroup_type-1]
-
 def test__teacher_distribution(school_world):
     for school in school_world.schools:
         students = len(school.students)
@@ -125,3 +137,6 @@ def test__limit_classroom_sizes(school_world):
                 assert len(subgroup.people) <= school_distributor.max_classroom_size
                 for person in subgroup.people:
                     assert person.age == school.years[subgroup.subgroup_type-1]
+        n_pupils = np.sum([len(grouping.people) for grouping in school.subgroups if grouping.subgroup_type!=0])
+        assert n_pupils == school.n_pupils
+

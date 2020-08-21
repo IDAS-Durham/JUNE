@@ -54,7 +54,7 @@ def test__contact_matrices_from_default():
 def test__school_index_translation():
     age_min = 3
     age_max = 7
-    school_years = tuple(range(age_min, age_max + 1))
+    school_years = list(range(age_min, age_max + 1))
     interaction._translate_school_subgroup(1, school_years) == 4
     interaction._translate_school_subgroup(5, school_years) == 8
 
@@ -64,7 +64,7 @@ def test__school_contact_matrices():
     xi = 0.3
     age_min = 3
     age_max = 7
-    school_years = tuple(range(age_min, age_max + 1))
+    school_years = list(range(age_min, age_max + 1))
     contact_matrix = interaction_instance.contact_matrices["school"]
     n_contacts_same_year = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 4
