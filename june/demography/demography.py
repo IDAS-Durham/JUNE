@@ -207,6 +207,8 @@ class Population:
     def recovered(self):
         return [person for person in self.people if person.recovered]
 
+    # settable patch method to be used when we just need
+    # the list of peoples per partition
     def to_list(self):
         return list(self.people)
 
