@@ -7,7 +7,7 @@ from june.demography import Person, Population
 from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAreas
 from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
-from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.groups.leisure import leisure #, Cinemas, Pubs, Groceries
 from june.infection import InfectionSelector, SymptomTag
 from june.interaction import Interaction
 from june.policy import (
@@ -142,7 +142,13 @@ def test__clear_world(sim: Simulator):
     ):
         if group_name in ["household_visits", "care_home_visits"]:
             continue
-        grouptype = getattr(sim.world, group_name)
+        elif (
+            sim.world.social_venues is not None 
+            and group_name in sim.world.social_venues.keys()
+        ):
+            grouptype = sim.world.social_venues[group_name]
+        else:
+            grouptype = getattr(sim.world, group_name)
         for group in grouptype.members:
             for subgroup in group.subgroups:
                 assert len(subgroup.people) == 0

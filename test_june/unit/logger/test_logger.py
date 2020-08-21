@@ -19,7 +19,7 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
+from june.groups.leisure import leisure, supergroup_factory# Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
 from june.interaction import Interaction
 from june.infection.infection import InfectionSelector
@@ -123,12 +123,15 @@ def make_dummy_world(geog):
     world.super_areas = geog.super_areas
     world.areas = geog.areas
     world.cemeteries = Cemeteries()
+    world.social_venues = {}
+    Cinemas, Cinema = supergroup_factory("cinema", "cinemas",return_group=True)
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
-    world.cinemas = Cinemas([cinema])
+    world.social_venues["cinemas"] = Cinemas([cinema])
+    Pubs, Pub = supergroup_factory("pubs", "pub", return_group=True)
     pub = Pub()
     pub.coordinates = super_area.coordinates
-    world.pubs = Pubs([pub])
+    world.social_venues["pubs"] = Pubs([pub])
 
     world.areas[0].people = world.people
 
@@ -168,15 +171,6 @@ def create_sim(world, interaction, selector):
         policies=policies,
     )
     return sim
-
-
-test_dict = {
-    "A": 10,
-    "B": {"B1": {},},
-}
-
-l = Logger()
-
 
 def test__log_population(sim):
     sim.logger.log_population(

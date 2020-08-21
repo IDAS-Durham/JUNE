@@ -2,7 +2,14 @@ import numpy as np
 import h5py
 from collections import defaultdict
 from itertools import count
-from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
+#from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
+from june.groups.leisure import (
+    generate_leisure_for_world, 
+    generate_social_venues_for_world,
+    group_factory,
+    supergroup_factory,
+    distributor_factory,
+)
 from june.demography import Demography, Person, Population
 from june.demography.geography import Geography, Area, SuperArea
 from june.groups import (
@@ -71,9 +78,16 @@ def create_world(geography_h5):
     world = generate_world_from_geography(
         geography=geography, include_households=True, include_commute=True
     )
-    world.pubs = Pubs.for_geography(geography)
-    world.cinemas = Cinemas.for_geography(geography)
-    world.groceries = Groceries.for_geography(geography)
+    #world.pubs = Pubs.for_geography(geography)
+    #world.cinemas = Cinemas.for_geography(geography)
+    #world.groceries = Groceries.for_geography(geography)
+    list_of_social_venues = ["pubs", "cinemas", "groceries"]
+    list_of_singular_names = ["pub", "cinema", "grocery"]
+    world.social_venues = generate_social_venues_for_world(
+        list_of_social_venues,
+        world,
+        list_of_singular_names=list_of_singular_names
+    )
     leisure = generate_leisure_for_world(
         ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
     )
@@ -327,12 +341,14 @@ class TestSaveUniversities:
 class TestSaveLeisure:
     def test__save_social_venues(self, world_h5):
         save_social_venues_to_hdf5(
-            social_venues_list=[world_h5.pubs, world_h5.groceries, world_h5.cinemas],
+            world_h5.social_venues,
+            #social_venues_list=[world_h5.pubs, world_h5.groceries, world_h5.cinemas],
             file_path="test.hdf5",
         )
         social_venues_dict = load_social_venues_from_hdf5("test.hdf5")
         for social_venues_spec, social_venues in social_venues_dict.items():
-            for sv1, sv2 in zip(getattr(world_h5, social_venues_spec), social_venues):
+            # for sv1, sv2 in zip(getattr(world_h5, social_venues_spec), social_venues):
+            for sv1, sv2 in zip(world_h5.social_venues[social_venues_spec], social_venues):
                 assert sv1.coordinates[0] == sv2.coordinates[0]
                 assert sv1.coordinates[1] == sv2.coordinates[1]
                 assert sv1.id == sv2.id
@@ -419,8 +435,8 @@ class TestSaveWorld:
 
     def test__social_venues_super_area(self, world_h5, world_h5_loaded):
         for spec in ["pubs", "groceries", "cinemas"]:
-            social_venues1 = getattr(world_h5, spec)
-            social_venues2 = getattr(world_h5_loaded, spec)
+            social_venues1 = world_h5.social_venues[spec]#getattr(world_h5, spec)
+            social_venues2 = world_h5_loaded.social_venues[spec] #getattr(world_h5_loaded, spec)
             assert len(social_venues1) == len(social_venues2)
             for v1, v2 in zip(social_venues1, social_venues2):
                 assert v1.super_area.id == v2.super_area.id

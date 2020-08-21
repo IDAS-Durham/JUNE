@@ -207,15 +207,23 @@ def make_dummy_world():
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
-    cinema = Cinema()
-    cinema.coordinates = super_area.coordinates
-    world.cinemas = Cinemas([cinema])
-    pub = Pub()
-    pub.coordinates = super_area.coordinates
-    world.pubs = Pubs([pub])
-    grocery = Grocery()
-    grocery.coordinates = super_area.coordinates
-    world.groceries = Groceries([grocery])
+    #cinema = Cinema()
+    #cinema.coordinates = super_area.coordinates
+    #world.cinemas = Cinemas([cinema])
+    #pub = Pub()
+    #pub.coordinates = super_area.coordinates
+    #world.pubs = Pubs([pub])
+    #grocery = Grocery()
+    #grocery.coordinates = super_area.coordinates
+    #world.groceries = Groceries([grocery])
+    list_of_leisure_groups = ["cinemas", "pubs","groceries"]
+    list_of_singular_names = ["cinema", "pub", "grocery"]
+    world.social_venues = {}
+    for leisure_group, singular in zip(list_of_leisure_groups, list_of_singular_names):
+        SVSupergroup, SVGroup = supergroup_factory(leisure_group, singular, return_group=True)
+        group = SVGroup()
+        group.coordinates = super_area.coordinates
+        world.social_venues[leisure_group] = SVSupergroup([group])
     # commute
     city = CommuteCity()
     hub = CommuteHub(None, None)

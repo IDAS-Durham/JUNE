@@ -252,9 +252,10 @@ class Geography:
         self.hospitals = None
         self.companies = None
         self.care_homes = None
-        self.pubs = None
-        self.cinemas = None
-        self.groceries = None
+        self.social_venues = None
+        #self.pubs = None
+        #self.cinemas = None
+        #self.groceries = None
         self.cemeteries = None
         self.universities = None
 

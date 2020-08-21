@@ -30,9 +30,10 @@ possible_groups = [
     "hospitals",
     "companies",
     "universities",
-    "pubs",
-    "groceries",
-    "cinemas",
+    "social_venues",
+    #"pubs",
+    #"groceries",
+    #"cinemas",
 ]
 
 
@@ -66,9 +67,10 @@ class World:
         self.schools = None
         self.companies = None
         self.hospitals = None
-        self.pubs = None
-        self.groceries = None
-        self.cinemas = None
+        self.social_venues = None
+        #self.pubs = None
+        #self.groceries = None
+        #self.cinemas = None
         self.commutecities = None
         self.commutehubs = None
         self.cemeteries = None

@@ -82,6 +82,9 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
         save_commute_hubs_to_hdf5(world.commutehubs, file_path)
     if world.universities is not None:
         save_universities_to_hdf5(world.universities, file_path)
+    if world.social_venues is not None:
+        save_social_venues_to_hdf5(world.social_venues, file_path)
+    """
     social_venue_possible_specs = ["pubs", "groceries", "cinemas"]  # TODO: generalise
     social_venues_list = []
     for spec in social_venue_possible_specs:
@@ -89,6 +92,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
             social_venues_list.append(getattr(world, spec))
     if social_venues_list:
         save_social_venues_to_hdf5(social_venues_list, file_path)
+    """
 
 
 def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
@@ -142,8 +146,9 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.people = load_population_from_hdf5(file_path, chunk_size=chunk_size)
     if "social_venues" in f_keys:
         social_venues_dict = load_social_venues_from_hdf5(file_path)
-        for social_venues_spec, social_venues in social_venues_dict.items():
-            setattr(world, social_venues_spec, social_venues)
+        #for social_venues_spec, social_venues in social_venues_dict.items():
+        #    setattr(world, social_venues_spec, social_venues)
+        world.social_venues = social_venues_dict
 
     # restore world
     print("restoring world...")

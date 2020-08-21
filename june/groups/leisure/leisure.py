@@ -14,11 +14,14 @@ from june.groups.leisure import (
     HouseholdVisitsDistributor,
     CareHomeVisitsDistributor,
 )
-from june.groups.leisure import Pubs, Cinemas, Groceries
+from june.groups.leisure import Pubs, Cinemas, Groceries, group_factory, supergroup_factory, distributor_factory
 from june.groups import Household
 from june import paths
 
 default_config_filename = paths.configs_path / "config_example.yaml"
+default_social_venue_config_filename = paths.configs_path / paths.Path(
+    'defaults/groups/leisure/social_venue_leisure.yaml'
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,59 @@ def roll_activity_dice(poisson_parameters, delta_time, n_activities):
         )
     return None
 
+def generate_social_venues_for_world(
+    list_of_leisure_groups: List[str], 
+    world, 
+    list_of_singular_names=None,
+    list_of_coordinates_filenames=None
+
+):
+    social_venues = {}
+    if list_of_singular_names is None:
+        list_of_singular_names = [None for _ in list_of_leisure_groups]
+    if list_of_coordinates_filenames is None:
+        list_of_coordinates_filenames = [None for _ in list_of_leisure_groups]       
+
+    for leisure_group, singular_name, coordinates_filename in zip(
+        list_of_leisure_groups, list_of_singular_names, list_of_coordinates_filenames
+    ):
+        # could make contents of this for loop its own function?
+        if leisure_group.endswith('visits'):
+            print("'vists' leisure activities not handled with SocialVenues")
+            continue
+        SVSupergroup, SVGroup = supergroup_factory(
+            leisure_group, 
+            singular_name, 
+            return_group=True
+        )
+        social_venues[leisure_group] = SVSupergroup.for_super_areas(
+            super_areas=world.super_areas,
+            coordinates_filename=coordinates_filename
+        )
+    return social_venues
+
+def generate_social_venues_for_config(
+    world, 
+    config_filename=default_social_venue_config_filename
+):
+    with open(config_filename) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    list_of_leisure_groups = [k for k in config.keys()]
+    list_of_singular_names = [
+        config[k]['singular'] if 'singular' in config[k].keys() else None
+        for k in list_of_leisure_groups 
+    ]
+    list_of_coordinates_filenames = [
+        config[k]['coordinates_filename'] if 'coordinates_filename' in config[k].keys() else None
+        for k in list_of_leisure_groups
+    ]
+    social_venues = generate_social_venues_for_world(
+        list_of_leisure_groups, 
+        world,
+        list_of_singular_names,
+        list_of_coordinates_filenames
+    )
+    return social_venues
 
 def generate_leisure_for_world(list_of_leisure_groups, world):
     """
@@ -52,35 +108,44 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     list_of_leisure_groups
         list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
     """
+
     leisure_distributors = {}
-    if "pubs" in list_of_leisure_groups:
-        if not hasattr(world, "pubs"):
-            raise ValueError("Your world does not have pubs.")
-        leisure_distributors["pubs"] = PubDistributor.from_config(world.pubs)
-    if "cinemas" in list_of_leisure_groups:
-        if not hasattr(world, "cinemas"):
-            raise ValueError("Your world does not have cinemas.")
-        leisure_distributors["cinemas"] = CinemaDistributor.from_config(world.cinemas)
-    if "groceries" in list_of_leisure_groups:
-        if not hasattr(world, "groceries"):
-            raise ValueError("Your world does not have groceries.")
-        leisure_distributors["groceries"] = GroceryDistributor.from_config(
-            world.groceries
-        )
-    if "care_home_visits" in list_of_leisure_groups:
-        if not hasattr(world, "care_homes"):
-            raise ValueError("Your world does not have care homes.")
-        leisure_distributors[
-            "care_home_visits"
-        ] = CareHomeVisitsDistributor.from_config()
-    if "household_visits" in list_of_leisure_groups:
-        if not hasattr(world, "households"):
-            raise ValueError("Your world does not have households.")
-        leisure_distributors[
-            "household_visits"
-        ] = HouseholdVisitsDistributor.from_config()
-    if "residence_visits" in list_of_leisure_groups:
-        raise NotImplementedError
+    for leisure_group in list_of_leisure_groups:
+        if leisure_group == "care_home_visits": # in list_of_leisure_groups:
+            if not hasattr(world, "care_homes"):
+                raise ValueError("Your world does not have care homes.")
+            leisure_distributors[
+                "care_home_visits"
+            ] = CareHomeVisitsDistributor.from_config()
+        elif leisure_group == "household_visits": # in list_of_leisure_groups:
+            if not hasattr(world, "households"):
+                raise ValueError("Your world does not have households.")
+            leisure_distributors[
+                "household_visits"
+            ] = HouseholdVisitsDistributor.from_config()
+        elif  leisure_group == "residence_visits": # in list_of_leisure_groups:
+            raise NotImplementedError
+        else:
+            if not hasattr(world, "social_venues"):
+                raise ValueError("Your world does not have social_venues.")
+            if world.social_venues is None:
+                raise ValueError("You've not initialied any social_venues.")
+            if (
+                world.social_venues is not None
+                and leisure_group not in world.social_venues
+            ):
+                raise ValueError(
+                    f"Your world.social_venues does not have {leisure_group}."
+                    + "(Call generate_social_venues_for_config?)"
+                )
+            SVDistributor = distributor_factory(leisure_group)
+            leisure_distributors[
+                leisure_group
+            ] = SVDistributor.from_config(
+                world.social_venues[leisure_group],
+                supergroup = leisure_group,
+            )
+
     leisure = Leisure(leisure_distributors)
     return leisure
 
@@ -91,7 +156,7 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
     Parameters
     ----------
     list_of_leisure_groups
-        list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
+        list of names of the leisure groups desired. Ex: ["pubs", "cinemas"]
     """
     with open(config_filename) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)

@@ -6,13 +6,13 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Supergroup, Group, Subgroup
 from june.demography.geography import Area, Areas, SuperArea, SuperAreas, Geography
+from june import paths
 
 earth_radius = 6371  # km
 
 
 class SocialVenueError(BaseException):
     pass
-
 
 class SocialVenue(Group):
     class SubgroupType(IntEnum):
@@ -71,13 +71,13 @@ class SocialVenues(Supergroup):
     def for_super_areas(
         cls, super_areas: List[SuperArea], coordinates_filename: str = None,
     ):
+        if coordinates_filename is None:
+            coordinates_filename = cls.default_coordinates_filename
         sv_coordinates = pd.read_csv(coordinates_filename)
         sa_names = [super_area.name for super_area in super_areas]
         sv_coordinates_in_super_areas = sv_coordinates.loc[
             sv_coordinates.super_area.isin(sa_names), ["lat", "lon"]
         ]
-        if coordinates_filename is None:
-            coordinates_filename = cls.default_coordinates_filename
         return cls.from_coordinates(
             sv_coordinates_in_super_areas.values, super_areas=super_areas
         )
@@ -236,3 +236,39 @@ class SocialVenues(Supergroup):
         if not venue_idxs.size:
             return None
         return [self[idx] for idx in venue_idxs]
+
+def group_name_guesser(group: str):
+    import string as s
+    vowels = 'aeiou'.split()
+    consonants = [l for l in s.ascii_lowercase if l not in vowels]
+
+    last = group[-1]
+    second_to_last = group[-2]
+
+def group_factory(group: str):
+    group_class_name = ''.join(w.capitalize() for w in group.split('_'))
+    d = {
+        "__module__" : __name__,
+    }
+    SVGroup = type(group_class_name, (SocialVenue,), d)
+
+    return SVGroup
+
+def supergroup_factory(supergroup: str, group: str = None, return_group=False):
+    if group is None:
+        group = supergroup[:-1] # Terrible guess at singular name.
+    SVGroup = group_factory(group)
+    supergroup_class_name = ''.join(w.capitalize() for w in supergroup.split('_'))
+    default_coordinates_filename = paths.data_path / paths.Path(
+        f"input/leisure/{supergroup}_per_super_area.csv"
+    )
+    d = {
+        "__module__" : __name__, 
+        "social_venue_class" : SVGroup,
+        "default_coordinates_filename" : default_coordinates_filename,
+    }
+    SVSupergroup = type(supergroup_class_name, (SocialVenues,), d)
+    if return_group:
+        return SVSupergroup, SVGroup
+    else:
+        return SVSupergroup

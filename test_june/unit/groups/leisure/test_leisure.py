@@ -7,13 +7,16 @@ from june.world import generate_world_from_geography
 from june.groups.leisure import (
     Leisure,
     generate_leisure_for_world,
-    Pub,
-    Pubs,
-    Cinemas,
-    Cinema,
-    Groceries,
-    PubDistributor,
-    CinemaDistributor,
+    generate_social_venues_for_world,
+    supergroup_factory,
+    distributor_factory,
+    #Pub,
+    #Pubs,
+    #Cinemas,
+    #Cinema,
+    #Groceries,
+    #PubDistributor,
+    #CinemaDistributor,
 )
 from june.demography.geography import Geography
 from june.demography import Person, Demography
@@ -28,7 +31,9 @@ def make_geography():
 
 @fixture(name="leisure")
 def make_leisure():
+    Pubs,Pub = supergroup_factory("pubs","pub",return_group=True)
     pubs = Pubs([Pub()], make_tree=False)
+    PubDistributor = distributor_factory("pubs")
     pub_distributor = PubDistributor(
         pubs,
         male_age_probabilities={"18-50": 0.5},
@@ -36,7 +41,9 @@ def make_leisure():
         drags_household_probability=0.0,
     )
     pubs[0].coordinates = [1, 2]
+    Cinemas,Cinema = supergroup_factory("cinemas","cinema",return_group=True)
     cinemas = Cinemas([Cinema()], make_tree=False)
+    CinemaDistributor = distributor_factory("cinemas")
     cinemas[0].coordinates = [1, 2]
     cinema_distributor = CinemaDistributor(
         cinemas,
@@ -101,22 +108,27 @@ def test__person_drags_household(leisure):
     for person in [person1, person2, person3]:
         assert person.subgroups.leisure == social_venue.subgroups[0]
 
-
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(
         geography, include_households=True, include_commute=False
     )
-    world.pubs = Pubs.for_geography(geography)
-    world.cinemas = Cinemas.for_geography(geography)
-    world.groceries = Groceries.for_geography(geography)
+    #world.social_venues["pubs"] = Pubs.for_geography(geography)
+    #world.social_venues["cinemas"] = Cinemas.for_geography(geography)
+    #world.social_venues["groceries"] = Groceries.for_geography(geography)
+    list_of_leisure_groups = ["pubs", "cinemas", "groceries"]
+    list_of_singular_names = ["pub", "cinema", "grocery"]
+    world.social_venues = generate_social_venues_for_world(
+        list_of_leisure_groups, world, 
+        list_of_singular_names=list_of_singular_names
+    )
     person = Person.from_attributes(sex="m", age=27)
     household = Household()
     household.area = world.areas[0]
     household.add(person)
     person.area = geography.areas[0]
     leisure = generate_leisure_for_world(
-        list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
+        list_of_leisure_groups=list_of_leisure_groups, world=world
     )
     leisure.distribute_social_venues_to_households([household], super_areas=world.super_areas)
     leisure.generate_leisure_probabilities_for_timestep(0.1, False)

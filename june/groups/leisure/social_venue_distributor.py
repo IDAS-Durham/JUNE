@@ -9,6 +9,7 @@ import re
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 from june.groups import Household
 from june.utils.parse_probabilities import parse_age_probabilities
+from june import paths
 
 
 @jit(nopython=True)
@@ -18,12 +19,14 @@ def random_choice_numba(arr, prob):
     """
     return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
-
-
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
     """
+
+    default_config_filename = paths.configs_path / paths.Path(
+        'defaults/groups/leisure/social_venue_leisure.yaml'
+    )
 
     def __init__(
         self,
@@ -34,6 +37,7 @@ class SocialVenueDistributor:
         neighbours_to_consider=5,
         maximum_distance=5,
         weekend_boost: float = 1.0,
+        **kwargs,
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -66,11 +70,13 @@ class SocialVenueDistributor:
         self.spec = "_".join(self.spec).lower()
 
     @classmethod
-    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+    def from_config(cls, social_venues: SocialVenues, supergroup: str = None, config_filename: str = None):
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        if supergroup is not None and supergroup in config.keys():
+            config = config[supergroup]
         return cls(social_venues, **config)
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
@@ -171,3 +177,12 @@ class SocialVenueDistributor:
             return False
         else:
             return random() < self.drags_household_probability
+
+def distributor_factory(leisure_group: str):
+    caps_name = ''.join(w.capitalize() for w in leisure_group.split('_'))
+    distributor_class_name = f"{caps_name}Distributor"
+    d = {
+        "__module__" : __name__,
+    }
+    SVDistributor = type(distributor_class_name, (SocialVenueDistributor,), d)
+    return SVDistributor

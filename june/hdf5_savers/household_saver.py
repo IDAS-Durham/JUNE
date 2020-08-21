@@ -270,8 +270,11 @@ def restore_households_properties_from_hdf5(
                         social_venues_specs[k], social_venues_ids[k]
                     ):
                         spec = group_spec.decode()
-                        spec_mapped = social_venues_spec_mapper[spec]
-                        supergroup = getattr(world, spec_mapped)
+                        if spec.endswith('visits'):
+                            spec_mapped = social_venues_spec_mapper[spec]
+                            supergroup = getattr(world, spec_mapped)
+                        else:
+                            supergroup = world.social_venues[spec]
                         first_group_id = supergroup.members[0].id
                         group = supergroup.members[group_id - first_group_id]
                         household.social_venues[spec] = (

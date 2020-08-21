@@ -232,7 +232,13 @@ class Simulator:
         for group_name in self.activity_manager.all_groups:
             if group_name in ["care_home_visits", "household_visits"]:
                 continue
-            grouptype = getattr(self.world, group_name)
+            elif (
+                self.world.social_venues is not None
+                and group_name in self.world.social_venues
+            ):
+                grouptype = self.world.social_venues[group_name]
+            else:
+                grouptype = getattr(self.world, group_name)
             if grouptype is not None:
                 for group in grouptype.members:
                     group.clear()
@@ -371,11 +377,18 @@ class Simulator:
         self.activity_manager.do_timestep()
 
         active_groups = self.activity_manager.active_groups
-        group_instances = [
-            getattr(self.world, group)
-            for group in active_groups
-            if group not in ["household_visits", "care_home_visits"]
-        ]
+        group_instances = []
+        for group in active_groups:
+            if group in ["household_visits", "care_home_visits"]:
+                continue
+            elif (
+                self.world.social_venues is not None and 
+                group in self.world.social_venues
+            ):
+                group_instances.append(self.world.social_venues[group])
+            else:
+                group_instances.append(getattr(self.world, group))
+
         n_people = 0
 
         for cemetery in self.world.cemeteries.members:

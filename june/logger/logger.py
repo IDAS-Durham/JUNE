@@ -215,7 +215,7 @@ class Logger:
                 len(hospital.subgroups[hospital.SubgroupType.icu_patients].people)
             )
         # save to hdf5
-        hospitals_ids = np.array(hospital_ids, dtype=np.int16)
+        hospitals_ids = np.array(hospital_ids, dtype=np.int16) # Is this meant to be saved in l224??
         n_patients = np.array(n_patients, dtype=np.int16)
         n_patients_icu = np.array(n_patients_icu, dtype=np.int16)
         with h5py.File(self.file_path, "a", libver="latest") as f:
