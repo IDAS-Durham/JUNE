@@ -12,7 +12,7 @@
 
 import json
 import numpy, time
-
+from june.mpi_setup import comm, size, rank
 
 def make_domains(super_areas, size):
     """ Generator to partition world into domains"""
@@ -155,14 +155,16 @@ def parallel_update(self, direction, timestep):
             if other_rank == self.domain_id:
                 continue
             outside_domain = self.outside_workers[other_rank]
-            tell_them = []
+            tell_them = {}
             for person in outside_domain:
                 if not person.hospitalised:
                     person.busy = True
                 #FIXME: Actually, this is the wrnog place, since policy may keep them at home ...
                 if person.infected:
-                    tell_them.append(person)
-            _put_updates(self, other_rank, tell_them, timestep)
+                    # tell_them.append(person)
+                    tell_them[person.id] = person.health_information
+            # _put_updates(self, other_rank, tell_them, timestep)
+            comm.send(tell_them, dest=other_rank, tag=100)
 
         # pay attention to people who are coming in
         for other_rank in self.inbound_workers:
@@ -172,9 +174,23 @@ def parallel_update(self, direction, timestep):
             for person in outside_domain:
                 person.busy = False
             # we might need to update the infection status of these people
-            _get_updates(self, id, timestep)
+            # _get_updates(self, id, timestep)
+            incoming = comm.recv(source=other_rank, tag=100)
 
-        return self.residents[self.domain_id] + self.inbound_workers[self.domain_id]
+            if incoming:
+                for id, infec in incoming.items():
+                   # find person in world (should be in domain - prob v inefficient)
+                   p_to_update = [
+                       p for p in self.inbound_workers[other_rank] if p.id == id
+                   ]
+                   if p_to_update:
+                       if p_to_update[0].health_information == None:
+                           print(rank, "from ", other_rank, " BAD ptoupdate ", p_to_update)
+                           print(rank, "from ", other_rank, "pid ", id, "infec ", infec)
+                       p_to_update[0].health_information = infec
+
+        domain_population = self.residents[self.domain_id] + self.inbound_workers[self.domain_id]
+        return domain_population
 
     elif direction == 'pm' or direction == "wknd":
 
@@ -183,47 +199,62 @@ def parallel_update(self, direction, timestep):
             if other_rank == self.domain_id:
                 continue
             outside_domain = self.inbound_workers[other_rank]
-            tell_them = []
+            tell_them = {}
             for person in outside_domain:
                 person.busy = True
                 if person.infected: # it happened at work!
-                    tell_them.append(person)
-            _put_updates(self, other_rank, tell_them, timestep)
+                    # tell_them.append(person)
+                    tell_them[person.id] = person.health_information
+            # _put_updates(self, other_rank, tell_them, timestep)
+            comm.send(tell_them, dest=other_rank, tag=100)
 
         # now see if any of our workers outside have got infected.
         for other_rank in self.outside_workers:
             if other_rank == self.domain_id:
                 continue
-            _get_updates(self, other_rank, timestep)
+            incoming = comm.recv(source=other_rank, tag=100)
 
-        return self.residents[self.domain_id] + self.outside_workers[self.domain_id]
+            if incoming:
+                for id, infec in incoming.items():
+                   # find person in world (should be in domain - prob v inefficient)
+                   p_to_update = [
+                       p for p in self.outside_workers[other_rank] if p.id == id
+                   ]
+                   if p_to_update:
+                       if p_to_update[0].health_information == None:
+                           print(rank, "from ", other_rank, " BAD ptoupdate ", p_to_update)
+                           print(rank, "from ", other_rank, "pid ", id, "infec ", infec)
+                       p_to_update[0].health_information = infec
+
+        domain_population = self.residents[self.domain_id] + self.outside_workers[self.domain_id]
+        return domain_population
 
 
-def _put_updates(self, target_rank, tell_them, timestep):
-    """
-    Write necessary information about people for infection transmission while they are outside.
-    In practice, we only need to tell them about infected people (the list of people called "tell_them").
-    """
+#def _put_updates(self, target_rank, tell_them, timestep):
+#    """
+#    Write necessary information about people for infection transmission while they are outside.
+#    In practice, we only need to tell them about infected people (the list of people called "tell_them").
+#    """
     # my domain is self.domain_id, and we are sending to domain_id
-    infected_ids = [set_person_info(p) for p in tell_them]
+#    infected_ids = [set_person_info(p) for p in tell_them]
 
     # at this point, we do a send/receive in MPI land.
     # after receive would need to do the inverse of set_person_info ...
-    with open(f'parallel_putter_{self.domain_id}_{timestep}.json','w') as f:
-        json.dump(infected_ids, f)
+    # with open(f'parallel_putter_{self.domain_id}_{timestep}.json','w') as f:
+    #     json.dump(infected_ids, f)
 
 
-def _get_updates(self, target_rank, timestep):
-    """Get necessary information about possible changes which happened to people while outside"""
-    try:
-        for id in self.other_domain_ids:
-            with open(f'parallel_putter_{id}_{timestep}.json','r') as f:
-                updated = json.load(f)
-    except FileNotFoundError:
-        # We'd wait a fraction of a second here in real life, but for now, we'll just skip it
-        # FIXME
-        # TODO lots of missed files due to MPI delays
-        pass
+#def _get_updates(self, target_rank, timestep):
+#    """Get necessary information about possible changes which happened to people while outside"""
+    # try:
+    #     for id in self.other_domain_ids:
+    #         with open(f'parallel_putter_{id}_{timestep}.json','r') as f:
+    #             updated = json.load(f)
+    # except FileNotFoundError:
+    #     # We'd wait a fraction of a second here in real life, but for now, we'll just skip it
+    #    # FIXME
+    #    # TODO lots of missed files due to MPI delays
+    #      pass
 
     #FIXME: Are people indexed in anyway? Then use that index here ...
 
