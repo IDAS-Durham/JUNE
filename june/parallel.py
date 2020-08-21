@@ -35,6 +35,7 @@ def parallel_setup(self, comm, debug=False):
     # partition the list of superareas
     # each of the following dictionaries is a list keyed by the rank associated with that partition
     self.residents = {i: [] for i in range(size)}
+    self.local_workers = {i: [] for i in range(size)}
     self.outside_workers = {i: [] for i in range(size)}
     self.inbound_workers = {i: [] for i in range(size)}
     # (of course there will never be anything but an empty list in the the rank of this PE.)
@@ -78,6 +79,7 @@ def parallel_setup(self, comm, debug=False):
         if person.primary_activity:  # some people are too old to work.
             if person.primary_activity.group.spec == "company":
                 work_super_area = person.primary_activity.group.super_area.name
+        
 
         live_here = super_index[home_super_area] == rank
         if work_super_area:
@@ -85,9 +87,12 @@ def parallel_setup(self, comm, debug=False):
         else:
             work_here = live_here  # well, not working somewhere ...
 
-        if live_here and work_here:
+        
+        if live_here:
             live += 1
             self.residents[super_index[home_super_area]].append(person)
+        elif live_here and work_here:
+            self.local_workers[super_index[home_super_area]].append(person)
         elif work_here and not live_here:
             # these folk commute into this domain, but where from?
             self.inbound_workers[super_index[home_super_area]].append(person)
@@ -101,7 +106,7 @@ def parallel_setup(self, comm, debug=False):
             # they never spend any time here interacting with anyone.
             binable.append(person)
             gone += 1
-
+    print("RR", rank, live, inb, oub, gone)
     # we can't delete them inside the loop, bad things happen if we do that.
     # FIXME takes a LONG time for many people
     #for p in binable:
@@ -189,7 +194,14 @@ def parallel_update(self, direction, timestep):
                            print(rank, "from ", other_rank, "pid ", id, "infec ", infec)
                        p_to_update[0].health_information = infec
 
-        domain_population = self.residents[self.domain_id] + self.inbound_workers[self.domain_id]
+        # people out and people in; keep children and elderly constant
+        children_old = [
+            p for p in self.residents[self.domain_id]
+            if not p in self.local_workers[self.domain_id]]
+        domain_population = children_old + \
+                            self.inbound_workers[self.domain_id] + \
+                            self.local_workers[self.domain_id]
+        print("AM INFECTED", rank, len([p for p in domain_population if p.infected == True]))
         return domain_population
 
     elif direction == 'pm' or direction == "wknd":
@@ -226,7 +238,9 @@ def parallel_update(self, direction, timestep):
                            print(rank, "from ", other_rank, "pid ", id, "infec ", infec)
                        p_to_update[0].health_information = infec
 
-        domain_population = self.residents[self.domain_id] + self.outside_workers[self.domain_id]
+        # nobody is moving no more
+        domain_population = self.residents[self.domain_id]
+        print("PM INFECTED", rank, len([p for p in domain_population if p.infected == True]))
         return domain_population
 
 
