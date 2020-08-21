@@ -146,8 +146,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.people = load_population_from_hdf5(file_path, chunk_size=chunk_size)
     if "social_venues" in f_keys:
         social_venues_dict = load_social_venues_from_hdf5(file_path)
-        #for social_venues_spec, social_venues in social_venues_dict.items():
-        #    setattr(world, social_venues_spec, social_venues)
         world.social_venues = social_venues_dict
 
     # restore world
@@ -183,7 +181,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         )
     if "universities" in f_keys:
         restore_universities_properties_from_hdf5(world=world, file_path=file_path)
-
     if "social_venues" in f_keys:
         restore_social_venues_properties_from_hdf5(world=world, file_path=file_path)
     world.cemeteries = Cemeteries()

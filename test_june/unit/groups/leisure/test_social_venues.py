@@ -27,11 +27,8 @@ def test__get_closest_venues():
 
 def test__make_group_from_factory():
     KarateClub = group_factory("karate_club")
-    KarateClub2 = group_factory("karate_club")
     kc = KarateClub()
     assert isinstance(kc,KarateClub)
-    # assert isinstance(kc,KarateClub2) 
-    # Need to modify __instancecheck__?!? This should be equiv. import Pub, import Pub as Pub2
     assert isinstance(kc,SocialVenue)
     assert KarateClub.__name__ == "KarateClub"
     assert kc.__class__.__name__ == "KarateClub"

@@ -66,11 +66,11 @@ def load_social_venues_from_hdf5(file_path: str):
             coordinates = np.empty((n, 2), dtype=float)
             data["coordinates"].read_direct(coordinates, np.s_[0:n], np.s_[0:n])
             for k in range(n):
-                social_venue = SVGroup() #spec_to_group_dict[spec]()
+                social_venue = SVGroup()
                 social_venue.id = ids[k]
                 social_venue.coordinates = coordinates[k]
                 social_venues.append(social_venue)
-            social_venues_dict[spec] = SVSupergroup(social_venues) #spec_to_supergroup_dict[spec](social_venues)
+            social_venues_dict[spec] = SVSupergroup(social_venues)
         return social_venues_dict
 
 

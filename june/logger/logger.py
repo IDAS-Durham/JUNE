@@ -221,31 +221,9 @@ class Logger:
         with h5py.File(self.file_path, "a", libver="latest") as f:
             hospital_dset = f.require_group("hospitals")
             time_dset = hospital_dset.create_group(time_stamp)
-            time_dset.create_dataset("hospital_id", data=hospital_ids)
+            time_dset.create_dataset("hospital_id", data=hospital_ids) # l218 saved here?!
             time_dset.create_dataset("n_patients", data=n_patients)
             time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
-
-    def get_number_group_instances(self, world: "World", location: str):
-        """
-        Given the world and a location, find the number of instances of that location that exist in the world
-
-        Parameters
-        ----------
-        world:
-            world instance
-        location:
-            location type
-        """
-        plural = location + "s"
-        if location == "grocery":
-            plural = "groceries"
-        elif location == "company":
-            plural = "companies"
-        elif location == "commute_unit":
-            plural = "commuteunits"
-        elif location == "commutecity_unit":
-            plural = "commutecityunits"
-        return len(getattr(world, plural).members)
 
     def accumulate_infection_location(self, location, n_infected=1):
         """

@@ -10,13 +10,6 @@ from june.groups.leisure import (
     generate_social_venues_for_world,
     supergroup_factory,
     distributor_factory,
-    #Pub,
-    #Pubs,
-    #Cinemas,
-    #Cinema,
-    #Groceries,
-    #PubDistributor,
-    #CinemaDistributor,
 )
 from june.demography.geography import Geography
 from june.demography import Person, Demography
@@ -31,7 +24,7 @@ def make_geography():
 
 @fixture(name="leisure")
 def make_leisure():
-    Pubs,Pub = supergroup_factory("pubs","pub",return_group=True)
+    Pubs,Pub = supergroup_factory("pubs", "pub",return_group=True)
     pubs = Pubs([Pub()], make_tree=False)
     PubDistributor = distributor_factory("pubs")
     pub_distributor = PubDistributor(
@@ -41,7 +34,7 @@ def make_leisure():
         drags_household_probability=0.0,
     )
     pubs[0].coordinates = [1, 2]
-    Cinemas,Cinema = supergroup_factory("cinemas","cinema",return_group=True)
+    Cinemas,Cinema = supergroup_factory("cinemas", "cinema", return_group=True)
     cinemas = Cinemas([Cinema()], make_tree=False)
     CinemaDistributor = distributor_factory("cinemas")
     cinemas[0].coordinates = [1, 2]
@@ -108,14 +101,23 @@ def test__person_drags_household(leisure):
     for person in [person1, person2, person3]:
         assert person.subgroups.leisure == social_venue.subgroups[0]
 
+def test__generate_social_venues_for_world():
+    geography = Geography.from_file({"super_area": ["E02002135"]})
+    world = generate_world_from_geography(
+        geography, include_households=False, include_commute=False
+    )
+    list_of_leisure_groups = ["pubs", "cinemas", "groceries"]
+    list_of_singular_names = ["pub", "cinema", "grocery"]
+    world.social_venues = generate_social_venues_for_world(
+        list_of_leisure_groups, world, 
+        list_of_singular_names=list_of_singular_names
+    )
+
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(
         geography, include_households=True, include_commute=False
     )
-    #world.social_venues["pubs"] = Pubs.for_geography(geography)
-    #world.social_venues["cinemas"] = Cinemas.for_geography(geography)
-    #world.social_venues["groceries"] = Groceries.for_geography(geography)
     list_of_leisure_groups = ["pubs", "cinemas", "groceries"]
     list_of_singular_names = ["pub", "cinema", "grocery"]
     world.social_venues = generate_social_venues_for_world(

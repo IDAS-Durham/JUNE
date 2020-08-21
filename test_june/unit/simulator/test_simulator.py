@@ -7,7 +7,7 @@ from june.demography import Person, Population
 from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAreas
 from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
-from june.groups.leisure import leisure #, Cinemas, Pubs, Groceries
+from june.groups.leisure import leisure
 from june.infection import InfectionSelector, SymptomTag
 from june.interaction import Interaction
 from june.policy import (

@@ -237,14 +237,6 @@ class SocialVenues(Supergroup):
             return None
         return [self[idx] for idx in venue_idxs]
 
-def group_name_guesser(group: str):
-    import string as s
-    vowels = 'aeiou'.split()
-    consonants = [l for l in s.ascii_lowercase if l not in vowels]
-
-    last = group[-1]
-    second_to_last = group[-2]
-
 def group_factory(group: str):
     group_class_name = ''.join(w.capitalize() for w in group.split('_'))
     d = {

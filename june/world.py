@@ -68,9 +68,6 @@ class World:
         self.companies = None
         self.hospitals = None
         self.social_venues = None
-        #self.pubs = None
-        #self.groceries = None
-        #self.cinemas = None
         self.commutecities = None
         self.commutehubs = None
         self.cemeteries = None

@@ -64,14 +64,6 @@ def test__full_run(dummy_world, selector):
         person.health_information = None
         person.susceptibility = 1.0
         person.dead = False
-    
-    #list_of_leisure_groups = ["pubs","cinemas","groceries"]
-    #list_of_singular_names = ["pub","cinema","grocery"]
-    #world.social_venues = leisure.generate_social_venues_for_world(
-    #    list_of_leisure_groups,
-    #    world,
-    #    list_of_singular_names=list_of_singular_names
-    #)
     leisure_instance = leisure.generate_leisure_for_world(
         world=world,
         list_of_leisure_groups=[

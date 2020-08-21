@@ -78,9 +78,6 @@ def create_world(geography_h5):
     world = generate_world_from_geography(
         geography=geography, include_households=True, include_commute=True
     )
-    #world.pubs = Pubs.for_geography(geography)
-    #world.cinemas = Cinemas.for_geography(geography)
-    #world.groceries = Groceries.for_geography(geography)
     list_of_social_venues = ["pubs", "cinemas", "groceries"]
     list_of_singular_names = ["pub", "cinema", "grocery"]
     world.social_venues = generate_social_venues_for_world(
