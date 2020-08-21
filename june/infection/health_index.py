@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
 import yaml
+from scipy import interpolate
 from june.infection.symptom_tag import SymptomTag
 from june import paths
 from june.utils.parse_probabilities import parse_age_probabilities
 from typing import Optional
 
-default_polinom_filename = paths.configs_path / "defaults/health_index_ratios.txt"
+default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
+default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
+default_hosp_cases_filename = paths.configs_path / "defaults/cases_hosp.dat"
+
 
 RKIdata = [
     [0.0, 4.0 / 100.0],
@@ -55,9 +59,10 @@ class HealthIndexGenerator:
 
     def __init__(
         self,
-        poli_hosp: dict,
-        poli_icu: dict,
-        poli_deaths: dict,
+        hosp_cases: dict,
+        icu_hosp: dict,
+        death_hosp: dict,
+
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
@@ -80,11 +85,10 @@ class HealthIndexGenerator:
           Vo et al 2019 ( https://doi.org/10.1101/2020.04.17.20053157 ).
           
         """
-        self.poli_hosp = poli_hosp
-        self.poli_icu = poli_icu
-        self.poli_deaths = poli_deaths
+        self.hosp_cases = hosp_cases
+        self.icu_hosp = icu_hosp
+        self.death_hosp = death_hosp
         self.asymptomatic_ratio = asymptomatic_ratio
-        self.max_age = 90
         self.adjust_hospitalisation_adults = adjust_hospitalisation_adults
         self.make_list()
         if comorbidity_multipliers is not None:
@@ -110,7 +114,9 @@ class HealthIndexGenerator:
     @classmethod
     def from_file(
         cls,
-        polinome_filename: str = default_polinom_filename,
+        hosp_filename: str = default_hosp_cases_filename,
+        icu_filename: str = default_icu_hosp_filename,
+        death_filename: str = default_death_hosp_filename,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
@@ -126,15 +132,46 @@ class HealthIndexGenerator:
           Interaction instance
         """
 
-        polinoms = np.loadtxt(polinome_filename, skiprows=1)
-        poli_hosp = np.array([polinoms[:, 0], polinoms[:, 1]])
-        poli_icu = np.array([polinoms[:, 2], polinoms[:, 3]])
-        poli_deaths = np.array([polinoms[:, 4], polinoms[:, 5]])
+        age=np.arange(0,121,1)
+        
+        hosp_data=np.loadtxt(hosp_filename,skiprows=1)
+        age_hosp=hosp_data[:,0]
+        female_hosp=hosp_data[:,1]
+        male_hosp=hosp_data[:,2]
+        
+        interp_female_hosp=interpolate.interp1d(age_hosp,female_hosp, bounds_error=False, \
+                                                            fill_value=female_hosp[-1])
+        interp_male_hosp=interpolate.interp1d(age_hosp,male_hosp, bounds_error=False, \
+                                                            fill_value=male_hosp[-1])
+
+        hosp_cases=[interp_female_hosp(age),interp_male_hosp(age)]
+
+        icu_data=np.loadtxt(icu_filename,skiprows=1)
+        age_icu=icu_data[:,0]
+        female_icu=icu_data[:,1]
+        male_icu=icu_data[:,2]
+
+        interp_female_icu=interpolate.interp1d(age_icu,female_icu, bounds_error=False, \
+                                                            fill_value=female_icu[-1])
+        interp_male_icu=interpolate.interp1d(age_icu,male_icu, bounds_error=False, \
+                                                            fill_value=male_icu[-1])
+        icu_hosp=[interp_female_icu(age),interp_male_icu(age)]
+
+        death_data=np.loadtxt(death_filename,skiprows=1)
+        age_death=death_data[:,0]
+        female_death=death_data[:,1]
+        male_death=death_data[:,2]
+
+        interp_female_death=interpolate.interp1d(age_death,female_death, bounds_error=False, \
+                                                            fill_value=female_death[-1])
+        interp_male_death=interpolate.interp1d(age_death,male_death, bounds_error=False, \
+                                                            fill_value=male_death[-1])
+        death_hosp=[interp_female_death(age),interp_male_death(age)]
 
         return cls(
-            poli_hosp,
-            poli_icu,
-            poli_deaths,
+            hosp_cases,
+            icu_hosp,
+            death_hosp,
             asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
@@ -147,7 +184,9 @@ class HealthIndexGenerator:
         multipliers_path: str,
         male_prevalence_path: str,
         female_prevalence_path: str,
-        polinome_filename: str = default_polinom_filename,
+        hosp_filename: str = default_hosp_cases_filename,
+        icu_filename: str = default_icu_hosp_filename,
+        death_filename: str = default_death_hosp_filename,
         asymptomatic_ratio: float = 0.2,
     ) -> "HealthIndexGenerator":
         """
@@ -167,34 +206,15 @@ class HealthIndexGenerator:
             female_prevalence, male_prevalence
         )
         return cls.from_file(
-            polinome_filename=polinome_filename,
+            hosp_filename=hosp_filename,
+            icu_filename=icu_filename,
+            death_filename=death_filename,
+            
             asymptomatic_ratio=asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
         )
 
-    def model(self, age, poli):
-        """
-        Computes the probability of an outcome from the coefficients of the polinomal fit and for 
-        a given array of ages
-        Parameters:
-        ----------
-          age:
-              array of ages where the probability should be computed.
-          poli:
-              The values C,C1,C2,C3
-              of the polinomail fit defined to the probability of being hospitalised, 
-              sent to an ICU unit or dying 
-              the probaility (P) is computed as 
-              P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
-          Returns:
-             The probability P for all ages in the array "age".
-        """
-        c, c1, c2, c3 = poli
-        age[age > self.max_age] = self.max_age
-        return 10 ** (
-            c + c1 * age + c2 * age ** 2 + c3 * age ** 3
-        )  # The coefficients are a fit to the logarithmic model
 
     def make_list(self):
         """
@@ -223,25 +243,21 @@ class HealthIndexGenerator:
         self.prob_lists[:, :, 0] = self.asymptomatic_ratio
         # hosp,ICU,death ratios
 
-        ratio_hosp_female_with_icu = self.model(
-            ages, self.poli_hosp[0]
-        )  # Going to the hospital
-        ratio_icu_female = self.model(ages, self.poli_icu[0])  # Going to ICU
-        ratio_death_female = self.model(
-            ages, self.poli_deaths[0]
-        )  # Dying in hospital (ICU+hosp)
+        ratio_hosp_female_with_icu = self.hosp_cases[0]  # Going to the hospital
+        ratio_icu_female = self.icu_hosp[0]   # Going to ICU
+        ratio_death_female = self.death_hosp[0]# Dying in hospital (ICU+hosp)
+        
 
-        ratio_hosp_male_with_icu = self.model(
-            ages, self.poli_hosp[1]
-        )  # Going to the hospital
-        ratio_icu_male = self.model(ages, self.poli_icu[1])  # Going to ICU
-        ratio_death_male = self.model(
-            ages, self.poli_deaths[1]
-        )  # Dying in hospital (ICU+hosp)
+
+        ratio_hosp_male_with_icu = self.hosp_cases[1]  # Going to the hospital
+        ratio_icu_male = self.icu_hosp[1]   # Going to ICU
+        ratio_death_male = self.death_hosp[1]# Dying in hospital (ICU+hosp)
+        
+
 
         # Going to the hospital but not to ICU
-        ratio_hosp_female = ratio_hosp_female_with_icu - ratio_icu_female
-        ratio_hosp_male = ratio_hosp_male_with_icu - ratio_icu_male
+        ratio_hosp_female = 1.0 - ratio_icu_female
+        ratio_hosp_male = 1.0 - ratio_icu_male
 
         # Probability of being simptomatic but not going to hospital
         no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_female_with_icu
@@ -271,31 +287,29 @@ class HealthIndexGenerator:
             len(survival_rate_icu) - 1
         ][1]
 
-        self.prob_lists[0, :, 4] = ratio_icu_female * survival_icu
-        self.prob_lists[1, :, 4] = ratio_icu_male * survival_icu
+        self.prob_lists[0, :, 4] = (ratio_hosp_female_with_icu*ratio_icu_female) * survival_icu
+        self.prob_lists[1, :, 4] = (ratio_hosp_male_with_icu*ratio_icu_male) * survival_icu
 
         # probavility of Dying in icu
         icu_deaths_female = ratio_icu_female * (1 - survival_icu)
         icu_deaths_male = ratio_icu_male * (1 - survival_icu)
 
-        # self.prob_lists[0,:,7]=icu_deaths_female
-        # self.prob_lists[1,:,7]=icu_deaths_male
 
         # probability of Survinving  hospital
 
-        deaths_hosp_noicu_female = ratio_death_female - icu_deaths_female
+        deaths_hosp_noicu_female = ratio_death_female - icu_deaths_female #deaths/hosp in hospital not in icu
         deaths_hosp_noicu_male = ratio_death_male - icu_deaths_male
 
         # If the death rate in icu is around the number of deaths virtually everyone in that age dies in icu.
-        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-6
-        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-6
+        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-3
+        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-3
 
-        self.prob_lists[0, :, 3] = ratio_hosp_female - deaths_hosp_noicu_female
-        self.prob_lists[1, :, 3] = ratio_hosp_male - deaths_hosp_noicu_male
+        self.prob_lists[0, :, 3] = (ratio_hosp_female - deaths_hosp_noicu_female)*ratio_hosp_female_with_icu
+        self.prob_lists[1, :, 3] = (ratio_hosp_male - deaths_hosp_noicu_male)*ratio_hosp_male_with_icu
 
         # probability of dying in hospital Without icu
-        self.prob_lists[0, :, 6] = deaths_hosp_noicu_female
-        self.prob_lists[1, :, 6] = deaths_hosp_noicu_male
+        self.prob_lists[0, :, 6] = deaths_hosp_noicu_female*ratio_hosp_female_with_icu
+        self.prob_lists[1, :, 6] = deaths_hosp_noicu_male*ratio_hosp_male_with_icu
         """
         probability of dying in your home is the same as the number of deths above the mean of previous years
         that do not have covid 19 in the death certificate it is 23% according to 
@@ -314,8 +328,8 @@ class HealthIndexGenerator:
         excess_death_female[ages >= excess_deaths[-1][0]] = excess_deaths[-1][1]
         excess_death_male[ages >= excess_deaths[-1][0]] = excess_deaths[-1][2]
 
-        deaths_at_home_female = ratio_death_female * (1 - excess_death_female)
-        deaths_at_home_male = ratio_death_male * (1 - excess_death_male)
+        deaths_at_home_female = (ratio_death_female*ratio_hosp_female_with_icu) * (1 - excess_death_female)
+        deaths_at_home_male = (ratio_death_male*ratio_hosp_male_with_icu)* (1 - excess_death_male)
 
         self.prob_lists[0, :, 5] = deaths_at_home_female
         self.prob_lists[1, :, 5] = deaths_at_home_male
@@ -327,6 +341,7 @@ class HealthIndexGenerator:
 
         self.prob_lists[0, :, 2] = prob_home_severe_female - deaths_at_home_female
         self.prob_lists[1, :, 2] = prob_home_severe_male - deaths_at_home_male
+        
 
     def __call__(self, person):
         """
@@ -368,18 +383,14 @@ class HealthIndexGenerator:
         Compute mean comorbidity multiplier given the prevalence of the different comorbidities
         in the reference population (for example the UK). It will be used to remove effect of comorbidities
         in the reference population
-
         Parameters
         ----------
         prevalence_reference_population:
             nested dictionary with prevalence of comorbidity by comorbodity, age and sex cohort
-
         age:
             age group to compute average multiplier
-
         sex:
             sex group to compute average multiplier
-
         Returns
         -------
             weighted_multiplier:
@@ -398,22 +409,17 @@ class HealthIndexGenerator:
     ):
         """
         Compute adjusted probabilities for a person with given comorbidity, age and sex.
-
         Parameters
         ----------
         probabilities:
             list with probability values for the 8 different outcomes (has len 7, but 8th value
             can be inferred from 1 - probabilities.sum())
-
         comorbidity:
             comorbidty type that the person has
-
         age:
             age group to compute average multiplier
-
         sex:
             sex group to compute average multiplier
-
         Returns
         -------
             probabilities adjusted for comorbidity 
@@ -433,16 +439,13 @@ class HealthIndexGenerator:
     ):
         """
         Compute adjusted probabilities given an effective multiplier
-
         Parameters
         ----------
         probabilities:
             list with probability values for the 8 different outcomes (has len 7, but 8th value
             can be inferred from 1 - probabilities.sum())
-
         effective_multiplier:
             factor that amplifies severe outcomes
-
         Returns
         -------
             adjusted probabilities
