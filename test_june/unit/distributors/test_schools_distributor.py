@@ -20,7 +20,7 @@ default_mandatory_age_range = (5, 18)
 @pytest.fixture(name="geography_school", scope="module")
 def create_geography():
     geography = Geography.from_file(
-        {"super_area": ["E02004935", "E02004935", "E02004935"]}
+        {"super_area": ["E02004935"]}
     )
     return geography
 
@@ -101,6 +101,12 @@ def test__non_mandatory_dont_go_if_school_full(school_world):
 
     assert non_mandatory_added == 0
 
+def test__years_mapping(school_world):
+    for school in school_world.schools:
+        for subgroup in school.subgroups:
+            if subgroup.subgroup_type != 0:
+                for person in subgroup.people:
+                    assert person.age == school.years[subgroup.subgroup_type-1]
 
 def test__teacher_distribution(school_world):
     for school in school_world.schools:
@@ -117,4 +123,5 @@ def test__limit_classroom_sizes(school_world):
         for subgroup in school.subgroups:
             if subgroup.subgroup_type != 0:
                 assert len(subgroup.people) <= school_distributor.max_classroom_size
-    
+                for person in subgroup.people:
+                    assert person.age == school.years[subgroup.subgroup_type-1]

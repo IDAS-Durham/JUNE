@@ -85,7 +85,7 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.years = tuple(range(age_min, age_max + 1))
+        self.years = list(range(age_min, age_max + 1))
 
     # add_to_age_group, add_to_class_room and modify school years
     def add(self, person, subgroup_type=SubgroupType.students):
@@ -115,11 +115,13 @@ class School(Group):
         for idx, subgroup in enumerate(old_subgroups[1:]):
             if len(subgroup.people) > max_classroom_size:
                 n_classrooms = math.ceil(len(subgroup.people)/max_classroom_size)
-                self.years += [self.years[idx]]*n_classrooms
-                pupils_in_classroom = [subgroup.people[i:i + n_classrooms] for i in range(0, len(subgroup.people), n_clsasrooms)]
+                self.years += [old_years[idx]]*n_classrooms
+                pupils_in_classroom = np.array_split(subgroup.people, n_classrooms)
                 for i in range(n_classrooms):
                     classroom = Subgroup(self, counter+1)
-                    classroom.people = pupils_in_classroom[i]
+                    for pupil in pupils_in_classroom[i]:
+                        classroom.append(pupil)
+                        pupil.subgroups.primary_activity = classroom 
                     self.subgroups.append(classroom)
                     counter += 1
             else:
