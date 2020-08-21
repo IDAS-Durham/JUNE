@@ -1,5 +1,5 @@
 from june.interaction import Interaction, interaction
-from june.infection.infection import InfectionSelector
+from june.infection.infection_selector import InfectionSelector
 from june.groups import School
 from june.demography import Person
 from june import paths

@@ -195,7 +195,7 @@ def restore_households_properties_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    print("loading households from hdf5 ", end="")
+    print("restoring households from hdf5 ", end="")
     first_area_id = world.areas[0].id
     first_household_id = world.households[0].id
     first_person_id = world.people[0].id

@@ -61,7 +61,7 @@ def test__full_run(dummy_world, selector):
     world = dummy_world
     # restore health status of people
     for person in world.people:
-        person.health_information = None
+        person.infection = None
         person.susceptibility = 1.0
         person.dead = False
     leisure_instance = leisure.generate_leisure_for_world(
