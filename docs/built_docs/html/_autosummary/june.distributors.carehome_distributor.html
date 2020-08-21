@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.distributors.carehome_distributor &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.distributors.company_distributor" href="june.distributors.company_distributor.html" />
+    <link rel="prev" title="june.demography.person" href="june.demography.person.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.distributors.carehome_distributor</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.demography.person.html">june.demography.person</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.company_distributor.html">june.distributors.company_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.distributors.carehome_distributor">
+<span id="june-distributors-carehome-distributor"></span><h1>june.distributors.carehome_distributor<a class="headerlink" href="#module-june.distributors.carehome_distributor" title="Permalink to this headline">¶</a></h1>
+<dl class="py exception">
+<dt id="june.distributors.carehome_distributor.CareHomeError">
+<em class="property">exception </em><code class="sig-prename descclassname">june.distributors.carehome_distributor.</code><code class="sig-name descname">CareHomeError</code><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeError" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeError.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeError.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeError.with_traceback">
+<code class="sig-name descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeError.with_traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.distributors.carehome_distributor.CareHomeError.args">
+<code class="sig-name descname">args</code><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeError.args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor">
+<em class="property">class </em><code class="sig-prename descclassname">june.distributors.carehome_distributor.</code><code class="sig-name descname">CareHomeDistributor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_age_in_care_home</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/carehome.yaml')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tool to distribute people from a certain area into a care home, if there is one.</p>
+<dl class="simple">
+<dt>min_age_in_care_home</dt><dd><p>minimum age to put people in care home.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_age_in_care_home</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/carehome.yaml')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tool to distribute people from a certain area into a care home, if there is one.</p>
+<dl class="simple">
+<dt>min_age_in_care_home</dt><dd><p>minimum age to put people in care home.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor._create_people_dicts">
+<code class="sig-name descname">_create_people_dicts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor._create_people_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates dictionaries with the men and women per age key living in the area.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor._get_person_of_age">
+<code class="sig-name descname">_get_person_of_age</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">people_dict</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor._get_person_of_age" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor.assign_workers">
+<code class="sig-name descname">assign_workers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a></span></em>, <em class="sig-param"><span class="n">care_home</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.carehome.html#june.groups.carehome.CareHome" title="june.groups.carehome.CareHome">june.groups.carehome.CareHome</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor.assign_workers" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Healthcares sector</dt><dd><p>Q: Carers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor.populate_care_home">
+<code class="sig-name descname">populate_care_home</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">care_home</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.carehome.html#june.groups.carehome.CareHome" title="june.groups.carehome.CareHome">june.groups.carehome.CareHome</a></span></em>, <em class="sig-param"><span class="n">men_by_age</span><span class="p">:</span> <span class="n">collections.OrderedDict</span></em>, <em class="sig-param"><span class="n">women_by_age</span><span class="p">:</span> <span class="n">collections.OrderedDict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor.populate_care_home" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes the oldest men and women from men_by_age and women_by_age dictionaries,
+and puts them into the care home until max capacity is reached.</p>
+<dl class="simple">
+<dt>care_home:</dt><dd><p>care home where to put people</p>
+</dd>
+<dt>men_by_age:</dt><dd><p>dictionary containing age as keys and lists of men as values.</p>
+</dd>
+<dt>women_by_age:</dt><dd><p>dictionary containing age as keys and lists of women as values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor.populate_care_home_in_area">
+<code class="sig-name descname">populate_care_home_in_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor.populate_care_home_in_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crates care home in area, if there needs to be one, and fills it with the
+oldest people in that area.</p>
+<dl class="simple">
+<dt>area:</dt><dd><p>area in which to create the care home</p>
+</dd>
+<dt>care_home_residents_number:</dt><dd><p>number of people to put in the care home.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.carehome_distributor.CareHomeDistributor.populate_care_home_in_areas">
+<code class="sig-name descname">populate_care_home_in_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">data_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/care_homes/care_homes_ew.csv')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.carehome_distributor.CareHomeDistributor.populate_care_home_in_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates care homes in areas from dataframe.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.demography.person.html">june.demography.person</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.company_distributor.html">june.distributors.company_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

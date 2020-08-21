@@ -46,8 +46,8 @@ class School(Group):
         self,
         coordinates: Tuple[float, float] = None,
         n_pupils_max: int = None,
-        age_min: int = None,
-        age_max: int = None,
+        age_min: int = 0,
+        age_max: int = 18,
         sector: str = None,
         area: Area = None,
     ):
@@ -84,8 +84,7 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        if age_min and age_max:
-            self.years = tuple(range(age_min, age_max + 1))
+        self.years = tuple(range(age_min, age_max + 1))
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
