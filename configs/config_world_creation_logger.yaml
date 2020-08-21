@@ -37,4 +37,4 @@ loggers:
 
 root:
   level: INFO
-  handlers: [console]
+  handlers: [console] # files handler disabled as they pose problems when doing multiple runs
