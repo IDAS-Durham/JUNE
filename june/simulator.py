@@ -328,6 +328,10 @@ class Simulator:
         symptoms = []
         n_secondary_infections = []
         perf1, perf2, perf3, perf4, perf5 =  0., 0., 0, 0., 0.
+
+        # replaces the call to infected property
+        # to be sure we are doing the health update only on the people
+        # within each partition
         domain_infected = [
             p for p in self.world.people.to_list if p.infected == True
         ]
@@ -437,7 +441,7 @@ class Simulator:
         people_to_infect = [
             self.world.people.to_list[idx - first_person_id] for idx in infected_ids
         ]
-        print("Current people", n_people)
+        print("Current people in partition", n_people)
         if n_people != len(self.world.people.to_list):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
