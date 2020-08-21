@@ -84,11 +84,6 @@ def _get_contacts_in_school(
     ][_translate_school_subgroup(infecters_idx, school_years)]
     if susceptibles_idx == 0 and infecters_idx > 0:
         n_contacts /= len(school_years)
-    print(_translate_school_subgroup(susceptibles_idx, school_years))
-    print(_translate_school_subgroup(infecters_idx, school_years))
-    print(susceptibles_idx)
-    print(infecters_idx)
-
     if (
         _translate_school_subgroup(susceptibles_idx, school_years)
         == _translate_school_subgroup(infecters_idx, school_years)
