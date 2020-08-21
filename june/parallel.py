@@ -201,6 +201,9 @@ def parallel_update(self, direction, timestep):
         domain_population = children_old + \
                             self.inbound_workers[self.domain_id] + \
                             self.local_workers[self.domain_id]
+
+        self.people.to_list = domain_population
+        # print and compare with simulator output
         print("AM INFECTED", rank, len([p for p in domain_population if p.infected == True]))
         return domain_population
 
@@ -240,6 +243,8 @@ def parallel_update(self, direction, timestep):
 
         # nobody is moving no more
         domain_population = self.residents[self.domain_id]
+        self.people.to_list = domain_population
+        # print and compare with simulator output
         print("PM INFECTED", rank, len([p for p in domain_population if p.infected == True]))
         return domain_population
 
