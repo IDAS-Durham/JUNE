@@ -37,16 +37,6 @@ def make_and_populate_schools(geography_school):
 
 def test__years_mapping(school_world):
     for school in school_world.schools:
-        print(school.age_min)
-        print(school.age_max)
-        print(school.years)
-        for subgroup in school.subgroups:
-            if subgroup.subgroup_type != 0:
-                print('subgroup type = ', subgroup.subgroup_type)
-                print('subgroup year = ', school.years[subgroup.subgroup_type - 1])
-                for person in subgroup.people:
-                    print(person.age)
-
         for subgroup in school.subgroups:
             if subgroup.subgroup_type != 0:
                 for person in subgroup.people:

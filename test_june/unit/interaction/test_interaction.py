@@ -54,7 +54,7 @@ def test__contact_matrices_from_default():
 def test__school_index_translation():
     age_min = 3
     age_max = 7
-    school_years = list(range(age_min, age_max + 1))
+    school_years = tuple(range(age_min, age_max + 1))
     interaction._translate_school_subgroup(1, school_years) == 4
     interaction._translate_school_subgroup(5, school_years) == 8
 
@@ -64,7 +64,7 @@ def test__school_contact_matrices():
     xi = 0.3
     age_min = 3
     age_max = 7
-    school_years = list(range(age_min, age_max + 1))
+    school_years = tuple(range(age_min, age_max + 1))
     contact_matrix = interaction_instance.contact_matrices["school"]
     n_contacts_same_year = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 4
@@ -90,6 +90,18 @@ def test__school_contact_matrices():
         contact_matrix, school_years, 4, 0
     )
     assert n_contacts_student_teacher == 0.81 * 3
+
+def test__school_contact_matrices_different_classroom():
+    interaction_instance = Interaction.from_file()
+    xi = 0.3
+    age_min = 3
+    age_max = 7
+    school_years = (3,4,4,5)
+    contact_matrix = interaction_instance.contact_matrices["school"]
+    n_contacts_same_year = interaction._get_contacts_in_school(
+        contact_matrix, school_years, 2, 3
+    )
+    assert n_contacts_same_year == 0.
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
