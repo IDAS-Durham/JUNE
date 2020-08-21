@@ -86,6 +86,7 @@ class School(Group):
         self.sector = sector
         self.years = tuple(range(age_min, age_max + 1))
 
+    # add_to_age_group, add_to_class_room and modify school years
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
