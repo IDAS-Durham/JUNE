@@ -6,7 +6,7 @@ from collections import Counter
 from june import paths
 from typing import List, Optional
 from june.demography.geography import SuperAreas
-from june.infection.infection import InfectionSelector
+from june.infection.infection_selector import InfectionSelector
 from june.infection.health_index import HealthIndexGenerator
 
 default_n_cases_region_filename = paths.data_path / "input/seed/n_cases_region.csv"
