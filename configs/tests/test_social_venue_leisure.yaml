@@ -1,5 +1,6 @@
 cinemas:
   singular: "cinema"
+  # coordinates_file: Guess the correct data path?
   male_age_probabilities:
     3-75: 0.05
     75-80: 0.02
@@ -10,14 +11,11 @@ cinemas:
   maximum_distance: 15
   weekend_boost: 1
   drags_household_probability: 0.5
-  # max_size:
-
-# 2019: 176.1 million cinema visitors per year
-# (from https://www.cinemauk.org.uk/the-industry/facts-and-figures/uk-cinema-admissions-and-box-office/annual-admissions/)
-# age/gender distribution from https://www.statista.com/statistics/296240/age-and-gender-of-the-cinema-audience-uk/
+  max_capacity: 1500 # Just a test number
 
 groceries:
-  singular: "grocery"
+  #singular: "food_store"
+  coordinates_filename: "input/leisure/groceries_per_super_area.csv" # relavive to data_path.
   male_age_probabilities:
     18-65 : 0.90
     65-100 : 0.70
@@ -28,10 +26,12 @@ groceries:
   drags_household_probability: 0.3
   neighbours_to_consider: 10
   maximum_distance: 10
-  # max_size: 
+  max_size: 150 # Just a test number - check grocery has max_size == 150.
 
-pubs:
-  singular: "pub"
+# A silly alternative name to "pubs" to make sure it's definitely reading coords from the config.
+saloons: 
+  singular: "saloon"
+  coordinates_filename:  "input/leisure/pubs_per_super_area.csv" # relavive to data_path.
   male_age_probabilities:
     18-65 : 0.90
     65-100 : 0.60
@@ -42,18 +42,4 @@ pubs:
   maximum_distance: 15
   weekend_boost: 0.70
   drags_household_probability: 0.2
-  # max_size: 
-
-# gyms:
-#   singular: "gym"
-#   male_age_probabilities:
-#     18-65 : 0.90
-#     65-100 : 0.60
-#   female_age_probabilities:
-#     18-65 : 0.90
-#     65-100 : 0.60
-#   neighbours_to_consider: 3
-#   maximum_distance: 15
-#   weekend_boost: 0.70
-#   drags_household_probability: 0.1
-#   max_capacity: 50
+  #max_size: Check the saloon has max_size np.inf

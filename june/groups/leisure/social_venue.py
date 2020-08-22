@@ -46,6 +46,7 @@ class SocialVenues(Supergroup):
         coordinates: List[np.array],
         super_areas: Optional[Areas],
         max_distance_to_area=5,
+        max_size=np.inf,
         **kwargs
     ):
 
@@ -57,7 +58,7 @@ class SocialVenues(Supergroup):
             coordinates = coordinates[distances_close]
         social_venues = []
         for i, coord in enumerate(coordinates):
-            sv = cls.social_venue_class()
+            sv = cls.social_venue_class(max_size=max_size)
             if super_areas:
                 super_area = super_areas[i]
             else:
@@ -69,7 +70,7 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def for_super_areas(
-        cls, super_areas: List[SuperArea], coordinates_filename: str = None,
+        cls, super_areas: List[SuperArea], coordinates_filename: str = None, max_size=np.inf
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -79,25 +80,25 @@ class SocialVenues(Supergroup):
             sv_coordinates.super_area.isin(sa_names), ["lat", "lon"]
         ]
         return cls.from_coordinates(
-            sv_coordinates_in_super_areas.values, super_areas=super_areas
+            sv_coordinates_in_super_areas.values, super_areas=super_areas, max_size=max_size
         )
 
     @classmethod
     def for_areas(
-        cls, areas: Areas, coordinates_filename: str = None,
+        cls, areas: Areas, coordinates_filename: str = None, max_size=np.inf
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         super_areas = [area.super_area for area in areas]
-        return cls.for_super_areas(super_areas, coordinates_filename)
+        return cls.for_super_areas(super_areas, coordinates_filename, max_size=max_size)
 
     @classmethod
     def for_geography(
-        cls, geography: Geography, coordinates_filename: str = None,
+        cls, geography: Geography, coordinates_filename: str = None, max_size=np.inf
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
-        return cls.for_super_areas(geography.super_areas, coordinates_filename)
+        return cls.for_super_areas(geography.super_areas, coordinates_filename, max_size=max_size)
 
     @classmethod
     def distribute_for_areas(
@@ -105,6 +106,7 @@ class SocialVenues(Supergroup):
         areas: List[Area],
         venues_per_capita: float = None,
         venues_per_area: int = None,
+        max_size=np.inf
     ):
         """
         Generates social venues in the given areas.
@@ -126,14 +128,14 @@ class SocialVenues(Supergroup):
         if venues_per_area is not None:
             for area in areas:
                 for _ in range(venues_per_area):
-                    sv = cls.social_venue_class()
+                    sv = cls.social_venue_class(max_size=max_size)
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = cls.social_venue_class()
+                    sv = cls.social_venue_class(max_size=max_size)
                     sv.area = area
                     social_venues.append(sv)
         else:
@@ -144,7 +146,11 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def distribute_for_super_areas(
-        cls, super_areas: List[SuperArea], venues_per_super_area=1, venues_per_capita=1
+        cls, 
+        super_areas: List[SuperArea], 
+        venues_per_super_area=1, 
+        venues_per_capita=1, 
+        max_size=np.inf
     ):
         """
         Generates social venues in the given super areas.
@@ -164,14 +170,14 @@ class SocialVenues(Supergroup):
         if venues_per_super_area is not None:
             for area in super_areas:
                 for _ in range(venues_per_super_area):
-                    sv = cls.social_venue_class()
+                    sv = cls.social_venue_class(max_size=max_size)
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in super_areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = cls.social_venue_class()
+                    sv = cls.social_venue_class(max_size=max_size)
                     sv.area = area
                     social_venues.append(sv)
         else:
@@ -269,7 +275,7 @@ def supergroup_factory(supergroup: str, group: str = None, return_group: bool = 
         returns KarateClubs if False; return (KarateClubs, KarateClub) if True.
     """
     if group is None:
-        group = supergroup[:-1] # Terrible guess at singular name.
+        group = group_name_guesser(supergroup) # Terrible guess at singular name.
     SVGroup = group_factory(group)
     supergroup_class_name = ''.join(w.capitalize() for w in supergroup.split('_'))
     default_coordinates_filename = paths.data_path / paths.Path(
@@ -285,3 +291,26 @@ def supergroup_factory(supergroup: str, group: str = None, return_group: bool = 
         return SVSupergroup, SVGroup
     else:
         return SVSupergroup
+
+def group_name_guesser(supergroup: str):
+    """Not perfect, but works for many situations!"""
+    vowels = list('aeiou')
+
+    if supergroup.endswith('s'):
+        if supergroup.endswith('es'):
+            if supergroup.endswith('ies'):
+                if supergroup[-4] not in vowels:
+                    return supergroup[:-3] + 'y' # ciTIES -> ciTY
+            elif supergroup.endswith('oes'):
+                if supergroup[-4] not in vowels:
+                    return supergroup[:-2] # potaTOES -> potaTO
+            elif supergroup.endswith('ves'):
+                return supergroup[:-3] + 'f' # wolVES -> wolF, but also kniVES -> kniF
+            elif supergroup[-4:-2] in ['ch','sh'] or supergroup[-3] in ['s','x','z']:
+                return supergroup[:-2] # churCHES -> churCH, boXES -> boX
+            else:
+                return supergroup[:-1] # 
+        else:
+            return supergroup[:-1]
+    else:
+        return supergroup[:-1]

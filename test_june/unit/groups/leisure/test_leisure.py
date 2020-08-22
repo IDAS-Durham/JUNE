@@ -8,12 +8,14 @@ from june.groups.leisure import (
     Leisure,
     generate_leisure_for_world,
     generate_social_venues_for_world,
+    generate_social_venues_for_config,
     supergroup_factory,
     distributor_factory,
 )
 from june.demography.geography import Geography
 from june.demography import Person, Demography
 from june import World
+from june import paths
 
 
 @fixture(name="geography")
@@ -100,22 +102,6 @@ def test__person_drags_household(leisure):
     )
     for person in [person1, person2, person3]:
         assert person.subgroups.leisure == social_venue.subgroups[0]
-
-def test__generate_social_venues_for_world():
-    geography = Geography.from_file({"super_area": ["E02002135"]})
-    world = generate_world_from_geography(
-        geography, include_households=False, include_commute=False
-    )
-    list_of_leisure_groups = ["pubs", "cinemas", "groceries"]
-    list_of_singular_names = ["pub", "cinema", "grocery"]
-    world.social_venues = generate_social_venues_for_world(
-        list_of_leisure_groups, world, 
-        list_of_singular_names=list_of_singular_names
-    )
-
-    assert len(world.social_venues["pubs"]) == 15
-    assert len(world.social_venues["groceries"]) == 3
-    assert len(world.social_venues["cinemas"]) == 1
 
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})

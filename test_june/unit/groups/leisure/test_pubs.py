@@ -9,7 +9,7 @@ import pytest
 from june.time import Timer
 from june.demography.geography import Geography, SuperArea, Area
 from june.demography import Demography, Person
-from june.groups.leisure import Pub, Pubs
+from june.groups.leisure import Pub, Pubs, supergroup_factory
 
 
 @pytest.fixture(name="geography")
@@ -23,3 +23,9 @@ class TestPubs:
         pubs = Pubs.for_geography(geography)
         assert len(pubs) == 7
         return pubs
+
+    def test__create_pubs_dynamically_for_geography(self, geography):
+        DynPubs,DynPub = supergroup_factory("pubs", "pub", return_group=True)
+        pubs2 = DynPubs.for_geography(geography)
+        assert len(pubs2) == 7
+        return pubs2

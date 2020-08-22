@@ -49,7 +49,8 @@ def generate_social_venues_for_world(
     list_of_leisure_groups: List[str], 
     world, 
     list_of_singular_names=None,
-    list_of_coordinates_filenames=None
+    list_of_coordinates_filenames=None,
+    list_of_max_sizes=None
 
 ):
     """
@@ -59,10 +60,15 @@ def generate_social_venues_for_world(
     if list_of_singular_names is None:
         list_of_singular_names = [None for _ in list_of_leisure_groups]
     if list_of_coordinates_filenames is None:
-        list_of_coordinates_filenames = [None for _ in list_of_leisure_groups]       
+        list_of_coordinates_filenames = [None for _ in list_of_leisure_groups]   
+    if list_of_max_sizes is None:
+        list_of_max_sizes = [np.inf for _ in list_of_leisure_groups]
 
-    for leisure_group, singular_name, coordinates_filename in zip(
-        list_of_leisure_groups, list_of_singular_names, list_of_coordinates_filenames
+    for leisure_group, singular_name, coordinates_filename, max_size in zip(
+        list_of_leisure_groups, 
+        list_of_singular_names, 
+        list_of_coordinates_filenames,
+        list_of_max_sizes
     ):
         # could make contents of this for loop its own function?
         if leisure_group.endswith('visits'):
@@ -75,7 +81,8 @@ def generate_social_venues_for_world(
         )
         social_venues[leisure_group] = SVSupergroup.for_super_areas(
             super_areas=world.super_areas,
-            coordinates_filename=coordinates_filename
+            coordinates_filename=coordinates_filename,
+            max_size=max_size
         )
     return social_venues
 
@@ -83,24 +90,31 @@ def generate_social_venues_for_config(
     world, 
     config_filename=default_social_venue_config_filename
 ):
-    """Re
+    """
+    Read a config file describing the social_venues the world will have.
     """
     with open(config_filename) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     list_of_leisure_groups = [k for k in config.keys()]
     list_of_singular_names = [
-        config[k]['singular'] if 'singular' in config[k].keys() else None
+        config[k]["singular"] if "singular" in config[k] else None
         for k in list_of_leisure_groups 
     ]
     list_of_coordinates_filenames = [
-        config[k]['coordinates_filename'] if 'coordinates_filename' in config[k].keys() else None
+        paths.data_path / paths.Path( config[k]["coordinates_filename"] )
+        if "coordinates_filename" in config[k] else None
+        for k in list_of_leisure_groups
+    ]
+    list_of_max_sizes = [
+        config[k]["max_size"] if "max_size" in config[k] else np.inf
         for k in list_of_leisure_groups
     ]
     social_venues = generate_social_venues_for_world(
         list_of_leisure_groups, 
         world,
         list_of_singular_names,
-        list_of_coordinates_filenames
+        list_of_coordinates_filenames,
+        list_of_max_sizes
     )
     return social_venues
 
