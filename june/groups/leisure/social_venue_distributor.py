@@ -179,6 +179,15 @@ class SocialVenueDistributor:
             return random() < self.drags_household_probability
 
 def distributor_factory(leisure_group: str):
+    """
+    Create a distributor class for social_venue-type leisure, using built-in type() function.
+    returned distributor __name__ is "nicely-formatted".
+
+    Parameters
+    ----------
+    leisure_group
+        
+    """
     caps_name = ''.join(w.capitalize() for w in leisure_group.split('_'))
     distributor_class_name = f"{caps_name}Distributor"
     d = {

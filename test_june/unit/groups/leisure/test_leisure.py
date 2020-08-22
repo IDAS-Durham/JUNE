@@ -113,6 +113,10 @@ def test__generate_social_venues_for_world():
         list_of_singular_names=list_of_singular_names
     )
 
+    assert len(world.social_venues["pubs"]) == 15
+    assert len(world.social_venues["groceries"]) == 3
+    assert len(world.social_venues["cinemas"]) == 1
+
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(

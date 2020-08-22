@@ -238,15 +238,36 @@ class SocialVenues(Supergroup):
         return [self[idx] for idx in venue_idxs]
 
 def group_factory(group: str):
+    """
+    Create a class for a social_venue-type group, using built-in type() funtion. 
+    Returned class __name__ is "nicely formatted".
+
+    Parameters
+    ----------
+    group
+        the name of the group, eg. "karate_clubs" -> "KarateClubs"
+    """
     group_class_name = ''.join(w.capitalize() for w in group.split('_'))
     d = {
         "__module__" : __name__,
     }
     SVGroup = type(group_class_name, (SocialVenue,), d)
-
     return SVGroup
 
-def supergroup_factory(supergroup: str, group: str = None, return_group=False):
+def supergroup_factory(supergroup: str, group: str = None, return_group: bool = False):
+    """
+    Create a class for for a social_venue-type supergroup , using built-in type() funtion. 
+
+    Parameters
+    ----------
+    supergroup
+        the name of the "plural" supergroup, eg. "karate_clubs" -> "KarateClubs"
+    group
+        the name of the "singular" group, eg. "karate_club" -> "KarateClub".
+        makes a (bad!) guess at singular if not provided.
+    return_group
+        returns KarateClubs if False; return (KarateClubs, KarateClub) if True.
+    """
     if group is None:
         group = supergroup[:-1] # Terrible guess at singular name.
     SVGroup = group_factory(group)

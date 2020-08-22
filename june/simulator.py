@@ -372,6 +372,7 @@ class Simulator:
 
         active_groups = self.activity_manager.active_groups
         group_instances = []
+        # Is this faster as a list comprehension?
         for group in active_groups:
             if group in ["household_visits", "care_home_visits"]:
                 continue

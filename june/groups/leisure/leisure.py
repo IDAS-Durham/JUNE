@@ -52,6 +52,9 @@ def generate_social_venues_for_world(
     list_of_coordinates_filenames=None
 
 ):
+    """
+    Set world.social_venues to be a dict of 
+    """
     social_venues = {}
     if list_of_singular_names is None:
         list_of_singular_names = [None for _ in list_of_leisure_groups]
@@ -80,6 +83,8 @@ def generate_social_venues_for_config(
     world, 
     config_filename=default_social_venue_config_filename
 ):
+    """Re
+    """
     with open(config_filename) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     list_of_leisure_groups = [k for k in config.keys()]
