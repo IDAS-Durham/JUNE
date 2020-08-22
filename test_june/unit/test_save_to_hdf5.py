@@ -199,6 +199,8 @@ class TestSaveSchools:
                 "age_min",
                 "age_max",
                 "sector",
+                "n_classrooms",
+                "years",
             ]:
                 attribute = getattr(school, attribute_name)
                 attribute2 = getattr(school2, attribute_name)

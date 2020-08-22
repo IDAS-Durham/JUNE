@@ -1,7 +1,9 @@
 import logging
 import yaml
 from enum import IntEnum
+import math
 from itertools import count
+from copy import deepcopy
 from june import paths
 from typing import List, Tuple, Dict, Optional
 
@@ -50,6 +52,8 @@ class School(Group):
         age_max: int = 18,
         sector: str = None,
         area: Area = None,
+        n_classrooms: Optional[int] = None,
+        years: Optional[int] = None,
     ):
         """
         Create a School given its description.
@@ -66,6 +70,12 @@ class School(Group):
             maximum age of the pupils
         sector:
             whether it is a "primary", "secondary" or both "primary_secondary"
+        area:
+            area the school belongs to
+        n_classrooms:
+            number of classrooms in the school
+        years:
+            age group year per classroom
 
         number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
         0 - teachers
@@ -75,8 +85,11 @@ class School(Group):
         """
         super().__init__()
         self.subgroups = []
-        for i, _ in enumerate(range(age_min, age_max + 2)):
-            self.subgroups.append(Subgroup(self, i))
+        # for i, _ in enumerate(range(age_min, age_max + 2)):
+        if n_classrooms is None:
+            n_classrooms = age_max - age_min
+        self.subgroups = [Subgroup(self, i) for i in range(n_classrooms + 2)]
+        self.n_classrooms = n_classrooms
         self.coordinates = coordinates
         self.area = area
         self.n_pupils_max = n_pupils_max
@@ -84,7 +97,10 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        self.years = tuple(range(age_min, age_max + 1))
+        if years is None:
+            self.years = tuple(range(age_min, age_max + 1))
+        else:
+            self.years = tuple(years)
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
@@ -95,6 +111,40 @@ class School(Group):
             subgroup = self.subgroups[self.SubgroupType.teachers]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
+
+    def limit_classroom_sizes(self, max_classroom_size: int):
+        """
+        Make all subgroups smaller than ```max_classroom_size```
+
+        Parameters
+        ----------
+        max_classroom_size:
+           maximum number of students per classroom (subgroup)
+        """
+        age_subgroups = self.subgroups.copy()
+        year_age_group = deepcopy(self.years)
+        self.subgroups = [age_subgroups[0]]  # keep teachers
+        self.years = []
+        counter = 1
+        for idx, subgroup in enumerate(age_subgroups[1:]):
+            if len(subgroup.people) > max_classroom_size:
+                n_classrooms = math.ceil(len(subgroup.people) / max_classroom_size)
+                self.years += [year_age_group[idx]] * n_classrooms
+                pupils_in_classroom = np.array_split(subgroup.people, n_classrooms)
+                for i in range(n_classrooms):
+                    classroom = Subgroup(self, counter)
+                    for pupil in pupils_in_classroom[i]:
+                        classroom.append(pupil)
+                        pupil.subgroups.primary_activity = classroom
+                    self.subgroups.append(classroom)
+                    counter += 1
+            else:
+                subgroup.subgroup_type = counter
+                self.subgroups.append(subgroup)
+                counter += 1
+                self.years.append(year_age_group[idx])
+        self.years = tuple(self.years)
+        self.n_classrooms = len(self.subgroups) - 1
 
     @property
     def is_full(self):

@@ -28,7 +28,7 @@ def get_contact_matrix(alpha, contacts, physical):
     return contacts * (1.0 + (alpha - 1.0) * physical)
 
 
-#@nb.jit(nopython=True)
+# @nb.jit(nopython=True)
 def compute_effective_transmission(
     subgroup_transmission_probabilities: np.array,
     susceptibles_group_idx: np.array,
@@ -66,7 +66,7 @@ def compute_effective_transmission(
     return 1.0 - np.exp(-poisson_exponent)
 
 
-#@nb.jit(nopython=True)
+# @nb.jit(nopython=True)
 def infect_susceptibles(effective_transmission_probability, susceptible_ids):
     infected_ids = []
     for id in susceptible_ids:
@@ -84,10 +84,17 @@ def _get_contacts_in_school(
     ][_translate_school_subgroup(infecters_idx, school_years)]
     if susceptibles_idx == 0 and infecters_idx > 0:
         n_contacts /= len(school_years)
+    if (
+        _translate_school_subgroup(susceptibles_idx, school_years)
+        == _translate_school_subgroup(infecters_idx, school_years)
+        and susceptibles_idx != infecters_idx
+    ):
+        # If same age but different class room, no contacts
+        n_contacts = 0
     return n_contacts
 
 
-#@nb.jit(nopython=True)
+# @nb.jit(nopython=True)
 def _subgroup_to_subgroup_transmission(
     contact_matrix,
     subgroup_transmission_probabilities,
