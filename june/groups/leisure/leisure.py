@@ -14,7 +14,7 @@ from june.groups.leisure import (
     HouseholdVisitsDistributor,
     CareHomeVisitsDistributor,
 )
-from june.groups.leisure import Pubs, Cinemas, Groceries, group_factory, supergroup_factory, distributor_factory
+from june.groups.leisure import group_factory, supergroup_factory, distributor_factory
 from june.groups import Household
 from june import paths
 

@@ -100,3 +100,4 @@ def test__generate_social_venues_from_config():
     assert world.social_venues["groceries"][0].max_size == 150
 
     assert set(world.social_venues.keys()) == set(["groceries", "cinemas", "saloons"])
+    
