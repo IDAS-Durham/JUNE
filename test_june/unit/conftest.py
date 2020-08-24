@@ -217,7 +217,7 @@ def make_dummy_world():
     city.commutehubs = [hub]
     world.commutehubs = CommuteHubs([city])
     world.commutehubs.members = [hub]
-    world.commutecities = CommuteCities()
+    world.commutecities = CommuteCities.for_super_areas(world.super_areas)
     world.commutecities.members = [city]
     world.commutehubs[0].add(commuter)
     world.commuteunits = CommuteUnits(world.commutehubs.members)
