@@ -88,7 +88,7 @@ class CommuteCities(Supergroup):
     def for_geography(
             cls,
             geography: Geography,
-            uk_pcs_coordinate_file: str = default_uk_pcs_coordinates,
+            uk_pcs_coordinates_file: str = default_uk_pcs_coordinates,
             msoa_coordinates_file: str = default_msoa_coordinates,
             london_stat_pcs_file: str = default_london_stat_pcs,
             non_london_stat_pcs_file: str = default_non_london_stat_pcs,
@@ -108,7 +108,7 @@ class CommuteCities(Supergroup):
     def for_super_areas(
             cls,
             super_areas: List[SuperArea],
-            uk_pcs_coordinate_file: str = default_uk_pcs_coordinates,
+            uk_pcs_coordinates_file: str = default_uk_pcs_coordinates,
             msoa_coordinates_file: str = default_msoa_coordinates,
             london_stat_pcs_file: str = default_london_stat_pcs,
             non_london_stat_pcs_file: str = default_non_london_stat_pcs,
