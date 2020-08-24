@@ -4,10 +4,11 @@ import numpy as np
 
 class CommuteCityUnit(Group):
 
-    def __init__(self, city, is_peak):
+    def __init__(self, city, super_area, is_peak):
         super().__init__()
         
         self.city = city
+        self.super_area = super_area
         self.is_peak = is_peak
         self.max_passengers = 50
         self.no_passengers = 0
@@ -34,6 +35,7 @@ class CommuteCityUnits(Supergroup):
             for i in range(no_units):
                 commutecity_unit = CommuteCityUnit(
                     city = commutecity.city,
+                    super_area = commutecity.super_area,
                     is_peak = peak_not_peak[i]
                 )
 

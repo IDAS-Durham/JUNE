@@ -8,7 +8,7 @@ class CommuteUnit(Group):
     These units will be filled dynamically
     """
 
-    def __init__(self, city, commutehub_id, is_peak):
+    def __init__(self, city, super_area, commutehub_id, is_peak):
         """
         city: (string) name of the city the commute unt is associated to
         commutehub_id: (int) id of commute hub unit is associated to
@@ -24,6 +24,7 @@ class CommuteUnit(Group):
         super().__init__()
         
         self.city = city
+        self.super_area = super_area
         self.commutehub_id = commutehub_id
         self.no_passengers = 0
         self.max_passengers = 50 # assume all units are of equal size but this could be made more granular later
@@ -70,6 +71,7 @@ class CommuteUnits(Supergroup):
                 commute_unit = CommuteUnit(
                     #commuteunit_id = ids,
                     city = hub.city,
+                    super_area=hub.super_area,
                     commutehub_id = hub.id,
                     is_peak = peak_not_peak[i]
                 )
