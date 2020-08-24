@@ -14,7 +14,7 @@ class CommuteHub(Group):
     Defines hubs around cities through with people commute and assigns people to those commute hubs
     """
 
-    def __init__(self, lat_lon, city, super_area):
+    def __init__(self, lat_lon, city, super_area=None):
         """
         id: (int) id of the commute hub
         lat_lon: (array) lat/lon of the commute hub

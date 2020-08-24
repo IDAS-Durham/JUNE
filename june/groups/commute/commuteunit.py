@@ -8,7 +8,7 @@ class CommuteUnit(Group):
     These units will be filled dynamically
     """
 
-    def __init__(self, city, super_area, commutehub_id, is_peak):
+    def __init__(self, city, commutehub_id, is_peak, super_area=None):
         """
         city: (string) name of the city the commute unt is associated to
         commutehub_id: (int) id of commute hub unit is associated to
