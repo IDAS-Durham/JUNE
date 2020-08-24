@@ -25,13 +25,14 @@ class CommuteCity(Group):
         "metro_centroid",
         "metro_msoas",
         "city",
+        "super_area",
         "commutehubs",
         "commute_internal",
         "commutecityunits",
     )
 
     
-    def __init__(self, city=None, metro_msoas=None, metro_centroid=None):
+    def __init__(self, city=None, super_area=None, metro_msoas=None, metro_centroid=None):
         """
         metro_centriod: (array) the centriod of the metropolitan area
         metro_msoas: (list) names of all MSOAs in the metropolitain area of the city
@@ -47,6 +48,7 @@ class CommuteCity(Group):
         self.metro_centroid = metro_centroid
         self.metro_msoas = metro_msoas
         self.city = city
+        self.super_area = super_area
         self.commutehubs = []
         self.commute_internal = []
         self.commutecityunits = []
