@@ -154,6 +154,7 @@ class CommuteCities(Supergroup):
 
             commute_city = CommuteCity(
                 city = stations[idx],
+                super_area = msoa_stat
                 metro_msoas = city_metro_msoas,
                 metro_centroid = city_metro_centroid,
             )
@@ -193,9 +194,11 @@ class CommuteCities(Supergroup):
         # get global centroid
         city_metro_centroid_all = np.array(city_metro_centroid_all)
         city_metro_centroid = [np.mean(city_metro_centroid_all[:,0]), np.mean(city_metro_centroid_all[:,1])]
-
+        metro_stat = self._get_nearest_msoas(city_metro_centroid, nearest=1)
+        
         commute_city = CommuteCity(
             city = 'London',
+            super_area = msoa_stat
             metro_msoas = city_metro_msoas_all,
             metro_centroid = city_metro_centroid,
         )
