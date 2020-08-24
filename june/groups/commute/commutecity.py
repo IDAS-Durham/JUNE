@@ -117,7 +117,7 @@ class CommuteCities(Supergroup):
         uk_pcs_coordinates = pd.read_csv(uk_pcs_coordinates_file)
         msoa_coordinates = pd.read_csv(msoa_coordinates_file)
 
-        lat_msoas, lon_msoas, lat_lon_msoas = get_msoa_lat_lon(msoa_coordinates)
+        msoas, lat_msoas, lon_msoas, lat_lon_msoas = get_msoa_lat_lon(msoa_coordinates)
 
         # initialise non-London stations
         stat_pcs_df = pd.read_csv(default_non_london_stat_pcs)
@@ -284,7 +284,7 @@ def get_msoa_lat_lon(msoa_coordinates):
     lat_lon_msoas[:,0] = lat_msoas
     lat_lon_msoas[:,1] = lon_msoas
 
-    return lat_msoas, lon_msoas, lat_lon_msoas
+    return msoas, lat_msoas, lon_msoas, lat_lon_msoas
 
 def get_stat_lat_lon(stat_pc, uk_pcs_coordinates):
     'Given a station postcode, return its lat/lon based on postcode data'
