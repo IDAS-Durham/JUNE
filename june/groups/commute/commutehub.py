@@ -28,6 +28,7 @@ class CommuteHub(Group):
         self.city = city # station the hub is affiliated to
         self.super_area = super_area
         self.commuteunits = []
+        self.commute_through = []
 
     def add(self, person):
         super().add(person, activity="commute", subgroup_type=0)
