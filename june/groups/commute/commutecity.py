@@ -156,7 +156,7 @@ class CommuteCities(Supergroup):
 
             commute_city = CommuteCity(
                 city = stations[idx],
-                super_area = msoa_stat
+                super_area = msoa_stat,
                 metro_msoas = city_metro_msoas,
                 metro_centroid = city_metro_centroid,
             )
@@ -200,7 +200,7 @@ class CommuteCities(Supergroup):
         
         commute_city = CommuteCity(
             city = 'London',
-            super_area = msoa_stat
+            super_area = msoa_stat,
             metro_msoas = city_metro_msoas_all,
             metro_centroid = city_metro_centroid,
         )
