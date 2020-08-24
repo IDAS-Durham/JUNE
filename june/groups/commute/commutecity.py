@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from typing import List
 from june.demography.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 from june import paths
@@ -87,7 +88,7 @@ class CommuteCities(Supergroup):
     def for_geography(
             cls,
             geography: Geography,
-            uk_pcs_coordinate_file: str = default_uk_coordinates,
+            uk_pcs_coordinate_file: str = default_uk_pcs_coordinates,
             msoa_coordinates_file: str = default_msoa_coordinates,
             london_stat_pcs_file: str = default_london_stat_pcs,
             non_london_stat_pcs_file: str = default_non_london_stat_pcs,
@@ -107,7 +108,7 @@ class CommuteCities(Supergroup):
     def for_super_areas(
             cls,
             super_areas: List[SuperArea],
-            uk_pcs_coordinate_file: str = default_uk_coordinates,
+            uk_pcs_coordinate_file: str = default_uk_pcs_coordinates,
             msoa_coordinates_file: str = default_msoa_coordinates,
             london_stat_pcs_file: str = default_london_stat_pcs,
             non_london_stat_pcs_file: str = default_non_london_stat_pcs,
@@ -180,10 +181,10 @@ class CommuteCities(Supergroup):
         msoa_stat, _ = get_nearest_msoas(city_metro_centroid, lat_lon_msoas, msoas, lat_msoas, lon_msoas, nearest=1)
 
         super_area_stat = None
-            for super_area in super_areas:
-                if super_area.name == msoa_stat:
-                    super_area_stat = super_area
-                    break
+        for super_area in super_areas:
+            if super_area.name == msoa_stat:
+                super_area_stat = super_area
+                break
         
         commute_city = CommuteCity(
             city = 'London',
