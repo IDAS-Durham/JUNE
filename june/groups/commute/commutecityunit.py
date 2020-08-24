@@ -4,7 +4,7 @@ import numpy as np
 
 class CommuteCityUnit(Group):
 
-    def __init__(self, city, super_area, is_peak):
+    def __init__(self, city, is_peak, super_area=None):
         super().__init__()
         
         self.city = city

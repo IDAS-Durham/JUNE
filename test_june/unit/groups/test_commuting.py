@@ -59,7 +59,7 @@ class TestCommuteHub:
         return CommuteHub(city="Manchester", lat_lon=[-2, 52.0],)
 
     def test__hub_grouptype(self, hub):
-        assert len(hub.people) == 0
+        assert len(hub.commute_through) == 0
         assert len(hub.commuteunits) == 0
 
 
