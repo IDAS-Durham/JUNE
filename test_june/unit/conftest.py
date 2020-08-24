@@ -94,7 +94,7 @@ def create_interaction():
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697"]})
+    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02001731"]})
     return geography
 
 
@@ -212,17 +212,20 @@ def make_dummy_world():
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
     # commute
-    city = CommuteCity()
-    hub = CommuteHub(None, None)
-    city.commutehubs = [hub]
-    world.commutehubs = CommuteHubs([city])
-    world.commutehubs.members = [hub]
+    #city = CommuteCity()
+    #hub = CommuteHub(None, None)
+    #city.commutehubs = [hub]
+    #world.commutehubs = CommuteHubs([city])
+    #world.commutehubs.members = [hub]
     world.commutecities = CommuteCities.for_super_areas(world.super_areas)
-    world.commutecities.members = [city]
-    world.commutehubs[0].add(commuter)
+    world.commutehubs = CommuteHubs(world.commutecities)
+    world.commutehubs.from_file()
+    world.commutehubs.init_hubs()
+    #world.commutecities.members = [city]
+    world.commutehubs[0].commute_through.append(commuter)
     world.commuteunits = CommuteUnits(world.commutehubs.members)
     world.commuteunits.init_units()
-    world.commutecityunits = CommuteCityUnits(world.commutecities)
+    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
     world.cemeteries = Cemeteries()
     return world
 
