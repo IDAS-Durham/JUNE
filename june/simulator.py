@@ -480,7 +480,7 @@ class Simulator:
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
-        self.world.local_people.initialise(self.timer.status)
+        self.world.local_people.initialise(self.timer.state)
 
         while self.timer.date < self.timer.final_date:
             tick = perf_counter()
