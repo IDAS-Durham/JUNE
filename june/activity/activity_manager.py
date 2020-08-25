@@ -11,7 +11,6 @@ from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
 from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 
-from june.parallel import parallel_update
 
 from june.policy import (
     IndividualPolicies,
@@ -256,16 +255,16 @@ class ActivityManager:
         # first handle any parallelism to get who we need to work with
         # assign groups per processed domain
         if self.timer.state == "primary_activity":
-            current = self.world.parallel_update("am", self.timer.now)
+            self.world.parallel_update("am", self.timer.now)
         elif (
             self.timer.state == "commute"
             and self.timer.last_state == "primary_activity"
         ):
-            current = self.world.parallel_update("pm", self.timer.now)
+            self.world.parallel_update("pm", self.timer.now)
         else:
-            current = self.world.parallel_update("wknd", self.timer.now)
+            self.world.parallel_update("wknd", self.timer.now)
 
-        for person in current:
+        for person in self.world.local_people:
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
