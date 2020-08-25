@@ -9,6 +9,7 @@ from typing import Optional
 
 default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
 default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
+default_death_home_filename = paths.configs_path / "defaults/percent_deaths_home.dat"
 default_hosp_cases_filename = paths.configs_path / "defaults/cases_hosp.dat"
 
 
@@ -33,16 +34,6 @@ survival_rate_icu = [
 ]
 
 
-# excess detahs
-# https://www.gov.uk/government/publications/covid-19-review-of-disparities-in-risks-and-outcomes
-excess_deaths = [
-    [0, 1.0, 1.0],  # No death in icu reported.
-    [15, 1.0, 1.0],
-    [45, 79.8 / 100.0, 81.2 / 100.0],
-    [64, 83.3 / 100.0, 83.7 / 100.0],
-    [75, 81.8 / 100.0, 84.7 / 100.0],
-    [85, 63.6 / 100.0, 75.1 / 100.0],
-]
 
 
 class HealthIndexGenerator:
@@ -62,7 +53,8 @@ class HealthIndexGenerator:
         hosp_cases: dict,
         icu_hosp: dict,
         death_hosp: dict,
-
+        death_home:dict,
+ 
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
@@ -88,6 +80,7 @@ class HealthIndexGenerator:
         self.hosp_cases = hosp_cases
         self.icu_hosp = icu_hosp
         self.death_hosp = death_hosp
+        self.death_home = death_home
         self.asymptomatic_ratio = asymptomatic_ratio
         self.adjust_hospitalisation_adults = adjust_hospitalisation_adults
         self.make_list()
@@ -117,6 +110,7 @@ class HealthIndexGenerator:
         hosp_filename: str = default_hosp_cases_filename,
         icu_filename: str = default_icu_hosp_filename,
         death_filename: str = default_death_hosp_filename,
+        death_home_filename: str = default_death_home_filename,
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
@@ -167,11 +161,24 @@ class HealthIndexGenerator:
         interp_male_death=interpolate.interp1d(age_death,male_death, bounds_error=False, \
                                                             fill_value=male_death[-1])
         death_hosp=[interp_female_death(age),interp_male_death(age)]
+        
+        death_home_data=np.loadtxt(death_home_filename,skiprows=1)
+        age_death_home=death_home_data[:,0]
+        death_home=death_home_data[:,1]
+        
+
+        interp_death_home=interpolate.interp1d(age_death,death_home, bounds_error=False, \
+                                                            fill_value=death_home[-1])
+        
+        death_home=interp_death_home(age)
+
+
 
         return cls(
             hosp_cases,
             icu_hosp,
             death_hosp,
+            death_home,
             asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
@@ -187,6 +194,7 @@ class HealthIndexGenerator:
         hosp_filename: str = default_hosp_cases_filename,
         icu_filename: str = default_icu_hosp_filename,
         death_filename: str = default_death_hosp_filename,
+        death_home_filename: str = default_death_home_filename,
         asymptomatic_ratio: float = 0.2,
     ) -> "HealthIndexGenerator":
         """
@@ -209,7 +217,8 @@ class HealthIndexGenerator:
             hosp_filename=hosp_filename,
             icu_filename=icu_filename,
             death_filename=death_filename,
-            
+            death_home_filename=death_home_filename,
+   
             asymptomatic_ratio=asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
@@ -253,7 +262,7 @@ class HealthIndexGenerator:
         ratio_icu_hosp_male = self.icu_hosp[1]   # ICU/hosp rate
         ratio_death_hosp_male = self.death_hosp[1]# deaths in hosp/hosp rate
         
-
+        prob_dying_home=self.death_home
 
         # Going to the hospital but not to ICU/hosp
         hosp_noicu_female = 1.0 - ratio_icu_hosp_female
@@ -316,20 +325,10 @@ class HealthIndexGenerator:
         https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/889861/disparities_review.pdf
         """
         # excesss deaths
-        excess_death_female = np.ones(121)
-        excess_death_male = np.ones(121)
-        for excess_deaths_index in range(len(excess_deaths) - 1):
-            boolean = (
-                excess_deaths[excess_deaths_index][0] <= np.arange(0, 121, 1)
-            ) & (np.arange(0, 121, 1) < excess_deaths[excess_deaths_index + 1][0])
-            excess_death_female[boolean] = excess_deaths[excess_deaths_index][1]
-            excess_death_male[boolean] = excess_deaths[excess_deaths_index][2]
 
-        excess_death_female[ages >= excess_deaths[-1][0]] = excess_deaths[-1][1]
-        excess_death_male[ages >= excess_deaths[-1][0]] = excess_deaths[-1][2]
 
-        deaths_at_home_female = (ratio_death_hosp_female*ratio_hosp_cases_female) * (1 - excess_death_female)
-        deaths_at_home_male = (ratio_death_hosp_male*ratio_hosp_cases_male)* (1 - excess_death_male)
+        deaths_at_home_female = (ratio_death_hosp_female*ratio_hosp_cases_female) *prob_dying_home 
+        deaths_at_home_male = (ratio_death_hosp_male*ratio_hosp_cases_male)* prob_dying_home
 
         self.prob_lists[0, :, 5] = deaths_at_home_female
         self.prob_lists[1, :, 5] = deaths_at_home_male
