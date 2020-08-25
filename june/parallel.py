@@ -56,8 +56,9 @@ class DomainPopulation (list):
         We need to start at home. Not at work.
         """
         assert timer_state != 'primary_activity'
-        for p in self.halo_people:
-            p.busy = True
+        for pvalues in self.halo_people:
+            for p in pvalues:
+                p.busy = True
 
     @property
     def infected(self):
@@ -65,7 +66,7 @@ class DomainPopulation (list):
         Return an iterator (list) which has all the infected people who are active in this domain
         """
         for person in self:
-            if person.infected and not person.busy:
+            if person.infected: # and not person.busy:
                 yield person
             else:
                 continue
@@ -73,8 +74,7 @@ class DomainPopulation (list):
     @property
     def number_infected(self):
         """ Find out how many people are infected"""
-        x = len([p for p in self.infected])
-        return x
+        return len([p for p in self.infected])
 
     @property
     def resident(self):
@@ -91,10 +91,10 @@ class DomainPopulation (list):
         """
         Return the number of people who are active now
         """
-        if timestep_status == 'primary_activity':
-            return len(self) - self.n_outbound + self.n_inbound
-        else:
-            return len(self) - self.n_inbound
+        #if timestep_status == 'primary_activity':
+        #    return len(self) - self.n_outbound + self.n_inbound
+        #else:
+        return len(self) # - self.n_inbound
 
 
 def parallel_setup(self, comm, debug=False):
@@ -172,7 +172,7 @@ def parallel_setup(self, comm, debug=False):
             # these folk commute into this domain, but where from?
             self.inbound_workers[super_index[home_super_area]][person.id] = person
             # these people are the halo people:
-            local_people.append(person)
+            # local_people.append(person)
             inb += 1
         elif live_here and not work_here:
             # these folk commute out, but where to?
@@ -205,7 +205,7 @@ def parallel_setup(self, comm, debug=False):
     delta_time = time.mktime(end_time) - time.mktime(start_time)
     print(f'Domain setup complete for rank {rank} at {current_time} ({delta_time}s)')
     # count people checks
-    assert len(local_people) == live + inb
+    # assert len(local_people) == live + inb
     assert live + inb + gone == len(self.people)
 
 
@@ -238,8 +238,8 @@ def parallel_update(self, direction, timestep):
             outside_domain = self.outside_workers[other_rank]
             tell_them = {}
             for pid, person in outside_domain.items():
-                if not person.hospitalised:
-                    person.busy = True
+                #if not person.hospitalised:
+                #    person.busy = True
                 #FIXME: Actually, this is the wrnog place, since policy may keep them at home ...
                 if person.infected:
                     # tell_them.append(person)
@@ -268,7 +268,7 @@ def parallel_update(self, direction, timestep):
 
         return
 
-    elif direction == 'pm':
+    elif direction == 'pm' or direction == 'wknd':
 
         # FIXME: What happens to inbound workers during initialisation?
         for other_rank in self.inbound_workers:
@@ -277,7 +277,7 @@ def parallel_update(self, direction, timestep):
             outside_domain = self.inbound_workers[other_rank]
             tell_them = {}
             for pid, person in outside_domain.items():
-                person.busy = True
+                #person.busy = True
                 if person.infected: # it happened at work!
                     # tell_them.append(person)
                     tell_them[pid] = person.infection
