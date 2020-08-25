@@ -14,18 +14,12 @@ default_config_filename = configs_path / "defaults/groups/leisure/pubs.yaml"
 
 
 class Pub(SocialVenue):
-    """
-    Pubs are fun.
-    """
-
-    def __init__(self):
-        super().__init__()
-
+    max_size = 50
+    pass
 
 class Pubs(SocialVenues):
     social_venue_class = Pub
     default_coordinates_filename = default_pub_coordinates_filename
-
 
 class PubDistributor(SocialVenueDistributor):
     default_config_filename = default_config_filename
