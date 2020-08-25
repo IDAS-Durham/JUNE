@@ -327,6 +327,7 @@ class Simulator:
         # to be sure we are doing the health update only on the people
         # within each partition
 
+        print("CURRDOMAININF", len(list(self.world.local_people.infected)))
         for person in self.world.local_people.infected:
             infection = person.infection
             tick = perf_counter()
@@ -407,7 +408,7 @@ class Simulator:
             f"number of infected = {self.world.local_people.number_infected} (domain={self.world.domain_id})"
         )
         infected_ids = []
-        first_person_id = self.world.people.infected[0].id
+        first_person_id = self.world.local_people[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -425,7 +426,7 @@ class Simulator:
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(int_group.infector_ids):
-                            infector = self.world.local_people[infector_id - first_person_id] # why this?
+                            infector = self.world.local_people[infector_id - first_person_id] # why this?  # V: good question!
                             assert infector.id == infector_id
                             infector.infection.number_of_infected += (
                                 n_infected
