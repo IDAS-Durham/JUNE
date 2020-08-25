@@ -35,7 +35,11 @@ class DomainPopulation (list):
         self.n_inbound = n_inbound
         self.n_outbound = n_outbound
         self.n_resident = len(self) - self.n_inbound
-        self.halo_people = [p for p in [halo.values() for rank, halo in inbound_people.items()]]
+        self.halo_people = [item for sublist in
+                            [v.values() for v in [halo for halo in inbound_people.values()]]
+                            for item in sublist]
+        x = self.halo_people[0]
+        print('bnl',x, type(x))
 
     def __delitem__(self, key):
         """
@@ -47,7 +51,7 @@ class DomainPopulation (list):
         raise NotImplementedError
 
     def initialise(self, timer_state):
-        """
+        """more run
         At beginning of the simulation, some people are not actually in the domain.
         We need to start at home. Not at work.
         """
