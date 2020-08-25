@@ -35,7 +35,7 @@ class DomainPopulation (list):
         self.n_inbound = n_inbound
         self.n_outbound = n_outbound
         self.n_resident = len(self) - self.n_inbound
-        self.halo_people = [p for p in [halo for rank, halo in inbound_people.items()]]
+        self.halo_people = [p for p in [halo.values() for rank, halo in inbound_people.items()]]
 
     def __delitem__(self, key):
         """
@@ -51,7 +51,7 @@ class DomainPopulation (list):
         At beginning of the simulation, some people are not actually in the domain.
         We need to start at home. Not at work.
         """
-        assert self.timer.state == 'primary_activity'
+        assert timer_state != 'primary_activity'
         for p in self.halo_people:
             p.busy = True
 
