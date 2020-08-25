@@ -401,7 +401,7 @@ class Simulator:
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
-            f"number of infected = {self.world.local_people.number_infected}"
+            f"number of infected = {self.world.local_people.number_infected} (domain={self.world.domain_id})"
         )
         infected_ids = []
         first_person_id = self.world.people.infected[0].id

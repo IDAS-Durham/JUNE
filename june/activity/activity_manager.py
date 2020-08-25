@@ -261,8 +261,6 @@ class ActivityManager:
             and self.timer.last_state == "primary_activity"
         ):
             self.world.parallel_update("pm", self.timer.now)
-        else:
-            self.world.parallel_update("wknd", self.timer.now)
 
         for person in self.world.local_people:
             if person.dead or person.busy:

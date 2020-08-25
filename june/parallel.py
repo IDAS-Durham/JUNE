@@ -46,7 +46,6 @@ class DomainPopulation (list):
         # Really we don't want it to happen!
         raise NotImplementedError
 
-
     @property
     def infected(self):
         """
@@ -61,7 +60,8 @@ class DomainPopulation (list):
     @property
     def number_infected(self):
         """ Find out how many people are infected"""
-        return len([p for p in self.infected])
+        x = len([p for p in self.infected])
+        return x
 
     @property
     def resident(self):
@@ -186,7 +186,7 @@ def parallel_setup(self, comm, debug=False):
 
     self.local_people = DomainPopulation(local_people, self.inbound_workers, inbound, outbound)
 
-    print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
+    print(f'Partition {rank} has {len(self.local_people)} (of {npeople} - {inbound} in and {outbound} out).')
     end_time = time.localtime()
     current_time = time.strftime("%H:%M:%S", end_time)
     delta_time = time.mktime(end_time) - time.mktime(start_time)
@@ -194,14 +194,6 @@ def parallel_setup(self, comm, debug=False):
     # count people checks
     assert len(local_people) == live + inb
     assert live + inb + gone == len(self.people)
-
-
-    # We'll check everything is covered, and use this as a sync point before integration
-    # the total number of people across the world, and split into domains should be
-    # the sum of the folk who live in each domain. That number should be, for each
-    # domain: the population it knows about, less those people who are commuting in.
-
-    my_population = self.people.total_people - inbound
 
 
 def parallel_update(self, direction, timestep):
@@ -263,7 +255,7 @@ def parallel_update(self, direction, timestep):
 
         return
 
-    elif direction == 'pm' or direction == "wknd":
+    elif direction == 'pm':
 
         # FIXME: What happens to inbound workers during initialisation?
         for other_rank in self.inbound_workers:
