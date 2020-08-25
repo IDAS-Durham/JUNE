@@ -46,6 +46,15 @@ class DomainPopulation (list):
         # Really we don't want it to happen!
         raise NotImplementedError
 
+    def initialise(self, timer_status):
+        """
+        At beginning of the simulation, some people are not actually in the domain.
+        We need to start at home. Not at work.
+        """
+        assert self.timer.state == 'primary_activity'
+        for p in self.halo_people:
+            p.busy = True
+
     @property
     def infected(self):
         """

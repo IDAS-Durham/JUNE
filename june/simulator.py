@@ -377,6 +377,9 @@ class Simulator:
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
+        print (f'Starting timestep for {self.world.domain_id} with {self.world.local_people.number_infected}')
+
+
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
                 date=self.timer.date, interaction=self.interaction,
@@ -433,10 +436,10 @@ class Simulator:
         people_to_infect = [
             self.world.local_people[idx - first_person_id] for idx in infected_ids
         ]
-        print("Current people in partition", n_people)
+        print("Active people in partition", n_people)
         if n_people != self.world.local_people.number_active(self.timer.state):
             raise SimulatorError(
-                f"Number of people active {n_people} does not match "
+                f"Number of people active {n_people} (domain {self.world.domain_id}) does not match "
                 f"the total people number {self.world.local_people.number_active(self.timer.state)}"
             )
         # infect people
@@ -477,6 +480,7 @@ class Simulator:
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
 
+        self.world.local_people.initialise(self.timer.status)
 
         while self.timer.date < self.timer.final_date:
             tick = perf_counter()
