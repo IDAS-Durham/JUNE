@@ -31,11 +31,14 @@ def parallel_setup(self, comm, debug=False):
 
     # let's just brute force it with MPI for now
     # partition the list of superareas
-    # each of the following dictionaries is a list keyed by the rank associated with that partition
-    self.residents = {i: [] for i in range(size)}
-    self.local_workers = {i: [] for i in range(size)}
-    self.outside_workers = {i: [] for i in range(size)}
-    self.inbound_workers = {i: [] for i in range(size)}
+
+    # for now we collect local_peoole as the folk who need to be passed back as a subset of the world.
+    # at some point in the future we can remove the rest of the world.
+    self.local_people = []
+
+    # these are dictionaries of people in each domain who float back and forward.
+    self.outside_workers = {i: {} for i in range(size)}
+    self.inbound_workers = {i: {} for i in range(size)}
     # (of course there will never be anything but an empty list in the the rank of this PE.)
     self.domain_id = rank
     self.other_domain_ids = [r for r in range(size) if r != rank]
@@ -70,41 +73,43 @@ def parallel_setup(self, comm, debug=False):
                 super_index[sa.name] = i
 
     live, inb, oub, gone = 0, 0, 0, 0
-    binable  = []
+    binable = []
+
     for person in self.people:
         home_super_area = person.area.super_area.name
         work_super_area = None
-        if person.primary_activity:  # some people are too old to work.
+        if person.primary_activity:  # some people are too old to work, some are children
             if person.primary_activity.group.spec == "company":
                 work_super_area = person.primary_activity.group.super_area.name
-        
 
         live_here = super_index[home_super_area] == rank
         if work_super_area:
             work_here = super_index[work_super_area] == rank
         else:
-            work_here = live_here  # well, not working somewhere ...
+            # for this loop we pretend that everyone who doesn't work, but lives here, works here.
+            work_here = live_here
 
-        
         if live_here:
             live += 1
-            self.residents[super_index[home_super_area]].append(person)
-        elif live_here and work_here:
-            self.local_workers[super_index[home_super_area]].append(person)
-        elif work_here and not live_here:
+            self.local_people.append(person)
+
+        if work_here and not live_here:
             # these folk commute into this domain, but where from?
-            self.inbound_workers[super_index[home_super_area]].append(person)
+            self.inbound_workers[super_index[home_super_area]][person.id] = person
+            # these people are the halo people:
+            self.local_people.append(person)
             inb += 1
         elif live_here and not work_here:
             # these folk commute out, but where to?
-            self.outside_workers[super_index[work_super_area]].append(person)
+            self.outside_workers[super_index[work_super_area]][person.id] = person
             oub += 1
-        else:
+        elif not live_here:
             # Anyone left is not interesting, and we want to bin them from this domain.
             # they never spend any time here interacting with anyone.
             binable.append(person)
             gone += 1
-    print("RR", rank, live, inb, oub, gone)
+
+    print("RR", rank, live, inb, oub, gone, len(self.local_people))
     # we can't delete them inside the loop, bad things happen if we do that.
     # FIXME takes a LONG time for many people eg 1000s for 67000 peeps
     #for p in binable:
@@ -121,7 +126,10 @@ def parallel_setup(self, comm, debug=False):
     current_time = time.strftime("%H:%M:%S", end_time)
     delta_time = time.mktime(end_time) - time.mktime(start_time)
     print(f'Domain setup complete for rank {rank} at {current_time} ({delta_time}s)')
-    assert npeople == live + inb + oub + gone
+    # count people checks
+    assert len(self.local_people) == live + inb
+    assert live + inb + gone == len(self.people)
+
 
     # We'll check everything is covered, and use this as a sync point before integration
     # the total number of people across the world, and split into domains should be
@@ -159,13 +167,14 @@ def parallel_update(self, direction, timestep):
                 continue
             outside_domain = self.outside_workers[other_rank]
             tell_them = {}
-            for person in outside_domain:
+            for pid, person in outside_domain.items():
                 if not person.hospitalised:
                     person.busy = True
                 #FIXME: Actually, this is the wrnog place, since policy may keep them at home ...
                 if person.infected:
                     # tell_them.append(person)
-                    tell_them[person.id] = person.infection
+                    print('>>a',self.domain_id, other_rank, person.id, person.infected, person.infection.infection_probability)
+                    tell_them[pid] = person.infection
             # _put_updates(self, other_rank, tell_them, timestep)
             comm.send(tell_them, dest=other_rank, tag=100)
 
@@ -174,38 +183,20 @@ def parallel_update(self, direction, timestep):
             if other_rank == self.domain_id:
                 continue
             outside_domain = self.inbound_workers[other_rank]
-            for person in outside_domain:
+            for pid, person in outside_domain.items():
                 person.busy = False
             # we might need to update the infection status of these people
             # _get_updates(self, id, timestep)
             incoming = comm.recv(source=other_rank, tag=100)
 
             if incoming:
-                for id, infec in incoming.items():
-                   # find person in world (should be in domain - prob v inefficient)
-                   p_to_update = [
-                       p for p in self.inbound_workers[other_rank] if p.id == id
-                   ]
-                   if p_to_update:
-                       if p_to_update[0].infection == None:
-                           print(rank, "from ", other_rank, " BAD ptoupdate ", p_to_update)
-                           print(rank, "from ", other_rank, "pid ", id, "infec ", infec)
-                       p_to_update[0].infection = infec
+                for pid, infec in incoming.items():
+                   self.inbound_workers[pid].infection = infec
 
-        # people out and people in; keep children and elderly constant
-        # TODO this should be built at the top of the module in setup
-        # only once but I don't know how to do it (VP)
-        children_old = [
-            p for p in self.residents[self.domain_id]
-            if not p in self.local_workers[self.domain_id]]
-        domain_population = children_old + \
-                            self.inbound_workers[self.domain_id] + \
-                            self.local_workers[self.domain_id]
-
-        self.people.to_list = domain_population
         # print and compare with simulator output
-        print("AM INFECTED", rank, len([p for p in domain_population if p.infected == True]))
-        return domain_population
+        print("AM INFECTED", rank, len([p for p in self.local_people if p.infected == True]))
+
+        return
 
     elif direction == 'pm' or direction == "wknd":
 
@@ -215,11 +206,11 @@ def parallel_update(self, direction, timestep):
                 continue
             outside_domain = self.inbound_workers[other_rank]
             tell_them = {}
-            for person in outside_domain:
+            for pid, person in outside_domain.items():
                 person.busy = True
                 if person.infected: # it happened at work!
                     # tell_them.append(person)
-                    tell_them[person.id] = person.infection
+                    tell_them[pid] = person.infection
             # _put_updates(self, other_rank, tell_them, timestep)
             comm.send(tell_them, dest=other_rank, tag=100)
 
@@ -230,23 +221,11 @@ def parallel_update(self, direction, timestep):
             incoming = comm.recv(source=other_rank, tag=100)
 
             if incoming:
-                for id, infec in incoming.items():
-                   # find person in world (should be in domain - prob v inefficient)
-                   p_to_update = [
-                       p for p in self.outside_workers[other_rank] if p.id == id
-                   ]
-                   if p_to_update:
-                       if p_to_update[0].infection == None:
-                           print(rank, "from ", other_rank, " BAD ptoupdate ", p_to_update)
-                           print(rank, "from ", other_rank, "pid ", id, "infec ", infec)
-                       p_to_update[0].infection = infec
+                print('>>i', self.domain_id, other_rank, [id for id, infec in incoming.items()])
+            for pid, infec in incoming.items():
+                self.outside_workers[other_rank][pid].infection = infec
 
-        # nobody is moving no more
-        domain_population = self.residents[self.domain_id]
-        self.people.to_list = domain_population
-        # print and compare with simulator output
-        print("PM INFECTED", rank, len([p for p in domain_population if p.infected == True]))
-        return domain_population
+        print("PM INFECTED", rank, len([p for p in self.local_people if p.infected == True]))
 
 
 #def _put_updates(self, target_rank, tell_them, timestep):

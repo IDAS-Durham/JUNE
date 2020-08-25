@@ -327,7 +327,7 @@ class Simulator:
         # to be sure we are doing the health update only on the people
         # within each partition
         domain_infected = [
-            p for p in self.world.people.to_list if p.infected == True
+            p for p in self.world.local_people if p.infected == True
         ]
         for person in domain_infected:
             infection = person.infection
@@ -400,7 +400,7 @@ class Simulator:
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
 
-        domain_infected = [p for p in self.world.people.to_list if p.infected == True]
+        domain_infected = [p for p in self.world.local_people if p.infected == True]
 
         logger.info(
             f"Date = {self.timer.date}, "
@@ -408,7 +408,7 @@ class Simulator:
             f"number of infected = {len(domain_infected)}"
         )
         infected_ids = []
-        first_person_id = self.world.people.to_list[0].id
+        first_person_id = self.world.local_people[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -426,7 +426,7 @@ class Simulator:
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(int_group.infector_ids):
-                            infector = self.world.people.to_list[infector_id - first_person_id] # why this?
+                            infector = self.world.local_people[infector_id - first_person_id] # why this?
                             assert infector.id == infector_id
                             infector.infection.number_of_infected += (
                                 n_infected
@@ -435,13 +435,13 @@ class Simulator:
                             )
                     infected_ids += new_infected_ids
         people_to_infect = [
-            self.world.people.to_list[idx - first_person_id] for idx in infected_ids
+            self.world.local_people[idx - first_person_id] for idx in infected_ids
         ]
         print("Current people in partition", n_people)
-        if n_people != len(self.world.people.to_list):
+        if n_people != len(self.world.local_people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
-                f"the total people number {len(self.world.people.to_list)}"
+                f"the total people number {len(self.world.local_people)}"
             )
         # infect people
         if self.infection_selector:
