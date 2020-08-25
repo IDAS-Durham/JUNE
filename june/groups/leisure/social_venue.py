@@ -228,13 +228,12 @@ class SocialVenues(Supergroup):
         if self.ball_tree is None:
             raise SocialVenueError("Initialise ball tree first with self.make_tree()")
         radius = radius / earth_radius
-        venue_idxs, distances = self.ball_tree.query_radius(
+        venue_idxs, _ = self.ball_tree.query_radius(
             np.deg2rad(coordinates).reshape(1, -1),
             r=radius,
             sort_results=True,
             return_distance=True,
         )
-        print(distances * earth_radius)
         venue_idxs = venue_idxs[0]
         if not venue_idxs.size:
             return None
