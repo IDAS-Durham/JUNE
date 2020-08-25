@@ -132,8 +132,8 @@ class SocialVenueDistributor:
         if potential_venues is None:
             return (self.social_venues.get_closest_venues(house_location, k=1)[0], )
         indices_len = min(len(potential_venues), self.neighbours_to_consider)
-        random_idx_choice = sample(len(potential_venues), indices_len)
-        return (potential_venues[random_idx_choice], )
+        random_idx_choice = sample(range(len(potential_venues)), indices_len)
+        return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_social_venue_for_person(self, person):
         """
