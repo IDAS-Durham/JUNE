@@ -233,7 +233,6 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    print("loading population from hdf5 ", end="")
     people = []
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # people = []
@@ -242,7 +241,6 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
@@ -326,14 +324,12 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                     person.lockdown_status = None
                 else:
                     person.lockdown_status = lockdown_status[k].decode()
-    print("\n", end="")
     return Population(people)
 
 
 def restore_population_properties_from_hdf5(
     world: World, file_path: str, chunk_size=50000
 ):
-    print("restoring population from hdf5 ", end="")
     first_person_id = world.people[0].id
     first_area_id = world.areas[0].id
     activities_fields = Activities.__fields__
@@ -344,7 +340,6 @@ def restore_population_properties_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
@@ -388,4 +383,3 @@ def restore_population_properties_from_hdf5(
                     subgroup.append(person)
                     setattr(subgroups_instances, activities_fields[i], subgroup)
                     person.subgroups = subgroups_instances
-    print("\n", end="")

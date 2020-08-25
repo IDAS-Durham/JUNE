@@ -86,13 +86,11 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
     This function should be rarely be called oustide world.py
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        print("loading companies from hdf5 ", end="")
         companies = f["companies"]
         companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1
@@ -112,7 +110,6 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
                 )
                 company.id = ids[k]
                 companies_list.append(company)
-    print("\n", end="")
     return Companies(companies_list)
 
 
@@ -121,14 +118,12 @@ def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_s
         0
     ].id  # in case some super areas were created before
     first_company_id = world.companies[0].id
-    print("restoring companies from hdf5 ", end="")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         companies = f["companies"]
         companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1
@@ -146,4 +141,3 @@ def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_s
                     company.super_area = world.super_areas[
                         super_areas[k] - super_areas_first_id
                     ]
-    print("done")
