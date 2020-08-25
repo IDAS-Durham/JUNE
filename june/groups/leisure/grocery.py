@@ -15,8 +15,7 @@ default_groceries_coordinates_filename = (
 
 
 class Grocery(SocialVenue):
-    def __init__(self):
-        super().__init__()
+    max_size = 100
 
 
 class Groceries(SocialVenues):

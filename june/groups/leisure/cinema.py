@@ -15,12 +15,7 @@ default_config_filename = configs_path / "defaults/groups/leisure/cinemas.yaml"
 
 
 class Cinema(SocialVenue):
-    """
-    cinemas are fun.
-    """
-
-    def __init__(self):
-        super().__init__()
+    max_size = 200
 
 
 class Cinemas(SocialVenues):
