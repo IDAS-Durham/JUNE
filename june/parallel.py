@@ -38,8 +38,6 @@ class DomainPopulation (list):
         self.halo_people = [item for sublist in
                             [v.values() for v in [halo for halo in inbound_people.values()]]
                             for item in sublist]
-        x = self.halo_people[0]
-        print('bnl',x, type(x))
 
     def __delitem__(self, key):
         """
@@ -51,14 +49,13 @@ class DomainPopulation (list):
         raise NotImplementedError
 
     def initialise(self, timer_state):
-        """more run
+        """
         At beginning of the simulation, some people are not actually in the domain.
         We need to start at home. Not at work.
         """
         assert timer_state != 'primary_activity'
-        for pvalues in self.halo_people:
-            for p in pvalues:
-                p.busy = True
+        for p in self.halo_people:
+            p.busy = True
 
     @property
     def infected(self):
@@ -268,7 +265,7 @@ def parallel_update(self, direction, timestep):
 
         return
 
-    elif direction == 'pm' or direction == 'wknd':
+    elif direction == 'pm':
 
         # FIXME: What happens to inbound workers during initialisation?
         for other_rank in self.inbound_workers:
