@@ -22,6 +22,68 @@ def make_domains(super_areas, size):
         yield super_areas[s[0]:s[-1]+1]
 
 
+class DomainPopulation (list):
+    """
+    Holds the information necessary to manipulate loops over people in the domain
+    """
+    def __init__(self, people, inbound_people, n_inbound, n_outbound):
+        """
+        Initialise with a list of persons who are local, the inbound halos,  and the number of folk
+        in the inbound and outbound halo regions.
+        """
+        super().__init__(people)
+        self.n_inbound = n_inbound
+        self.n_outbound = n_outbound
+        self.n_resident = len(self) - self.n_inbound
+        self.halo_people = [p for p in [halo for rank, halo in inbound_people.items()]]
+
+    def __delitem__(self, key):
+        """
+        Remove a person from the domain
+        """
+        # To implement this we would have to make sure we know how to remove
+        # people in the inbound/outbound domain as well, and we don't know how to do that now.
+        # Really we don't want it to happen!
+        raise NotImplementedError
+
+
+    @property
+    def infected(self):
+        """
+        Return an iterator (list) which has all the infected people who are active in this domain
+        """
+        for person in self:
+            if person.infected and not person.busy:
+                yield person
+            else:
+                continue
+
+    @property
+    def number_infected(self):
+        """ Find out how many people are infected"""
+        return len([p for p in self.infected])
+
+    @property
+    def resident(self):
+        """
+        Iterator over people who are actually resident in the domain
+        """
+        for person in self:
+            if person not in self.halo_people:
+                yield person
+            else:
+                continue
+
+    def number_active(self, timestep_status):
+        """
+        Return the number of people who are active now
+        """
+        if timestep_status == 'primary_activity':
+            return len(self) - self.n_outbound + self.n_inbound
+        else:
+            return len(self) - self.n_inbound
+
+
 def parallel_setup(self, comm, debug=False):
     """ Initialise by defining what part of the known world is outside _THIS_ domain."""
 
@@ -34,7 +96,7 @@ def parallel_setup(self, comm, debug=False):
 
     # for now we collect local_peoole as the folk who need to be passed back as a subset of the world.
     # at some point in the future we can remove the rest of the world.
-    self.local_people = []
+    local_people = []
 
     # these are dictionaries of people in each domain who float back and forward.
     self.outside_workers = {i: {} for i in range(size)}
@@ -91,13 +153,13 @@ def parallel_setup(self, comm, debug=False):
 
         if live_here:
             live += 1
-            self.local_people.append(person)
+            local_people.append(person)
 
         if work_here and not live_here:
             # these folk commute into this domain, but where from?
             self.inbound_workers[super_index[home_super_area]][person.id] = person
             # these people are the halo people:
-            self.local_people.append(person)
+            local_people.append(person)
             inb += 1
         elif live_here and not work_here:
             # these folk commute out, but where to?
@@ -109,7 +171,7 @@ def parallel_setup(self, comm, debug=False):
             binable.append(person)
             gone += 1
 
-    print("RR", rank, live, inb, oub, gone, len(self.local_people))
+    print("RR", rank, live, inb, oub, gone, len(local_people))
     # we can't delete them inside the loop, bad things happen if we do that.
     # FIXME takes a LONG time for many people eg 1000s for 67000 peeps
     #for p in binable:
@@ -120,14 +182,17 @@ def parallel_setup(self, comm, debug=False):
 
     print(rank, npeople, live, inb, oub, gone)
     inbound = sum([len(i) for k,i in self.inbound_workers.items()])
-    outbound = sum([len(i) for k,i in self.outside_workers.items()])
+    outbound = sum([len(i) for k, i in self.outside_workers.items()])
+
+    self.local_people = DomainPopulation(local_people, self.inbound_workers, inbound, outbound)
+
     print(f'Partition {rank} has {self.people.total_people} (of {npeople} - {inbound} in and {outbound} out).')
     end_time = time.localtime()
     current_time = time.strftime("%H:%M:%S", end_time)
     delta_time = time.mktime(end_time) - time.mktime(start_time)
     print(f'Domain setup complete for rank {rank} at {current_time} ({delta_time}s)')
     # count people checks
-    assert len(self.local_people) == live + inb
+    assert len(local_people) == live + inb
     assert live + inb + gone == len(self.people)
 
 
@@ -191,10 +256,10 @@ def parallel_update(self, direction, timestep):
 
             if incoming:
                 for pid, infec in incoming.items():
-                   self.inbound_workers[pid].infection = infec
+                   outside_domain[pid].infection = infec
 
         # print and compare with simulator output
-        print("AM INFECTED", rank, len([p for p in self.local_people if p.infected == True]))
+        print("AM INFECTED", rank, self.local_people.number_infected)
 
         return
 
@@ -225,7 +290,7 @@ def parallel_update(self, direction, timestep):
             for pid, infec in incoming.items():
                 self.outside_workers[other_rank][pid].infection = infec
 
-        print("PM INFECTED", rank, len([p for p in self.local_people if p.infected == True]))
+        print("PM INFECTED", rank, self.local_people.number_infected)
 
 
 #def _put_updates(self, target_rank, tell_them, timestep):

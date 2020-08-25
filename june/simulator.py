@@ -326,10 +326,8 @@ class Simulator:
         # replaces the call to infected property
         # to be sure we are doing the health update only on the people
         # within each partition
-        domain_infected = [
-            p for p in self.world.local_people if p.infected == True
-        ]
-        for person in domain_infected:
+
+        for person in self.world.local_people.infected:
             infection = person.infection
             tick = perf_counter()
             previous_tag = infection.tag
@@ -400,15 +398,13 @@ class Simulator:
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
 
-        domain_infected = [p for p in self.world.local_people if p.infected == True]
-
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
-            f"number of infected = {len(domain_infected)}"
+            f"number of infected = {self.world.local_people.number_infected}"
         )
         infected_ids = []
-        first_person_id = self.world.local_people[0].id
+        first_person_id = self.world.people.infected[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -438,10 +434,10 @@ class Simulator:
             self.world.local_people[idx - first_person_id] for idx in infected_ids
         ]
         print("Current people in partition", n_people)
-        if n_people != len(self.world.local_people):
+        if n_people != self.world.local_people.number_active(self.timer.state):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
-                f"the total people number {len(self.world.local_people)}"
+                f"the total people number {self.world.local_people.number_active(self.timer.state)}"
             )
         # infect people
         if self.infection_selector:
