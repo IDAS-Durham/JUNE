@@ -41,6 +41,7 @@ class DomainPopulation:
         self.halo_people = [item for sublist in
                             [v.values() for v in [halo for halo in inbound_people.values()]]
                             for item in sublist]
+        self.outbound_not_working = 0
 
     def __delitem__(self, key):
         """
@@ -101,8 +102,9 @@ class DomainPopulation:
         """
         Return the number of people who are active now
         """
+        print('number active', len(self), self.n_outbound, self.n_inbound, self.outbound_not_working, timestep_status)
         if timestep_status == 'primary_activity':
-            return len(self) - self.n_outbound + self.n_inbound
+            return len(self) - self.n_outbound + self.n_inbound + self.outbound_not_working
         else:
             return len(self) - self.n_inbound
 
@@ -245,18 +247,21 @@ def parallel_update(self, direction, timer):
         # send people away
         # we need only to pass infection status of infected people, so only some of these folk need writing out
         # we need to loop over the _other_ ranks (avoiding puns about NCOs)
+        not_working_today = 0
         for other_rank in self.outside_workers:
             if other_rank == self.domain_id:
                 continue
             outside_domain = self.outside_workers[other_rank]
             tell_them = {}
             for pid, person in outside_domain.items():
-                if not person.hospitalised:
+                if person.hospitalised:
+                    not_working_today += 1
+                else:
                    person.active = False
-                #FIXME: Actually, this is the wrnog place, since policy may keep them at home ...
                 if person.infected:
-                    # tell_them.append(person)
                     print('>>a',self.domain_id, other_rank, person.id, person.infected, person.infection.infection_probability)
+                    # FIXME: we need to tell them if hospitalised here, coz they shouldn't be active there!
+                    # FIXME: which means Grenville, you need to pass a tuple rather than just the infection.
                     tell_them[pid] = person.infection
             # _put_updates(self, other_rank, tell_them, timestep)
             comm.send(tell_them, dest=other_rank, tag=100)
@@ -269,12 +274,15 @@ def parallel_update(self, direction, timer):
             for pid, person in outside_domain.items():
                 person.active = True
             # we might need to update the infection status of these people
+            # FIXME and we need to sort out their hospitalisation status
             # _get_updates(self, id, timestep)
             incoming = comm.recv(source=other_rank, tag=100)
 
             if incoming:
                 for pid, infec in incoming.items():
                    outside_domain[pid].infection = infec
+
+        self.local_people.outbound_not_working = not_working_today
 
     elif direction == 'pm':
 

@@ -263,9 +263,14 @@ class ActivityManager:
         ):
             self.world.parallel_update("pm", self.timer)
 
+        active = 0
         for person in self.world.local_people:
-            if person.dead or person.busy or not person.active:
+            if person.dead or person.busy:
+                active += 1
                 continue
+            if not person.active:
+                continue
+            active += 1
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
                 person=person,
@@ -277,3 +282,11 @@ class ActivityManager:
             )
 
             self.move_to_active_subgroup(allowed_activities, person)
+
+        try:
+            assert active == self.world.local_people.number_active(self.timer.state)
+        except AssertionError:
+            print(f'Failing with {active} people instead of {self.world.local_people.number_active(self.timer.state)}'
+                  f' (inbound {self.world.local_people.n_inbound}, outbound {self.world.local_people.n_outbound})'
+                  )
+            raise
