@@ -408,7 +408,6 @@ class Simulator:
             f" (of {self.world.local_people.number_active(self.timer.state)} active in domain={self.world.domain_id})"
         )
         infected_ids = []
-        first_person_id = self.world.local_people[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -436,7 +435,7 @@ class Simulator:
                         #        / tprob_norm
                         #    )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.local_people[idx]  for idx in infected_ids]
+        people_to_infect = [self.world.local_people.from_index(idx) for idx in infected_ids]
         if n_people != self.world.local_people.number_active(self.timer.state):
             raise SimulatorError(
                 f"Number of people active {n_people} (domain {self.world.domain_id}) does not match "

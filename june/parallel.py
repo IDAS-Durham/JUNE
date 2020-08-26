@@ -22,16 +22,17 @@ def make_domains(super_areas, size):
         yield super_areas[s[0]:s[-1]+1]
 
 
-class DomainPopulation (dict):
+class DomainPopulation:
     """
-    Holds the information necessary to manipulate loops over people in the domain
+    Holds the information necessary to manipulate loops over people in the domain.
+    Provides a list-like iterator, but also includes the normal dictionary index.
     """
     def __init__(self, people, inbound_people, n_inbound, n_outbound):
         """
         Initialise with a dictionary of persons who are local, the inbound halos,  and the number of folk
         in the inbound and outbound halo regions.
         """
-        super().__init__(people)
+        self.people = people
         self.n_inbound = n_inbound
         self.n_outbound = n_outbound
         self.n_resident = len(self) - self.n_inbound
@@ -48,6 +49,16 @@ class DomainPopulation (dict):
         # Really we don't want it to happen!
         raise NotImplementedError
 
+    def __iter__(self):
+        for key, person in self.people.items():
+            yield person
+
+    def __len__(self):
+        return len(self.people)
+
+    def from_index(self, key):
+        return self.people[key]
+
     def initialise(self, timer_state):
         """
         At beginning of the simulation, some people are not actually in the domain.
@@ -62,7 +73,7 @@ class DomainPopulation (dict):
         """
         Return an iterator (list) which has all the infected people who are active in this domain
         """
-        for key, person in self.items():
+        for person in self:
             if person.infected and person.active:
                 yield person
             else:
@@ -78,7 +89,7 @@ class DomainPopulation (dict):
         """
         Iterator over people who are actually resident in the domain
         """
-        for key, person in self.items():
+        for person in self:
             if person not in self.halo_people:
                 yield person
             else:
