@@ -15,7 +15,7 @@ default_groceries_coordinates_filename = (
 
 
 class Grocery(SocialVenue):
-    max_size = 100
+    max_size = 200
 
 
 class Groceries(SocialVenues):
