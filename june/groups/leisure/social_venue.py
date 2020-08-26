@@ -15,12 +15,12 @@ class SocialVenueError(BaseException):
 
 
 class SocialVenue(Group):
+    max_size = np.inf
     class SubgroupType(IntEnum):
         default = 0
 
-    def __init__(self, max_size=np.inf):
+    def __init__(self):
         super().__init__()
-        self.max_size = max_size
         self.super_area = None
 
     def add(self, person, activity="leisure"):
@@ -28,6 +28,8 @@ class SocialVenue(Group):
         setattr(person.subgroups, activity, self.subgroups[0])
 
     def get_leisure_subgroup(self, person):
+        if self.size >= self.max_size:
+            return None
         return self.subgroups[0]
 
 
@@ -181,7 +183,7 @@ class SocialVenues(Supergroup):
         return cls(social_venues)
 
     def make_tree(self):
-        self.ball_tree = BallTree(np.array([np.deg2rad(sv.coordinates) for sv in self]))
+        self.ball_tree = BallTree(np.array([np.deg2rad(sv.coordinates) for sv in self]), metric = 'haversine')
 
     def add_to_super_areas(self, super_areas: SuperAreas):
         """
