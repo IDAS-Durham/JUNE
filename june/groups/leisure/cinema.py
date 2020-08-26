@@ -15,7 +15,7 @@ default_config_filename = configs_path / "defaults/groups/leisure/cinemas.yaml"
 
 
 class Cinema(SocialVenue):
-    max_size = 200
+    max_size = 1000
 
 
 class Cinemas(SocialVenues):

@@ -14,7 +14,7 @@ default_config_filename = configs_path / "defaults/groups/leisure/pubs.yaml"
 
 
 class Pub(SocialVenue):
-    max_size = 50
+    max_size = 100
     pass
 
 class Pubs(SocialVenues):
