@@ -22,13 +22,13 @@ def make_domains(super_areas, size):
         yield super_areas[s[0]:s[-1]+1]
 
 
-class DomainPopulation (list):
+class DomainPopulation (dict):
     """
     Holds the information necessary to manipulate loops over people in the domain
     """
     def __init__(self, people, inbound_people, n_inbound, n_outbound):
         """
-        Initialise with a list of persons who are local, the inbound halos,  and the number of folk
+        Initialise with a dictionary of persons who are local, the inbound halos,  and the number of folk
         in the inbound and outbound halo regions.
         """
         super().__init__(people)
@@ -62,7 +62,7 @@ class DomainPopulation (list):
         """
         Return an iterator (list) which has all the infected people who are active in this domain
         """
-        for person in self:
+        for key, person in self.items():
             if person.infected and person.active:
                 yield person
             else:
@@ -78,7 +78,7 @@ class DomainPopulation (list):
         """
         Iterator over people who are actually resident in the domain
         """
-        for person in self:
+        for key, person in self.items():
             if person not in self.halo_people:
                 yield person
             else:
@@ -106,7 +106,7 @@ def parallel_setup(self, comm, debug=False):
 
     # for now we collect local_peoole as the folk who need to be passed back as a subset of the world.
     # at some point in the future we can remove the rest of the world.
-    local_people = []
+    local_people = {}
 
     # these are dictionaries of people in each domain who float back and forward.
     self.outside_workers = {i: {} for i in range(size)}
@@ -163,12 +163,12 @@ def parallel_setup(self, comm, debug=False):
 
         if live_here:
             live += 1
-            local_people.append(person)
+            local_people[person.id] = person
 
         if work_here and not live_here:
             # these folk commute into this domain, but where from?
             self.inbound_workers[super_index[home_super_area]][person.id] = person
-            local_people.append(person)
+            local_people[person.id] = person
             inb += 1
         elif live_here and not work_here:
             # these folk commute out, but where to?

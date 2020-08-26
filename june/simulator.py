@@ -404,7 +404,8 @@ class Simulator:
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
-            f"number of infected = {self.world.local_people.number_infected} (domain={self.world.domain_id})"
+            f"number of infected = {self.world.local_people.number_infected}"
+            f" (of {self.world.local_people.number_active(self.timer.state)} active in domain={self.world.domain_id})"
         )
         infected_ids = []
         first_person_id = self.world.local_people[0].id
@@ -423,22 +424,19 @@ class Simulator:
                                 group.spec, n_infected
                             )
                         # assign blame of infections
-                        tprob_norm = sum(int_group.transmission_probabilities)
-                        for infector_id in chain.from_iterable(int_group.infector_ids):
-                            #FIXME: I worry about this order assumption .... (BNL)
-                            print('pid', first_person_id, infector_id, len(self.world.local_people))
-                            infector = self.world.local_people[infector_id - first_person_id] # why this?  # V: good question!
-                            assert infector.id == infector_id
-                            infector.infection.number_of_infected += (
-                                n_infected
-                                * infector.infection.transmission.probability
-                                / tprob_norm
-                            )
+                        #tprob_norm = sum(int_group.transmission_probabilities)
+                        #for infector_id in chain.from_iterable(int_group.infector_ids):
+                        #    #FIXME: I worry about this order assumption .... (BNL)
+                        #    print('pid', self.world.domain_id, first_person_id, infector_id, len(self.world.local_people))
+                        #    infector = self.world.local_people[infector_id - first_person_id] # why this?  # V: good question!
+                        #    assert infector.id == infector_id
+                        #    infector.infection.number_of_infected += (
+                        #        n_infected
+                        #        * infector.infection.transmission.probability
+                        #        / tprob_norm
+                        #    )
                     infected_ids += new_infected_ids
-        people_to_infect = [
-            self.world.local_people[idx - first_person_id] for idx in infected_ids
-        ]
-        print("Active people in partition", n_people)
+        people_to_infect = [self.world.local_people[idx]  for idx in infected_ids]
         if n_people != self.world.local_people.number_active(self.timer.state):
             raise SimulatorError(
                 f"Number of people active {n_people} (domain {self.world.domain_id}) does not match "
