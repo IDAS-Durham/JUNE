@@ -118,7 +118,6 @@ def restore_care_homes_properties_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    print("restoring care homes...")
     first_area_id = world.areas[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         first_care_home_id = world.care_homes[0].id
