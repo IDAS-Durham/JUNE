@@ -48,6 +48,8 @@ class Person(dataobject):
     # infection
     susceptibility: float = 1.0
     dead: bool = False
+    # parallelism
+    active: bool = True
 
     @classmethod
     def from_attributes(

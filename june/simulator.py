@@ -327,7 +327,6 @@ class Simulator:
         # to be sure we are doing the health update only on the people
         # within each partition
 
-        print("CURRDOMAININF", len(list(self.world.local_people.infected)))
         for person in self.world.local_people.infected:
             infection = person.infection
             tick = perf_counter()
@@ -426,6 +425,8 @@ class Simulator:
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(int_group.infector_ids):
+                            #FIXME: I worry about this order assumption .... (BNL)
+                            print('pid', first_person_id, infector_id, len(self.world.local_people))
                             infector = self.world.local_people[infector_id - first_person_id] # why this?  # V: good question!
                             assert infector.id == infector_id
                             infector.infection.number_of_infected += (

@@ -182,6 +182,7 @@ class ActivityManager:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
+
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -240,8 +241,8 @@ class ActivityManager:
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
-        they stay at home. If they work outside the domain, they are marked
-        as busy.
+        they stay at home. If they work outside the domain, their activity
+        status is modified.
 
         Parameters
         ----------
@@ -261,12 +262,10 @@ class ActivityManager:
             and self.timer.last_state == "primary_activity"
         ):
             self.world.parallel_update("pm", self.timer.now)
-        else:
-            self.world.parallel_update("wknd", self.timer.now)
 
         print("LOCALS", len(self.world.local_people))
         for person in self.world.local_people:
-            if person.dead or person.busy:
+            if person.dead or person.busy or not person.active:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
@@ -277,4 +276,5 @@ class ActivityManager:
                 key_ratio=self.key_ratio,
                 random_ratio=self.random_ratio,
             )
+
             self.move_to_active_subgroup(allowed_activities, person)
