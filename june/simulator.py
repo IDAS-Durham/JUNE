@@ -440,6 +440,7 @@ class Simulator:
             raise SimulatorError(
                 f"Number of people active {n_people} (domain {self.world.domain_id}) does not match "
                 f"the total people number {self.world.local_people.number_active(self.timer.state)}"
+                f" for {self.timer.state}"
             )
         # infect people
         if self.infection_selector:

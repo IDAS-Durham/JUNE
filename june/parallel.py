@@ -10,9 +10,11 @@
 #   world.parallel_setup(comm)
 #
 
-import json
+import logging
 import numpy, time
 from june.mpi_setup import comm, size, rank
+
+logger = logging.getLogger(__name__)
 
 def make_domains(super_areas, size):
     """ Generator to partition world into domains"""
@@ -216,7 +218,7 @@ def parallel_setup(self, comm, debug=False):
     assert live + inb + gone == len(self.people)
 
 
-def parallel_update(self, direction, timestep):
+def parallel_update(self, direction, timer):
     """
     (This method overrides the superclass mixin stub)
 
@@ -233,6 +235,10 @@ def parallel_update(self, direction, timestep):
         direction='am': people from outside come in to work or people inside leave to work,
         direction='pm': people return from work or head home to another domain.
     """
+
+    logger.info(f"Direction {direction} in domain {self.domain_id}"
+                f" - active/infected people initially "
+                f"{self.local_people.number_active(timer.last_state)}/{self.local_people.number_infected}")
 
     # Note that we have to put people before getting people, otherwise we get a deadlock
     if direction == 'am':
@@ -270,11 +276,6 @@ def parallel_update(self, direction, timestep):
                 for pid, infec in incoming.items():
                    outside_domain[pid].infection = infec
 
-        # print and compare with simulator output
-        print("AM INFECTED", rank, self.local_people.number_infected)
-
-        return
-
     elif direction == 'pm':
 
         # FIXME: What happens to inbound workers during initialisation?
@@ -302,7 +303,9 @@ def parallel_update(self, direction, timestep):
             for pid, infec in incoming.items():
                 self.outside_workers[other_rank][pid].infection = infec
 
-        print("PM INFECTED", rank, self.local_people.number_infected)
+    logger.info(f"Direction {direction} in domain {self.domain_id}"
+                f" - active/infected people now "
+                f"{self.local_people.number_active(timer.state)}/{self.local_people.number_infected}")
 
 
 #def _put_updates(self, target_rank, tell_them, timestep):

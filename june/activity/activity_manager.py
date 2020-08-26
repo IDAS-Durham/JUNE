@@ -256,14 +256,13 @@ class ActivityManager:
         # first handle any parallelism to get who we need to work with
         # assign groups per processed domain
         if self.timer.state == "primary_activity":
-            self.world.parallel_update("am", self.timer.now)
+            self.world.parallel_update("am", self.timer)
         elif (
             self.timer.state == "commute"
             and self.timer.last_state == "primary_activity"
         ):
-            self.world.parallel_update("pm", self.timer.now)
+            self.world.parallel_update("pm", self.timer)
 
-        print("LOCALS", len(self.world.local_people))
         for person in self.world.local_people:
             if person.dead or person.busy or not person.active:
                 continue
