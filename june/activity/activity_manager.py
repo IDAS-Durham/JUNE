@@ -264,11 +264,13 @@ class ActivityManager:
             self.world.parallel_update("pm", self.timer)
 
         active = 0
+        not_active = 0
         for person in self.world.local_people:
             if person.dead or person.busy:
                 active += 1
                 continue
             if not person.active:
+                not_active +=1
                 continue
             active += 1
             allowed_activities = self.policies.individual_policies.apply(
@@ -283,10 +285,22 @@ class ActivityManager:
 
             self.move_to_active_subgroup(allowed_activities, person)
 
+        print(f'Active {active}, not active {not_active}, {len(self.world.local_people)}, {len(self.world.local_people.halo_people)},'+
+            f'{len([p for p in self.world.local_people.halo_people if p.active])}')
+
+        first_halo = self.world.local_people.halo_people[0]
+        if self.timer.state == 'primary_activity':
+            assert self.world.local_people.from_index(first_halo.id).active == True
+
+        assert first_halo in self.world.local_people
+
         try:
             assert active == self.world.local_people.number_active(self.timer.state)
         except AssertionError:
             print(f'Failing with {active} people instead of {self.world.local_people.number_active(self.timer.state)}'
-                  f' (inbound {self.world.local_people.n_inbound}, outbound {self.world.local_people.n_outbound})'
+                  f' (inbound {self.world.local_people.n_inbound}, outbound {self.world.local_people.n_outbound},'
+                  f' resident {self.world.local_people.n_resident})\n'
+                  f'(deltas {active - self.world.local_people.number_active(self.timer.state)}, '
+                  f' {self.world.local_people.n_inbound-self.world.local_people.n_outbound})'
                   )
             raise

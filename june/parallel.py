@@ -67,6 +67,7 @@ class DomainPopulation:
         At beginning of the simulation, some people are not actually in the domain.
         We need to start at home. Not at work.
         """
+        print('Initialising halo')
         assert timer_state != 'primary_activity'
         for p in self.halo_people:
             p.active = False
@@ -104,7 +105,7 @@ class DomainPopulation:
         """
         print('number active', len(self), self.n_outbound, self.n_inbound, self.outbound_not_working, timestep_status)
         if timestep_status == 'primary_activity':
-            return len(self) - self.n_outbound + self.n_inbound + self.outbound_not_working
+            return len(self) - self.n_outbound + self.outbound_not_working
         else:
             return len(self) - self.n_inbound
 
@@ -267,13 +268,12 @@ def parallel_update(self, direction, timer):
             comm.send(tell_them, dest=other_rank, tag=100)
 
         # pay attention to people who are coming in
+        more_active = 0
         for other_rank in self.inbound_workers:
             if other_rank == self.domain_id:
                 continue
             outside_domain = self.inbound_workers[other_rank]
-            for pid, person in outside_domain.items():
-                person.active = True
-            # we might need to update the infection status of these people
+
             # FIXME and we need to sort out their hospitalisation status
             # _get_updates(self, id, timestep)
             incoming = comm.recv(source=other_rank, tag=100)
@@ -282,6 +282,12 @@ def parallel_update(self, direction, timer):
                 for pid, infec in incoming.items():
                    outside_domain[pid].infection = infec
 
+            for pid, person in outside_domain.items():
+                person.active = True
+                more_active += 1
+            print ('rank check', pid, person.active, self.local_people.from_index(pid).active )
+
+        print ('more_active', more_active, self.domain_id)
         self.local_people.outbound_not_working = not_working_today
 
     elif direction == 'pm':
@@ -310,6 +316,9 @@ def parallel_update(self, direction, timer):
                 print('>>i', self.domain_id, other_rank, [id for id, infec in incoming.items()])
             for pid, infec in incoming.items():
                 self.outside_workers[other_rank][pid].infection = infec
+
+            for pid, person in self.outside_workers[other_rank].items():
+                self.outside_workers[other_rank][pid].active=True
 
     logger.info(f"Direction {direction} in domain {self.domain_id}"
                 f" - active/infected people now "
