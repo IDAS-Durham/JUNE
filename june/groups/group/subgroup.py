@@ -69,8 +69,13 @@ class Subgroup(AbstractGroup):
         """
         Add a person to this group
         """
-        self.people.append(person)
-        person.busy = True
+        # VP: temporary hack to allow full run without SimulatorError
+        # for different numbers of active and total in domain;
+        # see explanation in
+        # https://github.com/IDAS-Durham/JUNE/issues/282#issuecomment-681947074
+        if person.active:
+            self.people.append(person)
+            person.busy = True
 
     def remove(self, person: Person):
         self.people.remove(person)
