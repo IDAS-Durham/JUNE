@@ -168,13 +168,14 @@ def load_commute_hubs_from_hdf5(file_path: str):
         n_commute_hubs = commute_hubs.attrs["n_commute_hubs"]
         ids = commute_hubs["id"]
         city_names = commute_hubs["city_names"]
+        commute_through = commute_hubs["commute_through"]
         commute_units = commute_hubs["commute_units"]
         commute_units_list = []
-        commute_through_list = []
         for k in range(n_commute_hubs):
             commute_hub = CommuteHub(lat_lon=None, city=city_names[k].decode())
             commute_hub.id = ids[k]
             commute_hub.city = city_names[k].decode()
+            commute_hub.commute_through = commute_through[k]
             for unit_id in commute_units[k]:
                 cunit = CommuteUnit(
                     commutehub_id=ids[k],
