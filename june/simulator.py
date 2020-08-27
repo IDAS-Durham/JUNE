@@ -401,6 +401,8 @@ class Simulator:
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
 
+        n_dead = n_people
+
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
@@ -437,6 +439,7 @@ class Simulator:
                     infected_ids += new_infected_ids
         people_to_infect = [self.world.local_people.from_index(idx) for idx in infected_ids]
         if n_people != self.world.local_people.number_active(self.timer.state):
+            print(self.world.debug_parallel, n_people, n_dead)
             raise SimulatorError(
                 f"Number of people active {n_people} (domain {self.world.domain_id}) does not match "
                 f"the total people number {self.world.local_people.number_active(self.timer.state)}"

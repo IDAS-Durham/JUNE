@@ -260,7 +260,6 @@ def parallel_update(self, direction, timer):
                 else:
                    person.active = False
                 if person.infected:
-                    print('>>a',self.domain_id, other_rank, person.id, person.infected, person.infection.infection_probability)
                     # FIXME: we need to tell them if hospitalised here, coz they shouldn't be active there!
                     # FIXME: which means Grenville, you need to pass a tuple rather than just the infection.
                     tell_them[pid] = person.infection
@@ -285,9 +284,7 @@ def parallel_update(self, direction, timer):
             for pid, person in outside_domain.items():
                 person.active = True
                 more_active += 1
-            print ('rank check', pid, person.active, self.local_people.from_index(pid).active )
 
-        print ('more_active', more_active, self.domain_id)
         self.local_people.outbound_not_working = not_working_today
 
     elif direction == 'pm':
@@ -312,8 +309,6 @@ def parallel_update(self, direction, timer):
                 continue
             incoming = comm.recv(source=other_rank, tag=100)
 
-            if incoming:
-                print('>>i', self.domain_id, other_rank, [id for id, infec in incoming.items()])
             for pid, infec in incoming.items():
                 self.outside_workers[other_rank][pid].infection = infec
 

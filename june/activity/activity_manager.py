@@ -265,13 +265,26 @@ class ActivityManager:
 
         active = 0
         not_active = 0
+        dead = 0
+        busy = 0
+        hospitalised = 0
         for person in self.world.local_people:
-            if person.dead or person.busy:
-                active += 1
-                continue
             if not person.active:
                 not_active +=1
+            if person.dead or person.busy:
+                active += 1
+                if person.dead:
+                    dead += 1
+                else:
+                    busy += 1
+                if person.active:
+                    print('Problem?', self.world.domain_id)
+            if not person.active:
                 continue
+            if person.dead or person.busy:
+                continue
+            if person.hospitalised:
+                hospitalised += 1
             active += 1
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
@@ -295,12 +308,17 @@ class ActivityManager:
         assert first_halo in self.world.local_people
 
         try:
+            self.world.debug_parallel = {'domain': self.world.domain_id, 'active': active, 'hospitalised': hospitalised, 'dead': dead, 'busy': busy,
+                'expected_active': self.world.local_people.number_active(self.timer.state), 'not_active':not_active,
+                                         'inb':self.world.local_people.n_inbound, 'oub': self.world.local_people.n_outbound}
             assert active == self.world.local_people.number_active(self.timer.state)
+
         except AssertionError:
             print(f'Failing with {active} people instead of {self.world.local_people.number_active(self.timer.state)}'
                   f' (inbound {self.world.local_people.n_inbound}, outbound {self.world.local_people.n_outbound},'
                   f' resident {self.world.local_people.n_resident})\n'
                   f'(deltas {active - self.world.local_people.number_active(self.timer.state)}, '
-                  f' {self.world.local_people.n_inbound-self.world.local_people.n_outbound})'
+                  f' {self.world.local_people.n_inbound-self.world.local_people.n_outbound}',
+                  f' \n {self.world.debug_parallel}'
                   )
-            raise
+            #raise
