@@ -130,9 +130,15 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         ids = []
         cities = []
         commute_units_list = []
+        commute_through_list = []
         for hub in commute_hubs:
             ids.append(hub.id)
             cities.append(hub.city)
+            commute_through = []
+            for commute_throu in hub.commute_through:
+                commute_through.append(commute_throu.id)
+            commute_through = np.array(commute_through, dtype=np.int)
+            commute_through_list.append(commute_through)
             commute_units = []
             for commute_unit in hub.commuteunits:
                 commute_units.append(commute_unit.id)
@@ -140,11 +146,13 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
 
         ids = np.array(ids, dtype=np.int)
         cities = np.array(cities, dtype="S20")
+        commute_through_list = np.array(commute_through_list, dtype=dt)
         commute_units_list = np.array(commute_units_list, dtype=dt)
         commute_hubs_dset.attrs["n_commute_hubs"] = n_hubs
         commute_hubs_dset.create_dataset("id", data=ids)
         commute_hubs_dset.create_dataset("city_names", data=cities)
         commute_hubs_dset.create_dataset("commute_units", data=commute_units_list)
+        commute_hubs.dset.create_dataset("commute_through", data=commute_through_list)
 
 
 def load_commute_hubs_from_hdf5(file_path: str):
@@ -162,6 +170,7 @@ def load_commute_hubs_from_hdf5(file_path: str):
         city_names = commute_hubs["city_names"]
         commute_units = commute_hubs["commute_units"]
         commute_units_list = []
+        commute_through_list = []
         for k in range(n_commute_hubs):
             commute_hub = CommuteHub(lat_lon=None, city=city_names[k].decode())
             commute_hub.id = ids[k]
