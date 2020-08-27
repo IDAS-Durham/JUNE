@@ -14,7 +14,7 @@ class CommuteHub(Group):
     Defines hubs around cities through with people commute and assigns people to those commute hubs
     """
 
-    def __init__(self, lat_lon, city):
+    def __init__(self, lat_lon, city, super_area=None):
         """
         id: (int) id of the commute hub
         lat_lon: (array) lat/lon of the commute hub
@@ -26,7 +26,9 @@ class CommuteHub(Group):
         
         self.lat_lon = lat_lon
         self.city = city # station the hub is affiliated to
+        self.super_area = super_area
         self.commuteunits = []
+        self.commute_through = []
 
     def add(self, person):
         super().add(person, activity="commute", subgroup_type=0)
@@ -129,7 +131,8 @@ class CommuteHubs(Supergroup):
                 commute_hub = CommuteHub(
                     #commutehub_id = ids,
                     lat_lon = hub,
-                    city = commutecity.city
+                    city = commutecity.city,
+                    super_area = commutecity.super_area
                 )
 
                 ids += 1
