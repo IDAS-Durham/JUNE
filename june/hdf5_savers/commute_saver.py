@@ -186,7 +186,6 @@ def load_commute_hubs_from_hdf5(file_path: str):
 def restore_commute_properties_from_hdf5(world: World, file_path: str):
     # restore commute
     first_person_id = world.people[0].id
-    print("restoring commute...")
     first_hub_id = world.commutehubs[0].id
     # commute
     for city in world.commutecities:
