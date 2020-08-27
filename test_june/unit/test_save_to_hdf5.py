@@ -294,6 +294,10 @@ class TestSaveCommute:
         for hub, hub_recovered in zip(commute_hubs, commute_hubs_recovered):
             assert hub.id == hub_recovered.id
             assert hub.city == hub_recovered.city
+            for commute_through, commute_through_recovered in zip(
+                hub.commute_through, hub_recovered.commute_through
+            ):
+                assert commute_through.id == commute_through_recovered
             for person1, person2 in zip(hub.people, hub_recovered.people):
                 assert person1.id == person2
             for unit1, unit2 in zip(hub.commuteunits, hub_recovered.commuteunits):
