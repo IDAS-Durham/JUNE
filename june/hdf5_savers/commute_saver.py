@@ -116,8 +116,7 @@ def load_commute_cities_from_hdf5(file_path: str):
                 commute_city.commutecityunits.append(cu)
                 commute_city_units_list.append(cu)
             commute_cities_list.append(commute_city)
-    cc = CommuteCities()
-    cc.members = commute_cities_list
+    cc = CommuteCities(commute_cities_list)
     ccu = CommuteCityUnits(cc)
     ccu.members = commute_city_units_list
     return cc, ccu
