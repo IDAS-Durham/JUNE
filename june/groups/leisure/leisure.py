@@ -162,7 +162,9 @@ class Leisure:
                     person.residence.group
                 )
 
-    def get_leisure_probability_for_age_and_sex(self, age, sex, delta_time, is_weekend):
+    def get_leisure_probability_for_age_and_sex(
+        self, age, sex, delta_time, is_weekend, working_hours
+    ):
         """
         Computes the probabilities of going to different leisure activities,
         and dragging the household with the person that does the activity.
@@ -171,6 +173,9 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
+            if activity == "household_visits" and working_hours:
+                # we do not have household visits during working hours as most households by then.
+                continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
@@ -285,16 +290,26 @@ class Leisure:
             person.subgroups.leisure = subgroup
             return subgroup
 
-    def generate_leisure_probabilities_for_timestep(self, delta_time, is_weekend):
+    def generate_leisure_probabilities_for_timestep(
+        self, delta_time: float, working_hours: bool, is_weekend: bool
+    ):
         men_probs = [
             self.get_leisure_probability_for_age_and_sex(
-                age, "m", delta_time, is_weekend
+                age=age,
+                sex="m",
+                delta_time=delta_time,
+                is_weekend=is_weekend,
+                working_hours=working_hours,
             )
             for age in range(0, 100)
         ]
         women_probs = [
             self.get_leisure_probability_for_age_and_sex(
-                age, "f", delta_time, is_weekend
+                age=age,
+                sex="f",
+                delta_time=delta_time,
+                is_weekend=is_weekend,
+                working_hours=working_hours,
             )
             for age in range(0, 100)
         ]

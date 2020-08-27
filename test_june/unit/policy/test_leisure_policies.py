@@ -54,7 +54,7 @@ class TestCloseLeisure:
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            10000, False
+            10000, False, False
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_before_policy, 0.0
@@ -67,7 +67,7 @@ class TestCloseLeisure:
         )
         assert list(leisure_instance.closed_venues) == ["pub"]
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            10000, False
+            10000, False, False
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
@@ -100,7 +100,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False
+            0.1, False, False
         )
         original_male_pub_probabilities = sim.activity_manager.leisure.leisure_distributors[
             "pubs"
@@ -147,7 +147,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False
+            0.1, False, False
         )
         assert (
             sim.activity_manager.leisure.leisure_distributors[
@@ -185,7 +185,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False
+            0.1, False, False
         )
         pubs1_visits_restored = 0
         pubs2_visits_restored = 0
