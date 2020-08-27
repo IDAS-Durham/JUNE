@@ -61,7 +61,7 @@ class CommuteUnits(Supergroup):
 
         ids = 0
         for hub in self.commutehubs:
-            no_passengers = len(hub.people)
+            no_passengers = len(hub.commute_through)
             no_units = int(float(no_passengers)/50) + 1
             # assign unit to peak/not peak times with prob 0.8/0.2
             # make this a parameter in the future

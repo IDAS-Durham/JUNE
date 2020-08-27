@@ -152,7 +152,7 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         commute_hubs_dset.create_dataset("id", data=ids)
         commute_hubs_dset.create_dataset("city_names", data=cities)
         commute_hubs_dset.create_dataset("commute_units", data=commute_units_list)
-        commute_hubs.dset.create_dataset("commute_through", data=commute_through_list)
+        commute_hubs_dset.create_dataset("commute_through", data=commute_through_list)
 
 
 def load_commute_hubs_from_hdf5(file_path: str):
