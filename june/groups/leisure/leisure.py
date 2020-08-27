@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-from random import random
+from random import random, sample
 from typing import List, Dict
 from june.demography import Person
 from june.demography.geography import Geography, SuperAreas
@@ -272,8 +272,13 @@ class Leisure:
             if candidates_length == 1:
                 subgroup = candidates[0].get_leisure_subgroup(person)
             else:
-                idx = 2000 % candidates_length
-                subgroup = candidates[idx].get_leisure_subgroup(person)
+                indices = sample(range(len(candidates)), len(candidates))
+                for idx in indices:
+                    subgroup = candidates[idx].get_leisure_subgroup(person)
+                    if subgroup is not None:
+                        break
+            if subgroup is None:
+                return
             self.send_household_with_person_if_necessary(
                 person, subgroup, prob_age_sex["drags_household"][activity]
             )

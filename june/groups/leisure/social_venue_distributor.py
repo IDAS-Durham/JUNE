@@ -1,5 +1,5 @@
 import numpy as np
-from random import choice, random
+from random import choice, random, sample, randint
 from numba import jit
 from numba import typed
 from itertools import chain
@@ -119,19 +119,21 @@ class SocialVenueDistributor:
         return 1 - np.exp(-poisson_parameter * delta_time)
 
     def get_possible_venues_for_household(self, household: Household):
+        """
+        Given a household location, searches for the social venues inside
+        ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
+        of them randomly. If there are no social venues inside the maximum distance,
+        it returns the closest one.
+        """
         house_location = household.area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
             house_location, self.maximum_distance
         )
         if potential_venues is None:
-            venue = self.social_venues.get_closest_venues(house_location, k=1)[0]
-            return (venue,)
-
-        potential_venues = np.random.choice(
-            potential_venues[: min(len(potential_venues), self.neighbours_to_consider)],
-            size=self.neighbours_to_consider,
-        )
-        return tuple(potential_venues,)
+            return (self.social_venues.get_closest_venues(house_location, k=1)[0], )
+        indices_len = min(len(potential_venues), self.neighbours_to_consider)
+        random_idx_choice = sample(range(len(potential_venues)), indices_len)
+        return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_social_venue_for_person(self, person):
         """
@@ -149,19 +151,13 @@ class SocialVenueDistributor:
             person_location, self.maximum_distance
         )
         if potential_venues is None:
-            venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
-            return venue
+            return self.social_venues.get_closest_venues(person_location, k=1)[0]
         else:
-            venue_candidates = choice(
+            return choice(
                 potential_venues[
                     : min(len(potential_venues), self.neighbours_to_consider)
-                ],
-                size=self.neighbours_to_consider,
+                ]
             )
-            for venue in venue_candidates:
-                if venue.size < venue.max_size:
-                    return venue
-            return venue_candidates[0]
 
     def person_drags_household(self):
         """
