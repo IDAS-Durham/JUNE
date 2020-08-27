@@ -224,7 +224,9 @@ class ActivityManager:
                     date=self.timer.date, leisure=self.leisure,
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
-                self.timer.duration, self.timer.is_weekend,
+                delta_time=self.timer.duration,
+                is_weekend=self.timer.is_weekend,
+                working_hours= "primary_activity" in activities
             )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
