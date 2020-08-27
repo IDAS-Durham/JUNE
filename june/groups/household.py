@@ -81,7 +81,6 @@ class Household(Group):
         don't go do any other leisure activities.
         """
         for resident in self.residents:
-            print("resident checking")
             if resident.busy:
                 for subgroup in resident.subgroups.iter():
                     if subgroup is not None and resident in subgroup.people:
