@@ -59,7 +59,7 @@ class TestCommuteHub:
         return CommuteHub(city="Manchester", lat_lon=[-2, 52.0],)
 
     def test__hub_grouptype(self, hub):
-        assert len(hub.people) == 0
+        assert len(hub.commute_through) == 0
         assert len(hub.commuteunits) == 0
 
 
@@ -115,10 +115,7 @@ class TestNewcastle:
 
     @pytest.fixture(name="commutecities_nc")
     def create_cities_with_people(self, world_nc):
-        commutecities = CommuteCities()
-        commutecities.from_file()
-        commutecities.init_non_london()
-        commutecities.init_london()
+        commutecities = CommuteCities.for_super_areas(world_nc.super_areas)
         commutecity_distributor = CommuteCityDistributor(
             commutecities.members, world_nc.super_areas.members
         )
