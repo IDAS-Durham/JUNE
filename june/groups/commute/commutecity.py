@@ -69,8 +69,12 @@ class CommuteCity(Group):
         self.commutecityunits = []
 
     def add(self, person):
+        super().add(
+            person=person, activity="commute", subgroup_type=self.SubgroupType.default
+        )
+
+    def add_internal_commuter(self, person):
         self.commute_internal.append(person)
-        person.subgroups.commute = self[0]
 
 
 class CommuteCities(Supergroup):
