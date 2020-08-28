@@ -31,7 +31,8 @@ class CommuteHub(Group):
         self.commute_through = []
 
     def add(self, person):
-        super().add(person, activity="commute", subgroup_type=0)
+        #super().add(person, activity="commute", subgroup_type=0)
+        self[0].append(person)
 
 class CommuteHubs(Supergroup):
     """
