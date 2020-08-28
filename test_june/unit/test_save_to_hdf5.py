@@ -433,11 +433,15 @@ class TestSaveWorld:
                 assert v1.super_area.name == v2.super_area.name
 
     def test__commute(self, world_h5, world_h5_loaded):
+        assert len(world_h5.commutecities) > 0
+        assert len(world_h5.commutecities) == len(world_h5_loaded.commutecities)
         for city1, city2 in zip(world_h5.commutecities, world_h5_loaded.commutecities):
             assert city1.city == city2.city
             for hub1, hub2 in zip(city1.commutehubs, city2.commutehubs):
                 assert hub1.id == hub2.id
 
+        assert len(world_h5.commutehubs) > 0
+        assert len(world_h5.commutehubs) == len(world_h5_loaded.commutehubs)
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
             people_in_hub1 = [person.id for person in hub1.people]
             people_in_hub2 = [person.id for person in hub2.people]
@@ -446,6 +450,10 @@ class TestSaveWorld:
                 assert len(people_in_hub1) == 0
             else:
                 assert (np.sort(people_in_hub1) == np.sort(people_in_hub2)).all()
+            for p1, p2 in zip(hub1.commute_through, hub2.commute_through):
+                assert p1.id == p2.id
+                assert p1.age == p2.age
+                assert p1.sex == p2.sex
 
     def test__household_residents(self, world_h5, world_h5_loaded):
         for h1, h2 in zip(world_h5.households, world_h5_loaded.households):
