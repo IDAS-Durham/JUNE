@@ -30,6 +30,4 @@ class CommuteCityDistributor:
                         ):
                             commutecity.add(
                                 person,
-#                                activity="commute",
-#                                subgroup_type=commutecity.SubgroupType.default,
                             )
