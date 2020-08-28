@@ -57,6 +57,10 @@ class CommuteCity(Group):
         self.commute_internal = []
         self.commutecityunits = []
 
+    def add(self, person):
+        #super().add(person, activity="commute", subgroup_type=0)
+        self[0].append(person)
+
 class CommuteCities(Supergroup):
     """
     Initialises commute cities by using postcode data on the station location
