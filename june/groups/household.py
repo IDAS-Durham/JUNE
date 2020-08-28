@@ -81,12 +81,13 @@ class Household(Group):
         don't go do any other leisure activities.
         """
         for resident in self.residents:
-            if resident.busy:
-                for subgroup in resident.subgroups.iter():
-                    if subgroup is not None and resident in subgroup.people:
-                        subgroup.remove(resident)
-                        break
-            resident.residence.append(resident)
+            if resident.medical_facility is not None:
+                if resident not in self.people and resident.busy:
+                    for subgroup in resident.subgroups.iter():
+                        if subgroup is not None and resident in subgroup.people:
+                            subgroup.remove(resident)
+                            break
+                resident.residence.append(resident)
         if person.age < 18:
             return self.subgroups[self.SubgroupType.kids]
         elif person.age <= 35:
