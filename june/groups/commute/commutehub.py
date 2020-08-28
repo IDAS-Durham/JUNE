@@ -57,8 +57,6 @@ class CommuteHubs(Supergroup):
         init: (bool) if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
-        super().__init__()
-
         self.commutecities = commutecities
         self.members = []
 

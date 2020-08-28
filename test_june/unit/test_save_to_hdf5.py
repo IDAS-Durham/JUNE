@@ -439,17 +439,14 @@ class TestSaveWorld:
             assert city1.city == city2.city
             for hub1, hub2 in zip(city1.commutehubs, city2.commutehubs):
                 assert hub1.id == hub2.id
+            assert len(city1.commute_internal) == len(city2.commute_internal)
+            for p1, p2 in zip(city1.commute_internal, city2.commute_internal):
+                assert p1.id == p2.id
 
         assert len(world_h5.commutehubs) > 0
         assert len(world_h5.commutehubs) == len(world_h5_loaded.commutehubs)
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
-            people_in_hub1 = [person.id for person in hub1.people]
-            people_in_hub2 = [person.id for person in hub2.people]
-            if len(people_in_hub1) == 0 or len(people_in_hub2) == 0:
-                assert len(people_in_hub2) == 0
-                assert len(people_in_hub1) == 0
-            else:
-                assert (np.sort(people_in_hub1) == np.sort(people_in_hub2)).all()
+            assert len(hub1.commute_through) == len(hub2.commute_through)
             for p1, p2 in zip(hub1.commute_through, hub2.commute_through):
                 assert p1.id == p2.id
                 assert p1.age == p2.age
