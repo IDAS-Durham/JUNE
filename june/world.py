@@ -108,9 +108,11 @@ class World:
         if self.schools is not None:
             school_distributor = SchoolDistributor(self.schools)
             school_distributor.distribute_kids_to_school(self.areas)
+            school_distributor.limit_classroom_sizes()
             school_distributor.distribute_teachers_to_schools_in_super_areas(
                 self.super_areas
             )
+
 
         if self.universities is not None:
             uni_distributor = UniversityDistributor(self.universities)
@@ -142,11 +144,7 @@ class World:
                 person.mode_of_transport = commute_gen.weighted_random_choice()
 
         # CommuteCity
-        self.commutecities = CommuteCities()
-        self.commutecities.from_file()
-        self.commutecities.init_non_london()
-        # Crucial that London is initialise second, after non-London
-        self.commutecities.init_london()
+        self.commutecities = CommuteCities.for_super_areas(self.super_areas)
 
         self.commutecity_distributor = CommuteCityDistributor(
             self.commutecities.members, self.super_areas.members

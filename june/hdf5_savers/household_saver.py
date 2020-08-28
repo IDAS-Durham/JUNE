@@ -157,14 +157,12 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    print("loading households from hdf5 ", end="")
     households_list = []
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
@@ -182,7 +180,6 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
                 )
                 households_list.append(household)
                 household.id = ids[k]
-    print("\n", end="")
     return Households(households_list)
 
 
@@ -195,7 +192,6 @@ def restore_households_properties_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    print("restoring households from hdf5 ", end="")
     first_area_id = world.areas[0].id
     first_household_id = world.households[0].id
     first_person_id = world.people[0].id
@@ -204,7 +200,6 @@ def restore_households_properties_from_hdf5(
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
@@ -278,4 +273,3 @@ def restore_households_properties_from_hdf5(
                             *household.social_venues[spec],
                             group,
                         )
-    print("\n", end="")

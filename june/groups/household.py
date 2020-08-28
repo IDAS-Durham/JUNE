@@ -75,6 +75,18 @@ class Household(Group):
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
     def get_leisure_subgroup(self, person):
+        """
+        A person wants to come and visit this household. We need to assign the person
+        to the relevant age subgroup, and make sure the residents welcome him and
+        don't go do any other leisure activities.
+        """
+        for resident in self.residents:
+            if resident.busy:
+                for subgroup in resident.subgroups.iter():
+                    if subgroup is not None and resident in subgroup.people:
+                        subgroup.remove(resident)
+                        break
+            resident.residence.append(resident)
         if person.age < 18:
             return self.subgroups[self.SubgroupType.kids]
         elif person.age <= 35:

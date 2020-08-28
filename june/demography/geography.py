@@ -91,7 +91,7 @@ class Areas:
 
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
-        ball_tree = BallTree(coordinates)
+        ball_tree = BallTree(coordinates, metric = 'haversine')
         return ball_tree
 
     def get_closest_areas(self, coordinates, k=1, return_distance=False):
@@ -193,7 +193,7 @@ class SuperAreas:
         coordinates = np.array(
             [np.deg2rad(super_area.coordinates) for super_area in self]
         )
-        ball_tree = BallTree(coordinates)
+        ball_tree = BallTree(coordinates, metric = 'haversine')
         return ball_tree
 
     def get_closest_super_areas(self, coordinates, k=1, return_distance=False):

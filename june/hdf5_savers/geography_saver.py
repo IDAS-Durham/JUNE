@@ -145,7 +145,6 @@ def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_s
         n_areas = geography.attrs["n_areas"]
         n_chunks = int(np.ceil(n_areas / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_areas)
             length = idx2 - idx1
