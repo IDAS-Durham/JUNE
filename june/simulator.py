@@ -206,7 +206,7 @@ class Simulator:
             checkpoint_data["infected_ids"], checkpoint_data["infection_list"]
         ):
             person = simulator.world.people[infected_id - first_person_id]
-            person.infection = infection  
+            person.infection = infection
             person.susceptibility = 0.0
         # restore timer
         checkpoint_timer = checkpoint_data["timer"]
@@ -288,6 +288,11 @@ class Simulator:
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
+        if person.residence.group.spec == "household":
+            household = person.residence.group
+            person.residence.residents = tuple(
+                mate for mate in household.residents if mate != person
+            )
         person.subgroups = Activities(None, None, None, None, None, None, None)
 
     @staticmethod
