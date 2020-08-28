@@ -50,6 +50,7 @@ class ActivityManager:
         self.timer = timer
         self.leisure = leisure
         self.all_activities = all_activities
+        self.world.debug_parallel = None
 
         if self.world.box_mode:
             self.activity_to_group_dict = {
@@ -298,19 +299,16 @@ class ActivityManager:
 
             self.move_to_active_subgroup(allowed_activities, person)
 
-        print(f'Active {active}, not active {not_active}, {len(self.world.local_people)}, {len(self.world.local_people.halo_people)},'+
-            f'{len([p for p in self.world.local_people.halo_people if p.active])}')
-
-        first_halo = self.world.local_people.halo_people[0]
-        if self.timer.state == 'primary_activity':
-            assert self.world.local_people.from_index(first_halo.id).active == True
-
-        assert first_halo in self.world.local_people
-
         try:
-            self.world.debug_parallel = {'domain': self.world.domain_id, 'active': active, 'hospitalised': hospitalised, 'dead': dead, 'busy': busy,
-                'expected_active': self.world.local_people.number_active(self.timer.state), 'not_active':not_active,
-                                         'inb':self.world.local_people.n_inbound, 'oub': self.world.local_people.n_outbound}
+            self.world.debug_previous = self.world.debug_parallel
+            self.world.debug_parallel = {'domain': self.world.domain_id, 'active': active,
+                                         'hospitalised': hospitalised, 'dead': dead, 'busy': busy,
+                                         'expected_active': self.world.local_people.number_active(self.timer.state),
+                                         'not_active':not_active,
+                                         'inb':self.world.local_people.n_inbound, 'oub': self.world.local_people.n_outbound,
+                                         'nw2day': self.world.local_people.outbound_not_working,
+                                         'total': len(self.world.local_people)
+                                         }
             assert active == self.world.local_people.number_active(self.timer.state)
 
         except AssertionError:

@@ -233,9 +233,9 @@ class Leisure:
                             mate.subgroups.leisure = subgroup
                             subgroup.append(mate)
                     else:
-                        mate.subgroups.leisure = (
-                            subgroup  # person will be added later in the simulator.
-                        )
+                        #pass
+                        # person will be added later in the simulator:
+                        mate.subgroups.leisure = subgroup
 
     def get_subgroup_for_person_and_housemates(self, person: Person):
         """

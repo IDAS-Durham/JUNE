@@ -99,7 +99,7 @@ class DomainPopulation:
             else:
                 continue
 
-    def number_active(self, timestep_status):
+    def number_active(self, timestep_status, debug=False):
         """
         Return the number of people who are active now
         """
@@ -258,7 +258,7 @@ def parallel_update(self, direction, timer):
                 if person.hospitalised:
                     not_working_today += 1
                 else:
-                   person.active = False
+                    person.active = False
                 if person.infected:
                     # FIXME: we need to tell them if hospitalised here, coz they shouldn't be active there!
                     # FIXME: which means Grenville, you need to pass a tuple rather than just the infection.
