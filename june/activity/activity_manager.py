@@ -281,7 +281,7 @@ class ActivityManager:
                 else:
                     busy += 1
                 if person.active:
-                    print('Problem?', self.world.domain_id)
+                    print('Problem in activity timestep? People who are dead/busy *and* active', self.world.domain_id)
             if not person.active:
                 continue
             if person.dead or person.busy:

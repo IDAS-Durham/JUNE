@@ -439,8 +439,8 @@ class Simulator:
                     infected_ids += new_infected_ids
         people_to_infect = [self.world.local_people.from_index(idx) for idx in infected_ids]
         if n_people != self.world.local_people.number_active(self.timer.state):
-            print(self.world.debug_previous)
-            print(self.world.debug_parallel, n_people, n_dead)
+            print('p', self.world.debug_previous)
+            print('c', self.world.debug_parallel, n_people, n_dead)
             raise SimulatorError(
                 f"Number of people active {n_people} (domain {self.world.domain_id}) does not match "
                 f"the total people number {self.world.local_people.number_active(self.timer.state)}"
