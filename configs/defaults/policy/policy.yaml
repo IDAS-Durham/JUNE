@@ -99,6 +99,20 @@ close_companies:
         avoid_work_probability: 0.20
         furlough_probability: 0.34
         key_probability: 0.22
+    10:
+        start_time: 2020-08-07
+        end_time: 2020-08-12
+        full_closure: False 
+        avoid_work_probability: 0.20
+        furlough_probability: 0.34
+        key_probability: 0.22
+    11:
+        start_time: 2020-08-12
+        end_time: 2020-08-25
+        full_closure: False 
+        avoid_work_probability: 0.18
+        furlough_probability: 0.34
+        key_probability: 0.22
 
 social_distancing:
     1: 
