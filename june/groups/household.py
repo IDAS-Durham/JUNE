@@ -80,9 +80,7 @@ class Household(Group):
         to the relevant age subgroup, and make sure the residents welcome him and
         don't go do any other leisure activities.
         """
-        print("getting leisure")
         for mate in self.residents:
-            print("mating")
             if mate.busy:
                 if (
                     mate.leisure is not None and mate in mate.leisure
@@ -91,12 +89,9 @@ class Household(Group):
                     mate.subgroups.leisure = mate.subgroups.residence
                     mate.residence.append(mate)
             else:
-                print("here")
-                print(mate.leisure)
                 mate.subgroups.leisure = (
                     mate.residence # person will be added later in the simulator.
                 )
-                print(mate.leisure)
         if person.age < 18:
             return self.subgroups[self.SubgroupType.kids]
         elif person.age <= 35:
