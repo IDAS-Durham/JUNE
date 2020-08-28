@@ -66,7 +66,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
             commute_hubs_list = np.array(commute_hubs_list, dtype=dt)
             commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
         except:
-            commute_hubs_list = np.array(commute_hubs_list,dtype=np.int)
+            commute_hubs_list = np.array(commute_hubs_list, dtype=np.int)
             commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
         commute_cities_dset.create_dataset(
             "commute_city_units_ids", data=commute_city_units_ids_list
@@ -192,6 +192,7 @@ def load_commute_hubs_from_hdf5(file_path: str):
     cu.members = commute_units_list
     return ch, cu
 
+
 def restore_commute_properties_from_hdf5(world: World, file_path: str):
     # restore commute
     first_person_id = world.people[0].id
@@ -206,3 +207,9 @@ def restore_commute_properties_from_hdf5(world: World, file_path: str):
             world.people[idx - first_person_id] for idx in city.commute_internal
         ]
         city.commute_internal = commute_internal_people
+
+    for hub in world.commutehubs:
+        commute_through_people = [
+            world.people[id - first_person_id] for id in hub.commute_through
+        ]
+        hub.commute_through = commute_through_people
