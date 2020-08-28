@@ -42,7 +42,7 @@ world_file = "./tests.hdf5"
 config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
-print("World loaded succesfully")
+print("World loaded successfully")
 
 # add parallelism
 World.parallel_setup = parallel_setup
@@ -51,10 +51,10 @@ World.parallel_update = parallel_update
 comm = MPI.COMM_WORLD
 world.parallel_setup(comm)
 
-# regenerate lesiure
+# regenerate leisure
 leisure = generate_leisure_for_config(world, config_path)
 #
-# health index and infection selecctor
+# health index and infection selector
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
@@ -66,7 +66,7 @@ infection_seed = InfectionSeed(
    world.super_areas, infection_selector,
 )
 
-infection_seed.unleash_virus(50) # number of initial cases
+infection_seed.unleash_virus(500) # number of initial cases
 
 # policies
 policies = Policies.from_file()
@@ -82,8 +82,8 @@ simulator = Simulator.from_file(
    config_filename=config_path,
    save_path="results",
 )
-print("simulator ready to go")
 
+print("simulator ready to go")
 t1 = time.time()
 simulator.run()
 t2 = time.time()
