@@ -80,4 +80,4 @@ class CommuteHubDistributor:
                 commutehub_in_city[hub_index].add(work_person)
 
             for work_person in to_commute_in:
-                commutecity.commute_internal.append(work_person)
+                commutecity.add(work_person)

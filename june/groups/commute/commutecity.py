@@ -59,6 +59,7 @@ class CommuteCity(Group):
 
     def add(self, person):
         self.commute_internal.append(person)
+        person.subgroups.commute = self[0]
 
 class CommuteCities(Supergroup):
     """
