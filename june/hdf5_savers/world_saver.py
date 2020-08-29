@@ -5,7 +5,7 @@ from collections import defaultdict
 from copy import copy, deepcopy
 
 from june.groups import Household
-from june.demography.geography import Geography
+from june.demography.geography import Geography, Areas, SuperAreas
 from june.world import World
 from june.groups import Cemeteries, Households
 from . import (
@@ -40,12 +40,13 @@ from . import (
     restore_school_properties_from_hdf5,
     restore_social_venues_properties_from_hdf5,
     restore_universities_properties_from_hdf5,
-    restore_hospital_properties_from_hdf5
+    restore_hospital_properties_from_hdf5,
 )
 from june.demography import Population
 from june.demography.person import Activities, Person
 
 logger = logging.getLogger(__name__)
+
 
 def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     """
@@ -214,3 +215,169 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         restore_social_venues_properties_from_hdf5(world=world, file_path=file_path)
     world.cemeteries = Cemeteries()
     return world
+
+
+def generate_domain_from_hdf5(
+    domain_super_area_names, file_path: str, chunk_size=500000
+) -> "Domain":
+    """
+    Loads the world from an hdf5 file. All id references are substituted
+    by actual references to the relevant instances.
+    Parameters
+    ----------
+    file_path
+        path of the hdf5 file
+    chunk_size
+        how many units of supergroups to process at a time.
+        It is advise to keep it around 1e6
+    """
+    from june.domain import Domain
+    logger.info("loading world from HDF5")
+    domain = Domain()
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
+        f_keys = list(f.keys()).copy()
+    geography = load_geography_from_hdf5(
+        file_path=file_path,
+        chunk_size=chunk_size,
+    )
+    domain.areas = geography.areas
+    domain.super_areas = geography.super_areas
+    restore_geography_properties_from_hdf5(
+        world=domain,
+        file_path=file_path,
+        chunk_size=chunk_size,
+    )
+    super_areas_domain = SuperAreas(
+        [
+            super_area
+            for super_area in geography.super_areas
+            if super_area.name in domain_super_area_names
+        ]
+    )
+    areas_domain = Areas(
+        [area for super_area in super_areas_domain for area in super_area.areas]
+    )
+    domain.areas = areas_domain 
+    domain.super_areas = super_areas_domain
+    super_area_ids = [super_area.id for super_area in domain.super_areas]
+    if "hospitals" in f_keys:
+        logger.info("loading hospitals...")
+        domain.hospitals = load_hospitals_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "schools" in f_keys:
+        logger.info("loading schools...")
+        domain.schools = load_schools_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "companies" in f_keys:
+        logger.info("loading companies...")
+        domain.companies = load_companies_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "care_homes" in f_keys:
+        logger.info("loading care homes...")
+        domain.care_homes = load_care_homes_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "universities" in f_keys:
+        logger.info("loading universities...")
+        domain.universities = load_universities_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "commute_cities" in f_keys:
+        logger.info("loading commute cities...")
+        domain.commutecities, domain.commutecityunits = load_commute_cities_from_hdf5(
+            file_path
+        )
+    if "commute_hubs" in f_keys:
+        logger.info("loading commute hubs...")
+        domain.commutehubs, domain.commuteunits = load_commute_hubs_from_hdf5(file_path)
+    if "households" in f_keys:
+        logger.info("loading households...")
+        domain.households = load_households_from_hdf5(
+            file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
+        )
+    if "population" in f_keys:
+        logger.info("loading population...")
+        domain.people = load_population_from_hdf5(
+            file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
+        )
+    if "social_venues" in f_keys:
+        logger.info("loading social venues...")
+        social_venues_dict = load_social_venues_from_hdf5(file_path)
+        for social_venues_spec, social_venues in social_venues_dict.items():
+            setattr(domain, social_venues_spec, social_venues)
+
+    # restore world
+    logger.info("restoring world...")
+    if "population" in f_keys:
+        logger.info("restoring population...")
+        restore_population_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "households" in f_keys:
+        logger.info("restoring households...")
+        restore_households_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "care_homes" in f_keys:
+        logger.info("restoring care homes...")
+        restore_care_homes_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "hospitals" in f_keys:
+        logger.info("restoring hospitals...")
+        restore_hospital_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "commute_hubs" and "commute_cities" in f_keys:
+        logger.info("restoring commute...")
+        restore_commute_properties_from_hdf5(world=domain, file_path=file_path)
+    if "companies" in f_keys:
+        logger.info("restoring companies...")
+        restore_companies_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "schools" in f_keys:
+        logger.info("restoring schools...")
+        restore_school_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+        )
+    if "universities" in f_keys:
+        logger.info("restoring unis...")
+        restore_universities_properties_from_hdf5(world=domain, file_path=file_path)
+
+    if "social_venues" in f_keys:
+        logger.info("restoring social venues...")
+        restore_social_venues_properties_from_hdf5(world=domain, file_path=file_path)
+    domain.cemeteries = Cemeteries()
+    return domain

@@ -46,14 +46,17 @@ def save_households_to_hdf5(
             idx2 = min((chunk + 1) * chunk_size, n_households)
             ids = []
             areas = []
+            super_areas = []
             types = []
             max_sizes = []
             for household in households[idx1:idx2]:
                 ids.append(household.id)
                 if household.area is None:
                     areas.append(nan_integer)
+                    super_areas.append(nan_integer)
                 else:
                     areas.append(household.area.id)
+                    super_areas.append(household.super_area.id)
                 if household.type is None:
                     types.append(" ".encode("ascii", "ignore"))
                 else:
@@ -62,12 +65,16 @@ def save_households_to_hdf5(
 
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
+            super_areas = np.array(super_areas, dtype=np.int)
             types = np.array(types, dtype="S20")
             max_sizes = np.array(max_sizes, dtype=np.float)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
                 households_dset.create_dataset("id", data=ids, maxshape=(None,))
                 households_dset.create_dataset("area", data=areas, maxshape=(None,))
+                households_dset.create_dataset(
+                    "super_area", data=super_areas, maxshape=(None,)
+                )
                 households_dset.create_dataset("type", data=types, maxshape=(None,))
                 households_dset.create_dataset(
                     "max_size", data=max_sizes, maxshape=(None,)
@@ -79,6 +86,8 @@ def save_households_to_hdf5(
                 households_dset["id"][idx1:idx2] = ids
                 households_dset["area"].resize(newshape)
                 households_dset["area"][idx1:idx2] = areas
+                households_dset["super_area"].resize(newshape)
+                households_dset["super_area"][idx1:idx2] = super_areas
                 households_dset["type"].resize(newshape)
                 households_dset["type"][idx1:idx2] = types
                 households_dset["max_size"].resize(newshape)
@@ -150,7 +159,9 @@ def save_households_to_hdf5(
             )
 
 
-def load_households_from_hdf5(file_path: str, chunk_size=50000):
+def load_households_from_hdf5(
+    file_path: str, chunk_size=50000, domain_super_areas=None
+):
     """
     Loads households from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -174,7 +185,19 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
             households["max_size"].read_direct(
                 max_sizes, np.s_[idx1:idx2], np.s_[0:length]
             )
+            super_areas = np.empty(length, dtype=int)
+            households["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 household = Household(
                     area=None, type=types[k].decode(), max_size=max_sizes[k]
                 )
@@ -184,7 +207,7 @@ def load_households_from_hdf5(file_path: str, chunk_size=50000):
 
 
 def restore_households_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000
+    world: World, file_path: str, chunk_size=50000, domain_super_areas=None
 ):
     """
     Loads households from an hdf5 file located at ``file_path``.
@@ -192,9 +215,6 @@ def restore_households_properties_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    first_area_id = world.areas[0].id
-    first_household_id = world.households[0].id
-    first_person_id = world.people[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
         n_households = households.attrs["n_households"]
@@ -207,10 +227,14 @@ def restore_households_properties_from_hdf5(
             relatives_in_households_list = np.empty(length, dtype=int_vlen_type)
             relatives_in_care_homes_list = np.empty(length, dtype=int_vlen_type)
             areas = np.empty(length, dtype=np.int)
+            super_areas = np.empty(length, dtype=np.int)
             social_venues_specs = np.empty(length, dtype=str_vlen_type)
             social_venues_ids = np.empty(length, dtype=int_vlen_type)
             households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             households["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
+            households["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             if "relatives_in_households" in households:
                 households["relatives_in_households"].read_direct(
                     relatives_in_households_list, np.s_[idx1:idx2], np.s_[0:length]
@@ -230,8 +254,19 @@ def restore_households_properties_from_hdf5(
                     social_venues_ids, np.s_[idx1:idx2], np.s_[0:length]
                 )
             for k in range(length):
-                household = world.households[ids[k] - first_household_id]
-                area = world.areas[areas[k] - first_area_id]
+                if domain_super_areas is not None:
+                    """
+                    Note: if the relatives live outside the super area this will fail.
+                    """
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                household = world.households.get_from_id(ids[k])
+                area = world.areas.get_from_id(areas[k])
                 household.area = area
                 area.households.append(household)
                 household.residents = tuple(household.people)
@@ -243,7 +278,7 @@ def restore_households_properties_from_hdf5(
                         household_relatives = []
                         for relative in relatives_in_households_list[k]:
                             household_relatives.append(
-                                world.people[relative - first_person_id]
+                                world.people.get_from_id(relative)
                             )
                         household.relatives_in_households = tuple(household_relatives)
                 if "relatives_in_care_homes" in households:
@@ -253,7 +288,7 @@ def restore_households_properties_from_hdf5(
                         care_home_relatives = []
                         for relative in relatives_in_care_homes_list[k]:
                             care_home_relatives.append(
-                                world.people[relative - first_person_id]
+                                world.people.get_from_id(relative)
                             )
                         household.relatives_in_care_homes = tuple(care_home_relatives)
                 # social venues
@@ -267,8 +302,7 @@ def restore_households_properties_from_hdf5(
                         spec = group_spec.decode()
                         spec_mapped = social_venues_spec_mapper[spec]
                         supergroup = getattr(world, spec_mapped)
-                        first_group_id = supergroup.members[0].id
-                        group = supergroup.members[group_id - first_group_id]
+                        group = supergroup.get_from_id(group_id)
                         household.social_venues[spec] = (
                             *household.social_venues[spec],
                             group,

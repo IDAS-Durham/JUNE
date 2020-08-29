@@ -151,13 +151,15 @@ class Hospitals(Supergroup):
         box_mode:
             whether to run in single box mode, or full simulation
         """
-        super().__init__()
+        super().__init__(members=hospitals)
         self.box_mode = box_mode
-        self.members = hospitals
         self.neighbour_hospitals = neighbour_hospitals
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
-            self.init_trees(coordinates)
+            if not self.members:
+                logger.info(f"No hospitals in this domain / world.")
+            else:
+                self.init_trees(coordinates)
 
     @classmethod
     def for_box_mode(cls):

@@ -137,9 +137,9 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
     return Geography(areas, super_areas)
 
 
-def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_size):
-    super_areas_first_id = world.super_areas[0].id
-    first_area_id = world.areas[0].id
+def restore_geography_properties_from_hdf5(
+    world: World, file_path: str, chunk_size
+):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
         n_areas = geography.attrs["n_areas"]
@@ -157,8 +157,6 @@ def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_s
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
-                area = world.areas[areas_ids[k] - first_area_id]
-                area.super_area = world.super_areas[
-                    super_areas[k] - super_areas_first_id
-                ]
+                area = world.areas.get_from_id(areas_ids[k])
+                area.super_area = world.super_areas.get_from_id(super_areas[k])
                 area.super_area.areas.append(area)

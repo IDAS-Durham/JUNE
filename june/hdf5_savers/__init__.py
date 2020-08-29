@@ -50,4 +50,8 @@ from .leisure_saver import (
     load_social_venues_from_hdf5,
     restore_social_venues_properties_from_hdf5,
 )
-from .world_saver import generate_world_from_hdf5, save_world_to_hdf5
+from .world_saver import (
+    generate_world_from_hdf5,
+    save_world_to_hdf5,
+    generate_domain_from_hdf5,
+)

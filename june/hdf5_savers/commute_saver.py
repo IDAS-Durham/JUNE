@@ -28,6 +28,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         commute_city_units_is_peak_list = []
         cities_names_list = []
         commute_internal_list = []
+        commute_city_super_areas = []
         for city in commute_cities:
             ids.append(city.id)
             cities_names_list.append(city.city.encode("ascii", "ignore"))
@@ -42,6 +43,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
                 commute_internal.append(commute_intern.id)
             commute_internal = np.array(commute_internal, dtype=np.int)
             commute_internal_list.append(commute_internal)
+            commute_city_super_areas.append(city.super_area)
             commute_city_units_ids = []
             commute_city_units_is_peak = []
             for commute_city_unit in city.commutecityunits:
@@ -64,10 +66,12 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         commute_city_units_is_peak_list = np.array(
             commute_city_units_is_peak_list, dtype=dt
         )
+        commute_city_super_areas = np.array(commute_city_super_areas, dtype=np.int)
         commute_internal_list = np.array(commute_internal_list, dtype=dt)
         commute_cities_dset.attrs["n_commute_cities"] = n_cities
         commute_cities_dset.create_dataset("id", data=ids)
         commute_cities_dset.create_dataset("city_names", data=cities_names_list)
+        commute_cities_dset.create_dataset("super_area", data=commute_city_super_areas)
         commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
         commute_cities_dset.create_dataset(
             "commute_city_units_ids", data=commute_city_units_ids_list
@@ -80,7 +84,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         )
 
 
-def load_commute_cities_from_hdf5(file_path: str):
+def load_commute_cities_from_hdf5(file_path: str, domain_super_areas = None):
     """
     Loads commute_cities from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -98,7 +102,16 @@ def load_commute_cities_from_hdf5(file_path: str):
         commute_city_units_is_peak_list = commute_cities["commute_city_units_is_peak"]
         commute_internal = commute_cities["commute_internal"]
         commute_city_units_list = []
+        super_areas = commute_cities["super_area"]
         for k in range(n_commute_cities):
+            if domain_super_areas is not None:
+                super_area = super_areas[k]
+                if super_area == nan_integer:
+                    raise ValueError(
+                        "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                    )
+                if super_area not in domain_super_areas:
+                    continue
             commute_city = CommuteCity()
             commute_city.id = ids[k]
             commute_city.city = city_names[k].decode()
@@ -133,9 +146,11 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         commute_units_list = []
         commute_through_list = []
         commute_units_length_list = []
+        super_areas = []
         for hub in commute_hubs:
             ids.append(hub.id)
             cities.append(hub.city)
+            super_areas.append(hub.super_area)
             commute_through = []
             for commute_throu in hub.commute_through:
                 commute_through.append(commute_throu.id)
@@ -156,11 +171,12 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         commute_hubs_dset.attrs["n_commute_hubs"] = n_hubs
         commute_hubs_dset.create_dataset("id", data=ids)
         commute_hubs_dset.create_dataset("city_names", data=cities)
+        commute_hubs_dset.create_dataset("super_area", data=super_areas)
         commute_hubs_dset.create_dataset("commute_units", data=commute_units_list)
         commute_hubs_dset.create_dataset("commute_through", data=commute_through_list)
 
 
-def load_commute_hubs_from_hdf5(file_path: str):
+def load_commute_hubs_from_hdf5(file_path: str, domain_super_areas=None):
     """
     Loads commute_hubs from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -175,6 +191,7 @@ def load_commute_hubs_from_hdf5(file_path: str):
         city_names = commute_hubs["city_names"]
         commute_through = commute_hubs["commute_through"]
         commute_units = commute_hubs["commute_units"]
+        super_areas = commute_hubs["super_area"]
         commute_units_list = []
         for k in range(n_commute_hubs):
             commute_hub = CommuteHub(lat_lon=None, city=city_names[k].decode())
@@ -182,6 +199,14 @@ def load_commute_hubs_from_hdf5(file_path: str):
             commute_hub.city = city_names[k].decode()
             commute_hub.commute_through = commute_through[k]
             for unit_id in commute_units[k]:
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 cunit = CommuteUnit(
                     commutehub_id=ids[k],
                     city=city_names[k].decode(),
@@ -200,22 +225,20 @@ def load_commute_hubs_from_hdf5(file_path: str):
 
 def restore_commute_properties_from_hdf5(world: World, file_path: str):
     # restore commute
-    first_person_id = world.people[0].id
-    first_hub_id = world.commutehubs[0].id
     # commute
     for city in world.commutecities:
         people_ids = city.people
         commute_hubs = [
-            world.commutehubs[idx - first_hub_id] for idx in city.commutehubs
+            world.commutehubs.get_from_id(idx) for idx in city.commutehubs
         ]
         city.commutehubs = commute_hubs
         commute_internal_people = [
-            world.people[idx - first_person_id] for idx in city.commute_internal
+            world.people.get_from_id(idx) for idx in city.commute_internal
         ]
         city.commute_internal = commute_internal_people
 
     for hub in world.commutehubs:
         commute_through_people = [
-            world.people[id - first_person_id] for id in hub.commute_through
+            world.people.get_from_id(id) for id in hub.commute_through
         ]
         hub.commute_through = commute_through_people

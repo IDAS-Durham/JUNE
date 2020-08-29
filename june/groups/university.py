@@ -60,8 +60,7 @@ class University(Group):
 
 class Universities(Supergroup):
     def __init__(self, universities: List[University]):
-        super().__init__()
-        self.members = universities
+        super().__init__(members=universities)
 
     @classmethod
     def for_super_areas(

@@ -36,7 +36,7 @@ geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
 world = generate_world_from_geography(
-    geography, include_households=True, include_commute=True
+    geography, include_households=True, include_commute=False
 )
 #
 ## some leisure activities

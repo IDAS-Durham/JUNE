@@ -56,10 +56,12 @@ def save_population_to_hdf5(
             ethns = []
             socioecon_indices = []
             areas = []
+            super_areas = []
             sectors = []
             sub_sectors = []
             group_ids = []
             group_specs = []
+            group_super_areas = []
             subgroup_types = []
             home_city = []
             mode_of_transport_description = []
@@ -84,8 +86,10 @@ def save_population_to_hdf5(
                     home_city.append(person.home_city.id)
                 if person.area is not None:
                     areas.append(person.area.id)
+                    super_areas.append(person.area.super_area.id)
                 else:
                     areas.append(nan_integer)
+                    super_areas.append(nan_integer)
                 if person.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
@@ -103,18 +107,25 @@ def save_population_to_hdf5(
                 gids = []
                 stypes = []
                 specs = []
+                group_super_areas_temp = []
                 for subgroup in person.subgroups.iter():
                     if subgroup is None:
                         gids.append(nan_integer)
                         stypes.append(nan_integer)
                         specs.append(" ".encode("ascii", "ignore"))
+                        group_super_areas_temp.append(nan_integer)
                     else:
                         gids.append(subgroup.group.id)
                         stypes.append(subgroup.subgroup_type)
                         specs.append(subgroup.group.spec.encode("ascii", "ignore"))
+                        try:
+                            group_super_areas_temp.append(subgroup.group.super_area.id)
+                        except AttributeError:
+                            print(subgroup.group.spec)
                 group_specs.append(np.array(specs, dtype="S20"))
                 group_ids.append(np.array(gids, dtype=np.int))
                 subgroup_types.append(np.array(stypes, dtype=np.int))
+                group_super_areas.append(np.array(group_super_areas_temp, dtype=np.int))
                 if person.mode_of_transport == None:
                     mode_of_transport_description.append(" ".encode("ascii", "ignore"))
                     mode_of_transport_is_public.append(False)
@@ -133,9 +144,11 @@ def save_population_to_hdf5(
             socioecon_indices = np.array(socioecon_indices, dtype=np.int)
             home_city = np.array(home_city, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
+            areas = np.array(super_areas, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
+            group_super_areas = np.array(group_super_areas, dtype=np.int)
             sectors = np.array(sectors, dtype="S30")
             sub_sectors = np.array(sub_sectors, dtype="S30")
             mode_of_transport_description = np.array(
@@ -175,7 +188,15 @@ def save_population_to_hdf5(
                     data=subgroup_types,
                     maxshape=(None, subgroup_types.shape[1]),
                 )
+                people_dset.create_dataset(
+                    "group_super_areas",
+                    data=group_super_areas,
+                    maxshape=(None, subgroup_types.shape[1]),
+                )
                 people_dset.create_dataset("area", data=areas, maxshape=(None,))
+                people_dset.create_dataset(
+                    "super_area", data=super_areas, maxshape=(None,)
+                )
                 people_dset.create_dataset(
                     "mode_of_transport_description",
                     data=mode_of_transport_description,
@@ -209,12 +230,16 @@ def save_population_to_hdf5(
                 people_dset["home_city"][idx1:idx2] = home_city
                 people_dset["area"].resize(newshape)
                 people_dset["area"][idx1:idx2] = areas
+                people_dset["super_area"].resize(newshape)
+                people_dset["super_area"][idx1:idx2] = super_areas
                 people_dset["group_ids"].resize(newshape[0], axis=0)
                 people_dset["group_ids"][idx1:idx2] = group_ids
                 people_dset["group_specs"].resize(newshape[0], axis=0)
                 people_dset["group_specs"][idx1:idx2] = group_specs
                 people_dset["subgroup_types"].resize(newshape[0], axis=0)
                 people_dset["subgroup_types"][idx1:idx2] = subgroup_types
+                people_dset["group_super_areas"].resize(newshape[0], axis=0)
+                people_dset["group_super_areas"][idx1:idx2] = group_super_areas
                 people_dset["mode_of_transport_description"].resize(newshape)
                 people_dset["mode_of_transport_description"][
                     idx1:idx2
@@ -227,7 +252,9 @@ def save_population_to_hdf5(
                 people_dset["lockdown_status"][idx1:idx2] = lockdown_status
 
 
-def load_population_from_hdf5(file_path: str, chunk_size=100000):
+def load_population_from_hdf5(
+    file_path: str, chunk_size=100000, domain_super_areas=None
+):
     """
     Loads the population from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -259,6 +286,10 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             population["socioecon_index"].read_direct(
                 socioecon_indices, np.s_[idx1:idx2], np.s_[0:length]
             )
+            super_areas = np.empty(length, dtype=int)
+            population["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             home_city = np.empty(length, dtype=int)
             population["home_city"].read_direct(
                 home_city, np.s_[idx1:idx2], np.s_[0:length]
@@ -282,6 +313,14 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                 mode_of_transport_description_list, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(idx2 - idx1):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 if ethns[k].decode() == " ":
                     ethn = None
                 else:
@@ -329,10 +368,8 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
 
 
 def restore_population_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000
+    world: World, file_path: str, chunk_size=50000, domain_super_areas=None
 ):
-    first_person_id = world.people[0].id
-    first_area_id = world.areas[0].id
     activities_fields = Activities.__fields__
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # people = []
@@ -358,27 +395,48 @@ def restore_population_properties_from_hdf5(
             population["subgroup_types"].read_direct(
                 subgroup_types, np.s_[idx1:idx2], np.s_[0:length]
             )
+            group_super_areas = np.empty((length, len(activities_fields)), dtype=int)
+            population["group_super_areas"].read_direct(
+                group_super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             areas = np.empty(length, dtype=int)
             population["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
+            super_areas = np.empty(length, dtype=int)
+            population["super_area"].read_direct(super_areas, np.s_[idx1:idx2], np.s_[0:length])
             for k in range(length):
-                person = world.people[ids[k] - first_person_id]
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                person = world.people.get_from_id(ids[k])
                 # restore area
-                person.area = world.areas[areas[k] - first_area_id]
+                person.area = world.areas.get_from_id(areas[k])
                 person.area.people.append(person)
                 person.area.super_area.people.append(person)
                 # restore groups and subgroups
                 subgroups_instances = Activities(
                     None, None, None, None, None, None, None
                 )
-                for i, (group_id, subgroup_type, group_spec) in enumerate(
-                    zip(group_ids[k], subgroup_types[k], group_specs[k])
+                for (
+                    i,
+                    (group_id, subgroup_type, group_spec, group_super_area),
+                ) in enumerate(
+                    zip(
+                        group_ids[k],
+                        subgroup_types[k],
+                        group_specs[k],
+                        group_super_areas[k],
+                    )
                 ):
                     if group_id == nan_integer:
                         continue
                     group_spec = group_spec.decode()
                     supergroup = getattr(world, spec_mapper[group_spec])
-                    first_group_id = supergroup.members[0].id
-                    group = supergroup.members[group_id - first_group_id]
+                    group = supergroup.get_from_id(group_id)
                     assert group_id == group.id
                     subgroup = group[subgroup_type]
                     subgroup.append(person)

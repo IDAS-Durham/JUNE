@@ -70,10 +70,10 @@ class Area:
 
 
 class Areas:
-    __slots__ = "members", "super_area", "ball_tree"
+    __slots__ = "members_dict", "super_area", "ball_tree"
 
     def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
-        self.members = areas
+        self.members_dict = {area.id : area for area in areas}
         self.super_area = super_area
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
@@ -88,6 +88,13 @@ class Areas:
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def get_from_id(self, id):
+        return self.members_dict[id]
+
+    @property
+    def members(self):
+        return list(self.members_dict.values())
 
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
@@ -161,7 +168,7 @@ class SuperArea:
 
 
 class SuperAreas:
-    __slots__ = "members", "ball_tree"
+    __slots__ = "members_dict", "ball_tree"
 
     def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
         """
@@ -174,7 +181,7 @@ class SuperAreas:
         ball_tree
             whether to construct a NN tree for the super areas
         """
-        self.members = super_areas
+        self.members_dict = {area.id : area for area in super_areas}
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
         else:
@@ -188,6 +195,13 @@ class SuperAreas:
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def get_from_id(self, id):
+        return self.members_dict[id]
+
+    @property
+    def members(self):
+        return list(self.members_dict.values())
 
     def construct_ball_tree(self):
         coordinates = np.array(
