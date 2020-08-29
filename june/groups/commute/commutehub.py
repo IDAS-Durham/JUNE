@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 from scipy import spatial
@@ -7,7 +6,10 @@ from june import paths
 
 default_data_path = paths.data_path
 
-default_msoa_coordinates = default_data_path / "input/geography/super_area_coordinates.csv"
+default_msoa_coordinates = (
+    default_data_path / "input/geography/super_area_coordinates.csv"
+)
+
 
 class CommuteHub(Group):
     """
@@ -23,15 +25,17 @@ class CommuteHub(Group):
         commuteunits: (list) commute units associated with the commute hub
         """
         super().__init__()
-        
+
         self.lat_lon = lat_lon
-        self.city = city # station the hub is affiliated to
+        self.city = city  # station the hub is affiliated to
         self.super_area = super_area
         self.commuteunits = []
         self.commute_through = []
 
     def add(self, person):
-        super().add(person, activity="commute", subgroup_type=0)
+        self.commute_through.append(person)
+        person.subgroups.commute = self[0]
+
 
 class CommuteHubs(Supergroup):
     """
@@ -53,26 +57,32 @@ class CommuteHubs(Supergroup):
         init: (bool) if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
-        super().__init__()
-        
         self.commutecities = commutecities
         self.members = []
 
     def _get_msoa_lat_lon(self, msoa):
-        'Given an MSOA, get the lat/lon'
+        "Given an MSOA, get the lat/lon"
 
-        msoa_lat = float(self.msoa_coordinates['latitude'][self.msoa_coordinates['super_area'] == msoa])
-        msoa_lon = float(self.msoa_coordinates['longitude'][self.msoa_coordinates['super_area'] == msoa])
+        msoa_lat = float(
+            self.msoa_coordinates["latitude"][
+                self.msoa_coordinates["super_area"] == msoa
+            ]
+        )
+        msoa_lon = float(
+            self.msoa_coordinates["longitude"][
+                self.msoa_coordinates["super_area"] == msoa
+            ]
+        )
 
         return [msoa_lat, msoa_lon]
 
     def from_file(self):
 
         self.msoa_coordinates = pd.read_csv(default_msoa_coordinates)
-            
+
     def init_hubs(self):
-        'Initialise all hubs'
-        
+        "Initialise all hubs"
+
         ids = 0
         for commutecity in self.commutecities:
             metro_centroid = commutecity.metro_centroid
@@ -84,7 +94,9 @@ class CommuteHubs(Supergroup):
                 metro_msoas_lat_lon.append(self._get_msoa_lat_lon(msoa))
 
             # find the distance between the metropolitan centriod and all associates metropolitan msoas
-            distances = spatial.KDTree(metro_msoas_lat_lon).query(metro_centroid,len(metro_msoas_lat_lon))[0]
+            distances = spatial.KDTree(metro_msoas_lat_lon).query(
+                metro_centroid, len(metro_msoas_lat_lon)
+            )[0]
             # get distance from metropolitan centroid to furthest away metropolitan msoa
             distance_max = np.max(distances)
 
@@ -93,12 +105,12 @@ class CommuteHubs(Supergroup):
 
             # handle London separately
             # give London 8 hubs
-            if commutecity.city == 'London':
+            if commutecity.city == "London":
                 # for now give London 8 hubs, but correct this later
 
-                hubs = np.zeros(8*2).reshape(8,2)
-                hubs[:,0] = metro_centroid[0]
-                hubs[:,1] = metro_centroid[1]
+                hubs = np.zeros(8 * 2).reshape(8, 2)
+                hubs[:, 0] = metro_centroid[0]
+                hubs[:, 1] = metro_centroid[1]
 
                 # north, south, east, west hubs
                 hubs[0][1] += distance_away
@@ -106,20 +118,20 @@ class CommuteHubs(Supergroup):
                 hubs[2][0] += distance_away
                 hubs[3][0] -= distance_away
                 # diagonal hubs
-                hubs[4][0] += distance_away/np.sqrt(2)
-                hubs[4][1] += distance_away/np.sqrt(2)
-                hubs[5][0] += distance_away/np.sqrt(2)
-                hubs[5][1] -= distance_away/np.sqrt(2)
-                hubs[6][0] -= distance_away/np.sqrt(2)
-                hubs[6][1] -= distance_away/np.sqrt(2)
-                hubs[7][0] -= distance_away/np.sqrt(2)
-                hubs[7][1] += distance_away/np.sqrt(2)
-                
+                hubs[4][0] += distance_away / np.sqrt(2)
+                hubs[4][1] += distance_away / np.sqrt(2)
+                hubs[5][0] += distance_away / np.sqrt(2)
+                hubs[5][1] -= distance_away / np.sqrt(2)
+                hubs[6][0] -= distance_away / np.sqrt(2)
+                hubs[6][1] -= distance_away / np.sqrt(2)
+                hubs[7][0] -= distance_away / np.sqrt(2)
+                hubs[7][1] += distance_away / np.sqrt(2)
+
             # give non-London stations 4 hubs
             else:
-                hubs = np.zeros(4*2).reshape(4,2)
-                hubs[:,0] = metro_centroid[0]
-                hubs[:,1] = metro_centroid[1]
+                hubs = np.zeros(4 * 2).reshape(4, 2)
+                hubs[:, 0] = metro_centroid[0]
+                hubs[:, 1] = metro_centroid[1]
 
                 hubs[0][1] += distance_away
                 hubs[1][1] -= distance_away
@@ -129,15 +141,14 @@ class CommuteHubs(Supergroup):
             # loop through all hubs to initialise and append to member and assign to commutecity too
             for hub in hubs:
                 commute_hub = CommuteHub(
-                    #commutehub_id = ids,
-                    lat_lon = hub,
-                    city = commutecity.city,
-                    super_area = commutecity.super_area
+                    # commutehub_id = ids,
+                    lat_lon=hub,
+                    city=commutecity.city,
+                    super_area=commutecity.super_area,
                 )
 
                 ids += 1
 
                 commutecity.commutehubs.append(commute_hub)
-                
+
                 self.members.append(commute_hub)
-            

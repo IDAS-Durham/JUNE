@@ -208,7 +208,7 @@ class Simulator:
             checkpoint_data["infected_ids"], checkpoint_data["infection_list"]
         ):
             person = simulator.world.people[infected_id - first_person_id]
-            person.infection = infection  
+            person.infection = infection
             person.susceptibility = 0.0
         # restore timer
         checkpoint_timer = checkpoint_data["timer"]

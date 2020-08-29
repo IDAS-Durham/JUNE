@@ -173,20 +173,19 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            if activity == "household_visits" and working_hours:
+            if (
+                activity == "household_visits" and working_hours
+            ) or distributor.spec in self.closed_venues:
                 # we do not have household visits during working hours as most households by then.
                 continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
-            if distributor.spec in self.closed_venues:
-                poisson_parameters.append(0.0)
-            else:
-                poisson_parameters.append(
-                    distributor.get_poisson_parameter(
-                        sex=sex, age=age, is_weekend=is_weekend
-                    )
+            poisson_parameters.append(
+                distributor.get_poisson_parameter(
+                    sex=sex, age=age, is_weekend=is_weekend
                 )
+            )
             activities.append(activity)
         total_poisson_parameter = sum(poisson_parameters)
         does_activity_probability = 1.0 - np.exp(-delta_time * total_poisson_parameter)
