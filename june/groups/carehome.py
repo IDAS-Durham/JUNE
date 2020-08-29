@@ -93,7 +93,6 @@ class CareHome(Group):
 
 
 class CareHomes(Supergroup):
-    __slots__ = "members"
 
     def __init__(self, care_homes: List[CareHome]):
         super().__init__(members=care_homes)

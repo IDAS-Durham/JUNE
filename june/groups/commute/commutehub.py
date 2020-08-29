@@ -57,8 +57,8 @@ class CommuteHubs(Supergroup):
         init: (bool) if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
+        super().__init__([])
         self.commutecities = commutecities
-        self.members = []
 
     def _get_msoa_lat_lon(self, msoa):
         "Given an MSOA, get the lat/lon"
@@ -151,4 +151,4 @@ class CommuteHubs(Supergroup):
 
                 commutecity.commutehubs.append(commute_hub)
 
-                self.members.append(commute_hub)
+                self.add(commute_hub)
