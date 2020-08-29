@@ -229,15 +229,37 @@ def test__log_infected(sim):
     assert set(test_symptoms) == set(f_symptoms)
     assert set(test_nsecondary) == set(f_nsecondary)
 
-
-def test__log_infected_in_timestep(sim):
-    ### the log_infected function is always called inside do_timestep. So test this too!
+def test__log_infection_location(sim):
     time_steps = []
     i = 0
     while sim.timer.date <= sim.timer.final_date:
         time = sim.timer.date
         time_steps.append(time.strftime("%Y-%m-%dT%H:%M:%S.%f"))
         sim.do_timestep()
+        if i > 10:
+            break
+        i += 1
+        next(sim.timer)
+    all_locations, all_new_infected = [], []
+    with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
+        locations = f['locations']
+        keys = list(locations.keys())
+        for key in keys:
+            all_locations += list(locations[f'{key}/infection_location'])
+            print(locations[f'{key}/new_infected_ids'])
+            all_new_infected += list(locations[f'{key}/new_infected_ids'])
+    non_susceptible_people = [p.id for p in sim.world.people if p.susceptible != 1.]
+    assert all(infected in non_susceptible_people for infected in all_new_infected)
+    assert len(all_new_infected) + 2 == len(non_susceptible_people)
+    assert all(t in keys for t in time_steps)
+
+def test__log_infected_in_timestep(sim):
+    time_steps = []
+    i = 0
+    sim.timer.reset()
+    while sim.timer.date <= sim.timer.final_date:
+        time = sim.timer.date
+        time_steps.append(time.strftime("%Y-%m-%dT%H:%M:%S.%f"))
         if i > 10:
             break
         i += 1
@@ -252,3 +274,4 @@ def test__log_infected_in_timestep(sim):
     assert all(t in keys for t in time_steps)
     assert infected_set.issubset(world_ids)
     assert len(infected_set) == 2
+
