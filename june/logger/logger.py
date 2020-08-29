@@ -24,6 +24,7 @@ class Logger:
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / "logger.hdf5"
         self.infection_location = []
+        self.new_infected_ids = []
         # Remove if exists
         try:
             os.remove(self.file_path)
@@ -247,7 +248,7 @@ class Logger:
             plural = "commutecityunits"
         return len(getattr(world, plural).members)
 
-    def accumulate_infection_location(self, location, n_infected=1):
+    def accumulate_infection_location(self, location, new_infected_ids):
         """
         Store where infections happend in a time step
         
@@ -256,7 +257,8 @@ class Logger:
         location:
             group type of the group in which the infection took place
         """
-        self.infection_location += [location] * n_infected
+        self.infection_location += [location] * len(new_infected_ids)
+        self.new_infected_ids += new_infected_ids
 
     def log_infection_location(self, time):
         """
@@ -268,16 +270,15 @@ class Logger:
             datetime to log
         """
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        unique_locations, counts = np.unique(
-            np.array(self.infection_location), return_counts=True
-        )
-        unique_locations = np.array(unique_locations, dtype="S10")
+        infection_location = np.array(self.infection_location, dtype="S10")
+        new_infected_ids = np.array(self.new_infected_ids, dtype=np.int)
         with h5py.File(self.file_path, "a", libver="latest") as f:
             locations_dset = f.require_group("locations")
             time_dset = locations_dset.create_group(time_stamp)
-            time_dset.create_dataset("infection_location", data=unique_locations)
-            time_dset.create_dataset("infection_counts", data=counts)
+            time_dset.create_dataset("infection_location", data=infection_location)
+            time_dset.create_dataset("new_infected_ids", data=new_infected_ids)
         self.infection_location = []
+        self.new_infected_ids = []
 
     def unpack_dict(self,hdf5_obj,data,base_path,depth=0,max_depth=5):
         if depth>max_depth:
