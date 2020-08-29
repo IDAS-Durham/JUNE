@@ -251,6 +251,8 @@ class ActivityManager:
         ----------
 
         """
+        print(f'(mv2active-sg start in  {self.world.domain_id} we see {self.world.local_people.debug_stats})')
+
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
@@ -266,29 +268,24 @@ class ActivityManager:
         ):
             self.world.parallel_update("pm", self.timer)
 
+        print(f'(after parallel in mv2activity-sg in {self.world.domain_id} we see {self.world.local_people.debug_stats})')
+
         active = 0
         not_active = 0
-        dead = 0
-        busy = 0
-        hospitalised = 0
+
+        # At this point no one should be busy, but as this loop progresses, if it is leisure timestep,
+        # people can become busy before they are investigated as their household is made busy at the same
+        # time. So these people can be busy and active. It should not be possible for anyone to be in a
+        # leisure household who does not live in this domain, so this in and of itself should not cause problems.
+
+        self.group_count(f'Domain {self.world.domain_id}')
         for person in self.world.local_people:
             if not person.active:
                 not_active +=1
-            if person.dead or person.busy:
-                active += 1
-                if person.dead:
-                    dead += 1
-                else:
-                    busy += 1
-                if person.active:
-                    print('Problem in activity timestep? People who are dead/busy *and* active', self.world.domain_id)
-            if not person.active:
                 continue
-            if person.dead or person.busy:
-                continue
-            if person.hospitalised:
-                hospitalised += 1
             active += 1
+            if person.dead or person.busy:
+                continue
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
                 person=person,
@@ -301,10 +298,13 @@ class ActivityManager:
 
             self.move_to_active_subgroup(allowed_activities, person)
 
+        print(f'(after mv2activity-sg in {self.world.domain_id} we see {self.world.local_people.debug_stats})')
+        self.group_count(f'Domain {self.world.domain_id}')
+
         try:
             self.world.debug_previous = self.world.debug_parallel
-            self.world.debug_parallel = {'domain': self.world.domain_id, 'active': active,
-                                         'hospitalised': hospitalised, 'dead': dead, 'busy': busy,
+            self.world.debug_parallel = {'domain': self.world.domain_id,
+                                         'active': active,
                                          'expected_active': self.world.local_people.number_active(self.timer.state),
                                          'not_active':not_active,
                                          'inb':self.world.local_people.n_inbound, 'oub': self.world.local_people.n_outbound,
@@ -322,3 +322,17 @@ class ActivityManager:
                   f' \n {self.world.debug_parallel}'
                   )
             #raise
+
+    def group_count(self, idstring):
+        """ For debugging """
+        n = 0
+        for agroup in self.active_groups:
+            ng = 0
+            if agroup not in ["household_visits", "care_home_visits"]:
+                this = getattr(self.world, agroup)
+                if this is not None:
+                    for group in this.members:
+                        ng += group.size
+                print(f'{idstring}: group {this.group_type} has {ng}  people')
+                n += ng
+        print(f'{idstring}: {n} in total cf {self.world.local_people.debug_stats}')

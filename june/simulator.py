@@ -290,6 +290,11 @@ class Simulator:
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
+        if person.residence.group.spec == "household":
+            household = person.residence.group
+            person.residence.residents = tuple(
+                mate for mate in household.residents if mate != person
+            )
         person.subgroups = Activities(None, None, None, None, None, None, None)
 
     @staticmethod
@@ -377,8 +382,8 @@ class Simulator:
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
-        print (f'Starting timestep for {self.world.domain_id} with {self.world.local_people.number_infected}')
-
+        print(f'Starting timestep for {self.world.domain_id} with {self.world.local_people.number_infected}\n' +
+              f'(at this point in {self.world.domain_id} we see {self.world.local_people.debug_stats})')
 
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
@@ -388,6 +393,7 @@ class Simulator:
         if not activities or len(activities) == 0:
             logger.info("==== do_timestep(): no active groups found. ====")
             return
+
         self.activity_manager.do_timestep()
 
         active_groups = self.activity_manager.active_groups
@@ -402,7 +408,7 @@ class Simulator:
             n_people += len(cemetery.people)
 
         n_dead = n_people
-
+        print(f'(In simulator b4 logger {self.world.domain_id} we see {self.world.local_people.debug_stats})')
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
@@ -414,6 +420,9 @@ class Simulator:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
                 n_people += int_group.size
+                #not_active = len([p for p in group.people if not p.active])
+                #if not_active:
+                #    raise ValueError(f'Group {group_type} includes {not_active} non-active people')
                 if int_group.must_timestep:
                     new_infected_ids = self.interaction.time_step_for_group(
                         self.timer.duration, int_group

@@ -103,11 +103,23 @@ class DomainPopulation:
         """
         Return the number of people who are active now
         """
-        print('number active', len(self), self.n_outbound, self.n_inbound, self.outbound_not_working, timestep_status)
         if timestep_status == 'primary_activity':
             return len(self) - self.n_outbound + self.outbound_not_working
         else:
             return len(self) - self.n_inbound
+
+    @property
+    def debug_stats(self):
+        stati = {'dead':0, 'busy':0, 'hospitalised':0, 'active':0}
+        for p in self.people:
+            for status in stati:
+                if getattr(self.people[p], status):
+                    stati[status] +=1
+        stati['all']=len(self)
+        stati['in'] = self.n_inbound
+        stati['out'] = self.n_outbound
+        stati['notw'] = self.outbound_not_working
+        return str(stati)
 
 
 def parallel_setup(self, comm, debug=False):
