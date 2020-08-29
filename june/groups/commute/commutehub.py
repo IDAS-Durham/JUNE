@@ -50,14 +50,16 @@ class CommuteHubs(Supergroup):
        the real stations, but we believe this gives a good approximation at the sub-regional level)
     """
 
-    def __init__(self, commutecities):
+    def __init__(self, commutecities, commute_hubs=None):
         """
         commutecities: (list) members of CommuteCities
         msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
         init: (bool) if True, initialise hubs, if False do this manually
         members: (list) list of all commute hubs
         """
-        super().__init__([])
+        if commute_hubs is None:
+            commute_hubs = []
+        super().__init__(commute_hubs)
         self.commutecities = commutecities
 
     def _get_msoa_lat_lon(self, msoa):

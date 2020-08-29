@@ -16,8 +16,7 @@ class Box(Group):
 
 class Boxes(Supergroup):
     def __init__(self, boxes: List[Box]):
-        super().__init__()
-        self.members = boxes
+        super().__init__(boxes)
 
     def erase_people_from_groups_and_subgroups(self):
         pass

@@ -294,11 +294,13 @@ def generate_domain_from_hdf5(
     if "commute_cities" in f_keys:
         logger.info("loading commute cities...")
         domain.commutecities, domain.commutecityunits = load_commute_cities_from_hdf5(
-            file_path
+            file_path, domain_super_areas=super_area_ids
         )
     if "commute_hubs" in f_keys:
         logger.info("loading commute hubs...")
-        domain.commutehubs, domain.commuteunits = load_commute_hubs_from_hdf5(file_path)
+        domain.commutehubs, domain.commuteunits = load_commute_hubs_from_hdf5(
+            file_path, domain_super_areas=super_area_ids
+        )
     if "households" in f_keys:
         logger.info("loading households...")
         domain.households = load_households_from_hdf5(
@@ -311,7 +313,9 @@ def generate_domain_from_hdf5(
         )
     if "social_venues" in f_keys:
         logger.info("loading social venues...")
-        social_venues_dict = load_social_venues_from_hdf5(file_path)
+        social_venues_dict = load_social_venues_from_hdf5(
+            file_path, domain_super_areas=super_area_ids
+        )
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(domain, social_venues_spec, social_venues)
 

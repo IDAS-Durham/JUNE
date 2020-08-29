@@ -1,4 +1,5 @@
 from june.groups.group import Group, Supergroup
+from typing import List
 
 import numpy as np
 
@@ -43,14 +44,15 @@ class CommuteUnits(Supergroup):
       - Adjusting this could be a later improvement of the code
     """
 
-    def __init__(self, commutehubs, init=False):
+    def __init__(self, commutehubs, commute_units: List[CommuteUnit] = None, init=False):
         """
         commutehubs: (list) members of CommuteHubs
         init: (bool) if True, initialise units, if False do this manually
         members: (list) list of all commute units
         """
-        super().__init__(members=[])
-
+        if commute_units is None:
+            commute_units = []
+        super().__init__(commute_units)
         self.commutehubs = commutehubs
         self.init = init
         
@@ -74,7 +76,7 @@ class CommuteUnits(Supergroup):
                     is_peak = peak_not_peak[i]
                 )
 
-                self.members.append(commute_unit)
+                self.add(commute_unit)
                 hub.commuteunits.append(commute_unit)
                 
             ids += 1
