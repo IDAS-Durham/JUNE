@@ -4,6 +4,7 @@ import random
 import numba as nb
 import numpy as np
 import pytest
+import h5py
 
 import june.infection.symptoms
 from june.interaction import Interaction
@@ -257,3 +258,34 @@ def setup_world(dummy_world, policy_simulator):
         person.dead = False
         person.subgroups.medical_facility = None
     return world, pupil, student, worker, policy_simulator
+
+@pytest.fixture(name="full_world_geography", scope="session")
+def make_geography():
+    geography = Geography.from_file(
+        {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
+    )
+    return geography
+
+@pytest.fixture(name="full_world", scope="session")
+def create_world(full_world_geography):
+    with h5py.File("test.hdf5", "w"):
+        pass  # reset file
+    geography = full_world_geography 
+    geography.hospitals = Hospitals.for_geography(geography)
+    geography.schools = Schools.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
+    world = generate_world_from_geography(
+        geography=geography, include_households=True, include_commute=True
+    )
+    world.pubs = Pubs.for_geography(geography)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.groceries = Groceries.for_geography(geography)
+    leisure = generate_leisure_for_world(
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
+    )
+    leisure.distribute_social_venues_to_households(
+        households=world.households, super_areas=world.super_areas
+    )
+    return world

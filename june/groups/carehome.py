@@ -96,8 +96,7 @@ class CareHomes(Supergroup):
     __slots__ = "members"
 
     def __init__(self, care_homes: List[CareHome]):
-        super().__init__()
-        self.members = care_homes
+        super().__init__(members=care_homes)
 
     @classmethod
     def for_geography(

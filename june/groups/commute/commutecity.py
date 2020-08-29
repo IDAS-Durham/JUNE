@@ -101,8 +101,7 @@ class CommuteCities(Supergroup):
         Note: London must be initialised after the other stations
         """
 
-        super().__init__()
-        self.members = commutecities
+        super().__init__(members=commutecities)
 
     @classmethod
     def for_geography(

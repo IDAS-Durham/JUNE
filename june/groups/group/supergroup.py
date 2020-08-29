@@ -13,10 +13,16 @@ class Supergroup:
     groups.
     """
 
-    def __init__(self):
-        self.members = []
+    def __init__(self, members):
         self.group_type = self.__class__.__name__
         self.spec = self.get_spec()
+        self.members_by_id = self._make_member_ids_dict(members)
+
+    def _make_member_ids_dict(self, members):
+        """
+        Makes a dictionary with the ids of the members.
+        """
+        return {member.id : member for member in members}
 
     def __iter__(self):
         return iter(self.members)
@@ -26,6 +32,17 @@ class Supergroup:
 
     def __getitem__(self, item):
         return self.members[item]
+
+    def get_from_id(self, id):
+        return self.members_by_id[id]
+
+    @property
+    def members(self):
+        return list(self.members_by_id.values())
+
+    @property
+    def member_ids(self):
+        return list(self.members_by_id.keys())
 
     def get_spec(self) -> str:
         """

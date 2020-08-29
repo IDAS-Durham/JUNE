@@ -199,8 +199,7 @@ class Schools(Supergroup):
         agegroup_to_global_indices:
             dictionary to map the
         """
-        super().__init__()
-        self.members = schools
+        super().__init__(members=schools)
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = agegroup_to_global_indices
 

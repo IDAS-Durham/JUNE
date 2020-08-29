@@ -170,7 +170,7 @@ class Population:
         people
             A list of people generated to match census data for that area
         """
-        self.people = people or []
+        self.people_dict = {person.id : person for person in people}
 
     def __len__(self):
         return len(self.people)
@@ -184,9 +184,16 @@ class Population:
     def extend(self, people):
         self.people.extend(people)
 
+    def get_from_id(self, id):
+        return self.people_dict[id]
+
     @property
     def members(self):
         return self.people
+
+    @property
+    def people(self):
+        return list(self.people_dict.values())
 
     @property
     def total_people(self):

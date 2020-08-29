@@ -84,6 +84,11 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     household.relatives_in_households = tuple(relatives_to_visit)
 
     def get_possible_venues_for_household(self, household: Household):
+        """
+        Note: This should check if a relative is dead. However, the possible venues for a household
+        are decided at the beginning of the simulation for performance. So this is not really checked,
+        currently. It shouldn't matter too much, as not that many people die (hopefully).
+        """
         if household.relatives_in_households is None:
             return ()
         return tuple(

@@ -1,18 +1,13 @@
-from june.groups.group import Supergroup
+from june.groups.group import Supergroup, Group
 
 
-class Cemetery:
-    def __init__(self):
-        self.people = []
-
+class Cemetery(Group):
     def add(self, person):
         self.people.append(person)
 
-
 class Cemeteries(Supergroup):
     def __init__(self):
-        super().__init__()
-        self.members = [Cemetery()]
+        super().__init__([Cemetery()])
 
     def get_nearest(self, person):
         return self.members[0]

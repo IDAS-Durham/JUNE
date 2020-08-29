@@ -18,10 +18,9 @@ class CommuteCityUnits(Supergroup):
 
     def __init__(self, commutecities):
 
-        super().__init__()
+        super().__init__(members=[])
 
         self.commutecities = commutecities
-        self.members = []
 
     def init_units(self):
 

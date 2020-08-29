@@ -37,9 +37,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             age_max = []
             sectors = []
             coordinates = []
-            areas = []
             n_classrooms = []
             years = []
+            areas = []
+            super_areas = []
             for school in schools[idx1:idx2]:
                 ids.append(school.id)
                 n_pupils_max.append(school.n_pupils_max)
@@ -51,8 +52,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                     sectors.append(school.sector.encode("ascii", "ignore"))
                 if school.area is None:
                     areas.append(nan_integer)
+                    super_areas.append(nan_integer)
                 else:
                     areas.append(school.area.id)
+                    super_areas.append(school.super_area.id)
                 coordinates.append(np.array(school.coordinates))
                 n_classrooms.append(school.n_classrooms)
                 years.append(np.array(school.years))
@@ -63,6 +66,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             age_max = np.array(age_max, dtype=np.int)
             sectors = np.array(sectors, dtype="S20")
             areas = np.array(areas, dtype=np.int)
+            super_areas = np.array(super_areas, dtype=np.int)
             coordinates = np.array(coordinates, dtype=np.float)
             n_classrooms = np.array(n_classrooms, dtype=np.int)
             years = np.array(years, dtype=int_vlen_type)
@@ -81,6 +85,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                     maxshape=(None, coordinates.shape[1]),
                 )
                 schools_dset.create_dataset("area", data=areas, maxshape=(None,))
+                schools_dset.create_dataset("super_area", data=super_areas, maxshape=(None, )) 
                 schools_dset.create_dataset("n_classrooms", data=n_classrooms, maxshape=(None,))
                 schools_dset.create_dataset("years", data=years) 
             else:
@@ -99,6 +104,8 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["coordinates"][idx1:idx2] = coordinates
                 schools_dset["area"].resize(newshape[0], axis=0)
                 schools_dset["area"][idx1:idx2] = areas
+                schools_dset["super_area"].resize(newshape[0], axis=0)
+                schools_dset["super_area"][idx1:idx2] = super_areas
                 schools_dset["n_classrooms"].resize(newshape[0], axis=0)
                 schools_dset["n_classrooms"][idx1:idx2] = n_classrooms 
                 schools_dset["years"].resize(newshape[0], axis=0)
@@ -107,7 +114,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
 
 
-def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
+def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000, domain_super_areas=None):
     """
     Loads schools from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -145,10 +152,22 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
             schools["years"].read_direct(
                 years, np.s_[idx1:idx2], np.s_[0:length]
             )
+            super_areas = np.empty(length, dtype=int)
+            schools["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
 
             sectors = np.empty(length, dtype="S20")
             schools["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
             for k in range(idx2 - idx1):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 sector = sectors[k]
                 if sector.decode() == " ":
                     sector = None
@@ -167,9 +186,7 @@ def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000):
                 schools_list.append(school)
     return Schools(schools_list)
 
-def restore_school_properties_from_hdf5(world: World, file_path: str, chunk_size):
-    first_school_id = world.schools[0].id
-    first_area_id = world.areas[0].id
+def restore_school_properties_from_hdf5(world: World, file_path: str, chunk_size, domain_super_areas=None):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
         schools_list = []
@@ -183,11 +200,21 @@ def restore_school_properties_from_hdf5(world: World, file_path: str, chunk_size
             schools["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             areas = np.empty(length, dtype=int)
             schools["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
+            super_areas = np.empty(length, dtype=int)
+            schools["super_area"].read_direct(super_areas, np.s_[idx1:idx2], np.s_[0:length])
             for k in range(length):
-                school = world.schools[ids[k] - first_school_id]
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                school = world.schools.get_from_id(ids[k]) 
                 area = areas[k]
                 if area == nan_integer:
                     school.area = None
                 else:
-                    school.area = world.areas[area - first_area_id]
+                    school.area = world.areas.get_from_id(area)
 

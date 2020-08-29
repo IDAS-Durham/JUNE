@@ -81,8 +81,7 @@ class Companies(Supergroup):
         compsec_per_msoa_df: pd.DataFrame
             Nr. of companies per sector sector per SuperArea.
         """
-        super().__init__()
-        self.members = companies
+        super().__init__(members=companies)
 
     @classmethod
     def for_geography(

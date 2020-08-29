@@ -49,12 +49,10 @@ class CommuteUnits(Supergroup):
         init: (bool) if True, initialise units, if False do this manually
         members: (list) list of all commute units
         """
-        super().__init__()
+        super().__init__(members=[])
 
         self.commutehubs = commutehubs
         self.init = init
-        self.members = []
-
         
     def init_units(self):
         'Initialise units'

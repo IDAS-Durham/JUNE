@@ -36,8 +36,7 @@ class SocialVenue(Group):
 class SocialVenues(Supergroup):
     social_venue_class = SocialVenue
     def __init__(self, social_venues: List[SocialVenue], make_tree=True):
-        super().__init__()
-        self.members = social_venues
+        super().__init__(members=social_venues)
         self.ball_tree = None
         if make_tree:
             self.make_tree()

@@ -143,8 +143,7 @@ class Households(Supergroup):
     """
 
     def __init__(self, households: List[Household]):
-        super().__init__()
-        self.members = households
+        super().__init__(members=households)
 
     def __add__(self, households: "Households"):
         """
