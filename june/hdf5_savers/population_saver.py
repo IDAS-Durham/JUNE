@@ -402,7 +402,9 @@ def restore_population_properties_from_hdf5(
             areas = np.empty(length, dtype=int)
             population["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
             super_areas = np.empty(length, dtype=int)
-            population["super_area"].read_direct(super_areas, np.s_[idx1:idx2], np.s_[0:length])
+            population["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]
@@ -436,14 +438,23 @@ def restore_population_properties_from_hdf5(
                         continue
                     group_spec = group_spec.decode()
                     supergroup = getattr(world, spec_mapper[group_spec])
-                    if group_super_area in domain_super_areas:
+                    if (
+                        domain_super_areas is None
+                        or group_super_area in domain_super_areas
+                    ):
                         group = supergroup.get_from_id(group_id)
                         assert group_id == group.id
                         subgroup = group[subgroup_type]
                         subgroup.append(person)
                         setattr(subgroups_instances, activities_fields[i], subgroup)
                     else:
-                        subgroup_tuple = (group_spec, group_id, subgroup_type, group_super_area)
-                        setattr(subgroups_instances, activities_fields[i], subgroup_tuple)
+                        subgroup_tuple = (
+                            group_spec,
+                            group_id,
+                            subgroup_type,
+                            group_super_area,
+                        )
+                        setattr(
+                            subgroups_instances, activities_fields[i], subgroup_tuple
+                        )
                 person.subgroups = subgroups_instances
-

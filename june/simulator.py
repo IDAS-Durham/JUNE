@@ -400,9 +400,7 @@ class Simulator:
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
-        people_to_infect = [
-            self.world.people.get_from_id(idx) for idx in infected_ids
-        ]
+        people_to_infect = [self.world.people.get_from_id(idx) for idx in infected_ids]
         if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "

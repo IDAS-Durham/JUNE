@@ -16,10 +16,11 @@ class CommuteCityUnit(Group):
     
 class CommuteCityUnits(Supergroup):
 
-    def __init__(self, commutecities):
+    def __init__(self, commutecities, commute_city_units=None):
 
-        super().__init__(members=[])
-
+        if commute_city_units is None:
+            commute_city_units = []
+        super().__init__(commute_city_units)
         self.commutecities = commutecities
 
     def init_units(self):
@@ -37,8 +38,9 @@ class CommuteCityUnits(Supergroup):
                     super_area = commutecity.super_area,
                     is_peak = peak_not_peak[i]
                 )
+                print("making unit...")
 
-                self.members.append(commutecity_unit)
+                self.add(commutecity_unit)
                 commutecity.commutecityunits.append(commutecity_unit)
                 
             ids += 1

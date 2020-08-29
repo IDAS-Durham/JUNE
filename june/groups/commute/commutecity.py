@@ -91,7 +91,7 @@ class CommuteCities(Supergroup):
       and define the London metropolitan area to be over the sum of all MSOAs near each station
     """
 
-    def __init__(self, commutecities: List["CommuteCities"]):
+    def __init__(self, commutecities: List[CommuteCity]):
         """
         uk_pcs_coodinates: (pd.Dataframe) Dataframe containing all UK postcodes and their coordinates
         msoa_coordinates: (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
