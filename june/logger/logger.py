@@ -270,7 +270,7 @@ class Logger:
             datetime to log
         """
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        infection_location = np.array(self.infection_location, dtype="S10")
+        infection_location = np.array(self.infection_location, dtype="S20")
         new_infected_ids = np.array(self.new_infected_ids, dtype=np.int)
         with h5py.File(self.file_path, "a", libver="latest") as f:
             locations_dset = f.require_group("locations")

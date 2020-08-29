@@ -298,19 +298,18 @@ class ReadLogger:
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             locations = f["locations"]
             infection_location = []
-            counts = []
+            new_infected_ids = []
             for time_stamp in locations.keys():
                 infection_location.append(
                     list(locations[time_stamp]["infection_location"][:].astype("U13"))
                 )
-                counts.append(list(locations[time_stamp]["infection_counts"][:]))
+                new_infected_ids.append(list(locations[time_stamp]["new_infected_ids"][:]))
             time_stamps = list(locations.keys())
-
         self.locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
                 "location": infection_location,
-                "counts": counts,
+                "new_infected_ids": new_infected_ids,
             }
         )
         self.locations_df["time_stamp"] = pd.to_datetime(
@@ -336,16 +335,7 @@ class ReadLogger:
             end_date = self.infections_df.index.max()
         selected_dates = self.locations_df.loc[start_date:end_date]
         all_locations = selected_dates.sum().location
-        all_counts = selected_dates.sum().counts
-        unique_locations = set(all_locations)
-        count_dict = {location: 0 for location in unique_locations}
-        for i, location in enumerate(all_locations):
-            count_dict[location] += all_counts[i]
-        locations = pd.DataFrame(
-            count_dict.values(), index=count_dict.keys(), columns=["counts"]
-        )
-        locations["percentage_infections"] = 100 * locations / locations.sum()
-        return locations
+        return all_locations
 
     def get_location_infections_timeseries(self, start_date=None, end_date=None,):
         """
