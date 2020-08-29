@@ -36,6 +36,9 @@ class Supergroup:
     def get_from_id(self, id):
         return self.members_by_id[id]
 
+    def add(self, group):
+        self.members_by_id[group.id] = group
+
     @property
     def members(self):
         return list(self.members_by_id.values())

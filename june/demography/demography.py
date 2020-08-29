@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional
- 
+
 import numpy as np
 import pandas as pd
 import h5py
@@ -11,13 +11,10 @@ from june.demography.geography import Geography
 
 default_data_path = paths.data_path / "input/demography"
 
-default_areas_map_path = (
-    paths.data_path / "input/geography/area_super_area_region.csv"
-)
+default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 
-default_config_path = (
-    paths.configs_path
-)
+default_config_path = paths.configs_path
+
 
 def parse_age_bin(age_bin: str):
     pairs = list(map(int, age_bin.split("-")))
@@ -170,7 +167,10 @@ class Population:
         people
             A list of people generated to match census data for that area
         """
-        self.people_dict = {person.id : person for person in people}
+        if people is None:
+            self.people_dict = {}
+        else:
+            self.people_dict = {person.id: person for person in people}
 
     def __len__(self):
         return len(self.people)
@@ -182,7 +182,8 @@ class Population:
         return self.people[index]
 
     def extend(self, people):
-        self.people.extend(people)
+        for person in people:
+            self.people_dict[person.id] = person
 
     def get_from_id(self, id):
         return self.people_dict[id]
@@ -213,7 +214,12 @@ class Population:
 
 
 class Demography:
-    def __init__(self, area_names, age_sex_generators: Dict[str, AgeSexGenerator], comorbidity_data = None):
+    def __init__(
+        self,
+        area_names,
+        age_sex_generators: Dict[str, AgeSexGenerator],
+        comorbidity_data=None,
+    ):
         """
         Tool to generate population for a certain geographical regin.
 
@@ -227,7 +233,9 @@ class Demography:
         self.age_sex_generators = age_sex_generators
         self.comorbidity_data = comorbidity_data
 
-    def populate(self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=True) -> Population:
+    def populate(
+        self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=True
+    ) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -351,8 +359,11 @@ class Demography:
             area_names,
         )
         comorbidity_data = load_comorbidity_data(m_comorbidity_path, f_comorbidity_path)
-        return Demography(age_sex_generators=age_sex_generators, area_names=area_names, \
-                          comorbidity_data=comorbidity_data)
+        return Demography(
+            age_sex_generators=age_sex_generators,
+            area_names=area_names,
+            comorbidity_data=comorbidity_data,
+        )
 
 
 def _load_age_and_sex_generators(
@@ -418,31 +429,37 @@ def _load_age_and_sex_generators(
 
     return ret
 
-def load_comorbidity_data(m_comorbidity_path = None, f_comorbidity_path = None):
+
+def load_comorbidity_data(m_comorbidity_path=None, f_comorbidity_path=None):
     if m_comorbidity_path is not None and f_comorbidity_path is not None:
         male_co = pd.read_csv(m_comorbidity_path)
         female_co = pd.read_csv(f_comorbidity_path)
 
-        male_co = male_co.set_index('comorbidity')
-        female_co = female_co.set_index('comorbidity')
+        male_co = male_co.set_index("comorbidity")
+        female_co = female_co.set_index("comorbidity")
 
         for column in male_co.columns:
-            m_nc = male_co[column].loc['no_condition']
+            m_nc = male_co[column].loc["no_condition"]
             m_norm_1 = 1 - m_nc
             m_norm_2 = np.sum(male_co[column]) - m_nc
-            
-            f_nc = female_co[column].loc['no_condition']
+
+            f_nc = female_co[column].loc["no_condition"]
             f_norm_1 = 1 - f_nc
             f_norm_2 = np.sum(female_co[column]) - f_nc
-            
+
             for idx in list(male_co.index)[:-1]:
-                male_co[column].loc[idx] = male_co[column].loc[idx]/m_norm_2 * m_norm_1
-                female_co[column].loc[idx] = female_co[column].loc[idx]/f_norm_2 * f_norm_1
+                male_co[column].loc[idx] = (
+                    male_co[column].loc[idx] / m_norm_2 * m_norm_1
+                )
+                female_co[column].loc[idx] = (
+                    female_co[column].loc[idx] / f_norm_2 * f_norm_1
+                )
 
         return [male_co, female_co]
 
     else:
         return None
+
 
 def generate_comorbidity(person, comorbidity_data):
     if comorbidity_data is not None:
@@ -457,18 +474,24 @@ def generate_comorbidity(person, comorbidity_data):
                 break
             else:
                 column_index = idx
-        if column_index !=0:
+        if column_index != 0:
             column_index += 1
 
-        if person.sex == 'm':
-            comorbidity = np.random.choice(list(male_co.index),1,p=list(male_co[male_co.columns[column_index]]))[0]
-            if comorbidity == 'no_condition':
+        if person.sex == "m":
+            comorbidity = np.random.choice(
+                list(male_co.index), 1, p=list(male_co[male_co.columns[column_index]])
+            )[0]
+            if comorbidity == "no_condition":
                 comorbidity = None
             return comorbidity
 
-        if person.sex == 'f':
-            comorbidity = np.random.choice(list(female_co.index),1,p=list(female_co[female_co.columns[column_index]]))[0]
-            if comorbidity == 'no_condition':
+        if person.sex == "f":
+            comorbidity = np.random.choice(
+                list(female_co.index),
+                1,
+                p=list(female_co[female_co.columns[column_index]]),
+            )[0]
+            if comorbidity == "no_condition":
                 comorbidity = None
             return comorbidity
 

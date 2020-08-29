@@ -144,7 +144,7 @@ def save_population_to_hdf5(
             socioecon_indices = np.array(socioecon_indices, dtype=np.int)
             home_city = np.array(home_city, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
-            areas = np.array(super_areas, dtype=np.int)
+            super_areas = np.array(super_areas, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
@@ -436,9 +436,14 @@ def restore_population_properties_from_hdf5(
                         continue
                     group_spec = group_spec.decode()
                     supergroup = getattr(world, spec_mapper[group_spec])
-                    group = supergroup.get_from_id(group_id)
-                    assert group_id == group.id
-                    subgroup = group[subgroup_type]
-                    subgroup.append(person)
-                    setattr(subgroups_instances, activities_fields[i], subgroup)
-                    person.subgroups = subgroups_instances
+                    if group_super_area in domain_super_areas:
+                        group = supergroup.get_from_id(group_id)
+                        assert group_id == group.id
+                        subgroup = group[subgroup_type]
+                        subgroup.append(person)
+                        setattr(subgroups_instances, activities_fields[i], subgroup)
+                    else:
+                        subgroup_tuple = (group_spec, group_id, subgroup_type, group_super_area)
+                        setattr(subgroups_instances, activities_fields[i], subgroup_tuple)
+                person.subgroups = subgroups_instances
+

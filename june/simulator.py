@@ -62,7 +62,6 @@ class Simulator:
             self.checkpoint_dates = ()
         else:
             self.checkpoint_dates = checkpoint_dates
-        self.sort_people_world()
         if save_path is not None:
             self.save_path = Path(save_path)
             self.save_path.mkdir(exist_ok=True, parents=True)
@@ -191,21 +190,20 @@ class Simulator:
         )
         with open(checkpoint_path, "rb") as f:
             checkpoint_data = pickle.load(f)
-        first_person_id = simulator.world.people[0].id
         for dead_id in checkpoint_data["dead_ids"]:
-            person = simulator.world.people[dead_id - first_person_id]
+            person = simulator.world.people.get_from_id(dead_id)
             person.dead = True
             person.susceptibility = 0.0
             cemetery = world.cemeteries.get_nearest(person)
             cemetery.add(person)
             person.subgroups = Activities(None, None, None, None, None, None, None)
         for recovered_id in checkpoint_data["recovered_ids"]:
-            person = simulator.world.people[recovered_id - first_person_id]
+            person = simulator.world.people.get_from_id(recovered_id)
             person.susceptibility = 0.0
         for infected_id, infection in zip(
             checkpoint_data["infected_ids"], checkpoint_data["infection_list"]
         ):
-            person = simulator.world.people[infected_id - first_person_id]
+            person = simulator.world.people.get_from_id(infected_id)
             person.infection = infection
             person.susceptibility = 0.0
         # restore timer
@@ -215,14 +213,6 @@ class Simulator:
         simulator.timer.delta_time = checkpoint_timer.delta_time
         simulator.timer.shift = checkpoint_timer.shift
         return simulator
-
-    def sort_people_world(self):
-        """
-        Sorts world population by id so it is easier to find them later.
-        """
-        people_ids = np.array([person.id for person in self.world.people])
-        ids_sorted_idx = np.argsort(people_ids)
-        self.world.people.people = np.array(self.world.people)[ids_sorted_idx]
 
     def clear_world(self):
         """
@@ -385,7 +375,6 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
-        first_person_id = self.world.people[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -403,7 +392,7 @@ class Simulator:
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(int_group.infector_ids):
-                            infector = self.world.people[infector_id - first_person_id]
+                            infector = self.world.people.get_from_id(infector_id)
                             assert infector.id == infector_id
                             infector.infection.number_of_infected += (
                                 n_infected
@@ -412,7 +401,7 @@ class Simulator:
                             )
                     infected_ids += new_infected_ids
         people_to_infect = [
-            self.world.people[idx - first_person_id] for idx in infected_ids
+            self.world.people.get_from_id(idx) for idx in infected_ids
         ]
         if n_people != len(self.world.people):
             raise SimulatorError(

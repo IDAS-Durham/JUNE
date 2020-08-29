@@ -232,32 +232,28 @@ def generate_domain_from_hdf5(
         It is advise to keep it around 1e6
     """
     from june.domain import Domain
+
     logger.info("loading world from HDF5")
     domain = Domain()
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         f_keys = list(f.keys()).copy()
-    geography = load_geography_from_hdf5(
-        file_path=file_path,
-        chunk_size=chunk_size,
-    )
+    geography = load_geography_from_hdf5(file_path=file_path, chunk_size=chunk_size,)
     domain.areas = geography.areas
     domain.super_areas = geography.super_areas
     restore_geography_properties_from_hdf5(
-        world=domain,
-        file_path=file_path,
-        chunk_size=chunk_size,
+        world=domain, file_path=file_path, chunk_size=chunk_size,
     )
     super_areas_domain = SuperAreas(
         [
             super_area
-            for super_area in geography.super_areas
+            for super_area in domain.super_areas
             if super_area.name in domain_super_area_names
         ]
     )
     areas_domain = Areas(
         [area for super_area in super_areas_domain for area in super_area.areas]
     )
-    domain.areas = areas_domain 
+    domain.areas = areas_domain
     domain.super_areas = super_areas_domain
     super_area_ids = [super_area.id for super_area in domain.super_areas]
     if "hospitals" in f_keys:
@@ -374,10 +370,14 @@ def generate_domain_from_hdf5(
         )
     if "universities" in f_keys:
         logger.info("restoring unis...")
-        restore_universities_properties_from_hdf5(world=domain, file_path=file_path)
+        restore_universities_properties_from_hdf5(
+            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+        )
 
     if "social_venues" in f_keys:
         logger.info("restoring social venues...")
-        restore_social_venues_properties_from_hdf5(world=domain, file_path=file_path)
+        restore_social_venues_properties_from_hdf5(
+            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+        )
     domain.cemeteries = Cemeteries()
     return domain
