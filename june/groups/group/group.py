@@ -4,7 +4,7 @@ import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
-from typing import List
+from typing import List, Tuple
 
 from june.demography.person import Person
 from june.exc import GroupException
@@ -121,11 +121,11 @@ class Group(AbstractGroup):
             setattr(person.subgroups, activity, self[subgroup_type])
 
     @property
-    def people(self) -> List[Person]:
+    def people(self) -> Tuple[Person]:
         """
         All the people in this group
         """
-        return [person for subgroup in self.subgroups for person in subgroup.people]
+        return tuple(person for subgroup in self.subgroups for person in subgroup.people)
 
     @property
     def contains_people(self) -> bool:

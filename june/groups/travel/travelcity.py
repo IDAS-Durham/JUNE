@@ -36,9 +36,8 @@ class TravelCities(Supergroup):
         Assumptions:
         - Commting is turned on and all commute cities have been distirbuted
         """
-        
+        super().__init__([]) 
         self.commutecities = commutecities
-        self.members = []
 
     def init_cities(self):
         'Initialise all cities'

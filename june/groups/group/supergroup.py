@@ -36,6 +36,10 @@ class Supergroup:
     def get_from_id(self, id):
         return self.members_by_id[id]
 
+    def __add__(self, households: "Households"):
+        for household in households:
+            self.add(household)
+
     def add(self, group):
         self.members_by_id[group.id] = group
 

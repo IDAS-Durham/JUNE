@@ -271,7 +271,7 @@ def setup_world(dummy_world, policy_simulator):
 
 
 @pytest.fixture(name="full_world_geography", scope="session")
-def make_geography():
+def make_full_world_geography():
     geography = Geography.from_file(
         {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
     )
@@ -279,7 +279,7 @@ def make_geography():
 
 
 @pytest.fixture(name="full_world", scope="session")
-def create_world(full_world_geography):
+def create_full_world(full_world_geography):
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
     geography = full_world_geography
@@ -304,10 +304,12 @@ def create_world(full_world_geography):
 
 
 @pytest.fixture(name="domains_world", scope="module")
-def create_world(full_world_geography):
+def create_domains_world():
+    geography = Geography.from_file(
+        {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
+    )
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
-    geography = full_world_geography
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)

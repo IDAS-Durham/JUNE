@@ -3,7 +3,7 @@ from june.groups.group import Supergroup, Group
 
 class Cemetery(Group):
     def add(self, person):
-        self.people.append(person)
+        self[0].people.append(person)
 
 class Cemeteries(Supergroup):
     def __init__(self):
