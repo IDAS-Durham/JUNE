@@ -49,4 +49,4 @@ class TravelCities(Supergroup):
                 metro_centroid = commutecity.metro_centroid,
             )
 
-            self.members.append(travel_city)
+            self.add(travel_city)

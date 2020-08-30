@@ -24,6 +24,5 @@ class TravelUnits(Supergroup):
 
     def __init__(self):
 
-        super().__init__()
-        
-        self.members = []
+        super().__init__([])
+
