@@ -203,6 +203,9 @@ def load_commute_hubs_from_hdf5(file_path: str, domain_super_areas=None):
             commute_hub = CommuteHub(lat_lon=None, city=city_names[k].decode())
             commute_hub.id = ids[k]
             commute_hub.city = city_names[k].decode()
+            print("###")
+            print(super_area)
+            print(commute_through[k])
             commute_hub.commute_through = commute_through[k]
             commute_hub.super_area = super_areas[k]
             for unit_id in commute_units[k]:
@@ -220,10 +223,10 @@ def load_commute_hubs_from_hdf5(file_path: str, domain_super_areas=None):
     return ch, cu
 
 
-def restore_commute_properties_from_hdf5(world: World, file_path: str):
-    # restore commute
-    # commute
+def restore_commute_properties_from_hdf5(world: World, file_path: str, domain_super_areas=None):
     for city in world.commutecities:
+        if domain_super_areas and city.super_area not in domain_super_areas:
+            continue
         people_ids = city.people
         commute_hubs = [world.commutehubs.get_from_id(idx) for idx in city.commutehubs]
         city.commutehubs = commute_hubs
@@ -236,7 +239,12 @@ def restore_commute_properties_from_hdf5(world: World, file_path: str):
         else:
             city.super_area = world.super_areas.get_from_id(city.super_area)
 
+    print("restoring hubs")
     for hub in world.commutehubs:
+        print(domain_super_areas)
+        print(hub.super_area)
+        if domain_super_areas and hub.super_area not in domain_super_areas:
+            continue
         if hub.super_area == nan_integer:
             hub.super_area = None
         else:

@@ -98,6 +98,7 @@ def save_households_to_hdf5(
         relatives_in_care_homes = []
         social_venues_specs_list = []
         social_venues_ids_list = []
+        social_venues_super_areas = []
         for household in households:
             if (
                 household.relatives_in_households is None
@@ -125,17 +126,23 @@ def save_households_to_hdf5(
                 )
             social_venues_ids = []
             social_venues_specs = []
+            social_venues_sas = []
             for spec in household.social_venues.keys():
                 for social_venue in household.social_venues[spec]:
                     social_venues_specs.append(spec.encode("ascii", "ignore"))
                     social_venues_ids.append(social_venue.id)
+                    social_venues_sas.append(social_venue.super_area.id)
             social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
             social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
+            social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
         relatives_in_care_homes = np.array(relatives_in_care_homes, dtype=int_vlen_type)
         social_venues_specs_list = np.array(
             social_venues_specs_list, dtype=str_vlen_type
         )
         social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
+        social_venues_super_areas = np.array(
+            social_venues_super_areas, dtype=int_vlen_type
+        )
         if len(np.unique(list(chain(*relatives_in_households)))) > 1:
             relatives_in_households = np.array(
                 relatives_in_households, dtype=int_vlen_type
@@ -156,6 +163,9 @@ def save_households_to_hdf5(
             )
             households_dset.create_dataset(
                 "social_venues_ids", data=social_venues_ids_list,
+            )
+            households_dset.create_dataset(
+                "social_venues_super_areas", data=social_venues_super_areas,
             )
 
 
@@ -230,6 +240,7 @@ def restore_households_properties_from_hdf5(
             super_areas = np.empty(length, dtype=np.int)
             social_venues_specs = np.empty(length, dtype=str_vlen_type)
             social_venues_ids = np.empty(length, dtype=int_vlen_type)
+            social_venues_super_areas = np.empty(length, dtype=int_vlen_type)
             households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             households["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
             households["super_area"].read_direct(
@@ -252,6 +263,9 @@ def restore_households_properties_from_hdf5(
                 )
                 households["social_venues_ids"].read_direct(
                     social_venues_ids, np.s_[idx1:idx2], np.s_[0:length]
+                )
+                households["social_venues_super_areas"].read_direct(
+                    social_venues_super_areas, np.s_[idx1:idx2], np.s_[0:length]
                 )
             for k in range(length):
                 if domain_super_areas is not None:
@@ -296,13 +310,21 @@ def restore_households_properties_from_hdf5(
                     "social_venues_specs" in households
                     and "social_venues_ids" in households
                 ):
-                    for group_spec, group_id in zip(
-                        social_venues_specs[k], social_venues_ids[k]
+                    for group_spec, group_id, group_super_area in zip(
+                        social_venues_specs[k],
+                        social_venues_ids[k],
+                        social_venues_super_areas[k],
                     ):
                         spec = group_spec.decode()
                         spec_mapped = social_venues_spec_mapper[spec]
                         supergroup = getattr(world, spec_mapped)
-                        group = supergroup.get_from_id(group_id)
+                        if (
+                            domain_super_areas is not None
+                            and group_super_area not in domain_super_areas
+                        ):
+                            group = (group_super_area, spec, group_id)
+                        else:
+                            group = supergroup.get_from_id(group_id)
                         household.social_venues[spec] = (
                             *household.social_venues[spec],
                             group,

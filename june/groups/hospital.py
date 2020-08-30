@@ -157,7 +157,7 @@ class Hospitals(Supergroup):
         coordinates = np.array([hospital.coordinates for hospital in hospitals])
         if not box_mode:
             if not self.members:
-                logger.info(f"No hospitals in this domain / world.")
+                logger.warning(f"No hospitals in this domain / world.")
             else:
                 self.init_trees(coordinates)
 
