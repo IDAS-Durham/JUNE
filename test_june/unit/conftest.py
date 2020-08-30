@@ -227,10 +227,6 @@ def make_dummy_world():
     world.commuteunits = CommuteUnits(world.commutehubs.members)
     world.commuteunits.init_units()
     world.commutecityunits = CommuteCityUnits(world.commutecities.members)
-    print("ASDSADASDA")
-    print(world.commuteunits.members)
-    print("ASDSADASDA")
-    print(world.commutecityunits.members)
     world.cemeteries = Cemeteries()
     return world
 
