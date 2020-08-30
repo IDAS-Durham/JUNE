@@ -16,7 +16,6 @@ class ReadLogger:
         output_path: str = "results",
         output_file_name: str = "logger.hdf5",
         light_logger: bool = False,
-        load_real: bool = True,
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -36,8 +35,6 @@ class ReadLogger:
         self.load_infection_location()
         self.start_date = min(self.infections_df.index)
         self.end_date = max(self.infections_df.index)
-        if load_real:
-            self.load_real_time_series()
 
     def load_population_data(self, light_logger):
         """
@@ -88,23 +85,15 @@ class ReadLogger:
 
     def subtract_previous(self, row, hospitalised_id, prev_hospitalised_id):
         try:
-            return len(set(hospitalised_id.loc[row.name]) - set(prev_hospitalised_id.loc[row.name]))   
+            return len(
+                set(hospitalised_id.loc[row.name])
+                - set(prev_hospitalised_id.loc[row.name])
+            )
         except:
             return len(set(hospitalised_id.loc[row.name]))
 
-    def get_daily_updates(self, symptoms_df, lambda_to_filter):
-        # Admissions
-        symptoms_id = symptoms_df.apply(
-                lambda_to_filter,
-                axis=1
-        )
-        previous_symptoms_id = symptoms_id.shift(1)
-        return symptoms_df.apply(self.subtract_previous, 
-                args=(symptoms_id, previous_symptoms_id), axis=1
-                )
-
     def process_symptoms(
-        self, symptoms_df: pd.DataFrame, n_people: int
+            self, symptoms_df: pd.DataFrame,  n_people: int
     ) -> pd.DataFrame:
         """
         Given a dataframe with time stamp and a list of symptoms representing the symptoms of every infected 
@@ -127,46 +116,56 @@ class ReadLogger:
             SymptomTag.dead_hospital,
         ]
         df = pd.DataFrame()
-        df["recovered"] = symptoms_df.apply(
+        df["daily_recovered"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
-        ).cumsum()
-        df["dead_home"] = symptoms_df.apply(
+        )  # .cumsum()
+        df["daily_deaths_home"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_home), axis=1
-        ).cumsum()
-        df["dead_hospital"] = symptoms_df.apply(
+        )  # .cumsum()
+        df["daily_deaths_hospital"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_hospital), axis=1
-        ).cumsum()
-        df["dead_icu"] = symptoms_df.apply(
+        )  # .cumsum()
+        df["daily_deaths_icu"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
-        ).cumsum()
-        df["dead"] = symptoms_df.apply(
-            lambda x: np.count_nonzero(np.isin(x.symptoms, dead_symptoms)), axis=1,
-        ).cumsum()
+        )  # .cumsum()
+        df['daily_deaths'] = df[['daily_deaths_home', 'daily_deaths_hospital', 'daily_deaths_icu']].sum(axis=1)
         # get rid of those that just recovered or died
-        df["infected"] = symptoms_df.apply(
+        df["current_infected"] = symptoms_df.apply(
             lambda x: (
-                (x.symptoms != SymptomTag.recovered) & (~np.isin(x.symptoms,dead_symptoms))
+                (x.symptoms != SymptomTag.recovered)
+                & (~np.isin(x.symptoms, dead_symptoms))
             ).sum(),
             axis=1,
         )
-        df["susceptible"] = n_people - df[["infected", "dead", "recovered"]].sum(axis=1)
-        df["hospitalised"] = symptoms_df.apply(
+        df["current_dead"] = df["daily_deaths"].cumsum()
+        df["current_recovered"] = df["daily_recovered"].cumsum()
+        df["current_susceptible"] = n_people - df[
+            ["current_infected", "current_dead", "current_recovered"]
+        ].sum(axis=1)
+        df["current_hospitalised"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.hospitalised), axis=1
         )
-        df["intensive_care"] = symptoms_df.apply(
+        df["current_intensive_care"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
-        df['hospital_admissions'] = self.get_daily_updates(symptoms_df, 
-                                    lambda x: x.infected_id[x.symptoms==SymptomTag.hospitalised])
-
-        df['intensive_care_admissions'] = self.get_daily_updates(symptoms_df, 
-                                    lambda x: x.infected_id[x.symptoms==SymptomTag.intensive_care])
-
-        df['new_infections'] = -df['susceptible'].diff().fillna(-df['infected'][0]).astype(int)
-
-        #df['new_dead'] = self.get_daily_updates(symptoms_df, SymptomTag.dead) 
+        flat_df = self.infections_df[["symptoms", "infected_id"]].apply(
+            lambda x: x.explode() 
+        )
+        flat_df = flat_df.drop_duplicates(keep='first')
+        flat_df = flat_df[
+            flat_df["symptoms"] == SymptomTag.hospitalised
+        ]
+        df["daily_hospital_admissions"] = flat_df.groupby(
+            flat_df.index
+        ).size()
+        df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
+        df["daily_infections"] = (
+            -df["current_susceptible"]
+            .diff()
+            .fillna(-df["current_infected"][0])
+            .astype(int)
+        )
         return df
-
 
     def world_summary(self) -> pd.DataFrame:
         """
@@ -192,8 +191,9 @@ class ReadLogger:
         self.infections_df["super_areas"] = self.infections_df.apply(
             lambda x: self.super_areas[x.infected_id], axis=1
         )
+        unique_super_areas = np.unique(self.super_areas)
         areas_df = []
-        for area in np.unique(self.super_areas):
+        for area in unique_super_areas:
             area_df = pd.DataFrame()
             n_people_in_area = np.sum(self.super_areas == area)
             area_df["symptoms"] = self.infections_df.apply(
@@ -244,14 +244,11 @@ class ReadLogger:
                 ],
                 axis=1,
             )
- 
+
             age_df = self.process_symptoms(age_df, n_age)
             age_df["age_range"] = f"{age_ranges[i]}_{age_ranges[i+1]-1}"
             ages_df.append(age_df)
         return pd.concat(ages_df)
-
-    def infection_duration(self):
-        pass
 
     def draw_symptom_trajectories(
         self, window_length: int = 50, n_people: int = 4
@@ -279,9 +276,7 @@ class ReadLogger:
         )
         random_trajectories = self.infections_df.loc[mask]
         random_trajectories = random_trajectories.apply(pd.Series.explode)
-        random_ids = sample(
-            list(random_trajectories.infected_id.unique()), n_people
-        )
+        random_ids = sample(list(random_trajectories.infected_id.unique()), n_people)
         return [
             random_trajectories[random_trajectories["infected_id"] == random_id]
             for random_id in random_ids
@@ -301,14 +296,16 @@ class ReadLogger:
             new_infected_ids = []
             for time_stamp in locations.keys():
                 infection_location.append(
-                    list(locations[time_stamp]["infection_location"][:].astype("U13"))
+                    list(locations[time_stamp]["infection_location"][:].astype("U"))
                 )
-                new_infected_ids.append(list(locations[time_stamp]["new_infected_ids"][:]))
+                new_infected_ids.append(
+                    list(locations[time_stamp]["new_infected_ids"][:])
+                )
             time_stamps = list(locations.keys())
         self.locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
-                "location": infection_location,
+                "location_id": infection_location,
                 "new_infected_ids": new_infected_ids,
             }
         )
@@ -316,6 +313,14 @@ class ReadLogger:
             self.locations_df["time_stamp"]
         )
         self.locations_df.set_index("time_stamp", inplace=True)
+        self.locations_df = self.locations_df.resample("D").sum()
+        self.locations_df["location"] = self.locations_df.apply(
+            lambda x: [location_name.split("_")[0] for location_name in x.location_id],
+            axis=1,
+        )
+        self.locations_df["super_areas"] = self.locations_df.apply(
+            lambda x: self.super_areas[x.new_infected_ids], axis=1
+        )
 
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
@@ -334,10 +339,12 @@ class ReadLogger:
         if end_date is None:
             end_date = self.infections_df.index.max()
         selected_dates = self.locations_df.loc[start_date:end_date]
-        all_locations = selected_dates.sum().location
+        all_locations = selected_dates["location"].sum()
         return all_locations
 
-    def get_location_infections_timeseries(self, start_date=None, end_date=None,):
+    def get_location_infections_timeseries(
+        self, start_date=None, end_date=None,
+    ):
         """
         Get a data frame timeseries with the number of infection happening at each type of place, within the given time
         period
@@ -359,10 +366,12 @@ class ReadLogger:
         all_counts = selected_dates.sum().counts
         unique_locations = set(all_locations)
 
-        time_series = pd.DataFrame(0, index=selected_dates.index, columns=unique_locations)
+        time_series = pd.DataFrame(
+            0, index=selected_dates.index, columns=unique_locations
+        )
         for ts, row in selected_dates.iterrows():
-            for location,count in zip(row["location"],row["counts"]):
-                time_series.loc[ts,location] = count
+            for location, count in zip(row["location"], row["counts"]):
+                time_series.loc[ts, location] = count
 
         time_series["total"] = time_series.sum(axis=1)
 
@@ -444,79 +453,53 @@ class ReadLogger:
         )
         return r_df
 
-    def load_real_time_series(self,):
-        self.load_real_deaths()
-        self.load_confirmed_cases()
-        self.load_estimated_cases()
-
-    def load_real_deaths(self,):
-        deaths_df = pd.read_csv(
-            paths.data_path / "covid_real_data/n_deaths_region.csv", index_col=0
-        )
-        deaths_df.index = pd.to_datetime(deaths_df.index)
-        mask = (deaths_df.index > self.start_date) & (deaths_df.index < self.end_date)
-        self.real_deaths_df = deaths_df[mask]
-
-    def load_confirmed_cases(self,):
-        confirmed_cases_df = pd.read_csv(
-            paths.data_path / "covid_real_data/n_confirmed_cases.csv", index_col=0
-        )
-        confirmed_cases_df.index = pd.to_datetime(confirmed_cases_df.index)
-        mask = (confirmed_cases_df.index > self.start_date) & (
-            confirmed_cases_df.index < self.end_date
-        )
-        self.confirmed_cases_df = confirmed_cases_df[mask]
-
-    def load_estimated_cases(self,):
-
-        estimated_cases_df = pd.read_csv(
-            paths.data_path / "covid_real_data/n_cases_region.csv", index_col=0
-        )
-        estimated_cases_df.index = pd.to_datetime(estimated_cases_df.index)
-        mask = (estimated_cases_df.index > self.start_date) & (
-            estimated_cases_df.index < self.end_date
-        )
-        self.estimated_cases_df = estimated_cases_df[mask]
-
     def repack_dict(
-        self,hdf5_obj,output_dict,base_path,output_name=None,depth=0,max_depth=8
+        self, hdf5_obj, output_dict, base_path, output_name=None, depth=0, max_depth=8
     ):
 
         if output_name is None:
-            output_name = base_path.split('/')[-1]
+            output_name = base_path.split("/")[-1]
 
         if depth > max_depth:
-            output_dict[output_name] = (
-                f"increase get_parameters max_depth, exceeded at max_depth={max_depth}"
-            )
+            output_dict[
+                output_name
+            ] = f"increase get_parameters max_depth, exceeded at max_depth={max_depth}"
             return None
 
-        if isinstance(hdf5_obj[base_path],h5py.Dataset):
+        if isinstance(hdf5_obj[base_path], h5py.Dataset):
             output_dict[output_name] = hdf5_obj[base_path][()]
         elif isinstance(hdf5_obj[base_path], h5py.Group):
             output_dict[output_name] = {}
             for obj_name in hdf5_obj[base_path]:
-                dset_path = f'{base_path}/{obj_name}'
+                dset_path = f"{base_path}/{obj_name}"
                 self.repack_dict(
-                    hdf5_obj,output_dict[output_name],dset_path,depth=depth+1,max_depth=max_depth
-                ) # Recursion!
+                    hdf5_obj,
+                    output_dict[output_name],
+                    dset_path,
+                    depth=depth + 1,
+                    max_depth=max_depth,
+                )  # Recursion!
 
-    def get_parameters(
-        self,
-        parameters=['beta','alpha_physical'],
-        max_depth=8
-    ):
-        if isinstance(parameters,list):
-            parameters = {p:p for p in parameters}
+    def get_parameters(self, parameters=["beta", "alpha_physical"], max_depth=8):
+        if isinstance(parameters, list):
+            parameters = {p: p for p in parameters}
 
         output_params = {}
-        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:            
-            for input_name,output_name in parameters.items():
-                dset_path = f'parameters/{input_name}'
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+            for input_name, output_name in parameters.items():
+                dset_path = f"parameters/{input_name}"
                 self.repack_dict(
-                    f,output_params,dset_path,output_name=output_name,depth=0,max_depth=max_depth
+                    f,
+                    output_params,
+                    dset_path,
+                    output_name=output_name,
+                    depth=0,
+                    max_depth=max_depth,
                 )
 
         return output_params
 
-            
+    def save_run_summary(self,):
+        world_df = self.world_summary()
+
+        self.process_symptoms(self.infections_df, self.n_people)
