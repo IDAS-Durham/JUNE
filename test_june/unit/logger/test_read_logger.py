@@ -104,7 +104,6 @@ def test__read_daily_hospital_admissions():
         next(timer)
     read = ReadLogger(output_path=output_path)
     world_df = read.world_summary()
-
     # Test hospital admissions are right
     hospital_admissions_df = pd.Series(hospital_admissions)
     hospital_admissions_df.index = pd.to_datetime(hospital_admissions_df.index)
@@ -126,8 +125,8 @@ def test__read_infected_and_dead():
     output_path = "dummy_results"
     logger = Logger(save_path=output_path)
     timer = Timer(initial_day="2020-03-10", total_days=15)
-    saved_ids = []
-    deaths = defaultdict(int)
+    ids_dead, ids_infected = [], []
+    infections, deaths = defaultdict(int), defaultdict(int)
     logger.log_population(world.people)
     while timer.date <= timer.final_date:
         time = timer.date
@@ -143,13 +142,15 @@ def test__read_infected_and_dead():
             )
             ids.append(person.id)
             symptoms.append(person.infection.tag.value)
-
+            if person.id not in ids_infected:
+                ids_infected.append(person.id)
+                infections[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
             if (
                 person.infection.symptoms.tag
                 in (SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu)
-                and person.id not in saved_ids
+                and person.id not in ids_dead
             ):
-                saved_ids.append(person.id)
+                ids_dead.append(person.id)
                 deaths[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
 
             if new_status == "recovered":
@@ -163,6 +164,15 @@ def test__read_infected_and_dead():
         next(timer)
     read = ReadLogger(output_path=output_path)
     world_df = read.world_summary()
+    infections_df = pd.Series(infections)
+    infections_df.index = pd.to_datetime(infections_df.index)
+    infections_logged = world_df['daily_infections']
+    infections_logged = infections_logged[infections_logged.values > 0]
+    assert sum(list(infections.values())) == infections_logged.sum()
+    pd._testing.assert_series_equal(
+        infections_df, infections_logged, check_names=False, check_dtype=False,
+    )
+
     deaths_df = pd.Series(deaths)
     deaths_df.index = pd.to_datetime(deaths_df.index)
     deaths_logged = world_df["daily_deaths"]
@@ -171,8 +181,11 @@ def test__read_infected_and_dead():
     pd._testing.assert_series_equal(
         deaths_df, deaths_logged, check_names=False, check_dtype=False,
     )
+    # Test  daily number of infected are right
+    # Test current number of infected are right
+
+# Test hospitalisations by age
+# Test hospitalisations by area
 
 
-# Test current number of infected are right
-# Test  daily number of infected are right
-# Test daily deaths are right
+
