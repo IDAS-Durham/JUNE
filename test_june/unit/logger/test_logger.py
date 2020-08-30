@@ -246,7 +246,6 @@ def test__log_infection_location(sim):
         keys = list(locations.keys())
         for key in keys:
             all_locations += list(locations[f'{key}/infection_location'])
-            print(locations[f'{key}/new_infected_ids'])
             all_new_infected += list(locations[f'{key}/new_infected_ids'])
     non_susceptible_people = [p.id for p in sim.world.people if p.susceptible != 1.]
     assert all(infected in non_susceptible_people for infected in all_new_infected)
@@ -274,4 +273,5 @@ def test__log_infected_in_timestep(sim):
     assert all(t in keys for t in time_steps)
     assert infected_set.issubset(world_ids)
     assert len(infected_set) == 2
+
 
