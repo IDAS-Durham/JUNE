@@ -1,4 +1,5 @@
 from typing import List
+import numpy as np
 
 from june.demography import Population
 from june.demography.geography import SuperArea
@@ -52,12 +53,23 @@ class Domain:
 
 def generate_super_areas_to_domain_dict(number_of_super_areas, number_of_domains):
     ret = {}
+    super_areas_per_domain = int(np.ceil(number_of_super_areas / number_of_domains))
+    number_of_areas_per_domain = {}
+    # guarantee that there is at least one are per domain
+    for domain in range(number_of_domains):
+        number_of_areas_per_domain[domain] = 1
+    remaining = number_of_super_areas - number_of_domains
+    for i in range(remaining):
+        number_of_areas_per_domain[i] += 1
     domain_number = 0
-    super_areas_per_domain = number_of_super_areas // number_of_domains
+    areas_per_domain = 0
     for super_area in range(number_of_super_areas):
-        if super_area != 0 and super_area % super_areas_per_domain == 0:
+        ret[super_area] = domain_number 
+        areas_per_domain += 1
+        if areas_per_domain == number_of_areas_per_domain[domain_number]:
             domain_number += 1
-        ret[super_area] = domain_number
+            areas_per_domain = 0
+
     return ret
 
 

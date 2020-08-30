@@ -49,6 +49,8 @@ london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
 super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
     4, size
 )
+print("MPI SIZE", size)
+print(super_areas_to_domain_dict)
 domain = Domain.from_hdf5(
     domain_id=rank,
     super_areas_to_domain_dict=super_areas_to_domain_dict,

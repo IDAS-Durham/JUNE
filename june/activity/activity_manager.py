@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import chain
 from typing import List, Optional
 from collections import defaultdict
+import numpy as np
 
 from june.demography import Person
 from june.exc import SimulatorError
@@ -18,7 +19,6 @@ from june.policy import (
     InteractionPolicies,
 )
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
-
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,24 @@ def _count_people_in_dict(people_from_abroad_dict):
             for subgroup_type in people_from_abroad_dict[group_spec][group_id]:
                 ret += len(people_from_abroad_dict[group_spec][group_id][subgroup_type])
     return ret
+
+
+def _update_data(people_from_abroad, data):
+    for group_spec in data:
+        if group_spec not in people_from_abroad:
+            people_from_abroad[group_spec] = {}
+        for group_id in data[group_spec]:
+            if group_id not in people_from_abroad[group_spec]:
+                people_from_abroad[group_spec][group_id] = {}
+            for subgroup_type in data[group_spec][group_id]:
+                if subgroup_type not in people_from_abroad[group_spec][group_id]:
+                    people_from_abroad[group_spec][group_id][subgroup_type] = {}
+                for person_id, person_data in data[group_spec][group_id][
+                    subgroup_type
+                ].items():
+                    people_from_abroad[group_spec][group_id][subgroup_type][
+                        person_id
+                    ] = person_data
 
 
 class ActivityManager:
@@ -210,6 +228,7 @@ class ActivityManager:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
                 if subgroup.external:
+                    person.busy = True
                     # this person goes to another MPI domain
                     return subgroup
                 subgroup.append(person)
@@ -252,13 +271,13 @@ class ActivityManager:
                 is_weekend=self.timer.is_weekend,
                 working_hours="primary_activity" in activities,
             )
+        n_people_going_abroad, to_send_abroad = self.move_people_to_active_subgroups(
+            activities, self.timer.date, self.timer.now,
+        )
         (
             people_from_abroad,
             n_people_from_abroad,
-            n_people_going_abroad,
-        ) = self.move_people_to_active_subgroups(
-            activities, self.timer.date, self.timer.now,
-        )
+        ) = self.send_and_receive_people_from_abroad(to_send_abroad)
         return people_from_abroad, n_people_from_abroad, n_people_going_abroad
 
     def move_people_to_active_subgroups(
@@ -318,45 +337,55 @@ class ActivityManager:
                         "dom": mpi_rank,
                     }
                 else:
-                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][ret.subgroup_type][
-                        person.id
-                    ] = {
+                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][
+                        ret.subgroup_type
+                    ][person.id] = {
                         "inf_prob": 0.0,
                         "susc": person.susceptibility,
                         "dom": mpi_rank,
                     }
+        return n_people_going_abroad, to_send_abroad
 
+    def send_and_receive_people_from_abroad(self, to_send_abroad):
+        print("STARTING MPI COMMUNICATION")
         # send people abroad
         people_from_abroad = {}
         n_people_from_abroad = 0
-        for rank_sending in range(mpi_size):
-            if rank_sending == mpi_rank:
+        for rank in range(mpi_size):
+            print(f"---- {mpi_rank} -> {rank} ---")
+            if rank == mpi_rank:
                 # my turn to send my data
                 for rank_receiving in range(mpi_size):
-                    if rank_sending == rank_receiving:
+                    if rank == rank_receiving:
                         continue
                     if rank_receiving in to_send_abroad:
+                        n_people_this_rank = _count_people_in_dict(
+                            to_send_abroad[rank_receiving]
+                        )
+                        print(
+                            f"I am rank {mpi_rank} sending {n_people_this_rank} to {rank_receiving}"
+                        )
                         mpi_comm.send(
                             to_send_abroad[rank_receiving],
                             dest=rank_receiving,
-                            tag=mpi_rank,
+                            tag=rank_receiving,
                         )
                         continue
-                    mpi_comm.send(None, dest=rank_receiving, tag=mpi_rank)
+                    print(f"I am rank {mpi_rank} sending nothing to {rank_receiving}")
+                    mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
             else:
                 # I have to listen
-                for rank_sending_to_me in range(mpi_size):
-                    if rank_sending_to_me == mpi_rank:
-                        continue
-                    data = mpi_comm.recv(
-                        source=rank_sending_to_me, tag=rank_sending_to_me
+                # for rank_sending_to_me in range(mpi_size):
+                #    if rank_sending_to_me == mpi_rank:
+                #        break
+                data = mpi_comm.recv(source=rank, tag=mpi_rank)
+                if data is not None:
+                    n_people_this_rank = _count_people_in_dict(data)
+                    print(
+                        f"I am rank {mpi_rank} and I have received {n_people_this_rank} people from {rank}"
                     )
-                    if data is not None:
-                        n_people_this_rank = _count_people_in_dict(data)
-                        print(
-                            f"I am rank {mpi_rank} and I have received {n_people_this_rank} people from {rank_sending_to_me}"
-                        )
-                        people_from_abroad.update(data)
-                        n_people_from_abroad += n_people_this_rank
-                        print(n_people_from_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
+                    _update_data(people_from_abroad, data)
+                    n_people_from_abroad += n_people_this_rank
+                # break
+        print("DONE!")
+        return people_from_abroad, n_people_from_abroad
