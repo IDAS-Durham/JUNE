@@ -71,7 +71,7 @@ class TestTravel:
 
         travelunits = TravelUnits()
         travelunit_distributor = TravelUnitDistributor(
-            travelcities.members, travelunits.members
+            travelcities, travelunits
         )
         travelunit_distributor.from_file()
         travelunit_distributor.distribute_people_out()
