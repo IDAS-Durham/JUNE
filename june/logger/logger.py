@@ -129,11 +129,7 @@ class Logger:
                         ] = socioeconomic_indcs
 
     def log_infected(
-        self,
-        date: "datetime",
-        infected_ids: List[int],
-        symptoms: List[int],
-        n_secondary_infections: List[int],
+        self, date: "datetime", super_area_infections: dict,
     ):
         """
         Log relevant information of infected people per time step.
@@ -151,17 +147,24 @@ class Logger:
         """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            infected_dset = f.create_group(time_stamp)
-            ids = np.array(infected_ids, dtype=np.int64)
-            symptoms = np.array(symptoms, dtype=np.int16)
-            n_secondary_infections = np.array(n_secondary_infections, dtype=np.int16)
-            infected_dset.create_dataset("id", compression="gzip", data=ids)
-            infected_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
-            infected_dset.create_dataset(
-                "n_secondary_infections",
-                compression="gzip",
-                data=n_secondary_infections,
-            )
+            for super_area in super_area_infections.keys():
+                super_area_dset = f.require_group(super_area)
+                super_area_dict = super_area_infections[super_area]
+                infected_dset = super_area_dset.create_group(time_stamp)
+                ids = np.array(super_area_dict["ids"], dtype=np.int64)
+                symptoms = np.array(super_area_dict["symptoms"], dtype=np.int16)
+                n_secondary_infections = np.array(
+                    super_area_dict["n_secondary_infections"], dtype=np.int16
+                )
+                infected_dset.create_dataset("id", compression="gzip", data=ids)
+                infected_dset.create_dataset(
+                    "symptoms", compression="gzip", data=symptoms
+                )
+                infected_dset.create_dataset(
+                    "n_secondary_infections",
+                    compression="gzip",
+                    data=n_secondary_infections,
+                )
 
     def log_hospital_characteristics(self, hospitals: "Hospitals"):
         """
@@ -280,8 +283,8 @@ class Logger:
         self.infection_location = []
         self.new_infected_ids = []
 
-    def unpack_dict(self,hdf5_obj,data,base_path,depth=0,max_depth=5):
-        if depth>max_depth:
+    def unpack_dict(self, hdf5_obj, data, base_path, depth=0, max_depth=5):
+        if depth > max_depth:
             return None
         for key, val in data.items():
             dset_path = f"{base_path}/{key}"
