@@ -148,7 +148,7 @@ class ReadLogger:
         df["current_intensive_care"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
-        flat_df = self.infections_df[["symptoms", "infected_id"]].apply(
+        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(
             lambda x: x.explode() 
         )
         flat_df = flat_df.drop_duplicates(keep='first')
