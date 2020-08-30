@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import yaml
 from itertools import chain
+from collections import defaultdict
 from typing import Optional, List
 from pathlib import Path
 
@@ -322,9 +323,9 @@ class Simulator:
         duration:
             duration of time step
         """
-        ids = []
-        symptoms = []
-        n_secondary_infections = []
+        super_area_infections = {
+                super_area.name: {"ids": [], "symptoms": [], "n_secondary_infections": []} for super_area in self.world.super_areas
+        }
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
@@ -333,9 +334,10 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
-            ids.append(person.id)
-            symptoms.append(person.infection.tag.value)
-            n_secondary_infections.append(person.infection.number_of_infected)
+            super_area_dict = super_area_infections[person.area.super_area.name] 
+            super_area_dict['ids'].append(person.id)
+            super_area_dict['symptoms'].append(person.infection.tag.value)
+            super_area_dict['n_secondary_infections'].append(person.infection.number_of_infected)
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person, medical_facilities=self.world.hospitals
@@ -346,7 +348,7 @@ class Simulator:
                 self.bury_the_dead(self.world, person)
         if self.logger is not None:
             self.logger.log_infected(
-                self.timer.date, ids, symptoms, n_secondary_infections
+                self.timer.date, super_area_infections
             )
 
     def do_timestep(self):
@@ -446,7 +448,9 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
-
+            self.logger.initialize_areas(
+                    self.world.super_areas
+            )
             self.logger.log_parameters(
                 interaction=self.interaction,
                 infection_seed=self.infection_seed,
