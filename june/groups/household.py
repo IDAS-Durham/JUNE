@@ -145,15 +145,3 @@ class Households(Supergroup):
     def __init__(self, households: List[Household]):
         super().__init__(members=households)
 
-    def __add__(self, households: "Households"):
-        """
-        Adding two households instances concatenates the members
-        list.
-
-        Parameters
-        ----------
-        households:
-            instance of Households to sum with.
-        """
-        self.members += households.members
-        return self

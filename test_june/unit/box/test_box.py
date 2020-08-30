@@ -10,7 +10,7 @@ def make_population():
     demography = Demography.for_geography(geography)
     population = Population() 
     for area in geography.areas:
-        population.people += demography.populate(area.name)
+        population.extend(demography.populate(area.name))
     return population
 
 
