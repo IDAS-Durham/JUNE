@@ -448,9 +448,6 @@ class Simulator:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger
             )
-            self.logger.initialize_areas(
-                    self.world.super_areas
-            )
             self.logger.log_parameters(
                 interaction=self.interaction,
                 infection_seed=self.infection_seed,
