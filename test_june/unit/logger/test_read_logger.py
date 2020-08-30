@@ -181,8 +181,51 @@ def test__read_infected_and_dead():
     pd._testing.assert_series_equal(
         deaths_df, deaths_logged, check_names=False, check_dtype=False,
     )
-    # Test  daily number of infected are right
-    # Test current number of infected are right
+# test current number of infected
+def test__read_current_infected():
+    world = make_dummy_world(infected=False)
+    output_path = "dummy_results"
+    logger = Logger(save_path=output_path)
+    timer = Timer(initial_day="2020-03-10", total_days=15)
+    ids_infected = []
+    infected = defaultdict(int)
+    logger.log_population(world.people)
+    while timer.date <= timer.final_date:
+        time = timer.date
+        ids = []
+        symptoms = []
+        select_random_susceptible = random.choice(
+            [person for person in world.people.susceptible]
+        )
+        infect_dead_person(select_random_susceptible)
+        for person in world.people.infected:
+            new_status = person.infection.update_health_status(
+                timer.now, timer.duration
+            )
+            ids.append(person.id)
+            ids_infected.append(person.id)
+            symptoms.append(person.infection.tag.value)
+            if new_status == "recovered":
+                person.infection = None
+            elif new_status == "dead":
+                person.infection = None
+                person.dead = True
+            else:
+                infected[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
+        n_secondary_infections = [0] * len(ids)
+        logger.log_infected(timer.date, ids, symptoms, n_secondary_infections)
+        logger.log_infection_location(time)
+        next(timer)
+    read = ReadLogger(output_path=output_path)
+    world_df = read.world_summary()
+    infected_df = pd.Series(infected)
+    infected_df.index = pd.to_datetime(infected_df.index)
+    infected_logged = world_df['current_infected']
+    infected_logged = infected_logged[infected_logged.values > 0]
+    assert sum(list(infected.values())) == infected_logged.sum()
+    pd._testing.assert_series_equal(
+        infected_df, infected_logged, check_names=False, check_dtype=False,
+    )
 
 # Test hospitalisations by age
 # Test hospitalisations by area
