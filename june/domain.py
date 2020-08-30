@@ -1,5 +1,4 @@
 from typing import List
-from itertools import chain
 
 from june.demography import Population
 from june.demography.geography import SuperArea
@@ -18,19 +17,32 @@ class Domain:
     required to transfer the infection status of people.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, id: int = None):
+        self.id = id
+
+    @classmethod
+    def _next_id(cls) -> int:
+        """
+        Iterate an id for this class. Each group class has its own id iterator
+        starting at 0
+        """
+        return next(cls.__id_generators[cls])
 
     def __iter__(self):
         return iter(self.super_areas)
 
-class Domains:
-    def __init__(self, domains: List[Domain]):
-        self.domains = domains
-
     @classmethod
-    def from_hdf5(self, domain_super_area_names, hdf5_file_path: str):
-        return generate_domain_from_hdf5(domain_super_area_names, hdf5_file_path)
-
-
+    def from_hdf5(
+        cls,
+        domain_id,
+        super_areas_to_domain_dict: dict,
+        hdf5_file_path: str,
+    ):
+        domain = generate_domain_from_hdf5(
+            domain_id = domain_id,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
+            file_path=hdf5_file_path,
+        )
+        domain.id = domain_id
+        return domain
 

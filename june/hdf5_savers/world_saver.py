@@ -218,7 +218,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
 
 
 def generate_domain_from_hdf5(
-    domain_super_area_names, file_path: str, chunk_size=500000
+    domain_id, super_areas_to_domain_dict: dict, file_path: str, chunk_size=500000
 ) -> "Domain":
     """
     Loads the world from an hdf5 file. All id references are substituted
@@ -231,31 +231,26 @@ def generate_domain_from_hdf5(
         how many units of supergroups to process at a time.
         It is advise to keep it around 1e6
     """
+    logger.info(f"loading domain {domain_id} from HDF5")
+    # import here to avoid recurisve imports
     from june.domain import Domain
 
-    logger.info("loading world from HDF5")
+    # get the super area ids of this domain
+    super_area_ids = []
+    for super_area, did in super_areas_to_domain_dict.items():
+        if did == domain_id:
+            super_area_ids.append(super_area)
     domain = Domain()
+    # get keys in hdf5 file
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         f_keys = list(f.keys()).copy()
-    geography = load_geography_from_hdf5(file_path=file_path, chunk_size=chunk_size,)
+    geography = load_geography_from_hdf5(
+        file_path=file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
+    )
     domain.areas = geography.areas
     domain.super_areas = geography.super_areas
-    restore_geography_properties_from_hdf5(
-        world=domain, file_path=file_path, chunk_size=chunk_size,
-    )
-    super_areas_domain = SuperAreas(
-        [
-            super_area
-            for super_area in domain.super_areas
-            if super_area.name in domain_super_area_names
-        ]
-    )
-    areas_domain = Areas(
-        [area for super_area in super_areas_domain for area in super_area.areas]
-    )
-    domain.areas = areas_domain
-    domain.super_areas = super_areas_domain
-    super_area_ids = [super_area.id for super_area in domain.super_areas]
+
+    # load world data
     if "hospitals" in f_keys:
         logger.info("loading hospitals...")
         domain.hospitals = load_hospitals_from_hdf5(
@@ -321,6 +316,12 @@ def generate_domain_from_hdf5(
 
     # restore world
     logger.info("restoring world...")
+    restore_geography_properties_from_hdf5(
+        world=domain,
+        file_path=file_path,
+        chunk_size=chunk_size,
+        domain_super_areas=super_area_ids,
+    )
     if "population" in f_keys:
         logger.info("restoring population...")
         restore_population_properties_from_hdf5(
@@ -328,6 +329,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "households" in f_keys:
         logger.info("restoring households...")
@@ -355,7 +357,9 @@ def generate_domain_from_hdf5(
         )
     if "commute_hubs" and "commute_cities" in f_keys:
         logger.info("restoring commute...")
-        restore_commute_properties_from_hdf5(world=domain, file_path=file_path)
+        restore_commute_properties_from_hdf5(
+            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+        )
     if "companies" in f_keys:
         logger.info("restoring companies...")
         restore_companies_properties_from_hdf5(

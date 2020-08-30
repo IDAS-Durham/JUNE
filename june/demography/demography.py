@@ -197,6 +197,10 @@ class Population:
         return list(self.people_dict.values())
 
     @property
+    def people_ids(self):
+        return list(self.people_dict.keys())
+
+    @property
     def total_people(self):
         return len(self.members)
 

@@ -67,7 +67,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         )
 
 
-def load_geography_from_hdf5(file_path: str, chunk_size=50000):
+def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas= None):
     """
     Loads geography from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -97,7 +97,19 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
             geography["area_coordinates"].read_direct(
                 area_coordinates, np.s_[idx1:idx2], np.s_[0:length]
             )
+            area_super_areas = np.empty(length, dtype=int)
+            geography["area_super_area"].read_direct(
+                area_super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
+                if domain_super_areas is not None:
+                    super_area = area_super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 area = Area(
                     name=area_names[k].decode(),
                     super_area=None,
@@ -125,6 +137,14 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
                 super_area_coordinates, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(idx2 - idx1):
+                if domain_super_areas is not None:
+                    super_area_id = super_area_ids[k]
+                    if super_area_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area_id not in domain_super_areas:
+                        continue
                 super_area = SuperArea(
                     name=super_area_names[k].decode(),
                     areas=None,
@@ -138,7 +158,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
 
 
 def restore_geography_properties_from_hdf5(
-    world: World, file_path: str, chunk_size
+    world: World, file_path: str, chunk_size, domain_super_areas=None
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
@@ -157,6 +177,14 @@ def restore_geography_properties_from_hdf5(
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
+                if domain_super_areas is not None:
+                    super_area_id = super_areas[k]
+                    if super_area_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area_id not in domain_super_areas:
+                        continue
                 area = world.areas.get_from_id(areas_ids[k])
                 area.super_area = world.super_areas.get_from_id(super_areas[k])
                 area.super_area.areas.append(area)

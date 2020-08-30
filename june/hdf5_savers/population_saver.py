@@ -368,7 +368,11 @@ def load_population_from_hdf5(
 
 
 def restore_population_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000, domain_super_areas=None
+    world: World,
+    file_path: str,
+    chunk_size=50000,
+    domain_super_areas=None,
+    super_areas_to_domain_dict: dict = None,
 ):
     activities_fields = Activities.__fields__
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
@@ -448,11 +452,14 @@ def restore_population_properties_from_hdf5(
                         subgroup.append(person)
                         setattr(subgroups_instances, activities_fields[i], subgroup)
                     else:
+                        domain_of_subgroup = super_areas_to_domain_dict[
+                            group_super_area
+                        ]
                         subgroup_tuple = (
+                            domain_of_subgroup,
                             group_spec,
                             group_id,
                             subgroup_type,
-                            group_super_area,
                         )
                         setattr(
                             subgroups_instances, activities_fields[i], subgroup_tuple

@@ -23,6 +23,11 @@ from june.world import generate_world_from_geography, World
 
 constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
 
+import logging
+
+# disable logging for testing
+logging.disable(logging.CRITICAL)
+
 
 @pytest.fixture(autouse=True)
 def set_random_seed(seed=999):
@@ -94,7 +99,9 @@ def create_interaction():
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02001731"]})
+    geography = Geography.from_file(
+        {"super_area": ["E02002512", "E02001697", "E02001731"]}
+    )
     return geography
 
 
@@ -262,6 +269,7 @@ def setup_world(dummy_world, policy_simulator):
         person.subgroups.medical_facility = None
     return world, pupil, student, worker, policy_simulator
 
+
 @pytest.fixture(name="full_world_geography", scope="session")
 def make_geography():
     geography = Geography.from_file(
@@ -269,11 +277,12 @@ def make_geography():
     )
     return geography
 
+
 @pytest.fixture(name="full_world", scope="session")
 def create_world(full_world_geography):
     with h5py.File("test.hdf5", "w"):
         pass  # reset file
-    geography = full_world_geography 
+    geography = full_world_geography
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
@@ -281,6 +290,31 @@ def create_world(full_world_geography):
     geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
         geography=geography, include_households=True, include_commute=True
+    )
+    world.pubs = Pubs.for_geography(geography)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.groceries = Groceries.for_geography(geography)
+    leisure = generate_leisure_for_world(
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
+    )
+    leisure.distribute_social_venues_to_households(
+        households=world.households, super_areas=world.super_areas
+    )
+    return world
+
+
+@pytest.fixture(name="domains_world", scope="module")
+def create_world(full_world_geography):
+    with h5py.File("test.hdf5", "w"):
+        pass  # reset file
+    geography = full_world_geography
+    geography.hospitals = Hospitals.for_geography(geography)
+    geography.schools = Schools.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
+    world = generate_world_from_geography(
+        geography=geography, include_households=True, include_commute=False
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)

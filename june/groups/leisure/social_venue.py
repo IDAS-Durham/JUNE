@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import logging
 from typing import List, Optional
 from enum import IntEnum
 from sklearn.neighbors import BallTree
@@ -9,6 +10,7 @@ from june.demography.geography import Area, Areas, SuperArea, SuperAreas, Geogra
 
 earth_radius = 6371  # km
 
+logger = logging.getLogger(__name__)
 
 class SocialVenueError(BaseException):
     pass
@@ -39,7 +41,10 @@ class SocialVenues(Supergroup):
         super().__init__(members=social_venues)
         self.ball_tree = None
         if make_tree:
-            self.make_tree()
+            if not social_venues:
+                logger.warning(f"No social venues of type {self.spec} in this domain")
+            else:
+                self.make_tree()
 
     @classmethod
     def from_coordinates(
