@@ -31,6 +31,10 @@ class Domain:
     def __iter__(self):
         return iter(self.super_areas)
 
+    @property
+    def box_mode(self):
+        return False
+
     @classmethod
     def from_hdf5(
         cls,
@@ -45,4 +49,18 @@ class Domain:
         )
         domain.id = domain_id
         return domain
+
+def generate_super_areas_to_domain_dict(number_of_super_areas, number_of_domains):
+    ret = {}
+    domain_number = 0
+    super_areas_per_domain = number_of_super_areas // number_of_domains
+    for super_area in range(number_of_super_areas):
+        if super_area != 0 and super_area % super_areas_per_domain == 0:
+            domain_number += 1
+        ret[super_area] = domain_number
+    return ret
+
+
+
+
 

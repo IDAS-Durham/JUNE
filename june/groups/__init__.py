@@ -1,4 +1,4 @@
-from .group import AbstractGroup, Group, Subgroup, Supergroup
+from .group import AbstractGroup, Group, Subgroup, Supergroup, ExternalSubgroup
 from .boundary import Boundary
 from .carehome import CareHome, CareHomes
 from .cemetery import Cemetery, Cemeteries

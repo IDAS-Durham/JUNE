@@ -426,6 +426,12 @@ class TestSaveWorld:
             for p1, p2 in zip(np.sort(h1_resident_ids), np.sort(h2_resident_ids)):
                 assert p1 == p2
 
+    def test__closest_hospitals(self, full_world, full_world_loaded):
+        for sa1, sa2 in zip(full_world.super_areas, full_world_loaded.super_areas):
+            assert len(sa1.closest_hospitals) == len(sa2.closest_hospitals)
+            for h1, h2 in zip(sa1.closest_hospitals, sa2.closest_hospitals):
+                assert h1.id == h2.id
+
     def test__social_venues(self, full_world, full_world_loaded):
         for p1, p2 in zip(full_world.people, full_world_loaded.people):
             if p1.residence.group.spec == "household":

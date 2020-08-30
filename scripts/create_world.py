@@ -23,10 +23,21 @@ london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)
 t1 = time.time()
 
 # default config path
-config_path = "./config.yaml"
+config_path = "./config_basic.yaml"
 
 # define geography, let's run the first 20 super areas of london
-geography = Geography.from_file({"super_area": london_areas[40:60]})
+#geography = Geography.from_file({"super_area": london_areas[40:60]})
+#geography = Geography.from_file({"super_area": london_areas[:5]})
+geography = Geography.from_file(
+        {
+            "super_area": [
+                "E02003282",
+                "E02003283",
+                "E02001720",
+                "E02002560",
+            ]
+        }
+)
 
 # add buildings
 geography.hospitals = Hospitals.for_geography(geography)
@@ -40,13 +51,13 @@ world = generate_world_from_geography(
 )
 #
 ## some leisure activities
-world.pubs = Pubs.for_geography(geography)
-world.cinemas = Cinemas.for_geography(geography)
-world.groceries = Groceries.for_geography(geography)
-leisure = generate_leisure_for_config(world, config_filename=config_path)
-leisure.distribute_social_venues_to_households(
-    world.households, super_areas=world.super_areas
-)  # this assigns possible social venues to people.
+#world.pubs = Pubs.for_geography(geography)
+#world.cinemas = Cinemas.for_geography(geography)
+#world.groceries = Groceries.for_geography(geography)
+#leisure = generate_leisure_for_config(world, config_filename=config_path)
+#leisure.distribute_social_venues_to_households(
+#    world.households, super_areas=world.super_areas
+#)  # this assigns possible social venues to people.
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later

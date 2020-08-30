@@ -5,6 +5,7 @@ from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAr
 from june.world import World
 
 nan_integer = -999
+int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 
 
 def save_geography_to_hdf5(geography: Geography, file_path: str):
@@ -32,6 +33,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_ids = []
     super_area_names = []
     super_area_coordinates = []
+    closest_hospitals_ids = []
+    closest_hospitals_super_areas = []
+    hospital_lengths = []
 
     for area in geography.areas:
         area_ids.append(area.id)
@@ -43,6 +47,21 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_ids.append(super_area.id)
         super_area_names.append(super_area.name.encode("ascii", "ignore"))
         super_area_coordinates.append(np.array(super_area.coordinates))
+        if super_area.closest_hospitals is None:
+            closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int))
+            closest_hospitals_super_areas.append(np.array([nan_integer], dtype=np.int))
+            hospital_lengths.append(1)
+        else:
+            hospital_ids = np.array(
+                [hospital.id for hospital in super_area.closest_hospitals], dtype=np.int
+            )
+            hospital_sas = np.array(
+                [hospital.super_area.id for hospital in super_area.closest_hospitals],
+                dtype=np.int,
+            )
+            closest_hospitals_ids.append(hospital_ids)
+            closest_hospitals_super_areas.append(hospital_sas)
+            hospital_lengths.append(len(hospital_ids))
 
     area_ids = np.array(area_ids, dtype=np.int)
     area_names = np.array(area_names, dtype="S20")
@@ -51,6 +70,16 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_ids = np.array(super_area_ids, dtype=np.int)
     super_area_names = np.array(super_area_names, dtype="S20")
     super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
+    if len(np.unique(hospital_lengths)) == 1:
+        closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int)
+        closest_hospitals_super_areas = np.array(
+            closest_hospitals_super_areas, dtype=np.int
+        )
+    else:
+        closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=int_vlen_type)
+        closest_hospitals_super_areas = np.array(
+            closest_hospitals_super_areas, dtype=int_vlen_type
+        )
 
     with h5py.File(file_path, "a") as f:
         geography_dset = f.create_group("geography")
@@ -65,9 +94,15 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset(
             "super_area_coordinates", data=super_area_coordinates
         )
+        geography_dset.create_dataset(
+            "closest_hospitals_ids", data=closest_hospitals_ids
+        )
+        geography_dset.create_dataset(
+            "closest_hospitals_super_areas", data=closest_hospitals_super_areas
+        )
 
 
-def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas= None):
+def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
     """
     Loads geography from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -158,7 +193,11 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
 
 
 def restore_geography_properties_from_hdf5(
-    world: World, file_path: str, chunk_size, domain_super_areas=None
+    world: World,
+    file_path: str,
+    chunk_size,
+    domain_super_areas=None,
+    super_areas_to_domain_dict: dict = None,
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
@@ -188,3 +227,42 @@ def restore_geography_properties_from_hdf5(
                 area = world.areas.get_from_id(areas_ids[k])
                 area.super_area = world.super_areas.get_from_id(super_areas[k])
                 area.super_area.areas.append(area)
+
+        n_super_areas = geography.attrs["n_super_areas"]
+        n_chunks = int(np.ceil(n_super_areas / chunk_size))
+        for chunk in range(n_chunks):
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_super_areas)
+            length = idx2 - idx1
+            super_areas_ids = np.empty(length, dtype=int)
+            geography["super_area_id"].read_direct(
+                super_areas_ids, np.s_[idx1:idx2], np.s_[0:length]
+            )
+            closest_hospitals_ids = geography["closest_hospitals_ids"][idx1:idx2]
+            closest_hospitals_super_areas = geography["closest_hospitals_super_areas"][
+                idx1:idx2
+            ]
+            for k in range(length):
+                if domain_super_areas is not None:
+                    super_area_id = super_areas_ids[k]
+                    if super_area_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area_id not in domain_super_areas:
+                        continue
+                super_area = world.super_areas.get_from_id(super_areas_ids[k])
+                hospitals = []
+                for hospital_id, hospital_super_area_id in zip(
+                    closest_hospitals_ids[k], closest_hospitals_super_areas[k]
+                ):
+                    if hospital_super_area_id not in domain_super_areas:
+                        hospital_data = (
+                            super_areas_to_domain_dict[hospital_super_area_id],
+                            hospital_id,
+                        )
+                        hospitals.append(hospital_id)
+                    else:
+                        hospital = world.hospitals.get_from_id(hospital_id)
+                        hospitals.append(hospital)
+                super_area.closest_hospitals = hospitals

@@ -74,6 +74,7 @@ class World:
         self.cemeteries = None
         self.universities = None
         self.box_mode = False
+        self.id = 0 # for parallelisation
 
     def distribute_people(
         self, include_households=True, include_commute=False, include_rail_travel=False
@@ -127,6 +128,7 @@ class World:
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
+            hospital_distributor.assign_closest_hospitals_to_super_areas(self.super_areas)
 
         # Companies last because need hospital and school workers first
         if self.companies is not None:

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
+from collections import defaultdict
 
 from june.demography import Person
 from june.exc import SimulatorError
@@ -16,6 +17,8 @@ from june.policy import (
     MedicalCarePolicies,
     InteractionPolicies,
 )
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,24 @@ activity_hierarchy = [
     "leisure",
     "residence",
 ]
+
+
+def _get_supergroup_from_group(group_name):
+    if group_name == "grocery":
+        return "groceries"
+    elif group_name == "company":
+        return "companies"
+    else:
+        return group_name + "s"
+
+
+def _count_people_in_dict(people_from_abroad_dict):
+    ret = 0
+    for group_spec in people_from_abroad_dict:
+        for group_id in people_from_abroad_dict[group_spec]:
+            for subgroup_type in people_from_abroad_dict[group_spec][group_id]:
+                ret += len(people_from_abroad_dict[group_spec][group_id][subgroup_type])
+    return ret
 
 
 class ActivityManager:
@@ -188,6 +209,9 @@ class ActivityManager:
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
+                if subgroup.external:
+                    # this person goes to another MPI domain
+                    return subgroup
                 subgroup.append(person)
                 return
         raise SimulatorError(
@@ -226,11 +250,16 @@ class ActivityManager:
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=self.timer.duration,
                 is_weekend=self.timer.is_weekend,
-                working_hours= "primary_activity" in activities
+                working_hours="primary_activity" in activities,
             )
-        self.move_people_to_active_subgroups(
+        (
+            people_from_abroad,
+            n_people_from_abroad,
+            n_people_going_abroad,
+        ) = self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
 
     def move_people_to_active_subgroups(
         self,
@@ -250,6 +279,8 @@ class ActivityManager:
             date=date
         )
         activities = self.apply_activity_hierarchy(activities)
+        to_send_abroad = {}
+        n_people_going_abroad = 0
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
@@ -262,4 +293,70 @@ class ActivityManager:
                 key_ratio=self.key_ratio,
                 random_ratio=self.random_ratio,
             )
-            self.move_to_active_subgroup(allowed_activities, person)
+            ret = self.move_to_active_subgroup(allowed_activities, person)
+            if ret is not None:
+                n_people_going_abroad += 1
+                if ret.domain_id not in to_send_abroad:
+                    to_send_abroad[ret.domain_id] = {}  # allocate domain id
+                if ret.group_spec not in to_send_abroad[ret.domain_id]:
+                    to_send_abroad[ret.domain_id][ret.group_spec] = {}
+                if ret.group_id not in to_send_abroad[ret.domain_id][ret.group_spec]:
+                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id] = {}
+                if (
+                    ret.subgroup_type
+                    not in to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id]
+                ):
+                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][
+                        ret.subgroup_type
+                    ] = {}
+                if person.infected:
+                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][
+                        ret.subgroup_type
+                    ][person.id] = {
+                        "inf_prob": person.infection.transmission.probability,
+                        "susc": 0.0,
+                        "dom": mpi_rank,
+                    }
+                else:
+                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][ret.subgroup_type][
+                        person.id
+                    ] = {
+                        "inf_prob": 0.0,
+                        "susc": person.susceptibility,
+                        "dom": mpi_rank,
+                    }
+
+        # send people abroad
+        people_from_abroad = {}
+        n_people_from_abroad = 0
+        for rank_sending in range(mpi_size):
+            if rank_sending == mpi_rank:
+                # my turn to send my data
+                for rank_receiving in range(mpi_size):
+                    if rank_sending == rank_receiving:
+                        continue
+                    if rank_receiving in to_send_abroad:
+                        mpi_comm.send(
+                            to_send_abroad[rank_receiving],
+                            dest=rank_receiving,
+                            tag=mpi_rank,
+                        )
+                        continue
+                    mpi_comm.send(None, dest=rank_receiving, tag=mpi_rank)
+            else:
+                # I have to listen
+                for rank_sending_to_me in range(mpi_size):
+                    if rank_sending_to_me == mpi_rank:
+                        continue
+                    data = mpi_comm.recv(
+                        source=rank_sending_to_me, tag=rank_sending_to_me
+                    )
+                    if data is not None:
+                        n_people_this_rank = _count_people_in_dict(data)
+                        print(
+                            f"I am rank {mpi_rank} and I have received {n_people_this_rank} people from {rank_sending_to_me}"
+                        )
+                        people_from_abroad.update(data)
+                        n_people_from_abroad += n_people_this_rank
+                        print(n_people_from_abroad)
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad

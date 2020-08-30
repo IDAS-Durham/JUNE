@@ -161,3 +161,7 @@ class Person(dataobject):
             return None
         else:
             return self.infection.symptoms
+
+    @property
+    def super_area(self):
+        return self.area.super_area
