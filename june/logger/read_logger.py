@@ -93,7 +93,7 @@ class ReadLogger:
             return len(set(hospitalised_id.loc[row.name]))
 
     def process_symptoms(
-        self, symptoms_df: pd.DataFrame, n_people: int
+            self, symptoms_df: pd.DataFrame,  n_people: int
     ) -> pd.DataFrame:
         """
         Given a dataframe with time stamp and a list of symptoms representing the symptoms of every infected 
@@ -149,13 +149,14 @@ class ReadLogger:
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
         flat_df = self.infections_df[["symptoms", "infected_id"]].apply(
-            lambda x: x.explode() if x.name in ["infected_id", "symptoms"] else x
+            lambda x: x.explode() 
         )
-        flat_hospitalised_df = flat_df[
+        flat_df = flat_df.drop_duplicates(keep='first')
+        flat_df = flat_df[
             flat_df["symptoms"] == SymptomTag.hospitalised
-        ].drop_duplicates(keep="first")
-        df["daily_hospital_admissions"] = flat_hospitalised_df.groupby(
-            flat_hospitalised_df.index
+        ]
+        df["daily_hospital_admissions"] = flat_df.groupby(
+            flat_df.index
         ).size()
         df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
         df["daily_infections"] = (
