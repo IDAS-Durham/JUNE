@@ -26,6 +26,8 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger(__name__)
 
+from june.activity.activity_manager import _count_people_in_dict
+
 
 class Simulator:
     ActivityManager = ActivityManager
@@ -355,9 +357,14 @@ class Simulator:
             for spec in people_from_abroad_dict:
                 for group in people_from_abroad_dict[spec]:
                     for subgroup in people_from_abroad_dict[spec][group]:
-                        p_ids = list(people_from_abroad_dict[spec][group][subgroup].keys())
+                        p_ids = list(
+                            people_from_abroad_dict[spec][group][subgroup].keys()
+                        )
                         people_ids += p_ids
-                        people_domains += [people_from_abroad_dict[spec][group][subgroup][id]["dom"] for id in p_ids]
+                        people_domains += [
+                            people_from_abroad_dict[spec][group][subgroup][id]["dom"]
+                            for id in p_ids
+                        ]
             for id, domain in zip(people_ids, people_domains):
                 if id in foreign_ids:
                     if domain not in infect_in_domains:
@@ -373,7 +380,10 @@ class Simulator:
                 for rank_receiving in range(mpi_size):
                     if rank_sending == rank_receiving:
                         continue
-                    if infect_in_domains is None or rank_receiving not in infect_in_domains:
+                    if (
+                        infect_in_domains is None
+                        or rank_receiving not in infect_in_domains
+                    ):
                         mpi_comm.send(None, dest=rank_receiving, tag=mpi_rank)
                     else:
                         mpi_comm.send(
@@ -384,17 +394,12 @@ class Simulator:
                         continue
             else:
                 # I have to listen
-                for rank_sending_to_me in range(mpi_size):
-                    if rank_sending_to_me == mpi_rank:
-                        continue
-                    data = mpi_comm.recv(
-                        source=rank_sending_to_me, tag=rank_sending_to_me
+                data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
+                if data is not None:
+                    print(
+                        f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
                     )
-                    if data is not None:
-                        print(
-                            f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
-                        )
-                        people_to_infect += data
+                    people_to_infect += data
         for inf_id in people_to_infect:
             person = self.world.people.get_from_id(inf_id)
             self.infection_selector.infect_person_at_time(person, self.timer.now)
@@ -420,7 +425,7 @@ class Simulator:
         (
             people_from_abroad_dict,
             n_people_from_abroad,
-            n_people_going_abroad
+            n_people_going_abroad,
         ) = self.activity_manager.do_timestep()
 
         active_groups = self.activity_manager.active_groups
@@ -439,8 +444,11 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
+        people_in_groups = 0
+        foreign_people_number = _count_people_in_dict(people_from_abroad_dict)
         for group_type in group_instances:
             for group in group_type.members:
+                people_in_groups += group.size
                 if (
                     group.spec in people_from_abroad_dict
                     and group.id in people_from_abroad_dict[group.spec]
@@ -461,8 +469,8 @@ class Simulator:
                                 group.spec, n_infected
                             )
                         # assign blame of infections
-                        #tprob_norm = sum(int_group.transmission_probabilities)
-                        #for infector_id in chain.from_iterable(int_group.infector_ids):
+                        # tprob_norm = sum(int_group.transmission_probabilities)
+                        # for infector_id in chain.from_iterable(int_group.infector_ids):
                         #    infector = self.world.people.get_from_id(infector_id)
                         #    assert infector.id == infector_id
                         #    infector.infection.number_of_infected += (
@@ -471,13 +479,27 @@ class Simulator:
                         #        / tprob_norm
                         #    )
                     infected_ids += new_infected_ids
-        if self.infection_selector:
-            infect_in_domains = self.infect_people(infected_ids, people_from_abroad_dict)
-            to_infect = self.tell_domains_to_infect(infect_in_domains)
-        if n_people != (len(self.world.people) + n_people_from_abroad - n_people_going_abroad):
+        # if self.infection_selector:
+        #    infect_in_domains = self.infect_people(
+        #        infected_ids, people_from_abroad_dict
+        #    )
+        #    to_infect = self.tell_domains_to_infect(infect_in_domains)
+        people_active = (
+            len(self.world.people) + n_people_from_abroad - n_people_going_abroad
+        )
+        if n_people != people_active:
+            print(
+                f"rank {mpi_rank} : \n people in groups {people_in_groups} \n foreign_people {foreign_people_number}"
+            )
+            for person in self.world.people:
+                assert person.busy
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
-                f"the total people number {len(self.world.people.members)}"
+                f"the total people number {people_active}.\n"
+                f"People in the world {len(self.world.people)}\n"
+                f"People going abroad {n_people_going_abroad}\n"
+                f"People coming from abroad {n_people_from_abroad}\n"
+                f"Current rank {mpi_rank}\n"
             )
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
@@ -497,6 +519,7 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
+        print("cleared world")
         if self.logger:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger

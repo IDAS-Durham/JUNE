@@ -256,13 +256,13 @@ def restore_geography_properties_from_hdf5(
                 for hospital_id, hospital_super_area_id in zip(
                     closest_hospitals_ids[k], closest_hospitals_super_areas[k]
                 ):
-                    if hospital_super_area_id not in domain_super_areas:
+                    if domain_super_areas is None or hospital_super_area_id in domain_super_areas:
+                        hospital = world.hospitals.get_from_id(hospital_id)
+                        hospitals.append(hospital)
+                    else:
                         hospital_data = (
                             super_areas_to_domain_dict[hospital_super_area_id],
                             hospital_id,
                         )
                         hospitals.append(hospital_id)
-                    else:
-                        hospital = world.hospitals.get_from_id(hospital_id)
-                        hospitals.append(hospital)
                 super_area.closest_hospitals = hospitals
