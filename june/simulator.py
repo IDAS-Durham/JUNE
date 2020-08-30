@@ -20,6 +20,7 @@ from june.logger.logger import Logger
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -339,6 +340,65 @@ class Simulator:
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
 
+    def infect_people(self, infected_ids, people_from_abroad_dict):
+        foreign_ids = []
+        for inf_id in infected_ids:
+            if inf_id in self.world.people.people_dict:
+                person = self.world.people.get_from_id(inf_id)
+                self.infection_selector.infect_person_at_time(person, self.timer.now)
+            else:
+                foreign_ids.append(inf_id)
+        if foreign_ids:
+            infect_in_domains = {}
+            people_ids = []
+            people_domains = []
+            for spec in people_from_abroad_dict:
+                for group in people_from_abroad_dict[spec]:
+                    for subgroup in people_from_abroad_dict[spec][group]:
+                        p_ids = list(people_from_abroad_dict[spec][group][subgroup].keys())
+                        people_ids += p_ids
+                        people_domains += [people_from_abroad_dict[spec][group][subgroup][id]["dom"] for id in p_ids]
+            for id, domain in zip(people_ids, people_domains):
+                if id in foreign_ids:
+                    if domain not in infect_in_domains:
+                        infect_in_domains[domain] = []
+                    infect_in_domains[domain].append(id)
+            return infect_in_domains
+
+    def tell_domains_to_infect(self, infect_in_domains):
+        people_to_infect = []
+        for rank_sending in range(mpi_size):
+            if rank_sending == mpi_rank:
+                # my turn to send my data
+                for rank_receiving in range(mpi_size):
+                    if rank_sending == rank_receiving:
+                        continue
+                    if infect_in_domains is None or rank_receiving not in infect_in_domains:
+                        mpi_comm.send(None, dest=rank_receiving, tag=mpi_rank)
+                    else:
+                        mpi_comm.send(
+                            infect_in_domains[rank_receiving],
+                            dest=rank_receiving,
+                            tag=mpi_rank,
+                        )
+                        continue
+            else:
+                # I have to listen
+                for rank_sending_to_me in range(mpi_size):
+                    if rank_sending_to_me == mpi_rank:
+                        continue
+                    data = mpi_comm.recv(
+                        source=rank_sending_to_me, tag=rank_sending_to_me
+                    )
+                    if data is not None:
+                        print(
+                            f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
+                        )
+                        people_to_infect += data
+        for inf_id in people_to_infect:
+            person = self.world.people.get_from_id(inf_id)
+            self.infection_selector.infect_person_at_time(person, self.timer.now)
+
     def do_timestep(self):
         """
         Perform a time step in the simulation. First, ActivityManager is called
@@ -357,7 +417,11 @@ class Simulator:
         if not activities or len(activities) == 0:
             logger.info("==== do_timestep(): no active groups found. ====")
             return
-        self.activity_manager.do_timestep()
+        (
+            people_from_abroad_dict,
+            n_people_from_abroad,
+            n_people_going_abroad
+        ) = self.activity_manager.do_timestep()
 
         active_groups = self.activity_manager.active_groups
         group_instances = [
@@ -377,7 +441,14 @@ class Simulator:
         infected_ids = []
         for group_type in group_instances:
             for group in group_type.members:
-                int_group = InteractiveGroup(group)
+                if (
+                    group.spec in people_from_abroad_dict
+                    and group.id in people_from_abroad_dict[group.spec]
+                ):
+                    foreign_people = people_from_abroad_dict[group.spec][group.id]
+                else:
+                    foreign_people = None
+                int_group = InteractiveGroup(group, foreign_people)
                 n_people += int_group.size
                 if int_group.must_timestep:
                     new_infected_ids = self.interaction.time_step_for_group(
@@ -390,27 +461,24 @@ class Simulator:
                                 group.spec, n_infected
                             )
                         # assign blame of infections
-                        tprob_norm = sum(int_group.transmission_probabilities)
-                        for infector_id in chain.from_iterable(int_group.infector_ids):
-                            infector = self.world.people.get_from_id(infector_id)
-                            assert infector.id == infector_id
-                            infector.infection.number_of_infected += (
-                                n_infected
-                                * infector.infection.transmission.probability
-                                / tprob_norm
-                            )
+                        #tprob_norm = sum(int_group.transmission_probabilities)
+                        #for infector_id in chain.from_iterable(int_group.infector_ids):
+                        #    infector = self.world.people.get_from_id(infector_id)
+                        #    assert infector.id == infector_id
+                        #    infector.infection.number_of_infected += (
+                        #        n_infected
+                        #        * infector.infection.transmission.probability
+                        #        / tprob_norm
+                        #    )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.people.get_from_id(idx) for idx in infected_ids]
-        if n_people != len(self.world.people):
+        if self.infection_selector:
+            infect_in_domains = self.infect_people(infected_ids, people_from_abroad_dict)
+            to_infect = self.tell_domains_to_infect(infect_in_domains)
+        if n_people != (len(self.world.people) + n_people_from_abroad - n_people_going_abroad):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {len(self.world.people.members)}"
             )
-        # infect people
-        if self.infection_selector:
-            for i, person in enumerate(people_to_infect):
-                assert infected_ids[i] == person.id
-                self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)

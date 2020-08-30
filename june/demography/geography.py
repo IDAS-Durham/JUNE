@@ -141,6 +141,7 @@ class SuperArea:
         "areas",
         "companies",
         "groceries",
+        "closest_hospitals"
     )
     _id = count()
 
@@ -157,6 +158,7 @@ class SuperArea:
         self.workers = []
         self.companies = []
         self.groceries = []
+        self.closest_hospitals = None
 
     def add_worker(self, person: Person):
         self.workers.append(person)

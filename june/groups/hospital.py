@@ -125,8 +125,8 @@ class Hospital(Group):
                 "ERROR: This person shouldn't be trying to get to a hospital"
             )
 
-    def release_as_patient(self, person):
-        person.subgroups.medical_facility = None
+    #def release_as_patient(self, person):
+    #    person.subgroups.medical_facility = None
 
 class Hospitals(Supergroup):
     def __init__(
@@ -293,49 +293,74 @@ class Hospitals(Supergroup):
             np.deg2rad(hospital_coordinates), metric="haversine",
         )
 
-    def allocate_patient(self, person: "Person"):
+    #def allocate_patient(self, person: "Person"):
+    #    """
+    #    Function to allocate patients into close by hospitals with available beds.
+    #    If there are no available beds within a maximum distance, the patient is
+    #    not allocated.
+
+    #    Parameters
+    #    ----------
+    #    person: 
+    #        patient to allocate into a hospital 
+    #    Returns
+    #    -------
+    #    hospital with availability
+
+    #    """
+    #    assign_icu = person.infection.tag == SymptomTag.intensive_care
+    #    assign_patient = person.infection.tag == SymptomTag.hospitalised
+    #    if self.box_mode:
+    #        for hospital in self.members:
+    #            if assign_patient and not hospital.full:
+    #                return hospital
+    #            if assign_icu and not hospital.full_ICU:
+    #                return hospital
+    #    else:
+    #        hospital = None
+    #        hospitals_idx = self.get_closest_hospitals_idx(
+    #            coordinates=person.area.coordinates, k=self.neighbour_hospitals
+    #        )
+    #        closest_hospitals = []
+    #        for hospital_id in hospitals_idx:
+    #            hospital = self.get_from_id(hospital_id)
+    #            closest_hospitals.append(hospital)
+    #            if (assign_patient and not hospital.full) or (
+    #                assign_icu and not hospital.full_ICU
+    #            ):
+    #                break 
+    #        if hospital is None:
+    #            random_number = np.random.randint(
+    #                    0, min(len(closest_hospitals), len(self.members))
+    #                    )
+    #            hospital = closest_hospitals[random_number]
+    #        hospital.add_as_patient(person)
+
+    def get_closest_hospitals_idx(
+        self, coordinates: Tuple[float, float], k: int 
+    ) -> Tuple[float, float]:
         """
-        Function to allocate patients into close by hospitals with available beds.
-        If there are no available beds within a maximum distance, the patient is
-        not allocated.
+        Get the k-th closest hospital to a given coordinate
 
         Parameters
-        ----------
-        person: 
-            patient to allocate into a hospital 
+        ---------
+        coordinates: 
+            latitude and longitude
+        k:
+            k-th neighbour
+
         Returns
         -------
-        hospital with availability
+        ID of the k-th closest hospital
 
         """
-        assign_icu = person.infection.tag == SymptomTag.intensive_care
-        assign_patient = person.infection.tag == SymptomTag.hospitalised
-
-        if self.box_mode:
-            for hospital in self.members:
-                if assign_patient and not hospital.full:
-                    return hospital
-                if assign_icu and not hospital.full_ICU:
-                    return hospital
-        else:
-            hospital = None
-            hospitals_idx = self.get_closest_hospitals(
-                coordinates=person.area.coordinates, k=self.neighbour_hospitals
-            )
-            closest_hospitals = []
-            for hospital_id in hospitals_idx:
-                hospital = self.members[hospital_id]
-                closest_hospitals.append(hospital)
-                if (assign_patient and not hospital.full) or (
-                    assign_icu and not hospital.full_ICU
-                ):
-                    break 
-            if hospital is None:
-                random_number = np.random.randint(
-                        0, min(len(closest_hospitals), len(self.members))
-                        )
-                hospital = closest_hospitals[random_number]
-            hospital.add_as_patient(person)
+        k = min(k, len(list(self.hospital_trees.data)))
+        distances, neighbours = self.hospital_trees.query(
+            np.deg2rad(coordinates.reshape(1, -1)),
+            k = k,
+            sort_results=True,
+        )
+        return neighbours[0]
 
     def get_closest_hospitals(
         self, coordinates: Tuple[float, float], k: int 
@@ -361,4 +386,4 @@ class Hospitals(Supergroup):
             k = k,
             sort_results=True,
         )
-        return neighbours[0]
+        return [self.get_from_id(id) for id in neighbours[0]]
