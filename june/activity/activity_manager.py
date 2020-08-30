@@ -347,12 +347,10 @@ class ActivityManager:
         return n_people_going_abroad, to_send_abroad
 
     def send_and_receive_people_from_abroad(self, to_send_abroad):
-        print("STARTING MPI COMMUNICATION")
         # send people abroad
         people_from_abroad = {}
         n_people_from_abroad = 0
         for rank in range(mpi_size):
-            print(f"---- {mpi_rank} -> {rank} ---")
             if rank == mpi_rank:
                 # my turn to send my data
                 for rank_receiving in range(mpi_size):
@@ -362,16 +360,16 @@ class ActivityManager:
                         n_people_this_rank = _count_people_in_dict(
                             to_send_abroad[rank_receiving]
                         )
-                        print(
-                            f"I am rank {mpi_rank} sending {n_people_this_rank} to {rank_receiving}"
-                        )
+                        #print(
+                        #    f"I am rank {mpi_rank} sending {n_people_this_rank} to {rank_receiving}"
+                        #)
                         mpi_comm.send(
                             to_send_abroad[rank_receiving],
                             dest=rank_receiving,
                             tag=rank_receiving,
                         )
                         continue
-                    print(f"I am rank {mpi_rank} sending nothing to {rank_receiving}")
+                    #print(f"I am rank {mpi_rank} sending nothing to {rank_receiving}")
                     mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
             else:
                 # I have to listen
@@ -381,11 +379,10 @@ class ActivityManager:
                 data = mpi_comm.recv(source=rank, tag=mpi_rank)
                 if data is not None:
                     n_people_this_rank = _count_people_in_dict(data)
-                    print(
-                        f"I am rank {mpi_rank} and I have received {n_people_this_rank} people from {rank}"
-                    )
+                    #print(
+                    #    f"I am rank {mpi_rank} and I have received {n_people_this_rank} people from {rank}"
+                    #)
                     _update_data(people_from_abroad, data)
                     n_people_from_abroad += n_people_this_rank
                 # break
-        print("DONE!")
         return people_from_abroad, n_people_from_abroad

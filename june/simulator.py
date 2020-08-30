@@ -519,7 +519,6 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        print("cleared world")
         if self.logger:
             self.logger.log_population(
                 self.world.people, light_logger=self.light_logger

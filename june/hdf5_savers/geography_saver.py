@@ -264,5 +264,5 @@ def restore_geography_properties_from_hdf5(
                             super_areas_to_domain_dict[hospital_super_area_id],
                             hospital_id,
                         )
-                        hospitals.append(hospital_id)
+                        hospitals.append(hospital_data)
                 super_area.closest_hospitals = hospitals
