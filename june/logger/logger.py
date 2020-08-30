@@ -34,7 +34,7 @@ class Logger:
     def log_population(
         self,
         population: Population,
-        light_logger: bool = True,
+        light_logger: bool = False,
         chunk_size: int = 100000,
     ):
         """
@@ -270,7 +270,7 @@ class Logger:
             datetime to log
         """
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        infection_location = np.array(self.infection_location, dtype="S20")
+        infection_location = np.array(self.infection_location, dtype="S")
         new_infected_ids = np.array(self.new_infected_ids, dtype=np.int)
         with h5py.File(self.file_path, "a", libver="latest") as f:
             locations_dset = f.require_group("locations")
