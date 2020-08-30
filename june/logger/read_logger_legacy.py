@@ -10,7 +10,7 @@ from june.infection import SymptomTag
 from june import paths
 
 
-class ReadLogger:
+class ReadLoggerLegacy:
     def __init__(
         self,
         output_path: str = "results",
@@ -33,8 +33,8 @@ class ReadLogger:
         self.load_population_data(self.light_logger)
         self.load_infected_data()
         self.load_infection_location()
-        self.start_date = min(self.infections_per_super_area[0].index)
-        self.end_date = max(self.infections_per_super_area[0].index)
+        self.start_date = min(self.infections_df.index)
+        self.end_date = max(self.infections_df.index)
 
     def load_population_data(self, light_logger):
         """
@@ -53,42 +53,35 @@ class ReadLogger:
 
     def load_infected_data(self,):
         """
-        Load data on infected people over time and convert to a list of data frames ``self.infections_per_super_area``
+        Load data on infected people over time and convert to a data frame ``self.infections_df``
         """
-        self.infections_per_super_area = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            super_areas = [
+            time_stamps = [
                 key
                 for key in f.keys()
                 if key not in ("population", "hospitals", "locations", "parameters")
             ]
-            for super_area in super_areas:
-                time_stamps = [
-                    key
-                    for key in f[super_area]
-                ]
-                ids = []
-                symptoms = []
-                n_secondary_infections = []
-                for time_stamp in time_stamps:
-                    ids.append(f[super_area][time_stamp]["id"][:])
-                    symptoms.append(f[super_area][time_stamp]["symptoms"][:])
-                    n_secondary_infections.append(
-                        f[super_area][time_stamp]["n_secondary_infections"][:]
-                    )
-                infections_df = pd.DataFrame(
-                    {
-                        "time_stamp": time_stamps,
-                        "infected_id": ids,
-                        "symptoms": symptoms,
-                        "n_secondary_infections": n_secondary_infections,
-                    }
+            ids = []
+            symptoms = []
+            n_secondary_infections = []
+            for time_stamp in time_stamps:
+                ids.append(f[time_stamp]["id"][:])
+                symptoms.append(f[time_stamp]["symptoms"][:])
+                n_secondary_infections.append(
+                    f[time_stamp]["n_secondary_infections"][:]
                 )
-                infections_df["time_stamp"] = pd.to_datetime(
-                    infections_df["time_stamp"]
-                )
-                infections_df.set_index("time_stamp", inplace=True)
-                self.infections_per_super_area.append(infections_df)
+            self.infections_df = pd.DataFrame(
+                {
+                    "time_stamp": time_stamps,
+                    "infected_id": ids,
+                    "symptoms": symptoms,
+                    "n_secondary_infections": n_secondary_infections,
+                }
+            )
+            self.infections_df["time_stamp"] = pd.to_datetime(
+                self.infections_df["time_stamp"]
+            )
+            self.infections_df.set_index("time_stamp", inplace=True)
 
     def subtract_previous(self, row, hospitalised_id, prev_hospitalised_id):
         try:
@@ -155,7 +148,7 @@ class ReadLogger:
         df["current_intensive_care"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
-        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(
+        flat_df = self.infections_df[["symptoms", "infected_id"]].apply(
             lambda x: x.explode() 
         )
         flat_df = flat_df.drop_duplicates(keep='first')
