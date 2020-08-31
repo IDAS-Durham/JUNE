@@ -312,15 +312,20 @@ class ReadLogger:
                 for key in f.keys()
                 if key not in ("population", "parameters")
             ]
+
+            time_stamps, infection_location, super_areas_for_df = [], [], []
             for super_area in super_areas:
                 try:
                     locations = f[f"{super_area}/locations"]
-                    infection_location, super_areas_for_df = [], []
+                    location_per_area, super_area_per_area = [], []
                     for time_stamp in locations.keys():
                         locations_for_df = list(locations[time_stamp]["locations"][:].astype("U"))
-                        infection_location.append(locations_for_df)
-                        super_areas_for_df.append([super_area]*len(locations_for_df))
-                    time_stamps = list(locations.keys())
+                        location_per_area.append(locations_for_df)
+                        super_area_per_area.append([super_area]*len(locations_for_df))
+                    time_stamps += list(locations.keys())
+                    infection_location += location_per_area
+                    super_areas_for_df += super_area_per_area 
+
                 except KeyError:
                     continue
         self.locations_df = pd.DataFrame(
@@ -334,6 +339,7 @@ class ReadLogger:
             self.locations_df["time_stamp"]
         )
         self.locations_df.set_index("time_stamp", inplace=True)
+        self.locations_df = self.locations_df.groupby(self.locations_df.index).sum()
         self.locations_df = self.locations_df.resample("D").sum()
         self.locations_df = self.locations_df[self.locations_df['location_id'] != 0]
         self.locations_df["location"] = self.locations_df.apply(
@@ -558,6 +564,7 @@ class ReadLogger:
         super_area_df["region"] = self.super_areas_to_region(
             super_area_df["super_area"].values
         )
+        self.load_infection_location()
         flat_locations = self.locations_df[["location_id", "super_area"]].apply(
             lambda x: x.explode()
         )
