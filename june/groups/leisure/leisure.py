@@ -17,6 +17,7 @@ from june.groups.leisure import (
 from june.groups.leisure import Pubs, Cinemas, Groceries
 from june.groups import Household, ExternalSubgroup, Households
 from june import paths
+from june.mpi_setup import add_person_entry, delete_person_entry
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -231,18 +232,20 @@ class Leisure:
         return random() < prob
 
     def send_household_with_person_if_necessary(
-        self, person, subgroup, probability,
+        self, person, subgroup, probability, to_send_abroad=None
     ):
         """
         When we know that the person does an activity in the social venue X,
         then we ask X whether the person needs to drag the household with
         him or her.
         """
+        # this produces a recursive import...
         if (
             person.residence.group.spec == "care_home"
             or person.residence.group.type in ["communal", "other", "student"]
         ):
             return
+        assert subgroup is not None
         if random() < probability:
             for mate in person.residence.group.residents:
                 if mate != person:
@@ -250,16 +253,27 @@ class Leisure:
                         if (
                             mate.leisure is not None
                         ):  # this perosn has already been assigned somewhere
-                            if not subgroup.external:
+                            if not mate.leisure.external:
+                                if mate not in mate.leisure.people:
+                                    # person active somewhere else, let's not disturb them
+                                    continue
                                 mate.leisure.remove(mate)
+                            else:
+                                ret = delete_person_entry(to_send_abroad, mate, mate.leisure)
+                                if ret:
+                                    # person active somewhere else, let's not disturb them
+                                    continue
+                            if not subgroup.external:
                                 subgroup.append(mate)
-                            mate.subgroups.leisure = subgroup
-                    else:
-                        mate.subgroups.leisure = (
-                            subgroup  # person will be added later in the simulator.
-                        )
+                            else:
+                                add_person_entry(to_send_abroad, mate, subgroup)
+                    mate.subgroups.leisure = (
+                        subgroup  # person will be added later in the simulator.
+                    )
 
-    def get_subgroup_for_person_and_housemates(self, person: Person):
+    def get_subgroup_for_person_and_housemates(
+        self, person: Person, to_send_abroad: dict = None
+    ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
         we chech the Poisson parameter lambda = probability / day * deltat of that activty 
@@ -315,16 +329,20 @@ class Leisure:
             if group is None:
                 return
             elif group.external:
-                subgroup = ExternalSubgroup.from_external_group(
+                subgroup = ExternalSubgroup(
                     subgroup_type=leisure_subgroup_type, group=group
                 )
             else:
                 subgroup = group[leisure_subgroup_type]
-            #self.send_household_with_person_if_necessary(
-            #    person, subgroup, prob_age_sex["drags_household"][activity]
-            #)
-            #if activity == "household_visits":
-            #    group.make_household_residents_stay_home()
+            assert subgroup is not None
+            self.send_household_with_person_if_necessary(
+               person,
+               subgroup,
+               prob_age_sex["drags_household"][activity],
+               to_send_abroad=to_send_abroad,
+            )
+            if activity == "household_visits":
+                group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
             person.subgroups.leisure = subgroup
             return subgroup
 

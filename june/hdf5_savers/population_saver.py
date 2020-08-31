@@ -3,7 +3,7 @@ import numpy as np
 from collections import OrderedDict
 
 from june.groups.commute import CommuteCity
-from june.groups import ExternalSubgroup
+from june.groups import ExternalSubgroup, ExternalGroup
 from june.commute import ModeOfTransport
 from june.demography import Population, Person
 from june.demography.person import Activities
@@ -456,13 +456,13 @@ def restore_population_properties_from_hdf5(
                         domain_of_subgroup = super_areas_to_domain_dict[
                             group_super_area
                         ]
+                        group = ExternalGroup(
+                            domain_id=domain_of_subgroup, id=group_id, spec=group_spec
+                        )
                         subgroup_external = ExternalSubgroup(
-                            domain_id=domain_of_subgroup,
-                            group_spec=group_spec,
-                            group_id=group_id,
-                            subgroup_type=subgroup_type,
+                            group=group, subgroup_type=subgroup_type,
                         )
                         setattr(
-                            subgroups_instances, activities_fields[i], subgroup_external 
+                            subgroups_instances, activities_fields[i], subgroup_external
                         )
                 person.subgroups = subgroups_instances

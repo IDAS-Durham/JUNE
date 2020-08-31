@@ -41,12 +41,10 @@ class Hospitalisation(MedicalCarePolicy):
             # note, we dont model hospital capacity here.
             closest_hospital = person.super_area.closest_hospitals[0]
             if symptoms_tag == SymptomTag.hospitalised:
-                if type(closest_hospital) == tuple:
+                if closest_hospital.external:
                     # not in this domain, we need to send it over
                     person.subgroups.medical_facility = ExternalSubgroup(
-                        domain_id=closest_hospital[0],
-                        group_spec="hospital",
-                        group_id=closest_hospital[1],
+                        group=closest_hospital,
                         subgroup_type=Hospital.SubgroupType.patients,
                     )
                 else:
@@ -54,12 +52,10 @@ class Hospitalisation(MedicalCarePolicy):
                         closest_hospital.SubgroupType.patients
                     ]
             else: 
-                if type(closest_hospital) == tuple:
+                if closest_hospital.external:
                     # not in this domain, we need to send it over
                     person.subgroups.medical_facility = ExternalSubgroup(
-                        domain_id=closest_hospital[0],
-                        group_spec="hospital",
-                        group_id=closest_hospital[1],
+                        group=closest_hospital,
                         subgroup_type=Hospital.SubgroupType.icu_patients,
                     )
                 else:

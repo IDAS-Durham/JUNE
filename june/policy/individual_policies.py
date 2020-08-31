@@ -52,24 +52,25 @@ class IndividualPolicies(PolicyCollection):
                         days_from_start=days_from_start,
                         activities=activities,
                     )
-                    if person.age < self.min_age_home_alone:  # can't stay home alone
-                        possible_guardians = [
-                            housemate
-                            for housemate in person.residence.group.people
-                            if housemate.age >= 18
-                        ]
-                        if not possible_guardians:
-                            guardian = person.find_guardian()
-                            if guardian is not None:
-                                if guardian.busy:
-                                    for subgroup in guardian.subgroups.iter():
-                                        if (
-                                            subgroup is not None
-                                            and guardian in subgroup
-                                        ):
-                                            subgroup.remove(guardian)
-                                            break
-                                guardian.residence.append(guardian)
+                    # TODO: make it work with parallelisation
+                    #if person.age < self.min_age_home_alone:  # can't stay home alone
+                    #    possible_guardians = [
+                    #        housemate
+                    #        for housemate in person.residence.group.people
+                    #        if housemate.age >= 18
+                    #    ]
+                    #    if not possible_guardians:
+                    #        guardian = person.find_guardian()
+                    #        if guardian is not None:
+                    #            if guardian.busy:
+                    #                for subgroup in guardian.subgroups.iter():
+                    #                    if (
+                    #                        subgroup is not None
+                    #                        and guardian in subgroup
+                    #                    ):
+                    #                        subgroup.remove(guardian)
+                    #                        break
+                    #            guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
                 if policy.spec == "close_companies":
