@@ -98,11 +98,12 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         )
 
     def get_social_venue_for_person(self, person):
-        relatives = person.residence.group.relatives_in_households
-        if relatives is None:
+        households_to_visit = person.residence.group.households_to_visit
+        if households_to_visit is None:
             return None
-        alive_relatives = [relative for relative in relatives if relative.dead is False]
-        return alive_relatives[randint(0, len(alive_relatives) - 1)].residence.group
+        return households_to_visit[
+            randint(0, len(households_to_visit) - 1)
+        ]
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """

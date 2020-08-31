@@ -26,8 +26,7 @@ t1 = time.time()
 config_path = "./config_nocommute.yaml"
 
 # define geography, let's run the first 20 super areas of london
-#geography = Geography.from_file({"super_area": london_areas[0:60]})
-#geography = Geography.from_file({"super_area": london_areas[:5]})
+#geography = Geography.from_file({"super_area": london_areas[40:60]})
 geography = Geography.from_file(
         {
             "super_area": [

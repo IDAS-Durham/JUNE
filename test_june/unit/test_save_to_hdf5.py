@@ -433,41 +433,38 @@ class TestSaveWorld:
                 assert h1.id == h2.id
 
     def test__social_venues(self, full_world, full_world_loaded):
-        for p1, p2 in zip(full_world.people, full_world_loaded.people):
-            if p1.residence.group.spec == "household":
-                for key in p1.residence.group.social_venues.keys():
-                    if key not in p2.residence.group.social_venues.keys():
-                        assert len(p1.residence.group.social_venues[key]) == 0
-                        continue
-                    social_venues = p1.residence.group.social_venues[key]
-                    social_venues_recovered = p2.residence.group.social_venues[key]
-                    social_venues_id = np.sort([sv.id for sv in social_venues])
-                    social_venues_recovered_id = np.sort(
-                        [sv.id for sv in social_venues_recovered]
-                    )
-                    assert np.array_equal(social_venues_id, social_venues_recovered_id)
+        for area1, area2 in zip(full_world.areas, full_world_loaded.areas):
+            for key in area1.social_venues.keys():
+                assert key in area2.social_venues.keys()
+                social_venues = area1.social_venues[key]
+                social_venues_recovered = area2.social_venues[key]
+                social_venues_id = np.sort([sv.id for sv in social_venues])
+                social_venues_recovered_id = np.sort(
+                    [sv.id for sv in social_venues_recovered]
+                )
+                assert np.array_equal(social_venues_id, social_venues_recovered_id)
         for h1, h2 in zip(full_world.households, full_world_loaded.households):
-            if h1.relatives_in_households is None:
-                assert h2.relatives_in_households is None
+            if h1.households_to_visit is None:
+                assert h2.households_to_visit is None
                 continue
-            assert len(h1.relatives_in_households) == len(h2.relatives_in_households)
-            if h1.relatives_in_care_homes is None:
-                assert h2.relatives_in_care_homes is None
+            assert len(h1.households_to_visit) == len(h2.households_to_visit)
+            if h1.care_homes_to_visit is None:
+                assert h2.care_homes_to_visit is None
                 continue
-            assert len(h1.relatives_in_care_homes) == len(h2.relatives_in_care_homes)
-            if len(h1.relatives_in_households) > 0:
+            assert len(h1.care_homes_to_visit) == len(h2.care_homes_to_visit)
+            if len(h1.households_to_visit) > 0:
                 h1ids = np.sort(
-                    [relative.id for relative in h1.relatives_in_households]
+                    [relative.id for relative in h1.households_to_visit]
                 )
                 h2ids = np.sort(
-                    [relative.id for relative in h2.relatives_in_households]
+                    [relative.id for relative in h2.households_to_visit]
                 )
                 assert np.array_equal(h1ids, h2ids)
-            if len(h1.relatives_in_care_homes) > 0:
+            if len(h1.care_homes_to_visit) > 0:
                 h1ids = np.sort(
-                    [relative.id for relative in h1.relatives_in_care_homes]
+                    [relative.id for relative in h1.care_homes_to_visit]
                 )
                 h2ids = np.sort(
-                    [relative.id for relative in h2.relatives_in_care_homes]
+                    [relative.id for relative in h2.care_homes_to_visit]
                 )
                 assert np.array_equal(h1ids, h2ids)

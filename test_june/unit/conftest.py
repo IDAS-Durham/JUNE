@@ -197,6 +197,7 @@ def make_dummy_world():
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
     commuter.mode_of_transport = "public"
+    commuter.area = area
     household.add(commuter)
 
     world = World()
@@ -296,8 +297,8 @@ def create_full_world(full_world_geography):
     leisure = generate_leisure_for_world(
         ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
     )
-    leisure.distribute_social_venues_to_households(
-        households=world.households, super_areas=world.super_areas
+    leisure.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
     )
     return world
 
@@ -321,7 +322,7 @@ def create_domains_world():
     leisure = generate_leisure_for_world(
         ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
     )
-    leisure.distribute_social_venues_to_households(
-        households=world.households, super_areas=world.super_areas
+    leisure.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
     )
     return world

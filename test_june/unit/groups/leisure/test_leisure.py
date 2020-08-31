@@ -19,6 +19,10 @@ from june.demography.geography import Geography
 from june.demography import Person, Demography
 from june import World
 
+class MockArea:
+    def __init__(self):
+        pass
+
 
 @fixture(name="geography")
 def make_geography():
@@ -53,9 +57,10 @@ def make_leisure():
 
 def test__probability_of_leisure(leisure):
     person = Person.from_attributes(sex="m", age=26)
+    person.area = MockArea()
     household = Household(type="student")
     household.add(person)
-    person.residence.group.social_venues = {
+    person.area.social_venues = {
         "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
         "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
     }
@@ -118,7 +123,7 @@ def test__generate_leisure_from_world():
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
-    leisure.distribute_social_venues_to_households([household], super_areas=world.super_areas)
+    leisure.distribute_social_venues_to_areas(world.areas, super_areas=world.super_areas)
     leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
     n_pubs = 0
     n_cinemas = 0

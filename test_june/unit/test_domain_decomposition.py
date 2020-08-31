@@ -41,13 +41,6 @@ def decomp(domains_world):
         for subgroup in person.subgroups.iter():
             if subgroup is not None:
                 subgroup.append(person)
-    for household in world.households:
-        for social_venues in household.social_venues.values():
-            for social_venue in social_venues:
-                for resident in household.residents:
-                    subgroup = social_venue.get_leisure_subgroup(resident)
-                    if subgroup is not None:
-                        subgroup.append(resident)
     return domains
 
 
