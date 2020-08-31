@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 
 from june.exc import GroupException
 
@@ -22,7 +23,10 @@ class Supergroup:
         """
         Makes a dictionary with the ids of the members.
         """
-        return {member.id : member for member in members}
+        ret = OrderedDict()
+        for member in members:
+            ret[member.id] = member
+        return ret
 
     def __iter__(self):
         return iter(self.members)

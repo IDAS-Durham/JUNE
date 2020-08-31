@@ -4,6 +4,7 @@ from typing import List
 from itertools import chain
 
 class ExternalGroup:
+    __slots__ = "spec"
     def __init__(self, spec):
         self.spec = spec
 

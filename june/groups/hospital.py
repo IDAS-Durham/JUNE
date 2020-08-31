@@ -386,4 +386,4 @@ class Hospitals(Supergroup):
             k = k,
             sort_results=True,
         )
-        return [self.get_from_id(id) for id in neighbours[0]]
+        return [self.members[index] for index in neighbours[0]]

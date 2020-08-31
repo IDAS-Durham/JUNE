@@ -121,7 +121,7 @@ class SimulatorBox(Simulator):
         infected_ids = []
         for group_type in group_instances:
             for group in group_type.members:
-                int_group = InteractiveGroup(group)
+                int_group = InteractiveGroup(group, None)
                 n_people += int_group.size
                 if int_group.must_timestep:
                     new_infected_ids = self.interaction.time_step_for_group(
