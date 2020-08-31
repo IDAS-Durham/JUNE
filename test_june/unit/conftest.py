@@ -158,6 +158,7 @@ def make_super_areas():
 def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
+    area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
     school = School(
         coordinates=super_area.coordinates,
@@ -174,20 +175,21 @@ def make_dummy_world():
         super_area=super_area.name,
         coordinates=super_area.coordinates,
     )
+    super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)
-    worker.area = super_area
+    worker.area = area
     household.add(worker, subgroup_type=household.SubgroupType.adults)
     worker.sector = "Q"
     company.add(worker)
 
     pupil = Person.from_attributes(age=6)
-    pupil.area = super_area
+    pupil.area = area
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = super_area
+    household.area = area
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
-    student.area = super_area
+    student.area = area
     household.add(student, subgroup_type=household.SubgroupType.adults)
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
@@ -276,6 +278,9 @@ def make_full_world_geography():
 
 @pytest.fixture(name="full_world", scope="session")
 def create_full_world(full_world_geography):
+    # clean file
+    with h5py.File("test.hdf5", "w") as f:
+        pass
     geography = full_world_geography
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
