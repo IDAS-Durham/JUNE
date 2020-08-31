@@ -31,7 +31,6 @@ class ReadLogger:
         self.file_path = Path(self.output_path) / output_file_name
         self.load_population_data()
         self.load_infected_data()
-        self.load_infection_location()
         self.start_date = min(self.infections_per_super_area[0].index)
         self.end_date = max(self.infections_per_super_area[0].index)
 
@@ -443,30 +442,43 @@ class ReadLogger:
         -------
             data frame indexed by time stamp
         """
+        hospitals_df = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            hospitals = f["hospitals"]
-            hospital_ids = []
-            n_patients = []
-            n_patients_icu = []
-            time_stamps = []
-            for time_stamp in hospitals.keys():
-                if time_stamp not in (
-                    "coordinates",
-                    "n_beds",
-                    "n_icu_beds",
-                    "trust_code",
-                ):
-                    hospital_ids.append(hospitals[time_stamp]["hospital_id"][:])
-                    n_patients.append(hospitals[time_stamp]["n_patients"][:])
-                    n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
-                    time_stamps.append(time_stamp)
-        hospitals_df = pd.DataFrame(
-            {
-                "time_stamp": time_stamps,
-                "id": hospital_ids,
-                "n_patients": n_patients,
-                "n_patients_icu": n_patients_icu,
-            }
+            super_areas = [
+                key
+                for key in f.keys()
+                if key not in ("population", "parameters")
+            ]
+            for super_area in super_areas:
+                try:
+                    hospitals = f[f"{super_area}/hospitals"]
+                    hospital_ids, n_patients, n_patients_icu, time_stamps = [], [], [], []
+                    for time_stamp in hospitals.keys():
+                        if time_stamp not in (
+                            "coordinates",
+                            "n_beds",
+                            "n_icu_beds",
+                            "trust_code",
+                        ):
+                            hospital_ids.append(hospitals[time_stamp]["id"][:])
+                            n_patients.append(hospitals[time_stamp]["n_patients"][:])
+                            n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
+                            time_stamps.append(time_stamp)
+                    df = pd.DataFrame(
+                    {
+                        "time_stamp": time_stamps,
+                        "id": hospital_ids,
+                        "n_patients": n_patients,
+                        "n_patients_icu": n_patients_icu,
+                    }
+                    )
+                    df.set_index('time_stamp', inplace=True)
+                    df.index = pd.to_datetime(df.index)
+                    hospitals_df.append(df)
+                except KeyError:
+                    continue
+        hospitals_df = functools.reduce(
+            lambda a, b: a + b, hospitals_df
         )
         return hospitals_df.apply(pd.Series.explode)
 
