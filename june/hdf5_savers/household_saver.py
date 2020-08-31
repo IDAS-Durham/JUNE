@@ -7,14 +7,6 @@ from itertools import chain
 
 nan_integer = -999
 
-social_venues_spec_mapper = {
-    "pubs": "pubs",
-    "household_visits": "households",
-    "care_home_visits": "care_homes",
-    "cinemas": "cinemas",
-    "groceries": "groceries",
-}
-
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
 

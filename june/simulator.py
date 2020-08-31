@@ -107,9 +107,15 @@ class Simulator:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         if world.box_mode:
-            activity_to_groups = None
+            activity_to_super_groups = None
         else:
-            activity_to_groups = config["activity_to_groups"]
+            try:
+                activity_to_super_groups = config["activity_to_super_groups"]
+            except:
+                print(
+                    "Activity to groups in config is deprecated, please change it to activity_to_super_groups"
+                )
+                activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
         if "checkpoint_dates" in config:
             if isinstance(config["checkpoint_dates"], datetime.date):
@@ -146,7 +152,7 @@ class Simulator:
         activity_manager = cls.ActivityManager(
             world=world,
             all_activities=all_activities,
-            activity_to_groups=activity_to_groups,
+            activity_to_super_groups=activity_to_super_groups,
             leisure=leisure,
             policies=policies,
             timer=timer,
@@ -222,10 +228,10 @@ class Simulator:
         Removes everyone from all possible groups, and sets everyone's busy attribute
         to False.
         """
-        for group_name in self.activity_manager.all_groups:
-            if group_name in ["care_home_visits", "household_visits"]:
+        for super_group_name in self.activity_manager.all_super_groups:
+            if super_group_name in ["care_home_visits", "household_visits"]:
                 continue
-            grouptype = getattr(self.world, group_name)
+            grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
                 for group in grouptype.members:
                     group.clear()
@@ -255,13 +261,13 @@ class Simulator:
             )
 
         # Check that all groups given in time_config file are in the valid group hierarchy
-        all_groups = activity_hierarchy
+        all_super_groups = activity_hierarchy
         try:
             for step, activities in time_config["step_activities"]["weekday"].items():
-                assert all(group in all_groups for group in activities)
+                assert all(group in all_super_groups for group in activities)
 
             for step, activities in time_config["step_activities"]["weekend"].items():
-                assert all(group in all_groups for group in activities)
+                assert all(group in all_super_groups for group in activities)
         except AssertionError:
             raise SimulatorError("Config file contains unsupported activity name.")
 
@@ -396,9 +402,9 @@ class Simulator:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
-                    #print(
+                    # print(
                     #    f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
-                    #)
+                    # )
                     people_to_infect += data
         for inf_id in people_to_infect:
             person = self.world.people.get_from_id(inf_id)
@@ -428,14 +434,20 @@ class Simulator:
             n_people_going_abroad,
         ) = self.activity_manager.do_timestep()
 
-        active_groups = self.activity_manager.active_groups
-        group_instances = [
-            getattr(self.world, group)
-            for group in active_groups
-            if group not in ["household_visits", "care_home_visits"]
-        ]
+        # get the supergroup instances that are active in this time step:
+        active_super_groups = self.activity_manager.active_super_groups
+        super_group_instances = []
+        for super_group_name in active_super_groups:
+            if super_group_name not in ["household_visits", "care_home_visits"]:
+                super_group_instance = getattr(self.world, super_group_name)
+                if super_group_instance is None or len(super_group_instance) == 0:
+                    continue
+                super_group_instances.append(super_group_instance)
+
+        # for checking that people is conserved
         n_people = 0
 
+        # count people in the cemetery
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
         logger.info(
@@ -443,9 +455,10 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
+        # main interaction loop
         infected_ids = []
-        for group_type in group_instances:
-            for group in group_type.members:
+        for super_group in super_group_instances:
+            for group in super_group:
                 if (
                     group.spec in people_from_abroad_dict
                     and group.id in people_from_abroad_dict[group.spec]
@@ -469,20 +482,24 @@ class Simulator:
                             # note this is disabled in parallel
                             # assign blame of infections
                             tprob_norm = sum(int_group.transmission_probabilities)
-                            for infector_id in chain.from_iterable(int_group.infector_ids):
-                               infector = self.world.people.get_from_id(infector_id)
-                               assert infector.id == infector_id
-                               infector.infection.number_of_infected += (
-                                   n_infected
-                                   * infector.infection.transmission.probability
-                                   / tprob_norm
-                               )
+                            for infector_id in chain.from_iterable(
+                                int_group.infector_ids
+                            ):
+                                infector = self.world.people.get_from_id(infector_id)
+                                assert infector.id == infector_id
+                                infector.infection.number_of_infected += (
+                                    n_infected
+                                    * infector.infection.transmission.probability
+                                    / tprob_norm
+                                )
                     infected_ids += new_infected_ids
+        # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
                 infected_ids, people_from_abroad_dict
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
+        # recount people active to check people conservation
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
@@ -497,11 +514,13 @@ class Simulator:
                 f"People coming from abroad {n_people_from_abroad}\n"
                 f"Current rank {mpi_rank}\n"
             )
+        # update the health status of the population
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             if self.world.hospitals is not None:
                 self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        # remove everyone from their active groups
         self.clear_world()
 
     def run(self):

@@ -36,8 +36,8 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./../../june_scripts/NEY_simple.hdf5"
-config_path = "./config_basic.yaml"
+world_file = "./tests.hdf5"
+config_path = "./config_nocommute.yaml"
 
 # parallel setup
 
@@ -62,8 +62,8 @@ domain = Domain.from_hdf5(
 )
 #
 # regenerate lesiure
-#leisure = generate_leisure_for_config(domain, config_path)
-leisure = None
+leisure = generate_leisure_for_config(domain, config_path)
+#leisure = None
 #
 # health index and infection selecctor
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)

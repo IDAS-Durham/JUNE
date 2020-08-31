@@ -106,7 +106,10 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
     """
     with open(config_filename) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    list_of_leisure_groups = config["activity_to_groups"]["leisure"]
+    try:
+        list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
+    except:
+        list_of_leisure_groups = config["activity_to_groups"]["leisure"]
     leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
     return leisure_instance
 
@@ -301,7 +304,7 @@ class Leisure:
             candidates_length = len(candidates)
             if candidates_length == 0:
                 return
-            if candidates_length == 1:
+            elif candidates_length == 1:
                 group = candidates[0]
             else:
                 indices = sample(range(len(candidates)), len(candidates))
@@ -311,17 +314,17 @@ class Leisure:
                         break
             if group is None:
                 return
-            if group.external:
+            elif group.external:
                 subgroup = ExternalSubgroup.from_external_group(
                     subgroup_type=leisure_subgroup_type, group=group
                 )
             else:
                 subgroup = group[leisure_subgroup_type]
-            self.send_household_with_person_if_necessary(
-                person, subgroup, prob_age_sex["drags_household"][activity]
-            )
-            if activity == "household_visits":
-                group.make_household_residents_stay_home()
+            #self.send_household_with_person_if_necessary(
+            #    person, subgroup, prob_age_sex["drags_household"][activity]
+            #)
+            #if activity == "household_visits":
+            #    group.make_household_residents_stay_home()
             person.subgroups.leisure = subgroup
             return subgroup
 

@@ -34,15 +34,6 @@ activity_hierarchy = [
 ]
 
 
-def _get_supergroup_from_group(group_name):
-    if group_name == "grocery":
-        return "groceries"
-    elif group_name == "company":
-        return "companies"
-    else:
-        return group_name + "s"
-
-
 def _count_people_in_dict(people_from_abroad_dict):
     ret = 0
     for group_spec in people_from_abroad_dict:
@@ -77,7 +68,7 @@ class ActivityManager:
         policies,
         timer,
         all_activities,
-        activity_to_groups: dict,
+        activity_to_super_groups: dict,
         leisure: Optional[Leisure] = None,
         min_age_home_alone: int = 15,
     ):
@@ -89,22 +80,22 @@ class ActivityManager:
         self.all_activities = all_activities
 
         if self.world.box_mode:
-            self.activity_to_group_dict = {
+            self.activity_to_super_group_dict = {
                 "box": ["boxes"],
             }
         else:
-            self.activity_to_group_dict = {
-                "medical_facility": activity_to_groups.get("medical_facility", []),
-                "primary_activity": activity_to_groups.get("primary_activity", []),
-                "leisure": activity_to_groups.get("leisure", []),
-                "residence": activity_to_groups.get("residence", []),
-                "commute": activity_to_groups.get("commute", []),
-                "rail_travel": activity_to_groups.get("rail_travel", []),
+            self.activity_to_super_group_dict = {
+                "medical_facility": activity_to_super_groups.get("medical_facility", []),
+                "primary_activity": activity_to_super_groups.get("primary_activity", []),
+                "leisure": activity_to_super_groups.get("leisure", []),
+                "residence": activity_to_super_groups.get("residence", []),
+                "commute": activity_to_super_groups.get("commute", []),
+                "rail_travel": activity_to_super_groups.get("rail_travel", []),
             }
         self.min_age_home_alone = min_age_home_alone
 
         if "commute" in self.all_activities:
-            commute_options = activity_to_groups["commute"]
+            commute_options = activity_to_super_groups["commute"]
             if "commuteunits" in commute_options:
                 self.commute_unit_distributor = CommuteUnitDistributor(
                     self.world.commutehubs.members
@@ -118,7 +109,7 @@ class ActivityManager:
             "rail_travel_out" in self.all_activities
             or "rail_travel_back" in self.all_activities
         ):
-            travel_options = activity_to_groups["rail_travel"]
+            travel_options = activity_to_super_groups["rail_travel"]
             if "travelunits" in travel_options:
                 self.travelunit_distributor = TravelUnitDistributor(
                     self.world.travelcities.members, self.world.travelunits.members
@@ -148,12 +139,12 @@ class ActivityManager:
             self.random_ratio = None
 
     @property
-    def all_groups(self):
-        return self.activities_to_groups(self.all_activities)
+    def all_super_groups(self):
+        return self.activities_to_super_groups(self.all_activities)
 
     @property
-    def active_groups(self):
-        return self.activities_to_groups(self.timer.activities)
+    def active_super_groups(self):
+        return self.activities_to_super_groups(self.timer.activities)
 
     def distribute_commuters(self):
         if hasattr(self, "commute_unit_distributor"):
@@ -186,9 +177,9 @@ class ActivityManager:
         activities.sort(key=lambda x: activity_hierarchy.index(x))
         return activities
 
-    def activities_to_groups(self, activities: List[str]) -> List[str]:
+    def activities_to_super_groups(self, activities: List[str]) -> List[str]:
         """
-        Converts activities into Groups, the interaction will run over these Groups.
+        Converts activities into Supergroups, the interaction will run over these Groups.
 
         Parameters
         ---------
@@ -199,8 +190,8 @@ class ActivityManager:
         List of groups that are active.
         """
 
-        groups = [self.activity_to_group_dict[activity] for activity in activities]
-        return list(chain.from_iterable(groups))
+        super_groups = [self.activity_to_super_group_dict[activity] for activity in activities]
+        return list(chain.from_iterable(super_groups))
 
     def move_to_active_subgroup(
         self, activities: List[str], person: Person
