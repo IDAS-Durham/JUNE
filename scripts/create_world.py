@@ -26,17 +26,7 @@ t1 = time.time()
 config_path = "./config_nocommute.yaml"
 
 # define geography, let's run the first 20 super areas of london
-#geography = Geography.from_file({"super_area": london_areas[40:60]})
-geography = Geography.from_file(
-        {
-            "super_area": [
-                "E02003282",
-                "E02003283",
-                "E02001720",
-                "E02002560",
-            ]
-        }
-)
+geography = Geography.from_file({"super_area": london_areas[40:60]})
 
 # add buildings
 geography.hospitals = Hospitals.for_geography(geography)
@@ -46,7 +36,7 @@ geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
 world = generate_world_from_geography(
-    geography, include_households=True, include_commute=False
+    geography, include_households=True, include_commute=True
 )
 #
 ## some leisure activities
