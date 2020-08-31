@@ -341,8 +341,8 @@ class Leisure:
                prob_age_sex["drags_household"][activity],
                to_send_abroad=to_send_abroad,
             )
-            #if activity == "household_visits":
-            #    group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
+            if activity == "household_visits":
+                group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
             person.subgroups.leisure = subgroup
             return subgroup
 
