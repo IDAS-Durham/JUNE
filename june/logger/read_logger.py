@@ -35,7 +35,7 @@ class ReadLogger:
         self.start_date = min(self.infections_per_super_area[0].index)
         self.end_date = max(self.infections_per_super_area[0].index)
 
-    def load_population_data(self, light_logger):
+    def load_population_data(self):
         """
         Load data related to population (age, sex, ...)
         """
@@ -56,21 +56,23 @@ class ReadLogger:
         """
         self.infections_per_super_area = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+            
             super_areas = [
                 key
                 for key in f.keys()
-                if key not in ("population", "hospitals", "locations", "parameters")
+                #if key not in ("population", "hospitals", "locations", "parameters")
             ]
             for super_area in super_areas:
-                time_stamps = [key for key in f[super_area]]
+                infections = f[f'{super_area}/infection']
+                time_stamps = [key for key in infections]
                 ids = []
                 symptoms = []
                 n_secondary_infections = []
                 for time_stamp in time_stamps:
-                    ids.append(list(f[super_area][time_stamp]["id"][:]))
-                    symptoms.append(list(f[super_area][time_stamp]["symptoms"][:]))
+                    ids.append(list(f[super_area]['infections'][time_stamp]["id"][:]))
+                    symptoms.append(list(f[super_area]['infections'][time_stamp]["symptoms"][:]))
                     n_secondary_infections.append(
-                        list(f[super_area][time_stamp]["n_secondary_infections"][:])
+                        list(f[super_area]['infections'][time_stamp]["n_secondary_infections"][:])
                     )
                 infections_df = pd.DataFrame(
                     {
@@ -304,41 +306,37 @@ class ReadLogger:
             data frame with infection locations, and average count of infections per group type
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            locations = f["locations"]
-            infection_location = []
-            new_infected_ids = []
-            for time_stamp in locations.keys():
-                infection_location.append(
-                    list(locations[time_stamp]["infection_location"][:].astype("U"))
-                )
-                new_infected_ids.append(
-                    list(locations[time_stamp]["new_infected_ids"][:])
-                )
-            time_stamps = list(locations.keys())
+            super_areas = list(f.keys())
+            for super_area in super_areas:
+                locations = f[f"{super_area}/locations"]
+                infection_location, super_areas_for_df = [], []
+                for time_stamp in locations.keys():
+                    locations_for_df = list(locations[time_stamp]["infection_location"][:].astype("U"))
+                    infection_location.append(locations_for_df)
+                    super_areas_for_df.append([super_area]*len(locations_for_df))
+                time_stamps = list(locations.keys())
         self.locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
                 "location_id": infection_location,
-                "new_infected_ids": new_infected_ids,
+                "super_area": super_areas_for_df,
             }
         )
         self.locations_df["time_stamp"] = pd.to_datetime(
             self.locations_df["time_stamp"]
         )
-        self.locations_df.set_index("time_stamp", inplace=True)
+        self.locations_df.set_index(["time_stamp", "super_area"], inplace=True)
+
         self.locations_df = self.locations_df.resample("D").sum()
         self.locations_df["location"] = self.locations_df.apply(
             lambda x: [location_name.split("_")[0] for location_name in x.location_id],
             axis=1,
         )
-        self.locations_df["super_area"] = self.locations_df.apply(
-            lambda x: self.super_areas[x.new_infected_ids], axis=1
-        )
 
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
-        Get a data frame with the number of infection happening at each type of place, within the given time
-        period
+        Get a data frame with the number of infection happening at each type of place, 
+        within the given time period
 
         Parameters
         ----------

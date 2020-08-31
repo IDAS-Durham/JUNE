@@ -79,7 +79,7 @@ def make_dummy_world(geog):
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area.name,
+        super_area=super_area,
         coordinates=super_area.coordinates,
     )
     uni = University(coordinates=super_area.coordinates, n_students_max=2500,)

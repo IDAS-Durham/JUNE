@@ -176,17 +176,17 @@ class Logger:
                 "n_icu_beds": [],
                 "trust_code": [],
             }
-            for super_area in [hospital.super_area for hospital in hospitals]
+            for super_area in [hospital.super_area.name for hospital in hospitals]
         }
         for hospital in hospitals:
-            super_area_hospitals[hospital.super_area]["coordinates"].append(
+            super_area_hospitals[hospital.super_area.name]["coordinates"].append(
                 hospital.coordinates
             )
-            super_area_hospitals[hospital.super_area]["n_beds"].append(hospital.n_beds)
-            super_area_hospitals[hospital.super_area]["n_icu_beds"].append(
+            super_area_hospitals[hospital.super_area.name]["n_beds"].append(hospital.n_beds)
+            super_area_hospitals[hospital.super_area.name]["n_icu_beds"].append(
                 hospital.n_icu_beds
             )
-            super_area_hospitals[hospital.super_area]["trust_code"].append(
+            super_area_hospitals[hospital.super_area.name]["trust_code"].append(
                 hospital.trust_code
             )
         with h5py.File(self.file_path, "a", libver="latest") as f:
@@ -217,14 +217,14 @@ class Logger:
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         super_area_hospitals = {
             super_area: {"id": [], "n_patients": [], "n_patients_icu": []}
-            for super_area in [hospital.super_area for hospital in hospitals]
+            for super_area in [hospital.super_area.name for hospital in hospitals]
         }
         for hospital in hospitals:
-            super_area_hospitals[hospital.super_area]["id"].append(hospital.id)
-            super_area_hospitals[hospital.super_area]["n_patients"].append(
+            super_area_hospitals[hospital.super_area.name]["id"].append(hospital.id)
+            super_area_hospitals[hospital.super_area.name]["n_patients"].append(
                 len(hospital.subgroups[hospital.SubgroupType.patients].people)
             )
-            super_area_hospitals[hospital.super_area]["n_patients_icu"].append(
+            super_area_hospitals[hospital.super_area.name]["n_patients_icu"].append(
                 len(hospital.subgroups[hospital.SubgroupType.icu_patients].people)
             )
         # save to hdf5
