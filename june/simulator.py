@@ -16,7 +16,7 @@ from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
 from june.interaction import Interaction, InteractiveGroup
-from june.logger.logger import Logger
+from june.logger import Logger
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
@@ -402,9 +402,6 @@ class Simulator:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
-                    # print(
-                    #    f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
-                    # )
                     people_to_infect += data
         for inf_id in people_to_infect:
             person = self.world.people.get_from_id(inf_id)
@@ -476,9 +473,9 @@ class Simulator:
                         n_infected = len(new_infected_ids)
                         if self.logger is not None:
                             self.logger.accumulate_infection_location(
-                                group.spec, n_infected
+                                group.spec + f'_{group.id}', new_infected_ids 
                             )
-                        if mpi_size == 0:
+                        if mpi_size == 1:
                             # note this is disabled in parallel
                             # assign blame of infections
                             tprob_norm = sum(int_group.transmission_probabilities)
