@@ -45,8 +45,6 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
-        self.relatives_in_care_homes = None
-        self.relatives_in_households = None
         self.quarantine_starting_date = None
 
     def add(
@@ -66,8 +64,6 @@ class CareHome(Group):
                 person, subgroup_type=subgroup_type, activity=activity
             )
 
-    def get_leisure_subgroup(self, person):
-        return self.subgroups[self.SubgroupType.visitors]
 
     @property
     def workers(self):
@@ -90,6 +86,14 @@ class CareHome(Group):
             return None
         else:
             return self.area.super_area
+
+    @property
+    def households_to_visit(self):
+        return None
+
+    @property
+    def care_homes_to_visit(self):
+        return None
 
 
 class CareHomes(Supergroup):

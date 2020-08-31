@@ -42,6 +42,7 @@ class Area:
         "care_home",
         "schools",
         "households",
+        "social_venues"
     )
     _id = count()
 
@@ -59,6 +60,7 @@ class Area:
         self.people = []
         self.schools = []
         self.households = []
+        self.social_venues = {}
 
     def add(self, person: Person):
         self.people.append(person)
@@ -157,7 +159,6 @@ class SuperArea:
         self.areas = areas or []
         self.workers = []
         self.companies = []
-        self.groceries = []
         self.closest_hospitals = None
 
     def add_worker(self, person: Person):

@@ -119,7 +119,10 @@ def save_population_to_hdf5(
                         gids.append(subgroup.group.id)
                         stypes.append(subgroup.subgroup_type)
                         specs.append(subgroup.group.spec.encode("ascii", "ignore"))
-                        group_super_areas_temp.append(subgroup.group.super_area.id)
+                        if subgroup.group.super_area is None:
+                            group_super_areas_temp.append(nan_integer)
+                        else:
+                            group_super_areas_temp.append(subgroup.group.super_area.id)
                 group_specs.append(np.array(specs, dtype="S20"))
                 group_ids.append(np.array(gids, dtype=np.int))
                 subgroup_types.append(np.array(stypes, dtype=np.int))

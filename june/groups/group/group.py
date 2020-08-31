@@ -36,6 +36,7 @@ class Group(AbstractGroup):
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+    external = False
 
     class SubgroupType(IntEnum):
         """
