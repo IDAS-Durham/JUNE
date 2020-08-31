@@ -26,7 +26,7 @@ t1 = time.time()
 config_path = "./config_nocommute.yaml"
 
 # define geography, let's run the first 20 super areas of london
-geography = Geography.from_file({"super_area": london_areas[40:50]})
+geography = Geography.from_file({"super_area": london_areas[0:50]})
 
 # add buildings
 geography.hospitals = Hospitals.for_geography(geography)
@@ -50,5 +50,5 @@ leisure.distribute_social_venues_to_areas(
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
-world.to_hdf5("london_10.hdf5")
+world.to_hdf5("london_50.hdf5")
 print("Done :)")
