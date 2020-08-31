@@ -5,6 +5,7 @@ from random import random
 import h5py
 
 from june.groups.group import Group, Supergroup
+from june.mpi_setup import add_person_entry, delete_person_entry
 from enum import IntEnum
 from typing import List
 from recordclass import dataobject
@@ -29,7 +30,8 @@ class Household(Group):
         "residents",
         "quarantine_starting_date",
         "households_to_visit",
-        "care_homes_to_visit"
+        "care_homes_to_visit",
+        "ids_checked",
     )
 
     class SubgroupType(IntEnum):
@@ -74,7 +76,7 @@ class Household(Group):
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
-    def make_household_residents_stay_home(self):
+    def make_household_residents_stay_home(self, to_send_abroad=None):
         """
         Forces the residents to stay home if they are away doing leisure.
         This is used to welcome visitors.
@@ -82,16 +84,29 @@ class Household(Group):
         for mate in self.residents:
             if mate.busy:
                 if (
-                    mate.leisure is not None 
-                ):  # this perosn has already been assigned somewhere
+                    mate.leisure is not None
+                ):  # this person has already been assigned somewhere
                     if not mate.leisure.external:
+                        if mate not in mate.leisure.people:
+                            # person active somewhere else, let's not disturb them
+                            continue
                         mate.leisure.remove(mate)
-                    mate.subgroups.leisure = mate.subgroups.residence
+                    else:
+                        ret = delete_person_entry(
+                            to_send_abroad=to_send_abroad,
+                            person=mate,
+                            external_subgroup=mate.leisure,
+                        )
+                        if ret:
+                            # person active somewhere else, let's not disturb them
+                            continue
+                    mate.subgroups.leisure = mate.residence
                     mate.residence.append(mate)
             else:
                 mate.subgroups.leisure = (
-                    mate.residence # person will be added later in the simulator.
+                    mate.residence  # person will be added later in the simulator.
                 )
+
     @property
     def kids(self):
         return self.subgroups[self.SubgroupType.kids]

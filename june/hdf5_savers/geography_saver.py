@@ -3,6 +3,7 @@ import numpy as np
 from collections import defaultdict
 
 from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAreas
+from june.groups import ExternalGroup, ExternalSubgroup
 from june.world import World
 
 nan_integer = -999
@@ -16,6 +17,13 @@ social_venues_spec_mapper = {
     "cinemas": "cinemas",
     "groceries": "groceries",
 }
+
+super_group_to_group_mapper = {
+    "pubs": "pub",
+    "groceries": "grocery",
+    "cinemas": "cinema",
+}
+
 
 def save_geography_to_hdf5(geography: Geography, file_path: str):
     """
@@ -65,13 +73,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
         social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
         social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
-    social_venues_specs_list = np.array(
-        social_venues_specs_list, dtype=str_vlen_type
-    )
+    social_venues_specs_list = np.array(social_venues_specs_list, dtype=str_vlen_type)
     social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-    social_venues_super_areas = np.array(
-        social_venues_super_areas, dtype=int_vlen_type
-    )
+    social_venues_super_areas = np.array(social_venues_super_areas, dtype=int_vlen_type)
 
     for super_area in geography.super_areas:
         super_area_ids.append(super_area.id)
@@ -259,10 +263,7 @@ def restore_geography_properties_from_hdf5(
             social_venues_specs = np.empty(length, dtype=str_vlen_type)
             social_venues_ids = np.empty(length, dtype=int_vlen_type)
             social_venues_super_areas = np.empty(length, dtype=int_vlen_type)
-            if (
-                "social_venues_specs" in geography 
-                and "social_venues_ids" in geography 
-            ):
+            if "social_venues_specs" in geography and "social_venues_ids" in geography:
                 geography["social_venues_specs"].read_direct(
                     social_venues_specs, np.s_[idx1:idx2], np.s_[0:length]
                 )
@@ -287,8 +288,8 @@ def restore_geography_properties_from_hdf5(
                 # social venues
                 area.social_venues = defaultdict(tuple)
                 if (
-                    "social_venues_specs" in geography 
-                    and "social_venues_ids" in geography 
+                    "social_venues_specs" in geography
+                    and "social_venues_ids" in geography
                 ):
                     for group_spec, group_id, group_super_area in zip(
                         social_venues_specs[k],
@@ -302,7 +303,15 @@ def restore_geography_properties_from_hdf5(
                             domain_super_areas is not None
                             and group_super_area not in domain_super_areas
                         ):
-                            group = (group_super_area, spec, group_id)
+
+                            domain_of_group = super_areas_to_domain_dict[
+                                group_super_area
+                            ]
+                            group = ExternalGroup(
+                                id=group_id,
+                                domain_id=domain_of_group,
+                                spec=super_group_to_group_mapper[spec],
+                            )
                         else:
                             group = supergroup.get_from_id(group_id)
                         area.social_venues[spec] = (
@@ -339,13 +348,18 @@ def restore_geography_properties_from_hdf5(
                 for hospital_id, hospital_super_area_id in zip(
                     closest_hospitals_ids[k], closest_hospitals_super_areas[k]
                 ):
-                    if domain_super_areas is None or hospital_super_area_id in domain_super_areas:
+                    if (
+                        domain_super_areas is None
+                        or hospital_super_area_id in domain_super_areas
+                    ):
                         hospital = world.hospitals.get_from_id(hospital_id)
-                        hospitals.append(hospital)
                     else:
-                        hospital_data = (
-                            super_areas_to_domain_dict[hospital_super_area_id],
-                            hospital_id,
+                        hospital = ExternalGroup(
+                            domain_id=super_areas_to_domain_dict[
+                                hospital_super_area_id
+                            ],
+                            spec="hospital",
+                            id=hospital_id,
                         )
-                        hospitals.append(hospital_data)
+                    hospitals.append(hospital)
                 super_area.closest_hospitals = hospitals

@@ -18,7 +18,15 @@ from june.policy import (
     MedicalCarePolicies,
     InteractionPolicies,
 )
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_setup import (
+    mpi_comm,
+    mpi_size,
+    mpi_rank,
+    count_people_in_dict,
+    update_data,
+    add_person_entry,
+    delete_person_entry,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,33 +40,6 @@ activity_hierarchy = [
     "leisure",
     "residence",
 ]
-
-
-def _count_people_in_dict(people_from_abroad_dict):
-    ret = 0
-    for group_spec in people_from_abroad_dict:
-        for group_id in people_from_abroad_dict[group_spec]:
-            for subgroup_type in people_from_abroad_dict[group_spec][group_id]:
-                ret += len(people_from_abroad_dict[group_spec][group_id][subgroup_type])
-    return ret
-
-
-def _update_data(people_from_abroad, data):
-    for group_spec in data:
-        if group_spec not in people_from_abroad:
-            people_from_abroad[group_spec] = {}
-        for group_id in data[group_spec]:
-            if group_id not in people_from_abroad[group_spec]:
-                people_from_abroad[group_spec][group_id] = {}
-            for subgroup_type in data[group_spec][group_id]:
-                if subgroup_type not in people_from_abroad[group_spec][group_id]:
-                    people_from_abroad[group_spec][group_id][subgroup_type] = {}
-                for person_id, person_data in data[group_spec][group_id][
-                    subgroup_type
-                ].items():
-                    people_from_abroad[group_spec][group_id][subgroup_type][
-                        person_id
-                    ] = person_data
 
 
 class ActivityManager:
@@ -85,8 +66,12 @@ class ActivityManager:
             }
         else:
             self.activity_to_super_group_dict = {
-                "medical_facility": activity_to_super_groups.get("medical_facility", []),
-                "primary_activity": activity_to_super_groups.get("primary_activity", []),
+                "medical_facility": activity_to_super_groups.get(
+                    "medical_facility", []
+                ),
+                "primary_activity": activity_to_super_groups.get(
+                    "primary_activity", []
+                ),
                 "leisure": activity_to_super_groups.get("leisure", []),
                 "residence": activity_to_super_groups.get("residence", []),
                 "commute": activity_to_super_groups.get("commute", []),
@@ -190,11 +175,13 @@ class ActivityManager:
         List of groups that are active.
         """
 
-        super_groups = [self.activity_to_super_group_dict[activity] for activity in activities]
+        super_groups = [
+            self.activity_to_super_group_dict[activity] for activity in activities
+        ]
         return list(chain.from_iterable(super_groups))
 
     def move_to_active_subgroup(
-        self, activities: List[str], person: Person
+        self, activities: List[str], person: Person, to_send_abroad=None
     ) -> Optional["Subgroup"]:
         """
         Given the hierarchy of activities and a person, decide what subgroup
@@ -213,7 +200,7 @@ class ActivityManager:
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person=person,
+                    person=person, to_send_abroad=to_send_abroad
                 )
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
@@ -290,7 +277,6 @@ class ActivityManager:
         )
         activities = self.apply_activity_hierarchy(activities)
         to_send_abroad = {}
-        n_people_going_abroad = 0
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
@@ -303,38 +289,18 @@ class ActivityManager:
                 key_ratio=self.key_ratio,
                 random_ratio=self.random_ratio,
             )
-            ret = self.move_to_active_subgroup(allowed_activities, person)
-            if ret is not None:
-                n_people_going_abroad += 1
-                if ret.domain_id not in to_send_abroad:
-                    to_send_abroad[ret.domain_id] = {}  # allocate domain id
-                if ret.group_spec not in to_send_abroad[ret.domain_id]:
-                    to_send_abroad[ret.domain_id][ret.group_spec] = {}
-                if ret.group_id not in to_send_abroad[ret.domain_id][ret.group_spec]:
-                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id] = {}
-                if (
-                    ret.subgroup_type
-                    not in to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id]
-                ):
-                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][
-                        ret.subgroup_type
-                    ] = {}
-                if person.infected:
-                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][
-                        ret.subgroup_type
-                    ][person.id] = {
-                        "inf_prob": person.infection.transmission.probability,
-                        "susc": 0.0,
-                        "dom": mpi_rank,
-                    }
-                else:
-                    to_send_abroad[ret.domain_id][ret.group_spec][ret.group_id][
-                        ret.subgroup_type
-                    ][person.id] = {
-                        "inf_prob": 0.0,
-                        "susc": person.susceptibility,
-                        "dom": mpi_rank,
-                    }
+            external_subgroup = self.move_to_active_subgroup(
+                allowed_activities, person, to_send_abroad
+            )
+            if external_subgroup is not None:
+                add_person_entry(
+                    to_send_abroad=to_send_abroad,
+                    person=person,
+                    external_subgroup=external_subgroup,
+                )
+        n_people_going_abroad = 0
+        for domain_id in to_send_abroad:
+            n_people_going_abroad += count_people_in_dict(to_send_abroad[domain_id])
         return n_people_going_abroad, to_send_abroad
 
     def send_and_receive_people_from_abroad(self, to_send_abroad):
@@ -348,7 +314,7 @@ class ActivityManager:
                     if rank == rank_receiving:
                         continue
                     if rank_receiving in to_send_abroad:
-                        n_people_this_rank = _count_people_in_dict(
+                        n_people_this_rank = count_people_in_dict(
                             to_send_abroad[rank_receiving]
                         )
                         mpi_comm.send(
@@ -356,13 +322,19 @@ class ActivityManager:
                             dest=rank_receiving,
                             tag=rank_receiving,
                         )
+                        print(
+                            f"I am rank {mpi_rank} and I just sent {n_people_this_rank} to {rank_receiving}"
+                        )
                         continue
                     mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
             else:
                 # I have to listen
                 data = mpi_comm.recv(source=rank, tag=mpi_rank)
                 if data is not None:
-                    n_people_this_rank = _count_people_in_dict(data)
-                    _update_data(people_from_abroad, data)
+                    n_people_this_rank = count_people_in_dict(data)
+                    print(
+                        f"I am rank {mpi_rank} and I just received {n_people_this_rank} from {rank}"
+                    )
+                    update_data(people_from_abroad, data)
                     n_people_from_abroad += n_people_this_rank
         return people_from_abroad, n_people_from_abroad

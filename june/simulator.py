@@ -26,7 +26,6 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger(__name__)
 
-from june.activity.activity_manager import _count_people_in_dict
 
 
 class Simulator:
@@ -501,8 +500,6 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
-            for person in self.world.people:
-                assert person.busy
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {people_active}.\n"
