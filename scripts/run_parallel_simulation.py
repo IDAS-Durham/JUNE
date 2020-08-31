@@ -3,6 +3,7 @@ import numpy as np
 import numba as nb
 import random
 from mpi4py import MPI
+import h5py
 
 from june.hdf5_savers import generate_world_from_hdf5
 from june.demography.geography import Geography
@@ -35,7 +36,7 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./london_60.hdf5"
+world_file = "./../../june_scripts/NEY_simple.hdf5"
 config_path = "./config_basic.yaml"
 
 # parallel setup
@@ -44,13 +45,16 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
+with h5py.File(world_file, "r") as f:
+    print(f["geography"].keys())
+    n_super_areas = f["geography"].attrs["n_super_areas"]
+
 
 #london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
 super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
-    60, size
+    n_super_areas, size
 )
 print("MPI SIZE", size)
-print(super_areas_to_domain_dict)
 domain = Domain.from_hdf5(
     domain_id=rank,
     super_areas_to_domain_dict=super_areas_to_domain_dict,
