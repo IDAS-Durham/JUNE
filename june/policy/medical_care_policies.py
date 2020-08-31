@@ -41,7 +41,6 @@ class Hospitalisation(MedicalCarePolicy):
             if person.medical_facility is None:
                 # note, we dont model hospital capacity here.
                 closest_hospital = person.super_area.closest_hospitals[0]
-                print(closest_hospital)
                 if symptoms_tag == SymptomTag.hospitalised:
                     if type(closest_hospital) == tuple:
                         # not in this domain, we need to send it over

@@ -60,7 +60,8 @@ def generate_super_areas_to_domain_dict(number_of_super_areas, number_of_domains
         number_of_areas_per_domain[domain] = 1
     remaining = number_of_super_areas - number_of_domains
     for i in range(remaining):
-        number_of_areas_per_domain[i] += 1
+        j = i % number_of_domains
+        number_of_areas_per_domain[j] += 1
     domain_number = 0
     areas_per_domain = 0
     for super_area in range(number_of_super_areas):
@@ -69,7 +70,6 @@ def generate_super_areas_to_domain_dict(number_of_super_areas, number_of_domains
         if areas_per_domain == number_of_areas_per_domain[domain_number]:
             domain_number += 1
             areas_per_domain = 0
-
     return ret
 
 
