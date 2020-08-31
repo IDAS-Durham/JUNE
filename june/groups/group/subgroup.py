@@ -3,23 +3,6 @@ from .abstract import AbstractGroup
 from typing import List
 from itertools import chain
 
-class ExternalGroup:
-    __slots__ = "spec"
-    def __init__(self, spec):
-        self.spec = spec
-
-class ExternalSubgroup:
-    external = True
-    __slots__ = ("domain_id", "group_spec", "group_id", "subgroup_type", "group")
-    """
-    This is a place holder group for groups that live in other domains.
-    """
-    def __init__(self, domain_id, group_spec, group_id, subgroup_type):
-        self.group_spec = group_spec
-        self.group_id = group_id
-        self.subgroup_type = subgroup_type
-        self.domain_id = domain_id
-        self.group = ExternalGroup(group_spec)
 
 class Subgroup(AbstractGroup):
     external = False
@@ -92,7 +75,7 @@ class Subgroup(AbstractGroup):
 
     def remove(self, person: Person):
         self.people.remove(person)
-        person.busy=False
+        person.busy = False
 
     def __getitem__(self, item):
         return list(self.people)[item]

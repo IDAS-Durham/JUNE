@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 from random import randint, shuffle
 from june.demography.geography import Areas, SuperAreas
-from june.groups import CareHomes, Households, Household
+from june.groups import CareHomes, Households, Household, CareHome
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
@@ -66,13 +66,13 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                         person for person in area.care_home.residents
                     ]
                     for i, person in enumerate(people_in_care_home):
-                        if households_super_area[i].relatives_in_care_homes is None:
-                            households_super_area[i].relatives_in_care_homes = (person,)
+                        if households_super_area[i].care_homes_to_visit is None:
+                            households_super_area[i].care_homes_to_visit = (area.care_home,)
                         else:
-                            households_super_area[i].relatives_in_care_homes = tuple(
+                            households_super_area[i].care_homes_to_visit = tuple(
                                 (
-                                    *households_super_area[i].relatives_in_care_homes,
-                                    person,
+                                    *households_super_area[i].care_homes_to_visit,
+                                    area.care_home,
                                 )
                             )
 
@@ -115,3 +115,6 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
+
+    def get_leisure_subgroup_type(self, person):
+        return CareHome.SubgroupType.visitors

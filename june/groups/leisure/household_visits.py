@@ -57,7 +57,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     for household in area.households
                     if household.type
                     in [
-                        "families",
+                        "family",
                         "ya_parents",
                         "nokids",
                         "old",
@@ -69,8 +69,8 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
             for household in households_super_area:
                 if household.size == 0:
                     continue
-                households_to_link_n = randint(0, 3)
-                relatives_to_visit = []
+                households_to_link_n = randint(1, 3)
+                households_to_visit = []
                 for _ in range(households_to_link_n):
                     house_idx = randint(0, len(households_super_area) - 1)
                     house = households_super_area[house_idx]
@@ -79,9 +79,9 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     if not house.people:
                         continue
                     person_idx = randint(0, len(house.people) - 1)
-                    relatives_to_visit.append(house.people[person_idx])
-                if relatives_to_visit:
-                    household.relatives_in_households = tuple(relatives_to_visit)
+                    households_to_visit.append(house)
+                if households_to_visit:
+                    household.households_to_visit = tuple(households_to_visit)
 
     def get_possible_venues_for_household(self, household: Household):
         """
@@ -125,3 +125,18 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability
+
+    def get_leisure_subgroup_type(self, person):
+        """
+        A person wants to come and visit this household. We need to assign the person
+        to the relevant age subgroup, and make sure the residents welcome him and
+        don't go do any other leisure activities.
+        """
+        if person.age < 18:
+            return Household.SubgroupType.kids
+        elif person.age <= 35:
+            return Household.SubgroupType.young_adults
+        elif person.age < 65:
+            return Household.SubgroupType.adults
+        else:
+            return Household.SubgroupType.old_adults

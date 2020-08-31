@@ -94,78 +94,47 @@ def save_households_to_hdf5(
                 households_dset["max_size"][idx1:idx2] = max_sizes
 
         # I dont know how to chunk these...
-        relatives_in_households = []
-        relatives_in_care_homes = []
-        social_venues_specs_list = []
-        social_venues_ids_list = []
-        social_venues_super_areas = []
+        households_to_visit = []
+        care_homes_to_visit = []
         for household in households:
             if (
-                household.relatives_in_households is None
-                or len(household.relatives_in_households) == 0
+                household.households_to_visit is None
+                or len(household.households_to_visit) == 0
             ):
-                relatives_in_households.append(np.array([nan_integer], dtype=np.int))
+                households_to_visit.append(np.array([nan_integer], dtype=np.int))
             else:
-                relatives_in_households.append(
+                households_to_visit.append(
                     np.array(
-                        [person.id for person in household.relatives_in_households],
+                        [household.id for household in household.households_to_visit],
                         dtype=np.int,
                     )
                 )
             if (
-                household.relatives_in_care_homes is None
-                or len(household.relatives_in_care_homes) == 0
+                household.care_homes_to_visit is None
+                or len(household.care_homes_to_visit) == 0
             ):
-                relatives_in_care_homes.append(np.array([nan_integer], dtype=np.int))
+                care_homes_to_visit.append(np.array([nan_integer], dtype=np.int))
             else:
-                relatives_in_care_homes.append(
+                care_homes_to_visit.append(
                     np.array(
-                        [person.id for person in household.relatives_in_care_homes],
+                        [care_home.id for care_home in household.care_homes_to_visit],
                         dtype=np.int,
                     )
                 )
-            social_venues_ids = []
-            social_venues_specs = []
-            social_venues_sas = []
-            for spec in household.social_venues.keys():
-                for social_venue in household.social_venues[spec]:
-                    social_venues_specs.append(spec.encode("ascii", "ignore"))
-                    social_venues_ids.append(social_venue.id)
-                    social_venues_sas.append(social_venue.super_area.id)
-            social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
-            social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
-            social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
-        relatives_in_care_homes = np.array(relatives_in_care_homes, dtype=int_vlen_type)
-        social_venues_specs_list = np.array(
-            social_venues_specs_list, dtype=str_vlen_type
-        )
-        social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-        social_venues_super_areas = np.array(
-            social_venues_super_areas, dtype=int_vlen_type
-        )
-        if len(np.unique(list(chain(*relatives_in_households)))) > 1:
-            relatives_in_households = np.array(
-                relatives_in_households, dtype=int_vlen_type
+        care_homes_to_visit = np.array(care_homes_to_visit, dtype=int_vlen_type)
+        if len(np.unique(list(chain(*households_to_visit)))) > 1:
+            households_to_visit = np.array(
+                households_to_visit, dtype=int_vlen_type
             )
             households_dset.create_dataset(
-                "relatives_in_households", data=relatives_in_households,
+                "households_to_visit", data=households_to_visit,
             )
-        if len(np.unique(list(chain(*relatives_in_care_homes)))) > 1:
-            relatives_in_care_homes = np.array(
-                relatives_in_care_homes, dtype=int_vlen_type
-            )
-            households_dset.create_dataset(
-                "relatives_in_care_homes", data=relatives_in_care_homes,
-            )
-        if social_venues_specs and social_venues_ids:
-            households_dset.create_dataset(
-                "social_venues_specs", data=social_venues_specs_list,
+        if len(np.unique(list(chain(*care_homes_to_visit)))) > 1:
+            care_homes_to_visit = np.array(
+                care_homes_to_visit, dtype=int_vlen_type
             )
             households_dset.create_dataset(
-                "social_venues_ids", data=social_venues_ids_list,
-            )
-            households_dset.create_dataset(
-                "social_venues_super_areas", data=social_venues_super_areas,
+                "care_homes_to_visit", data=care_homes_to_visit,
             )
 
 
@@ -234,38 +203,22 @@ def restore_households_properties_from_hdf5(
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
             ids = np.empty(length, dtype=int)
-            relatives_in_households_list = np.empty(length, dtype=int_vlen_type)
-            relatives_in_care_homes_list = np.empty(length, dtype=int_vlen_type)
+            households_to_visit_list = np.empty(length, dtype=int_vlen_type)
+            care_homes_to_visit_list = np.empty(length, dtype=int_vlen_type)
             areas = np.empty(length, dtype=np.int)
             super_areas = np.empty(length, dtype=np.int)
-            social_venues_specs = np.empty(length, dtype=str_vlen_type)
-            social_venues_ids = np.empty(length, dtype=int_vlen_type)
-            social_venues_super_areas = np.empty(length, dtype=int_vlen_type)
             households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
             households["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
             households["super_area"].read_direct(
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
-            if "relatives_in_households" in households:
-                households["relatives_in_households"].read_direct(
-                    relatives_in_households_list, np.s_[idx1:idx2], np.s_[0:length]
+            if "households_to_visit" in households:
+                households["households_to_visit"].read_direct(
+                    households_to_visit_list, np.s_[idx1:idx2], np.s_[0:length]
                 )
-            if "relatives_in_care_homes" in households:
-                households["relatives_in_care_homes"].read_direct(
-                    relatives_in_care_homes_list, np.s_[idx1:idx2], np.s_[0:length]
-                )
-            if (
-                "social_venues_specs" in households
-                and "social_venues_ids" in households
-            ):
-                households["social_venues_specs"].read_direct(
-                    social_venues_specs, np.s_[idx1:idx2], np.s_[0:length]
-                )
-                households["social_venues_ids"].read_direct(
-                    social_venues_ids, np.s_[idx1:idx2], np.s_[0:length]
-                )
-                households["social_venues_super_areas"].read_direct(
-                    social_venues_super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            if "care_homes_to_visit" in households:
+                households["care_homes_to_visit"].read_direct(
+                    care_homes_to_visit_list, np.s_[idx1:idx2], np.s_[0:length]
                 )
             for k in range(length):
                 if domain_super_areas is not None:
@@ -285,47 +238,23 @@ def restore_households_properties_from_hdf5(
                 area.households.append(household)
                 household.residents = tuple(household.people)
                 # relatives
-                if "relatives_in_households" in households:
-                    if relatives_in_households_list[k][0] == nan_integer:
-                        household.household_relatives = None
+                if "households_to_visit" in households:
+                    if households_to_visit_list[k][0] == nan_integer:
+                        household.households_to_visit = None
                     else:
-                        household_relatives = []
-                        for relative in relatives_in_households_list[k]:
-                            household_relatives.append(
-                                world.people.get_from_id(relative)
+                        households_to_visit = []
+                        for house_id in households_to_visit_list[k]:
+                            households_to_visit.append(
+                                world.households.get_from_id(house_id)
                             )
-                        household.relatives_in_households = tuple(household_relatives)
-                if "relatives_in_care_homes" in households:
-                    if relatives_in_care_homes_list[k][0] == nan_integer:
-                        household.care_home_relatives = None
+                        household.households_to_visit = tuple(households_to_visit)
+                if "care_homes_to_visit" in households:
+                    if care_homes_to_visit_list[k][0] == nan_integer:
+                        household.care_homes_to_visit = None
                     else:
-                        care_home_relatives = []
-                        for relative in relatives_in_care_homes_list[k]:
-                            care_home_relatives.append(
-                                world.people.get_from_id(relative)
+                        care_homes_to_visit = []
+                        for care_home_id in care_homes_to_visit_list[k]:
+                            care_homes_to_visit.append(
+                                world.care_homes.get_from_id(care_home_id)
                             )
-                        household.relatives_in_care_homes = tuple(care_home_relatives)
-                # social venues
-                if (
-                    "social_venues_specs" in households
-                    and "social_venues_ids" in households
-                ):
-                    for group_spec, group_id, group_super_area in zip(
-                        social_venues_specs[k],
-                        social_venues_ids[k],
-                        social_venues_super_areas[k],
-                    ):
-                        spec = group_spec.decode()
-                        spec_mapped = social_venues_spec_mapper[spec]
-                        supergroup = getattr(world, spec_mapped)
-                        if (
-                            domain_super_areas is not None
-                            and group_super_area not in domain_super_areas
-                        ):
-                            group = (group_super_area, spec, group_id)
-                        else:
-                            group = supergroup.get_from_id(group_id)
-                        household.social_venues[spec] = (
-                            *household.social_venues[spec],
-                            group,
-                        )
+                        household.care_homes_to_visit = tuple(care_homes_to_visit)

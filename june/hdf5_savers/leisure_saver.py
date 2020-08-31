@@ -50,6 +50,8 @@ def load_social_venues_from_hdf5(file_path: str, domain_super_areas=None):
             data = f["social_venues"][spec]
             social_venues = []
             n = data.attrs["n"]
+            if n == 0:
+                continue
             ids = np.empty(n, dtype=int)
             data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
             coordinates = np.empty((n, 2), dtype=float)
@@ -81,6 +83,8 @@ def restore_social_venues_properties_from_hdf5(
             social_venues = getattr(world, spec)
             data = f["social_venues"][spec]
             n = data.attrs["n"]
+            if n == 0:
+                continue
             ids = np.empty(n, dtype=int)
             data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
             super_areas = np.empty(n, dtype=int)

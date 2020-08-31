@@ -1,12 +1,21 @@
 import h5py
 import numpy as np
+from collections import defaultdict
 
 from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAreas
 from june.world import World
 
 nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
+str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
 
+social_venues_spec_mapper = {
+    "pubs": "pubs",
+    "household_visits": "households",
+    "care_home_visits": "care_homes",
+    "cinemas": "cinemas",
+    "groceries": "groceries",
+}
 
 def save_geography_to_hdf5(geography: Geography, file_path: str):
     """
@@ -36,12 +45,33 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     closest_hospitals_ids = []
     closest_hospitals_super_areas = []
     hospital_lengths = []
+    social_venues_specs_list = []
+    social_venues_ids_list = []
+    social_venues_super_areas = []
 
     for area in geography.areas:
         area_ids.append(area.id)
         area_super_areas.append(area.super_area.id)
         area_names.append(area.name.encode("ascii", "ignore"))
         area_coordinates.append(np.array(area.coordinates, dtype=np.float))
+        social_venues_ids = []
+        social_venues_specs = []
+        social_venues_sas = []
+        for spec in area.social_venues.keys():
+            for social_venue in area.social_venues[spec]:
+                social_venues_specs.append(spec.encode("ascii", "ignore"))
+                social_venues_ids.append(social_venue.id)
+                social_venues_sas.append(social_venue.super_area.id)
+        social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
+        social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
+        social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
+    social_venues_specs_list = np.array(
+        social_venues_specs_list, dtype=str_vlen_type
+    )
+    social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
+    social_venues_super_areas = np.array(
+        social_venues_super_areas, dtype=int_vlen_type
+    )
 
     for super_area in geography.super_areas:
         super_area_ids.append(super_area.id)
@@ -100,6 +130,16 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset(
             "closest_hospitals_super_areas", data=closest_hospitals_super_areas
         )
+        if social_venues_specs and social_venues_ids:
+            geography_dset.create_dataset(
+                "social_venues_specs", data=social_venues_specs_list,
+            )
+            geography_dset.create_dataset(
+                "social_venues_ids", data=social_venues_ids_list,
+            )
+            geography_dset.create_dataset(
+                "social_venues_super_areas", data=social_venues_super_areas,
+            )
 
 
 def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
@@ -203,6 +243,7 @@ def restore_geography_properties_from_hdf5(
         geography = f["geography"]
         n_areas = geography.attrs["n_areas"]
         n_chunks = int(np.ceil(n_areas / chunk_size))
+        # areas
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_areas)
@@ -215,6 +256,22 @@ def restore_geography_properties_from_hdf5(
             geography["area_super_area"].read_direct(
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
+            social_venues_specs = np.empty(length, dtype=str_vlen_type)
+            social_venues_ids = np.empty(length, dtype=int_vlen_type)
+            social_venues_super_areas = np.empty(length, dtype=int_vlen_type)
+            if (
+                "social_venues_specs" in geography 
+                and "social_venues_ids" in geography 
+            ):
+                geography["social_venues_specs"].read_direct(
+                    social_venues_specs, np.s_[idx1:idx2], np.s_[0:length]
+                )
+                geography["social_venues_ids"].read_direct(
+                    social_venues_ids, np.s_[idx1:idx2], np.s_[0:length]
+                )
+                geography["social_venues_super_areas"].read_direct(
+                    social_venues_super_areas, np.s_[idx1:idx2], np.s_[0:length]
+                )
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area_id = super_areas[k]
@@ -227,7 +284,33 @@ def restore_geography_properties_from_hdf5(
                 area = world.areas.get_from_id(areas_ids[k])
                 area.super_area = world.super_areas.get_from_id(super_areas[k])
                 area.super_area.areas.append(area)
+                # social venues
+                area.social_venues = defaultdict(tuple)
+                if (
+                    "social_venues_specs" in geography 
+                    and "social_venues_ids" in geography 
+                ):
+                    for group_spec, group_id, group_super_area in zip(
+                        social_venues_specs[k],
+                        social_venues_ids[k],
+                        social_venues_super_areas[k],
+                    ):
+                        spec = group_spec.decode()
+                        spec_mapped = social_venues_spec_mapper[spec]
+                        supergroup = getattr(world, spec_mapped)
+                        if (
+                            domain_super_areas is not None
+                            and group_super_area not in domain_super_areas
+                        ):
+                            group = (group_super_area, spec, group_id)
+                        else:
+                            group = supergroup.get_from_id(group_id)
+                        area.social_venues[spec] = (
+                            *area.social_venues[spec],
+                            group,
+                        )
 
+        # super areas
         n_super_areas = geography.attrs["n_super_areas"]
         n_chunks = int(np.ceil(n_super_areas / chunk_size))
         for chunk in range(n_chunks):
