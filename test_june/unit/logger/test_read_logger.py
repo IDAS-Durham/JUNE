@@ -99,7 +99,13 @@ def test__read_daily_hospital_admissions():
             if new_status == "recovered":
                 person.infection = None
         n_secondary_infections = [0] * len(ids)
-        super_area_infections = {'holi': {'ids': ids, 'symptoms':symptoms, 'n_secondary_infections': n_secondary_infections}}
+        super_area_infections = {
+            "holi": {
+                "ids": ids,
+                "symptoms": symptoms,
+                "n_secondary_infections": n_secondary_infections,
+            }
+        }
         logger.log_infected(timer.date, super_area_infections)
         logger.log_infection_location(time)
         next(timer)
@@ -161,7 +167,13 @@ def test__read_infected_and_dead():
                 person.infection = None
                 person.dead = True
         n_secondary_infections = [0] * len(ids)
-        super_area_infections = {'holi': {'ids': ids, 'symptoms':symptoms, 'n_secondary_infections': n_secondary_infections}}
+        super_area_infections = {
+            "holi": {
+                "ids": ids,
+                "symptoms": symptoms,
+                "n_secondary_infections": n_secondary_infections,
+            }
+        }
         logger.log_infected(timer.date, super_area_infections)
         logger.log_infection_location(time)
         next(timer)
@@ -169,12 +181,12 @@ def test__read_infected_and_dead():
     world_df = read.world_summary()
     infections_df = pd.Series(infections)
     infections_df.index = pd.to_datetime(infections_df.index)
-    infections_logged = world_df['daily_infections']
-    #infections_logged = infections_logged[infections_logged.values > 0]
-    #assert sum(list(infections.values())) == infections_logged.sum()
-    #pd._testing.assert_series_equal(
+    infections_logged = world_df["daily_infections"]
+    # infections_logged = infections_logged[infections_logged.values > 0]
+    # assert sum(list(infections.values())) == infections_logged.sum()
+    # pd._testing.assert_series_equal(
     #    infections_df, infections_logged, check_names=False, check_dtype=False,
-    #)
+    # )
 
     deaths_df = pd.Series(deaths)
     deaths_df.index = pd.to_datetime(deaths_df.index)
@@ -186,6 +198,8 @@ def test__read_infected_and_dead():
     pd._testing.assert_series_equal(
         deaths_df, deaths_logged, check_names=False, check_dtype=False,
     )
+
+
 # test current number of infected
 def test__read_current_infected():
     world = make_dummy_world(infected=False)
@@ -218,7 +232,13 @@ def test__read_current_infected():
             else:
                 infected[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
         n_secondary_infections = [0] * len(ids)
-        super_area_infections = {'holi': {'ids': ids, 'symptoms':symptoms, 'n_secondary_infections': n_secondary_infections}}
+        super_area_infections = {
+            "holi": {
+                "ids": ids,
+                "symptoms": symptoms,
+                "n_secondary_infections": n_secondary_infections,
+            }
+        }
         logger.log_infected(timer.date, super_area_infections)
         logger.log_infection_location(time)
         next(timer)
@@ -226,15 +246,13 @@ def test__read_current_infected():
     world_df = read.world_summary()
     infected_df = pd.Series(infected)
     infected_df.index = pd.to_datetime(infected_df.index)
-    infected_logged = world_df['current_infected']
+    infected_logged = world_df["current_infected"]
     infected_logged = infected_logged[infected_logged.values > 0]
     assert sum(list(infected.values())) == infected_logged.sum()
     pd._testing.assert_series_equal(
         infected_df, infected_logged, check_names=False, check_dtype=False,
     )
 
+
 # Test hospitalisations by age
 # Test hospitalisations by area
-
-
-

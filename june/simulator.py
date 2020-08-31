@@ -4,7 +4,6 @@ import numpy as np
 import pickle
 import yaml
 from itertools import chain
-from collections import defaultdict
 from typing import Optional, List
 from pathlib import Path
 
@@ -40,7 +39,6 @@ class Simulator:
         infection_seed: Optional["InfectionSeed"] = None,
         save_path: str = "results",
         checkpoint_dates: List[datetime.date] = None,
-        light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on the world.
@@ -57,7 +55,6 @@ class Simulator:
         self.interaction = interaction
         self.infection_selector = infection_selector
         self.infection_seed = infection_seed
-        self.light_logger = light_logger
         self.timer = timer
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
@@ -324,7 +321,8 @@ class Simulator:
             duration of time step
         """
         super_area_infections = {
-                super_area.name: {"ids": [], "symptoms": [], "n_secondary_infections": []} for super_area in self.world.super_areas
+            super_area.name: {"ids": [], "symptoms": [], "n_secondary_infections": []}
+            for super_area in self.world.super_areas
         }
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
@@ -334,10 +332,12 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
-            super_area_dict = super_area_infections[person.area.super_area.name] 
-            super_area_dict['ids'].append(person.id)
-            super_area_dict['symptoms'].append(person.infection.tag.value)
-            super_area_dict['n_secondary_infections'].append(person.infection.number_of_infected)
+            super_area_dict = super_area_infections[person.area.super_area.name]
+            super_area_dict["ids"].append(person.id)
+            super_area_dict["symptoms"].append(person.infection.tag.value)
+            super_area_dict["n_secondary_infections"].append(
+                person.infection.number_of_infected
+            )
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person, medical_facilities=self.world.hospitals
@@ -347,9 +347,7 @@ class Simulator:
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
         if self.logger is not None:
-            self.logger.log_infected(
-                self.timer.date, super_area_infections
-            )
+            self.logger.log_infected(self.timer.date, super_area_infections)
 
     def do_timestep(self):
         """
@@ -398,9 +396,14 @@ class Simulator:
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
+                        super_area_new_infected = [
+                            person.area.super_area.name
+                            for person in self.world.people[new_infected_ids]
+                        ]
                         if self.logger is not None:
                             self.logger.accumulate_infection_location(
-                                group.spec + f'_{group.id}', new_infected_ids 
+                                location=group.spec + f"_{group.id}",
+                                super_areas_infection=super_area_new_infected,
                             )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
@@ -445,14 +448,13 @@ class Simulator:
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(
-                self.world.people, light_logger=self.light_logger
-            )
+            self.logger.log_population(self.world.people, rank=0)
             self.logger.log_parameters(
                 interaction=self.interaction,
                 infection_seed=self.infection_seed,
                 infection_selector=self.infection_selector,
                 activity_manager=self.activity_manager,
+                rank=0,
             )
 
             if self.world.hospitals is not None:

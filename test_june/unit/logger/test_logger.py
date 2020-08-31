@@ -179,9 +179,7 @@ l = Logger()
 
 
 def test__log_population(sim):
-    sim.logger.log_population(
-        sim.world.people, light_logger=sim.light_logger, chunk_size=2
-    )
+    sim.logger.log_population(sim.world.people, chunk_size=2)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         assert f["population"].attrs["n_people"] == 5
         assert set(f["population/age"][()]) == set([5, 8, 20, 42, 44])
@@ -193,8 +191,9 @@ def test__log_population(sim):
 def test__log_hospital_characteristics(sim):
     sim.logger.log_hospital_characteristics(sim.world.hospitals)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        assert set(f["hospitals/n_beds"]) == set([40])
-        assert set(f["hospitals/n_icu_beds"]) == set([5])
+        super_area = sim.world.super_areas[0].name
+        assert set(f[f"{super_area}/hospitals/n_beds"]) == set([40])
+        assert set(f[f"{super_area}/hospitals/n_icu_beds"]) == set([5])
 
 
 def test__log_parameters(sim):
@@ -223,17 +222,20 @@ def test__log_infection_location(sim):
             break
         i += 1
         next(sim.timer)
-    all_locations, all_new_infected = [], []
+    all_locations = []
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        locations = f["locations"]
+        super_area = sim.world.super_areas[0].name
+        locations = f[f"{super_area}/locations"]
         keys = list(locations.keys())
         for key in keys:
-            all_locations += list(locations[f"{key}/infection_location"])
-            all_new_infected += list(locations[f"{key}/new_infected_ids"])
-    non_susceptible_people = [p.id for p in sim.world.people if p.susceptible != 1.0]
-    assert all(infected in non_susceptible_people for infected in all_new_infected)
-    assert len(all_new_infected) + 2 == len(non_susceptible_people)
-    assert all(t in keys for t in time_steps)
+            all_locations += list(locations[f"{key}/locations"])
+    assert all(key in time_steps for key in keys)
+    for location in all_locations:
+        location = location.decode("utf-8")
+        generic = location.split("_")[0]
+        location_id = location.split("_")[1]
+        assert generic in ("household", "university", "company", "cinema", "pub")
+        assert int(location_id) == 0
 
 
 def test__log_infected(sim):
@@ -252,9 +254,9 @@ def test__log_infected(sim):
     sim.logger.log_infected(test_datetime, test_super_area_infections)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         super_area = f["dummy_super_area"]
-        f_ids = super_area[f"{test_dt_str}/id"][()]
-        f_symptoms = super_area[f"{test_dt_str}/symptoms"][()]
-        f_nsecondary = super_area[f"{test_dt_str}/n_secondary_infections"][()]
+        f_ids = super_area[f"infection/{test_dt_str}/id"][()]
+        f_symptoms = super_area[f"infection/{test_dt_str}/symptoms"][()]
+        f_nsecondary = super_area[f"infection/{test_dt_str}/n_secondary_infections"][()]
 
     assert set(test_ids) == set(f_ids)
     assert set(test_symptoms) == set(f_symptoms)
@@ -276,9 +278,9 @@ def test__log_infected_in_timestep(sim):
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         super_area = list(f.keys())[0]
         super_area = f[super_area]
-        keys = list(super_area.keys())
         first_ts = time_steps[0]
-        infected_set = set(super_area[f"{first_ts}/id"][()])
+        keys = list(super_area[f"infection"].keys())
+        infected_set = set(super_area[f"infection/{first_ts}/id"][()])
         world_ids = set([p.id for p in sim.world.people])
 
     assert all(t in keys for t in time_steps)
