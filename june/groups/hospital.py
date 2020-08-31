@@ -293,49 +293,6 @@ class Hospitals(Supergroup):
             np.deg2rad(hospital_coordinates), metric="haversine",
         )
 
-    #def allocate_patient(self, person: "Person"):
-    #    """
-    #    Function to allocate patients into close by hospitals with available beds.
-    #    If there are no available beds within a maximum distance, the patient is
-    #    not allocated.
-
-    #    Parameters
-    #    ----------
-    #    person: 
-    #        patient to allocate into a hospital 
-    #    Returns
-    #    -------
-    #    hospital with availability
-
-    #    """
-    #    assign_icu = person.infection.tag == SymptomTag.intensive_care
-    #    assign_patient = person.infection.tag == SymptomTag.hospitalised
-    #    if self.box_mode:
-    #        for hospital in self.members:
-    #            if assign_patient and not hospital.full:
-    #                return hospital
-    #            if assign_icu and not hospital.full_ICU:
-    #                return hospital
-    #    else:
-    #        hospital = None
-    #        hospitals_idx = self.get_closest_hospitals_idx(
-    #            coordinates=person.area.coordinates, k=self.neighbour_hospitals
-    #        )
-    #        closest_hospitals = []
-    #        for hospital_id in hospitals_idx:
-    #            hospital = self.get_from_id(hospital_id)
-    #            closest_hospitals.append(hospital)
-    #            if (assign_patient and not hospital.full) or (
-    #                assign_icu and not hospital.full_ICU
-    #            ):
-    #                break 
-    #        if hospital is None:
-    #            random_number = np.random.randint(
-    #                    0, min(len(closest_hospitals), len(self.members))
-    #                    )
-    #            hospital = closest_hospitals[random_number]
-    #        hospital.add_as_patient(person)
-
     def get_closest_hospitals_idx(
         self, coordinates: Tuple[float, float], k: int 
     ) -> Tuple[float, float]:

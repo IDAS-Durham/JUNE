@@ -38,32 +38,31 @@ class Hospitalisation(MedicalCarePolicy):
             return
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
-            if person.medical_facility is None:
-                # note, we dont model hospital capacity here.
-                closest_hospital = person.super_area.closest_hospitals[0]
-                if symptoms_tag == SymptomTag.hospitalised:
-                    if type(closest_hospital) == tuple:
-                        # not in this domain, we need to send it over
-                        person.subgroups.medical_facility = ExternalSubgroup(
-                            domain_id=closest_hospital[0],
-                            group_spec="hospital",
-                            group_id=closest_hospital[1],
-                            subgroup_type=Hospital.SubgroupType.patients,
-                        )
-                    else:
-                        person.subgroups.medical_facility = closest_hospital.subgroups[
-                            closest_hospital.SubgroupType.patients
-                        ]
-                else: 
-                    if type(closest_hospital) == tuple:
-                        # not in this domain, we need to send it over
-                        person.subgroups.medical_facility = ExternalSubgroup(
-                            domain_id=closest_hospital[0],
-                            group_spec="hospital",
-                            group_id=closest_hospital[1],
-                            subgroup_type=Hospital.SubgroupType.icu_patients,
-                        )
-                    else:
-                        person.subgroups.medical_facility = closest_hospital.subgroups[
-                            closest_hospital.SubgroupType.icu_patients
-                        ]
+            # note, we dont model hospital capacity here.
+            closest_hospital = person.super_area.closest_hospitals[0]
+            if symptoms_tag == SymptomTag.hospitalised:
+                if type(closest_hospital) == tuple:
+                    # not in this domain, we need to send it over
+                    person.subgroups.medical_facility = ExternalSubgroup(
+                        domain_id=closest_hospital[0],
+                        group_spec="hospital",
+                        group_id=closest_hospital[1],
+                        subgroup_type=Hospital.SubgroupType.patients,
+                    )
+                else:
+                    person.subgroups.medical_facility = closest_hospital.subgroups[
+                        closest_hospital.SubgroupType.patients
+                    ]
+            else: 
+                if type(closest_hospital) == tuple:
+                    # not in this domain, we need to send it over
+                    person.subgroups.medical_facility = ExternalSubgroup(
+                        domain_id=closest_hospital[0],
+                        group_spec="hospital",
+                        group_id=closest_hospital[1],
+                        subgroup_type=Hospital.SubgroupType.icu_patients,
+                    )
+                else:
+                    person.subgroups.medical_facility = closest_hospital.subgroups[
+                        closest_hospital.SubgroupType.icu_patients
+                    ]

@@ -444,11 +444,8 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
-        people_in_groups = 0
-        foreign_people_number = _count_people_in_dict(people_from_abroad_dict)
         for group_type in group_instances:
             for group in group_type.members:
-                people_in_groups += group.size
                 if (
                     group.spec in people_from_abroad_dict
                     and group.id in people_from_abroad_dict[group.spec]
@@ -468,16 +465,18 @@ class Simulator:
                             self.logger.accumulate_infection_location(
                                 group.spec, n_infected
                             )
-                        # assign blame of infections
-                        # tprob_norm = sum(int_group.transmission_probabilities)
-                        # for infector_id in chain.from_iterable(int_group.infector_ids):
-                        #    infector = self.world.people.get_from_id(infector_id)
-                        #    assert infector.id == infector_id
-                        #    infector.infection.number_of_infected += (
-                        #        n_infected
-                        #        * infector.infection.transmission.probability
-                        #        / tprob_norm
-                        #    )
+                        if mpi_size == 0:
+                            # note this is disabled in parallel
+                            # assign blame of infections
+                            tprob_norm = sum(int_group.transmission_probabilities)
+                            for infector_id in chain.from_iterable(int_group.infector_ids):
+                               infector = self.world.people.get_from_id(infector_id)
+                               assert infector.id == infector_id
+                               infector.infection.number_of_infected += (
+                                   n_infected
+                                   * infector.infection.transmission.probability
+                                   / tprob_norm
+                               )
                     infected_ids += new_infected_ids
         if self.infection_selector:
             infect_in_domains = self.infect_people(
@@ -488,9 +487,6 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
-            print(
-                f"rank {mpi_rank} : \n people in groups {people_in_groups} \n foreign_people {foreign_people_number}"
-            )
             for person in self.world.people:
                 assert person.busy
             raise SimulatorError(
