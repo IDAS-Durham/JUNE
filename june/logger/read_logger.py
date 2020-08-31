@@ -64,10 +64,7 @@ class ReadLogger:
                 if key not in ("population", "hospitals", "locations", "parameters")
             ]
             for super_area in super_areas:
-                time_stamps = [
-                    key
-                    for key in f[super_area]
-                ]
+                time_stamps = [key for key in f[super_area]]
                 ids = []
                 symptoms = []
                 n_secondary_infections = []
@@ -90,11 +87,18 @@ class ReadLogger:
                 )
                 infections_df.set_index("time_stamp", inplace=True)
                 self.infections_per_super_area.append(infections_df)
-        self.infections_df = functools.reduce(lambda a,b: a+b, self.infections_per_super_area)
-        print(self.infections_df.loc['2020-03-18 12:00:00'])
+        self.infections_df = functools.reduce(
+            lambda a, b: a + b, self.infections_per_super_area
+        )
+        # convert symptoms to arrays
+        for df in self.infections_per_super_area:
+            df["symptoms"] = df.apply(lambda x: np.array(x.symptoms), axis=1)
+        self.infections_df["symptoms"] = self.infections_df.apply(
+            lambda x: np.array(x.symptoms), axis=1
+        )
 
     def process_symptoms(
-            self, symptoms_df: pd.DataFrame,  n_people: int
+        self, symptoms_df: pd.DataFrame, n_people: int
     ) -> pd.DataFrame:
         """
         Given a dataframe with time stamp and a list of symptoms representing the symptoms of every infected 
@@ -118,22 +122,20 @@ class ReadLogger:
         ]
         df = pd.DataFrame()
         df["daily_recovered"] = symptoms_df.apply(
-            lambda x: x.symptoms.count(SymptomTag.recovered),
-            axis=1
-        )  
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
+        )
         df["daily_deaths_home"] = symptoms_df.apply(
-            lambda x: x.symptoms.count(SymptomTag.dead_home),
-            axis=1
-        )  
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_home), axis=1
+        )
         df["daily_deaths_hospital"] = symptoms_df.apply(
-            lambda x: x.symptoms.count(SymptomTag.dead_hospital), 
-            axis=1
-        )  
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_hospital), axis=1
+        )
         df["daily_deaths_icu"] = symptoms_df.apply(
-            lambda x: x.symptoms.count(SymptomTag.dead_icu),
-            axis=1
-        )  
-        df['daily_deaths'] = df[['daily_deaths_home', 'daily_deaths_hospital', 'daily_deaths_icu']].sum(axis=1)
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
+        )
+        df["daily_deaths"] = df[
+            ["daily_deaths_home", "daily_deaths_hospital", "daily_deaths_icu"]
+        ].sum(axis=1)
         # get rid of those that just recovered or died
         df["current_infected"] = symptoms_df.apply(
             lambda x: (
@@ -148,21 +150,15 @@ class ReadLogger:
             ["current_infected", "current_dead", "current_recovered"]
         ].sum(axis=1)
         df["current_hospitalised"] = symptoms_df.apply(
-            lambda x: x.symptoms.count(SymptomTag.hospitalised), axis=1
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.hospitalised), axis=1
         )
         df["current_intensive_care"] = symptoms_df.apply(
-            lambda x: x.symptoms.count(SymptomTag.intensive_care), axis=1
+            lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
-        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(
-            lambda x: x.explode() 
-        )
-        flat_df = flat_df.drop_duplicates(keep='first')
-        flat_df = flat_df[
-            flat_df["symptoms"] == SymptomTag.hospitalised
-        ]
-        df["daily_hospital_admissions"] = flat_df.groupby(
-            flat_df.index
-        ).size()
+        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(lambda x: x.explode())
+        flat_df = flat_df.drop_duplicates(keep="first")
+        flat_df = flat_df[flat_df["symptoms"] == SymptomTag.hospitalised]
+        df["daily_hospital_admissions"] = flat_df.groupby(flat_df.index).size()
         df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
         df["daily_infections"] = (
             -df["current_susceptible"]
