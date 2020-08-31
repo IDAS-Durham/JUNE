@@ -13,9 +13,7 @@ from june import paths
 
 class ReadLogger:
     def __init__(
-        self,
-        output_path: str = "results",
-        output_file_name: str = "logger.hdf5",
+        self, output_path: str = "results", output_file_name: str = "logger.hdf5",
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -56,22 +54,28 @@ class ReadLogger:
         self.infections_per_super_area = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             super_areas = [
-                key
-                for key in f.keys()
-                if key not in ("population", "parameters")
+                key for key in f.keys() if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
                 try:
-                    infections = f[f'{super_area}/infection']
+                    infections = f[f"{super_area}/infection"]
                     time_stamps = [key for key in infections]
                     ids = []
                     symptoms = []
                     n_secondary_infections = []
                     for time_stamp in time_stamps:
-                        ids.append(list(f[super_area]['infection'][time_stamp]["id"][:]))
-                        symptoms.append(list(f[super_area]['infection'][time_stamp]["symptoms"][:]))
+                        ids.append(
+                            list(f[super_area]["infection"][time_stamp]["id"][:])
+                        )
+                        symptoms.append(
+                            list(f[super_area]["infection"][time_stamp]["symptoms"][:])
+                        )
                         n_secondary_infections.append(
-                            list(f[super_area]['infection'][time_stamp]["n_secondary_infections"][:])
+                            list(
+                                f[super_area]["infection"][time_stamp][
+                                    "n_secondary_infections"
+                                ][:]
+                            )
                         )
                     infections_df = pd.DataFrame(
                         {
@@ -95,7 +99,7 @@ class ReadLogger:
         # convert symptoms to arrays for fast counting later
         for df in self.infections_per_super_area:
             df["symptoms"] = df.apply(lambda x: np.array(x.symptoms), axis=1)
-            df['infected_id'] = df.apply(lambda x: np.array(x.infected_id), axis=1)
+            df["infected_id"] = df.apply(lambda x: np.array(x.infected_id), axis=1)
             df["n_secondary_infections"] = df.apply(
                 lambda x: np.array(x.n_secondary_infections), axis=1
             )
@@ -308,9 +312,7 @@ class ReadLogger:
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             super_areas = [
-                key
-                for key in f.keys()
-                if key not in ("population", "parameters")
+                key for key in f.keys() if key not in ("population", "parameters")
             ]
 
             time_stamps, infection_location, super_areas_for_df = [], [], []
@@ -319,12 +321,14 @@ class ReadLogger:
                     locations = f[f"{super_area}/locations"]
                     location_per_area, super_area_per_area = [], []
                     for time_stamp in locations.keys():
-                        locations_for_df = list(locations[time_stamp]["locations"][:].astype("U"))
+                        locations_for_df = list(
+                            locations[time_stamp]["locations"][:].astype("U")
+                        )
                         location_per_area.append(locations_for_df)
-                        super_area_per_area.append([super_area]*len(locations_for_df))
+                        super_area_per_area.append([super_area] * len(locations_for_df))
                     time_stamps += list(locations.keys())
                     infection_location += location_per_area
-                    super_areas_for_df += super_area_per_area 
+                    super_areas_for_df += super_area_per_area
 
                 except KeyError:
                     continue
@@ -341,12 +345,12 @@ class ReadLogger:
         self.locations_df.set_index("time_stamp", inplace=True)
         self.locations_df = self.locations_df.groupby(self.locations_df.index).sum()
         self.locations_df = self.locations_df.resample("D").sum()
-        self.locations_df = self.locations_df[self.locations_df['location_id'] != 0]
+        self.locations_df = self.locations_df[self.locations_df["location_id"] != 0]
         self.locations_df["location"] = self.locations_df.apply(
             lambda x: [location_name.split("_")[0] for location_name in x.location_id],
             axis=1,
         )
-        
+
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
         Get a data frame with the number of infection happening at each type of place, 
@@ -413,9 +417,7 @@ class ReadLogger:
         coordinates, n_beds, n_icu_beds, trust_code = [], [], [], []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             super_areas = [
-                key
-                for key in f.keys()
-                if key not in ("population", "parameters")
+                key for key in f.keys() if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
                 try:
@@ -451,14 +453,17 @@ class ReadLogger:
         hospitals_df = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             super_areas = [
-                key
-                for key in f.keys()
-                if key not in ("population", "parameters")
+                key for key in f.keys() if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
                 try:
                     hospitals = f[f"{super_area}/hospitals"]
-                    hospital_ids, n_patients, n_patients_icu, time_stamps = [], [], [], []
+                    hospital_ids, n_patients, n_patients_icu, time_stamps = (
+                        [],
+                        [],
+                        [],
+                        [],
+                    )
                     for time_stamp in hospitals.keys():
                         if time_stamp not in (
                             "coordinates",
@@ -468,24 +473,24 @@ class ReadLogger:
                         ):
                             hospital_ids.append(hospitals[time_stamp]["id"][:])
                             n_patients.append(hospitals[time_stamp]["n_patients"][:])
-                            n_patients_icu.append(hospitals[time_stamp]["n_patients_icu"][:])
+                            n_patients_icu.append(
+                                hospitals[time_stamp]["n_patients_icu"][:]
+                            )
                             time_stamps.append(time_stamp)
                     df = pd.DataFrame(
-                    {
-                        "time_stamp": time_stamps,
-                        "id": hospital_ids,
-                        "n_patients": n_patients,
-                        "n_patients_icu": n_patients_icu,
-                    }
+                        {
+                            "time_stamp": time_stamps,
+                            "id": hospital_ids,
+                            "n_patients": n_patients,
+                            "n_patients_icu": n_patients_icu,
+                        }
                     )
-                    df.set_index('time_stamp', inplace=True)
+                    df.set_index("time_stamp", inplace=True)
                     df.index = pd.to_datetime(df.index)
                     hospitals_df.append(df)
                 except KeyError:
                     continue
-        hospitals_df = functools.reduce(
-            lambda a, b: a + b, hospitals_df
-        )
+        hospitals_df = functools.reduce(lambda a, b: a + b, hospitals_df)
         return hospitals_df.apply(pd.Series.explode)
 
     def get_r(self) -> pd.DataFrame:

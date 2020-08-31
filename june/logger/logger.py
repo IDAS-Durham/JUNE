@@ -9,7 +9,9 @@ import datetime
 
 
 class Logger:
-    def __init__(self, save_path: str = "results", file_name: str = 'logger.hdf5', rank: int = 0):
+    def __init__(
+        self, save_path: str = "results", file_name: str = "logger.hdf5", rank: int = 0
+    ):
         """
         Logger used by the simulator to store the relevant information.
 
@@ -182,7 +184,9 @@ class Logger:
             super_area_hospitals[hospital.super_area.name]["coordinates"].append(
                 hospital.coordinates
             )
-            super_area_hospitals[hospital.super_area.name]["n_beds"].append(hospital.n_beds)
+            super_area_hospitals[hospital.super_area.name]["n_beds"].append(
+                hospital.n_beds
+            )
             super_area_hospitals[hospital.super_area.name]["n_icu_beds"].append(
                 hospital.n_icu_beds
             )

@@ -93,7 +93,7 @@ class ReadLoggerLegacy:
             return len(set(hospitalised_id.loc[row.name]))
 
     def process_symptoms(
-            self, symptoms_df: pd.DataFrame,  n_people: int
+        self, symptoms_df: pd.DataFrame, n_people: int
     ) -> pd.DataFrame:
         """
         Given a dataframe with time stamp and a list of symptoms representing the symptoms of every infected 
@@ -128,7 +128,9 @@ class ReadLoggerLegacy:
         df["daily_deaths_icu"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
         )  # .cumsum()
-        df['daily_deaths'] = df[['daily_deaths_home', 'daily_deaths_hospital', 'daily_deaths_icu']].sum(axis=1)
+        df["daily_deaths"] = df[
+            ["daily_deaths_home", "daily_deaths_hospital", "daily_deaths_icu"]
+        ].sum(axis=1)
         # get rid of those that just recovered or died
         df["current_infected"] = symptoms_df.apply(
             lambda x: (
@@ -149,15 +151,11 @@ class ReadLoggerLegacy:
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
         flat_df = self.infections_df[["symptoms", "infected_id"]].apply(
-            lambda x: x.explode() 
+            lambda x: x.explode()
         )
-        flat_df = flat_df.drop_duplicates(keep='first')
-        flat_df = flat_df[
-            flat_df["symptoms"] == SymptomTag.hospitalised
-        ]
-        df["daily_hospital_admissions"] = flat_df.groupby(
-            flat_df.index
-        ).size()
+        flat_df = flat_df.drop_duplicates(keep="first")
+        flat_df = flat_df[flat_df["symptoms"] == SymptomTag.hospitalised]
+        df["daily_hospital_admissions"] = flat_df.groupby(flat_df.index).size()
         df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
         df["daily_infections"] = (
             -df["current_susceptible"]
