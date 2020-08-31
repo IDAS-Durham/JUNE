@@ -185,8 +185,8 @@ def test__move_people_to_leisure(sim: Simulator):
                     n_pubs += 1
                 elif person.leisure.group.spec == "grocery":
                     n_groceries += 1
-                # print(f'There are {len(person.leisure.people)} in this group')
-                assert person in person.leisure.people
+                if person not in person.residence.people:
+                    assert person in person.leisure.people
     assert n_leisure > 0
     assert n_cinemas > 0
     assert n_pubs > 0

@@ -33,8 +33,8 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./tests.hdf5"
-config_path = "./config_simulation.yaml"
+world_file = "./london_50.hdf5"
+config_path = "./config_nocommute.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
@@ -68,7 +68,7 @@ simulator = Simulator.from_file(
    leisure=leisure,
    infection_selector=infection_selector,
    config_filename=config_path,
-   save_path="results",
+   save_path="results_nompi",
 )
 print("simulator ready to go")
 
