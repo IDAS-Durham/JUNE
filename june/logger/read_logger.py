@@ -56,11 +56,10 @@ class ReadLogger:
         """
         self.infections_per_super_area = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            
             super_areas = [
                 key
                 for key in f.keys()
-                #if key not in ("population", "hospitals", "locations", "parameters")
+                if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
                 infections = f[f'{super_area}/infection']
@@ -69,10 +68,10 @@ class ReadLogger:
                 symptoms = []
                 n_secondary_infections = []
                 for time_stamp in time_stamps:
-                    ids.append(list(f[super_area]['infections'][time_stamp]["id"][:]))
-                    symptoms.append(list(f[super_area]['infections'][time_stamp]["symptoms"][:]))
+                    ids.append(list(f[super_area]['infection'][time_stamp]["id"][:]))
+                    symptoms.append(list(f[super_area]['infection'][time_stamp]["symptoms"][:]))
                     n_secondary_infections.append(
-                        list(f[super_area]['infections'][time_stamp]["n_secondary_infections"][:])
+                        list(f[super_area]['infection'][time_stamp]["n_secondary_infections"][:])
                     )
                 infections_df = pd.DataFrame(
                     {
@@ -306,12 +305,16 @@ class ReadLogger:
             data frame with infection locations, and average count of infections per group type
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            super_areas = list(f.keys())
+            super_areas = [
+                key
+                for key in f.keys()
+                if key not in ("population", "parameters")
+            ]
             for super_area in super_areas:
                 locations = f[f"{super_area}/locations"]
                 infection_location, super_areas_for_df = [], []
                 for time_stamp in locations.keys():
-                    locations_for_df = list(locations[time_stamp]["infection_location"][:].astype("U"))
+                    locations_for_df = list(locations[time_stamp]["locations"][:].astype("U"))
                     infection_location.append(locations_for_df)
                     super_areas_for_df.append([super_area]*len(locations_for_df))
                 time_stamps = list(locations.keys())
@@ -325,14 +328,14 @@ class ReadLogger:
         self.locations_df["time_stamp"] = pd.to_datetime(
             self.locations_df["time_stamp"]
         )
-        self.locations_df.set_index(["time_stamp", "super_area"], inplace=True)
-
+        self.locations_df.set_index("time_stamp", inplace=True)
         self.locations_df = self.locations_df.resample("D").sum()
+        self.locations_df = self.locations_df[self.locations_df['location_id'] != 0]
         self.locations_df["location"] = self.locations_df.apply(
             lambda x: [location_name.split("_")[0] for location_name in x.location_id],
             axis=1,
         )
-
+        
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
         Get a data frame with the number of infection happening at each type of place, 
@@ -396,12 +399,20 @@ class ReadLogger:
         -------
             data frame indexed by the hospital id
         """
+        coordinates, n_beds, n_icu_beds, trust_code = [], [], [], []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            hospitals = f["hospitals"]
-            coordinates = hospitals["coordinates"][:]
-            n_beds = hospitals["n_beds"][:]
-            n_icu_beds = hospitals["n_icu_beds"][:]
-            trust_code = hospitals["trust_code"][:]
+            super_areas = [
+                key
+                for key in f.keys()
+                if key not in ("population", "parameters")
+            ]
+            for super_area in super_areas:
+                hospitals = f[f"{super_area}/hospitals"]
+                coordinates += list(hospitals["coordinates"][:])
+                n_beds += list(hospitals["n_beds"][:])
+                n_icu_beds += list(hospitals["n_icu_beds"][:])
+                trust_code += list(hospitals["trust_code"][:])
+        coordinates = np.array(coordinates)
         hospitals_df = pd.DataFrame(
             {
                 "longitude": coordinates[:, 1],
