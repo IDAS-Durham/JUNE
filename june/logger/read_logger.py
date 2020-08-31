@@ -62,30 +62,33 @@ class ReadLogger:
                 if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
-                infections = f[f'{super_area}/infection']
-                time_stamps = [key for key in infections]
-                ids = []
-                symptoms = []
-                n_secondary_infections = []
-                for time_stamp in time_stamps:
-                    ids.append(list(f[super_area]['infection'][time_stamp]["id"][:]))
-                    symptoms.append(list(f[super_area]['infection'][time_stamp]["symptoms"][:]))
-                    n_secondary_infections.append(
-                        list(f[super_area]['infection'][time_stamp]["n_secondary_infections"][:])
+                try:
+                    infections = f[f'{super_area}/infection']
+                    time_stamps = [key for key in infections]
+                    ids = []
+                    symptoms = []
+                    n_secondary_infections = []
+                    for time_stamp in time_stamps:
+                        ids.append(list(f[super_area]['infection'][time_stamp]["id"][:]))
+                        symptoms.append(list(f[super_area]['infection'][time_stamp]["symptoms"][:]))
+                        n_secondary_infections.append(
+                            list(f[super_area]['infection'][time_stamp]["n_secondary_infections"][:])
+                        )
+                    infections_df = pd.DataFrame(
+                        {
+                            "time_stamp": time_stamps,
+                            "infected_id": ids,
+                            "symptoms": symptoms,
+                            "n_secondary_infections": n_secondary_infections,
+                            "super_area": [super_area] * len(ids),
+                        }
                     )
-                infections_df = pd.DataFrame(
-                    {
-                        "time_stamp": time_stamps,
-                        "infected_id": ids,
-                        "symptoms": symptoms,
-                        "n_secondary_infections": n_secondary_infections,
-                        "super_area": [super_area] * len(ids),
-                    }
-                )
-                infections_df["time_stamp"] = pd.to_datetime(
-                    infections_df["time_stamp"]
-                )
-                infections_df.set_index("time_stamp", inplace=True)
+                    infections_df["time_stamp"] = pd.to_datetime(
+                        infections_df["time_stamp"]
+                    )
+                    infections_df.set_index("time_stamp", inplace=True)
+                except KeyError:
+                    continue
                 self.infections_per_super_area.append(infections_df)
         self.infections_df = functools.reduce(
             lambda a, b: a + b, self.infections_per_super_area
@@ -311,13 +314,16 @@ class ReadLogger:
                 if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
-                locations = f[f"{super_area}/locations"]
-                infection_location, super_areas_for_df = [], []
-                for time_stamp in locations.keys():
-                    locations_for_df = list(locations[time_stamp]["locations"][:].astype("U"))
-                    infection_location.append(locations_for_df)
-                    super_areas_for_df.append([super_area]*len(locations_for_df))
-                time_stamps = list(locations.keys())
+                try:
+                    locations = f[f"{super_area}/locations"]
+                    infection_location, super_areas_for_df = [], []
+                    for time_stamp in locations.keys():
+                        locations_for_df = list(locations[time_stamp]["locations"][:].astype("U"))
+                        infection_location.append(locations_for_df)
+                        super_areas_for_df.append([super_area]*len(locations_for_df))
+                    time_stamps = list(locations.keys())
+                except KeyError:
+                    continue
         self.locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
@@ -407,11 +413,14 @@ class ReadLogger:
                 if key not in ("population", "parameters")
             ]
             for super_area in super_areas:
-                hospitals = f[f"{super_area}/hospitals"]
-                coordinates += list(hospitals["coordinates"][:])
-                n_beds += list(hospitals["n_beds"][:])
-                n_icu_beds += list(hospitals["n_icu_beds"][:])
-                trust_code += list(hospitals["trust_code"][:])
+                try:
+                    hospitals = f[f"{super_area}/hospitals"]
+                    coordinates += list(hospitals["coordinates"][:])
+                    n_beds += list(hospitals["n_beds"][:])
+                    n_icu_beds += list(hospitals["n_icu_beds"][:])
+                    trust_code += list(hospitals["trust_code"][:])
+                except KeyError:
+                    continue
         coordinates = np.array(coordinates)
         hospitals_df = pd.DataFrame(
             {
