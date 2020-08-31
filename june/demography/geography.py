@@ -142,7 +142,6 @@ class SuperArea:
         "workers",
         "areas",
         "companies",
-        "groceries",
         "closest_hospitals"
     )
     _id = count()

@@ -51,6 +51,7 @@ def load_social_venues_from_hdf5(file_path: str, domain_super_areas=None):
             social_venues = []
             n = data.attrs["n"]
             if n == 0:
+                social_venues_dict[spec] = None
                 continue
             ids = np.empty(n, dtype=int)
             data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
@@ -80,11 +81,11 @@ def restore_social_venues_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         for spec in f["social_venues"]:
-            social_venues = getattr(world, spec)
             data = f["social_venues"][spec]
             n = data.attrs["n"]
             if n == 0:
                 continue
+            social_venues = getattr(world, spec)
             ids = np.empty(n, dtype=int)
             data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
             super_areas = np.empty(n, dtype=int)
