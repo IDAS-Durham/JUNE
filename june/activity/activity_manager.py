@@ -351,29 +351,18 @@ class ActivityManager:
                         n_people_this_rank = _count_people_in_dict(
                             to_send_abroad[rank_receiving]
                         )
-                        #print(
-                        #    f"I am rank {mpi_rank} sending {n_people_this_rank} to {rank_receiving}"
-                        #)
                         mpi_comm.send(
                             to_send_abroad[rank_receiving],
                             dest=rank_receiving,
                             tag=rank_receiving,
                         )
                         continue
-                    #print(f"I am rank {mpi_rank} sending nothing to {rank_receiving}")
                     mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
             else:
                 # I have to listen
-                # for rank_sending_to_me in range(mpi_size):
-                #    if rank_sending_to_me == mpi_rank:
-                #        break
                 data = mpi_comm.recv(source=rank, tag=mpi_rank)
                 if data is not None:
                     n_people_this_rank = _count_people_in_dict(data)
-                    #print(
-                    #    f"I am rank {mpi_rank} and I have received {n_people_this_rank} people from {rank}"
-                    #)
                     _update_data(people_from_abroad, data)
                     n_people_from_abroad += n_people_this_rank
-                # break
         return people_from_abroad, n_people_from_abroad
