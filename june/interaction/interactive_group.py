@@ -15,7 +15,7 @@ class InteractiveGroup:
     - group : group that we want to prepare for interaction.
     """
 
-    def __init__(self, group: Group, people_from_abroad):
+    def __init__(self, group: Group, people_from_abroad = None):
         infector_ids = []
         trans_prob = []
         susceptible_ids = []

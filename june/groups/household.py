@@ -80,26 +80,26 @@ class Household(Group):
         to the relevant age subgroup, and make sure the residents welcome him and
         don't go do any other leisure activities.
         """
-        #for mate in self.residents:
-        #    if mate.busy:
-        #        if (
-        #            mate.leisure is not None and mate in mate.leisure
-        #        ):  # this perosn has already been assigned somewhere
-        #            mate.leisure.remove(mate)
-        #            mate.subgroups.leisure = mate.subgroups.residence
-        #            mate.residence.append(mate)
-        #    else:
-        #        mate.subgroups.leisure = (
-        #            mate.residence # person will be added later in the simulator.
-        #        )
+        for mate in self.residents:
+            if mate.busy:
+                if (
+                    mate.leisure is not None and mate in mate.leisure
+                ):  # this perosn has already been assigned somewhere
+                    mate.leisure.remove(mate)
+                    mate.subgroups.leisure = mate.subgroups.residence
+                    mate.residence.append(mate)
+            else:
+                mate.subgroups.leisure = (
+                    mate.residence # person will be added later in the simulator.
+                )
         if person.age < 18:
-            return self.SubgroupType.kids
+            return self[self.SubgroupType.kids]
         elif person.age <= 35:
-            return self.SubgroupType.young_adults
+            return self[self.SubgroupType.young_adults]
         elif person.age < 65:
-            return self.SubgroupType.adults
+            return self[self.SubgroupType.adults]
         else:
-            return self.SubgroupType.old_adults
+            return self[self.SubgroupType.old_adults]
 
     @property
     def kids(self):

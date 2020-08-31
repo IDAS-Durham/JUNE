@@ -1,7 +1,7 @@
 import pytest
 
 from june.domain import Domain
-from june.groups import Subgroup
+from june.groups import Subgroup, ExternalSubgroup, ExternalGroup
 
 available_groups = [
     "companies",
@@ -94,16 +94,19 @@ class TestDomainDecomposition:
                         assert subgroup_domain is None
                     else:
                         if subgroup.group.super_area.name not in domain_super_areas:
-                            assert type(subgroup_domain) == tuple
+                            assert isinstance(subgroup_domain, ExternalSubgroup)
+                            assert isinstance(subgroup_domain.group, ExternalGroup)
                             if domain_id == 0:
-                                assert subgroup_domain[0] == 1
+                                assert subgroup_domain.domain_id == 1
                             else:
-                                assert subgroup_domain[0] == 0
-                            assert subgroup_domain[1] == subgroup.group.spec
-                            assert subgroup_domain[2] == subgroup.group.id
-                            assert subgroup_domain[3] == subgroup.subgroup_type
+                                assert subgroup_domain.domain_id == 0
+                            assert subgroup_domain.group.spec == subgroup.group.spec
+                            assert subgroup_domain.group_id == subgroup.group.id
+                            assert (
+                                subgroup_domain.subgroup_type == subgroup.subgroup_type
+                            )
                         else:
-                            assert type(subgroup_domain) == Subgroup
+                            assert isinstance(subgroup_domain, Subgroup)
                             assert subgroup_domain.group.id == subgroup.group.id
                             assert subgroup_domain.group.spec == subgroup.group.spec
                             assert (
