@@ -396,9 +396,9 @@ class Simulator:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
-                    print(
-                        f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
-                    )
+                    #print(
+                    #    f"I am rank {mpi_rank} and I have been told to infect {len(data)} people."
+                    #)
                     people_to_infect += data
         for inf_id in people_to_infect:
             person = self.world.people.get_from_id(inf_id)
@@ -479,11 +479,11 @@ class Simulator:
                         #        / tprob_norm
                         #    )
                     infected_ids += new_infected_ids
-        # if self.infection_selector:
-        #    infect_in_domains = self.infect_people(
-        #        infected_ids, people_from_abroad_dict
-        #    )
-        #    to_infect = self.tell_domains_to_infect(infect_in_domains)
+        if self.infection_selector:
+            infect_in_domains = self.infect_people(
+                infected_ids, people_from_abroad_dict
+            )
+            to_infect = self.tell_domains_to_infect(infect_in_domains)
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )

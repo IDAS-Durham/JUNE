@@ -35,7 +35,7 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./tests.hdf5"
+world_file = "./london_60.hdf5"
 config_path = "./config_basic.yaml"
 
 # parallel setup
@@ -45,9 +45,9 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 
-london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
+#london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
 super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
-    4, size
+    60, size
 )
 print("MPI SIZE", size)
 print(super_areas_to_domain_dict)
