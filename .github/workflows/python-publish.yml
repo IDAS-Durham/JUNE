@@ -23,6 +23,10 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: install mpi
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y openmpi-bin
 
     - name: Install dependencies
       run: |
