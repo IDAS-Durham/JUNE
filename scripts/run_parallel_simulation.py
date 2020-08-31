@@ -46,11 +46,9 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 with h5py.File(world_file, "r") as f:
-    print(f["geography"].keys())
     n_super_areas = f["geography"].attrs["n_super_areas"]
 
 
-#london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
 super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
     n_super_areas, size
 )
@@ -63,7 +61,6 @@ domain = Domain.from_hdf5(
 #
 # regenerate lesiure
 leisure = generate_leisure_for_config(domain, config_path)
-#leisure = None
 #
 # health index and infection selecctor
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)

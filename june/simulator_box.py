@@ -90,7 +90,7 @@ class SimulatorBox(Simulator):
 
         policies = self.activity_manager.policies
 
-        active_groups = self.activity_manager.activities_to_groups(activities)
+        active_groups = self.activity_manager.activities_to_super_groups(activities)
         group_instances = [
             getattr(self.world, group)
             for group in active_groups

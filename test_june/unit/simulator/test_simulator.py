@@ -70,8 +70,8 @@ def setup_sim(dummy_world, selector):
     leisure_instance = leisure.generate_leisure_for_world(
         world=world, list_of_leisure_groups=["pubs", "cinemas", "groceries"]
     )
-    leisure_instance.distribute_social_venues_to_households(
-        world.households, super_areas=world.super_areas
+    leisure_instance.distribute_social_venues_to_areas(
+        world.areas, super_areas=world.super_areas
     )
     interaction = Interaction.from_file()
     policies = Policies.from_file()
@@ -108,7 +108,7 @@ def test__apply_activity_hierarchy(sim: Simulator):
     assert ordered_activities == activity_hierarchy
 
 
-def test__activities_to_groups(sim: Simulator):
+def test__activities_to_super_groups(sim: Simulator):
     activities = [
         "medical_facility",
         "commute",
@@ -116,7 +116,7 @@ def test__activities_to_groups(sim: Simulator):
         "leisure",
         "residence",
     ]
-    groups = sim.activity_manager.activities_to_groups(activities)
+    groups = sim.activity_manager.activities_to_super_groups(activities)
 
     assert groups == [
         "hospitals",
@@ -137,7 +137,7 @@ def test__activities_to_groups(sim: Simulator):
 
 def test__clear_world(sim: Simulator):
     sim.clear_world()
-    for group_name in sim.activity_manager.activities_to_groups(
+    for group_name in sim.activity_manager.activities_to_super_groups(
         sim.activity_manager.all_activities
     ):
         if group_name in ["household_visits", "care_home_visits"]:

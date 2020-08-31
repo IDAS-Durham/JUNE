@@ -112,7 +112,7 @@ class Simulator:
             try:
                 activity_to_super_groups = config["activity_to_super_groups"]
             except:
-                print(
+                logger.warning(
                     "Activity to groups in config is deprecated, please change it to activity_to_super_groups"
                 )
                 activity_to_super_groups = config["activity_to_groups"]
