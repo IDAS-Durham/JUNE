@@ -60,9 +60,13 @@ class Symptoms:
         time_from_infection: float
             Time in days since the person got infected.
         """
-        if time_from_infection > self.trajectory[self.stage + 1][0]:
-            self.stage += 1
-            self.tag = self.trajectory[self.stage][1]
+        try:
+            if time_from_infection > self.trajectory[self.stage + 1][0]:
+                self.stage += 1
+                self.tag = self.trajectory[self.stage][1]
+        except IndexError:
+            print('Infection Error', self.stage, self.trajectory)
+            raise
 
     @property
     def time_exposed(self):
