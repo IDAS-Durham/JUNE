@@ -235,7 +235,6 @@ def test__log_infection_location(sim):
         generic = location.split("_")[0]
         location_id = location.split("_")[1]
         assert generic in ("household", "university", "company", "cinema", "pub")
-        assert int(location_id) == 0
 
 
 def test__log_infected(sim):

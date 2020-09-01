@@ -182,11 +182,11 @@ def test__read_infected_and_dead():
     infections_df = pd.Series(infections)
     infections_df.index = pd.to_datetime(infections_df.index)
     infections_logged = world_df["daily_infections"]
-    # infections_logged = infections_logged[infections_logged.values > 0]
-    # assert sum(list(infections.values())) == infections_logged.sum()
-    # pd._testing.assert_series_equal(
-    #    infections_df, infections_logged, check_names=False, check_dtype=False,
-    # )
+    infections_logged = infections_logged[infections_logged.values > 0]
+    assert sum(list(infections.values())) == infections_logged.sum()
+    pd._testing.assert_series_equal(
+        infections_df, infections_logged, check_names=False, check_dtype=False,
+    )
 
     deaths_df = pd.Series(deaths)
     deaths_df.index = pd.to_datetime(deaths_df.index)
