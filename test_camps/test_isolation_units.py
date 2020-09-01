@@ -26,8 +26,8 @@ def make_iso_pol():
 
 def infect_person(person, selector, symptom_tag="mild"):
     selector.infect_person_at_time(person, 0.0)
-    person.infection.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
-    person.infection.time_of_symptoms_onset = 5.3
+    person.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
+    person.infection.symptoms.time_of_symptoms_onset = 5.3
 
 
 def test__isolation_unit_group():
