@@ -336,7 +336,11 @@ class Simulator:
             infection = person.infection
             tick = perf_counter()
             previous_tag = infection.tag
-            new_status = infection.update_health_status(time, duration)
+            try:
+                new_status = infection.update_health_status(time, duration)
+            except IndexError:
+                print('Index problem', person.id, person in self.world.local_people.halo_people)
+                raise
             tock = perf_counter()
             perf1 += tock - tick
             if (
