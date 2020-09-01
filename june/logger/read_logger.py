@@ -564,7 +564,8 @@ class ReadLogger:
         super_area_region.set_index("super_area", inplace=True)
         return super_area_region.loc[super_areas]["region"].values
 
-    def run_summary(self,):
+    def run_summary(self,super_area_region_path=paths.data_path
+            / "input/geography/area_super_area_region.csv",):
         super_area_df = self.super_area_summary()
         super_area_df["region"] = self.super_areas_to_region(
             super_area_df["super_area"].values
