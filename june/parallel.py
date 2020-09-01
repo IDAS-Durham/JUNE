@@ -376,6 +376,7 @@ def parallel_update(self, direction, timer):
                         #send the infection class
                         print("SENDING INFECTION CLASS for ", person.id, "from to ", rank, other_rank)
                         tmp["infection"] = person.infection
+                        tmp["susceptibility"] = person.susceptibility
                     else:
                         tmp["infection"] = None
                         tmp["susceptibility"] = person.susceptibility
@@ -414,6 +415,7 @@ def parallel_update(self, direction, timer):
                    else:
                        print("*** passed infectiom class apparently")
                        print(rank, "updating from nothing", other_rank, "pid ", pid )
+                       outside_domain[pid].susceptibility = infec["susceptibility"]
                        outside_domain[pid].infection = infec["infection"]
                        print(rank, "updated from nothing", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
                                                                  outside_domain[pid].infection.transmission.probability)
@@ -443,6 +445,7 @@ def parallel_update(self, direction, timer):
                         #send the infection class
                         print("SENDING INFECTION CLASS for ", person.id, "from to ", rank, other_rank)
                         tmp["infection"] = person.infection
+                        tmp["susceptibility"] = person.susceptibility
                     else:
                         tmp["infection"] = None
                         tmp["susceptibility"] = person.susceptibility
@@ -474,6 +477,7 @@ def parallel_update(self, direction, timer):
                        print(rank, "updated from ", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
                                                                  outside_domain[pid].infection.transmission.probability)
                    else:
+                       outside_domain[pid].susceptibility = infec["susceptibility"]
                        outside_domain[pid].infection = infec["infection"]
                        print(rank, "updated from nothing", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
                                                                  outside_domain[pid].infection.transmission.probability)
