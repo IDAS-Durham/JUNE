@@ -397,8 +397,10 @@ class Simulator:
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
                         super_area_new_infected = [
-                            person.area.super_area.name
-                            for person in self.world.people[new_infected_ids]
+                            self.world.people[
+                                idx - first_person_id
+                            ].area.super_area.name
+                            for idx in new_infected_ids
                         ]
                         if self.logger is not None:
                             self.logger.accumulate_infection_location(
