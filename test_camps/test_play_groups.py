@@ -32,4 +32,4 @@ def test__play_group_per_area(n_people):
     dummy_area.people = people
     play_groups =  PlayGroups.for_areas(areas=areas, venues_per_capita=1./20.)
     
-    assert len(play_groups) == int(1./20.*n_people)
+    assert len(play_groups) == int(np.ceil(1./20.*n_people))
