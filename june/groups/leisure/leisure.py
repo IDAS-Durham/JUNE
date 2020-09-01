@@ -2,10 +2,10 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-from random import random
+from random import random, sample
 from typing import List, Dict
 from june.demography import Person
-from june.demography.geography import Geography
+from june.demography.geography import Geography, SuperAreas
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
@@ -22,6 +22,7 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger(__name__)
 
+
 @jit(nopython=True)
 def random_choice_numba(arr, prob):
     """
@@ -33,9 +34,7 @@ def random_choice_numba(arr, prob):
 @jit(nopython=True)
 def roll_activity_dice(poisson_parameters, delta_time, n_activities):
     total_poisson_parameter = np.sum(poisson_parameters)
-    does_activity = random() < (
-        1.0 - np.exp(-total_poisson_parameter * delta_time)
-    )
+    does_activity = random() < (1.0 - np.exp(-total_poisson_parameter * delta_time))
     if does_activity:
         poisson_parameters_normalized = poisson_parameters / total_poisson_parameter
         return random_choice_numba(
@@ -73,7 +72,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             raise ValueError("Your world does not have care homes.")
         leisure_distributors[
             "care_home_visits"
-        ] = CareHomeVisitsDistributor.from_config(world.super_areas)
+        ] = CareHomeVisitsDistributor.from_config()
 
     if "pump_latrines" in list_of_leisure_groups:
         if not hasattr(world, "pump_latrines"):
@@ -106,7 +105,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             raise ValueError("Your world does not have households.")
         leisure_distributors[
             "household_visits"
-        ] = HouseholdVisitsDistributor.from_config(world.super_areas)
+        ] = HouseholdVisitsDistributor.from_config()
     if "residence_visits" in list_of_leisure_groups:
         raise NotImplementedError
     leisure = Leisure(leisure_distributors)
@@ -145,7 +144,17 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
         self.closed_venues = set()
 
-    def distribute_social_venues_to_households(self, households: List[Household]):
+    def distribute_social_venues_to_households(
+        self, households: List[Household], super_areas: SuperAreas
+    ):
+        if "household_visits" in self.leisure_distributors:
+            self.leisure_distributors["household_visits"].link_households_to_households(
+                super_areas
+            )
+        if "care_home_visits" in self.leisure_distributors:
+            self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
+                super_areas
+            )
         logger.info("Distributing social venues to households")
         for i, household in enumerate(households):
             if i % 1_000_000 == 0:
@@ -181,7 +190,7 @@ class Leisure:
                 )
 
     def get_leisure_probability_for_age_and_sex(
-        self, age, sex, delta_time, is_weekend
+        self, age, sex, delta_time, is_weekend, working_hours
     ):
         """
         Computes the probabilities of going to different leisure activities,
@@ -191,17 +200,19 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
+            if (
+                activity == "household_visits" and working_hours
+            ) or distributor.spec in self.closed_venues:
+                # we do not have household visits during working hours as most households by then.
+                continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
-            if distributor.spec in self.closed_venues:
-                poisson_parameters.append(0.0)
-            else:
-                poisson_parameters.append(
-                    distributor.get_poisson_parameter(
-                        sex=sex, age=age, is_weekend=is_weekend
-                    )
+            poisson_parameters.append(
+                distributor.get_poisson_parameter(
+                    sex=sex, age=age, is_weekend=is_weekend
                 )
+            )
             activities.append(activity)
         total_poisson_parameter = sum(poisson_parameters)
         does_activity_probability = 1.0 - np.exp(-delta_time * total_poisson_parameter)
@@ -297,8 +308,13 @@ class Leisure:
             if candidates_length == 1:
                 subgroup = candidates[0].get_leisure_subgroup(person)
             else:
-                idx = 2000 % candidates_length
-                subgroup = candidates[idx].get_leisure_subgroup(person)
+                indices = sample(range(len(candidates)), len(candidates))
+                for idx in indices:
+                    subgroup = candidates[idx].get_leisure_subgroup(person)
+                    if subgroup is not None:
+                        break
+            if subgroup is None:
+                return
             self.send_household_with_person_if_necessary(
                 person, subgroup, prob_age_sex["drags_household"][activity]
             )
@@ -306,17 +322,25 @@ class Leisure:
             return subgroup
 
     def generate_leisure_probabilities_for_timestep(
-        self, delta_time, is_weekend
+        self, delta_time: float, working_hours: bool, is_weekend: bool
     ):
         men_probs = [
             self.get_leisure_probability_for_age_and_sex(
-                age, "m", delta_time, is_weekend
+                age=age,
+                sex="m",
+                delta_time=delta_time,
+                is_weekend=is_weekend,
+                working_hours=working_hours,
             )
             for age in range(0, 100)
         ]
         women_probs = [
             self.get_leisure_probability_for_age_and_sex(
-                age, "f", delta_time, is_weekend
+                age=age,
+                sex="f",
+                delta_time=delta_time,
+                is_weekend=is_weekend,
+                working_hours=working_hours,
             )
             for age in range(0, 100)
         ]

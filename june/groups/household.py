@@ -1,10 +1,8 @@
 from enum import IntEnum
-
-
+from collections import defaultdict
 import numpy as np
 from random import random
 import h5py
-import time
 
 from june.groups.group import Group, Supergroup
 from enum import IntEnum
@@ -32,7 +30,6 @@ class Household(Group):
         "relatives_in_care_homes",
         "relatives_in_households",
         "quarantine_starting_date",
-        "household_complacency",
         "social_venues",
     )
 
@@ -42,7 +39,7 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf, household_complacency=1.0):
+    def __init__(self, type=None, area=None, max_size=np.inf):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
@@ -51,13 +48,12 @@ class Household(Group):
         self.area = area
         self.type = type
         self.quarantine_starting_date = None
-        self.household_complacency = household_complacency
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
         self.max_size = max_size
         self.n_residents = 0
-        self.residents = tuple()
-        self.social_venues = {}
+        self.residents = ()
+        self.social_venues = defaultdict(tuple)
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
@@ -79,6 +75,23 @@ class Household(Group):
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
     def get_leisure_subgroup(self, person):
+        """
+        A person wants to come and visit this household. We need to assign the person
+        to the relevant age subgroup, and make sure the residents welcome him and
+        don't go do any other leisure activities.
+        """
+        for mate in self.residents:
+            if mate.busy:
+                if (
+                    mate.leisure is not None and mate in mate.leisure
+                ):  # this perosn has already been assigned somewhere
+                    mate.leisure.remove(mate)
+                    mate.subgroups.leisure = mate.subgroups.residence
+                    mate.residence.append(mate)
+            else:
+                mate.subgroups.leisure = (
+                    mate.residence # person will be added later in the simulator.
+                )
         if person.age < 18:
             return self.subgroups[self.SubgroupType.kids]
         elif person.age <= 35:
@@ -115,6 +128,13 @@ class Household(Group):
             ):
                 return random() < household_compliance
         return False
+
+    @property
+    def super_area(self):
+        if self.area is None:
+            return None
+        else:
+            return self.area.super_area
 
 
 class Households(Supergroup):

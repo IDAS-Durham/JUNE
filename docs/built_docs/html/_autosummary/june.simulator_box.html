@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.simulator_box &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.simulator" href="june.simulator.html" />
+    <link rel="prev" title="june.policy.policy" href="june.policy.policy.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.simulator_box</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.policy.policy.html">june.policy.policy</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.simulator.html">june.simulator</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.simulator_box">
+<span id="june-simulator-box"></span><h1>june.simulator_box<a class="headerlink" href="#module-june.simulator_box" title="Permalink to this headline">¶</a></h1>
+<dl class="py exception">
+<dt id="june.simulator_box.SimulatorError">
+<em class="property">exception </em><code class="sig-prename descclassname">june.simulator_box.</code><code class="sig-name descname">SimulatorError</code><a class="headerlink" href="#june.simulator_box.SimulatorError" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="june.simulator_box.SimulatorError.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorError.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorError.with_traceback">
+<code class="sig-name descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorError.with_traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.simulator_box.SimulatorError.args">
+<code class="sig-name descname">args</code><a class="headerlink" href="#june.simulator_box.SimulatorError.args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.simulator_box.SimulatorBox">
+<em class="property">class </em><code class="sig-prename descclassname">june.simulator_box.</code><code class="sig-name descname">SimulatorBox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.world.html#june.world.World" title="june.world.World">june.world.World</a></span></em>, <em class="sig-param"><span class="n">interaction</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction">june.interaction.interaction.Interaction</a></span></em>, <em class="sig-param"><span class="n">timer</span></em>, <em class="sig-param"><span class="n">activity_manager</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">infection_seed</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>InfectionSeed<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">checkpoint_dates</span><span class="p">:</span> <span class="n">List<span class="p">[</span>datetime.date<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to run an epidemic spread simulation on a box. It is 
+basically a wrapper around the Simualtor class, disabling
+the options that are not available in box mode, like
+moving ill people to households.</p>
+<dl class="simple">
+<dt>world: </dt><dd><p>instance of World class</p>
+</dd>
+<dt>interaction:</dt><dd><p>instance of Interaction class</p>
+</dd>
+<dt>infection:</dt><dd><p>instance of Infection class</p>
+</dd>
+<dt>activity_to_groups:</dt><dd><p>mapping between an activity and its corresponding groups</p>
+</dd>
+<dt>time_config:</dt><dd><p>dictionary with temporal configuration to set up the simulation</p>
+</dd>
+<dt>min_age_home_alone:</dt><dd><p>minimum age of a child to be left alone at home when ill</p>
+</dd>
+<dt>policies:</dt><dd><p>policies to be implemented at different time steps</p>
+</dd>
+<dt>save_path:</dt><dd><p>path to save logger results</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="june.simulator_box.SimulatorBox.ActivityManager">
+<code class="sig-name descname">ActivityManager</code><a class="headerlink" href="#june.simulator_box.SimulatorBox.ActivityManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="june.activity.activity_manager_box.html#june.activity.activity_manager_box.ActivityManagerBox" title="june.activity.activity_manager_box.ActivityManagerBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">june.activity.activity_manager_box.ActivityManagerBox</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.world.html#june.world.World" title="june.world.World">june.world.World</a></span></em>, <em class="sig-param"><span class="n">interaction</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction">june.interaction.interaction.Interaction</a></span></em>, <em class="sig-param"><span class="n">timer</span></em>, <em class="sig-param"><span class="n">activity_manager</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">infection_seed</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>InfectionSeed<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">checkpoint_dates</span><span class="p">:</span> <span class="n">List<span class="p">[</span>datetime.date<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to run an epidemic spread simulation on a box. It is 
+basically a wrapper around the Simualtor class, disabling
+the options that are not available in box mode, like
+moving ill people to households.</p>
+<dl class="simple">
+<dt>world: </dt><dd><p>instance of World class</p>
+</dd>
+<dt>interaction:</dt><dd><p>instance of Interaction class</p>
+</dd>
+<dt>infection:</dt><dd><p>instance of Infection class</p>
+</dd>
+<dt>activity_to_groups:</dt><dd><p>mapping between an activity and its corresponding groups</p>
+</dd>
+<dt>time_config:</dt><dd><p>dictionary with temporal configuration to set up the simulation</p>
+</dd>
+<dt>min_age_home_alone:</dt><dd><p>minimum age of a child to be left alone at home when ill</p>
+</dd>
+<dt>policies:</dt><dd><p>policies to be implemented at different time steps</p>
+</dd>
+<dt>save_path:</dt><dd><p>path to save logger results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.bury_the_dead">
+<em class="property">static </em><code class="sig-name descname">bury_the_dead</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.world.html#june.world.World" title="june.world.World">june.world.World</a></span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">time</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.bury_the_dead" title="Permalink to this definition">¶</a></dt>
+<dd><p>When someone dies, send them to cemetery. 
+ZOMBIE ALERT!!</p>
+<p>time
+person:</p>
+<blockquote>
+<div><p>person to send to cemetery</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.check_inputs">
+<em class="property">static </em><code class="sig-name descname">check_inputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_config</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.check_inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the iput time configuration is correct, i.e., activities are among allowed activities
+and days have 24 hours.</p>
+<dl class="simple">
+<dt>time_config:</dt><dd><p>dictionary with time steps configuration</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.clear_world">
+<code class="sig-name descname">clear_world</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.clear_world" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes everyone from all possible groups, and sets everyone’s busy attribute
+to False.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.do_timestep">
+<code class="sig-name descname">do_timestep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.do_timestep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a time step in the simulation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.from_checkpoint">
+<em class="property">classmethod </em><code class="sig-name descname">from_checkpoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.world.html#june.world.World" title="june.world.World">june.world.World</a></span></em>, <em class="sig-param"><span class="n">checkpoint_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">interaction</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction">june.interaction.interaction.Interaction</a></span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policies" title="june.policy.policy.Policies">june.policy.policy.Policies</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">infection_seed</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection_seed.infection_seed.html#june.infection_seed.infection_seed.InfectionSeed" title="june.infection_seed.infection_seed.InfectionSeed">june.infection_seed.infection_seed.InfectionSeed</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/config_example.yaml')</span></em>, <em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.from_checkpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
+initialisation but with the additional path to where the checkpoint pickle file is located.
+The checkpoint saves information about the infection status of all the people in the world as well as the timings.
+Note, nonetheless, that all the past infections / deaths will have the checkpoint date as date.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.from_file">
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.world.html#june.world.World" title="june.world.World">june.world.World</a></span></em>, <em class="sig-param"><span class="n">interaction</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction">june.interaction.interaction.Interaction</a></span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policies" title="june.policy.policy.Policies">june.policy.policy.Policies</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">infection_seed</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection_seed.infection_seed.html#june.infection_seed.infection_seed.InfectionSeed" title="june.infection_seed.infection_seed.InfectionSeed">june.infection_seed.infection_seed.InfectionSeed</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/config_example.yaml')</span></em>, <em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.simulator.html#june.simulator.Simulator" title="june.simulator.Simulator">june.simulator.Simulator</a><a class="headerlink" href="#june.simulator_box.SimulatorBox.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load config for simulator from world.yaml</p>
+<p>save_path
+leisure
+infection_seed
+policies
+interaction
+world
+config_filename</p>
+<blockquote>
+<div><p>The path to the world yaml configuration</p>
+</div></blockquote>
+<p>A Simulator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.recover">
+<em class="property">static </em><code class="sig-name descname">recover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">time</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.recover" title="Permalink to this definition">¶</a></dt>
+<dd><p>When someone recovers, erase the health information they carry and change their susceptibility.</p>
+<dl class="simple">
+<dt>person:</dt><dd><p>person to recover</p>
+</dd>
+<dt>time:</dt><dd><p>time (in days), at which the person recovers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run simulation with n_seed initial infections</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.save_checkpoint">
+<code class="sig-name descname">save_checkpoint</code><span class="sig-paren">(</span><em class="sig-param">date: &lt;module 'datetime' from '/home/sadie/anaconda3/envs/june/lib/python3.8/datetime.py'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.save_checkpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a checkpoint at the given date. We save all the health information of the
+population. We can then load the world back to the checkpoint state using the
+from_checkpoint class method of this class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.sort_people_world">
+<code class="sig-name descname">sort_people_world</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.sort_people_world" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts world population by id so it is easier to find them later.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.simulator_box.SimulatorBox.update_health_status">
+<code class="sig-name descname">update_health_status</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">duration</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.simulator_box.SimulatorBox.update_health_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update symptoms and health status of infected people.
+Send them to hospital if necessary, or bury them if they
+have died.</p>
+<dl class="simple">
+<dt>time:</dt><dd><p>time now</p>
+</dd>
+<dt>duration:</dt><dd><p>duration of time step</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.policy.policy.html">june.policy.policy</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.simulator.html">june.simulator</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

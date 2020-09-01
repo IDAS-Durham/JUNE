@@ -1,5 +1,7 @@
 import h5py
 import numpy as np
+
+from june.world import World
 from june.groups.commute import (
     CommuteCity,
     CommuteCities,
@@ -21,6 +23,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         commute_cities_dset = f.create_group("commute_cities")
         ids = []
         commute_hubs_list = []
+        commute_hubs_list_lengths = []
         commute_city_units_ids_list = []
         commute_city_units_is_peak_list = []
         cities_names_list = []
@@ -33,6 +36,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
             else:
                 hubs = np.array([hub.id for hub in city.commutehubs], dtype=np.int)
             commute_hubs_list.append(hubs)
+            commute_hubs_list_lengths.append(len(hubs))
             commute_internal = []
             for commute_intern in city.commute_internal:
                 commute_internal.append(commute_intern.id)
@@ -51,6 +55,10 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
             commute_city_units_is_peak_list.append(commute_city_units_is_peak)
 
         ids = np.array(ids, dtype=np.int)
+        if len(np.unique(commute_hubs_list_lengths)) == 1:
+            commute_hubs_list = np.array(commute_hubs_list, dtype=np.int)
+        else:
+            commute_hubs_list = np.array(commute_hubs_list, dtype=dt)
         cities_names_list = np.array(cities_names_list, dtype="S20")
         commute_city_units_ids_list = np.array(commute_city_units_ids_list, dtype=dt)
         commute_city_units_is_peak_list = np.array(
@@ -60,12 +68,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         commute_cities_dset.attrs["n_commute_cities"] = n_cities
         commute_cities_dset.create_dataset("id", data=ids)
         commute_cities_dset.create_dataset("city_names", data=cities_names_list)
-        try:
-            commute_hubs_list = np.array(commute_hubs_list, dtype=dt)
-            commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
-        except:
-            commute_hubs_list = np.array(commute_hubs_list,dtype=np.int)
-            commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
+        commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
         commute_cities_dset.create_dataset(
             "commute_city_units_ids", data=commute_city_units_ids_list
         )
@@ -114,8 +117,7 @@ def load_commute_cities_from_hdf5(file_path: str):
                 commute_city.commutecityunits.append(cu)
                 commute_city_units_list.append(cu)
             commute_cities_list.append(commute_city)
-    cc = CommuteCities()
-    cc.members = commute_cities_list
+    cc = CommuteCities(commute_cities_list)
     ccu = CommuteCityUnits(cc)
     ccu.members = commute_city_units_list
     return cc, ccu
@@ -129,21 +131,33 @@ def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
         ids = []
         cities = []
         commute_units_list = []
+        commute_through_list = []
+        commute_units_length_list = []
         for hub in commute_hubs:
             ids.append(hub.id)
             cities.append(hub.city)
+            commute_through = []
+            for commute_throu in hub.commute_through:
+                commute_through.append(commute_throu.id)
+            commute_through = np.array(commute_through, dtype=np.int)
+            commute_through_list.append(commute_through)
             commute_units = []
             for commute_unit in hub.commuteunits:
                 commute_units.append(commute_unit.id)
             commute_units_list.append(np.array(commute_units, dtype=np.int))
-
+            commute_units_length_list.append(len(commute_units))
+        if len(np.unique(commute_units_length_list)) == 1:
+            commute_units_list = np.array(commute_units_list, dtype=int)
+        else:
+            commute_units_list = np.array(commute_units_list, dtype=dt)
         ids = np.array(ids, dtype=np.int)
         cities = np.array(cities, dtype="S20")
-        commute_units_list = np.array(commute_units_list, dtype=dt)
+        commute_through_list = np.array(commute_through_list, dtype=dt)
         commute_hubs_dset.attrs["n_commute_hubs"] = n_hubs
         commute_hubs_dset.create_dataset("id", data=ids)
         commute_hubs_dset.create_dataset("city_names", data=cities)
         commute_hubs_dset.create_dataset("commute_units", data=commute_units_list)
+        commute_hubs_dset.create_dataset("commute_through", data=commute_through_list)
 
 
 def load_commute_hubs_from_hdf5(file_path: str):
@@ -159,12 +173,14 @@ def load_commute_hubs_from_hdf5(file_path: str):
         n_commute_hubs = commute_hubs.attrs["n_commute_hubs"]
         ids = commute_hubs["id"]
         city_names = commute_hubs["city_names"]
+        commute_through = commute_hubs["commute_through"]
         commute_units = commute_hubs["commute_units"]
         commute_units_list = []
         for k in range(n_commute_hubs):
             commute_hub = CommuteHub(lat_lon=None, city=city_names[k].decode())
             commute_hub.id = ids[k]
             commute_hub.city = city_names[k].decode()
+            commute_hub.commute_through = commute_through[k]
             for unit_id in commute_units[k]:
                 cunit = CommuteUnit(
                     commutehub_id=ids[k],
@@ -180,3 +196,26 @@ def load_commute_hubs_from_hdf5(file_path: str):
     cu = CommuteUnits(ch)
     cu.members = commute_units_list
     return ch, cu
+
+
+def restore_commute_properties_from_hdf5(world: World, file_path: str):
+    # restore commute
+    first_person_id = world.people[0].id
+    first_hub_id = world.commutehubs[0].id
+    # commute
+    for city in world.commutecities:
+        people_ids = city.people
+        commute_hubs = [
+            world.commutehubs[idx - first_hub_id] for idx in city.commutehubs
+        ]
+        city.commutehubs = commute_hubs
+        commute_internal_people = [
+            world.people[idx - first_person_id] for idx in city.commute_internal
+        ]
+        city.commute_internal = commute_internal_people
+
+    for hub in world.commutehubs:
+        commute_through_people = [
+            world.people[id - first_person_id] for id in hub.commute_through
+        ]
+        hub.commute_through = commute_through_people

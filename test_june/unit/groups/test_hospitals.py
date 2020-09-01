@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from june.demography.geography import Geography
 
-from june.groups import *
+from june.groups import Hospital, Hospitals
 from june.demography import Person
 from june.infection import SymptomTag
 from june.infection import InfectionSelector, Infection
@@ -40,10 +40,6 @@ def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index)
     assert hospitals.members[closest_hospital_idx] == hospitals.members[index]
 
 
-class MockHealthInformation:
-    def __init__(self, tag):
-        self.tag = tag
-
 @pytest.fixture(name='selector', scope='module')
 def create_selector():
     selector = InfectionSelector.from_file()
@@ -56,7 +52,7 @@ def create_selector():
 def test__add_patient_release_patient(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
-    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
+    dummy_person.infection.symptoms.tag = getattr(SymptomTag, health_info)
     assert dummy_person.medical_facility is None
     hospitals.members[0].add_as_patient(dummy_person)
     if health_info == "hospitalised":
@@ -82,7 +78,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
     selector.infect_person_at_time(dummy_person, 0.0)
     dummy_person.area = MockArea(hospitals.members[-1].coordinates)
     assert dummy_person.medical_facility is None
-    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
+    dummy_person.infection.symptoms.tag = getattr(SymptomTag, health_info)
     hospitals.allocate_patient(dummy_person)
     if health_info == "hospitalised":
         assert (
@@ -103,7 +99,7 @@ def test__allocate_patient_release_patient(hospitals, health_info, selector):
 def test_try_allocate_patient_to_full_hospital(hospitals, health_info, selector):
     dummy_person = Person().from_attributes(age=80, sex='m')
     selector.infect_person_at_time(dummy_person, 0.0)
-    dummy_person.health_information.infection.symptoms.tag = getattr(SymptomTag, health_info)
+    dummy_person.infection.symptoms.tag = getattr(SymptomTag, health_info)
 
     dummy_person.area = MockArea(hospitals.members[0].coordinates)
 
@@ -127,6 +123,6 @@ def test__initialize_hospitals_from_geography():
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
     assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 468 + 41 
-    assert hospitals.members[0].super_area == 'E02005560' 
+    assert hospitals.members[0].super_area.name == 'E02005560' 
     assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 2115 + 296 
     assert hospitals.members[1].trust_code == 'RAJ' 

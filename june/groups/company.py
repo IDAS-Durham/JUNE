@@ -1,5 +1,4 @@
 import logging
-import os
 from enum import IntEnum
 from random import shuffle
 from june import paths
@@ -14,10 +13,10 @@ from june.demography.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
 default_size_nr_file = paths.data_path / "input/companies/company_size_2019.csv"
-default_sector_nr_per_msoa_file = paths.data_path / "input/companies/company_sector_2011.csv"
-default_areas_map_path = (
-    paths.data_path / "input/geography/area_super_area_region.csv"
+default_sector_nr_per_msoa_file = (
+    paths.data_path / "input/companies/company_sector_2011.csv"
 )
+default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_filename = paths.configs_path / "defaults/groups/companies.yaml"
 
 logger = logging.getLogger(__name__)
@@ -53,13 +52,11 @@ class Company(Group):
         self.sector = sector
         self.n_workers_max = n_workers_max
 
-
-
     def add(self, person):
         super().add(
             person,
-            subgroup_type = self.SubgroupType.workers,
-            activity = "primary_activity", 
+            subgroup_type=self.SubgroupType.workers,
+            activity="primary_activity",
         )
 
     @property
@@ -110,7 +107,10 @@ class Companies(Supergroup):
         if not geography.super_areas:
             raise CompanyError("Empty geography!")
         return cls.for_super_areas(
-            geography.super_areas, size_nr_file, sector_nr_per_msoa_file, default_config_filename
+            geography.super_areas,
+            size_nr_file,
+            sector_nr_per_msoa_file,
+            default_config_filename,
         )
 
     @classmethod
@@ -162,17 +162,14 @@ class Companies(Supergroup):
                 company_sectors_per_super_area.iterrows(),
             ):
                 super_area.companies = cls.create_companies_in_super_area(
-                    super_area, company_sizes, company_sectors, 
+                    super_area, company_sizes, company_sectors,
                 )
                 companies += super_area.companies
         return cls(companies)
 
     @classmethod
     def create_companies_in_super_area(
-            cls,
-            super_area: SuperArea,
-            company_sizes,
-            company_sectors,
+        cls, super_area: SuperArea, company_sizes, company_sectors,
     ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.
@@ -180,8 +177,9 @@ class Companies(Supergroup):
         sizes = np.array([])
         for size_bracket, counts in company_sizes.items():
             size_min, size_max = _get_size_brackets(size_bracket)
-            sizes = np.concatenate((sizes, np.random.randint(max(size_min, 1),
-                                                             size_max, int(counts))))
+            sizes = np.concatenate(
+                (sizes, np.random.randint(max(size_min, 1), size_max, int(counts)))
+            )
         sectors = []
         for sector, counts in company_sectors.items():
             sectors += [sector] * int(counts)
