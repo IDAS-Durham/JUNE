@@ -7,6 +7,7 @@ import seaborn as sns
 from datetime import datetime
 import sys
 import argparse
+from pathlib import Path
 
 from june.demography.geography import Geography
 from june.demography.demography import (
@@ -301,3 +302,9 @@ simulator.timer.reset()
 simulator.run()
 
 # ==================================================================================#
+
+summary = read.run_summary(
+    super_area_region_path=camp_data_path 
+    / 'input/geography/area_super_area_region.csv'
+)
+summary.to_csv(Path(args.save_path) / 'summary.csv')
