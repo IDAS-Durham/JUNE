@@ -560,6 +560,7 @@ class ReadLogger:
         / "input/geography/area_super_area_region.csv",
     ):
         super_area_region = pd.read_csv(super_area_region_path)
+        super_area_region = super_area_region.loc[:, ~super_area_region.columns.str.contains('^Unnamed')]
         super_area_region = super_area_region.drop(columns="area").drop_duplicates()
         super_area_region.set_index("super_area", inplace=True)
         return super_area_region.loc[super_areas]["region"].values
@@ -568,7 +569,7 @@ class ReadLogger:
             / "input/geography/area_super_area_region.csv",):
         super_area_df = self.super_area_summary()
         super_area_df["region"] = self.super_areas_to_region(
-            super_area_df["super_area"].values
+            super_area_df["super_area"].values, super_area_region_path=super_area_region_path
         )
         self.load_infection_location()
         flat_locations = self.locations_df[["location_id", "super_area"]].apply(
