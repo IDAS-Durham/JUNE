@@ -1,7 +1,7 @@
 import logging
 import yaml
 from enum import IntEnum
-from typing import Dict, List, Optional
+from typing import List
 import numpy as np
 import h5py
 
@@ -83,6 +83,13 @@ class CareHome(Group):
     
     def quarantine(self, time, quarantine_days, household_compliance):
         return True
+
+    @property
+    def super_area(self):
+        if self.area is None:
+            return None
+        else:
+            return self.area.super_area
 
 
 class CareHomes(Supergroup):

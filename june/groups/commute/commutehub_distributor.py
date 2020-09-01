@@ -1,9 +1,4 @@
 import logging
-import os
-from enum import IntEnum
-from pathlib import Path
-from typing import List, Dict, Optional
-
 import csv
 import numpy as np
 import pandas as pd
@@ -14,6 +9,8 @@ from scipy import spatial
 default_msoa_oa_coordinates = (
     paths.data_path / "input/geography/area_super_area_coordinates.csv"
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CommuteHubDistributor:
@@ -50,22 +47,22 @@ class CommuteHubDistributor:
         self.coordinates_dict = coordinates_dict
 
     def distribute_people(self):
-
+        logger.info(
+            f"Distributing people to commute hubs in {len(self.commutecities)} commute cities."
+        )
         for commutecity in self.commutecities:
             # people commuting into city
-            work_people = commutecity.people
-
             to_commute_in = []
             to_commute_out = []
-            for work_person in work_people:
+            for commuter in commutecity.people:
 
-                msoa = self._get_msoa_oa(work_person.area.name)
+                msoa = self._get_msoa_oa(commuter.area.name)
                 # check if live AND work in metropolitan area
                 if msoa in commutecity.metro_msoas:
-                    to_commute_in.append(work_person)
+                    to_commute_in.append(commuter)
                 # if they live outside and commute in then they need to commute through a hub
                 else:
-                    to_commute_out.append(work_person)
+                    to_commute_out.append(commuter)
 
             # possible commutehubs
             commutehub_in_city = commutecity.commutehubs
@@ -74,15 +71,17 @@ class CommuteHubDistributor:
                 commutehub_in_city_lat_lon.append(commutehub.lat_lon)
 
             commutehub_tree = spatial.KDTree(commutehub_in_city_lat_lon)
-
-            for work_person in to_commute_out:
-                live_area = work_person.area.name
+            logger.info(
+                f"{commutecity.city} : {len(to_commute_in)} people commute in, " +\
+                f"{len(to_commute_out)} commute out."
+            )
+            for commuter in to_commute_out:
+                live_area = commuter.area.name
                 live_lat_lon = self._get_area_lat_lon(live_area)
                 # find nearest commute hub to the person given where they live
 
                 _, hub_index = commutehub_tree.query(live_lat_lon, 1)
+                commutehub_in_city[hub_index].add(commuter)
 
-                commutehub_in_city[hub_index].add(work_person)
-
-            for work_person in to_commute_in:
-                commutecity.commute_internal.append(work_person)
+            for commuter in to_commute_in:
+                commutecity.add_internal_commuter(commuter)

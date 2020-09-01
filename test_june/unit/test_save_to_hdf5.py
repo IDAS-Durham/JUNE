@@ -16,7 +16,7 @@ from june.groups import (
 )
 from june.distributors import HouseholdDistributor
 from june import World
-from june.world import generate_world_from_hdf5, generate_world_from_geography
+from june.world import generate_world_from_geography
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -28,9 +28,8 @@ from june.hdf5_savers import (
     save_commute_cities_to_hdf5,
     save_commute_hubs_to_hdf5,
     save_universities_to_hdf5,
-    save_cinemas_to_hdf5,
-    save_pubs_to_hdf5,
-    save_groceries_to_hdf5,
+    save_social_venues_to_hdf5,
+    generate_world_from_hdf5,
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -44,9 +43,7 @@ from june.hdf5_savers import (
     load_commute_cities_from_hdf5,
     load_commute_hubs_from_hdf5,
     load_universities_from_hdf5,
-    load_pubs_from_hdf5,
-    load_cinemas_from_hdf5,
-    load_groceries_from_hdf5,
+    load_social_venues_from_hdf5,
 )
 from june import paths
 
@@ -57,7 +54,6 @@ from pytest import fixture
 def make_geography():
     geography = Geography.from_file(
         {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
-        # {"super_area": ["E02003282", "E02002559"]}
     )
     return geography
 
@@ -79,15 +75,18 @@ def create_world(geography_h5):
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
     leisure = generate_leisure_for_world(
-        ["pubs", "cinemas", "groceries", "household_visits", "care_home_vists"], world
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
     )
-    leisure.distribute_social_venues_to_households(world.households)
+    leisure.distribute_social_venues_to_households(
+        households=world.households, super_areas=world.super_areas
+    )
     return world
 
 
 class TestSavePeople:
     def test__save_population(self, world_h5):
         population = world_h5.people
+        assert len(population) > 0
         save_population_to_hdf5(population, "test.hdf5")
         pop_recovered = load_population_from_hdf5("test.hdf5")
         for person, person2 in zip(population, pop_recovered):
@@ -106,37 +105,6 @@ class TestSavePeople:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-
-            group_specs = np.array(
-                [
-                    subgroup.group.spec if subgroup is not None else None
-                    for subgroup in person.subgroups.iter()
-                ]
-            )
-            group_ids = np.array(
-                [
-                    subgroup.group.id if subgroup is not None else None
-                    for subgroup in person.subgroups.iter()
-                ]
-            )
-            subgroup_types = np.array(
-                [
-                    subgroup.subgroup_type if subgroup is not None else None
-                    for subgroup in person.subgroups.iter()
-                ]
-            )
-            for group_spec, group_id, subgroup_type, group_array in zip(
-                group_specs, group_ids, subgroup_types, person2.subgroups
-            ):
-                assert group_spec == group_array[0]
-                assert group_id == group_array[1]
-                assert subgroup_type == group_array[2]
-            if person.area is not None:
-                assert person.area.id == person2.area
-            else:
-                assert person2.area is None
-
-            # mode of transport
             assert (
                 person.mode_of_transport.description
                 == person2.mode_of_transport.description
@@ -155,28 +123,23 @@ class TestSavePeople:
 class TestSaveHouses:
     def test__save_households(self, world_h5):
         households = world_h5.households
+        assert len(households) > 0
         save_households_to_hdf5(households, "test.hdf5")
         households_recovered = load_households_from_hdf5("test.hdf5")
         for household, household2 in zip(households, households_recovered):
             for attribute_name in ["id", "max_size", "type"]:
-                if attribute_name == "type":
-                    attribute2 = getattr(household2, attribute_name)
-                else:
-                    attribute2 = getattr(household2, attribute_name)
                 attribute = getattr(household, attribute_name)
+                attribute2 = getattr(household2, attribute_name)
                 if attribute is None:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if household.area is not None:
-                assert household.area.id == household2.area
-            else:
-                assert household2.area is None
 
 
 class TestSaveCompanies:
     def test__save_companies(self, world_h5):
         companies = world_h5.companies
+        assert len(companies) > 0
         save_companies_to_hdf5(companies, "test.hdf5")
         companies_recovered = load_companies_from_hdf5("test.hdf5")
         for company, company2 in zip(companies, companies_recovered):
@@ -187,15 +150,12 @@ class TestSaveCompanies:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if company.super_area is not None:
-                assert company.super_area.id == company2.super_area
-            else:
-                assert company2.super_area is None
 
 
 class TestSaveHospitals:
     def test__save_hospitals(self, world_h5):
         hospitals = world_h5.hospitals
+        assert len(hospitals) > 0
         save_hospitals_to_hdf5(hospitals, "test.hdf5")
         hospitals_recovered = load_hospitals_from_hdf5("test.hdf5")
         for hospital, hospital2 in zip(hospitals, hospitals_recovered):
@@ -210,10 +170,6 @@ class TestSaveHospitals:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if hospital.super_area is not None:
-                assert hospital.super_area == hospital2.super_area
-            else:
-                assert hospital2.super_area is None
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
             assert hospital.trust_code == hospital2.trust_code
@@ -222,6 +178,7 @@ class TestSaveHospitals:
 class TestSaveSchools:
     def test__save_schools(self, world_h5):
         schools = world_h5.schools
+        assert len(schools) > 0
         save_schools_to_hdf5(schools, "test.hdf5")
         schools_recovered = load_schools_from_hdf5("test.hdf5")
         for school, school2 in zip(schools, schools_recovered):
@@ -231,6 +188,8 @@ class TestSaveSchools:
                 "age_min",
                 "age_max",
                 "sector",
+                "n_classrooms",
+                "years",
             ]:
                 attribute = getattr(school, attribute_name)
                 attribute2 = getattr(school2, attribute_name)
@@ -238,10 +197,6 @@ class TestSaveSchools:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if school.super_area is not None:
-                assert school.super_area.id == school2.super_area
-            else:
-                assert school2.super_area is None
             assert school.coordinates[0] == school2.coordinates[0]
             assert school.coordinates[1] == school2.coordinates[1]
 
@@ -249,6 +204,7 @@ class TestSaveSchools:
 class TestSaveCarehomes:
     def test__save_carehomes(self, world_h5):
         carehomes = world_h5.care_homes
+        assert len(carehomes) > 0
         save_care_homes_to_hdf5(carehomes, "test.hdf5")
         carehomes_recovered = load_care_homes_from_hdf5("test.hdf5")
         for carehome, carehome2 in zip(carehomes, carehomes_recovered):
@@ -259,16 +215,14 @@ class TestSaveCarehomes:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if carehome.area is not None:
-                assert carehome.area.id == carehome2.area
-            else:
-                assert carehome2.area is None
 
 
 class TestSaveGeography:
     def test__save_geography(self, world_h5):
         areas = world_h5.areas
         super_areas = world_h5.super_areas
+        assert len(areas) > 0
+        assert len(super_areas) > 0
         geography = Geography(areas, super_areas)
         save_geography_to_hdf5(geography, "test.hdf5")
         geography_recovered = load_geography_from_hdf5("test.hdf5")
@@ -280,10 +234,6 @@ class TestSaveGeography:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-            if area.super_area is not None:
-                assert area.super_area.id == area2.super_area
-            else:
-                assert area2.super_area is None
             assert area.coordinates[0] == area2.coordinates[0]
             assert area.coordinates[1] == area2.coordinates[1]
 
@@ -305,6 +255,8 @@ class TestSaveCommute:
     def test__save_cities(self, world_h5):
         commute_cities = world_h5.commutecities
         commute_city_units = world_h5.commutecityunits
+        assert len(commute_cities) > 0
+        assert len(commute_city_units) > 0
         save_commute_cities_to_hdf5(commute_cities, "test.hdf5")
         (
             commute_cities_recovered,
@@ -333,6 +285,8 @@ class TestSaveCommute:
     def test__save_hubs(self, world_h5):
         commute_hubs = world_h5.commutehubs
         commute_units = world_h5.commuteunits
+        assert len(commute_hubs) > 0
+        assert len(commute_units) > 0
         save_commute_hubs_to_hdf5(commute_hubs, "test.hdf5")
         commute_hubs_recovered, commute_units_recovered = load_commute_hubs_from_hdf5(
             "test.hdf5"
@@ -340,6 +294,10 @@ class TestSaveCommute:
         for hub, hub_recovered in zip(commute_hubs, commute_hubs_recovered):
             assert hub.id == hub_recovered.id
             assert hub.city == hub_recovered.city
+            for commute_through, commute_through_recovered in zip(
+                hub.commute_through, hub_recovered.commute_through
+            ):
+                assert commute_through.id == commute_through_recovered
             for person1, person2 in zip(hub.people, hub_recovered.people):
                 assert person1.id == person2
             for unit1, unit2 in zip(hub.commuteunits, hub_recovered.commuteunits):
@@ -353,6 +311,7 @@ class TestSaveCommute:
 class TestSaveUniversities:
     def test__save_universities(self, world_h5):
         universities = world_h5.universities
+        assert len(universities) > 0
         save_universities_to_hdf5(universities, "test.hdf5")
         universities_recovered = load_universities_from_hdf5("test.hdf5")
         for uni, uni2 in zip(universities, universities_recovered):
@@ -372,32 +331,17 @@ class TestSaveUniversities:
 
 
 class TestSaveLeisure:
-    def test__save_pubs(self, world_h5):
-        pubs = world_h5.pubs
-        save_pubs_to_hdf5(pubs, "test.hdf5")
-        pubs_recovered = load_pubs_from_hdf5("test.hdf5")
-        for pub1, pub2 in zip(pubs, pubs_recovered):
-            assert pub1.coordinates[0] == pub2.coordinates[0]
-            assert pub1.coordinates[1] == pub2.coordinates[1]
-            assert pub1.id == pub2.id
-
-    def test__save_groceries(self, world_h5):
-        groceries = world_h5.groceries
-        save_groceries_to_hdf5(groceries, "test.hdf5")
-        groceries_recovered = load_groceries_from_hdf5("test.hdf5")
-        for gr1, gr2 in zip(groceries, groceries_recovered):
-            assert gr1.coordinates[0] == gr2.coordinates[0]
-            assert gr1.coordinates[1] == gr2.coordinates[1]
-            assert gr1.id == gr2.id
-
-    def test__save_cinemas(self, world_h5):
-        cinemas = world_h5.cinemas
-        save_cinemas_to_hdf5(cinemas, "test.hdf5")
-        cinemas_recovered = load_cinemas_from_hdf5("test.hdf5")
-        for cinema1, cinema2 in zip(cinemas, cinemas_recovered):
-            assert cinema1.coordinates[0] == cinema2.coordinates[0]
-            assert cinema1.coordinates[1] == cinema2.coordinates[1]
-            assert cinema1.id == cinema2.id
+    def test__save_social_venues(self, world_h5):
+        save_social_venues_to_hdf5(
+            social_venues_list=[world_h5.pubs, world_h5.groceries, world_h5.cinemas],
+            file_path="test.hdf5",
+        )
+        social_venues_dict = load_social_venues_from_hdf5("test.hdf5")
+        for social_venues_spec, social_venues in social_venues_dict.items():
+            for sv1, sv2 in zip(getattr(world_h5, social_venues_spec), social_venues):
+                assert sv1.coordinates[0] == sv2.coordinates[0]
+                assert sv1.coordinates[1] == sv2.coordinates[1]
+                assert sv1.id == sv2.id
 
 
 class TestSaveWorld:
@@ -429,6 +373,8 @@ class TestSaveWorld:
 
     def test__subgroups(self, world_h5, world_h5_loaded):
         for person1, person2 in zip(world_h5.people, world_h5_loaded.people):
+            assert person1.area.id == person2.area.id
+            assert (person1.area.coordinates == person2.area.coordinates).all()
             for subgroup1, subgroup2 in zip(
                 person1.subgroups.iter(), person2.subgroups.iter()
             ):
@@ -439,24 +385,72 @@ class TestSaveWorld:
                 assert subgroup1.group.id == subgroup2.group.id
                 assert subgroup1.subgroup_type == subgroup2.subgroup_type
 
+    def test__household_area(self, world_h5, world_h5_loaded):
+        assert len(world_h5_loaded.households) == len(world_h5_loaded.households)
+        for household, household2 in zip(
+            world_h5.households, world_h5_loaded.households
+        ):
+            if household.area is not None:
+                assert household.area.id == household2.area.id
+            else:
+                assert household2.area is None
+
+    def test__school_area(self, world_h5, world_h5_loaded):
+        assert len(world_h5_loaded.schools) == len(world_h5.schools)
+        for school, school2 in zip(world_h5.schools, world_h5_loaded.schools):
+            if school.area is not None:
+                assert school.area.id == school2.area.id
+            else:
+                assert school2.super_area is None
+
+    def test__care_home_area(self, world_h5, world_h5_loaded):
+        assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
+        for carehome, carehome2 in zip(world_h5.care_homes, world_h5_loaded.care_homes):
+            assert carehome.area.id == carehome2.area.id
+            assert carehome.area.name == carehome2.area.name
+
     def test__company_super_area(self, world_h5, world_h5_loaded):
         for company1, company2 in zip(world_h5.companies, world_h5_loaded.companies):
             assert company1.super_area.id == company2.super_area.id
 
+    def test__university_super_area(self, world_h5, world_h5_loaded):
+        for uni1, uni2 in zip(world_h5.universities, world_h5_loaded.universities):
+            assert uni1.super_area.id == uni2.super_area.id
+            assert uni1.super_area.name == uni2.super_area.name
+
+    def test__hospital_super_area(self, world_h5, world_h5_loaded):
+        for h1, h2 in zip(world_h5.hospitals, world_h5_loaded.hospitals):
+            assert h1.super_area.id == h2.super_area.id
+            assert h1.super_area.name == h2.super_area.name
+
+    def test__social_venues_super_area(self, world_h5, world_h5_loaded):
+        for spec in ["pubs", "groceries", "cinemas"]:
+            social_venues1 = getattr(world_h5, spec)
+            social_venues2 = getattr(world_h5_loaded, spec)
+            assert len(social_venues1) == len(social_venues2)
+            for v1, v2 in zip(social_venues1, social_venues2):
+                assert v1.super_area.id == v2.super_area.id
+                assert v1.super_area.name == v2.super_area.name
+
     def test__commute(self, world_h5, world_h5_loaded):
+        assert len(world_h5.commutecities) > 0
+        assert len(world_h5.commutecities) == len(world_h5_loaded.commutecities)
         for city1, city2 in zip(world_h5.commutecities, world_h5_loaded.commutecities):
             assert city1.city == city2.city
             for hub1, hub2 in zip(city1.commutehubs, city2.commutehubs):
                 assert hub1.id == hub2.id
+            assert len(city1.commute_internal) == len(city2.commute_internal)
+            for p1, p2 in zip(city1.commute_internal, city2.commute_internal):
+                assert p1.id == p2.id
 
+        assert len(world_h5.commutehubs) > 0
+        assert len(world_h5.commutehubs) == len(world_h5_loaded.commutehubs)
         for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
-            people_in_hub1 = [person.id for person in hub1.people]
-            people_in_hub2 = [person.id for person in hub2.people]
-            if len(people_in_hub1) == 0 or len(people_in_hub2) == 0:
-                assert len(people_in_hub2) == 0
-                assert len(people_in_hub1) == 0
-            else:
-                assert (np.sort(people_in_hub1) == np.sort(people_in_hub2)).all()
+            assert len(hub1.commute_through) == len(hub2.commute_through)
+            for p1, p2 in zip(hub1.commute_through, hub2.commute_through):
+                assert p1.id == p2.id
+                assert p1.age == p2.age
+                assert p1.sex == p2.sex
 
     def test__household_residents(self, world_h5, world_h5_loaded):
         for h1, h2 in zip(world_h5.households, world_h5_loaded.households):
@@ -482,17 +476,11 @@ class TestSaveWorld:
                     assert np.array_equal(social_venues_id, social_venues_recovered_id)
         for h1, h2 in zip(world_h5.households, world_h5_loaded.households):
             if h1.relatives_in_households is None:
-                assert (
-                    h2.relatives_in_households is None
-                    or len(h2.relatives_in_households) == 0
-                )
+                assert h2.relatives_in_households is None
                 continue
             assert len(h1.relatives_in_households) == len(h2.relatives_in_households)
             if h1.relatives_in_care_homes is None:
-                assert (
-                    h2.relatives_in_care_homes is None
-                    or len(h2.relatives_in_care_homes) == 0
-                )
+                assert h2.relatives_in_care_homes is None
                 continue
             assert len(h1.relatives_in_care_homes) == len(h2.relatives_in_care_homes)
             if len(h1.relatives_in_households) > 0:

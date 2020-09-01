@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.infection.trajectory_maker.BetaCompletionTime &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.infection.trajectory_maker.LognormalCompletionTime" href="june.infection.trajectory_maker.LognormalCompletionTime.html" />
+    <link rel="prev" title="june.infection.trajectory_maker.ExponentialCompletionTime" href="june.infection.trajectory_maker.ExponentialCompletionTime.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.infection.trajectory_maker.BetaCompletionTime</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.trajectory_maker.ExponentialCompletionTime.html">june.infection.trajectory_maker.ExponentialCompletionTime</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.trajectory_maker.LognormalCompletionTime.html">june.infection.trajectory_maker.LognormalCompletionTime</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-infection-trajectory-maker-betacompletiontime">
+<h1>june.infection.trajectory_maker.BetaCompletionTime<a class="headerlink" href="#june-infection-trajectory-maker-betacompletiontime" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection.trajectory_maker.</code><code class="sig-name descname">BetaCompletionTime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">loc</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">class_for_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type_string</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; type</dt>
+<dd><p>Get a CompletionTime class from a string in configuration</p>
+<dl class="simple">
+<dt>type_string</dt><dd><p>The type of CompletionTime
+e.g. constant/exponential/beta</p>
+</dd>
+</dl>
+<p>The corresponding class</p>
+<dl class="simple">
+<dt>AssertionError</dt><dd><p>If the type string is not recognised</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variation_type_dict</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">distribution</code></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.trajectory_maker.ExponentialCompletionTime.html">june.infection.trajectory_maker.ExponentialCompletionTime</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.trajectory_maker.LognormalCompletionTime.html">june.infection.trajectory_maker.LognormalCompletionTime</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>
