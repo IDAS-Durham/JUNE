@@ -205,7 +205,7 @@ def test__infection_is_isolated(selector):
         / "interaction_test_config.yaml",
         leisure=None,
         policies=policies,
-        save_path=None,
+        #save_path=None,
     )
     infected_people = [person for person in world.people if person.infected]
     assert len(infected_people) == 5
