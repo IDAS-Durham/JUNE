@@ -408,7 +408,6 @@ class Simulator:
             n_people += len(cemetery.people)
 
         n_dead = n_people
-        print(f'(In simulator b4 logger {self.world.domain_id} we see {self.world.local_people.debug_stats})')
         logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "

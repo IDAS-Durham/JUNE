@@ -251,7 +251,6 @@ class ActivityManager:
         ----------
 
         """
-        print(f'(mv2active-sg start in  {self.world.domain_id} we see {self.world.local_people.debug_stats})')
 
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
