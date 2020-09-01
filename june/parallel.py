@@ -13,6 +13,9 @@
 import logging
 import numpy, time
 from june.mpi_setup import comm, size, rank
+from june.infection.infection import Infection
+from june.infection.transmission import Transmission
+from june.infection.symptoms import Symptoms
 
 logger = logging.getLogger(__name__)
 
@@ -99,10 +102,11 @@ class DomainPopulation:
             else:
                 continue
 
-    def number_active(self, timestep_status, debug=False):
+    def number_active(self, timestep_status):
         """
         Return the number of people who are active now
         """
+        print('number active', len(self), self.n_outbound, self.n_inbound, self.outbound_not_working, timestep_status)
         if timestep_status == 'primary_activity':
             return len(self) - self.n_outbound + self.outbound_not_working
         else:
@@ -251,11 +255,103 @@ def parallel_update(self, direction, timer):
         direction='pm': people return from work or head home to another domain.
     """
 
+    other_rank_ifs_am = {i: {} for i in range(size)}
+    other_rank_ifs_pm = {i: {} for i in range(size)}
+
+    coll_inf_send_am = {i: {} for i in range(size)}
+    coll_inf_send_pm = {i: {} for i in range(size)}
+
     logger.info(f"Direction {direction} in domain {self.domain_id}"
                 f" - active/infected people initially "
                 f"{self.local_people.number_active(timer.last_state)}/{self.local_people.number_infected}")
 
     # Note that we have to put people before getting people, otherwise we get a deadlock
+    if direction == 'am':
+        # send people away
+        # we need only to pass infection status of infected people, so only some of these folk need writing out
+        # we need to loop over the _other_ ranks (avoiding puns about NCOs)
+        for other_rank in self.outside_workers:
+            if other_rank == self.domain_id:
+                continue
+            outside_domain = self.outside_workers[other_rank]
+            infected_status_outside_workers = {}
+            for pid, person in outside_domain.items():
+
+                if person.infected:
+                    infected_status_outside_workers[pid] = person.infected
+
+#            print(rank, "sending to ", other_rank)
+#            for pid, infec in infected_status_outside_workers.items():
+#                print(rank, "sending to ", other_rank, "infec status outside ", infec)
+            comm.send(infected_status_outside_workers, dest=other_rank, tag=200)
+#            for pid, infec in infected_status_outside_workers.items():
+#                print(rank, "sent to ", other_rank, "infec status outside ", infec)
+
+
+        # pay attention to people who are coming in
+        for other_rank in self.inbound_workers:
+            if other_rank == self.domain_id:
+                continue
+            outside_domain = self.inbound_workers[other_rank]
+
+            infection_test_am = comm.recv(source=other_rank, tag=200)
+            
+
+            if infection_test_am:
+                for pid, infec in infection_test_am.items():
+                    print(rank, pid, "rcv from ", other_rank, "infection_status of incoming workers ", infec)
+                    print(rank, pid, "infect stat here ", self.inbound_workers[other_rank][pid].infected)
+#                    other_rank_ifs_am[other_rank][pid] = infec
+                    if infec != self.inbound_workers[other_rank][pid].infected:
+                        other_rank_ifs_am[other_rank][pid] = infec
+            print("other_rank_ifs_am ", other_rank_ifs_am)
+#                        print("am rank, other_rank, pid, infec ", rank, other_rank, pid, infec)
+        coll_inf_send_am[rank]  = other_rank_ifs_am
+            
+        XX = comm.allgather(coll_inf_send_am[rank])
+        for d in range(size):
+            print("col am ", d, XX[d])
+
+
+    elif direction == 'pm':
+
+        # FIXME: What happens to inbound workers during initialisation?
+        for other_rank in self.inbound_workers:
+            if other_rank == self.domain_id:
+                continue
+            outside_domain = self.inbound_workers[other_rank]
+            infected_status_inbound_workers = {}
+            for pid, person in outside_domain.items():
+                if person.infected:
+                    infected_status_inbound_workers[pid] = person.infected
+
+#            for pid, infec in infected_status_inbound_workers.items():
+#                print(rank, "sending to ", other_rank, "infec status ourside ", infec)
+            comm.send(infected_status_inbound_workers, dest=other_rank, tag=200)
+#            for pid, infec in infected_status_inbound_workers.items():
+#                print(rank, "sent to ", other_rank, "infec status ourside ", infec)
+
+        # now see if any of our workers outside have got infected.
+        for other_rank in self.outside_workers:
+            if other_rank == self.domain_id:
+                continue
+            infection_test_pm = comm.recv(source=other_rank, tag=200)
+
+            if infection_test_pm:
+                for pid, infec in infection_test_pm.items():
+                    print(rank, pid, "recv fromm ", other_rank, "infection status ", infec )
+                    print(rank, pid, "infect stat here ", self.outside_workers[other_rank][pid].infected)
+                    if infec != self.outside_workers[other_rank][pid].infected:
+                        other_rank_ifs_pm[other_rank][pid] = infec
+            print("other_rank_ifs_pm ", other_rank_ifs_pm)
+#                        print("pm rank, other_rank, pid, infec ", rank, other_rank, pid, infec)
+        coll_inf_send_pm[rank]  = other_rank_ifs_pm
+        YY = comm.allgather(coll_inf_send_pm[rank])
+        for d in range(size):
+            print("col pm ", d, YY[d])
+
+
+
     if direction == 'am':
         # send people away
         # we need only to pass infection status of infected people, so only some of these folk need writing out
@@ -266,17 +362,30 @@ def parallel_update(self, direction, timer):
                 continue
             outside_domain = self.outside_workers[other_rank]
             tell_them = {}
+            tmp = {}
             for pid, person in outside_domain.items():
                 if person.hospitalised:
                     not_working_today += 1
                 else:
                     person.active = False
                 if person.infected:
-                    # FIXME: we need to tell them if hospitalised here, coz they shouldn't be active there!
-                    # FIXME: which means Grenville, you need to pass a tuple rather than just the infection.
-                    tell_them[pid] = person.infection
+                    print("PERS ", rank, other_rank_ifs_am[rank], person.id)
+                    print("RANK ", rank, other_rank_ifs_am, person.id)
+# figure out what to send  - if the person sending to doesn't have an infection, we need to send it, else just send the suscptibility & trans prob
+                    if person.id in XX[other_rank][rank]:
+                        #send the infection class
+                        print("SENDING INFECTION CLASS for ", person.id, "from to ", rank, other_rank)
+                        tmp["infection"] = person.infection
+                    else:
+                        tmp["infection"] = None
+                        tmp["susceptibility"] = person.susceptibility
+                        tmp["transmission_probability"] = person.infection.transmission.probability
+                        tell_them[pid] = tmp
+                        for a, b in tell_them.items():
+                            print("sending ", a, b)
             # _put_updates(self, other_rank, tell_them, timestep)
             comm.send(tell_them, dest=other_rank, tag=100)
+
 
         # pay attention to people who are coming in
         more_active = 0
@@ -287,11 +396,28 @@ def parallel_update(self, direction, timer):
 
             # FIXME and we need to sort out their hospitalisation status
             # _get_updates(self, id, timestep)
-            incoming = comm.recv(source=other_rank, tag=100)
 
+
+            incoming = comm.recv(source=other_rank, tag=100)
             if incoming:
                 for pid, infec in incoming.items():
-                   outside_domain[pid].infection = infec
+                   if infec == None:
+                       continue
+
+                   if infec["infection"] == None:
+                       print(rank, "from ", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
+                                                                 outside_domain[pid].infection.transmission.probability)
+                       outside_domain[pid].susceptibility = infec["susceptibility"]
+                       outside_domain[pid].infection.transmission.probability = infec["transmission_probability"]
+                       print(rank, "updated from ", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
+                                                                 outside_domain[pid].infection.transmission.probability)
+                   else:
+                       print("*** passed infectiom class apparently")
+                       print(rank, "updating from nothing", other_rank, "pid ", pid )
+                       outside_domain[pid].infection = infec["infection"]
+                       print(rank, "updated from nothing", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
+                                                                 outside_domain[pid].infection.transmission.probability)
+
 
             for pid, person in outside_domain.items():
                 person.active = True
@@ -307,11 +433,23 @@ def parallel_update(self, direction, timer):
                 continue
             outside_domain = self.inbound_workers[other_rank]
             tell_them = {}
+            tmp = {}
             for pid, person in outside_domain.items():
                 person.active = False
                 if person.infected: # it happened at work!
-                    # tell_them.append(person)
-                    tell_them[pid] = person.infection
+                    print("PERSPM ", rank, other_rank_ifs_pm[rank], person.id)
+                    print("RANKPM ", rank, other_rank_ifs_pm, person.id)
+                    if person.id in YY[other_rank][rank]:
+                        #send the infection class
+                        print("SENDING INFECTION CLASS for ", person.id, "from to ", rank, other_rank)
+                        tmp["infection"] = person.infection
+                    else:
+                        tmp["infection"] = None
+                        tmp["susceptibility"] = person.susceptibility
+                        tmp["transmission_probability"] = person.infection.transmission.probability
+                        tell_them[pid] = tmp
+                        for a, b in tell_them.items():
+                            print("sending ", a, b)
             # _put_updates(self, other_rank, tell_them, timestep)
             comm.send(tell_them, dest=other_rank, tag=100)
 
@@ -319,10 +457,26 @@ def parallel_update(self, direction, timer):
         for other_rank in self.outside_workers:
             if other_rank == self.domain_id:
                 continue
-            incoming = comm.recv(source=other_rank, tag=100)
+            outside_domain = self.outside_workers[other_rank]
 
-            for pid, infec in incoming.items():
-                self.outside_workers[other_rank][pid].infection = infec
+            incoming = comm.recv(source=other_rank, tag=100)
+            if incoming:
+                for pid, infec in incoming.items():
+                   if infec == None:
+                       continue
+
+                   if infec["infection"] == None:
+                       print("$$$$ pid ", pid)
+                       print(rank, "from ", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
+                                                                 outside_domain[pid].infection.transmission.probability)
+                       outside_domain[pid].susceptibility = infec["susceptibility"]
+                       outside_domain[pid].infection.transmission.probability = infec["transmission_probability"]
+                       print(rank, "updated from ", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
+                                                                 outside_domain[pid].infection.transmission.probability)
+                   else:
+                       outside_domain[pid].infection = infec["infection"]
+                       print(rank, "updated from nothing", other_rank, "pid ", pid, outside_domain[pid].susceptibility,
+                                                                 outside_domain[pid].infection.transmission.probability)
 
             for pid, person in self.outside_workers[other_rank].items():
                 self.outside_workers[other_rank][pid].active=True
@@ -330,6 +484,7 @@ def parallel_update(self, direction, timer):
     logger.info(f"Direction {direction} in domain {self.domain_id}"
                 f" - active/infected people now "
                 f"{self.local_people.number_active(timer.state)}/{self.local_people.number_infected}")
+
 
 
 #def _put_updates(self, target_rank, tell_them, timestep):

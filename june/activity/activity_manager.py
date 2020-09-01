@@ -251,7 +251,6 @@ class ActivityManager:
         ----------
 
         """
-
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
