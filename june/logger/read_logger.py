@@ -578,7 +578,7 @@ class ReadLogger:
         ].apply(list)
         super_area_df = super_area_df.set_index(["super_area", super_area_df.index])
         super_area_df = super_area_df.merge(
-            location_by_area, left_index=True, right_index=True
+            location_by_area, left_index=True, right_index=True, how='left',
         )
         super_area_df.reset_index(inplace=True)
         return super_area_df.set_index("time_stamp")
