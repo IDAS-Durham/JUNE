@@ -31,9 +31,9 @@ class Isolation(MedicalCarePolicy):
 
     def _generate_time_of_testing(self, person: Person):
         try:
-            if person.health_information.time_of_symptoms_onset is not None:
+            if person.infection.time_of_symptoms_onset is not None:
                 return (
-                    person.health_information.time_of_symptoms_onset
+                    person.infection.time_of_symptoms_onset
                     + self._generate_time_from_symptoms_to_testing()
                 )
             else:
@@ -52,10 +52,10 @@ class Isolation(MedicalCarePolicy):
             if isinstance(medical_facility, IsolationUnits)
         ][0]
         if person.infected:
-            if person.health_information.time_of_testing is None:
+            if person.infection.time_of_testing is None:
                 if np.random.rand() > self.compliance:
                     isolation_units.refused_to_go_ids.add(person.id)
-                person.health_information.time_of_testing = self._generate_time_of_testing(
+                person.infection.time_of_testing = self._generate_time_of_testing(
                     person
                 )
         else:
@@ -63,9 +63,9 @@ class Isolation(MedicalCarePolicy):
         if not person.hospitalised and person.id not in isolation_units.refused_to_go_ids:
             if person.symptoms.tag.value >= SymptomTag.mild.value:  # mild or more
                 if (
-                    person.health_information.time_of_testing
+                    person.infection.time_of_testing
                     <= days_from_start
-                    <= person.health_information.time_of_testing
+                    <= person.infection.time_of_testing
                     + self.n_quarantine_days
                 ):
                         isolation_unit = isolation_units.get_closest()

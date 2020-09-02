@@ -35,7 +35,7 @@ class HospitalDistributor:
         patients_per_medic: int,
         healthcare_sector_label: Optional[str] = None,
     ):
-        '''
+        """
         
         Parameters
         ----------
@@ -47,7 +47,7 @@ class HospitalDistributor:
             ratio of patients per medic
         healthcare_sector_label:
             string that characterizes the helathcare workers
-        '''
+        """
         # check if this msoarea has hospitals
         self.hospitals = hospitals
         self.medic_min_age = medic_min_age
@@ -68,7 +68,7 @@ class HospitalDistributor:
         )
 
     def distribute_medics_from_world(self, people: List["Person"]):
-        '''
+        """
         Randomly distribute people from the world to work as medics for hospitals,
         useful if we don't have data on where do people work. It will still
         match the patients to medic ratio and the minimum age to be a medic.
@@ -77,10 +77,8 @@ class HospitalDistributor:
         ----------
         people:
             list of Persons in the world
-        '''
-        medics = [
-            person for person in people if person.age >= self.medic_min_age
-        ]
+        """
+        medics = [person for person in people if person.age >= self.medic_min_age]
         shuffle(medics)
         for hospital in self.hospitals:
             max_capacity = hospital.n_beds + hospital.n_icu_beds
@@ -90,10 +88,10 @@ class HospitalDistributor:
             for _ in range(n_medics):
                 medic = medics.pop()
                 hospital.add(medic, hospital.SubgroupType.workers)
-                medic.lockdown_status = 'key_worker'
+                medic.lockdown_status = "key_worker"
 
     def distribute_medics_to_super_areas(self, super_areas: SuperAreas):
-        '''
+        """
         Distribute medics to super areas, flow data is necessary to find medics in the 
         super area according to their sector.
 
@@ -101,11 +99,11 @@ class HospitalDistributor:
         ----------
         super_areas:
             object containing all the super areas to distribute medics
-        '''
+        """
         for super_area in super_areas:
             self.distribute_medics_to_hospitals(super_area)
 
-    def get_hospitals_in_super_area(self, super_area: SuperArea)->List["Hospital"]:
+    def get_hospitals_in_super_area(self, super_area: SuperArea) -> List["Hospital"]:
         """
         From all hospitals, filter the ones placed in a given super_area
         
@@ -117,7 +115,7 @@ class HospitalDistributor:
         hospitals_in_super_area = [
             hospital
             for hospital in self.hospitals.members
-            if hospital.super_area == super_area.name
+            if hospital.super_area.name == super_area.name
         ]
         return hospitals_in_super_area
 
@@ -150,8 +148,11 @@ class HospitalDistributor:
                 max_capacity = hospital.n_beds + hospital.n_icu_beds
                 if max_capacity == 0:
                     continue
-                n_medics = max(int(np.floor(max_capacity / self.patients_per_medic)), 1)
+                n_medics = min(
+                    max(int(np.floor(max_capacity / self.patients_per_medic)), 1),
+                    len(medics),
+                )
                 for _ in range(n_medics):
                     medic = medics.pop()
                     hospital.add(medic, hospital.SubgroupType.workers)
-                    medic.lockdown_status = 'key_worker'
+                    medic.lockdown_status = "key_worker"

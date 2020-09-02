@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
-from collections import defaultdict
 
 from june.demography import Person
 from june.exc import SimulatorError
@@ -225,7 +224,9 @@ class ActivityManager:
                     date=self.timer.date, leisure=self.leisure,
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
-                self.timer.duration, self.timer.is_weekend,
+                delta_time=self.timer.duration,
+                is_weekend=self.timer.is_weekend,
+                working_hours= "primary_activity" in activities
             )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,

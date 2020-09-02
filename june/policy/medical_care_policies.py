@@ -1,6 +1,5 @@
 import datetime
-from typing import Union, Optional, List, Dict
-
+from typing import List
 from .policy import Policy, Policies, PolicyCollection
 from june.groups import Hospitals, Hospital, MedicalFacilities, MedicalFacility
 from june.demography import Person
@@ -42,45 +41,30 @@ class Hospitalisation(MedicalCarePolicy):
     enough. When the person recovers, releases the person from the hospital.
     """
 
-    def apply(
-        self,
-        person: Person,
-        medical_facilities: List[MedicalFacilities],
-        days_from_start: float,
-    ):
+    def apply(self, person: Person, medical_facilities: List[MedicalFacilities], days_from_start):
         hospitals = [
             medical_facility
             for medical_facility in medical_facilities
             if isinstance(medical_facility, Hospitals)
         ][0]
-        if person.health_information.recovered:
-            if person.medical_facility is not None and isinstance(
-                person.medical_facility.group, Hospital
-            ):
+
+        if person.recovered:
+            if person.medical_facility is not None:
                 person.medical_facility.group.release_as_patient(person)
             return
-        symptoms_tag = person.health_information.tag
-        if symptoms_tag in hospitalised_tags :
+        symptoms_tag = person.infection.tag
+        if symptoms_tag in hospitalised_tags:
             if person.medical_facility is None:
                 hospitals.allocate_patient(person)
-            elif not isinstance(person.medical_facility.group, Hospital):
-                try:
-                    person.medical_facility.remove(person)
-                except:
-                    pass
-                hospitals.allocate_patient(person)
+            elif symptoms_tag == SymptomTag.hospitalised:
+                person.subgroups.medical_facility = person.medical_facility.group[
+                    person.medical_facility.group.SubgroupType.patients
+                ]
+            elif symptoms_tag == SymptomTag.intensive_care:
+                person.subgroups.medical_facility = person.medical_facility.group[
+                    person.medical_facility.group.SubgroupType.icu_patients
+                ]
             else:
-                if person.health_information.tag == SymptomTag.hospitalised:
-                    person.subgroups.medical_facility = person.medical_facility.group[
-                        person.medical_facility.group.SubgroupType.patients
-                    ]
-                elif person.health_information.tag == SymptomTag.intensive_care:
-                    person.subgroups.medical_facility = person.medical_facility.group[
-                        person.medical_facility.group.SubgroupType.icu_patients
-                    ]
-                else:
-                    raise ValueError(
-                        f"Person with health information {person.health_information.tag} cannot go to hospital."
-                    )
-            return True
-        return False
+                raise ValueError(
+                    f"Person with symptoms tag {person.infection.tag} cannot go to hospital."
+                )

@@ -54,10 +54,7 @@ class TestTravel:
 
     @pytest.fixture(name="commutecities_nc")
     def create_commute_setup(self, world_nc):
-        commutecities = CommuteCities()
-        commutecities.from_file()
-        commutecities.init_non_london()
-        commutecities.init_london()
+        commutecities = CommuteCities.for_super_areas(world_nc.super_areas)
         assert len(commutecities.members) == 11
 
         return commutecities
