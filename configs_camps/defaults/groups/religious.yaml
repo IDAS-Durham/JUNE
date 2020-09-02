@@ -1,4 +1,8 @@
 male_age_probabilities:
-  11-100: 0.624
+  11-100: 0.348
 female_age_probabilities:
   0-100: 0.0
+neighbours_to_consider: 5
+maximum_distance: 1000
+weekend_boost: 0.0
+drags_household_probability: 0.0
