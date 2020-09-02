@@ -172,29 +172,30 @@ def make_dummy_world():
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area.name,
+        super_area=super_area,
         coordinates=super_area.coordinates,
     )
     super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)
-    worker.area = area
+    worker.area = super_area.areas[0]
     household.add(worker, subgroup_type=household.SubgroupType.adults)
     worker.sector = "Q"
     company.add(worker)
 
     pupil = Person.from_attributes(age=6)
-    pupil.area = area
+    pupil.area = super_area.areas[0] 
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = area
+    household.area = super_area.areas[0] 
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
-    student.area = area
+    student.area = super_area.areas[0] 
     household.add(student, subgroup_type=household.SubgroupType.adults)
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
 
     commuter = Person.from_attributes(sex="m", age=30)
+    commuter.area = super_area.areas[0]
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
     commuter.mode_of_transport = "public"
     commuter.area = area
