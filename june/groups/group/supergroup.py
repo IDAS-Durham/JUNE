@@ -1,4 +1,5 @@
-from typing import List
+import re
+
 from june.exc import GroupException
 
 
@@ -15,6 +16,7 @@ class Supergroup:
     def __init__(self):
         self.members = []
         self.group_type = self.__class__.__name__
+        self.spec = self.get_spec()
 
     def __iter__(self):
         return iter(self.members)
@@ -24,6 +26,12 @@ class Supergroup:
 
     def __getitem__(self, item):
         return self.members[item]
+
+    def get_spec(self) -> str:
+        """
+        Returns the speciailization of the group.
+        """
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
 
     @classmethod
     def for_geography(cls):

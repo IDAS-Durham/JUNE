@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.distributors.university_distributor &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.distributors.worker_distributor" href="june.distributors.worker_distributor.html" />
+    <link rel="prev" title="june.distributors.school_distributor" href="june.distributors.school_distributor.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.distributors.university_distributor</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.distributors.school_distributor.html">june.distributors.school_distributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.worker_distributor.html">june.distributors.worker_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.distributors.university_distributor">
+<span id="june-distributors-university-distributor"></span><h1>june.distributors.university_distributor<a class="headerlink" href="#module-june.distributors.university_distributor" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.distributors.university_distributor.UniversityDistributor">
+<em class="property">class </em><code class="sig-prename descclassname">june.distributors.university_distributor.</code><code class="sig-name descname">UniversityDistributor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">universities</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.groups.university.html#june.groups.university.University" title="june.groups.university.University">june.groups.university.University</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">max_number_of_super_areas</span><span class="o">=</span><span class="default_value">20</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.university_distributor.UniversityDistributor" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each university it searches in the nearby super areas for students living
+in student households. Once it has enough to fill the university, it stops
+searching and fills the university.</p>
+<dl class="simple">
+<dt>universities</dt><dd><p>a list of universities to fill</p>
+</dd>
+<dt>max_number_of_super_areas</dt><dd><p>maximum number of neighbour super areas to look for students</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.distributors.university_distributor.UniversityDistributor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">universities</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.groups.university.html#june.groups.university.University" title="june.groups.university.University">june.groups.university.University</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">max_number_of_super_areas</span><span class="o">=</span><span class="default_value">20</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.university_distributor.UniversityDistributor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each university it searches in the nearby super areas for students living
+in student households. Once it has enough to fill the university, it stops
+searching and fills the university.</p>
+<dl class="simple">
+<dt>universities</dt><dd><p>a list of universities to fill</p>
+</dd>
+<dt>max_number_of_super_areas</dt><dd><p>maximum number of neighbour super areas to look for students</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.university_distributor.UniversityDistributor.distribute_students_to_universities">
+<code class="sig-name descname">distribute_students_to_universities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.university_distributor.UniversityDistributor.distribute_students_to_universities" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each university, search for students in nearby areas and allocate them to
+the university.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.university_distributor.UniversityDistributor.find_students_in_super_areas">
+<code class="sig-name descname">find_students_in_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em>, <em class="sig-param"><span class="n">n_students</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.university_distributor.UniversityDistributor.find_students_in_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.distributors.school_distributor.html">june.distributors.school_distributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.worker_distributor.html">june.distributors.worker_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

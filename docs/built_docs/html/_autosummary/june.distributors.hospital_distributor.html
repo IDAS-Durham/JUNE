@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.distributors.hospital_distributor &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.distributors.household_distributor" href="june.distributors.household_distributor.html" />
+    <link rel="prev" title="june.distributors.company_distributor" href="june.distributors.company_distributor.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.distributors.hospital_distributor</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.distributors.company_distributor.html">june.distributors.company_distributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.household_distributor.html">june.distributors.household_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.distributors.hospital_distributor">
+<span id="june-distributors-hospital-distributor"></span><h1>june.distributors.hospital_distributor<a class="headerlink" href="#module-june.distributors.hospital_distributor" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor">
+<em class="property">class </em><code class="sig-prename descclassname">june.distributors.hospital_distributor.</code><code class="sig-name descname">HospitalDistributor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals">june.groups.hospital.Hospitals</a></span></em>, <em class="sig-param"><span class="n">medic_min_age</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">patients_per_medic</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">healthcare_sector_label</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distributes people to work as health care workers in hospitals</p>
+<blockquote>
+<div><p>#TODO: sub sectors of doctors and nurses should be found
+Healthcares sector
+2211: Medical practitioners
+2217: Medical radiographers
+2231: Nurses
+2232: Midwives</p>
+</div></blockquote>
+<dl class="simple">
+<dt>hospitals:</dt><dd><p>hospitals to populate with workers</p>
+</dd>
+<dt>medic_min_age:</dt><dd><p>minimum age to qualify as a worker</p>
+</dd>
+<dt>patients_per_medic:</dt><dd><p>ratio of patients per medic</p>
+</dd>
+<dt>healthcare_sector_label:</dt><dd><p>string that characterizes the helathcare workers</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals">june.groups.hospital.Hospitals</a></span></em>, <em class="sig-param"><span class="n">medic_min_age</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">patients_per_medic</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">healthcare_sector_label</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>hospitals:</dt><dd><p>hospitals to populate with workers</p>
+</dd>
+<dt>medic_min_age:</dt><dd><p>minimum age to qualify as a worker</p>
+</dd>
+<dt>patients_per_medic:</dt><dd><p>ratio of patients per medic</p>
+</dd>
+<dt>healthcare_sector_label:</dt><dd><p>string that characterizes the helathcare workers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor.distribute_medics_from_world">
+<code class="sig-name descname">distribute_medics_from_world</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">people</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Person<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor.distribute_medics_from_world" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly distribute people from the world to work as medics for hospitals,
+useful if we don’t have data on where do people work. It will still
+match the patients to medic ratio and the minimum age to be a medic.</p>
+<dl class="simple">
+<dt>people:</dt><dd><p>list of Persons in the world</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor.distribute_medics_to_hospitals">
+<code class="sig-name descname">distribute_medics_to_hospitals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor.distribute_medics_to_hospitals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distribute medics to hospitals within a super area
+Parameters
+———-
+super_area:</p>
+<blockquote>
+<div><p>super area to distribute medics</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor.distribute_medics_to_super_areas">
+<code class="sig-name descname">distribute_medics_to_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor.distribute_medics_to_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distribute medics to super areas, flow data is necessary to find medics in the 
+super area according to their sector.</p>
+<dl class="simple">
+<dt>super_areas:</dt><dd><p>object containing all the super areas to distribute medics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor.from_file">
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span></em>, <em class="sig-param"><span class="n">config_filename</span><span class="o">=</span><span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/hospital_distributor.yaml')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.distributors.hospital_distributor.HospitalDistributor.get_hospitals_in_super_area">
+<code class="sig-name descname">get_hospitals_in_super_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>Hospital<span class="p">]</span><a class="headerlink" href="#june.distributors.hospital_distributor.HospitalDistributor.get_hospitals_in_super_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>From all hospitals, filter the ones placed in a given super_area</p>
+<dl class="simple">
+<dt>super_area:</dt><dd><p>super area</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.distributors.company_distributor.html">june.distributors.company_distributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.distributors.household_distributor.html">june.distributors.household_distributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

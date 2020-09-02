@@ -34,7 +34,6 @@ class SimulatorBox(Simulator):
             infection_seed: Optional["InfectionSeed"] = None,
             checkpoint_dates: List[datetime.date] = None,
             save_path: str = "results",
-            light_logger: bool = False,
     ):
         """
         Class to run an epidemic spread simulation on a box. It is 
@@ -58,8 +57,6 @@ class SimulatorBox(Simulator):
             minimum age of a child to be left alone at home when ill
         policies:
             policies to be implemented at different time steps
-        save_path:
-            path to save logger results
         """
         self.beta_copy = interaction.beta
 
@@ -71,7 +68,6 @@ class SimulatorBox(Simulator):
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
-            light_logger=light_logger,
             checkpoint_dates=checkpoint_dates,
         )
 
@@ -138,9 +134,9 @@ class SimulatorBox(Simulator):
                         for infector_id in chain.from_iterable(
                                 int_group.infector_ids):
                             infector = self.world.people[infector_id]
-                            infector.health_information.number_of_infected += (
+                            infector.infection.number_of_infected += (
                                 n_infected
-                                * infector.health_information.infection.transmission.probability
+                                * infector.infection.transmission.probability
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
@@ -181,19 +177,18 @@ class SimulatorBox(Simulator):
                 policies=self.activity_manager.policies, date=self.timer.date
             )
         for person in self.world.people.infected:
-            health_information = person.health_information
-            previous_tag = health_information.tag
-            health_information.update_health_status(time, duration)
+            previous_tag = person.infection.tag
+            new_status = person.infection.update_health_status(time, duration)
             ids.append(person.id)
-            symptoms.append(person.health_information.tag.value)
-            n_secondary_infections.append(person.health_information.number_of_infected)
+            symptoms.append(person.infection.tag.value)
+            n_secondary_infections.append(person.infection.number_of_infected)
             # Take actions on new symptoms
             if self.activity_manager.policies is not None:
                 medical_care_policies.apply(person=person)
-            if health_information.recovered:
-                self.recover(person, time)
-            elif health_information.is_dead:
-                self.bury_the_dead(person, time)
+            if new_status == "recovered":
+                self.recover(person)
+            elif new_status == "dead":
+                self.bury_the_dead(person)
         if self.logger:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections

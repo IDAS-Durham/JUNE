@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.infection.transmission_xnexp.TransmissionXNExp &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.interaction.contact_sampling.ContactSampling" href="june.interaction.contact_sampling.ContactSampling.html" />
+    <link rel="prev" title="june.infection.transmission.TransmissionGamma" href="june.infection.transmission.TransmissionGamma.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.infection.transmission_xnexp.TransmissionXNExp</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.transmission.TransmissionGamma.html">june.infection.transmission.TransmissionGamma</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.interaction.contact_sampling.ContactSampling.html">june.interaction.contact_sampling.ContactSampling</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-infection-transmission-xnexp-transmissionxnexp">
+<h1>june.infection.transmission_xnexp.TransmissionXNExp<a class="headerlink" href="#june-infection-transmission-xnexp-transmissionxnexp" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection.transmission_xnexp.</code><code class="sig-name descname">TransmissionXNExp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_probability</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">time_first_infectious</span><span class="o">=</span><span class="default_value">2.6</span></em>, <em class="sig-param"><span class="n">norm_time</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Class that defines the time profile of the infectiousness to be of the form x^n exp(-x/alpha)</p>
+<dl class="simple">
+<dt>max_probability:</dt><dd><p>value of the infectiousness at its peak. Used to control the number of super spreaders</p>
+</dd>
+<dt>time_first_infectious:</dt><dd><p>time at which the person becomes infectious</p>
+</dd>
+<dt>norm_time:</dt><dd><p>controls the definition of x, x = (time_from_infection - time-first_infectious)/norm_time</p>
+</dd>
+<dt>n:</dt><dd><p>exponent of x in the x^n exp(-x/alpha) function</p>
+</dd>
+<dt>alpha:</dt><dd><p>denominator in exponential</p>
+</dd>
+<dt>max_symptoms:</dt><dd><p>maximum symptoms that the person will ever have, used to lower the infectiousness of
+asymptomatic and mild cases</p>
+</dd>
+<dt>asymptomatic_infectious_factor:</dt><dd><p>multiplier that lowers the infectiousness of asymptomatic cases</p>
+</dd>
+<dt>mild_infectious_factor:</dt><dd><p>multiplier that lowers the infectiousness of mild cases</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_probability</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">time_first_infectious</span><span class="o">=</span><span class="default_value">2.6</span></em>, <em class="sig-param"><span class="n">norm_time</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Class that defines the time profile of the infectiousness to be of the form x^n exp(-x/alpha)</p>
+<dl class="simple">
+<dt>max_probability:</dt><dd><p>value of the infectiousness at its peak. Used to control the number of super spreaders</p>
+</dd>
+<dt>time_first_infectious:</dt><dd><p>time at which the person becomes infectious</p>
+</dd>
+<dt>norm_time:</dt><dd><p>controls the definition of x, x = (time_from_infection - time-first_infectious)/norm_time</p>
+</dd>
+<dt>n:</dt><dd><p>exponent of x in the x^n exp(-x/alpha) function</p>
+</dd>
+<dt>alpha:</dt><dd><p>denominator in exponential</p>
+</dd>
+<dt>max_symptoms:</dt><dd><p>maximum symptoms that the person will ever have, used to lower the infectiousness of
+asymptomatic and mild cases</p>
+</dd>
+<dt>asymptomatic_infectious_factor:</dt><dd><p>multiplier that lowers the infectiousness of asymptomatic cases</p>
+</dd>
+<dt>mild_infectious_factor:</dt><dd><p>multiplier that lowers the infectiousness of mild cases</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_first_infectious</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">n</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/transmission/XNExp.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.transmission_xnexp.html#june.infection.transmission_xnexp.TransmissionXNExp" title="june.infection.transmission_xnexp.TransmissionXNExp">june.infection.transmission_xnexp.TransmissionXNExp</a></dt>
+<dd><p>Generates transmission class from config file</p>
+<dl class="simple">
+<dt>time_first_infectious:</dt><dd><p>time at which the person becomes infectious</p>
+</dd>
+<dt>n:</dt><dd><p>exponent of x in the x^n exp(-x/alpha) function</p>
+</dd>
+<dt>alpha:</dt><dd><p>denominator in exponential</p>
+</dd>
+<dt>max_symptoms:</dt><dd><p>maximum symptoms that the person will ever have, used to lower the infectiousness of
+asymptomatic and mild cases</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>class instance</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file_linked_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_to_symptoms_onset</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/transmission/XNExp.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.transmission_xnexp.html#june.infection.transmission_xnexp.TransmissionXNExp" title="june.infection.transmission_xnexp.TransmissionXNExp">june.infection.transmission_xnexp.TransmissionXNExp</a></dt>
+<dd><p>Generates transmission class from config file</p>
+<dl class="simple">
+<dt>time_first_infectious:</dt><dd><p>time at which the person becomes infectious</p>
+</dd>
+<dt>n:</dt><dd><p>exponent of x in the x^n exp(-x/alpha) function</p>
+</dd>
+<dt>alpha:</dt><dd><p>denominator in exponential</p>
+</dd>
+<dt>max_symptoms:</dt><dd><p>maximum symptoms that the person will ever have, used to lower the infectiousness of
+asymptomatic and mild cases</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>class instance</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">modify_infectiousness_for_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Lowers the infectiousness of asymptomatic and mild cases, by modifying
+self.norm</p>
+<dl class="simple">
+<dt>max_symptoms:</dt><dd><p>maximum symptom severity the person will ever have</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">object_from_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Loads the default Transmission class from the general.ini config file and 
+returns the class as object (not as an instance). This is used to set up the 
+epidemiology model in world.py via configs if an input is not provided.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">update_probability_from_delta_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Performs a probability update given time from infection</p>
+<dl class="simple">
+<dt>time_from_infection:</dt><dd><p>time elapsed since person became infected</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.transmission.TransmissionGamma.html">june.infection.transmission.TransmissionGamma</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.interaction.contact_sampling.ContactSampling.html">june.interaction.contact_sampling.ContactSampling</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>
