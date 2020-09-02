@@ -1,0 +1,29 @@
+# needs more thinking
+social_distancing:
+        start_time: 2021-03-16
+        end_time: 2021-07-04 
+        beta_factors:
+          communal: 0.5
+          female_communal: 0.5
+          religious: 0.5
+          distribution_center: 0.5
+          pump_latrine: 0.5
+          hospital: 0.5
+          household: 0.5
+          shelter: 0.5
+
+hospitalisation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+severe_symptoms_stay_home:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+quarantine:
+  n_days: 7 # for the symptomatic person
+  n_days_household: 7 # for the housemates
+  compliance: 0.3
+  household_compliance: 0.2
+  start_time: 1000-03-16 
+  end_time: 9999-03-23

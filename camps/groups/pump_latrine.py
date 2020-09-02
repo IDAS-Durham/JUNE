@@ -37,6 +37,8 @@ class PumpLatrineDistributor(SocialVenueDistributor):
             pump_latrines: PumpLatrines,
             male_age_probabilities: dict = None,
             female_age_probabilities: dict = None,
+            neighbours_to_consider=5,
+            maximum_distance=5,
             weekend_boost: float = 1.0,
             drags_household_probability = 0.
     ):
@@ -44,6 +46,8 @@ class PumpLatrineDistributor(SocialVenueDistributor):
             social_venues=pump_latrines,
             male_age_probabilities=male_age_probabilities,
             female_age_probabilities=female_age_probabilities,
+            neighbours_to_consider=neighbours_to_consider,
+            maximum_distance=maximum_distance,
             weekend_boost=weekend_boost,
             drags_household_probability=drags_household_probability
         )
