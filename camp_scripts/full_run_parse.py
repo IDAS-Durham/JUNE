@@ -150,7 +150,6 @@ if args.learning_centers:
     CONFIG_PATH = camp_configs_path / "learning_center_config.yaml"
 
 
-
 world.pump_latrines = PumpLatrines.for_areas(world.areas)
 world.play_groups = PlayGroups.for_areas(world.areas)
 world.distribution_centers = DistributionCenters.for_areas(world.areas)
@@ -236,6 +235,12 @@ interaction = Interaction.from_file(
     config_filename=camp_configs_path
     / "defaults/interaction/" / args.parameters,
 )
+
+if args.learning_centers and args.learning_center_beta_ratio:
+    interaction.beta['learning_center'] = interaction.beta['household']*args.learning_center_beta_ratio
+
+if args.play_group_beta_ratio:
+    interaction.beta['play_group'] = interaction.beta['household']*args.play_group_beta_ratio
 
 
 cases_detected = {
