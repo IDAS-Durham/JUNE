@@ -21,18 +21,21 @@ class Logger:
             path to save file
         file_name:
             name of output hdf5 file
+        rank:
+            id of rank that will save population (for parallel mpi code)
         """
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / file_name
         self.infection_location, self.super_areas_infection = [], []
+        self.rank = rank
         try:
             os.remove(self.file_path)
         except OSError:
             pass
 
     def log_population(
-        self, population: Population, rank: int = 0, chunk_size: int = 100000,
+        self, population: Population, chunk_size: int = 100000,
     ):
         """
         Saves the Population object to hdf5 format file ``self.save_path``. Currently for each person,
@@ -43,13 +46,11 @@ class Logger:
         ----------
         population:
             population object
-        rank:
-            id of rank that will save population (for parallel code)
         chunk_size:
             number of people to save at a time. Note that they have to be copied to be saved,
             so keep the number below 1e6.
         """
-        if rank == 0:
+        if self.rank == 0:
             n_people = len(population.people)
             dt = h5py.vlen_dtype(np.dtype("int32"))
             # dt = tuple
@@ -73,12 +74,12 @@ class Logger:
                         ethnicities.append(person.ethnicity.encode("ascii", "ignore"))
                         socioeconomic_indcs.append(person.socioecon_index)
                         sexes.append(person.sex.encode("ascii", "ignore"))
-                        super_areas.append(person.area.super_area.name)
+                        #super_areas.append(person.area.super_area.name)
 
                     ids = np.array(ids, dtype=np.int)
                     ages = np.array(ages, dtype=np.int16)
                     sexes = np.array(sexes, dtype="S10")
-                    super_areas = np.array(super_areas, dtype="S10")
+                    #super_areas = np.array(super_areas, dtype="S10")
                     ethnicities = np.array(ethnicities, dtype="S10")
                     socioeconomic_indcs = np.array(socioeconomic_indcs, dtype=np.int8)
 
@@ -104,12 +105,14 @@ class Logger:
                             maxshape=(None,),
                             compression="gzip",
                         )
+                        '''
                         people_dset.create_dataset(
                             "super_area",
                             data=super_areas,
                             maxshape=(None,),
                             compression="gzip",
                         )
+                        '''
                     else:
                         newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                         people_dset["id"].resize(newshape)
@@ -118,8 +121,8 @@ class Logger:
                         people_dset["age"][idx1:idx2] = ages
                         people_dset["sex"].resize(newshape)
                         people_dset["sex"][idx1:idx2] = sexes
-                        people_dset["super_area"].resize(newshape)
-                        people_dset["super_area"][idx1:idx2] = super_areas
+                        #people_dset["super_area"].resize(newshape)
+                        #people_dset["super_area"][idx1:idx2] = super_areas
                         people_dset["ethnicity"].resize(newshape)
                         people_dset["ethnicity"][idx1:idx2] = ethnicities
                         people_dset["socioeconomic_index"].resize(newshape)
@@ -258,8 +261,8 @@ class Logger:
         super_area_infection:
             super area in which the person that was infected lives
         """
-        self.infection_location += [location] * len(super_areas_infection)
-        self.super_areas_infection += super_areas_infection
+        self.infection_location.append(location)
+        self.super_areas_infection.append(super_areas_infection)
 
     def log_infection_location(self, time):
         """
@@ -321,9 +324,8 @@ class Logger:
         infection_seed: "InfectionSeed" = None,
         infection_selector: "InfectionSelector" = None,
         activity_manager: "ActivityManager" = None,
-        rank: int = 0,
     ):
-        if rank == 0:
+        if self.rank == 0:
             with h5py.File(self.file_path, "a", libver="latest") as f:
                 params = f.require_group("parameters")
 

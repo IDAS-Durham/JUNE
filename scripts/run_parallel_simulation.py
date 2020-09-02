@@ -5,7 +5,7 @@ import random
 from mpi4py import MPI
 import h5py
 
-from june.hdf5_savers import generate_world_from_hdf5
+from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.demography.geography import Geography
 from june.interaction import Interaction
 from june.infection import Infection, InfectionSelector, HealthIndexGenerator
@@ -16,6 +16,7 @@ from june.infection_seed import InfectionSeed
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
+from june.logger import Logger
 from june.domain import Domain, generate_super_areas_to_domain_dict
 
 
@@ -48,6 +49,10 @@ size = comm.Get_size()
 with h5py.File(world_file, "r") as f:
     n_super_areas = f["geography"].attrs["n_super_areas"]
 
+# log_population
+logger = Logger(file_name=f'logger_{rank}.hdf5') 
+population = load_population_from_hdf5(world_file)
+logger.log_population(population)
 
 super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
     n_super_areas, size
