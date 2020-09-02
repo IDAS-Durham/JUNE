@@ -7,3 +7,5 @@ from .shelter import Shelter, Shelters, ShelterDistributor
 from .isolation_unit import IsolationUnit, IsolationUnits
 from .learning_center import LearningCenter, LearningCenters
 from .play_group import PlayGroup, PlayGroups, PlayGroupDistributor
+from .e_voucher import EVoucher, EVouchers, EVoucherDistributor
+from .non_food_distribution_center import NFDistributionCenter, NFDistributionCenters, NFDistributionCenterDistributor
