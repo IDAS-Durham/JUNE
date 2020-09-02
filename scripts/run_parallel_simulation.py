@@ -88,7 +88,7 @@ simulator = Simulator.from_file(
     leisure=leisure,
     infection_selector=infection_selector,
     config_filename=config_path,
-    save_path=f"results_{rank}",
+    logger=logger,
 )
 print("simulator ready to go")
 
