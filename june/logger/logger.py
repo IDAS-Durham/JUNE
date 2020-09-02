@@ -22,7 +22,7 @@ class Logger:
         """
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.save_path / "logger.hdf5"
+        self.file_path = self.save_path / f"logger.hdf5"
         self.infection_location = []
         self.new_infected_ids = []
         # Remove if exists
