@@ -29,3 +29,5 @@ class CampWorld(World):
         self.female_communals = None
         self.religiouss = None
         self.shelters = None
+        self.e_vouchers = None
+        self.n_f_distribution_centers = None

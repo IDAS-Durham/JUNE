@@ -1,12 +1,12 @@
 male_age_probabilities:
-  0-18: 0.0469
-  19-100: 0.406
+  0-18: 0.025
+  19-100: 0.228
 female_age_probabilities:
-  7-18: 0.00784
-  19-100: 0.133
+  7-18: 0.004
+  19-100: 0.073
 neighbours_to_consider: 5
 maximum_distance: 1000
 weekend_boost: 1.5
 drags_household_probability: 0.0
 
-# this includes distirbution centres of all types and therefore we set the max distance to be arbitrarily large
+# this includes distirbution centres of all types as well as LPG centers

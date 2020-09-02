@@ -50,6 +50,8 @@ from camps.groups import IsolationUnit, IsolationUnits
 from camps.groups import LearningCenters 
 from camps.distributors import LearningCenterDistributor
 from camps.groups import PlayGroups, PlayGroupDistributor 
+from camps.groups import EVouchers, EVoucherDistributor
+from camps.groups import NFDistributionCenters, NFDistributionCenterDistributor
 
 from june.groups.leisure import HouseholdVisitsDistributor
 
@@ -153,6 +155,8 @@ world.distribution_centers = DistributionCenters.for_areas(world.areas)
 world.communals = Communals.for_areas(world.areas)
 world.female_communals = FemaleCommunals.for_areas(world.areas)
 world.religiouss = Religiouss.for_areas(world.areas)
+world.e_vouchers = EVouchers.for_areas(world.areas)
+world.n_f_distribution_centers = NFDistributionCenters.for_areas(world.areas)
 
 print("Total people = ", len(world.people))
 print("Mean age = ", np.mean([person.age for person in world.people]))
@@ -195,7 +199,7 @@ else:
 
 if args.isolation_units:
     policies = Policies.from_file(
-        camp_configs_path / "defaults/policy/policy.yaml",
+        camp_configs_path / "defaults/policy/isolation.yaml",
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
@@ -273,12 +277,27 @@ leisure_instance.leisure_distributors[
 ] = DistributionCenterDistributor.from_config(
     distribution_centers=world.distribution_centers
 )
-leisure_instance.leisure_distributors["communals"] = CommunalDistributor.from_config(
+leisure_instance.leisure_distributors[
+    "communals"
+] = CommunalDistributor.from_config(
     communals=world.communals
 )
 leisure_instance.leisure_distributors[
     "female_communals"
-] = FemaleCommunalDistributor.from_config(female_communals=world.female_communals)
+] = FemaleCommunalDistributor.from_config(
+    female_communals=world.female_communals
+)
+leisure_instance.leisure_distributors[
+    'religiouss'
+] = ReligiousDistributor.from_config(religiouss=world.religiouss)
+leisure_instance.leisure_distributors[
+    'e_vouchers'
+] = EVoucherDistributor.from_config(evouchers=world.e_vouchers)
+leisure_instance.leisure_distributors[
+    'n_f_distribution_centers'
+] = NFDistributionCenterDistributor.from_config(
+    nfdistributioncenters=world.n_f_distribution_centers
+)
 
 # associate social activities to shelters
 leisure_instance.distribute_social_venues_to_households(world.shelters, world.super_areas)

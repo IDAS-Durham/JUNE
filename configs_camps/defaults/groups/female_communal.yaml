@@ -1,5 +1,5 @@
 female_age_probabilities:
-  0-100: 0.297
+  0-100: 0.222
 male_age_probabilities:
   0-100: 0.
 neighbours_to_consider: 5
