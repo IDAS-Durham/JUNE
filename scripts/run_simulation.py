@@ -3,7 +3,7 @@ import numpy as np
 import numba as nb
 import random
 
-from june.hdf5_savers import generate_world_from_hdf5
+from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.demography.geography import Geography
 from june.interaction import Interaction
 from june.infection import Infection, InfectionSelector, HealthIndexGenerator
@@ -12,6 +12,7 @@ from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_c
 from june.simulator import Simulator
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
+from june.logger import Logger
 from june import paths
 from june.groups.commute import *
 
@@ -38,6 +39,11 @@ config_path = "./config_nocommute.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
+
+logger = Logger(save_path='results_nompi', file_name=f'logger_0.hdf5') 
+population = load_population_from_hdf5(world_file)
+logger.log_population(population)
+
 
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
@@ -68,7 +74,7 @@ simulator = Simulator.from_file(
    leisure=leisure,
    infection_selector=infection_selector,
    config_filename=config_path,
-   save_path="results_nompi",
+   logger=logger,
 )
 print("simulator ready to go")
 

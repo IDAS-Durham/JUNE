@@ -16,7 +16,6 @@ from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
 from june.interaction import Interaction, InteractiveGroup
-from june.logger import Logger
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
@@ -24,7 +23,7 @@ from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
-logger = logging.getLogger(__name__)
+output_logger = logging.getLogger(__name__)
 
 
 
@@ -39,7 +38,7 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        save_path: str = "results",
+        logger: "Logger" = None,
         checkpoint_dates: List[datetime.date] = None,
     ):
         """
@@ -49,8 +48,6 @@ class Simulator:
         ----------
         world: 
             instance of World class
-        save_path:
-            path to save logger results
         """
         self.activity_manager = activity_manager
         self.world = world
@@ -62,13 +59,7 @@ class Simulator:
             self.checkpoint_dates = ()
         else:
             self.checkpoint_dates = checkpoint_dates
-        if save_path is not None:
-            self.save_path = Path(save_path)
-            self.save_path.mkdir(exist_ok=True, parents=True)
-        if not self.world.box_mode and save_path is not None:
-            self.logger = Logger(save_path=self.save_path)
-        else:
-            self.logger = None
+        self.logger = logger
 
     @classmethod
     def from_file(
@@ -80,7 +71,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        save_path: str = "results",
+        logger: "Logger" = None
     ) -> "Simulator":
 
         """
@@ -88,7 +79,6 @@ class Simulator:
 
         Parameters
         ----------
-        save_path
         leisure
         infection_seed
         policies
@@ -109,7 +99,7 @@ class Simulator:
             try:
                 activity_to_super_groups = config["activity_to_super_groups"]
             except:
-                logger.warning(
+                output_logger.warning(
                     "Activity to groups in config is deprecated, please change it to activity_to_super_groups"
                 )
                 activity_to_super_groups = config["activity_to_groups"]
@@ -160,7 +150,7 @@ class Simulator:
             timer=timer,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            save_path=save_path,
+            logger=logger,
             interaction=interaction,
             checkpoint_dates=checkpoint_dates,
         )
@@ -176,7 +166,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        save_path: str = "results",
+        logger: "Logger" = None,
     ):
         """
         Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
@@ -192,7 +182,7 @@ class Simulator:
             infection_seed=infection_seed,
             leisure=leisure,
             config_filename=config_filename,
-            save_path=save_path,
+            logger=logger,
         )
         with open(checkpoint_path, "rb") as f:
             checkpoint_data = pickle.load(f)
@@ -422,7 +412,7 @@ class Simulator:
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
-            logger.info("==== do_timestep(): no active groups found. ====")
+            output_logger.info("==== do_timestep(): no active groups found. ====")
             return
         (
             people_from_abroad_dict,
@@ -446,13 +436,13 @@ class Simulator:
         # count people in the cemetery
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
-        logger.info(
+        output_logger.info(
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
         # main interaction loop
-        infected_ids = []
+        infected_ids = []#, group_where_infection = [], []
         for super_group in super_group_instances:
             for group in super_group:
                 if (
@@ -470,6 +460,7 @@ class Simulator:
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
+                        '''
                         super_area_new_infected = [
                             self.world.people[
                                 idx - first_person_id
@@ -481,6 +472,7 @@ class Simulator:
                                 location=group.spec + f"_{group.id}",
                                 super_areas_infection=super_area_new_infected,
                             )
+                        '''
                         if mpi_size == 1:
                             # note this is disabled in parallel
                             # assign blame of infections
@@ -496,10 +488,11 @@ class Simulator:
                                     / tprob_norm
                                 )
                     infected_ids += new_infected_ids
+                    #group_where_infection += len(new_infected_ids) * [f"{group.spec}_{group.id}"]
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
-                infected_ids, people_from_abroad_dict
+                infected_ids, people_from_abroad_dict, #group_where_infection
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
         # recount people active to check people conservation
@@ -517,10 +510,12 @@ class Simulator:
             )
         # update the health status of the population
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
+        '''
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             if self.world.hospitals is not None:
                 self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        '''
         # remove everyone from their active groups
         self.clear_world()
 
@@ -528,25 +523,25 @@ class Simulator:
         """
         Run simulation with n_seed initial infections
         """
-        logger.info(
+        output_logger.info(
             f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
         )
-        logger.info(
+        output_logger.info(
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
         if self.logger:
-            self.logger.log_population(self.world.people, rank=0)
             self.logger.log_parameters(
                 interaction=self.interaction,
                 infection_seed=self.infection_seed,
                 infection_selector=self.infection_selector,
                 activity_manager=self.activity_manager,
-                rank=0,
             )
 
+            '''
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
+            '''
 
         while self.timer.date < self.timer.final_date:
             if self.infection_seed:
@@ -564,7 +559,7 @@ class Simulator:
                 saving_date = self.timer.date.date()
                 next(self.timer)  # we want to save at the next time step so that
                 # we can resume consistenly
-                logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
+                output_logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
                 self.save_checkpoint(saving_date)
                 continue
             next(self.timer)
@@ -595,5 +590,5 @@ class Simulator:
             "infection_list": infection_list,
             "timer": self.timer,
         }
-        with open(self.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
+        with open(self.logger.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
             pickle.dump(checkpoint_data, f)
