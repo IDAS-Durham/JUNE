@@ -52,8 +52,10 @@ change_leisure_probability:
                 women: 
                     0-100: 0.584
             religiouss:
-	        men:
-		    11-100: 0.112
+                men:
+                    11-100: 0.112
+                women:
+                    0-100: 0.0
 
     2:
         start_time: 2020-04-15
@@ -64,6 +66,5 @@ change_leisure_probability:
                     0-100: 1.07
                 women: 
                     0-100: 0.584
-
 
 
