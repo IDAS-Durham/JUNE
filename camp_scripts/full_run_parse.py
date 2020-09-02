@@ -71,6 +71,8 @@ parser.add_argument('-mb', '--mask_beta_factor', help="Mask beta factor reductio
 parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
 parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 parser.add_argument('-lc', '--learning_centers' ,help="Add learning centers", required=False, default=False)
+parser.add_argument('-lch', '--learning_center_beta_ratio', help="Learning center/household beta ratio scaling", required=False, default=False)
+parser.add_argument('-pgh', '--play_group_beta_ratio', help="Play group/household beta ratio scaling", required=False, default=False)
 args = parser.parse_args()
 
 if args.comorbidities == "True":
@@ -213,8 +215,8 @@ elif args.mask_wearing:
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
-    policies.policies[4].compliance = args.mask_compliance
-    policies.policies[4].beta_factor = args.mask_beta_factor
+    policies.policies[7].compliance = args.mask_compliance
+    policies.policies[7].beta_factor = args.mask_beta_factor
     
 else:
     policies = Policies.from_file(
