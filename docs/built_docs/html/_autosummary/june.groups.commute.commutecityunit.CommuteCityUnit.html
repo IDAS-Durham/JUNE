@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.groups.commute.commutecityunit.CommuteCityUnit &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.groups.commute.commutecityunit.CommuteCityUnits" href="june.groups.commute.commutecityunit.CommuteCityUnits.html" />
+    <link rel="prev" title="june.groups.commute.commutecity_distributor.CommuteCityDistributor" href="june.groups.commute.commutecity_distributor.CommuteCityDistributor.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.groups.commute.commutecityunit.CommuteCityUnit</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.commute.commutecity_distributor.CommuteCityDistributor.html">june.groups.commute.commutecity_distributor.CommuteCityDistributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.commute.commutecityunit.CommuteCityUnits.html">june.groups.commute.commutecityunit.CommuteCityUnits</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-groups-commute-commutecityunit-commutecityunit">
+<h1>june.groups.commute.commutecityunit.CommuteCityUnit<a class="headerlink" href="#june-groups-commute-commutecityunit-commutecityunit" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.commute.commutecityunit.</code><code class="sig-name descname">CommuteCityUnit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">city</span></em>, <em class="sig-param"><span class="n">is_peak</span></em><span class="sig-paren">)</span></dt>
+<dd><p>A group of people such as in a hospital or a school.</p>
+<p>If a spec attribute is not defined in the child class then it is generated
+by converting the class name into snakecase.</p>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">SubgroupType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Defines the indices of subgroups within the subgroups array</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">default</code><em class="property"> = 0</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">city</span></em>, <em class="sig-param"><span class="n">is_peak</span></em><span class="sig-paren">)</span></dt>
+<dd><p>A group of people such as in a hospital or a school.</p>
+<p>If a spec attribute is not defined in the child class then it is generated
+by converting the class name into snakecase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_collate_from_subgroups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attribute</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a><span class="p">]</span></dt>
+<dd><p>Return a set of all of the people in the subgroups with a particular health status</p>
+<dl class="simple">
+<dt>attribute</dt><dd><p>The name of the attribute in the subgroup, e.g. “in_hospital”</p>
+</dd>
+</dl>
+<p>The union of all the sets with the given attribute name in all of the sub groups.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">_next_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><p>Iterate an id for this class. Each group class has its own id iterator
+starting at 0</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">activity</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">subgroup_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.group.group.html#june.groups.group.group.Group.SubgroupType" title="june.groups.group.group.Group.SubgroupType">june.groups.group.group.Group.SubgroupType</a></span></em>, <em class="sig-param"><span class="n">dynamic</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add a person to a given subgroup. For example, in a school
+a student is added to the subgroup matching their age.</p>
+<dl class="simple">
+<dt>person</dt><dd><p>A person</p>
+</dd>
+</dl>
+<p>group_type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><p>Returns the speciailization of the group.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">remove_person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Remove a person from this group by removing them
+from the subgroup to which they belong</p>
+<dl class="simple">
+<dt>person</dt><dd><p>A person</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">contains_people</code></dt>
+<dd><p>Does this group contain at least one person?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dead</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">id</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">in_hospital</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">infected</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">must_timestep</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">name</code></dt>
+<dd><p>The name is computed on the fly to reduce memory footprint. It combines
+the name fo the class with the id of the instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">people</code></dt>
+<dd><p>All the people in this group</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">recovered</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">size</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">size_infected</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">size_recovered</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">size_susceptible</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">spec</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">subgroups</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">susceptible</code></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.commute.commutecity_distributor.CommuteCityDistributor.html">june.groups.commute.commutecity_distributor.CommuteCityDistributor</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.commute.commutecityunit.CommuteCityUnits.html">june.groups.commute.commutecityunit.CommuteCityUnits</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

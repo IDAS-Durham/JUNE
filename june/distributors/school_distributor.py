@@ -38,6 +38,7 @@ class SchoolDistributor:
         teacher_student_ratio_primary = 21,
         teacher_student_ratio_secondary = 16,
         teacher_min_age=21,
+        max_classroom_size=40,
     ):
         """
         Get closest schools to this output area, per age group
@@ -60,6 +61,7 @@ class SchoolDistributor:
         self.teacher_min_age = teacher_min_age
         self.teacher_student_ratio_primary = teacher_student_ratio_primary
         self.teacher_student_ratio_secondary = teacher_student_ratio_secondary
+        self.max_classroom_size = max_classroom_size
 
     @classmethod
     def from_file(
@@ -93,7 +95,8 @@ class SchoolDistributor:
             config["neighbour_schools"],
             config["age_range"],
             config["mandatory_age_range"],
-            config["teacher_min_age"]
+            config["teacher_min_age"],
+            config["max_classroom_size"]
         )
 
     @classmethod
@@ -354,3 +357,12 @@ class SchoolDistributor:
                     teacher.lockdown_status = 'key_worker'
             if all_filled:
                 break
+
+    def limit_classroom_sizes(self, ):
+        '''
+        Limit subgroup sizes that represent class rooms to a maximum number of students.
+        If maximum number is exceeded create new subgroups to distribute students homogeneously
+        '''
+        for school in self.schools:
+            school.limit_classroom_sizes(self.max_classroom_size)
+
