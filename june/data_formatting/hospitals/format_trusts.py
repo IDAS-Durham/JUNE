@@ -1,7 +1,5 @@
 import pandas as pd
 from june import paths
-from datetime import datetime
-import os
 
 raw_path = paths.data_path  
 processed_path = paths.data_path / "input/hospitals/"

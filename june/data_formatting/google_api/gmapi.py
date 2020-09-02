@@ -1,5 +1,4 @@
 import googlemaps
-from datetime import datetime
 import time
 
 import responses
@@ -167,7 +166,6 @@ class APICall():
                     region="UK",
                     #language-"en-UK"
                 )
-            pass
 
         except:
             raise Exception('Error: GET request failed')

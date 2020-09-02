@@ -39,7 +39,7 @@ class PlayGroup(SocialVenue):
 
 class PlayGroups(SocialVenues):
     def __init__(self, play_groups: List[PlayGroup]):
-        super().__init__(play_groups)
+        super().__init__(play_groups, make_tree=False)
 
     @classmethod
     def for_areas(
@@ -56,7 +56,7 @@ class PlayGroups(SocialVenues):
                     person
                     for person in area.people
                     if person.age >= age_group_limits[0]
-                    and person.age <= age_group_limits[1]
+                    and person.age <= age_group_limits[-1]
                 ]
             )
             for _ in range(0, int(np.ceil(venues_per_capita * area_population))):

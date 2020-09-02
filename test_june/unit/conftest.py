@@ -14,8 +14,7 @@ from june.groups import *
 from june.groups.leisure import *
 from june.demography import Person, Population
 from june.infection import Infection
-from june.infection import InfectionSelector
-from june.infection import infection as infect
+from june.infection.infection_selector import InfectionSelector
 from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
 from june.simulator import Simulator
@@ -87,7 +86,7 @@ def create_infection_constant(transmission, symptoms_constant):
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
     interaction = Interaction.from_file()
-    interaction.selector = infect.InfectionSelector.from_file(
+    interaction.selector = InfectionSelector.from_file(
         transmission_config_path=constant_config
     )
     return interaction
@@ -95,7 +94,7 @@ def create_interaction():
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697"]})
+    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02001731"]})
     return geography
 
 
@@ -125,11 +124,7 @@ def create_box_world():
 
 @pytest.fixture(name="selector", scope="session")
 def make_selector():
-    return InfectionSelector.from_file(
-        transmission_config_path=constant_config
-    )
-
-
+    return InfectionSelector.from_file(transmission_config_path=constant_config)
 
 
 @pytest.fixture(name="simulator_box", scope="session")
@@ -156,6 +151,7 @@ def make_super_areas():
 def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
+    area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
     school = School(
         coordinates=super_area.coordinates,
@@ -169,28 +165,29 @@ def make_dummy_world():
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area.name,
+        super_area=super_area,
         coordinates=super_area.coordinates,
     )
     worker = Person.from_attributes(age=40)
-    worker.area = super_area
+    worker.area = super_area.areas[0]
     household.add(worker, subgroup_type=household.SubgroupType.adults)
     worker.sector = "Q"
     company.add(worker)
 
     pupil = Person.from_attributes(age=6)
-    pupil.area = super_area
+    pupil.area = super_area.areas[0] 
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = super_area
+    household.area = super_area.areas[0] 
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
-    student.area = super_area
+    student.area = super_area.areas[0] 
     household.add(student, subgroup_type=household.SubgroupType.adults)
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
 
     commuter = Person.from_attributes(sex="m", age=30)
+    commuter.area = super_area.areas[0]
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
     commuter.mode_of_transport = "public"
     household.add(commuter)
@@ -217,17 +214,14 @@ def make_dummy_world():
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
     # commute
-    city = CommuteCity()
-    hub = CommuteHub(None, None)
-    city.commutehubs = [hub]
-    world.commutehubs = CommuteHubs([city])
-    world.commutehubs.members = [hub]
-    world.commutecities = CommuteCities()
-    world.commutecities.members = [city]
-    world.commutehubs[0].add(commuter)
+    world.commutecities = CommuteCities.for_super_areas(world.super_areas)
+    world.commutehubs = CommuteHubs(world.commutecities)
+    world.commutehubs.from_file()
+    world.commutehubs.init_hubs()
+    world.commutehubs[0].commute_through.append(commuter)
     world.commuteunits = CommuteUnits(world.commutehubs.members)
     world.commuteunits.init_units()
-    world.commutecityunits = CommuteCityUnits(world.commutecities)
+    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
     world.cemeteries = Cemeteries()
     return world
 
@@ -260,7 +254,7 @@ def setup_world(dummy_world, policy_simulator):
     for household in world.households:
         household.quarantine_starting_date = None
     for person in [pupil, student, worker]:
-        person.health_information = None
+        person.infection = None
         person.susceptibility = 1.0
         person.dead = False
         person.subgroups.medical_facility = None

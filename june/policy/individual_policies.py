@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union, Optional, List, Dict
+from typing import List, Optional, Union
 import datetime
 from random import random
 import june.policy
@@ -120,8 +120,8 @@ class StayHome(IndividualPolicy):
 class SevereSymptomsStayHome(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
         return (
-            person.health_information is not None
-            and person.health_information.tag is SymptomTag.severe
+            person.infection is not None
+            and person.infection.tag is SymptomTag.severe
         )
 
 
@@ -165,7 +165,7 @@ class Quarantine(StayHome):
         try:
             if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = (
-                    person.health_information.time_of_symptoms_onset
+                    person.infection.time_of_symptoms_onset
                 )
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
@@ -219,7 +219,6 @@ class SkipActivity(IndividualPolicy):
         """
         Returns True if the activity is to be skipped, otherwise False
         """
-        pass
 
     def apply(self, activities: List[str]) -> List[str]:
         """

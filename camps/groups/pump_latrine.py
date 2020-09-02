@@ -18,7 +18,7 @@ class PumpLatrine(SocialVenue):
 
 class PumpLatrines(SocialVenues):
     def __init__(self, pump_latrines: List[PumpLatrine]):
-        super().__init__(pump_latrines)
+        super().__init__(pump_latrines, make_tree=False)
 
     @classmethod
     def for_areas(cls, areas: List[Area], venues_per_capita=1/(100+35/2), max_size=10):

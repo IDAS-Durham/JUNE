@@ -1,6 +1,5 @@
 import logging
 import re
-import functools
 import numpy as np
 from collections import defaultdict
 from enum import IntEnum

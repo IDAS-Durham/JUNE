@@ -2,17 +2,17 @@ alpha_physical: 2.
 
 beta:
  box: 1
- pub: 0.1 
- grocery: 0.1
- cinema: 0.1
- commute_unit: 1.0 
- commute_city_unit: 1.0 
- hospital: 1.0 
- care_home: 1.0
- company: 0.1 
- school: 0.1 
- household: 0.2 
- university: 0.01 
+ pub: 0.5 
+ grocery: 0.25
+ cinema: 0.25
+ commute_unit: 0.5 
+ commute_city_unit: 0.5 
+ hospital: 0.05
+ care_home: 1.2
+ company: 0.8 
+ school: 0.8 
+ household: 1.0 
+ university: 0.5 
 
 contact_matrices:
   # number 10 comes from the fact that on average there are 10 medics per patient
