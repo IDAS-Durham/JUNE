@@ -89,6 +89,11 @@ if args.mask_wearing == "True":
     args.mask_wearing = True
 else:
     args.mask_wearing = False
+
+if args.learning_centers == "True":
+    args.learning_centers = True
+else:
+    args.learning_centers = False
     
 if args.infectiousness_path == 'nature':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature.yaml'
@@ -237,10 +242,10 @@ interaction = Interaction.from_file(
 )
 
 if args.learning_centers and args.learning_center_beta_ratio:
-    interaction.beta['learning_center'] = interaction.beta['household']*args.learning_center_beta_ratio
+    interaction.beta['learning_center'] = interaction.beta['household']*float(args.learning_center_beta_ratio)
 
 if args.play_group_beta_ratio:
-    interaction.beta['play_group'] = interaction.beta['household']*args.play_group_beta_ratio
+    interaction.beta['play_group'] = interaction.beta['household']*float(args.play_group_beta_ratio)
 
 
 cases_detected = {
