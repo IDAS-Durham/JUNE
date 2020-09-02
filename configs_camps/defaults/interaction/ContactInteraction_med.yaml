@@ -6,6 +6,8 @@ beta:
   religious: 0.1
   distribution_center: 0.1
   pump_latrine: 0.05
+  n_f_distribution_center: 0.1
+  e_voucher: 0.1
   hospital: 0.05
   household: 0.5
   shelter: 0.5
@@ -31,6 +33,14 @@ contact_matrices:
   pump_latrine:
     contacts: [[5]]
     proportion_physical: [[0.02]]
+    characteristic_time: 2
+  n_f_distribution_center:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 2
+  e_voucher:
+    contacts: [[5]]
+    proportion_physical: [[0.12]]
     characteristic_time: 2
   hospital:
     contacts: [[5.00, 10., 10.], [1., 0., 0.], [1., 0., 0.]]
