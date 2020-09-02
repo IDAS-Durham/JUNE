@@ -34,5 +34,36 @@ quarantine:
   compliance: 0.3
   household_compliance: 0.2
   start_time: 1000-03-16 
-  end_time: 9999-03-23 
+  end_time: 9999-03-23
+
+close_leisure_venue:
+    start_time: 1000-01-01
+    end_time: 2021-01-01
+    venues_to_close: ['n_f_distribution_center', 'female_communal']
+
+change_leisure_probability:
+    1:
+        start_time: 1000-01-01
+        end_time: 2020-04-15
+        leisure_activities_probabilities:
+            communals:
+                men: 
+                    0-100: 0.584
+                women: 
+                    0-100: 0.584
+            religiouss:
+	        men:
+		    11-100: 0.112
+
+    2:
+        start_time: 2020-04-15
+        end_time: 2021-01-01
+        leisure_activities_probabilities:
+            communals:
+                men:
+                    0-100: 1.07
+                women: 
+                    0-100: 0.584
+
+
 
