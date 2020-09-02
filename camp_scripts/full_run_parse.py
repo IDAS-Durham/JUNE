@@ -71,6 +71,8 @@ parser.add_argument('-mb', '--mask_beta_factor', help="Mask beta factor reductio
 parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
 parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 parser.add_argument('-lc', '--learning_centers' ,help="Add learning centers", required=False, default=False)
+parser.add_argument('-lch', '--learning_center_beta_ratio', help="Learning center/household beta ratio scaling", required=False, default=False)
+parser.add_argument('-pgh', '--play_group_beta_ratio', help="Play group/household beta ratio scaling", required=False, default=False)
 args = parser.parse_args()
 
 if args.comorbidities == "True":
@@ -87,6 +89,11 @@ if args.mask_wearing == "True":
     args.mask_wearing = True
 else:
     args.mask_wearing = False
+
+if args.learning_centers == "True":
+    args.learning_centers = True
+else:
+    args.learning_centers = False
     
 if args.infectiousness_path == 'nature':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature.yaml'
@@ -146,7 +153,6 @@ if args.learning_centers:
     learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
     learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
     CONFIG_PATH = camp_configs_path / "learning_center_config.yaml"
-
 
 
 world.pump_latrines = PumpLatrines.for_areas(world.areas)
@@ -213,8 +219,8 @@ elif args.mask_wearing:
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
-    policies.policies[4].compliance = args.mask_compliance
-    policies.policies[4].beta_factor = args.mask_beta_factor
+    policies.policies[7].compliance = args.mask_compliance
+    policies.policies[7].beta_factor = args.mask_beta_factor
     
 else:
     policies = Policies.from_file(
@@ -234,6 +240,12 @@ interaction = Interaction.from_file(
     config_filename=camp_configs_path
     / "defaults/interaction/" / args.parameters,
 )
+
+if args.learning_centers and args.learning_center_beta_ratio:
+    interaction.beta['learning_center'] = interaction.beta['household']*float(args.learning_center_beta_ratio)
+
+if args.play_group_beta_ratio:
+    interaction.beta['play_group'] = interaction.beta['household']*float(args.play_group_beta_ratio)
 
 
 cases_detected = {
