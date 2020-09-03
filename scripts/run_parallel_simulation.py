@@ -27,6 +27,7 @@ def set_random_seed(seed=999):
 
     @nb.njit(cache=True)
     def set_seed_numba(seed):
+        random.seed(seed)
         return np.random.seed(seed)
 
     np.random.seed(seed)
@@ -77,9 +78,9 @@ infection_selector = InfectionSelector.from_file(
 interaction = Interaction.from_file()
 
 # initial infection seeding
-infection_seed = InfectionSeed(domain.super_areas, infection_selector,)
+#infection_seed = InfectionSeed(domain.super_areas, infection_selector,)
 
-infection_seed.unleash_virus(50)  # number of initial cases
+#infection_seed.unleash_virus(50)  # number of initial cases
 
 # policies
 policies = Policies.from_file()
@@ -96,6 +97,29 @@ simulator = Simulator.from_file(
     logger=logger,
 )
 print("simulator ready to go")
+
+if rank == 0:
+    n_cases = 50
+    selected_people = np.random.choice(len(population.people), n_cases, replace=False)
+    selected_ids = []
+    for selected_person in selected_people:
+        selected_ids.append(population.people[selected_person].id)
+    print('Original Selected IDS = ', selected_ids)
+    for rank_receiving in range(1,size):
+        comm.send(selected_ids, dest=rank_receiving,tag=0)
+
+elif rank > 0:
+    selected_ids = comm.recv(source=0, tag=0)
+
+print('Received selected IDs = ' , selected_ids)
+print('Len selected IDs = ', len(selected_ids))
+
+for inf_id in selected_ids:
+    if inf_id in domain.people.people_dict:
+        person = domain.people.get_from_id(inf_id)
+        simulator.infection_selector.infect_person_at_time(person, 0.)
+
+del population
 
 t1 = time.time()
 simulator.run()
