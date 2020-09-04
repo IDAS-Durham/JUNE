@@ -131,7 +131,7 @@ class InfectionSeed:
         )
         return np.array(self.super_areas.members)[filter_region]
 
-    def infect_super_areas(self, super_areas: List["SuperArea"], n_cases: int):
+    def infect_super_areas(self, super_areas: List["SuperArea"], n_cases: int, n_people_region: int):
         """
         Infect n_cases random people from a list of super_areas. It will place
         more cases in proportion to the super_area population
@@ -143,10 +143,15 @@ class InfectionSeed:
         n_cases:
             number of cases to seed.
         """
-        n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
-        n_cases_homogeneous = n_cases / n_people_region
+        n_people_in_super_areas = np.sum([len(super_area.people) for super_area in super_areas])
+        print('People here = ', n_people_in_super_areas)
+        print('N cases to seed = ', n_cases)
+        print(int(n_people_in_super_areas/n_people_region))
+        n_cases *= int(n_people_in_super_areas/n_people_region)
+        print('N cases to seed here = ', n_cases)
+        #n_cases_homogeneous = n_cases * n_people_in_super_areas/ n_people_region
         weights = [
-            len(super_area.people) / n_people_region for super_area in super_areas
+            len(super_area.people) / n_people_in_super_areas for super_area in super_areas
         ]
         chosen_super_areas = np.random.choice(
             super_areas, size=n_cases, replace=True, p=weights
@@ -199,8 +204,8 @@ class InfectionSeed:
         return choices
                 
 
-            
-
+    def get_people_in_region(self, region: str):
+        return 25000 
 
     def unleash_virus_per_region(self, date):
         """
@@ -212,9 +217,10 @@ class InfectionSeed:
         if date.date() not in self.dates_seeded:
             for region, n_cases in n_cases_region.iteritems():
                 super_areas = self._filter_region(region=region)
+                n_people_region = self.get_people_in_region(region=region)
                 if super_areas.size:
                     self.infect_super_areas(
-                        super_areas, int(self.seed_strength * n_cases)
+                        super_areas, int(self.seed_strength * n_cases), n_people_region
                     )
             self.dates_seeded.append(date.date())
 

@@ -1,27 +1,166 @@
 import yaml
 import pytest
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from june.infection_seed import Observed2Cases
 from june.demography import Person
 from june.demography.geography import Area, SuperArea, SuperAreas
 from june.infection import HealthIndexGenerator
+from june.infection.trajectory_maker import TrajectoryMaker
 from june import paths
 
 
 @pytest.fixture(name="oc")
 def get_oc():
-    person = Person.from_attributes(age=90, sex="m")
-    area = Area(name='E00003255', super_area='E02000134', coordinates=(0,0))
-    area.add(person)
-    super_area = SuperArea(areas=[area], coordinates=(1,1), name='E02000134')
-    super_areas = SuperAreas([super_area])
-    health_index = HealthIndexGenerator.from_file()
-    return Observed2Cases.from_file(super_areas=super_areas, health_index=health_index)
+    area_super_region_df = pd.DataFrame(
+        {
+            "area": ["beautiful"],
+            "super_area": ["marvellous"],
+            "region": ["magnificient"],
+        }
+    )
+    area_super_region_df.set_index("area", inplace=True)
+    age_per_area_dict = {str(i): 0 for i in range(101)}
+    age_per_area_dict["50"] = 1
+    age_per_area_df = pd.DataFrame(age_per_area_dict, index=["beautiful"])
+    female_fraction_per_area_dict = {str(i): 0 for i in range(0, 101, 5)}
+    female_fraction_per_area_dict["50"] = 1.0
+    female_fraction_per_area_df = pd.DataFrame(
+        female_fraction_per_area_dict, index=["beautiful"]
+    )
+    health_index_generator = HealthIndexGenerator.from_file()
+    with open(paths.configs_path / "defaults/symptoms/trajectories.yaml") as f:
+        trajectories = yaml.safe_load(f)["trajectories"]
+    trajectories = [
+            TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
+    ]
+    return Observed2Cases(
+        age_per_area_df=age_per_area_df,
+        female_fraction_per_area_df=female_fraction_per_area_df,
+        area_super_region_df=area_super_region_df,
+        health_index_generator=health_index_generator,
+        trajectories = trajectories
+    )
 
-def test__find_regions(oc):
-    regions = oc.find_regions_for_super_areas(oc.super_areas)
-    assert regions == ['London']
+
+@pytest.fixture(name="oc_multiple_super_areas")
+def get_oc_multiple_super_areas():
+    area_super_region_df = pd.DataFrame(
+        {
+            "area": ["area_1", "area_2", "area_3"],
+            "super_area": ["super_1", "super_2", "super_3"],
+            "region": ["magnificient", "magnificient", "magnificient"],
+        }
+    )
+    area_super_region_df.set_index("area", inplace=True)
+    age_per_area_dict = {str(i): [0, 0, 0] for i in range(101)}
+    age_per_area_dict["50"] = [1, 1, 1]
+    age_per_area_df = pd.DataFrame(
+        age_per_area_dict, index=["area_1", "area_2", "area_3"]
+    )
+    female_fraction_per_area_dict = {str(i): [0, 0, 0] for i in range(0, 101, 5)}
+    female_fraction_per_area_dict["50"] = [1, 1, 1]
+    female_fraction_per_area_df = pd.DataFrame(
+        female_fraction_per_area_dict, index=["area_1", "area_2", "area_3"]
+    )
+    health_index_generator = HealthIndexGenerator.from_file()
+    return Observed2Cases(
+        age_per_area_df=age_per_area_df,
+        female_fraction_per_area_df=female_fraction_per_area_df,
+        area_super_region_df=area_super_region_df,
+        health_index_generator=health_index_generator,
+    )
+
+
+def test__generate_demography_dfs_by_region(oc):
+    assert oc.females_per_age_region_df.loc["magnificient"]["50"] == 1
+    assert oc.females_per_age_region_df.loc["magnificient"].sum() == 1
+    assert oc.males_per_age_region_df.loc["magnificient"].sum() == 0
+
+
+def test__avg_rates_by_age_and_sex(oc):
+    rates_dict = oc.get_all_rates_per_age_sex()
+    assert list(rates_dict.keys()) == ["m", "f"]
+    np.testing.assert_equal(np.array(list(rates_dict["f"].keys())), np.arange(100))
+    np.testing.assert_equal(np.array(list(rates_dict["m"].keys())), np.arange(100))
+    assert rates_dict["f"][0].shape[0] == 8
+    avg_death_rate = oc.get_rates_weighted_by_age_sex_per_region(
+        rates_dict, symptoms_tags=("dead_home", "dead_hospital", "dead_icu")
+    )
+    np.testing.assert_equal(
+        avg_death_rate["magnificient"],
+        np.array(
+            np.diff(
+                oc.health_index_generator(Person(age=50, sex="f")),
+                prepend=0.0,
+                append=1.0,
+            )
+        )[[5, 6, 7]],
+    )
+
+
+def test__expected_cases(oc):
+    n_cases = oc.get_expected_cases_given_observed(
+        n_observed=20, avg_rates=[0.2, 0.1, 0.1]
+    )
+    assert n_cases == 20 / 0.4
+
+
+def test__cases_from_observation_per_region(oc):
+    n_observed_df = pd.DataFrame(
+        {"date": ["2020-04-20", "2020-04-21"], "magnificient": [100, 200],}
+    )
+    n_observed_df.set_index("date", inplace=True)
+    n_observed_df.index = pd.to_datetime(n_observed_df.index)
+    n_expected_true_df = pd.DataFrame(
+        {"date": ["2020-04-10", "2020-04-11"], "magnificient": [100 / 0.4, 200 / 0.4],}
+    )
+    n_expected_true_df.set_index("date", inplace=True)
+    n_expected_true_df.index = pd.to_datetime(n_expected_true_df.index)
+    avg_death_rate = {"magnificient": [0.2, 0.1, 0.1]}
+    n_expected_df = oc.cases_from_observation_per_region(
+        n_observed_df, 10.2, avg_death_rate
+    )
+    pd.testing.assert_frame_equal(n_expected_df, n_expected_true_df)
+
+
+def test__cases_from_observation_per_super_area(oc_multiple_super_areas):
+    n_observed_df = pd.DataFrame(
+        {"date": ["2020-04-20", "2020-04-21"], "magnificient": [100, 200],}
+    )
+    n_observed_df.set_index("date", inplace=True)
+    n_observed_df.index = pd.to_datetime(n_observed_df.index)
+    n_expected_true_df = pd.DataFrame(
+        {"date": ["2020-04-10", "2020-04-11"], 
+            'super_1': [round(100/3 / 0.4), round(200/3 / 0.4)],
+            'super_2': [round(100/3 / 0.4), round(200/3 / 0.4)],
+            'super_3': [round(100/3 / 0.4), round(200/3 / 0.4)],
+        }
+    )
+    n_expected_true_df.set_index("date", inplace=True)
+    n_expected_true_df.index = pd.to_datetime(n_expected_true_df.index)
+    avg_death_rate = {"magnificient": [0.2, 0.1, 0.1]}
+    n_expected_per_region_df = oc_multiple_super_areas.cases_from_observation_per_region(
+        n_observed_df, 10.2, avg_death_rate
+    )
+    super_area_weights = oc_multiple_super_areas.get_super_area_weights()
+    
+    assert (
+        super_area_weights.groupby("region").sum()["weights"].loc["magnificient"] == 1.0
+    )
+    assert super_area_weights.loc['super_1']['weights'] == pytest.approx(0.33, rel=0.05)
+    assert super_area_weights.loc['super_2']['weights'] == pytest.approx(0.33, rel=0.05)
+    assert super_area_weights.loc['super_3']['weights'] == pytest.approx(0.33, rel=0.05)
+    n_expected_per_super_area_df = oc_multiple_super_areas.convert_regional_cases_to_super_area(
+        n_expected_per_region_df
+    )
+    
+    pd.testing.assert_series_equal(
+            n_expected_per_super_area_df.sum(axis=1), 
+            n_expected_per_region_df['magnificient'].astype(int),
+            check_names=False
+            )
 
 def test__filter_trajectories(oc):
     hospitalised_trajectories = oc.filter_trajectories(
@@ -37,7 +176,6 @@ def test__filter_trajectories(oc):
     for trajectory in dead_trajectories:
         symptom_tags = [stage.symptoms_tag.name for stage in trajectory.stages]
         assert "dead" in symptom_tags[-1]
-
 
 def test__median_completion_time(oc):
     assert oc.get_median_completion_time(oc.trajectories[0].stages[1]) == 14
@@ -65,24 +203,13 @@ def test__get_time_it_takes_to_symptoms(oc):
     for time in times_to_hospital:
         assert 1.0 < time < 16.0
 
-
-def test__get_avg_rate_for_symptoms(oc):
-    avg_rates = oc.get_avg_rate_for_symptoms(
-        ["hospitalised", "intensive_care", "dead_hospital", "dead_icu"], region='London'
-    )
-    person_health_index = oc.health_index(oc.population['London'][0])
-    assert len(avg_rates) == 4
-    assert avg_rates[-1] == 1 - person_health_index[-1]
-    assert avg_rates[-2] == person_health_index[-1] - person_health_index[-2]
-    assert avg_rates[-3] == person_health_index[-3] - person_health_index[-4]
-    assert avg_rates[-4] == person_health_index[-4] - person_health_index[-5]
-
-
 def test__get_avg_time_to_symptoms(oc):
-    avg_rates = oc.get_avg_rate_for_symptoms(
-        ["hospitalised", "intensive_care", "dead_hospital", "dead_icu"], region='London'
+    rates_dict = oc.get_all_rates_per_age_sex()
+    avg_rates = oc.get_rates_weighted_by_age_sex_per_region(
+        rates_dict,
+        symptoms_tags=["hospitalised", "intensive_care", "dead_hospital", "dead_icu"], 
     )
-
+    avg_rates = avg_rates['magnificient']
     hospitalised_trajectories = oc.filter_trajectories(
         oc.trajectories,
         symptoms_to_keep=[
@@ -93,32 +220,7 @@ def test__get_avg_time_to_symptoms(oc):
         ],
     )
 
-    avg_rates = oc.get_avg_rate_for_symptoms(
-        ["hospitalised", "intensive_care", "dead_hospital", "dead_icu"], region='London'
-    )
     avg_time_to_hospital = oc.get_avg_time_to_symptoms(
         hospitalised_trajectories, avg_rates, ["hospitalised", "intensive_care"]
     )
     assert 1.0 < avg_time_to_hospital < 13.0
-
-
-def test__n_cases_from_observed(oc):
-    assert oc.get_n_cases_from_observed(100, [0.0, 0.4]) == 250
-
-def test__cases_from_observations(oc):
-    n_observed_df = pd.DataFrame(
-            {
-            'date':['2020-04-20','2020-04-21'], 
-            'London': [100,200],
-             }
-        )
-    n_observed_df.set_index('date', inplace=True)
-    n_observed_df.index = pd.to_datetime(n_observed_df.index)
-    cases_df = oc.cases_from_observation(n_observed_df, time_to_get_there=5, avg_rates=[0.4], 
-            region='London')
-    assert cases_df.index[0] == datetime(2020,4,15) 
-    assert cases_df.index[1] == datetime(2020,4,16) 
-    assert cases_df['London'].iloc[0] == 250 
-    assert cases_df['London'].iloc[1] == 500 
-
-
