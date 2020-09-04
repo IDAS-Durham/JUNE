@@ -94,7 +94,7 @@ if args.learning_centers == "True":
     args.learning_centers = True
 else:
     args.learning_centers = False
-    
+
 if args.infectiousness_path == 'nature':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature.yaml'
 elif args.infectiousness_path == 'correction_nature':
@@ -103,6 +103,8 @@ elif args.infectiousness_path == 'nature_larger':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature_larger_presymptomatic_transmission.yaml'
 elif args.infectiousness_path == 'nature_lower':
     transmission_config_path = camp_configs_path / 'defaults/transmission/nature_lower_presymptomatic_transmission.yaml'
+elif args.infectiousness_path == 'xnexp':
+    transmission_config_path = camp_configs_path / 'defaults/transmission/XNExp.yaml'    
 else:
     raise NotImplementedError
 
