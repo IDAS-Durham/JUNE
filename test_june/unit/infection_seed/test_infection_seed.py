@@ -108,6 +108,7 @@ def test__n_infected_total_region_seeds_only_once_per_day(selector,):
         )
     n_cases_region.set_index('date', inplace=True)
     n_cases_region.index = pd.to_datetime(n_cases_region.index)
+    print('People = ', sum([len(super_area.people) for super_area in geography.super_areas]))
     seed = InfectionSeed.from_file(super_areas=geography.super_areas, 
             selector=selector,
             n_cases_region=n_cases_region)
