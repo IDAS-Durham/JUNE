@@ -5,6 +5,7 @@ import datetime
 from collections import Counter
 from june import paths
 from typing import List, Optional
+from june.demography import Population
 from june.demography.geography import SuperAreas
 from june.infection.infection_selector import InfectionSelector
 from june.infection.health_index import HealthIndexGenerator
@@ -15,6 +16,73 @@ default_msoa_region_filename = (
 )
 
 
+class InfectionSeed:
+    def __init__(
+        self,
+        world: "World",
+        infection_selector: InfectionSelector,
+        seed_strength: float = 1.0,
+        age_profile: Optional[dict] = None,
+    ):
+        self.world = world
+        self.infection_selector = infection_selector
+        self.seed_strength = seed_strength
+        self.age_profile = age_profile
+        self.dates_seeded = []
+
+    def unleash_virus(
+        self,
+        population: "Population",
+        n_cases: int,
+        mpi_rank: int = 0,
+        mpi_comm: Optional["MPI.COMM_WORLD"] = None,
+        mpi_size: Optional[int] = None,
+    ):
+        if mpi_rank == 0:
+            ids_to_infect = np.random.choice(
+                [person.id for person in population.people],
+                round(self.seed_strength * n_cases),
+                replace=False,
+            )
+        if mpi_comm is not None:
+            for rank_receiving in range(1, mpi_size):
+                mpi_comm.send(ids_to_infect, est=rank_receiving, tag=0)
+            if mpi_rank > 0:
+                ids_to_infect = mpi_comm.recv(source=0, tag=0)
+            for inf_id in ids_to_infect:
+                if inf_id in self.world.people.people_dict:
+                    person = self.world.people.get_from_id(inf_id)
+                    self.infection_selector.infect_person_at_time(person, 0.0)
+        else:
+            for inf_id in ids_to_infect:
+                self.infection_selector.infect_person_at_time(self.world.people[inf_id], 0.0)
+
+    def infect_super_areas(self, n_daily_cases_by_super_area: pd.DataFrame):
+        for super_area in self.world.super_areas:
+            try:
+                n_cases = int(n_daily_cases_by_super_area[super_area.name])
+                self.unleash_virus(Population(super_area.people),
+                        n_cases = n_cases,
+                        )
+            except KeyError as e:
+                raise KeyError('There is no data on cases for super area: %s' %str(e))
+
+    def unleash_virus_per_day(
+            self, 
+            n_cases_by_super_area: pd.DataFrame,
+            date: 'datetime',
+            ):
+        date_str = date.strftime("%Y-%m-%d")
+        date = date.date()
+        if date not in self.dates_seeded and date in n_cases_by_super_area.index:
+            self.infect_super_areas(n_cases_by_super_area.loc[date_str])
+            self.dates_seeded.append(date)
+
+
+
+       
+
+'''
 class InfectionSeed:
     def __init__(
         self,
@@ -258,4 +326,4 @@ class InfectionSeed:
                 super_areas, int(self.seed_strength * n_cases)
             )
 
-
+'''
