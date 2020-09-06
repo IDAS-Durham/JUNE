@@ -26,7 +26,6 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 output_logger = logging.getLogger(__name__)
 
 
-
 class Simulator:
     ActivityManager = ActivityManager
 
@@ -71,7 +70,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        logger: "Logger" = None
+        logger: "Logger" = None,
     ) -> "Simulator":
 
         """
@@ -338,13 +337,17 @@ class Simulator:
             self.logger.log_infected(self.timer.date, super_area_infections)
 
     def infect_people(self, infected_ids, people_from_abroad_dict, infection_locations):
-        foreign_ids = []
-        for inf_id in infected_ids:
+        foreign_ids, foreign_infection_locations = [], []
+        for inf_id, inf_loc in zip(infected_ids, infection_locations):
             if inf_id in self.world.people.people_dict:
                 person = self.world.people.get_from_id(inf_id)
+                self.logger.accumulate_infection_location(
+                    location=inf_loc, super_areas_infected=person.area.super_area.name
+                )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
                 foreign_ids.append(inf_id)
+                foreign_infection_locations.append(inf_loc)
         if foreign_ids:
             infect_in_domains = {}
             people_ids = []
@@ -364,11 +367,13 @@ class Simulator:
                 if id in foreign_ids:
                     if domain not in infect_in_domains:
                         infect_in_domains[domain] = []
-                    infect_in_domains[domain].append(id)
+                    infect_in_domains[domain].append(
+                        (id, foreign_infection_locations[foreign_ids.index(id)])
+                    )
             return infect_in_domains
 
-    def tell_domains_to_infect(self, infect_in_domains, infection_location):
-        people_to_infect = []
+    def tell_domains_to_infect(self, infect_in_domains):
+        people_to_infect_id_location = []
         for rank_sending in range(mpi_size):
             if rank_sending == mpi_rank:
                 # my turn to send my data
@@ -391,9 +396,12 @@ class Simulator:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
-                    people_to_infect += data
-        for inf_id in people_to_infect:
+                    people_to_infect_id_location += data
+        for (inf_id, inf_loc) in people_to_infect_id_location:
             person = self.world.people.get_from_id(inf_id)
+            self.logger.accumulate_infection_location(
+                location=inf_loc, super_areas_infected=person.area.super_area.name
+            )
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
     def do_timestep(self):
@@ -441,7 +449,7 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         # main interaction loop
-        infected_ids, infection_locations = [], []
+        infected_ids, infection_location = [], []
         for super_group in super_group_instances:
             for group in super_group:
                 if (
@@ -474,13 +482,17 @@ class Simulator:
                                     / tprob_norm
                                 )
                     infected_ids += new_infected_ids
-                    infection_location += len(new_infected_ids) * [f"{group.spec}_{group.id}"]
+                    infection_location += len(new_infected_ids) * [
+                        f"{group.spec}_{group.id}"
+                    ]
         # infect the people that got exposed
         if self.infection_selector:
-            infect_in_domains, locations_to_store_in_domains = self.infect_people(
+            infect_in_domains = self.infect_people(
                 infected_ids, people_from_abroad_dict, infection_location
             )
-            to_infect = self.tell_domains_to_infect(infect_in_domains, locations_to_store_in_domains)
+            to_infect = self.tell_domains_to_infect(
+                infect_in_domains, 
+            )
         # recount people active to check people conservation
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
@@ -496,12 +508,10 @@ class Simulator:
             )
         # update the health status of the population
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
-        '''
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
-            if self.world.hospitals is not None:
-                self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
-        '''
+            #if self.world.hospitals is not None:
+            #    self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         # remove everyone from their active groups
         self.clear_world()
 
@@ -524,10 +534,10 @@ class Simulator:
                 activity_manager=self.activity_manager,
             )
 
-            '''
+            """
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
-            '''
+            """
 
         while self.timer.date < self.timer.final_date:
             if self.infection_seed:
@@ -545,7 +555,9 @@ class Simulator:
                 saving_date = self.timer.date.date()
                 next(self.timer)  # we want to save at the next time step so that
                 # we can resume consistenly
-                output_logger.info(f"Saving simulation checkpoint at {self.timer.date.date()}")
+                output_logger.info(
+                    f"Saving simulation checkpoint at {self.timer.date.date()}"
+                )
                 self.save_checkpoint(saving_date)
                 continue
             next(self.timer)

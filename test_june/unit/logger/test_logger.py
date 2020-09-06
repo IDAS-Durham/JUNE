@@ -44,6 +44,12 @@ dir_pwd = path_pwd.parent
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
 
+def clean_world(world):
+    for person in world.people:
+        person.infection = None
+        person.susceptibility = 1.0
+
+
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
     selector = InfectionSelector.from_file()
@@ -66,7 +72,7 @@ def create_interaction():
 @pytest.fixture(name="geog", scope="module")
 def create_geography():
     geog = Geography.from_file(filter_key={"area": ["E00000001"]})
-    return geog  # .super_areas.members[0]
+    return geog  
 
 
 @pytest.fixture(name="world", scope="module")
@@ -134,9 +140,9 @@ def make_dummy_world(geog):
     return world
 
 
-@pytest.fixture(name="sim", scope="module")
 def create_sim(world, interaction, selector):
 
+    logger = Logger()
     leisure_instance = leisure.generate_leisure_for_config(
         world=world, config_filename=test_config
     )
@@ -154,9 +160,9 @@ def create_sim(world, interaction, selector):
             ),
         ]
     )
-    infection_seed = InfectionSeed(super_areas=world.super_areas, selector=selector)
+    infection_seed = InfectionSeed(world=world, infection_selector=selector)
     n_cases = 2
-    infection_seed.unleash_virus(n_cases)
+    infection_seed.unleash_virus(Population(world.people), n_cases)
 
     sim = Simulator.from_file(
         world=world,
@@ -165,6 +171,7 @@ def create_sim(world, interaction, selector):
         config_filename=test_config,
         leisure=leisure_instance,
         policies=policies,
+        logger=logger,
     )
     return sim
 
@@ -174,10 +181,9 @@ test_dict = {
     "B": {"B1": {},},
 }
 
-l = Logger()
 
-
-def test__log_population(sim):
+def test__log_population(world, interaction, selector):
+    sim = create_sim(world, interaction, selector)
     sim.logger.log_population(sim.world.people, chunk_size=2)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         assert f["population"].attrs["n_people"] == 5
@@ -187,15 +193,8 @@ def test__log_population(sim):
         # TODO check more?
 
 
-def test__log_hospital_characteristics(sim):
-    sim.logger.log_hospital_characteristics(sim.world.hospitals)
-    with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = sim.world.super_areas[0].name
-        assert set(f[f"{super_area}/hospitals/n_beds"]) == set([40])
-        assert set(f[f"{super_area}/hospitals/n_icu_beds"]) == set([5])
-
-
-def test__log_parameters(sim):
+def test__log_parameters(world, interaction, selector):
+    sim = create_sim(world, interaction, selector)
     sim.logger.log_parameters(
         interaction=sim.interaction, activity_manager=sim.activity_manager
     )
@@ -210,33 +209,43 @@ def test__log_parameters(sim):
         ) == set(["cinema", "pub"])
 
 
-def test__log_infection_location(sim):
-    time_steps = []
+def test__log_infected_in_timestep(world, interaction, selector):
+    clean_world(world)
+    sim = create_sim(world, interaction, selector)
     i = 0
+    sim.timer.reset()
     while sim.timer.date <= sim.timer.final_date:
         time = sim.timer.date
-        time_steps.append(time.strftime("%Y-%m-%dT%H:%M:%S.%f"))
         sim.do_timestep()
         if i > 10:
             break
         i += 1
         next(sim.timer)
-    all_locations = []
+
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = sim.world.super_areas[0].name
-        locations = f[f"{super_area}/locations"]
-        keys = list(locations.keys())
+        super_area = list(f.keys())[0]
+        super_area = f[super_area]
+        keys = list(super_area[f"infection"].keys())
         for key in keys:
-            all_locations += list(locations[f"{key}/locations"])
-    assert all(key in time_steps for key in keys)
-    for location in all_locations:
-        location = location.decode("utf-8")
-        generic = location.split("_")[0]
-        location_id = location.split("_")[1]
-        assert generic in ("household", "university", "company", "cinema", "pub")
+            ids_found = list(super_area[f"infection/{key}/id"][:])
+            if key in (
+                "2020-03-01T00:00:00.000000",
+                "2020-03-02T00:00:00.000000",
+                "2020-03-02T12:00:00.000000",
+            ):
+                assert len(ids_found) == 2
+                assert ids_found == [2, 3]
+            elif key in ("2020-03-03T00:00:00.000000", "2020-03-03T12:00:00.000000"):
+                assert len(ids_found) == 4
+                assert ids_found == [0, 2, 3, 4]
+            else:
+                assert len(ids_found) == 5
+                assert ids_found == [0, 1, 2, 3, 4]
 
 
-def test__log_infected(sim):
+def test__log_infected(world, interaction, selector):
+    clean_world(world)
+    sim = create_sim(world, interaction, selector)
     test_datetime = datetime(year=1971, month=1, day=1)
     test_dt_str = test_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
     test_ids = [7, 8, 9, 10, 11, 12]
@@ -261,26 +270,42 @@ def test__log_infected(sim):
     assert set(test_nsecondary) == set(f_nsecondary)
 
 
-def test__log_infected_in_timestep(sim):
+def test__log_infection_location(world, interaction, selector):
+    clean_world(world)
+    sim = create_sim(world, interaction, selector)
     time_steps = []
     i = 0
-    sim.timer.reset()
     while sim.timer.date <= sim.timer.final_date:
         time = sim.timer.date
         time_steps.append(time.strftime("%Y-%m-%dT%H:%M:%S.%f"))
+        sim.do_timestep()
         if i > 10:
             break
         i += 1
         next(sim.timer)
-
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = list(f.keys())[0]
-        super_area = f[super_area]
-        first_ts = time_steps[0]
-        keys = list(super_area[f"infection"].keys())
-        infected_set = set(super_area[f"infection/{first_ts}/id"][()])
-        world_ids = set([p.id for p in sim.world.people])
+        super_area = sim.world.super_areas[0].name
+        locations = f[f"{super_area}/locations"]
+        keys = list(locations.keys())
+        for key in keys:
+            locations_found = list(locations[f"{key}/locations"][:])
+            if key == "2020-03-03T00:00:00.000000":
+                assert len(locations_found) == 2
+                assert locations_found[0] == b"household_0"
+                assert locations_found[1] == b"household_0"
+            elif key == "2020-03-04T00:00:00.000000":
+                assert len(locations_found) == 1
+                assert locations_found[0] == b"household_0"
+            else:
+                assert len(locations_found) == 0
+    assert all(key in time_steps for key in keys)
 
-    assert all(t in keys for t in time_steps)
-    assert infected_set.issubset(world_ids)
-    assert len(infected_set) == 2
+
+"""
+def test__log_hospital_characteristics(sim):
+    sim.logger.log_hospital_characteristics(sim.world.hospitals)
+    with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
+        super_area = sim.world.super_areas[0].name
+        assert set(f[f"{super_area}/hospitals/n_beds"]) == set([40])
+        assert set(f[f"{super_area}/hospitals/n_icu_beds"]) == set([5])
+"""
