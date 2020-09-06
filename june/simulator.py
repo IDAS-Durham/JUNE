@@ -550,7 +550,7 @@ class Simulator:
                     >= self.timer.date
                     >= self.infection_seed.min_date
                 ):
-                    self.infection_seed.unleash_virus_per_region(self.timer.date)
+                    self.infection_seed.unleash_virus_per_day(self.timer.date)
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_dates
