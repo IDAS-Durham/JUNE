@@ -12,6 +12,7 @@ from june.demography import Demography, Person, Population
 from june.interaction import Interaction
 from june.infection import InfectionSelector
 from june.commute import ModeOfTransport
+from june.logger import Logger
 from june.groups import (
     Hospitals,
     Schools,
@@ -86,6 +87,7 @@ def test__full_run(dummy_world, selector):
         config_filename=test_config,
         leisure=leisure_instance,
         policies=policies,
+        logger=Logger(),
     )
     seed = InfectionSeed(world=sim.world, infection_selector=selector)
     seed.unleash_virus(Population(sim.world.people), n_cases=1)
