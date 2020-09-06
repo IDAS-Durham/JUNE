@@ -33,7 +33,7 @@ class SimulatorBox(Simulator):
             infection_selector: InfectionSelector =None,
             infection_seed: Optional["InfectionSeed"] = None,
             checkpoint_dates: List[datetime.date] = None,
-            save_path: str = "results",
+            logger: "Logger" = None,
     ):
         """
         Class to run an epidemic spread simulation on a box. It is 
@@ -67,7 +67,7 @@ class SimulatorBox(Simulator):
             activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            save_path=save_path,
+            logger=logger,
             checkpoint_dates=checkpoint_dates,
         )
 

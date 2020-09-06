@@ -13,7 +13,7 @@ from june import paths
 
 class ReadLogger:
     def __init__(
-            self, output_path: str = "results", output_file_name: str = "logger", n_processes: int = 2
+            self, output_path: str = "results", root_output_file: str = "logger", n_processes: int = 2
     ):
         """
         Read hdf5 file saved by the logger, and produce useful data frames
@@ -22,11 +22,11 @@ class ReadLogger:
         ----------
         output_path:
             path to simulation's output
-        output_file_name:
+        root_output_path:
             name of file saved by simulation
         """
         self.output_path = Path(output_path)
-        self.output_file_name = output_file_name
+        self.root_output_path = root_output_path
         self.load_population_data()
         self.infections_per_super_area, infections_world_list = [], []
         for rank in range(n_processes):
@@ -43,7 +43,7 @@ class ReadLogger:
         """
         Load data related to population (age, sex, ...)
         """
-        with h5py.File(self.output_path / f'{self.output_file_name}_0.hdf5', "r", libver="latest", swmr=True) as f:
+        with h5py.File(self.output_path / f'{self.root_output_path}.0.hdf5', "r", libver="latest", swmr=True) as f:
             population = f["population"]
             self.n_people = population.attrs["n_people"]
             self.ids = population["id"][:]
@@ -59,7 +59,7 @@ class ReadLogger:
         ``self.infections_per_super_area``
         """
         infections_per_super_area = []
-        with h5py.File(self.output_path / f'{self.output_file_name}_{rank}.hdf5', "r", libver="latest", swmr=True) as f:
+        with h5py.File(self.output_path / f'{self.root_output_path}.{rank}.hdf5', "r", libver="latest", swmr=True) as f:
             super_areas = [
                 key for key in f.keys() if key not in ("population", "parameters")
             ]

@@ -8,7 +8,7 @@ from june.simulator import Simulator
 from june import world
 from june.time import Timer
 from june.demography.geography import Geography
-from june.demography import Demography, Person
+from june.demography import Demography, Person, Population
 from june.interaction import Interaction
 from june.infection import InfectionSelector
 from june.commute import ModeOfTransport
@@ -86,8 +86,7 @@ def test__full_run(dummy_world, selector):
         config_filename=test_config,
         leisure=leisure_instance,
         policies=policies,
-        save_path=None,
     )
-    seed = InfectionSeed(sim.world.super_areas, selector)
-    seed.unleash_virus(1)
+    seed = InfectionSeed(world=sim.world, infection_selector=selector)
+    seed.unleash_virus(Population(sim.world.people), n_cases=1)
     sim.run()

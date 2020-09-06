@@ -131,7 +131,6 @@ def make_dummy_world(geog):
     world.pubs = Pubs([pub])
 
     world.areas[0].people = world.people
-
     return world
 
 

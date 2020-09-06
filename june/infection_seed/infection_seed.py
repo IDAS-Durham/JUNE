@@ -47,6 +47,9 @@ class InfectionSeed:
         self.seed_strength = seed_strength
         self.age_profile = age_profile
         self.daily_super_area_cases = daily_super_area_cases
+        if self.daily_super_area_cases is not None:
+            self.min_date = self.daily_super_area_cases.index.min()
+            self.max_date = self.daily_super_area_cases.index.max()
         self.dates_seeded = []
 
     def unleash_virus(
@@ -56,6 +59,7 @@ class InfectionSeed:
         mpi_rank: int = 0,
         mpi_comm: Optional["MPI.COMM_WORLD"] = None,
         mpi_size: Optional[int] = None,
+        box_mode=False
     ):
         """
         Infects ```n_cases``` people in ```population```
@@ -73,6 +77,8 @@ class InfectionSeed:
             different processes
         mpi_size:
             number of processes
+        box_mode:
+            whether to run on box mode
         """
         if mpi_rank == 0:
             susceptible_ids = [
@@ -99,7 +105,11 @@ class InfectionSeed:
                 if isinstance(self.world, Domain):
                     person_to_infect = self.world.people.get_from_id(inf_id)
                 else:
-                    person_to_infect = self.world.people[inf_id]
+                    if box_mode:
+                        world = self.world.members[0]
+                    else:
+                        world = self.world
+                    person_to_infect = world.people[inf_id]
                 self.infection_selector.infect_person_at_time(
                     person_to_infect,
                      0.0
