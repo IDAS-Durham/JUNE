@@ -93,7 +93,6 @@ def test__infection_by_super_area_errors(world, selector):
 
 def test__infection_per_day(world, selector):
     clean_world(world)
-    selector = InfectionSelector.from_file()
     cases_per_super_area_df = pd.DataFrame(
         {"date": ["2020-04-20", "2020-04-21"], 
             "super_1": [1, 2],
@@ -103,10 +102,10 @@ def test__infection_per_day(world, selector):
     cases_per_super_area_df.set_index('date', inplace=True)
     cases_per_super_area_df.index = pd.to_datetime(cases_per_super_area_df.index)
     seed = InfectionSeed(
-        world=world, infection_selector=selector, 
+        world=world, infection_selector=selector, daily_super_area_cases=cases_per_super_area_df,
     )
     timer = Timer(initial_day="2020-04-20", total_days=7,)
-    seed.unleash_virus_per_day(cases_per_super_area_df, timer.date)
+    seed.unleash_virus_per_day( timer.date)
     next(timer)
     assert (
         len([person for person in world.super_areas[0].people if person.infected]) == 1
@@ -115,7 +114,7 @@ def test__infection_per_day(world, selector):
         len([person for person in world.super_areas[1].people if person.infected]) == 5
     )
 
-    seed.unleash_virus_per_day(cases_per_super_area_df, timer.date)
+    seed.unleash_virus_per_day(timer.date)
     next(timer)
     assert (
         len([person for person in world.super_areas[0].people if person.infected]) == 1
@@ -124,7 +123,7 @@ def test__infection_per_day(world, selector):
         len([person for person in world.super_areas[1].people if person.infected]) == 5
     )
 
-    seed.unleash_virus_per_day(cases_per_super_area_df, timer.date)
+    seed.unleash_virus_per_day( timer.date)
     next(timer)
 
     assert (
@@ -136,7 +135,7 @@ def test__infection_per_day(world, selector):
         == 5 + 6
     )
 
-    seed.unleash_virus_per_day(cases_per_super_area_df, timer.date)
+    seed.unleash_virus_per_day( timer.date)
     next(timer)
 
     assert (
@@ -148,7 +147,7 @@ def test__infection_per_day(world, selector):
         == 5 + 6
     )
 
-    seed.unleash_virus_per_day(cases_per_super_area_df, timer.date)
+    seed.unleash_virus_per_day( timer.date)
     next(timer)
 
     assert (
@@ -159,8 +158,6 @@ def test__infection_per_day(world, selector):
         len([person for person in world.super_areas[1].people if person.infected])
         == 5 + 6
     )
-
-
 
 def test__age_profile(world, selector):
     clean_world(world)
