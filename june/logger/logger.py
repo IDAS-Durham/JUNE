@@ -27,7 +27,7 @@ class Logger:
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / file_name
-        self.infection_location, self.super_areas_infection = [], []
+        self.infection_location, self.super_areas_infected = [], []
         self.rank = rank
         try:
             os.remove(self.file_path)
@@ -250,7 +250,7 @@ class Logger:
                 time_dset.create_dataset("n_patients", data=n_patients)
                 time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
 
-    def accumulate_infection_location(self, location, super_areas_infection):
+    def accumulate_infection_location(self, location, super_areas_infected):
         """
         Store where infections happend in a time step
         
@@ -262,7 +262,7 @@ class Logger:
             super area in which the person that was infected lives
         """
         self.infection_location.append(location)
-        self.super_areas_infection.append(super_areas_infection)
+        self.super_areas_infected.append(super_areas_infected)
 
     def log_infection_location(self, time):
         """
@@ -274,10 +274,10 @@ class Logger:
             datetime to log
         """
         super_area_locations = {
-            super_area: {"location": [],} for super_area in self.super_areas_infection
+            super_area: {"location": [],} for super_area in self.super_areas_infected
         }
         for super_area, location in zip(
-            self.super_areas_infection, self.infection_location
+            self.super_areas_infected, self.infection_location
         ):
             super_area_locations[super_area]["location"].append(location)
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -290,7 +290,7 @@ class Logger:
                 locations = np.array(super_area_dict["location"], dtype="S")
                 time_dset.create_dataset("locations", data=locations)
         self.infection_location = []
-        self.super_areas_infection = []
+        self.super_areas_infected = []
 
     def unpack_dict(self, hdf5_obj, data, base_path, depth=0, max_depth=5):
         if depth > max_depth:
