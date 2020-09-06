@@ -104,7 +104,7 @@ class InfectionSeed:
             for inf_id in ids_to_infect:
                 #if isinstance(self.world, Domain):
                 if box_mode:
-                    person_to_infect = self.world.memebers[0].people[inf_id]
+                    person_to_infect = self.world.members[0].people[inf_id]
                 else:
                     person_to_infect = self.world.people.get_from_id(inf_id)
                 self.infection_selector.infect_person_at_time(
