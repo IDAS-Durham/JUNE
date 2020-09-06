@@ -10,7 +10,7 @@ import datetime
 
 class Logger:
     def __init__(
-        self, save_path: str = "results", file_name: str = "logger.hdf5", rank: int = 0
+        self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 0
     ):
         """
         Logger used by the simulator to store the relevant information.
@@ -74,12 +74,12 @@ class Logger:
                         ethnicities.append(person.ethnicity.encode("ascii", "ignore"))
                         socioeconomic_indcs.append(person.socioecon_index)
                         sexes.append(person.sex.encode("ascii", "ignore"))
-                        #super_areas.append(person.area.super_area.name)
+                        # super_areas.append(person.area.super_area.name)
 
                     ids = np.array(ids, dtype=np.int)
                     ages = np.array(ages, dtype=np.int16)
                     sexes = np.array(sexes, dtype="S10")
-                    #super_areas = np.array(super_areas, dtype="S10")
+                    # super_areas = np.array(super_areas, dtype="S10")
                     ethnicities = np.array(ethnicities, dtype="S10")
                     socioeconomic_indcs = np.array(socioeconomic_indcs, dtype=np.int8)
 
@@ -105,14 +105,14 @@ class Logger:
                             maxshape=(None,),
                             compression="gzip",
                         )
-                        '''
+                        """
                         people_dset.create_dataset(
                             "super_area",
                             data=super_areas,
                             maxshape=(None,),
                             compression="gzip",
                         )
-                        '''
+                        """
                     else:
                         newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                         people_dset["id"].resize(newshape)
@@ -121,8 +121,8 @@ class Logger:
                         people_dset["age"][idx1:idx2] = ages
                         people_dset["sex"].resize(newshape)
                         people_dset["sex"][idx1:idx2] = sexes
-                        #people_dset["super_area"].resize(newshape)
-                        #people_dset["super_area"][idx1:idx2] = super_areas
+                        # people_dset["super_area"].resize(newshape)
+                        # people_dset["super_area"][idx1:idx2] = super_areas
                         people_dset["ethnicity"].resize(newshape)
                         people_dset["ethnicity"][idx1:idx2] = ethnicities
                         people_dset["socioeconomic_index"].resize(newshape)
