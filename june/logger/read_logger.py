@@ -31,16 +31,7 @@ class ReadLogger:
         self.output_path = Path(output_path)
         self.root_output_file = root_output_file
         self.load_population_data()
-        self.infections_per_super_area, infections_world_list = [], []
-        for rank in range(n_processes):
-            infections_per_super_area, infections_world_df = self.load_infected_data(
-                rank
-            )
-            self.infections_per_super_area += infections_per_super_area
-            infections_world_list.append(infections_world_df)
-        self.infections_df = functools.reduce(lambda a, b: a + b, infections_world_list)
-        self.start_date = min(self.infections_per_super_area[0].index)
-        self.end_date = max(self.infections_per_super_area[0].index)
+        self.load_infected_data(n_processes)
 
     def load_population_data(self):
         """
@@ -57,11 +48,23 @@ class ReadLogger:
             self.ids = population["id"][:]
             self.ages = population["age"][:]
             self.sexes = population["sex"][:]
-            # self.super_areas = population["super_area"][:].astype("U13")
             self.ethnicities = population["ethnicity"][:]
             self.socioeconomic_indices = population["socioeconomic_index"][:]
 
-    def load_infected_data(self, rank: int):
+    def load_infected_data(self, n_processes):
+        self.infections_per_super_area, infections_world_list = [], []
+        for rank in range(n_processes):
+            (
+                infections_per_super_area,
+                infections_world_df,
+            ) = self._load_infected_data_for_rank(rank)
+            self.infections_per_super_area += infections_per_super_area
+            infections_world_list.append(infections_world_df)
+        self.infections_df = functools.reduce(lambda a, b: a + b, infections_world_list)
+        self.start_date = min(self.infections_per_super_area[0].index)
+        self.end_date = max(self.infections_per_super_area[0].index)
+
+    def _load_infected_data_for_rank(self, rank: int):
         """
         Load data on infected people over time and convert to a list of data frames 
         ``self.infections_per_super_area``
@@ -121,17 +124,6 @@ class ReadLogger:
             df["n_secondary_infections"] = df.apply(
                 lambda x: np.array(x.n_secondary_infections), axis=1
             )
-        """
-        infections_df["symptoms"] = infections_df.apply(
-            lambda x: np.array(x.symptoms), axis=1
-        )
-        infections_df["infected_id"] = infections_df.apply(
-            lambda x: np.array(x.infected_id), axis=1
-        )
-        infections_df["n_secondary_infections"] = infections_df.apply(
-            lambda x: np.array(x.n_secondary_infections), axis=1
-        )
-        """
         return infections_per_super_area, infections_df
 
     def process_symptoms(
@@ -323,7 +315,15 @@ class ReadLogger:
             for random_id in random_ids
         ]
 
-    def load_infection_location(self) -> pd.DataFrame:
+    def load_infection_location(self, n_processes) -> pd.DataFrame:
+        infection_locations = []
+        for rank in range(n_processes):
+            infection_locations.append(
+                self._load_infection_location_for_rank(rank=rank)
+            )
+        self.locations_df = pd.concat(infection_locations)
+
+    def _load_infection_location_for_rank(self, rank: int) -> pd.DataFrame:
         """
         Load data frame with informtion on where did people get infected
 
@@ -331,7 +331,12 @@ class ReadLogger:
         -------
             data frame with infection locations, and average count of infections per group type
         """
-        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+        with h5py.File(
+            self.output_path / f"{self.root_output_file}.{rank}.hdf5",
+            "r",
+            libver="latest",
+            swmr=True,
+        ) as f:
             super_areas = [
                 key for key in f.keys() if key not in ("population", "parameters")
             ]
@@ -353,24 +358,23 @@ class ReadLogger:
 
                 except KeyError:
                     continue
-        self.locations_df = pd.DataFrame(
+        locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
                 "location_id": infection_location,
                 "super_area": super_areas_for_df,
             }
         )
-        self.locations_df["time_stamp"] = pd.to_datetime(
-            self.locations_df["time_stamp"]
-        )
-        self.locations_df.set_index("time_stamp", inplace=True)
-        self.locations_df = self.locations_df.groupby(self.locations_df.index).sum()
-        self.locations_df = self.locations_df.resample("D").sum()
-        self.locations_df = self.locations_df[self.locations_df["location_id"] != 0]
-        self.locations_df["location"] = self.locations_df.apply(
+        locations_df["time_stamp"] = pd.to_datetime(locations_df["time_stamp"])
+        locations_df.set_index("time_stamp", inplace=True)
+        locations_df = locations_df.groupby(locations_df.index).sum()
+        locations_df = locations_df.resample("D").sum()
+        locations_df = locations_df[locations_df["location_id"] != 0]
+        locations_df["location"] = locations_df.apply(
             lambda x: [location_name.split("_")[0] for location_name in x.location_id],
             axis=1,
         )
+        return locations_df
 
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
