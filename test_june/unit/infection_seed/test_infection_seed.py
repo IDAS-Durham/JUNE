@@ -25,7 +25,7 @@ def create_world():
         for i in range(100)
     ]
     world = World()
-    world.people = people
+    world.people = Population(people)
     area_1 = Area(name="area_1", super_area=None, coordinates=None)
     area_1.people = people[:20]
     area_2 = Area(name="area_2", super_area=None, coordinates=None)
