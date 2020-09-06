@@ -337,7 +337,7 @@ class Simulator:
         if self.logger is not None:
             self.logger.log_infected(self.timer.date, super_area_infections)
 
-    def infect_people(self, infected_ids, people_from_abroad_dict):
+    def infect_people(self, infected_ids, people_from_abroad_dict, infection_locations):
         foreign_ids = []
         for inf_id in infected_ids:
             if inf_id in self.world.people.people_dict:
@@ -367,7 +367,7 @@ class Simulator:
                     infect_in_domains[domain].append(id)
             return infect_in_domains
 
-    def tell_domains_to_infect(self, infect_in_domains):
+    def tell_domains_to_infect(self, infect_in_domains, infection_location):
         people_to_infect = []
         for rank_sending in range(mpi_size):
             if rank_sending == mpi_rank:
@@ -432,7 +432,6 @@ class Simulator:
 
         # for checking that people is conserved
         n_people = 0
-
         # count people in the cemetery
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
@@ -442,7 +441,7 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         # main interaction loop
-        infected_ids = []#, group_where_infection = [], []
+        infected_ids, infection_locations = [], []
         for super_group in super_group_instances:
             for group in super_group:
                 if (
@@ -460,19 +459,6 @@ class Simulator:
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
-                        '''
-                        super_area_new_infected = [
-                            self.world.people[
-                                idx - first_person_id
-                            ].area.super_area.name
-                            for idx in new_infected_ids
-                        ]
-                        if self.logger is not None:
-                            self.logger.accumulate_infection_location(
-                                location=group.spec + f"_{group.id}",
-                                super_areas_infection=super_area_new_infected,
-                            )
-                        '''
                         if mpi_size == 1:
                             # note this is disabled in parallel
                             # assign blame of infections
@@ -488,13 +474,13 @@ class Simulator:
                                     / tprob_norm
                                 )
                     infected_ids += new_infected_ids
-                    #group_where_infection += len(new_infected_ids) * [f"{group.spec}_{group.id}"]
+                    infection_location += len(new_infected_ids) * [f"{group.spec}_{group.id}"]
         # infect the people that got exposed
         if self.infection_selector:
-            infect_in_domains = self.infect_people(
-                infected_ids, people_from_abroad_dict, #group_where_infection
+            infect_in_domains, locations_to_store_in_domains = self.infect_people(
+                infected_ids, people_from_abroad_dict, infection_location
             )
-            to_infect = self.tell_domains_to_infect(infect_in_domains)
+            to_infect = self.tell_domains_to_infect(infect_in_domains, locations_to_store_in_domains)
         # recount people active to check people conservation
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
