@@ -234,13 +234,14 @@ def test__log_infected_in_timestep(world, interaction, selector):
                 "2020-03-02T12:00:00.000000",
             ):
                 assert len(ids_found) == 2
-                assert ids_found == [2, 3]
+                assert ids_found ==  [353348, 353349]
             elif key in ("2020-03-03T00:00:00.000000", "2020-03-03T12:00:00.000000"):
                 assert len(ids_found) == 4
-                assert ids_found == [0, 2, 3, 4]
+                assert ids_found == [353346,353348, 353349,353350]
             else:
                 assert len(ids_found) == 5
-                assert ids_found == [0, 1, 2, 3, 4]
+                assert ids_found == [353346,353347,353348, 353349,353350]
+
 
 
 def test__log_infected(world, interaction, selector):
@@ -291,11 +292,11 @@ def test__log_infection_location(world, interaction, selector):
             locations_found = list(locations[f"{key}/locations"][:])
             if key == "2020-03-03T00:00:00.000000":
                 assert len(locations_found) == 2
-                assert locations_found[0] == b"household_0"
-                assert locations_found[1] == b"household_0"
+                assert locations_found[0] == b"household_114754"
+                assert locations_found[1] == b"household_114754"
             elif key == "2020-03-04T00:00:00.000000":
                 assert len(locations_found) == 1
-                assert locations_found[0] == b"household_0"
+                assert locations_found[0] == b"household_114754"
             else:
                 assert len(locations_found) == 0
     assert all(key in time_steps for key in keys)

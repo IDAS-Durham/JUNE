@@ -317,14 +317,14 @@ def test__read_infection_location(selector, interaction):
     dates = [date.date().strftime("%Y-%m-%d") for date in list(read.locations_df.index)]
     assert dates == ["2020-03-03", "2020-03-05", "2020-03-07"]
     assert read.locations_df.loc["2020-03-03"]["location_id"] == [
-        "household_3",
-        "household_3",
+        "household_114758",
+        "household_114758",
     ]
-    assert read.locations_df.loc["2020-03-05"]["location_id"] == ["household_3"]
+    assert read.locations_df.loc["2020-03-05"]["location_id"] == ["household_114758"]
     assert read.locations_df.loc["2020-03-07"]["location_id"] == [
-        "household_3",
-        "household_3",
-        "household_3",
+        "household_114758",
+        "household_114758",
+        "household_114758",
     ]
 
 
