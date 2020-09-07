@@ -5,6 +5,7 @@ import datetime
 import logging
 import june.simulator
 
+from june.logger import Logger
 from june.groups import Hospitals, Hospital
 from june.demography import Geography, Demography, Population
 from june.demography.geography import Areas
@@ -54,23 +55,24 @@ def run_simulator(selector):
         person.dead = False
     interaction = Interaction.from_file()
     policies = Policies([])
+    logger = Logger()
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
         infection_selector=selector,
         config_filename=test_config,
         leisure=None,
+        logger=logger,
         policies=policies,
-        save_path="tests",
     )
-    seed = InfectionSeed(sim.world.super_areas, selector)
-    seed.unleash_virus(20)
+    seed = InfectionSeed(sim.world, selector)
+    seed.unleash_virus(sim.world.people, n_cases=20)
     sim.run()
     return sim
 
 
 def test__checkpoints_are_saved(selector):
-    june.simulator.logger.disabled = True
+    june.simulator.output_logger.disabled = True
     sim = run_simulator(selector)
     fresh_world = generate_world_from_hdf5("./checkpoint_world.hdf5")
     interaction = Interaction.from_file()
@@ -83,7 +85,6 @@ def test__checkpoints_are_saved(selector):
         config_filename=test_config,
         leisure=None,
         policies=policies,
-        save_path="tests",
     )
     # check timer is correct
     assert sim_recovered.timer.initial_date == sim.timer.initial_date

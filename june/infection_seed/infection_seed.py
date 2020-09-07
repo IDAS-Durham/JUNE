@@ -163,7 +163,7 @@ class InfectionSeed:
                 break
             if (
                 int(age_group.split("-")[0])
-                <= self.world.people[person_id].age
+                <= self.world.people.get_from_id(person_id).age
                 < int(age_group.split("-")[1])
             ):
                 choices.append(person_id)
