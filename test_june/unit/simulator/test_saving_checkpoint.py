@@ -55,7 +55,7 @@ def run_simulator(selector):
         person.dead = False
     interaction = Interaction.from_file()
     policies = Policies([])
-    logger = Logger()
+    logger = Logger(save_path='tests')
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
@@ -77,6 +77,7 @@ def test__checkpoints_are_saved(selector):
     fresh_world = generate_world_from_hdf5("./checkpoint_world.hdf5")
     interaction = Interaction.from_file()
     policies = Policies([])
+    logger = Logger(save_path='tests')
     sim_recovered = Simulator.from_checkpoint(
         world=fresh_world,
         checkpoint_path="tests/checkpoint_2020-03-25.pkl",
