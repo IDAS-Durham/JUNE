@@ -185,6 +185,8 @@ class ActivityManager:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
                 )
+            elif person.commute is not None and activity == "commute":
+                subgroup = person.commute.group.get_active_subgroup(person=person)
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
