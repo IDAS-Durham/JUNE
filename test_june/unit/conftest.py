@@ -140,7 +140,7 @@ def create_simulator_box(world_box, interaction, selector):
 
 @pytest.fixture(name="world_visits", scope="session")
 def make_super_areas():
-    geo = Geography.from_file({"super_area": ["E02003353"]})
+    geo = Geography.from_file({"super_area": ["E02003353", "E02002512"]})
     geo.care_homes = CareHomes.for_geography(geo)
     world = generate_world_from_geography(geo, include_households=True)
     return world
@@ -149,7 +149,7 @@ def make_super_areas():
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
-    g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
+    g = Geography.from_file(filter_key={"super_area": ["E02002559", "E02002512"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
