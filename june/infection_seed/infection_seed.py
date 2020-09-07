@@ -200,6 +200,6 @@ class InfectionSeed:
         '''
         date_str = date.strftime("%Y-%m-%d")
         date = date.date()
-        if date not in self.dates_seeded and date in self.daily_super_area_cases.index:
+        if date not in self.dates_seeded and date_str in self.daily_super_area_cases.index:
             self.infect_super_areas(self.daily_super_area_cases.loc[date_str])
             self.dates_seeded.append(date)

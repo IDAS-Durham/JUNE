@@ -104,6 +104,8 @@ def test__infection_per_day(world, selector):
     seed = InfectionSeed(
         world=world, infection_selector=selector, daily_super_area_cases=cases_per_super_area_df,
     )
+    assert seed.min_date.strftime('%Y-%m-%d') == '2020-04-20'
+    assert seed.max_date.strftime('%Y-%m-%d') == '2020-04-21'
     timer = Timer(initial_day="2020-04-20", total_days=7,)
     seed.unleash_virus_per_day( timer.date)
     next(timer)
