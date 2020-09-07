@@ -191,11 +191,11 @@ def test__infection_is_isolated(selector):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file()
-    infection_seed = InfectionSeed(world.super_areas, selector)
+    infection_seed = InfectionSeed(world, selector)
     n_cases = 5
     infection_seed.unleash_virus(
         world.people,
-        n_cases=1
+        n_cases=n_cases
     )  # play around with the initial number of cases
     policies = Policies([])
     simulator = Simulator.from_file(

@@ -341,7 +341,8 @@ class Simulator:
         for inf_id, inf_loc in zip(infected_ids, infection_locations):
             if inf_id in self.world.people.people_dict:
                 person = self.world.people.get_from_id(inf_id)
-                self.logger.accumulate_infection_location(
+                if self.logger is not None:
+                    self.logger.accumulate_infection_location(
                     location=inf_loc, super_areas_infected=person.area.super_area.name
                 )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
@@ -399,7 +400,8 @@ class Simulator:
                     people_to_infect_id_location += data
         for (inf_id, inf_loc) in people_to_infect_id_location:
             person = self.world.people.get_from_id(inf_id)
-            self.logger.accumulate_infection_location(
+            if self.logger is not None:
+                self.logger.accumulate_infection_location(
                 location=inf_loc, super_areas_infected=person.area.super_area.name
             )
             self.infection_selector.infect_person_at_time(person, self.timer.now)
