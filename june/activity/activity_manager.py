@@ -64,16 +64,16 @@ class ActivityManager:
             }
         self.min_age_home_alone = min_age_home_alone
 
-        if "commute" in self.all_activities:
-            commute_options = activity_to_groups["commute"]
-            if "commuteunits" in commute_options:
-                self.commute_unit_distributor = CommuteUnitDistributor(
-                    self.world.commutehubs.members
-                )
-            if "commutecityunits" in commute_options:
-                self.commute_city_unit_distributor = CommuteCityUnitDistributor(
-                    self.world.commutecities.members
-                )
+        #if "commute" in self.all_activities:
+        #    commute_options = activity_to_groups["commute"]
+        #    if "commuteunits" in commute_options:
+        #        self.commute_unit_distributor = CommuteUnitDistributor(
+        #            self.world.commutehubs.members
+        #        )
+        #    if "commutecityunits" in commute_options:
+        #        self.commute_city_unit_distributor = CommuteCityUnitDistributor(
+        #            self.world.commutecities.members
+        #        )
 
         if (
             "rail_travel_out" in self.all_activities
@@ -116,11 +116,11 @@ class ActivityManager:
     def active_groups(self):
         return self.activities_to_groups(self.timer.activities)
 
-    def distribute_commuters(self):
-        if hasattr(self, "commute_unit_distributor"):
-            self.commute_unit_distributor.distribute_people()
-        if hasattr(self, "commute_city_unit_distributor"):
-            self.commute_city_unit_distributor.distribute_people()
+    #def distribute_commuters(self):
+    #    if hasattr(self, "commute_unit_distributor"):
+    #        self.commute_unit_distributor.distribute_people()
+    #    if hasattr(self, "commute_city_unit_distributor"):
+    #        self.commute_city_unit_distributor.distribute_people()
 
     def distribute_rail_out(self):
         if hasattr(self, "travelunit_distributor"):
@@ -214,8 +214,8 @@ class ActivityManager:
 
     def do_timestep(self):
         activities = self.timer.activities
-        if "commute" in activities:
-            self.distribute_commuters()
+        #if "commute" in activities:
+        #    self.distribute_commuters()
         if "rail_travel_out" in activities:
             self.distribute_rail_out()
         if "rail_travel_back" in activities:

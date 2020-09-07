@@ -226,14 +226,29 @@ class CommuteCities(Supergroup):
 
     def get_active_subgroup(person):
         if person in self.commute_internal:
-            so the commutecity unit thing
-            return unit.subgroup[0]
+            possible_units = self.commutecityunits
+            indices = list(range((len(possible_units))))
+            shuffle(indices)
+            for i in indices:
+                unit = possible_units[i]
+                if unit.no_passengers < unit.max_passengers:
+                    unit.no_passenger += 1
+                    person.subgroup.commute = unit
+                    return unit.subgroup[0]
+
         else:
             for hub in self.commutehubs:
                 if person in hub.commute_through:
                     for unit in hub.possible_units:
-                        do commute hub unit thing
-                        return unit.subgroup[0]
+                        possible_units = hub.commuteunits
+                        indices = list(range((len(possible_units))))
+                        shuffle(indices)
+                        for i in indices:
+                            unit = possible_units[i]
+                            if unit.no_passengers < unit.max_passengers:
+                                unit.no_passengers += 1
+                                person.subgroup.commute = unit
+                                return unit.subgroup[0]
 
 
 def get_msoa_lat_lon(msoa_coordinates):
