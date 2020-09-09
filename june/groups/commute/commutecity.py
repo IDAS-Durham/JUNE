@@ -77,7 +77,7 @@ class CommuteCity(Group):
         self.commute_internal.append(person)
 
 
-    def get_active_subgroup(person):
+    def get_commute_subgroup(person):
         if person in self.commute_internal:
             possible_units = self.commutecityunits
             indices = list(range((len(possible_units))))
@@ -86,7 +86,7 @@ class CommuteCity(Group):
                 unit = possible_units[i]
                 if unit.no_passengers < unit.max_passengers:
                     unit.no_passenger += 1
-                    person.subgroup.commute = unit
+                    person.subgroups.commute = unit
                     return unit.subgroup[0]
 
         else:
@@ -100,7 +100,7 @@ class CommuteCity(Group):
                             unit = possible_units[i]
                             if unit.no_passengers < unit.max_passengers:
                                 unit.no_passengers += 1
-                                person.subgroup.commute = unit
+                                person.subgroups.commute = unit
                                 return unit.subgroup[0]
 
 class CommuteCities(Supergroup):
