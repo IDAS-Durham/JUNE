@@ -102,7 +102,7 @@ class Susceptibility(IndividualInteraction):
         self,
         start_time: Union[str, datetime.datetime] = "1900-01-01",
         end_time: Union[str, datetime.datetime] = "2100-01-01",
-        age_group: str,
+        age_group: str = '0-100',
         susceptibility: float = 1.0,
     ):
         

@@ -31,6 +31,7 @@ from june.policy import (
     Policies,
     IndividualPolicies,
     Hospitalisation,
+    Susceptibility
 )
 from june.simulator import Simulator
 from june.world import World
