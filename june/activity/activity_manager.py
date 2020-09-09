@@ -170,7 +170,7 @@ class ActivityManager:
                 )
             elif person.mode_of_transport is not None and person.mode_of_transport.is_public and activity == "commute":
                 for commutecity in self.world.commutecities:
-                    if person in commutecity.people:
+                    if person in commutecity.commuters:
                         subgroup = commutecity.get_commute_subgroup(person=person)
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
