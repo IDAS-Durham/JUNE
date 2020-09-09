@@ -185,7 +185,7 @@ class ActivityManager:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
                 )
-            elif person.mode_of_transport.is_public and activity == "commute":
+            elif person.mode_of_transport is not None and person.mode_of_transport.is_public and activity == "commute":
                 for commutecity in self.world.commutecities:
                     if person in commutecity.people:
                         subgroup = commutecity.get_commute_subgroup(person=person)
