@@ -334,20 +334,20 @@ class ReadLoggerLegacy:
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             locations = f["locations"]
             infection_location = []
-            new_infected_ids = []
+            infection_counts = []
             for time_stamp in locations.keys():
                 infection_location.append(
                     list(locations[time_stamp]["infection_location"][:].astype("U"))
                 )
-                new_infected_ids.append(
-                    list(locations[time_stamp]["new_infected_ids"][:])
+                infection_counts.append(
+                    list(locations[time_stamp]["infection_counts"][:])
                 )
             time_stamps = list(locations.keys())
         self.locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
                 "location_id": infection_location,
-                "new_infected_ids": new_infected_ids,
+                "infection_counts": infection_counts,
             }
         )
         self.locations_df["time_stamp"] = pd.to_datetime(
@@ -359,9 +359,11 @@ class ReadLoggerLegacy:
             lambda x: [location_name.split("_")[0] for location_name in x.location_id],
             axis=1,
         )
-        self.locations_df["super_areas"] = self.locations_df.apply(
-            lambda x: self.super_areas[x.new_infected_ids], axis=1
-        )
+        
+        # not used anywhere and new_infected_ids not in logger.hdf5
+        # self.locations_df["super_areas"] = self.locations_df.apply(
+        #     lambda x: self.super_areas[x.new_infected_ids], axis=1
+        # )
 
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
@@ -404,15 +406,15 @@ class ReadLoggerLegacy:
         selected_dates = self.locations_df.loc[start_date:end_date]
 
         all_locations = selected_dates.sum().location
-        all_counts = selected_dates.sum().counts
+        all_counts = selected_dates.sum().infection_counts
         unique_locations = set(all_locations)
 
         time_series = pd.DataFrame(
             0, index=selected_dates.index, columns=unique_locations
         )
         for ts, row in selected_dates.iterrows():
-            for location, count in zip(row["location"], row["counts"]):
-                time_series.loc[ts, location] = count
+            for location, count in zip(row["location"], row["infection_counts"]):
+                time_series.loc[ts, location] += count
 
         time_series["total"] = time_series.sum(axis=1)
 
