@@ -47,6 +47,18 @@ class CloseLeisureVenue(LeisurePolicy):
         super().__init__(start_time, end_time)
         self.venues_to_close = venues_to_close
 
+    def is_active(self, date: datetime.datetime) -> bool:
+        """
+        Returns true if the policy is active, false otherwise
+
+        Parameters
+        ----------
+        date:
+            date to check
+        """
+        return self.start_time <= date <= self.end_time
+
+
     def apply(self, date: datetime.datetime, leisure: Leisure):
         if self.is_active(date):
             for venue in self.venues_to_close:
