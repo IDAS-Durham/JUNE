@@ -92,16 +92,15 @@ class CommuteCity(Group):
         else:
             for hub in self.commutehubs:
                 if person in hub.commute_through:
-                    for unit in hub.possible_units:
-                        possible_units = hub.commuteunits
-                        indices = list(range((len(possible_units))))
-                        shuffle(indices)
-                        for i in indices:
-                            unit = possible_units[i]
-                            if unit.no_passengers < unit.max_passengers:
-                                unit.no_passengers += 1
-                                person.subgroups.commute = unit
-                                return unit.subgroup[0]
+                    possible_units = hub.commuteunits
+                    indices = list(range((len(possible_units))))
+                    shuffle(indices)
+                    for i in indices:
+                        unit = possible_units[i]
+                        if unit.no_passengers < unit.max_passengers:
+                            unit.no_passengers += 1
+                            person.subgroups.commute = unit
+                            return unit.subgroup[0]
 
 class CommuteCities(Supergroup):
     """
