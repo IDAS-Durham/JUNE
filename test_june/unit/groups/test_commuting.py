@@ -148,7 +148,7 @@ class TestNewcastle:
         return commuteunits
 
     def test__commuteunits(self, commuteunits_nc):
-        assert len(commuteunits_nc.members[0].commuters) == 0
+        assert len(commuteunits_nc.members[0].people) == 0
 
     @pytest.fixture(name="commutecityunits_nc")
     def create_commute_city_units_with_people(self, commutecities_nc, commutehubs_nc):
