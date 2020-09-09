@@ -112,7 +112,7 @@ class Susceptibility(IndividualInteraction):
         self.susceptibility = susceptibility
 
     def apply(self, person: Person):
-        if person.age >= self.min_age and person.age <= max_age:
+        if person.age >= self.min_age and person.age <= self.max_age:
             person.susceptibility = self.susceptibility
         
 class StayHome(IndividualPolicy):
