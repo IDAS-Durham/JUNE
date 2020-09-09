@@ -436,9 +436,6 @@ class Simulator:
             self.logger.log_infection_location(self.timer.date)
             if self.world.hospitals is not None:
                 self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
-        people_in_pubs = 0
-        for pub in self.world.pubs:
-            people_in_pubs += len(pub.people)
         self.clear_world()
 
     def run(self):
