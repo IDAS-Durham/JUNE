@@ -43,6 +43,19 @@ def infect_person(person, selector, symptom_tag="mild"):
     if symptom_tag != "asymptomatic":
         person.residence.group.quarantine_starting_date = 5.3
 
+class TestIndividualInteraction:
+    def test__susceptibility(self, setup_policy_world, selector):
+        world, pupil, student, worker, sim = setup_policy_world
+        susceptibility_policy = Susceptibility(
+            start_time="2020-1-1",
+            end_time="2020-10-1",
+            age_group = '2-18',
+            susceptibility = 0.5,
+        )
+        policies = Policies([susceptibility_policy])
+        sim.activity_manager.policies = policies
+        sim.clear_world()
+        
 
 class TestSevereSymptomsStayHome:
     def test__policy_adults(self, setup_policy_world, selector):
