@@ -149,7 +149,7 @@ def make_super_areas():
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
-    g = Geography.from_file(filter_key={"super_area": ["E02002559", "E02001731"]})
+    g = Geography.from_file(filter_key={"super_area": ["E02002512", "E02001697", "E02001731"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
@@ -215,6 +215,7 @@ def make_dummy_world():
     world.groceries = Groceries([grocery])
     # commute
     world.commutecities = CommuteCities.for_super_areas(world.super_areas)
+    world.commutecities[7].add(commuter)
     world.commutehubs = CommuteHubs(world.commutecities)
     world.commutehubs.from_file()
     world.commutehubs.init_hubs()
