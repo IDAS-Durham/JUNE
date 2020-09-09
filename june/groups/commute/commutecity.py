@@ -86,7 +86,7 @@ class CommuteCity(Group):
             for i in indices:
                 unit = possible_units[i]
                 if unit.no_passengers < unit.max_passengers:
-                    unit.no_passenger += 1
+                    unit.no_passengers += 1
                     person.subgroups.commute = unit
                     return unit.subgroups[0]
 

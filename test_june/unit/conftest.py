@@ -189,7 +189,7 @@ def make_dummy_world():
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.area = super_area.areas[0]
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
-    commuter.mode_of_transport = "public"
+    #commuter.mode_of_transport = "public"
     household.add(commuter)
 
     world = World()
@@ -216,10 +216,13 @@ def make_dummy_world():
     # commute
     world.commutecities = CommuteCities.for_super_areas(world.super_areas)
     world.commutecities[7].add(commuter)
+    world.commutecities[7].add_internal_commuter(commuter)
     world.commutehubs = CommuteHubs(world.commutecities)
     world.commutehubs.from_file()
     world.commutehubs.init_hubs()
     world.commutehubs[0].commute_through.append(commuter)
+    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
+    world.commutecityunits.init_units()
     world.commuteunits = CommuteUnits(world.commutehubs.members)
     world.commuteunits.init_units()
     world.commutecityunits = CommuteCityUnits(world.commutecities.members)
