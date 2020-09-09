@@ -64,17 +64,6 @@ class ActivityManager:
             }
         self.min_age_home_alone = min_age_home_alone
 
-        if "commute" in self.all_activities:
-            commute_options = activity_to_groups["commute"]
-            if "commuteunits" in commute_options:
-                self.commute_unit_distributor = CommuteUnitDistributor(
-                    self.world.commutehubs.members
-                )
-            if "commutecityunits" in commute_options:
-                self.commute_city_unit_distributor = CommuteCityUnitDistributor(
-                    self.world.commutecities.members
-                )
-
         if (
             "rail_travel_out" in self.all_activities
             or "rail_travel_back" in self.all_activities
@@ -115,12 +104,6 @@ class ActivityManager:
     @property
     def active_groups(self):
         return self.activities_to_groups(self.timer.activities)
-
-    def distribute_commuters(self):
-        if hasattr(self, "commute_unit_distributor"):
-            self.commute_unit_distributor.distribute_people()
-        if hasattr(self, "commute_city_unit_distributor"):
-            self.commute_city_unit_distributor.distribute_people()
 
     def distribute_rail_out(self):
         if hasattr(self, "travelunit_distributor"):
@@ -185,6 +168,10 @@ class ActivityManager:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
                 )
+            elif person.mode_of_transport is not None and person.mode_of_transport.is_public and activity == "commute":
+                for commutecity in self.world.commutecities:
+                    if person in commutecity.commuters:
+                        subgroup = commutecity.get_commute_subgroup(person=person)
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
@@ -212,8 +199,6 @@ class ActivityManager:
 
     def do_timestep(self):
         activities = self.timer.activities
-        if "commute" in activities:
-            self.distribute_commuters()
         if "rail_travel_out" in activities:
             self.distribute_rail_out()
         if "rail_travel_back" in activities:
