@@ -77,7 +77,7 @@ class CommuteCity(Group):
         self.commute_internal.append(person)
 
 
-    def get_commute_subgroup(person):
+    def get_commute_subgroup(self, person):
         if person in self.commute_internal:
             possible_units = self.commutecityunits
             indices = list(range((len(possible_units))))
