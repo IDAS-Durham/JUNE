@@ -76,6 +76,8 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         commute_cities_dset.create_dataset("city_names", data=cities_names_list)
         commute_cities_dset.create_dataset("super_area", data=commute_city_super_areas)
         commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
+        print('commute city units ids = ', commute_city_units_ids_list)
+        print('commute city units ids type = ', type(commute_city_units_ids_list))
         commute_cities_dset.create_dataset(
             "commute_city_units_ids", data=commute_city_units_ids_list
         )
