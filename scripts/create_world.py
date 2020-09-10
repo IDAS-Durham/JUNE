@@ -23,7 +23,7 @@ london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)
 t1 = time.time()
 
 # default config path
-config_path = "./config_nocommute.yaml"
+config_path = "./config.yaml"
 
 # define geography, let's run the first 20 super areas of london
 geography = Geography.from_file({"super_area": london_areas[0:50]})
@@ -36,7 +36,7 @@ geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
 world = generate_world_from_geography(
-    geography, include_households=True, include_commute=False
+    geography, include_households=True, include_commute=True
 )
 #
 ## some leisure activities

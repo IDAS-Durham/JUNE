@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import spatial
+from random import shuffle
 from typing import List
 from june.demography.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
@@ -67,15 +68,39 @@ class CommuteCity(Group):
         self.commutehubs = []
         self.commute_internal = []
         self.commutecityunits = []
+        self.commuters = []
 
     def add(self, person):
-        super().add(
-            person=person, activity="commute", subgroup_type=self.SubgroupType.default
-        )
+        self.commuters.append(person)
 
     def add_internal_commuter(self, person):
         self.commute_internal.append(person)
 
+
+    def get_commute_subgroup(self, person):
+        if person in self.commute_internal:
+            possible_units = self.commutecityunits
+            indices = list(range((len(possible_units))))
+            shuffle(indices)
+            for i in indices:
+                unit = possible_units[i]
+                if unit.no_passengers < unit.max_passengers:
+                    unit.no_passengers += 1
+                    person.subgroups.commute = unit
+                    return unit.subgroups[0]
+
+        else:
+            for hub in self.commutehubs:
+                if person in hub.commute_through:
+                    possible_units = hub.commuteunits
+                    indices = list(range((len(possible_units))))
+                    shuffle(indices)
+                    for i in indices:
+                        unit = possible_units[i]
+                        if unit.no_passengers < unit.max_passengers:
+                            unit.no_passengers += 1
+                            person.subgroups.commute = unit
+                            return unit.subgroups[0]
 
 class CommuteCities(Supergroup):
     """

@@ -555,3 +555,4 @@ class Observed2Cases:
         )
         return self.get_latent_cases_per_region(
             self.n_observed_deaths, median_time_to_death, avg_hospital_death_rate
+            )
