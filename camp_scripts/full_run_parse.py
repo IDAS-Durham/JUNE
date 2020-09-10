@@ -61,6 +61,7 @@ parser = argparse.ArgumentParser(description='Full run of the camp')
 
 parser.add_argument('-c', '--comorbidities', help="True to include comorbidities", required=False, default="True")
 parser.add_argument('-p', '--parameters', help="Parameter file", required=False, default="ContactInteraction_med_low_low_low.yaml")
+parser.add_argument('-cs', '--child_susceptibility' ,help="Reduce child susceptibility", required=False, default=False)
 parser.add_argument('-u', '--isolation_units', help="True to include isolation units", required=False, default="False")
 parser.add_argument('-t', '--isolation_testing', help="Model weights in HDF5 format", required=False, default=3)
 parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=False, default=7)
@@ -69,10 +70,10 @@ parser.add_argument('-m', '--mask_wearing', help="True to include mask wearing",
 parser.add_argument('-mc', '--mask_compliance', help="Mask wearing compliance", required=False, default="False")
 parser.add_argument('-mb', '--mask_beta_factor', help="Mask beta factor reduction", required=False, default=0.5)
 parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
-parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 parser.add_argument('-lc', '--learning_centers' ,help="Add learning centers", required=False, default=False)
 parser.add_argument('-lch', '--learning_center_beta_ratio', help="Learning center/household beta ratio scaling", required=False, default=False)
 parser.add_argument('-pgh', '--play_group_beta_ratio', help="Play group/household beta ratio scaling", required=False, default=False)
+parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
 args = parser.parse_args()
 
 if args.comorbidities == "True":
@@ -80,6 +81,11 @@ if args.comorbidities == "True":
 else:
     args.comorbidities = False
 
+if args.child_susceptibility == "True":
+    args.child_susceptibility = True
+else:
+    args.child_susceptibility = False
+    
 if args.isolation_units == "True":
     args.isolation_units = True
 else:
@@ -211,9 +217,9 @@ if args.isolation_units:
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
-    policies.policies[3].n_quarantine_days = args.isolation_time
-    policies.policies[3].testing_mean_time = args.isolation_testing
-    policies.policies[3].compliance = args.isolation_compliance
+    policies.policies[5].n_quarantine_days = args.isolation_time
+    policies.policies[5].testing_mean_time = args.isolation_testing
+    policies.policies[5].compliance = args.isolation_compliance
 
 elif args.mask_wearing:
     policies = Policies.from_file(
@@ -221,14 +227,18 @@ elif args.mask_wearing:
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
-    policies.policies[7].compliance = args.mask_compliance
-    policies.policies[7].beta_factor = args.mask_beta_factor
-    
+    policies.policies[9].compliance = args.mask_compliance
+    policies.policies[9].beta_factor = args.mask_beta_factor
+
 else:
     policies = Policies.from_file(
         camp_configs_path / "defaults/policy/home_care_policy.yaml",
         base_policy_modules=("june.policy", "camps.policy"),
     )
+
+if args.child_susceptibility:
+    policies[3].susceptibility = 0.5
+    policies[4].susceptibility = 0.75
 
 # ============================================================================#
 
