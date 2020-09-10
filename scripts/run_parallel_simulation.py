@@ -39,7 +39,7 @@ def set_random_seed(seed=999):
 set_random_seed()
 
 world_file = "./london_50.hdf5"
-config_path = "./config_nocommute.yaml"
+config_path = "./config.yaml"
 
 # parallel setup
 
