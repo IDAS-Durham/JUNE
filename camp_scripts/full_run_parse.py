@@ -237,8 +237,8 @@ else:
     )
 
 if args.child_susceptibility:
-    policies[3].susceptibility = 0.5
-    policies[4].susceptibility = 0.75
+    policies.policies[3].susceptibility = 0.5
+    policies.policies[4].susceptibility = 0.75
 
 # ============================================================================#
 
