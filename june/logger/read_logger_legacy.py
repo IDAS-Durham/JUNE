@@ -128,9 +128,7 @@ class ReadLoggerLegacy:
         df["daily_deaths_icu"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
         )  # .cumsum()
-        df["daily_deaths"] = df[
-            ["daily_deaths_home", "daily_deaths_hospital", "daily_deaths_icu"]
-        ].sum(axis=1)
+        df['daily_deaths'] = df[['daily_deaths_home', 'daily_deaths_hospital', 'daily_deaths_icu']].sum(axis=1)
         # get rid of those that just recovered or died
         df["current_infected"] = symptoms_df.apply(
             lambda x: (
@@ -150,19 +148,29 @@ class ReadLoggerLegacy:
         df["current_intensive_care"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.intensive_care), axis=1
         )
-        flat_df = self.infections_df[["symptoms", "infected_id"]].apply(
-            lambda x: x.explode()
-        )
-        flat_df = flat_df.drop_duplicates(keep="first")
-        flat_df = flat_df[flat_df["symptoms"] == SymptomTag.hospitalised]
-        df["daily_hospital_admissions"] = flat_df.groupby(flat_df.index).size()
-        df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
         df["daily_infections"] = (
             -df["current_susceptible"]
             .diff()
             .fillna(-df["current_infected"][0])
             .astype(int)
         )
+        # filter rows that contain at least one hospitalised person
+        symptoms_df = symptoms_df[df['current_hospitalised'] > 0]
+        for ts,row in symptoms_df.iterrows():
+            mask = (row["symptoms"] == SymptomTag.hospitalised)
+            for col,data in row.iteritems():
+                symptoms_df.loc[ts,col] = data[mask]
+        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(
+            lambda x: x.explode() 
+        )
+        unique,unique_indices = np.unique(
+            flat_df["infected_id"].values,return_index=True
+        ) # will only return the first index of each.
+        flat_hospitalised_df = flat_df.iloc[unique_indices]
+        df["daily_hospital_admissions"] = flat_hospitalised_df.groupby(
+            flat_hospitalised_df.index
+        ).size()
+        df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
         return df
 
     def world_summary(self) -> pd.DataFrame:
@@ -204,6 +212,41 @@ class ReadLoggerLegacy:
             area_df["super_area"] = area
             areas_df.append(area_df)
         return pd.concat(areas_df)
+
+    def super_areas_to_region_mapping(self, super_areas, super_area_region_path=paths.data_path / 'input/geography/area_super_area_region.csv'):
+        super_area_region = pd.read_csv(super_area_region_path)
+        super_area_region = super_area_region.drop(columns='area').drop_duplicates()
+        super_area_region.set_index('super_area', inplace=True)
+        return super_area_region.loc[super_areas]['region'].values
+
+    def region_summary(self) -> pd.DataFrame:
+        """ 
+        Generate a summary for regions, on how many people are recovered, dead, infected,
+        susceptible, hospitalised or in intensive care, per time step.
+
+        Returns
+        -------
+        A data frame whose index is the date recorded, and columns are regions, number of recovered,
+        dead, infected...
+        """
+        regions = self.super_areas_to_region_mapping(self.super_areas)
+        self.infections_df["regions"] = self.infections_df.apply(
+          lambda x: regions[x.infected_id], axis=1
+        )
+        regions_df = []
+        for region in np.unique(regions):
+            region_df = pd.DataFrame()
+            n_people_in_region = np.sum(regions == region)
+            region_df["symptoms"] = self.infections_df.apply(
+              lambda x: x.symptoms[x.regions == region], axis=1
+            )
+            region_df["infected_id"] = self.infections_df.apply(
+              lambda x: x.infected_id[x.regions == region], axis=1
+            )
+            region_df = self.process_symptoms(region_df, n_people_in_region)
+            region_df["region"] = region
+            regions_df.append(region_df)
+        return pd.concat(regions_df)
 
     def age_summary(self, age_ranges: List[int]) -> pd.DataFrame:
         """
@@ -291,20 +334,20 @@ class ReadLoggerLegacy:
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             locations = f["locations"]
             infection_location = []
-            new_infected_ids = []
+            infection_counts = []
             for time_stamp in locations.keys():
                 infection_location.append(
                     list(locations[time_stamp]["infection_location"][:].astype("U"))
                 )
-                new_infected_ids.append(
-                    list(locations[time_stamp]["new_infected_ids"][:])
+                infection_counts.append(
+                    list(locations[time_stamp]["infection_counts"][:])
                 )
             time_stamps = list(locations.keys())
         self.locations_df = pd.DataFrame(
             {
                 "time_stamp": time_stamps,
                 "location_id": infection_location,
-                "new_infected_ids": new_infected_ids,
+                "infection_counts": infection_counts,
             }
         )
         self.locations_df["time_stamp"] = pd.to_datetime(
@@ -316,9 +359,11 @@ class ReadLoggerLegacy:
             lambda x: [location_name.split("_")[0] for location_name in x.location_id],
             axis=1,
         )
-        self.locations_df["super_areas"] = self.locations_df.apply(
-            lambda x: self.super_areas[x.new_infected_ids], axis=1
-        )
+        
+        # not used anywhere and new_infected_ids not in logger.hdf5
+        # self.locations_df["super_areas"] = self.locations_df.apply(
+        #     lambda x: self.super_areas[x.new_infected_ids], axis=1
+        # )
 
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
@@ -361,15 +406,15 @@ class ReadLoggerLegacy:
         selected_dates = self.locations_df.loc[start_date:end_date]
 
         all_locations = selected_dates.sum().location
-        all_counts = selected_dates.sum().counts
+        all_counts = selected_dates.sum().infection_counts
         unique_locations = set(all_locations)
 
         time_series = pd.DataFrame(
             0, index=selected_dates.index, columns=unique_locations
         )
         for ts, row in selected_dates.iterrows():
-            for location, count in zip(row["location"], row["counts"]):
-                time_series.loc[ts, location] = count
+            for location, count in zip(row["location"], row["infection_counts"]):
+                time_series.loc[ts, location] += count
 
         time_series["total"] = time_series.sum(axis=1)
 
