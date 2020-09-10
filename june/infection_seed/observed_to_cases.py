@@ -207,10 +207,10 @@ class Observed2Cases:
     def cases_from_deaths_for_region(self, region):
         dead_trajectories = self.filter_trajectories(self.trajectories)
         avg_rates = self.get_avg_rate_for_symptoms(
-            symptoms_tags=("dead_icu", "dead_hospital"), region=region
+            symptoms_tags=("dead_hospital", "dead_icu"), region=region
         )
         time_to_death = self.get_avg_time_to_symptoms(
-            dead_trajectories, avg_rates, symptoms_tags=("dead_icu", "dead_hospital")
+            dead_trajectories, avg_rates, symptoms_tags=("dead_hospital", "dead_icu")
         )
         return self.cases_from_observation(
             self.n_observed_deaths, time_to_death, avg_rates, region=region
@@ -228,16 +228,16 @@ class Observed2Cases:
              symptoms_to_keep=(
                 "hospitalised",
                 "intensive_care",
-                "dead_icu",
                 "dead_hospital",
+                "dead_icu",
             ),
         )
         avg_rates = self.get_avg_rate_for_symptoms(
             symptoms_tags=(
                 "hospitalised",
                 "intensive_care",
-                "dead_icu",
                 "dead_hospital",
+                "dead_icu",
             ),
             region=region,
         )
