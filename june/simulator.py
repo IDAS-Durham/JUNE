@@ -20,6 +20,8 @@ from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from time import perf_counter
+from time import time as wall_clock
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -374,7 +376,8 @@ class Simulator:
             return infect_in_domains
 
     def tell_domains_to_infect(self, infect_in_domains):
-        people_to_infect_id_location = []
+        people_to_infect = []
+        tick, tickw = perf_counter(), wall_clock()
         for rank_sending in range(mpi_size):
             if rank_sending == mpi_rank:
                 # my turn to send my data
@@ -397,8 +400,10 @@ class Simulator:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
-                    people_to_infect_id_location += data
-        for (inf_id, inf_loc) in people_to_infect_id_location:
+                    people_to_infect += data
+        tock, tockw = perf_counter(),wall_clock()
+        output_logger.info(f'CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}')
+        for inf_id in people_to_infect:
             person = self.world.people.get_from_id(inf_id)
             if self.logger is not None:
                 self.logger.accumulate_infection_location(
@@ -416,6 +421,7 @@ class Simulator:
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
+        tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
                 date=self.timer.date, interaction=self.interaction,
@@ -490,11 +496,9 @@ class Simulator:
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
-                infected_ids, people_from_abroad_dict, infection_location
+                infected_ids, people_from_abroad_dict
             )
-            to_infect = self.tell_domains_to_infect(
-                infect_in_domains, 
-            )
+            to_infect = self.tell_domains_to_infect(infect_in_domains)
         # recount people active to check people conservation
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
@@ -516,6 +520,8 @@ class Simulator:
             #    self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         # remove everyone from their active groups
         self.clear_world()
+        tock, tockw = perf_counter(), wall_clock()
+        output_logger.info(f'CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}')
 
     def run(self):
         """

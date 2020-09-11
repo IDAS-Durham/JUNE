@@ -5,7 +5,7 @@ from random import random
 import h5py
 
 from june.groups.group import Group, Supergroup
-from june.mpi_setup import add_person_entry, delete_person_entry
+
 from enum import IntEnum
 from typing import List
 from recordclass import dataobject
@@ -92,11 +92,7 @@ class Household(Group):
                             continue
                         mate.leisure.remove(mate)
                     else:
-                        ret = delete_person_entry(
-                            to_send_abroad=to_send_abroad,
-                            person=mate,
-                            external_subgroup=mate.leisure,
-                        )
+                        ret = to_send_abroad.delete_person(mate, mate.leisure)
                         if ret:
                             # person active somewhere else, let's not disturb them
                             continue

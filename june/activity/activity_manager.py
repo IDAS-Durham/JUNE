@@ -4,6 +4,8 @@ from itertools import chain
 from typing import List, Optional
 from collections import defaultdict
 import numpy as np
+from time import perf_counter
+from time import time as wall_clock
 
 from june.demography import Person
 from june.exc import SimulatorError
@@ -12,6 +14,7 @@ from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistr
 from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
 from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
@@ -22,10 +25,8 @@ from june.mpi_setup import (
     mpi_comm,
     mpi_size,
     mpi_rank,
+    MovablePeople,
     count_people_in_dict,
-    update_data,
-    add_person_entry,
-    delete_person_entry,
 )
 
 logger = logging.getLogger(__name__)
@@ -249,12 +250,13 @@ class ActivityManager:
                 is_weekend=self.timer.is_weekend,
                 working_hours="primary_activity" in activities,
             )
-        n_people_going_abroad, to_send_abroad = self.move_people_to_active_subgroups(
+        to_send_abroad = self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
         (
             people_from_abroad,
             n_people_from_abroad,
+            n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
         return people_from_abroad, n_people_from_abroad, n_people_going_abroad
 
@@ -276,7 +278,7 @@ class ActivityManager:
             date=date
         )
         activities = self.apply_activity_hierarchy(activities)
-        to_send_abroad = {}
+        to_send_abroad = MovablePeople()
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
@@ -293,18 +295,13 @@ class ActivityManager:
                 allowed_activities, person, to_send_abroad
             )
             if external_subgroup is not None:
-                add_person_entry(
-                    to_send_abroad=to_send_abroad,
-                    person=person,
-                    external_subgroup=external_subgroup,
-                )
-        n_people_going_abroad = 0
-        for domain_id in to_send_abroad:
-            n_people_going_abroad += count_people_in_dict(to_send_abroad[domain_id])
-        return n_people_going_abroad, to_send_abroad
+                to_send_abroad.add_person(person, external_subgroup)
 
-    def send_and_receive_people_from_abroad(self, to_send_abroad):
+        return to_send_abroad
+
+    def send_and_receive_people_from_abroad_old(self, to_send_abroad):
         # send people abroad
+        tick, tickw = perf_counter(), wall_clock()
         people_from_abroad = {}
         n_people_from_abroad = 0
         for rank in range(mpi_size):
@@ -337,4 +334,49 @@ class ActivityManager:
                     )
                     update_data(people_from_abroad, data)
                     n_people_from_abroad += n_people_this_rank
+        tock,tockw = perf_counter(), wall_clock()
+        logger.info(f'CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw-tickw} - {self.timer.date}')
         return people_from_abroad, n_people_from_abroad
+
+    def send_and_receive_people_from_abroad(self, movable_people):
+        """
+        Deal with the MPI comms.
+        """
+        n_people_going_abroad = 0
+        n_people_from_abroad = 0
+        tick, tickw = perf_counter(), wall_clock()
+        reqs = []
+
+        for rank in range(mpi_size):
+
+            if mpi_rank == rank:
+                continue
+            keys, data, n_this_rank = movable_people.serialise(rank)
+            if n_this_rank:
+                reqs.append(mpi_comm.isend(keys, dest=rank, tag=100))
+                reqs.append(mpi_comm.isend(data, dest=rank, tag=200))
+                n_people_going_abroad += n_this_rank
+            else:
+                reqs.append(mpi_comm.isend(None, dest=rank, tag=100))
+                reqs.append(mpi_comm.isend(None, dest=rank, tag=200))
+
+        # now it has all been sent, we can start the receiving.
+
+        for rank in range(mpi_size):
+
+            if rank == mpi_rank:
+                continue
+            keys = mpi_comm.recv(source=rank, tag=100)
+            data = mpi_comm.recv(source=rank, tag=200)
+
+            if keys is not None:
+                movable_people.update(rank, keys, data)
+                n_people_from_abroad += data.shape[0]
+
+        for r in reqs:
+            r.wait()
+
+        tock, tockw = perf_counter(), wall_clock()
+        logger.info(
+            f'CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}')
+        return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad

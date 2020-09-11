@@ -17,7 +17,8 @@ from june.groups.leisure import (
 from june.groups.leisure import Pubs, Cinemas, Groceries
 from june.groups import Household, ExternalSubgroup, Households
 from june import paths
-from june.mpi_setup import add_person_entry, delete_person_entry
+
+
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -259,14 +260,14 @@ class Leisure:
                                     continue
                                 mate.leisure.remove(mate)
                             else:
-                                ret = delete_person_entry(to_send_abroad, mate, mate.leisure)
+                                ret = to_send_abroad.delete_person(mate, mate.leisure)
                                 if ret:
                                     # person active somewhere else, let's not disturb them
                                     continue
                             if not subgroup.external:
                                 subgroup.append(mate)
                             else:
-                                add_person_entry(to_send_abroad, mate, subgroup)
+                                to_send_abroad.add_person(mate, subgroup)
                     mate.subgroups.leisure = (
                         subgroup  # person will be added later in the simulator.
                     )
