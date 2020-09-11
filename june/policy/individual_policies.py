@@ -83,9 +83,41 @@ class IndividualPolicies(PolicyCollection):
                 else:
                     if policy.check_skips_activity(person):
                         activities = policy.apply(activities=activities)
+            elif policy.policy_subtype == "individual_interaction":
+                policy.apply(person=person)
         return activities
 
 
+class IndividualInteraction(IndividualPolicy):
+
+    def __init__(self, start_time="1900-01-01", end_time="2100-01-01"):
+        super().__init__(start_time=start_time, end_time=end_time)
+        self.policy_subtype = "individual_interaction"
+
+    def apply(self):
+        raise NotImplementedError(
+            f"Need to implement apply for policy {self.__class__.__name__}"
+        )
+
+class Susceptibility(IndividualInteraction):
+
+    def __init__(
+        self,
+        start_time: Union[str, datetime.datetime] = "1900-01-01",
+        end_time: Union[str, datetime.datetime] = "2100-01-01",
+        age_group: str = '0-100',
+        susceptibility: float = 1.0,
+    ):
+        
+        super().__init__(start_time, end_time)
+        self.min_age = int(age_group.split('-')[0])
+        self.max_age = int(age_group.split('-')[1])
+        self.susceptibility = susceptibility
+
+    def apply(self, person: Person):
+        if person.age >= self.min_age and person.age <= self.max_age:
+            person.susceptibility = self.susceptibility
+        
 class StayHome(IndividualPolicy):
     """
     Template for policies that will force someone to stay at home
