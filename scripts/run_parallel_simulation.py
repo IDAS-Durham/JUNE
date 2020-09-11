@@ -99,7 +99,7 @@ simulator = Simulator.from_file(
 print("simulator ready to go")
 
 if rank == 0:
-    n_cases = 50
+    n_cases = 500
     selected_people = np.random.choice(len(population.people), n_cases, replace=False)
     selected_ids = []
     for selected_person in selected_people:
