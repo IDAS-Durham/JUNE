@@ -65,10 +65,20 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         else:
             commute_hubs_list = np.array(commute_hubs_list, dtype=dt)
         cities_names_list = np.array(cities_names_list, dtype="S20")
-        commute_city_units_ids_list = np.array(commute_city_units_ids_list, dtype=dt)
-        commute_city_units_is_peak_list = np.array(
-            commute_city_units_is_peak_list, dtype=dt
-        )
+        if sum([len(c_id) for c_id in commute_city_units_ids_list]) == len(commute_cities):
+            commute_city_units_ids_list = np.array(commute_city_units_ids_list, dtype=np.int)
+        else:
+            commute_city_units_ids_list = np.array(commute_city_units_ids_list, dtype=dt)
+
+        if sum([len(c_id) for c_id in commute_city_units_is_peak_list]) == len(commute_cities):
+            commute_city_units_is_peak_list = np.array(
+                commute_city_units_is_peak_list, dtype=np.int
+            )
+        else:
+            commute_city_units_is_peak_list = np.array(
+                commute_city_units_is_peak_list, dtype=dt
+            )
+
         commute_city_super_areas = np.array(commute_city_super_areas, dtype=np.int)
         commute_internal_list = np.array(commute_internal_list, dtype=dt)
         commute_cities_dset.attrs["n_commute_cities"] = n_cities
@@ -76,8 +86,6 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         commute_cities_dset.create_dataset("city_names", data=cities_names_list)
         commute_cities_dset.create_dataset("super_area", data=commute_city_super_areas)
         commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
-        print('commute city units ids = ', commute_city_units_ids_list)
-        print('commute city units ids type = ', type(commute_city_units_ids_list))
         commute_cities_dset.create_dataset(
             "commute_city_units_ids", data=commute_city_units_ids_list
         )
