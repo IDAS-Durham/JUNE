@@ -96,29 +96,6 @@ class IndividualInteraction(IndividualPolicy):
         )
 
 
-class Susceptibility(IndividualInteraction):
-    def __init__(
-        self,
-        start_time: Union[str, datetime.datetime] = "1900-01-01",
-        end_time: Union[str, datetime.datetime] = "2100-01-01",
-        age_group: str = "0-100",
-        susceptibility: float = 1.0,
-    ):
-
-        super().__init__(start_time, end_time)
-        self.min_age = int(age_group.split("-")[0])
-        self.max_age = int(age_group.split("-")[1])
-        self.susceptibility = susceptibility
-
-    def apply(self, person: Person):
-        if (
-            person.susceptibility != 0.0
-            and person.age >= self.min_age
-            and person.age <= self.max_age
-        ):
-            person.susceptibility = self.susceptibility
-
-
 class StayHome(IndividualPolicy):
     """
     Template for policies that will force someone to stay at home
