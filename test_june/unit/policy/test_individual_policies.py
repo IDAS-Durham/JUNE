@@ -31,7 +31,6 @@ from june.policy import (
     Policies,
     IndividualPolicies,
     Hospitalisation,
-    Susceptibility
 )
 from june.simulator import Simulator
 from june.world import World
@@ -43,29 +42,6 @@ def infect_person(person, selector, symptom_tag="mild"):
     person.infection.symptoms.time_of_symptoms_onset = 5.3
     if symptom_tag != "asymptomatic":
         person.residence.group.quarantine_starting_date = 5.3
-
-class TestIndividualInteraction:
-    def test__susceptibility(self, setup_policy_world, selector):
-        world, pupil, student, worker, sim = setup_policy_world
-        susceptibility_policy = Susceptibility(
-            start_time="2020-1-10",
-            end_time="2020-3-12",
-            age_group = '2-18',
-            susceptibility = 0.5,
-        )
-        start_date = datetime(2020, 3, 10)
-        end_date = datetime(2020, 3, 12)
-        policies = Policies([susceptibility_policy])
-        sim.activity_manager.policies = policies
-        sim.clear_world()
-        while sim.timer.date >= sim.timer.final_date:
-            sim.do_timestep()
-            if sim.timer.date >= start_date and sim.timer.date < end_date:
-                assert pupil.susceptibility == 0.5
-                assert worker.susceptibility == 1.0
-            else:
-                assert pupil.susceptibility == 1.0
-                assert worker.susceptibility == 1.0
 
 class TestSevereSymptomsStayHome:
     def test__policy_adults(self, setup_policy_world, selector):
