@@ -15,7 +15,6 @@ from .individual_policies import (
     IndividualPolicy,
     IndividualPolicies,
     IndividualInteraction,
-    Susceptibility,
     StayHome,
     SevereSymptomsStayHome,
     Quarantine,
