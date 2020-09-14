@@ -1,9 +1,11 @@
 from enum import IntEnum
 
 import numpy as np
+from typing import Optional
 import yaml
 
 from june import paths
+from june.utils import parse_age_probabilities
 from june.infection.health_index import HealthIndexGenerator
 from june.infection import Infection
 from june.infection.symptoms import Symptoms, SymptomTag
@@ -18,12 +20,13 @@ default_transmission_config_path = (
 default_trajectories_config_path = (
     paths.configs_path / "defaults/symptoms/trajectories.yaml"
 )
-
+default_susceptibilities_config_path = paths.configs_path / "defaults/infection/susceptibility.yaml"
 
 class InfectionSelector:
     def __init__(
         self,
         transmission_config_path: str,
+        susceptibilities_by_age: dict,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
         health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3),
     ):
@@ -41,14 +44,16 @@ class InfectionSelector:
         self.trajectory_maker = trajectory_maker
         self.health_index_generator = health_index_generator
         self._load_transmission()
+        self.susceptibilities_by_age = susceptibilities_by_age
 
     @classmethod
     def from_file(
         cls,
         transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
+        susceptibilities_by_age_config_path: str = default_susceptibilities_config_path,
         health_index_generator: HealthIndexGenerator = HealthIndexGenerator.from_file(
-            asymptomatic_ratio=0.3
+            asymptomatic_ratio=0.3,
         ),
     ) -> "InfectionSelector":
         """
@@ -64,10 +69,13 @@ class InfectionSelector:
             health index generator
         """
         trajectory_maker = TrajectoryMakers.from_file(trajectories_config_path)
+        with open(susceptibilities_by_age_config_path) as f:
+            susceptibilities_by_age = yaml.load(f, Loader=yaml.FullLoader)
         return InfectionSelector(
             transmission_config_path=transmission_config_path,
             trajectory_maker=trajectory_maker,
             health_index_generator=health_index_generator,
+            susceptibilities_by_age=susceptibilities_by_age,
         )
 
     def infect_person_at_time(self, person: "Person", time: float):
@@ -183,9 +191,7 @@ class InfectionSelector:
         self.probability = CompletionTime.from_dict(transmission_config["probability"])
 
     def _select_transmission(
-        self,
-        time_to_symptoms_onset: float,
-        max_symptoms_tag: "SymptomsTag",
+        self, time_to_symptoms_onset: float, max_symptoms_tag: "SymptomsTag",
     ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init, 
@@ -246,3 +252,18 @@ class InfectionSelector:
         health_index = self.health_index_generator(person)
         return Symptoms(health_index=health_index)
 
+    def set_susceptibilities_by_age(self, population: "Population"):
+        """
+        Set person.susceptibility to a value that depends on their age
+
+        Parameters
+        ----------
+        population:
+            population to whom susceptibilities are going to be set 
+
+        """
+        susceptibilities = parse_age_probabilities(
+            age_dict=self.susceptibilities_by_age
+        )
+        for person in population:
+            person.susceptibility = susceptibilities[person.age]

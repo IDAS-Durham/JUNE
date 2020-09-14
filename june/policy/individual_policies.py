@@ -86,7 +86,6 @@ class IndividualPolicies(PolicyCollection):
 
 
 class IndividualInteraction(IndividualPolicy):
-
     def __init__(self, start_time="1900-01-01", end_time="2100-01-01"):
         super().__init__(start_time=start_time, end_time=end_time)
         self.policy_subtype = "individual_interaction"
@@ -96,25 +95,7 @@ class IndividualInteraction(IndividualPolicy):
             f"Need to implement apply for policy {self.__class__.__name__}"
         )
 
-class Susceptibility(IndividualInteraction):
 
-    def __init__(
-        self,
-        start_time: Union[str, datetime.datetime] = "1900-01-01",
-        end_time: Union[str, datetime.datetime] = "2100-01-01",
-        age_group: str = '0-100',
-        susceptibility: float = 1.0,
-    ):
-        
-        super().__init__(start_time, end_time)
-        self.min_age = int(age_group.split('-')[0])
-        self.max_age = int(age_group.split('-')[1])
-        self.susceptibility = susceptibility
-
-    def apply(self, person: Person):
-        if person.age >= self.min_age and person.age <= self.max_age:
-            person.susceptibility = self.susceptibility
-        
 class StayHome(IndividualPolicy):
     """
     Template for policies that will force someone to stay at home
@@ -152,8 +133,7 @@ class StayHome(IndividualPolicy):
 class SevereSymptomsStayHome(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
         return (
-            person.infection is not None
-            and person.infection.tag is SymptomTag.severe
+            person.infection is not None and person.infection.tag is SymptomTag.severe
         )
 
 
@@ -195,9 +175,7 @@ class Quarantine(StayHome):
         self_quarantine = False
         try:
             if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
-                time_of_symptoms_onset = (
-                    person.infection.time_of_symptoms_onset
-                )
+                time_of_symptoms_onset = person.infection.time_of_symptoms_onset
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
                     if random() < self.compliance:
