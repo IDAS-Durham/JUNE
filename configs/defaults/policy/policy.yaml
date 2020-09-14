@@ -6,12 +6,6 @@ severe_symptoms_stay_home:
     start_time: 1000-01-01
     end_time: 9999-01-01
 
-susceptibility:
-    start_time: 1000-01-01
-    end_time: 9999-01-01
-    age_group: 0-100
-    susceptibility: 1.0
-
 quarantine:
     1:
         n_days: 7 # for the symptomatic person
