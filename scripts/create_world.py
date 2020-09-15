@@ -1,5 +1,5 @@
 from june.world import World
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Demography
 from june.groups import (
     Hospitals,

@@ -7,7 +7,7 @@ import yaml
 
 from june import paths
 from june.demography import Person
-from june.demography.geography import Geography
+from june.geography import Geography
 
 default_data_path = paths.data_path / "input/demography"
 

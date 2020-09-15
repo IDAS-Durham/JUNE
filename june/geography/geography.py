@@ -46,7 +46,10 @@ class Area:
     _id = count()
 
     def __init__(
-        self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
+        self,
+        name: str = None,
+        super_area: "SuperArea" = None,
+        coordinates: Tuple[float, float] = None,
     ):
         """
         Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.
@@ -68,12 +71,12 @@ class Area:
         for person in demography.populate(self.name):
             self.add(person)
 
-
 class Areas:
-    __slots__ = "members", "super_area", "ball_tree"
+    __slots__ = "members_dict", "super_area", "ball_tree", "members_by_name"
 
     def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
-        self.members = areas
+        self.members_dict = {area.id : area for area in areas}
+        self.members_by_name = {area.name : area for area in areas}
         self.super_area = super_area
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
@@ -88,6 +91,13 @@ class Areas:
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def get_from_id(self, id):
+        return self.members_dict[id]
+
+    @property
+    def members(self):
+        return list(self.members_dict.values())
 
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
@@ -119,6 +129,8 @@ class Areas:
 
     def get_closest_area(self, coordinates):
         return self.get_closest_areas(coordinates, k=1, return_distance=False)[0]
+
+
 
 
 class SuperArea:
@@ -193,7 +205,7 @@ class SuperAreas:
         coordinates = np.array(
             [np.deg2rad(super_area.coordinates) for super_area in self]
         )
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_super_areas(self, coordinates, k=1, return_distance=False):

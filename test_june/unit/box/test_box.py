@@ -1,5 +1,5 @@
 from june.box import Box, Boxes
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Demography, Population
 import pytest
 

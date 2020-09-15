@@ -4,7 +4,7 @@ from collections import defaultdict
 from itertools import count
 from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
 from june.demography import Demography, Person, Population
-from june.demography.geography import Geography, Area, SuperArea
+from june.geography import Geography, Area, SuperArea
 from june.groups import (
     Households,
     Companies,

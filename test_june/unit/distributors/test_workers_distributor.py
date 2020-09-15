@@ -7,7 +7,7 @@ import pytest
 import yaml
 
 from june.demography import Demography, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june import paths
 from june.distributors import WorkerDistributor, load_workflow_df, load_sex_per_sector
 

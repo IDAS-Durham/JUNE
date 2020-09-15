@@ -5,7 +5,7 @@ import datetime
 from collections import Counter
 from june import paths
 from typing import List, Optional
-from june.demography.geography import SuperAreas
+from june.geography import SuperAreas
 from june.infection.infection_selector import InfectionSelector
 from june.infection.health_index import HealthIndexGenerator
 

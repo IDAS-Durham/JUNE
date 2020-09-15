@@ -5,7 +5,7 @@ from collections import defaultdict
 from copy import copy, deepcopy
 
 from june.groups import Household
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.world import World
 from june.groups import Cemeteries, Households
 from . import (

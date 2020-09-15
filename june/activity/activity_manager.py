@@ -6,10 +6,10 @@ from typing import List, Optional
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
-from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+#from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
+#from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
-from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+#from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,

@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 import numpy as np
 from collections import Counter
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Demography, Person
 from june import World
 from june.infection_seed import InfectionSeed
@@ -36,7 +36,7 @@ def get_geography():
 
 
 @pytest.fixture(name="demography")
-def get_demography(geography):
+def get_geography):
     demography = Demography.for_geography(geography)
     for area in geography.areas:
         area.populate(demography)

@@ -8,8 +8,8 @@ import pytest
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.demography.geography import Geography, Areas, SuperAreas
-from june.commute import ModeOfTransport
+from june.geography import Geography, Areas, SuperAreas
+from june.groups.commute import ModeOfTransport
 from june.groups import *
 from june.groups.leisure import *
 from june.demography import Person, Population

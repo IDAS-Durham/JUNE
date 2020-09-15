@@ -1,9 +1,9 @@
 import pytest
-from june.demography.geography import SuperArea
+from june.geography import SuperArea
 from june.groups import Company
 from june.demography import Person
 from june.distributors import CompanyDistributor
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.world import World, generate_world_from_geography
 from june.groups import (
     Hospitals,
