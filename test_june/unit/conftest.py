@@ -8,8 +8,14 @@ import pytest
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.geography import Geography, Areas, SuperAreas
-from june.groups.commute import ModeOfTransport
+from june.geography import Geography, Areas, SuperAreas, Cities, City, Station, Stations
+from june.groups.travel import (
+    ModeOfTransport,
+    CityTransport,
+    CityTransports,
+    InterCityTransport,
+    InterCityTransports,
+)
 from june.groups import *
 from june.groups.leisure import *
 from june.demography import Person, Population
@@ -94,7 +100,9 @@ def create_interaction():
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02001731"]})
+    geography = Geography.from_file(
+        {"super_area": ["E02002512", "E02001697", "E02001731"]}
+    )
     return geography
 
 
@@ -149,7 +157,9 @@ def make_super_areas():
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
-    g = Geography.from_file(filter_key={"super_area": ["E02002512", "E02001697", "E02001731"]})
+    g = Geography.from_file(
+        filter_key={"super_area": ["E02002512", "E02001697", "E02001731"]}
+    )
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
@@ -175,13 +185,13 @@ def make_dummy_world():
     company.add(worker)
 
     pupil = Person.from_attributes(age=6)
-    pupil.area = super_area.areas[0] 
+    pupil.area = super_area.areas[0]
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = super_area.areas[0] 
+    household.area = super_area.areas[0]
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
-    student.area = super_area.areas[0] 
+    student.area = super_area.areas[0]
     household.add(student, subgroup_type=household.SubgroupType.adults)
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
@@ -189,7 +199,7 @@ def make_dummy_world():
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.area = super_area.areas[0]
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
-    #commuter.mode_of_transport = "public"
+    # commuter.mode_of_transport = "public"
     household.add(commuter)
 
     world = World()
@@ -213,18 +223,25 @@ def make_dummy_world():
     grocery = Grocery()
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
+    world.cities = Cities([City(name="test", coordinates=[1, 2])])
+    world.cities[0].commuters.append(commuter)
+    world.cities[0].stations = [
+        Station(super_area=world.super_areas[0], city=world.cities[0])
+    ]
+    world.city_transports = CityTransports([CityTransport()])
+    world.inter_city_transports = InterCityTransports([InterCityTransport()])
     # commute
-    world.commutecities = CommuteCities.for_super_areas(world.super_areas)
-    world.commutecities[7].add(commuter)
-    world.commutecities[7].add_internal_commuter(commuter)
-    world.commutehubs = CommuteHubs(world.commutecities)
-    world.commutehubs.from_file()
-    world.commutehubs.init_hubs()
-    world.commutehubs[0].commute_through.append(commuter)
-    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
-    world.commutecityunits.init_units()
-    world.commuteunits = CommuteUnits(world.commutehubs.members)
-    world.commuteunits.init_units()
+    # world.commutecities = CommuteCities.for_super_areas(world.super_areas)
+    # world.commutecities[7].add(commuter)
+    # world.commutecities[7].add_internal_commuter(commuter)
+    # world.commutehubs = CommuteHubs(world.commutecities)
+    # world.commutehubs.from_file()
+    # world.commutehubs.init_hubs()
+    # world.commutehubs[0].commute_through.append(commuter)
+    # world.commutecityunits = CommuteCityUnits(world.commutecities.members)
+    # world.commutecityunits.init_units()
+    # world.commuteunits = CommuteUnits(world.commutehubs.members)
+    # world.commuteunits.init_units()
     world.cemeteries = Cemeteries()
     return world
 

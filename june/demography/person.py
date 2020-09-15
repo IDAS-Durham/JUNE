@@ -4,7 +4,6 @@ from recordclass import dataobject
 import numpy as np
 
 from june.infection import Infection
-from june.groups.commute.mode_of_transport import ModeOfTransport
 
 
 class Activities(dataobject):
@@ -39,7 +38,7 @@ class Person(dataobject):
     comorbidity: str = None
     # commute
     #home_city: str = None
-    mode_of_transport: ModeOfTransport = None
+    mode_of_transport: "ModeOfTransport" = None
     # rail travel
     # activities
     busy: bool = False
@@ -161,3 +160,19 @@ class Person(dataobject):
             return None
         else:
             return self.infection.symptoms
+
+    @property
+    def super_area(self):
+        try:
+            return self.area.super_area
+        except:
+            return None
+    @property
+    def home_city(self):
+        return self.area.super_area.city
+
+    @property
+    def work_city(self):
+        if self.work_super_area is None:
+            return None
+        return self.work_super_area.city

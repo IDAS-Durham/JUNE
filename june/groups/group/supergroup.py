@@ -27,6 +27,10 @@ class Supergroup:
     def __getitem__(self, item):
         return self.members[item]
 
+    def __add__(self, supergroup: "Supergroup"):
+        self.members += supergroup.members
+        return self
+
     def get_spec(self) -> str:
         """
         Returns the speciailization of the group.

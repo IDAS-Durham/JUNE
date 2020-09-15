@@ -141,7 +141,10 @@ class SuperArea:
     __slots__ = (
         "id",
         "name",
+        "city",
         "coordinates",
+        "closest_city",
+        "closest_station",
         "workers",
         "areas",
         "companies",
@@ -157,6 +160,9 @@ class SuperArea:
     ):
         self.id = next(self._id)
         self.name = name
+        self.city = None
+        self.closest_city = None
+        self.closest_station = None
         self.coordinates = coordinates
         self.areas = areas or []
         self.workers = []
@@ -173,7 +179,7 @@ class SuperArea:
 
 
 class SuperAreas:
-    __slots__ = "members", "ball_tree"
+    __slots__ = "members", "ball_tree", "members_by_name"
 
     def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
         """
@@ -187,6 +193,7 @@ class SuperAreas:
             whether to construct a NN tree for the super areas
         """
         self.members = super_areas
+        self.members_by_name = {super_area.name : super_area for super_area in super_areas}
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
         else:

@@ -6,10 +6,13 @@ from typing import List, Optional
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-#from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
-#from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+
+# from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
+# from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
-#from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+from june.groups.travel import Travel 
+
+# from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
@@ -40,6 +43,7 @@ class ActivityManager:
         all_activities,
         activity_to_groups: dict,
         leisure: Optional[Leisure] = None,
+        travel: Optional[Travel] = None,
         min_age_home_alone: int = 15,
     ):
         self.logger = logger
@@ -47,6 +51,7 @@ class ActivityManager:
         self.world = world
         self.timer = timer
         self.leisure = leisure
+        self.travel = travel
         self.all_activities = all_activities
 
         if self.world.box_mode:
@@ -64,15 +69,15 @@ class ActivityManager:
             }
         self.min_age_home_alone = min_age_home_alone
 
-        if (
-            "rail_travel_out" in self.all_activities
-            or "rail_travel_back" in self.all_activities
-        ):
-            travel_options = activity_to_groups["rail_travel"]
-            if "travelunits" in travel_options:
-                self.travelunit_distributor = TravelUnitDistributor(
-                    self.world.travelcities.members, self.world.travelunits.members
-                )
+        #if (
+        #    "rail_travel_out" in self.all_activities
+        #    or "rail_travel_back" in self.all_activities
+        #):
+        #    travel_options = activity_to_groups["rail_travel"]
+        #    if "travelunits" in travel_options:
+        #        self.travelunit_distributor = TravelUnitDistributor(
+        #            self.world.travelcities.members, self.world.travelunits.members
+        #        )
 
         self.furlough_ratio = 0
         self.key_ratio = 0
@@ -105,13 +110,13 @@ class ActivityManager:
     def active_groups(self):
         return self.activities_to_groups(self.timer.activities)
 
-    def distribute_rail_out(self):
-        if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distributor.distribute_people_out()
+    #def distribute_rail_out(self):
+    #    if hasattr(self, "travelunit_distributor"):
+    #        self.travelunit_distributor.distribute_people_out()
 
-    def distribute_rail_back(self):
-        if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distributor.distribute_people_back()
+    #def distribute_rail_back(self):
+    #    if hasattr(self, "travelunit_distributor"):
+    #        self.travelunit_distributor.distribute_people_back()
 
     @staticmethod
     def apply_activity_hierarchy(activities: List[str]) -> List[str]:
@@ -168,10 +173,8 @@ class ActivityManager:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
                 )
-            elif person.mode_of_transport is not None and person.mode_of_transport.is_public and activity == "commute":
-                for commutecity in self.world.commutecities:
-                    if person in commutecity.commuters:
-                        subgroup = commutecity.get_commute_subgroup(person=person)
+            elif activity == "commute":
+                subgroup = self.travel.get_commute_subgroup(person=person)
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
@@ -211,7 +214,7 @@ class ActivityManager:
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=self.timer.duration,
                 is_weekend=self.timer.is_weekend,
-                working_hours= "primary_activity" in activities
+                working_hours="primary_activity" in activities,
             )
         self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
