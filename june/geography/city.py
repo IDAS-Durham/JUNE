@@ -1,7 +1,9 @@
 import pandas as pd
 from typing import List
+import numpy as np
 
 from june.paths import data_path
+from june.geography import Area
 
 default_cities_filename = data_path / "input/geography/england_wales_cities.csv"
 
@@ -44,14 +46,13 @@ class Cities:
 
     @classmethod
     def for_areas(
-        cls, areas: List["Area"], city_areas_filename=default_cities_filename
+        cls, areas: List[Area], city_areas_filename=default_cities_filename
     ):
         """
         Initializes the cities which are on the given areas.
         """
         city_areas = pd.read_csv(city_areas_filename)
-        city_areas.set_index("area", inplace=True)
-        city_areas = city_areas.loc[[area.name for area in areas]]
+        city_areas = city_areas.loc[city_areas.area.isin([area.name for area in areas])]
         city_areas.reset_index(inplace=True)
         city_areas.set_index("city", inplace=True)
         cities = []

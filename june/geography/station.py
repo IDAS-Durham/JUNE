@@ -19,6 +19,7 @@ class Station:
         self.name = name
         self.area = area
         self.city = city
+        self.stations = None
 
     def get_coordinates(self, areas: Areas):
         return areas.members_by_name[self.area].coordinates
@@ -53,14 +54,16 @@ class Stations:
             A path to a csv file containing two columns, "station" and "area", mapping each station to an area.
         """
         stations = pd.read_csv(station_areas_filename)
-        stations.set_index("area", inplace=True)
-        stations = stations.loc[areas]
-        stations.reset_index(inplace=True)
-        station_instances = []
-        for _, row in stations.iterrows():
-            station = Station(name=row["station"], area=row["area"])
-            station_instances.append(station)
-        return cls(station_instances)
+        stations = stations.loc[stations.area.isin(areas)]
+        if len(stations) > 0:
+            stations.reset_index(inplace=True)
+            station_instances = []
+            for _, row in stations.iterrows():
+                station = Station(name=row["station"], area=row["area"])
+                station_instances.append(station)
+            return cls(station_instances)
+        else:
+            return None
 
     @classmethod
     def for_city(cls, city: City, station_areas_filename=default_stations_filename):
@@ -77,8 +80,9 @@ class Stations:
         stations = cls.from_file(
             areas=city.areas, station_areas_filename=station_areas_filename
         )
-        for station in stations:
-            station.city = city
+        if stations:
+            for station in stations:
+                station.city = city
         return stations
 
 
