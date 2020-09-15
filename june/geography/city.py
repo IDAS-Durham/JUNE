@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 
 from june.paths import data_path
-from june.geography import Area
+from june.geography import Area, Geography
 
 default_cities_filename = data_path / "input/geography/england_wales_cities.csv"
 
@@ -46,9 +46,7 @@ class Cities:
         return self.members[idx]
 
     @classmethod
-    def for_areas(
-        cls, areas: List[Area], city_areas_filename=default_cities_filename
-    ):
+    def for_areas(cls, areas: List[Area], city_areas_filename=default_cities_filename):
         """
         Initializes the cities which are on the given areas.
         """
@@ -62,4 +60,10 @@ class Cities:
             cities.append(city)
         return cls(cities)
 
-
+    @classmethod
+    def for_geography(
+        cls, geography: Geography, city_areas_filename=default_cities_filename
+    ):
+        return cls.for_areas(
+            areas=geography.areas, city_areas_filename=city_areas_filename
+        )

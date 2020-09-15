@@ -32,13 +32,13 @@ class Person(dataobject):
     socioecon_index: str = None
     area: "Area" = None
     # work info
-    work_super_area: str = None
+    work_super_area: "SuperArea" = None
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
     comorbidity: str = None
     # commute
-    home_city: str = None
+    #home_city: str = None
     mode_of_transport: ModeOfTransport = None
     # rail travel
     # activities

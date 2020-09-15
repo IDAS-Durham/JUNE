@@ -1,0 +1,3 @@
+# if not specified, it defaults to 4 hubs
+city: London
+n_hubs: 8

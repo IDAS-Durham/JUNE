@@ -6,7 +6,7 @@ import yaml
 
 from june import paths
 
-default_config_filename = paths.configs_path / "defaults/commute.yaml"
+default_config_filename = paths.configs_path / "defaults/commute/mode_of_transport.yaml"
 
 default_commute_file = paths.data_path / "input/commute/commute_ew.csv"
 

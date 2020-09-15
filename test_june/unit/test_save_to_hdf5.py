@@ -403,6 +403,10 @@ class TestSaveWorld:
             else:
                 assert school2.super_area is None
 
+    def test__work_super_area(self, world_h5, world_h5_loaded):
+        for p1, p2 in zip(world_h5.people, world_h5_loaded.people):
+            assert p1.work_super_area == p2.work_super_area
+
     def test__care_home_area(self, world_h5, world_h5_loaded):
         assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
         for carehome, carehome2 in zip(world_h5.care_homes, world_h5_loaded.care_homes):

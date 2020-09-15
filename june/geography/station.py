@@ -66,6 +66,7 @@ class Station:
         self.name = name
         self.area = area
         self.city = city
+        self.commuters = []
         self.hubs = None
 
     def get_coordinates(self, areas: Areas):
@@ -142,6 +143,7 @@ class StationHub:
         self.station = station
         self.city = city
         self.area = area
+        self.commuters = []
 
     @property
     def coordinates(self):
