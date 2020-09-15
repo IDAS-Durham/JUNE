@@ -56,12 +56,13 @@ def save_population_to_hdf5(
             ethns = []
             socioecon_indices = []
             areas = []
+            work_super_areas = []
             sectors = []
             sub_sectors = []
             group_ids = []
             group_specs = []
             subgroup_types = []
-            home_city = []
+            # home_city = []
             mode_of_transport_description = []
             mode_of_transport_is_public = []
             lockdown_status = []
@@ -78,14 +79,19 @@ def save_population_to_hdf5(
                     socioecon_indices.append(nan_integer)
                 else:
                     socioecon_indices.append(person.socioecon_index)
-                if person.home_city is None:
-                    home_city.append(nan_integer)
-                else:
-                    home_city.append(person.home_city.id)
+
+                # if person.home_city is None:
+                #    home_city.append(nan_integer)
+                # else:
+                #    home_city.append(person.home_city.id)
                 if person.area is not None:
                     areas.append(person.area.id)
                 else:
                     areas.append(nan_integer)
+                if person.work_super_area is not None:
+                    work_super_areas.append(person.work_super_area.id)
+                else:
+                    work_super_areas.append(nan_integer)
                 if person.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
@@ -131,8 +137,9 @@ def save_population_to_hdf5(
             sexes = np.array(sexes, dtype="S10")
             ethns = np.array(ethns, dtype="S10")
             socioecon_indices = np.array(socioecon_indices, dtype=np.int)
-            home_city = np.array(home_city, dtype=np.int)
+            # home_city = np.array(home_city, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
+            work_super_areas = np.array(work_super_areas, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
@@ -158,9 +165,9 @@ def save_population_to_hdf5(
                 people_dset.create_dataset(
                     "socioecon_index", data=socioecon_indices, maxshape=(None,)
                 )
-                people_dset.create_dataset(
-                    "home_city", data=home_city, maxshape=(None,)
-                )
+                # people_dset.create_dataset(
+                #    "home_city", data=home_city, maxshape=(None,)
+                # )
                 people_dset.create_dataset("ethnicity", data=ethns, maxshape=(None,))
                 people_dset.create_dataset(
                     "group_ids", data=group_ids, maxshape=(None, group_ids.shape[1]),
@@ -205,10 +212,12 @@ def save_population_to_hdf5(
                 people_dset["sub_sector"][idx1:idx2] = sub_sectors
                 people_dset["socioecon_index"].resize(newshape)
                 people_dset["socioecon_index"][idx1:idx2] = socioecon_indices
-                people_dset["home_city"].resize(newshape)
-                people_dset["home_city"][idx1:idx2] = home_city
+                # people_dset["home_city"].resize(newshape)
+                # people_dset["home_city"][idx1:idx2] = home_city
                 people_dset["area"].resize(newshape)
                 people_dset["area"][idx1:idx2] = areas
+                people_dset["work_super_area"].resize(newshape)
+                people_dset["work_super_area"][idx1:idx2] = work_super_areas
                 people_dset["group_ids"].resize(newshape[0], axis=0)
                 people_dset["group_ids"][idx1:idx2] = group_ids
                 people_dset["group_specs"].resize(newshape[0], axis=0)
@@ -259,10 +268,10 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             population["socioecon_index"].read_direct(
                 socioecon_indices, np.s_[idx1:idx2], np.s_[0:length]
             )
-            home_city = np.empty(length, dtype=int)
-            population["home_city"].read_direct(
-                home_city, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            # home_city = np.empty(length, dtype=int)
+            # population["home_city"].read_direct(
+            #    home_city, np.s_[idx1:idx2], np.s_[0:length]
+            # )
             sectors = np.empty(length, dtype="S20")
             population["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
             sub_sectors = np.empty(length, dtype="S20")
@@ -308,11 +317,11 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                         description=mode_of_transport_description.decode(),
                         is_public=mode_of_transport_is_public,
                     )
-                hc = home_city[k]
-                if hc == nan_integer:
-                    person.home_city = None
-                else:
-                    person.home_city = hc
+                # hc = home_city[k]
+                # if hc == nan_integer:
+                #    person.home_city = None
+                # else:
+                #    person.home_city = hc
                 if sectors[k].decode() == " ":
                     person.sector = None
                 else:
@@ -333,6 +342,7 @@ def restore_population_properties_from_hdf5(
 ):
     first_person_id = world.people[0].id
     first_area_id = world.areas[0].id
+    first_super_area_id = world.super_areas[0].id
     activities_fields = Activities.__fields__
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # people = []
@@ -360,10 +370,17 @@ def restore_population_properties_from_hdf5(
             )
             areas = np.empty(length, dtype=int)
             population["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
+            work_super_areas = np.empty(length, dtype=int)
+            population["work_super_area"].read_direct(
+                work_super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
                 person = world.people[ids[k] - first_person_id]
                 # restore area
                 person.area = world.areas[areas[k] - first_area_id]
+                if person.work_super_area != nan_integer:
+                    person.work_super_area = world.super_areas[work_super_areas[k] - first_super_area_id]
+                    person.work_super_area.workers.append(person)
                 person.area.people.append(person)
                 person.area.super_area.people.append(person)
                 # restore groups and subgroups
