@@ -46,19 +46,19 @@ class TestStations:
 
 class TestHubs:
     def test__hubs_setup(self):
-        hub = StationHub(station="Sants", city="Barcelona", area="b1")
+        hub = StationHub(station="Sants", city="Barcelona", area=Area(name="b1"))
         assert hub.station == "Sants"
         assert hub.city == "Barcelona"
-        assert hub.area == "b1"
+        assert hub.area.name == "b1"
 
     def test__hubs_for_station(self):
         areas = Areas(
             [
                 Area(name="b1", coordinates=[0, 0]),
-                Area(name="b2", coordinates=[10, 0]),
-                Area(name="b3", coordinates=[0, 10]),
-                Area(name="b4", coordinates=[-10, 0]),
-                Area(name="b5", coordinates=[0, -10]),
+                Area(name="b2", coordinates=[1, 0]),
+                Area(name="b3", coordinates=[0, 1]),
+                Area(name="b4", coordinates=[-1, 0]),
+                Area(name="b5", coordinates=[0, -1]),
             ],
             ball_tree=True,
         )
@@ -66,17 +66,21 @@ class TestHubs:
         station_coordinates = station.get_coordinates(areas)
         assert station_coordinates == [0, 0]
         hubs = StationHubs.for_station(
-            station=station, number_of_hubs=4, distance_to_station=7, areas = areas
+            station=station, number_of_hubs=4, distance_to_station=500, areas = areas
         )
         assert len(hubs) == 4
         hub_areas = []
         for hub in hubs:
-            hub_areas.append(hub.area)
+            hub_areas.append(hub.area.name)
             assert hub.station == station.name
             assert hub.city == station.city
-            assert hub.area in ["b1", "b2", "b3", "b4", "b5"]
-        assert len(np.unique(hub_areas)) == 4 # each hub in one area.
-        assert hub_areas[0] == "b2"
-        assert hub_areas[1] == "b3"
-        assert hub_areas[2] == "b4"
-        assert hub_areas[3] == "b5"
+            assert hub.area.name in ["b1", "b2", "b3", "b4", "b5"]
+        assert len(np.unique(hub_areas)) == 4
+        hub = hubs.get_closest_hub([0.1, 0])
+        assert hub.coordinates[0] == 1
+        assert hub.coordinates[1] == 0
+        hub = hubs.get_closest_hub([-50,-10])
+        assert hub.coordinates[0] == -1
+        assert hub.coordinates[1] == 0
+
+

@@ -17,6 +17,7 @@ class City:
     def __init__(self, areas: List[str] = None, name: str = None):
         self.areas = areas
         self.name = name
+        self.stations = None
 
     @classmethod
     def from_file(cls, name, city_areas_filename=default_cities_filename):
