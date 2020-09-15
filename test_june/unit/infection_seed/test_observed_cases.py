@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 from june.infection_seed import Observed2Cases
 from june.demography import Person
-from june.demography.geography import Area, SuperArea, SuperAreas
+from june.geography import Area, SuperArea, SuperAreas
 from june.infection import HealthIndexGenerator
 from june import paths
 

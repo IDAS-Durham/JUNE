@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
 
-from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAreas
+from june.geography import Geography, Area, SuperArea, Areas, SuperAreas
 from june.world import World
 
 nan_integer = -999

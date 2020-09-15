@@ -7,7 +7,7 @@ from pathlib import Path
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Demography, Person
 from june.interaction import Interaction
 from june.infection import InfectionSelector

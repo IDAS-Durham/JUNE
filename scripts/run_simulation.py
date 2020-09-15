@@ -4,7 +4,7 @@ import numba as nb
 import random
 
 from june.hdf5_savers import generate_world_from_hdf5
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.interaction import Interaction
 from june.infection import Infection, InfectionSelector, HealthIndexGenerator
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries

@@ -1,7 +1,7 @@
 import pytest
 
 from june import World
-from june.demography.geography import Geography, Area
+from june.geography import Geography, Area
 from june.demography import Person, Demography
 from june.distributors import WorkerDistributor
 from june.commute import CommuteGenerator

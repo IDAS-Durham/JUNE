@@ -9,7 +9,7 @@ from scipy.stats import rv_discrete
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography, Areas, SuperAreas
+from june.geography import Geography, Areas, SuperAreas
 
 default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (

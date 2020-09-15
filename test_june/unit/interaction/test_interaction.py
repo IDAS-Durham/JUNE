@@ -3,7 +3,7 @@ from june.infection.infection_selector import InfectionSelector
 from june.groups import School
 from june.demography import Person
 from june import paths
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.interaction.interactive_group import InteractiveGroup
 from june.world import generate_world_from_geography
 from june.groups import Hospital, Hospitals

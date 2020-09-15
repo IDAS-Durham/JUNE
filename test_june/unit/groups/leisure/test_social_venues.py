@@ -1,6 +1,6 @@
 import numpy as np
 from june.groups.leisure import SocialVenue, SocialVenues
-from june.demography.geography import Geography, SuperAreas
+from june.geography import Geography, SuperAreas
 
 
 def test__social_venue_from_coordinates():

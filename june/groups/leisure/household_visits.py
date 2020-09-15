@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from random import randint, shuffle
-from june.demography.geography import Areas, SuperAreas
+from june.geography import Areas, SuperAreas
 from june.groups import Households
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError

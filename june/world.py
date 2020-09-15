@@ -17,9 +17,9 @@ from june.distributors import (
     CompanyDistributor,
     UniversityDistributor,
 )
-from june.demography.geography import Geography, Areas
+from june.geography import Geography, Areas
 from june.groups import *
-from june.commute import CommuteGenerator
+#from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +69,6 @@ class World:
         self.pubs = None
         self.groceries = None
         self.cinemas = None
-        self.commutecities = None
-        self.commutehubs = None
         self.cemeteries = None
         self.universities = None
         self.box_mode = False
@@ -135,38 +133,38 @@ class World:
                 self.super_areas
             )
 
-    def initialise_commuting(self):
-        commute_generator = CommuteGenerator.from_file()
+    #def initialise_commuting(self):
+    #    commute_generator = CommuteGenerator.from_file()
 
-        for area in self.areas:
-            commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
-            for person in area.people:
-                person.mode_of_transport = commute_gen.weighted_random_choice()
+    #    for area in self.areas:
+    #        commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
+    #        for person in area.people:
+    #            person.mode_of_transport = commute_gen.weighted_random_choice()
 
-        # CommuteCity
-        self.commutecities = CommuteCities.for_super_areas(self.super_areas)
+    #    # CommuteCity
+    #    self.commutecities = CommuteCities.for_super_areas(self.super_areas)
 
-        self.commutecity_distributor = CommuteCityDistributor(
-            self.commutecities.members, self.super_areas.members
-        )
-        self.commutecity_distributor.distribute_people()
+    #    self.commutecity_distributor = CommuteCityDistributor(
+    #        self.commutecities.members, self.super_areas.members
+    #    )
+    #    self.commutecity_distributor.distribute_people()
 
-        # CommuteHub
-        self.commutehubs = CommuteHubs(self.commutecities)
-        self.commutehubs.from_file()
-        self.commutehubs.init_hubs()
+    #    # CommuteHub
+    #    self.commutehubs = CommuteHubs(self.commutecities)
+    #    self.commutehubs.from_file()
+    #    self.commutehubs.init_hubs()
 
-        self.commutehub_distributor = CommuteHubDistributor(self.commutecities.members)
-        self.commutehub_distributor.from_file()
-        self.commutehub_distributor.distribute_people()
+    #    self.commutehub_distributor = CommuteHubDistributor(self.commutecities.members)
+    #    self.commutehub_distributor.from_file()
+    #    self.commutehub_distributor.distribute_people()
 
-        # CommuteUnit
-        self.commuteunits = CommuteUnits(self.commutehubs.members)
-        self.commuteunits.init_units()
+    #    # CommuteUnit
+    #    self.commuteunits = CommuteUnits(self.commutehubs.members)
+    #    self.commuteunits.init_units()
 
-        # CommuteCityUnit
-        self.commutecityunits = CommuteCityUnits(self.commutecities.members)
-        self.commutecityunits.init_units()
+    #    # CommuteCityUnit
+    #    self.commutecityunits = CommuteCityUnits(self.commutecities.members)
+    #    self.commutecityunits.init_units()
 
     def initialise_rail_travel(self):
 

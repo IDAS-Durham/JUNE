@@ -3,8 +3,8 @@ from random import choice
 from recordclass import dataobject
 import numpy as np
 
-from june.commute import ModeOfTransport
 from june.infection import Infection
+from june.groups.commute.mode_of_transport import ModeOfTransport
 
 
 class Activities(dataobject):

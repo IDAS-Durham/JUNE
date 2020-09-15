@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Person
 from june.groups import School, Schools
 

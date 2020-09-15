@@ -10,7 +10,7 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup
 
-from june.demography.geography import SuperArea
+from june.geography import SuperArea
 from june.infection import SymptomTag
 
 logger = logging.getLogger(__name__)
