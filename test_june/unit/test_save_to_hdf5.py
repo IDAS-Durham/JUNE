@@ -25,8 +25,7 @@ from june.hdf5_savers import (
     save_care_homes_to_hdf5,
     save_households_to_hdf5,
     save_companies_to_hdf5,
-    save_commute_cities_to_hdf5,
-    save_commute_hubs_to_hdf5,
+    save_cities_to_hdf5,
     save_universities_to_hdf5,
     save_social_venues_to_hdf5,
     generate_world_from_hdf5,
@@ -40,8 +39,7 @@ from june.hdf5_savers import (
     load_population_from_hdf5,
     load_schools_from_hdf5,
     load_hospitals_from_hdf5,
-    load_commute_cities_from_hdf5,
-    load_commute_hubs_from_hdf5,
+    load_cities_from_hdf5,
     load_universities_from_hdf5,
     load_social_venues_from_hdf5,
 )
@@ -251,61 +249,32 @@ class TestSaveGeography:
             assert super_area.coordinates[1] == super_area2.coordinates[1]
 
 
-class TestSaveCommute:
+class TestSaveTravel:
     def test__save_cities(self, world_h5):
-        commute_cities = world_h5.commutecities
-        commute_city_units = world_h5.commutecityunits
-        assert len(commute_cities) > 0
-        assert len(commute_city_units) > 0
-        save_commute_cities_to_hdf5(commute_cities, "test.hdf5")
-        (
-            commute_cities_recovered,
-            commute_city_units_recovered,
-        ) = load_commute_cities_from_hdf5("test.hdf5")
-        for city, city_recovered in zip(commute_cities, commute_cities_recovered):
-            assert city.id == city_recovered.id
-            for commute_hub, commute_hub_recovered in zip(
-                city.commutehubs, city_recovered.commutehubs
-            ):
-                assert commute_hub.id == commute_hub_recovered
-
-            for commute_internal, commute_internal_recovered in zip(
-                city.commute_internal, city_recovered.commute_internal
-            ):
-                assert commute_internal.id == commute_internal_recovered
-            for commute_city_unit, commute_city_unit_recovered in zip(
-                city.commutecityunits, city_recovered.commutecityunits
-            ):
-                assert commute_city_unit.id == commute_city_unit_recovered.id
-                assert commute_city_unit.city == commute_city_unit_recovered.city
-                assert commute_city_unit.is_peak == commute_city_unit_recovered.is_peak
-        for ccu1, ccu2 in zip(commute_city_units, commute_city_units_recovered):
-            assert ccu1.id == ccu2.id
-
-    def test__save_hubs(self, world_h5):
-        commute_hubs = world_h5.commutehubs
-        commute_units = world_h5.commuteunits
-        assert len(commute_hubs) > 0
-        assert len(commute_units) > 0
-        save_commute_hubs_to_hdf5(commute_hubs, "test.hdf5")
-        commute_hubs_recovered, commute_units_recovered = load_commute_hubs_from_hdf5(
-            "test.hdf5"
-        )
-        for hub, hub_recovered in zip(commute_hubs, commute_hubs_recovered):
-            assert hub.id == hub_recovered.id
-            assert hub.city == hub_recovered.city
-            for commute_through, commute_through_recovered in zip(
-                hub.commute_through, hub_recovered.commute_through
-            ):
-                assert commute_through.id == commute_through_recovered
-            for person1, person2 in zip(hub.people, hub_recovered.people):
-                assert person1.id == person2
-            for unit1, unit2 in zip(hub.commuteunits, hub_recovered.commuteunits):
-                assert unit1.id == unit2.id
-                assert unit1.commutehub_id == unit2.commutehub_id
-                assert unit1.city == unit2.city
-        for cu1, cu2 in zip(commute_units, commute_units_recovered):
-            assert cu1.id == cu2.id
+        cities = world_h5.cities
+        assert len(cities) > 0
+        save_cities_to_hdf5(cities, "test.hdf5")
+        cities_recovered = load_cities_from_hdf5("test.hdf5")
+        for city, city_recovered in zip(cities, cities_recovered):
+            assert city.name == city_recovered.name
+            for sa1, sa2 in zip(city.super_areas, city_recovered.super_areas):
+                assert sa1 == sa2
+            assert city.coordinates[0] == city_recovered.coordinates[0]
+            assert city.coordinates[1] == city_recovered.coordinates[1]
+            assert len(city.stations) == city_recovered.stations
+            assert len(city.city_transports) == city_recovered.city_transports
+            for ct1, ct2 in zip(city.city_transports, city_recovered.city_transports):
+                assert ct1.id == ct2.id
+            for station1, station2 in zip(city.stations, city_recovered.stations):
+                assert station1.id == station2.id
+                assert station1.city == station2.city
+                assert len(station1.inter_city_transports) == len(
+                    station2.inter_city_transports
+                )
+                for ict1, ict2 in zip(
+                    city.inter_city_transports, city_recovered.inter_city_transports
+                ):
+                    assert ict1.id == ict2.id
 
 
 class TestSaveUniversities:
@@ -437,24 +406,28 @@ class TestSaveWorld:
                 assert v1.super_area.name == v2.super_area.name
 
     def test__commute(self, world_h5, world_h5_loaded):
-        assert len(world_h5.commutecities) > 0
-        assert len(world_h5.commutecities) == len(world_h5_loaded.commutecities)
-        for city1, city2 in zip(world_h5.commutecities, world_h5_loaded.commutecities):
-            assert city1.city == city2.city
-            for hub1, hub2 in zip(city1.commutehubs, city2.commutehubs):
-                assert hub1.id == hub2.id
-            assert len(city1.commute_internal) == len(city2.commute_internal)
-            for p1, p2 in zip(city1.commute_internal, city2.commute_internal):
-                assert p1.id == p2.id
-
-        assert len(world_h5.commutehubs) > 0
-        assert len(world_h5.commutehubs) == len(world_h5_loaded.commutehubs)
-        for hub1, hub2 in zip(world_h5.commutehubs, world_h5_loaded.commutehubs):
-            assert len(hub1.commute_through) == len(hub2.commute_through)
-            for p1, p2 in zip(hub1.commute_through, hub2.commute_through):
-                assert p1.id == p2.id
-                assert p1.age == p2.age
-                assert p1.sex == p2.sex
+        assert len(world_h5.city_transports) > 0
+        assert len(world_h5.inter_city_transports) > 0
+        for ct1, ct2 in zip(world_h5.city_transports, world_h5_loaded.city_transports):
+            assert ct1.id == ct2.id
+        for ict1, ict2 in zip(
+            world_h5.inter_city_transports, world_h5_loaded.inter_city_transports
+        ):
+            assert ict1.id == ict2.id
+        for city1, city2 in zip(world_h5.cities, world_h5_loaded.cities):
+            assert city1.name == city2.name
+            assert len(city1.commuters) == len(city2.commuters)
+            for c1, c2 in zip(city1.commuters, city2.commuters):
+                assert c1.id == c2.id
+                assert c1.age == c2.age
+                assert c1.sex == c2.sex
+            assert len(city1.stations) == len(city2.stations)
+            for station1, station2 in zip(city1.stations, city2.stations):
+                assert len(station1.commuters) == len(station2.commuters)
+                for c1, c2 in zip(station1.commuters, station2.commuters):
+                    assert c1.id == c2.id
+                    assert c1.age == c2.age
+                    assert c1.sex == c2.sex
 
     def test__household_residents(self, world_h5, world_h5_loaded):
         for h1, h2 in zip(world_h5.households, world_h5_loaded.households):

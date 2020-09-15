@@ -1,86 +1,87 @@
 from pathlib import Path
 import numpy as np
 
-from june.geography import Area, Areas, Station, Stations, City, Cities, SuperArea
-from june.geography import Station, Stations, StationHub, StationHubs
+from june.geography import SuperArea, SuperAreas, Station, Stations, City, Cities
+from june.geography import Station, Stations, SuperStations, SuperStation 
 
-stations_test_file = Path(__file__).parent / "stations.csv"
+super_stations_test_file = Path(__file__).parent / "stations.csv"
+
+class TestSuperStations:
+    def test__stations_setup(self):
+        super_station = SuperStation(name="King's Cross", super_area="l1")
+        assert super_station.super_area == "l1"
+        assert super_station.name == "King's Cross"
+
+    def test__super_stations_from_file(self):
+        super_stations = SuperStations.from_file(
+            super_areas=["l1", "l2"], super_station_super_areas_filename=super_stations_test_file
+        )
+        assert super_stations[0].super_area == "l1"
+        assert super_stations[0].name == "King's Cross"
+        assert super_stations[1].super_area == "l2"
+        assert super_stations[1].name == "Victoria"
+
+    def test__super_stations_for_city(self):
+        city = City(name="London", super_areas=["l1", "l2"])
+        super_stations = SuperStations.for_city(
+            city=city, super_station_super_areas_filename=super_stations_test_file
+        )
+        assert super_stations[0].super_area == "l1"
+        assert super_stations[0].name == "King's Cross"
+        assert super_stations[1].super_area == "l2"
+        assert super_stations[1].name == "Victoria"
+        assert super_stations[0].city == city
+        assert super_stations[1].city == city
+
+    def test__super_station_coordinates(self):
+        super_areas = SuperAreas(
+            [SuperArea(name="c1", coordinates=[1, 2]), SuperArea(name="c2", coordinates=[3, 4])],
+            ball_tree=False,
+        )
+        super_station = SuperStation(super_area="c1")
+        assert super_station.get_coordinates(super_areas) == [1, 2]
+        super_station = SuperStation(super_area="c2")
+        assert super_station.get_coordinates(super_areas) == [3, 4]
+
 
 class TestStations:
     def test__stations_setup(self):
-        station = Station(name="King's Cross", area="l1")
-        assert station.area == "l1"
-        assert station.name == "King's Cross"
+        station = Station(super_station="Sants", city="Barcelona", super_area=SuperArea(name="b1"))
+        assert station.super_station == "Sants"
+        assert station.city == "Barcelona"
+        assert station.super_area.name == "b1"
 
-    def test__stations_from_file(self):
-        stations = Stations.from_file(
-            areas=["l1", "l2"], station_areas_filename=stations_test_file
-        )
-        assert stations[0].area == "l1"
-        assert stations[0].name == "King's Cross"
-        assert stations[1].area == "l2"
-        assert stations[1].name == "Victoria"
-
-    def test__stations_for_city(self):
-        city = City(name="London", areas=["l1", "l2"])
-        stations = Stations.for_city(
-            city=city, station_areas_filename=stations_test_file
-        )
-        assert stations[0].area == "l1"
-        assert stations[0].name == "King's Cross"
-        assert stations[1].area == "l2"
-        assert stations[1].name == "Victoria"
-        assert stations[0].city == city
-        assert stations[1].city == city
-
-    def test__station_coordinates(self):
-        areas = Areas(
-            [Area(name="c1", coordinates=[1, 2]), Area(name="c2", coordinates=[3, 4])],
-            ball_tree=False,
-        )
-        station = Station(area="c1")
-        assert station.get_coordinates(areas) == [1, 2]
-        station = Station(area="c2")
-        assert station.get_coordinates(areas) == [3, 4]
-
-
-class TestHubs:
-    def test__hubs_setup(self):
-        hub = StationHub(station="Sants", city="Barcelona", area=Area(name="b1"))
-        assert hub.station == "Sants"
-        assert hub.city == "Barcelona"
-        assert hub.area.name == "b1"
-
-    def test__hubs_for_station(self):
-        areas = Areas(
+    def test__stations_for_super_station(self):
+        super_areas = SuperAreas(
             [
-                Area(name="b1", coordinates=[0, 0]),
-                Area(name="b2", coordinates=[1, 0]),
-                Area(name="b3", coordinates=[0, 1]),
-                Area(name="b4", coordinates=[-1, 0]),
-                Area(name="b5", coordinates=[0, -1]),
+                SuperArea(name="b1", coordinates=[0, 0]),
+                SuperArea(name="b2", coordinates=[1, 0]),
+                SuperArea(name="b3", coordinates=[0, 1]),
+                SuperArea(name="b4", coordinates=[-1, 0]),
+                SuperArea(name="b5", coordinates=[0, -1]),
             ],
             ball_tree=True,
         )
-        station = Station(name="Sants", area="b1")
-        station_coordinates = station.get_coordinates(areas)
+        super_station = SuperStation(name="Sants", super_area="b1")
+        station_coordinates = super_station.get_coordinates(super_areas)
         assert station_coordinates == [0, 0]
-        hubs = StationHubs.for_station(
-            station=station, number_of_hubs=4, distance_to_station=500, areas = areas
+        stations = Stations.for_super_station(
+            super_station=super_station, number_of_stations=4, distance_to_super_station=500, super_areas = super_areas
         )
-        assert len(hubs) == 4
-        hub_areas = []
-        for hub in hubs:
-            hub_areas.append(hub.area.name)
-            assert hub.station == station.name
-            assert hub.city == station.city
-            assert hub.area.name in ["b1", "b2", "b3", "b4", "b5"]
-        assert len(np.unique(hub_areas)) == 4
-        hub = hubs.get_closest_hub([0.1, 0])
-        assert hub.coordinates[0] == 1
-        assert hub.coordinates[1] == 0
-        hub = hubs.get_closest_hub([-50,-10])
-        assert hub.coordinates[0] == -1
-        assert hub.coordinates[1] == 0
+        assert len(stations) == 4
+        station_super_areas = []
+        for station in stations:
+            station_super_areas.append(station.super_area.name)
+            assert station.super_station == super_station.name
+            assert station.city == station.city
+            assert station.super_area.name in ["b1", "b2", "b3", "b4", "b5"]
+        assert len(np.unique(station_super_areas)) == 4
+        stations._construct_ball_tree()
+        station = stations.get_closest_station([0.1, 0])
+        assert station.coordinates[0] == 1
+        assert station.coordinates[1] == 0
+        station = stations.get_closest_station([-50,-10])
+        assert station.coordinates[0] == -1
+        assert station.coordinates[1] == 0
 
 

@@ -4,7 +4,7 @@ activity_to_groups:
   primary_activity: ['schools', 'companies', 'universities']
   leisure: ['pubs', 'cinemas', 'groceries', 'household_visits', "care_home_visits"] 
   residence: ['households', 'care_homes']
-  commute: ['commuteunits', 'commutecityunits']
+  commute: ['city_transports', 'inter_city_transports']
   medical_facility: ['hospitals']
 
 time:
