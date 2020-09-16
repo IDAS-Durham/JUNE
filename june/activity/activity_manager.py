@@ -144,17 +144,13 @@ class ActivityManager:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-        print("######")
-        print(person.id)
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person,
                 )
             elif activity == "commute":
-                print("commute!")
                 subgroup = self.travel.get_commute_subgroup(person=person)
-                print(subgroup)
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:

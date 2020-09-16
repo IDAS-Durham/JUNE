@@ -62,13 +62,9 @@ class City:
         """
         Gets the commute subgroup of the person.
         """
-        print("station...")
-        print(self.commuters)
         if person in self.commuters:
-            print("inner commute")
             return self.city_transports[randint(0, len(self.city_transports)-1)][0]
         else:
-            print("outer")
             closest_station = person.super_area.closest_station
             return closest_station.inter_city_transports[
                 randint(0, len(closest_station.inter_city_transports)-1)
