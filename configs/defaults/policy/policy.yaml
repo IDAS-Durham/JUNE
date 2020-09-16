@@ -124,8 +124,8 @@ social_distancing:
             pub: 0.875
             grocery: 0.875
             cinema: 0.875
-            commute_unit: 0.875
-            commute_city_unit: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
             hospital: 0.875
             care_home: 0.875
             company: 0.875
@@ -141,8 +141,8 @@ social_distancing:
             pub: 0.75
             grocery: 0.75
             cinema: 0.75
-            commute_unit: 0.75
-            commute_city_unit: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
             hospital: 0.75
             care_home: 0.75
             company: 0.75
@@ -157,8 +157,8 @@ social_distancing:
             pub: 0.875
             grocery: 0.875
             cinema: 0.875
-            commute_unit: 0.875
-            commute_city_unit: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
             hospital: 0.875
             care_home: 0.875
             company: 0.875
@@ -177,8 +177,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -195,8 +195,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -213,8 +213,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -231,8 +231,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -249,8 +249,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -267,8 +267,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -285,8 +285,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -303,8 +303,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -321,8 +321,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -339,8 +339,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -359,8 +359,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5

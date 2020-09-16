@@ -187,7 +187,6 @@ class ReadLogger:
         )
         # filter rows that contain at least one hospitalised person
         symptoms_df = symptoms_df[df['current_hospitalised'] > 0]
-        print(symptoms_df.head(4))
         for ts,row in symptoms_df.iterrows():
             mask = (row["symptoms"] == SymptomTag.hospitalised)
             for col,data in row.iteritems():
