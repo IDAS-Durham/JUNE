@@ -17,8 +17,8 @@ from . import (
     load_care_homes_from_hdf5,
     load_households_from_hdf5,
     load_universities_from_hdf5,
-    load_commute_hubs_from_hdf5,
-    load_commute_cities_from_hdf5,
+    load_stations_from_hdf5,
+    load_cities_from_hdf5,
     load_social_venues_from_hdf5,
     save_geography_to_hdf5,
     save_population_to_hdf5,
@@ -26,26 +26,27 @@ from . import (
     save_hospitals_to_hdf5,
     save_companies_to_hdf5,
     save_universities_to_hdf5,
-    save_commute_cities_to_hdf5,
-    save_commute_hubs_to_hdf5,
+    save_cities_to_hdf5,
+    save_stations_to_hdf5,
     save_care_homes_to_hdf5,
     save_social_venues_to_hdf5,
     save_households_to_hdf5,
     restore_population_properties_from_hdf5,
     restore_households_properties_from_hdf5,
     restore_care_homes_properties_from_hdf5,
-    restore_commute_properties_from_hdf5,
+    restore_cities_and_stations_properties_from_hdf5,
     restore_geography_properties_from_hdf5,
     restore_companies_properties_from_hdf5,
     restore_school_properties_from_hdf5,
     restore_social_venues_properties_from_hdf5,
     restore_universities_properties_from_hdf5,
-    restore_hospital_properties_from_hdf5
+    restore_hospital_properties_from_hdf5,
 )
 from june.demography import Population
 from june.demography.person import Activities, Person
 
 logger = logging.getLogger(__name__)
+
 
 def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     """
@@ -84,12 +85,12 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if world.care_homes is not None:
         logger.info("saving care homes...")
         save_care_homes_to_hdf5(world.care_homes, file_path, chunk_size)
-    if world.commutecities is not None:
-        logger.info("saving commute cities...")
-        save_commute_cities_to_hdf5(world.commutecities, file_path)
-    if world.commutehubs is not None:
-        logger.info("saving commute hubs...")
-        save_commute_hubs_to_hdf5(world.commutehubs, file_path)
+    if world.cities is not None:
+        logger.info("saving cities...")
+        save_cities_to_hdf5(world.cities, file_path)
+    if world.stations is not None:
+        logger.info("saving stations...")
+        save_stations_to_hdf5(world.stations, file_path)
     if world.universities is not None:
         logger.info("saving universities...")
         save_universities_to_hdf5(world.universities, file_path)
@@ -147,14 +148,12 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world.universities = load_universities_from_hdf5(
             file_path=file_path, chunk_size=chunk_size
         )
-    if "commute_cities" in f_keys:
-        logger.info("loading commute cities...")
-        world.commutecities, world.commutecityunits = load_commute_cities_from_hdf5(
-            file_path
-        )
-    if "commute_hubs" in f_keys:
-        logger.info("loading commute hubs...")
-        world.commutehubs, world.commuteunits = load_commute_hubs_from_hdf5(file_path)
+    if "cities" in f_keys:
+        logger.info("loading cities...")
+        world.cities, world.city_transports = load_cities_from_hdf5(file_path)
+    if "stations" in f_keys:
+        logger.info("loading stations...")
+        world.stations, world.inter_city_transports = load_stations_from_hdf5(file_path)
     if "households" in f_keys:
         logger.info("loading households...")
         world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size)
@@ -192,9 +191,11 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         restore_hospital_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size
         )
-    if "commute_hubs" and "commute_cities" in f_keys:
+    if "cities" and "stations" in f_keys:
         logger.info("restoring commute...")
-        restore_commute_properties_from_hdf5(world=world, file_path=file_path)
+        restore_cities_and_stations_properties_from_hdf5(
+            world=world, file_path=file_path
+        )
     if "companies" in f_keys:
         logger.info("restoring companies...")
         restore_companies_properties_from_hdf5(

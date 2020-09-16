@@ -181,7 +181,7 @@ class WorkerDistributor:
             super_area.add_worker(person)
         elif work_location in list(self.non_geographical_work_location.keys()):
             if self.non_geographical_work_location[work_location] == "home":
-                person.work_super_area = "home"
+                person.work_super_area = None
             elif self.non_geographical_work_location[work_location] == "bind":
                 self._select_rnd_superarea(person)
             else:
