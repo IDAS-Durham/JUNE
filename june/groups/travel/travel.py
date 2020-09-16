@@ -50,7 +50,7 @@ def generate_commuting_network(
         city.super_stations = SuperStations.for_city(city, super_stations_filename)
         # by default, 4 stations per super station, unless specified in the config file
         if city.name in config["cities"]:
-            n_stations_per_super_station = config["cities"][
+            n_stations_per_super_station = config["cities"][city.name][
                 "n_stations_per_super_station"
             ]
         else:
@@ -70,7 +70,9 @@ def generate_commuting_network(
         logger.warning("No stations in this world, travel won't work")
         return
     for super_area in world.super_areas:
-        super_area.closest_commuting_city = world.cities.get_closest_commuting_city(super_area.coordinates)
+        super_area.closest_commuting_city = world.cities.get_closest_commuting_city(
+            super_area.coordinates
+        )
         super_area.closest_station = super_area.closest_commuting_city.stations.get_closest_station(
             super_area.coordinates
         )
@@ -82,8 +84,26 @@ class Travel:
     to inter-city and inter-regional travel.
     """
 
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        commute_config_filename=default_commute_config_filenmame,
+        city_super_areas_filename=default_cities_filename,
+        super_stations_filename=default_super_stations_filename,
+    ):
+        self.commute_config_filename = commute_config_filename
+        self.city_super_areas_filename = city_super_areas_filename
+        self.super_stations_filename = super_stations_filename
+
+    def initialise_commute(self, world):
+        generate_commuting_network(
+            world=world,
+            commute_config_filename=self.commute_config_filename,
+            city_super_areas_filename=self.city_super_areas_filename,
+            super_stations_filename=self.super_stations_filename,
+        )
+        self.assign_mode_of_transport_to_people(world)
+        self.distribute_commuters_to_stations_and_cities(world)
+        self.create_transport_units_at_stations_and_cities(world)
 
     def assign_mode_of_transport_to_people(self, world):
         """
@@ -162,12 +182,3 @@ class Travel:
         if work_city is None or not person.mode_of_transport.is_public:
             return
         return work_city.get_commute_subgroup(person)
-        # if work_city.external:
-
-        # closest_super_station = person.super_area.closest_super_station
-        # if person in work_city.commute_internal:
-        #    idx = randint(len(work_city))
-        #    return person.work_super_area.closest_city_transports[idx]
-        # else:
-        #    idx = randint(len(person.work_super_area.closest_inter_city_transports))
-        #    return person.work_super_area.closest_inter_city_transports[idx]

@@ -9,6 +9,7 @@ from june.interaction import Interaction
 from june.infection import Infection, InfectionSelector, HealthIndexGenerator
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
+from june.groups.travel import Travel
 from june.simulator import Simulator
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
@@ -42,6 +43,7 @@ print("World loaded succesfully")
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
 #
+travel = Travel()
 # health index and infection selecctor
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator,
@@ -68,6 +70,7 @@ simulator = Simulator.from_file(
    policies=policies,
    interaction=interaction,
    leisure=leisure,
+   travel = travel,
    infection_selector=infection_selector,
    config_filename=config_path,
    save_path="results",

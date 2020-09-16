@@ -25,7 +25,9 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         super_areas_list_lengths = []
         names = []
         commuters_list = []
+        commuters_list_lengths = []
         stations_id_list = []
+        station_ids_lengths = []
         stations_per_city = []
         cities_transport_numbers = []
         coordinates = []
@@ -33,6 +35,7 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             ids.append(city.id)
             names.append(city.name.encode("ascii", "ignore"))
             commuters = [person.id for person in city.commuters]
+            commuters_list_lengths.append(len(commuters))
             commuters_list.append(np.array(commuters, dtype=np.int))
             super_areas = np.array(
                 [
@@ -50,6 +53,7 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             stations_ids = np.array(
                 [station.id for station in city.stations], dtype=np.int
             )
+            station_ids_lengths.append(len(stations_ids))
             stations_id_list.append(stations_ids)
 
         ids = np.array(ids, dtype=np.int)
@@ -58,8 +62,14 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             super_areas_list = np.array(super_areas_list, dtype="S15")
         else:
             super_areas_list = np.array(super_areas_list, dtype=ds)
-        stations_id_list = np.array(stations_id_list, dtype=dt)
-        commuters_list = np.array(commuters_list, dtype=dt)
+        if len(np.unique(station_ids_lengths)) == 1:
+            stations_id_list = np.array(stations_id_list, dtype=np.int)
+        else:
+            stations_id_list = np.array(stations_id_list, dtype=dt)
+        if len(np.unique(commuters_list_lengths)) == 1:
+            commuters_list = np.array(commuters_list, dtype=np.int)
+        else:
+            commuters_list = np.array(commuters_list, dtype=dt)
         cities_transport_numbers = np.array(cities_transport_numbers, dtype=np.int)
 
         stations_ids = np.array(stations_ids, dtype=dt)

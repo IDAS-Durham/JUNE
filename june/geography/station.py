@@ -2,6 +2,7 @@ from typing import List
 import pandas as pd
 import numpy as np
 import math
+import logging
 from sklearn.neighbors import BallTree
 from itertools import chain, count
 from collections import defaultdict
@@ -15,6 +16,7 @@ default_super_stations_filename = (
 
 earth_radius = 6371  # km
 
+logger = logging.getLogger(__name__)
 
 def _haversine_distance(origin, destination):
     """
@@ -64,22 +66,14 @@ class SuperStation:
     An important train station (like King's Cross). This is used to model commute and travel.
     """
 
-    __id_generators = defaultdict(count)
+    _id = count()
 
     def __init__(self, name: str = None, super_area: str = None, city: str = None):
-        self.id = self._next_id()
+        self.id = next(self._id)
         self.name = name
         self.super_area = super_area
         self.city = city
         self.stations = None
-
-    @classmethod
-    def _next_id(cls) -> int:
-        """
-        Iterate an id for this class. Each group class has its own id iterator
-        starting at 0
-        """
-        return next(cls.__id_generators[cls])
 
     def get_coordinates(self, super_areas: SuperAreas):
         return super_areas.members_by_name[self.super_area].coordinates
@@ -129,8 +123,10 @@ class SuperStations:
             stations.reset_index(inplace=True)
             station_instances = []
             for _, row in stations.iterrows():
+                station_name = row["station"]
+                logger.info(f"Station {station_name} initialised.")
                 station = SuperStation(
-                    name=row["station"], super_area=row["super_area"], city=city
+                    name=station_name, super_area=row["super_area"], city=city
                 )
                 station_instances.append(station)
             return cls(station_instances)
@@ -167,25 +163,17 @@ class Station:
     SuperStation.
     """
 
-    __id_generators = defaultdict(count)
+    _id = count()
 
     def __init__(
         self, super_station: str = None, city: str = None, super_area: SuperArea = None
     ):
-        self.id = self._next_id()
+        self.id = next(self._id)
         self.super_station = super_station
         self.commuters = []
         self.city = city
         self.super_area = super_area
         self.inter_city_transports = []
-
-    @classmethod
-    def _next_id(cls) -> int:
-        """
-        Iterate an id for this class. Each group class has its own id iterator
-        starting at 0
-        """
-        return next(cls.__id_generators[cls])
 
     @property
     def coordinates(self):

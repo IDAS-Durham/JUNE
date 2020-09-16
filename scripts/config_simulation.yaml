@@ -5,7 +5,7 @@ activity_to_groups:
   primary_activity: ['schools', 'companies', "universities"]
   leisure: ['pubs', 'cinemas', 'groceries', "care_home_visits", "household_visits"] 
   residence: ['households', 'care_homes']
-  commute: ['commuteunits', 'commutecityunits']
+  commute: ['city_transports', 'inter_city_transports']
 
 time:
   total_days: 10

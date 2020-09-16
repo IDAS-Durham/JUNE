@@ -386,6 +386,23 @@ class TestSaveWorld:
             else:
                 assert p1.work_super_area.id == p2.work_super_area.id
 
+    def test__super_area_city(self, world_h5, world_h5_loaded):
+        for sa1, sa2 in zip(world_h5.super_areas, world_h5_loaded.super_areas):
+            if sa1.city is None:
+                assert sa2.city is None
+            else:
+                assert sa1.city.id == sa2.city.id
+                assert sa1.city.name == sa2.city.name
+            if sa1.closest_station is None:
+                assert sa2.closest_station is None
+            else:
+                assert sa1.closest_station.id == sa2.closest_station.id
+            if sa1.closest_commuting_city is None:
+                assert sa2.closest_commuting_city is None
+            else:
+                assert sa1.closest_commuting_city.id == sa2.closest_commuting_city.id
+                assert sa1.closest_commuting_city.name == sa2.closest_commuting_city.name
+
     def test__care_home_area(self, world_h5, world_h5_loaded):
         assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
         for carehome, carehome2 in zip(world_h5.care_homes, world_h5_loaded.care_homes):

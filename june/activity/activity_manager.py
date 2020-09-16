@@ -7,12 +7,9 @@ from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
 
-# from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
-# from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
 from june.groups.leisure import Leisure
-from june.groups.travel import Travel 
+from june.groups.travel import Travel
 
-# from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
@@ -44,7 +41,6 @@ class ActivityManager:
         activity_to_groups: dict,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
-        min_age_home_alone: int = 15,
     ):
         self.logger = logger
         self.policies = policies
@@ -67,18 +63,6 @@ class ActivityManager:
                 "commute": activity_to_groups.get("commute", []),
                 "rail_travel": activity_to_groups.get("rail_travel", []),
             }
-        self.min_age_home_alone = min_age_home_alone
-
-        #if (
-        #    "rail_travel_out" in self.all_activities
-        #    or "rail_travel_back" in self.all_activities
-        #):
-        #    travel_options = activity_to_groups["rail_travel"]
-        #    if "travelunits" in travel_options:
-        #        self.travelunit_distributor = TravelUnitDistributor(
-        #            self.world.travelcities.members, self.world.travelunits.members
-        #        )
-
         self.furlough_ratio = 0
         self.key_ratio = 0
         self.random_ratio = 0
@@ -109,14 +93,6 @@ class ActivityManager:
     @property
     def active_groups(self):
         return self.activities_to_groups(self.timer.activities)
-
-    #def distribute_rail_out(self):
-    #    if hasattr(self, "travelunit_distributor"):
-    #        self.travelunit_distributor.distribute_people_out()
-
-    #def distribute_rail_back(self):
-    #    if hasattr(self, "travelunit_distributor"):
-    #        self.travelunit_distributor.distribute_people_back()
 
     @staticmethod
     def apply_activity_hierarchy(activities: List[str]) -> List[str]:

@@ -30,7 +30,7 @@ class City:
     A city is a collection of areas, with some added methods for functionality,
     such as commuting or local lockdowns.
     """
-    __id_generators = defaultdict(count)
+    _id = count()
 
     def __init__(
         self,
@@ -38,7 +38,7 @@ class City:
         name: str = None,
         coordinates = None,
     ):
-        self.id = self._next_id()
+        self.id = next(self._id)
         self.super_areas = super_areas
         self.name = name
         self.super_stations = None
@@ -46,14 +46,6 @@ class City:
         self.coordinates = coordinates
         self.city_transports = []
         self.commuters = []  # internal commuters in the city
-
-    @classmethod
-    def _next_id(cls) -> int:
-        """
-        Iterate an id for this class. Each group class has its own id iterator
-        starting at 0
-        """
-        return next(cls.__id_generators[cls])
 
     @classmethod
     def from_file(cls, name, city_super_areas_filename=default_cities_filename):

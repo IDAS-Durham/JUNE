@@ -32,6 +32,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_ids = []
     super_area_names = []
     super_area_coordinates = []
+    super_area_city = []
+    super_area_closest_commuting_city = []
+    super_area_closest_station = []
 
     for area in geography.areas:
         area_ids.append(area.id)
@@ -43,6 +46,20 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_ids.append(super_area.id)
         super_area_names.append(super_area.name.encode("ascii", "ignore"))
         super_area_coordinates.append(np.array(super_area.coordinates))
+        if super_area.city is None:
+            super_area_city.append(nan_integer)
+        else:
+            super_area_city.append(super_area.city.id)
+        if super_area.closest_commuting_city is None:
+            super_area_closest_commuting_city.append(nan_integer)
+        else:
+            super_area_closest_commuting_city.append(
+                super_area.closest_commuting_city.id
+            )
+        if super_area.closest_station is None:
+            super_area_closest_station.append(nan_integer)
+        else:
+            super_area_closest_station.append(super_area.closest_station.id)
 
     area_ids = np.array(area_ids, dtype=np.int)
     area_names = np.array(area_names, dtype="S20")
@@ -51,6 +68,11 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_ids = np.array(super_area_ids, dtype=np.int)
     super_area_names = np.array(super_area_names, dtype="S20")
     super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
+    super_area_city = np.array(super_area_city, dtype=np.int)
+    super_area_closest_commuting_city = np.array(
+        super_area_closest_commuting_city, dtype=np.int
+    )
+    super_area_closest_station = np.array(super_area_closest_station, dtype=np.int)
 
     with h5py.File(file_path, "a") as f:
         geography_dset = f.create_group("geography")
@@ -62,6 +84,13 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset("area_coordinates", data=area_coordinates)
         geography_dset.create_dataset("super_area_id", data=super_area_ids)
         geography_dset.create_dataset("super_area_name", data=super_area_names)
+        geography_dset.create_dataset("super_area_city", data=super_area_city)
+        geography_dset.create_dataset(
+            "super_area_closest_commuting_city", data=super_area_closest_commuting_city
+        )
+        geography_dset.create_dataset(
+            "super_area_closest_station", data=super_area_closest_station
+        )
         geography_dset.create_dataset(
             "super_area_coordinates", data=super_area_coordinates
         )
@@ -138,8 +167,10 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
 
 
 def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_size):
-    super_areas_first_id = world.super_areas[0].id
+    first_super_area_id = world.super_areas[0].id
     first_area_id = world.areas[0].id
+    first_city_id = world.cities[0].id
+    first_station_id = world.stations[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
         n_areas = geography.attrs["n_areas"]
@@ -159,6 +190,21 @@ def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_s
             for k in range(length):
                 area = world.areas[areas_ids[k] - first_area_id]
                 area.super_area = world.super_areas[
-                    super_areas[k] - super_areas_first_id
+                    super_areas[k] - first_super_area_id
                 ]
                 area.super_area.areas.append(area)
+        n_super_areas = geography.attrs["n_super_areas"]
+        super_area_ids = geography["super_area_id"]
+        super_area_cities = geography["super_area_city"]
+        super_area_closest_commuting_city = geography[
+            "super_area_closest_commuting_city"
+        ]
+        super_area_closest_station = geography["super_area_closest_station"]
+        for k in range(n_super_areas):
+            super_area = world.super_areas[super_area_ids[k] - first_super_area_id]
+            if super_area_cities[k] != nan_integer:
+                super_area.city = world.cities[super_area_cities[k] - first_city_id]
+            if super_area_closest_commuting_city[k] != nan_integer:
+                super_area.closest_commuting_city = world.cities[super_area_closest_commuting_city[k] - first_city_id]
+            if super_area_closest_station[k] != nan_integer:
+                super_area.closest_station = world.stations[super_area_closest_station[k] - first_station_id]
