@@ -19,7 +19,7 @@ def create_world():
         }
     )
     world = generate_world_from_geography(
-        geography, include_households=True, include_commute=False
+        geography, include_households=True
     )
     return world
 

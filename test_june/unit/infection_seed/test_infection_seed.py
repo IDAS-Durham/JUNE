@@ -54,7 +54,7 @@ def create_selector():
 
 
 @pytest.fixture(name="seed")
-def get_seed(geography, selector):
+def get_seed(geography, selector, demography):
     super_area_to_region = pd.DataFrame(
         {"super_area": SUPER_AREA_LIST, "region": REGION_LIST}
     )

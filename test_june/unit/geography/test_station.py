@@ -30,8 +30,8 @@ class TestSuperStations:
         assert super_stations[0].name == "King's Cross"
         assert super_stations[1].super_area == "l2"
         assert super_stations[1].name == "Victoria"
-        assert super_stations[0].city == city
-        assert super_stations[1].city == city
+        assert super_stations[0].city == city.name
+        assert super_stations[1].city == city.name
 
     def test__super_station_coordinates(self):
         super_areas = SuperAreas(

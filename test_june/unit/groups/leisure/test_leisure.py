@@ -105,7 +105,7 @@ def test__person_drags_household(leisure):
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(
-        geography, include_households=True, include_commute=False
+        geography, include_households=True
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)

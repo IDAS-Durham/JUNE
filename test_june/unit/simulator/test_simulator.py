@@ -61,6 +61,11 @@ def make_policies():
 @pytest.fixture(name="sim", scope="module")
 def setup_sim(dummy_world, selector):
     world = dummy_world
+    for person in world.people:
+        person.susceptibility = 1.0
+        person.infection = None
+        person.subgroups.medical_facility = None
+        person.dead = False
     leisure_instance = leisure.generate_leisure_for_world(
         world=world, list_of_leisure_groups=["pubs", "cinemas", "groceries"]
     )
@@ -79,7 +84,9 @@ def setup_sim(dummy_world, selector):
         travel=travel,
         policies=policies,
     )
-    sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(3, False, False)
+    sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
+        3, False, False
+    )
     return sim
 
 
@@ -200,7 +207,11 @@ def test__move_people_to_primary_activity(sim: Simulator):
 
 
 def test__move_people_to_commute(sim: Simulator):
-    sim.clear_world()
+    print("COMMUTE TEST")
+    print(sim.world.people.people)
+    for person in sim.world.people:
+        if person.mode_of_transport:
+            print(person.mode_of_transport.is_public)
     sim.activity_manager.move_people_to_active_subgroups(["commute", "residence"])
     n_commuters = 0
     for person in sim.world.people.members:
