@@ -66,7 +66,7 @@ class SuperStation:
 
     __id_generators = defaultdict(count)
 
-    def __init__(self, name: str = None, super_area: str = None, city: City = None):
+    def __init__(self, name: str = None, super_area: str = None, city: str = None):
         self.id = self._next_id()
         self.name = name
         self.super_area = super_area
@@ -110,6 +110,7 @@ class SuperStations:
     def from_file(
         cls,
         super_areas: List[str],
+        city: str = None,
         super_station_super_areas_filename=default_super_stations_filename,
     ):
         """
@@ -129,7 +130,7 @@ class SuperStations:
             station_instances = []
             for _, row in stations.iterrows():
                 station = SuperStation(
-                    name=row["station"], super_area=row["super_area"]
+                    name=row["station"], super_area=row["super_area"], city=city
                 )
                 station_instances.append(station)
             return cls(station_instances)
@@ -152,14 +153,12 @@ class SuperStations:
         station_super_areas_filename
             A path to a csv file containing two columns, "station" and "super_area", mapping each station to an super_area.
         """
-        stations = cls.from_file(
+        super_stations = cls.from_file(
             super_areas=city.super_areas,
+            city=city.name,
             super_station_super_areas_filename=super_station_super_areas_filename,
         )
-        if stations:
-            for station in stations:
-                station.city = city
-        return stations
+        return super_stations
 
 
 class Station:

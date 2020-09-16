@@ -74,7 +74,7 @@ class World:
         self.box_mode = False
 
     def distribute_people(
-        self, include_households=True#, include_commute=False, include_rail_travel=False
+        self, include_households=True
     ):
         """
         Distributes people to buildings assuming default configurations.
@@ -128,24 +128,6 @@ class World:
                 self.super_areas
             )
 
-        #if include_rail_travel:
-        #    self.initialise_rail_travel()
-
-    #def initialise_rail_travel(self):
-
-    #    # TravelCity
-    #    self.travelcities = TravelCities(self.commutecities)
-    #    self.init_cities()
-
-    #    # TravelCityDistributor
-    #    self.travelcity_distributor = TravelCityDistributor(
-    #        self.travelcities.members, self.super_areas.members
-    #    )
-    #    self.travelcity_distributor.distribute_msoas()
-
-    #    # TravelUnit
-    #    self.travelunits = TravelUnits()
-
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
@@ -170,7 +152,6 @@ def generate_world_from_geography(
     demography: Optional[Demography] = None,
     box_mode=False,
     include_households=True,
-    include_rail_travel=False,
 ):
     """
         Initializes the world given a geometry. The demography is calculated
@@ -196,7 +177,6 @@ def generate_world_from_geography(
             setattr(world, possible_group, geography_group)
     world.distribute_people(
         include_households=include_households,
-        include_rail_travel=include_rail_travel,
     )
     world.cemeteries = Cemeteries()
     return world

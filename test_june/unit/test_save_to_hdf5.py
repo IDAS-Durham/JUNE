@@ -5,6 +5,7 @@ from itertools import count
 from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
 from june.demography import Demography, Person, Population
 from june.geography import Geography, Area, SuperArea
+from june.groups.travel import generate_commuting_network, Travel
 from june.groups import (
     Households,
     Companies,
@@ -26,6 +27,7 @@ from june.hdf5_savers import (
     save_households_to_hdf5,
     save_companies_to_hdf5,
     save_cities_to_hdf5,
+    save_stations_to_hdf5,
     save_universities_to_hdf5,
     save_social_venues_to_hdf5,
     generate_world_from_hdf5,
@@ -40,6 +42,7 @@ from june.hdf5_savers import (
     load_schools_from_hdf5,
     load_hospitals_from_hdf5,
     load_cities_from_hdf5,
+    load_stations_from_hdf5,
     load_universities_from_hdf5,
     load_social_venues_from_hdf5,
 )
@@ -50,9 +53,7 @@ from pytest import fixture
 
 @fixture(name="geography_h5", scope="module")
 def make_geography():
-    geography = Geography.from_file(
-        {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
-    )
+    geography = Geography.from_file({"super_area": ["E02001731", "E02002566"]})
     return geography
 
 
@@ -66,9 +67,8 @@ def create_world(geography_h5):
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.universities = Universities.for_super_areas(geography.super_areas)
-    world = generate_world_from_geography(
-        geography=geography, include_households=True, include_commute=True
-    )
+    world = generate_world_from_geography(geography=geography, include_households=True)
+
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
@@ -78,6 +78,11 @@ def create_world(geography_h5):
     leisure.distribute_social_venues_to_households(
         households=world.households, super_areas=world.super_areas
     )
+    generate_commuting_network(world)
+    travel = Travel()
+    travel.assign_mode_of_transport_to_people(world)
+    travel.distribute_commuters_to_stations_and_cities(world)
+    travel.create_transport_units_at_stations_and_cities(world)
     return world
 
 
@@ -111,11 +116,6 @@ class TestSavePeople:
                 person.mode_of_transport.is_public
                 == person2.mode_of_transport.is_public
             )
-            # home city
-            if person.home_city is None:
-                assert person2.home_city is None
-            else:
-                assert person.home_city.id == person2.home_city
 
 
 class TestSaveHouses:
@@ -252,29 +252,36 @@ class TestSaveGeography:
 class TestSaveTravel:
     def test__save_cities(self, world_h5):
         cities = world_h5.cities
+        city_transports = world_h5.city_transports
         assert len(cities) > 0
         save_cities_to_hdf5(cities, "test.hdf5")
-        cities_recovered = load_cities_from_hdf5("test.hdf5")
+        cities_recovered, city_transports_recovered = load_cities_from_hdf5("test.hdf5")
+        assert len(cities) == len(cities_recovered)
+        assert len(city_transports) == len(city_transports_recovered)
         for city, city_recovered in zip(cities, cities_recovered):
             assert city.name == city_recovered.name
             for sa1, sa2 in zip(city.super_areas, city_recovered.super_areas):
                 assert sa1 == sa2
             assert city.coordinates[0] == city_recovered.coordinates[0]
             assert city.coordinates[1] == city_recovered.coordinates[1]
-            assert len(city.stations) == city_recovered.stations
-            assert len(city.city_transports) == city_recovered.city_transports
-            for ct1, ct2 in zip(city.city_transports, city_recovered.city_transports):
-                assert ct1.id == ct2.id
-            for station1, station2 in zip(city.stations, city_recovered.stations):
-                assert station1.id == station2.id
-                assert station1.city == station2.city
-                assert len(station1.inter_city_transports) == len(
-                    station2.inter_city_transports
-                )
-                for ict1, ict2 in zip(
-                    city.inter_city_transports, city_recovered.inter_city_transports
-                ):
-                    assert ict1.id == ict2.id
+            assert len(city.city_transports) == len(city_recovered.city_transports)
+
+    def test__save_stations(self, world_h5):
+        stations = world_h5.stations
+        inter_city_transports = world_h5.inter_city_transports
+        assert len(stations) > 0
+        save_stations_to_hdf5(stations, "test.hdf5")
+        stations_recovered, inter_city_transports_recovered = load_stations_from_hdf5(
+            "test.hdf5"
+        )
+        assert len(stations) == len(stations_recovered)
+        assert len(inter_city_transports) == len(inter_city_transports_recovered)
+        for station, station_recovered in zip(stations, stations_recovered):
+            assert station.id == station_recovered.id
+            assert station.city == station_recovered.city
+            assert len(station.inter_city_transports) == len(
+                station_recovered.inter_city_transports
+            )
 
 
 class TestSaveUniversities:
@@ -374,7 +381,10 @@ class TestSaveWorld:
 
     def test__work_super_area(self, world_h5, world_h5_loaded):
         for p1, p2 in zip(world_h5.people, world_h5_loaded.people):
-            assert p1.work_super_area == p2.work_super_area
+            if p1.work_super_area is None:
+                assert p2.work_super_area is None
+            else:
+                assert p1.work_super_area.id == p2.work_super_area.id
 
     def test__care_home_area(self, world_h5, world_h5_loaded):
         assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
@@ -408,12 +418,10 @@ class TestSaveWorld:
     def test__commute(self, world_h5, world_h5_loaded):
         assert len(world_h5.city_transports) > 0
         assert len(world_h5.inter_city_transports) > 0
-        for ct1, ct2 in zip(world_h5.city_transports, world_h5_loaded.city_transports):
-            assert ct1.id == ct2.id
-        for ict1, ict2 in zip(
-            world_h5.inter_city_transports, world_h5_loaded.inter_city_transports
-        ):
-            assert ict1.id == ict2.id
+        assert len(world_h5.city_transports) == len(world_h5_loaded.city_transports)
+        assert len(world_h5.inter_city_transports) == len(
+            world_h5_loaded.inter_city_transports
+        )
         for city1, city2 in zip(world_h5.cities, world_h5_loaded.cities):
             assert city1.name == city2.name
             assert len(city1.commuters) == len(city2.commuters)

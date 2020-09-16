@@ -2,8 +2,7 @@ import h5py
 import numpy as np
 from collections import OrderedDict
 
-from june.groups.commute import CommuteCity
-from june.commute import ModeOfTransport
+from june.groups.travel import ModeOfTransport
 from june.demography import Population, Person
 from june.demography.person import Activities
 from june.world import World
@@ -31,7 +30,6 @@ def save_population_to_hdf5(
     Saves the Population object to hdf5 format file ``file_path``. Currently for each person,
     the following values are stored:
     - id, age, sex, ethnicity, area, subgroup memberships ids, housemate ids, mode_of_transport,
-      home_city
 
     Parameters
     ----------
@@ -184,6 +182,9 @@ def save_population_to_hdf5(
                 )
                 people_dset.create_dataset("area", data=areas, maxshape=(None,))
                 people_dset.create_dataset(
+                    "work_super_area", data=work_super_areas, maxshape=(None,)
+                )
+                people_dset.create_dataset(
                     "mode_of_transport_description",
                     data=mode_of_transport_description,
                     maxshape=(None,),
@@ -268,10 +269,6 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
             population["socioecon_index"].read_direct(
                 socioecon_indices, np.s_[idx1:idx2], np.s_[0:length]
             )
-            # home_city = np.empty(length, dtype=int)
-            # population["home_city"].read_direct(
-            #    home_city, np.s_[idx1:idx2], np.s_[0:length]
-            # )
             sectors = np.empty(length, dtype="S20")
             population["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
             sub_sectors = np.empty(length, dtype="S20")
@@ -317,11 +314,6 @@ def load_population_from_hdf5(file_path: str, chunk_size=100000):
                         description=mode_of_transport_description.decode(),
                         is_public=mode_of_transport_is_public,
                     )
-                # hc = home_city[k]
-                # if hc == nan_integer:
-                #    person.home_city = None
-                # else:
-                #    person.home_city = hc
                 if sectors[k].decode() == " ":
                     person.sector = None
                 else:
@@ -378,8 +370,10 @@ def restore_population_properties_from_hdf5(
                 person = world.people[ids[k] - first_person_id]
                 # restore area
                 person.area = world.areas[areas[k] - first_area_id]
-                if person.work_super_area != nan_integer:
-                    person.work_super_area = world.super_areas[work_super_areas[k] - first_super_area_id]
+                if work_super_areas[k] != nan_integer:
+                    person.work_super_area = world.super_areas[
+                        work_super_areas[k] - first_super_area_id
+                    ]
                     person.work_super_area.workers.append(person)
                 person.area.people.append(person)
                 person.area.super_area.people.append(person)
