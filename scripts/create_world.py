@@ -19,7 +19,7 @@ import time
 import numpy as np
 
 # load london super areas
-london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[45:50]
+london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
 
 # add King's cross are for station
 if "E00004734" not in london_areas:
@@ -28,7 +28,7 @@ if "E00004734" not in london_areas:
 t1 = time.time()
 
 # default config path
-config_path = "./config.yaml"
+config_path = "./config_simulation.yaml"
 
 # define geography, let's run the first 20 super areas of london
 geography = Geography.from_file({"super_area": london_areas})
