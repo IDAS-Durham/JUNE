@@ -14,7 +14,6 @@ from june.simulator import Simulator
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
 from june import paths
-from june.groups.commute import *
 
 
 def set_random_seed(seed=999):
@@ -34,7 +33,7 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./tests.hdf5"
+world_file = "./new_commute.hdf5"
 config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
