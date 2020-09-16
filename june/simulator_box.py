@@ -115,6 +115,7 @@ class SimulatorBox(Simulator):
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
+        first_person_id = self.world.people[0].id
         for group_type in group_instances:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
@@ -133,14 +134,14 @@ class SimulatorBox(Simulator):
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(
                                 int_group.infector_ids):
-                            infector = self.world.people[infector_id]
+                            infector = self.world.people[infector_id - first_person_id]
                             infector.infection.number_of_infected += (
                                 n_infected
                                 * infector.infection.transmission.probability
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.people[idx] for idx in infected_ids]
+        people_to_infect = [self.world.people[idx - first_person_id] for idx in infected_ids]
         if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "

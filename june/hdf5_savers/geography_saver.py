@@ -169,8 +169,10 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000):
 def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_size):
     first_super_area_id = world.super_areas[0].id
     first_area_id = world.areas[0].id
-    first_city_id = world.cities[0].id
-    first_station_id = world.stations[0].id
+    if world.cities:
+        first_city_id = world.cities[0].id
+    if world.stations:
+        first_station_id = world.stations[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         geography = f["geography"]
         n_areas = geography.attrs["n_areas"]
@@ -202,9 +204,15 @@ def restore_geography_properties_from_hdf5(world: World, file_path: str, chunk_s
         super_area_closest_station = geography["super_area_closest_station"]
         for k in range(n_super_areas):
             super_area = world.super_areas[super_area_ids[k] - first_super_area_id]
-            if super_area_cities[k] != nan_integer:
-                super_area.city = world.cities[super_area_cities[k] - first_city_id]
-            if super_area_closest_commuting_city[k] != nan_integer:
-                super_area.closest_commuting_city = world.cities[super_area_closest_commuting_city[k] - first_city_id]
-            if super_area_closest_station[k] != nan_integer:
-                super_area.closest_station = world.stations[super_area_closest_station[k] - first_station_id]
+            if world.cities:
+                if super_area_cities[k] != nan_integer:
+                    super_area.city = world.cities[super_area_cities[k] - first_city_id]
+                if super_area_closest_commuting_city[k] != nan_integer:
+                    super_area.closest_commuting_city = world.cities[
+                        super_area_closest_commuting_city[k] - first_city_id
+                    ]
+            if world.stations:
+                if super_area_closest_station[k] != nan_integer:
+                    super_area.closest_station = world.stations[
+                        super_area_closest_station[k] - first_station_id
+                    ]

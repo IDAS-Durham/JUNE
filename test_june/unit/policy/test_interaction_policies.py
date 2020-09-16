@@ -46,8 +46,8 @@ class TestSocialDistancing:
             "pub": 0.7,
             "grocery": 0.7,
             "cinema": 0.7,
-            "commute_unit": 0.7,
-            "commute_city_unit": 0.7,
+            "inter_city_transport": 0.7,
+            "city_transport": 0.7,
             "hospital": 0.7,
             "care_home": 0.7,
             "company": 0.7,
@@ -81,9 +81,6 @@ class TestSocialDistancing:
             if sim.timer.date >= start_date and sim.timer.date < end_date:
                 for group in sim.interaction.beta:
                     if group != "household":
-                        print(group)
-                        print(initial_betas[group])
-                        print(sim.interaction.beta[group])
                         assert sim.interaction.beta[group] == initial_betas[group] * 0.7
                     else:
                         assert sim.interaction.beta[group] == initial_betas[group]
@@ -114,8 +111,8 @@ class TestMaskWearing:
             "pub": 0.5,
             "grocery": 0.5,
             "cinema": 0.5,
-            "commute_unit": 0.5,
-            "commute_city_unit": 0.5,
+            "city_transport": 0.5,
+            "inter_city_transport": 0.5,
             "hospital": 0.5,
             "care_home": 0.5,
             "company": 0.5,

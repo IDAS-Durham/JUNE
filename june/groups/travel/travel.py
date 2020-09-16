@@ -179,6 +179,11 @@ class Travel:
 
     def get_commute_subgroup(self, person):
         work_city = person.work_city
+        print("person work city")
+        print(work_city)
+        print("mode of transport")
+        if person.mode_of_transport:
+            print(person.mode_of_transport.is_public)
         if work_city is None or not person.mode_of_transport.is_public:
             return
         subgroup = work_city.get_commute_subgroup(person)

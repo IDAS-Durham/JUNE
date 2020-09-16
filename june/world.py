@@ -72,6 +72,8 @@ class World:
         self.cemeteries = None
         self.universities = None
         self.box_mode = False
+        self.cities = None
+        self.stations = None
 
     def distribute_people(
         self, include_households=True

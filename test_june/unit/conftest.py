@@ -18,6 +18,7 @@ from june.groups.travel import (
 )
 from june.groups import *
 from june.groups.leisure import *
+from june.groups.travel import Travel
 from june.demography import Person, Population
 from june.infection import Infection
 from june.infection.infection_selector import InfectionSelector
@@ -193,7 +194,7 @@ def make_dummy_world():
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.area = super_area.areas[0]
     commuter.work_super_area = super_area
-    commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
+    commuter.mode_of_transport = ModeOfTransport(description="surf", is_public=True)
     household.add(commuter)
 
     world = World()
@@ -240,11 +241,13 @@ def make_dummy_world():
 @pytest.fixture(name="policy_simulator", scope="session")
 def make_policy_simulator(dummy_world, interaction, selector):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
+    travel = Travel()
     sim = Simulator.from_file(
         dummy_world,
         interaction,
         infection_selector=selector,
         config_filename=config_name,
+        travel = travel,
         save_path=None,
         policies=None,
         leisure=None,

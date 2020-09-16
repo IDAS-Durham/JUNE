@@ -57,7 +57,7 @@ def make_world(geography):
     geography.care_homes = CareHomes.for_geography(geography)
     geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
-        geography, include_households=False, include_commute=False
+        geography, include_households=False
     )
     return world
 
