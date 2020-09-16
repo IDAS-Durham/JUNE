@@ -181,4 +181,6 @@ class Travel:
         work_city = person.work_city
         if work_city is None or not person.mode_of_transport.is_public:
             return
-        return work_city.get_commute_subgroup(person)
+        subgroup = work_city.get_commute_subgroup(person)
+        person.subgroups.commute = subgroup
+        return subgroup
