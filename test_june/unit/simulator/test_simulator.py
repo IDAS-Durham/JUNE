@@ -207,11 +207,6 @@ def test__move_people_to_primary_activity(sim: Simulator):
 
 
 def test__move_people_to_commute(sim: Simulator):
-    print("COMMUTE TEST")
-    print(sim.world.people.people)
-    for person in sim.world.people:
-        if person.mode_of_transport:
-            print(person.mode_of_transport.is_public)
     sim.activity_manager.move_people_to_active_subgroups(["commute", "residence"])
     n_commuters = 0
     for person in sim.world.people.members:
