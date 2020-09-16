@@ -220,7 +220,7 @@ def make_dummy_world():
     world.groceries = Groceries([grocery])
     city = City(name="test", coordinates=[1, 2])
     world.cities = Cities([city])
-    city.commuters.append(commuter)
+    city.commuter_ids.add(commuter.id)
     city.stations = [
         Station(super_area=world.super_areas[0], city=world.cities[0])
     ]

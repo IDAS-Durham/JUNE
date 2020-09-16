@@ -57,8 +57,8 @@ class TestCommute:
         city = world.cities[0]
         n_external_commuters = 0
         for station in city.stations:
-            n_external_commuters += len(station.commuters)
-        n_internal_commuters = len(city.commuters)
+            n_external_commuters += len(station.commuter_ids)
+        n_internal_commuters = len(city.commuter_ids)
         assert n_internal_commuters == 250
         assert n_external_commuters == 750
         
