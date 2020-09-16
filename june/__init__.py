@@ -5,7 +5,6 @@ import yaml
 
 from june import paths
 from . import box
-from . import commute_rail_travel
 from . import demography
 from . import distributors
 from . import groups

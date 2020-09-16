@@ -1,6 +1,6 @@
 import pytest
 
-from june import commute as c
+from june.groups.travel import mode_of_transport as c
 from june import paths
 
 test_data_filename = paths.data_path / "census_data/commute.csv"

@@ -36,7 +36,7 @@ def get_geography():
 
 
 @pytest.fixture(name="demography")
-def get_geography):
+def get_demography(geography):
     demography = Demography.for_geography(geography)
     for area in geography.areas:
         area.populate(demography)
@@ -54,7 +54,7 @@ def create_selector():
 
 
 @pytest.fixture(name="seed")
-def get_seed(geography, selector, demography):
+def get_seed(geography, selector):
     super_area_to_region = pd.DataFrame(
         {"super_area": SUPER_AREA_LIST, "region": REGION_LIST}
     )

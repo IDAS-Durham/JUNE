@@ -118,12 +118,6 @@ def create_world(geography):
     return world
 
 
-# @pytest.fixture(name="simulator", scope="session")
-# def create_simulator(world, interaction, infection_constant, selector):
-#    return Simulator.from_file(world=world, interaction=interaction, infection_constant, infection_selector=selector)
-#
-
-
 @pytest.fixture(name="world_box", scope="session")
 def create_box_world():
     geography = Geography.from_file({"area": ["E00000697"]})
@@ -198,8 +192,8 @@ def make_dummy_world():
 
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.area = super_area.areas[0]
+    commuter.work_super_area = super_area
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
-    # commuter.mode_of_transport = "public"
     household.add(commuter)
 
     world = World()
@@ -223,25 +217,22 @@ def make_dummy_world():
     grocery = Grocery()
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
-    world.cities = Cities([City(name="test", coordinates=[1, 2])])
-    world.cities[0].commuters.append(commuter)
-    world.cities[0].stations = [
+    city = City(name="test", coordinates=[1, 2])
+    world.cities = Cities([city])
+    city.commuters.append(commuter)
+    city.stations = [
         Station(super_area=world.super_areas[0], city=world.cities[0])
     ]
-    world.city_transports = CityTransports([CityTransport()])
-    world.inter_city_transports = InterCityTransports([InterCityTransport()])
-    # commute
-    # world.commutecities = CommuteCities.for_super_areas(world.super_areas)
-    # world.commutecities[7].add(commuter)
-    # world.commutecities[7].add_internal_commuter(commuter)
-    # world.commutehubs = CommuteHubs(world.commutecities)
-    # world.commutehubs.from_file()
-    # world.commutehubs.init_hubs()
-    # world.commutehubs[0].commute_through.append(commuter)
-    # world.commutecityunits = CommuteCityUnits(world.commutecities.members)
-    # world.commutecityunits.init_units()
-    # world.commuteunits = CommuteUnits(world.commutehubs.members)
-    # world.commuteunits.init_units()
+    world.stations = city.stations
+    world.super_areas[0].city = city
+    world.super_areas[0].closest_commuting_city = city
+    world.super_areas[0].closest_station = city.stations[0]
+    city_transports = CityTransports([CityTransport()])
+    world.city_transports = city_transports
+    city.city_transports = city_transports
+    inter_city_transports = InterCityTransports([InterCityTransport()])
+    world.inter_city_transports = inter_city_transports
+    city.stations[0].inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
     return world
 
