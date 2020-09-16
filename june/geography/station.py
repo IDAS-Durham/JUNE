@@ -170,7 +170,7 @@ class Station:
     ):
         self.id = next(self._id)
         self.super_station = super_station
-        self.commuters = []
+        self.commuter_ids = set()
         self.city = city
         self.super_area = super_area
         self.inter_city_transports = []

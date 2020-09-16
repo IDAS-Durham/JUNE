@@ -146,10 +146,10 @@ class Travel:
                 if person.work_city is not None:
                     if person.home_city == person.work_city:
                         # this person commutes internally
-                        person.work_city.commuters.append(person)
+                        person.work_city.commuter_ids.add(person.id)
                     else:
                         # commutes away to an external station
-                        person.area.super_area.closest_station.commuters.append(person)
+                        person.area.super_area.closest_station.commuter_ids.add(person.id)
             if i % 500_000 == 0:
                 logger.info(f"Assigned {i} of {len(world.people)} commuters...")
         logger.info(f"Commuters assigned")
@@ -161,7 +161,7 @@ class Travel:
         world.city_transports = CityTransports([])
         world.inter_city_transports = InterCityTransports([])
         for city in world.cities:
-            n_commute_internal = len(city.commuters)
+            n_commute_internal = len(city.commuter_ids)
             number_city_transports = int(
                 np.ceil(n_commute_internal / people_per_city_transport)
             )
@@ -170,7 +170,7 @@ class Travel:
             world.city_transports.members += city.city_transports
             for station in city.stations:
                 number_inter_city_transports = int(
-                    np.ceil(len(station.commuters) / people_per_inter_city_transport)
+                    np.ceil(len(station.commuter_ids) / people_per_inter_city_transport)
                 )
                 for _ in range(number_inter_city_transports):
                     station.inter_city_transports.append(InterCityTransport())

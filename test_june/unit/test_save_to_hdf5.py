@@ -441,18 +441,12 @@ class TestSaveWorld:
         )
         for city1, city2 in zip(world_h5.cities, world_h5_loaded.cities):
             assert city1.name == city2.name
-            assert len(city1.commuters) == len(city2.commuters)
-            for c1, c2 in zip(city1.commuters, city2.commuters):
-                assert c1.id == c2.id
-                assert c1.age == c2.age
-                assert c1.sex == c2.sex
+            assert len(city1.commuter_ids) == len(city2.commuter_ids)
+            assert city1.commuter_ids == city2.commuter_ids
             assert len(city1.stations) == len(city2.stations)
             for station1, station2 in zip(city1.stations, city2.stations):
-                assert len(station1.commuters) == len(station2.commuters)
-                for c1, c2 in zip(station1.commuters, station2.commuters):
-                    assert c1.id == c2.id
-                    assert c1.age == c2.age
-                    assert c1.sex == c2.sex
+                assert len(station1.commuter_ids) == len(station2.commuter_ids)
+                assert station1.commuter_ids == station2.commuter_ids
 
     def test__household_residents(self, world_h5, world_h5_loaded):
         for h1, h2 in zip(world_h5.households, world_h5_loaded.households):

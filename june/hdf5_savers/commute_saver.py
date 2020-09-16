@@ -34,7 +34,7 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         for city in cities:
             ids.append(city.id)
             names.append(city.name.encode("ascii", "ignore"))
-            commuters = [person.id for person in city.commuters]
+            commuters = [person_id for person_id in list(city.commuter_ids)]
             commuters_list_lengths.append(len(commuters))
             commuters_list.append(np.array(commuters, dtype=np.int))
             super_areas = np.array(
@@ -145,7 +145,7 @@ def save_stations_to_hdf5(stations: Stations, file_path: str):
             station_ids.append(station.id)
             station_super_areas.append(station.super_area.id)
             station_commuters.append(
-                np.array([person.id for person in station.commuters], dtype=np.int)
+                np.array([person_id for person_id in list(station.commuter_ids)], dtype=np.int)
             )
             station_transport_numbers.append(len(station.inter_city_transports))
             station_cities.append(station.city.encode("ascii", "ignore"))
@@ -213,19 +213,19 @@ def restore_cities_and_stations_properties_from_hdf5(world: World, file_path: st
             station.super_area = world.super_areas[
                 station_super_areas[k] - first_super_area_id
             ]
-            station.commuters = [
-                world.people[c_id - first_person_id]
+            station.commuter_ids = set([
+                c_id 
                 for c_id in station_commuters_list[k]
-            ]
+            ])
 
         for k in range(n_cities):
             city_id = city_ids[k]
             city = world.cities[city_id - first_city_id]
-            commuters = [
-                world.people[commuter_id - first_person_id]
+            commuters = set([
+                commuter_id 
                 for commuter_id in city_commuters_list[k]
-            ]
-            city.commuters = commuters
+            ])
+            city.commuter_ids = commuters
             city.stations = []
             for station_id in city_station_ids[k]:
                 station = world.stations[station_id - first_station_id]
