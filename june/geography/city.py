@@ -200,6 +200,6 @@ class ExternalCity(ExternalGroup):
 
     def get_commute_subgroup(self, person):
         group = self.city_transports[
-            randint(0, len(self.inter_city_transports) - 1)
+            randint(0, len(self.city_transports) - 1)
         ]
         return ExternalSubgroup(group=group, subgroup_type=0)

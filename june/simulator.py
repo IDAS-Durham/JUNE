@@ -225,7 +225,8 @@ class Simulator:
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
                 for group in grouptype.members:
-                    group.clear()
+                    if not group.external:
+                        group.clear()
 
         for person in self.world.people.members:
             person.busy = False
@@ -349,8 +350,9 @@ class Simulator:
                 person = self.world.people.get_from_id(inf_id)
                 if self.logger is not None:
                     self.logger.accumulate_infection_location(
-                    location=inf_loc, super_areas_infected=person.area.super_area.name
-                )
+                        location=inf_loc,
+                        super_areas_infected=person.area.super_area.name,
+                    )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
                 foreign_ids.append(inf_id)
@@ -405,14 +407,17 @@ class Simulator:
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
                     people_to_infect += data
-        tock, tockw = perf_counter(),wall_clock()
-        output_logger.info(f'CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}')
-        for inf_id in people_to_infect:
-            person = self.world.people.get_from_id(inf_id)
+        tock, tockw = perf_counter(), wall_clock()
+        output_logger.info(
+            f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
+        )
+        for infection_data in people_to_infect:
+            person = self.world.people.get_from_id(infection_data[0])
             if self.logger is not None:
                 self.logger.accumulate_infection_location(
-                location=inf_loc, super_areas_infected=person.area.super_area.name
-            )
+                    location=infection_data[1],
+                    super_areas_infected=person.area.super_area.name,
+                )
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
     def do_timestep(self):
@@ -464,6 +469,8 @@ class Simulator:
         infected_ids, infection_location = [], []
         for super_group in super_group_instances:
             for group in super_group:
+                if group.external:
+                    continue
                 if (
                     group.spec in people_from_abroad_dict
                     and group.id in people_from_abroad_dict[group.spec]
@@ -500,7 +507,9 @@ class Simulator:
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
-                infected_ids, people_from_abroad_dict, infection_location
+                infected_ids=infected_ids,
+                people_from_abroad_dict=people_from_abroad_dict,
+                infection_locations=infection_location,
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
         # recount people active to check people conservation
@@ -520,12 +529,14 @@ class Simulator:
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
-            #if self.world.hospitals is not None:
+            # if self.world.hospitals is not None:
             #    self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         # remove everyone from their active groups
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
-        output_logger.info(f'CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}')
+        output_logger.info(
+            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}"
+        )
 
     def run(self):
         """

@@ -353,6 +353,10 @@ class TestSaveWorld:
                 assert p2.work_super_area is None
             else:
                 assert p1.work_super_area.id == p2.work_super_area.id
+                if p1.work_super_area.city is None:
+                    assert p2.work_super_area.city is None
+                else:
+                    assert p1.work_super_area.city.id == p2.work_super_area.city.id
 
     def test__super_area_city(self, full_world, full_world_loaded):
         for sa1, sa2 in zip(full_world.super_areas, full_world_loaded.super_areas):

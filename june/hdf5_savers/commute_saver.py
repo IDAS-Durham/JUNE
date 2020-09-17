@@ -139,9 +139,6 @@ def load_cities_from_hdf5(
             city_super_area = city_super_areas[k]
             city_transport_ids = city_transport_ids_list[k]
             city_transports_city = []
-            print("--")
-            print(city_super_area)
-            print(domain_super_areas)
             if domain_super_areas is None or city_super_area in domain_super_areas:
                 city = City(
                     name=names[k].decode(),
@@ -154,14 +151,12 @@ def load_cities_from_hdf5(
                     city_transport.id = city_transport_id
                     city_transports_city.append(city_transport)
             else:
-                print(f"city with id {ids[k]} is external here")
                 # this city is external to the domain
                 city = ExternalCity(
                     id=ids[k],
                     domain_id=super_areas_to_domain_dict[city_super_area],
                     commuter_ids=None,
                 )
-                print(f"city {city.id} is external: {city.external}")
                 for city_transport_id in city_transport_ids:
                     city_transport = ExternalGroup(
                         domain_id=super_areas_to_domain_dict[city_super_area],
@@ -237,7 +232,10 @@ def load_stations_from_hdf5(
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
         ids = read_dataset(stations["id"])
-        transport_ids = read_dataset(stations["transport_ids"])
+        if stations["transport_ids"].shape[1] > 0:
+            transport_ids = read_dataset(stations["transport_ids"])
+        else:
+            transport_ids = [[] for _ in range(stations["transport_ids"].len())]
         cities = read_dataset(stations["station_cities"])
         super_areas = read_dataset(stations["super_area"])
         stations = []
@@ -272,9 +270,7 @@ def load_stations_from_hdf5(
 
 
 def restore_cities_and_stations_properties_from_hdf5(
-    world: World,
-    file_path: str,
-    domain_super_areas: List[int] = None,
+    world: World, file_path: str, domain_super_areas: List[int] = None,
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # load cities data
@@ -288,8 +284,11 @@ def restore_cities_and_stations_properties_from_hdf5(
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
         station_ids = read_dataset(stations["id"])
-        station_commuters_list = read_dataset(stations["commuters"])
         station_super_areas = read_dataset(stations["super_area"])
+        if stations["commuters"].shape[1] > 0:
+            station_commuters_list = read_dataset(stations["commuters"])
+        else:
+            station_commuters_list = [[] for _ in range(stations["commuters"].len())]
         for k in range(n_stations):
             station_id = station_ids[k]
             station = world.stations.get_from_id(station_id)
