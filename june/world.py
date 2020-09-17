@@ -72,6 +72,8 @@ class World:
         self.cemeteries = None
         self.universities = None
         self.box_mode = False
+        self.cities = None
+        self.stations = None
 #        self.id = 0 # for parallelisation
 
     def distribute_people(

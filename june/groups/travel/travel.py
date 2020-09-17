@@ -166,15 +166,17 @@ class Travel:
                 np.ceil(n_commute_internal / people_per_city_transport)
             )
             for _ in range(number_city_transports):
-                city.city_transports.append(CityTransport())
-            world.city_transports.members += city.city_transports
+                city_transport = CityTransport()
+                city.city_transports.append(city_transport)
+                world.city_transports.add(city_transport)
             for station in city.stations:
                 number_inter_city_transports = int(
                     np.ceil(len(station.commuter_ids) / people_per_inter_city_transport)
                 )
                 for _ in range(number_inter_city_transports):
-                    station.inter_city_transports.append(InterCityTransport())
-                world.inter_city_transports.members += station.inter_city_transports
+                    inter_city_transport = InterCityTransport()
+                    station.inter_city_transports.append(inter_city_transport)
+                    world.inter_city_transports.add(inter_city_transport)
         logger.info(f"Cities' transport initialised")
 
     def get_commute_subgroup(self, person):

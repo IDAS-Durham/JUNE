@@ -2,13 +2,8 @@ import h5py
 import numpy as np
 from collections import OrderedDict
 
-<<<<<<< HEAD
-from june.groups.commute import CommuteCity
 from june.groups import ExternalSubgroup, ExternalGroup
-from june.commute import ModeOfTransport
-=======
 from june.groups.travel import ModeOfTransport
->>>>>>> refactor/commute
 from june.demography import Population, Person
 from june.demography.person import Activities
 from june.world import World
@@ -60,11 +55,8 @@ def save_population_to_hdf5(
             ethns = []
             socioecon_indices = []
             areas = []
-<<<<<<< HEAD
             super_areas = []
-=======
             work_super_areas = []
->>>>>>> refactor/commute
             sectors = []
             sub_sectors = []
             group_ids = []
@@ -98,14 +90,11 @@ def save_population_to_hdf5(
                     super_areas.append(person.area.super_area.id)
                 else:
                     areas.append(nan_integer)
-<<<<<<< HEAD
                     super_areas.append(nan_integer)
-=======
                 if person.work_super_area is not None:
                     work_super_areas.append(person.work_super_area.id)
                 else:
                     work_super_areas.append(nan_integer)
->>>>>>> refactor/commute
                 if person.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
@@ -160,11 +149,8 @@ def save_population_to_hdf5(
             socioecon_indices = np.array(socioecon_indices, dtype=np.int)
             # home_city = np.array(home_city, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
-<<<<<<< HEAD
             super_areas = np.array(super_areas, dtype=np.int)
-=======
             work_super_areas = np.array(work_super_areas, dtype=np.int)
->>>>>>> refactor/commute
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
@@ -215,11 +201,10 @@ def save_population_to_hdf5(
                 )
                 people_dset.create_dataset("area", data=areas, maxshape=(None,))
                 people_dset.create_dataset(
-<<<<<<< HEAD
                     "super_area", data=super_areas, maxshape=(None,)
-=======
+                )
+                people_dset.create_dataset(
                     "work_super_area", data=work_super_areas, maxshape=(None,)
->>>>>>> refactor/commute
                 )
                 people_dset.create_dataset(
                     "mode_of_transport_description",
@@ -250,17 +235,12 @@ def save_population_to_hdf5(
                 people_dset["sub_sector"][idx1:idx2] = sub_sectors
                 people_dset["socioecon_index"].resize(newshape)
                 people_dset["socioecon_index"][idx1:idx2] = socioecon_indices
-                # people_dset["home_city"].resize(newshape)
-                # people_dset["home_city"][idx1:idx2] = home_city
                 people_dset["area"].resize(newshape)
                 people_dset["area"][idx1:idx2] = areas
-<<<<<<< HEAD
                 people_dset["super_area"].resize(newshape)
                 people_dset["super_area"][idx1:idx2] = super_areas
-=======
                 people_dset["work_super_area"].resize(newshape)
                 people_dset["work_super_area"][idx1:idx2] = work_super_areas
->>>>>>> refactor/commute
                 people_dset["group_ids"].resize(newshape[0], axis=0)
                 people_dset["group_ids"][idx1:idx2] = group_ids
                 people_dset["group_specs"].resize(newshape[0], axis=0)
@@ -315,17 +295,10 @@ def load_population_from_hdf5(
             population["socioecon_index"].read_direct(
                 socioecon_indices, np.s_[idx1:idx2], np.s_[0:length]
             )
-<<<<<<< HEAD
             super_areas = np.empty(length, dtype=int)
             population["super_area"].read_direct(
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
-            home_city = np.empty(length, dtype=int)
-            population["home_city"].read_direct(
-                home_city, np.s_[idx1:idx2], np.s_[0:length]
-            )
-=======
->>>>>>> refactor/commute
             sectors = np.empty(length, dtype="S20")
             population["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
             sub_sectors = np.empty(length, dtype="S20")
@@ -401,12 +374,6 @@ def restore_population_properties_from_hdf5(
     domain_super_areas=None,
     super_areas_to_domain_dict: dict = None,
 ):
-<<<<<<< HEAD
-=======
-    first_person_id = world.people[0].id
-    first_area_id = world.areas[0].id
-    first_super_area_id = world.super_areas[0].id
->>>>>>> refactor/commute
     activities_fields = Activities.__fields__
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # people = []
@@ -438,15 +405,13 @@ def restore_population_properties_from_hdf5(
             )
             areas = np.empty(length, dtype=int)
             population["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
-<<<<<<< HEAD
             super_areas = np.empty(length, dtype=int)
             population["super_area"].read_direct(
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
-=======
+            )
             work_super_areas = np.empty(length, dtype=int)
             population["work_super_area"].read_direct(
                 work_super_areas, np.s_[idx1:idx2], np.s_[0:length]
->>>>>>> refactor/commute
             )
             for k in range(length):
                 if domain_super_areas is not None:
@@ -459,18 +424,27 @@ def restore_population_properties_from_hdf5(
                         continue
                 person = world.people.get_from_id(ids[k])
                 # restore area
-<<<<<<< HEAD
                 person.area = world.areas.get_from_id(areas[k])
-=======
-                person.area = world.areas[areas[k] - first_area_id]
-                if work_super_areas[k] != nan_integer:
-                    person.work_super_area = world.super_areas[
-                        work_super_areas[k] - first_super_area_id
-                    ]
-                    person.work_super_area.workers.append(person)
->>>>>>> refactor/commute
                 person.area.people.append(person)
                 person.area.super_area.people.append(person)
+                work_super_area_id = work_super_areas[k]
+                if work_super_area_id == nan_integer:
+                    person.work_super_area = None
+                else:
+                    if (
+                        domain_super_areas is None
+                        or work_super_area_id in domain_super_areas
+                    ):
+                        person.work_super_area = world.super_areas.get_from_id(
+                            work_super_area_id
+                        )
+                        person.work_super_area.workers.append(person)
+                    else:
+                        person.work_super_area = ExternalGroup(
+                            domain_id=super_areas_to_domain_dict[work_super_area_id],
+                            spec="super_area",
+                            id=work_super_area_id,
+                        )
                 # restore groups and subgroups
                 subgroups_instances = Activities(
                     None, None, None, None, None, None, None

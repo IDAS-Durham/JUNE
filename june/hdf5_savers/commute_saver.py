@@ -3,6 +3,7 @@ import numpy as np
 
 from june.world import World
 from june.geography import City, Cities, Station, Stations
+from .utils import read_dataset
 from june.groups.travel import (
     CityTransport,
     CityTransports,
@@ -14,6 +15,7 @@ nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 string_15_vlen_type = h5py.vlen_dtype(np.dtype("S15"))
 string_30_vlen_type = h5py.vlen_dtype(np.dtype("S30"))
+
 
 def save_cities_to_hdf5(cities: Cities, file_path: str):
     n_cities = len(cities)
@@ -28,7 +30,6 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         commuters_list_lengths = []
         stations_id_list = []
         station_ids_lengths = []
-        stations_per_city = []
         cities_transport_numbers = []
         coordinates = []
         for city in cities:
@@ -53,7 +54,6 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             else:
                 city_super_area_list.append(city.super_area.id)
             # stations
-            stations_per_city.append(len(city.stations))
             stations_ids = np.array(
                 [station.id for station in city.stations], dtype=np.int
             )
@@ -78,7 +78,6 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         city_super_area_list = np.array(city_super_area_list, dtype=np.int)
 
         stations_ids = np.array(stations_ids, dtype=int_vlen_type)
-        stations_per_city = np.array(stations_per_city, dtype=np.int)
 
         cities_dset.attrs["n_cities"] = n_cities
         cities_dset.create_dataset("id", data=ids)
@@ -92,7 +91,6 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         )
         # stations
         cities_dset.create_dataset("station_id", data=stations_id_list)
-        cities_dset.create_dataset("stations_per_city", data=stations_per_city)
 
 
 def load_cities_from_hdf5(file_path: str):
@@ -106,37 +104,26 @@ def load_cities_from_hdf5(file_path: str):
         cities = f["cities"]
         cities_list = []
         n_cities = cities.attrs["n_cities"]
-        ids = cities["id"]
         length = n_cities
         idx1 = 0
         idx2 = length
         ids = np.empty(length, dtype=int)
-        cities["id"].read_direct(
-            cities, np.s_[idx1:idx2], np.s_[0:length]
-        )
+        cities["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
         names = np.empty(length, dtype="S30")
-        cities["name"].read_direct(
-            names, np.s_[idx1:idx2], np.s_[0:length]
-        )
-        coordinates = np.empty((length,2), dtype=float)
+        cities["name"].read_direct(names, np.s_[idx1:idx2], np.s_[0:length])
+        coordinates = np.empty((length, 2), dtype=float)
         cities["coordinates"].read_direct(
             coordinates, np.s_[idx1:idx2], np.s_[0:length]
         )
-        super_areas_list = np.empty(length, dtype="S20")
+        super_areas_list = np.empty(
+            cities["super_areas"].shape, dtype=cities["super_areas"].dtype
+        )
         cities["super_areas"].read_direct(
             super_areas_list, np.s_[idx1:idx2], np.s_[0:length]
         )
         city_transports_list = np.empty(length, dtype=int)
         cities["city_transports_number"].read_direct(
             city_transports_list, np.s_[idx1:idx2], np.s_[0:length]
-        )
-        station_ids_list = np.empty(length, dtype=int)
-        cities["station_id"].read_direct(
-            station_ids_list, np.s_[idx1:idx2], np.s_[0:length]
-        )
-        stations_per_city = np.empty(length, dtype=int)
-        cities["stations_per_city"].read_direct(
-            stations_per_city, np.s_[idx1:idx2], np.s_[0:length]
         )
         cities = []
         city_transports = []
@@ -172,7 +159,10 @@ def save_stations_to_hdf5(stations: Stations, file_path: str):
             station_ids.append(station.id)
             station_super_areas.append(station.super_area.id)
             station_commuters.append(
-                np.array([person_id for person_id in list(station.commuter_ids)], dtype=np.int)
+                np.array(
+                    [person_id for person_id in list(station.commuter_ids)],
+                    dtype=np.int,
+                )
             )
             station_transport_numbers.append(len(station.inter_city_transports))
             station_cities.append(station.city.encode("ascii", "ignore"))
@@ -204,15 +194,13 @@ def load_stations_from_hdf5(file_path: str):
         idx1 = 0
         idx2 = length
         ids = np.empty(length, dtype=int)
-        cities["id"].read_direct(
-            ids, np.s_[idx1:idx2], np.s_[0:length]
-        )
+        stations["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
         transport_numbers = np.empty(length, dtype=int)
-        cities["transport_numbers"].read_direct(
+        stations["transport_numbers"].read_direct(
             transport_numbers, np.s_[idx1:idx2], np.s_[0:length]
         )
         cities = np.empty(length, dtype="S30")
-        cities["station_cities"].read_direct(
+        stations["station_cities"].read_direct(
             cities, np.s_[idx1:idx2], np.s_[0:length]
         )
         stations = []
@@ -224,24 +212,18 @@ def load_stations_from_hdf5(file_path: str):
             inter_city_transports_station = []
             for i in range(transport_numbers[k]):
                 inter_city_transports_station.append(InterCityTransport())
-                station.inter_city_transports = inter_city_transports_station
+            station.inter_city_transports = inter_city_transports_station
             inter_city_transports += inter_city_transports_station
     return Stations(stations), InterCityTransports(inter_city_transports)
 
 
 def restore_cities_and_stations_properties_from_hdf5(world: World, file_path: str):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        #load cities data
+        # load cities data
         cities = f["cities"]
         n_cities = cities.attrs["n_cities"]
-        stations_per_city= np.empty(n_cities, dtype=int)
-        cities["stations_per_city"].read_direct(
-            stations_per_city, np.s_[0:n_cities], np.s_[0:n_cities]
-        )
         city_ids = np.empty(n_cities, dtype=int)
-        cities["id"].read_direct(
-            city_ids, np.s_[0:n_cities], np.s_[0:n_cities]
-        )
+        cities["id"].read_direct(city_ids, np.s_[0:n_cities], np.s_[0:n_cities])
         city_station_ids = np.empty(n_cities, dtype=int_vlen_type)
         cities["station_id"].read_direct(
             city_station_ids, np.s_[0:n_cities], np.s_[0:n_cities]
@@ -250,39 +232,35 @@ def restore_cities_and_stations_properties_from_hdf5(world: World, file_path: st
         cities["commuters"].read_direct(
             city_commuters_list, np.s_[0:n_cities], np.s_[0:n_cities]
         )
+        city_super_areas = read_dataset(cities["city_super_area"])
         # load stations data
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
         station_ids = np.empty(n_stations, dtype=int)
         stations["id"].read_direct(
-            station_ids, np.s_[0:n_cities], np.s_[0:n_cities]
+            station_ids, np.s_[0:n_stations], np.s_[0:n_stations]
         )
         station_commuters_list = np.empty(n_stations, dtype=int_vlen_type)
         stations["commuters"].read_direct(
-            station_commuters_list, np.s_[0:n_cities], np.s_[0:n_cities]
+            station_commuters_list, np.s_[0:n_stations], np.s_[0:n_stations]
         )
         station_super_areas = np.empty(n_stations, dtype=int)
         stations["super_area"].read_direct(
-            station_super_areas, np.s_[0:n_cities], np.s_[0:n_cities]
+            station_super_areas, np.s_[0:n_stations], np.s_[0:n_stations]
         )
         for k in range(n_stations):
             station_id = station_ids[k]
             station = world.stations.get_from_id(station_id)
             station.super_area = world.super_areas.get_from_id(station_super_areas[k])
-            station.commuter_ids = set([
-                c_id 
-                for c_id in station_commuters_list[k]
-            ])
+            station.commuter_ids = set([c_id for c_id in station_commuters_list[k]])
 
         for k in range(n_cities):
             city_id = city_ids[k]
             city = world.cities.get_from_id(city_id)
-            commuters = set([
-                commuter_id 
-                for commuter_id in city_commuters_list[k]
-            ])
+            commuters = set([commuter_id for commuter_id in city_commuters_list[k]])
             city.commuter_ids = commuters
             city.stations = []
+            city.super_area = world.super_areas.get_from_id(city_super_areas[k])
             for station_id in city_station_ids[k]:
                 station = world.stations.get_from_id(station_id)
                 city.stations.append(station)

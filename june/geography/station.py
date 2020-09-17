@@ -188,7 +188,6 @@ class Stations(Supergroup):
 
     def __init__(self, stations: List[Station]):
         super().__init__(stations)
-        self.members = stations
         self._ball_tree = None
 
     @classmethod

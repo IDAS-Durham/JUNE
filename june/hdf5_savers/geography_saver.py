@@ -112,7 +112,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             super_area_closest_commuting_city.append(
                 super_area.closest_commuting_city.id
             )
-            super_area_closest_commuting_city.append(
+            super_area_closest_commuting_city_super_area.append(
                 super_area.closest_commuting_city.super_area.id
             )
         if super_area.closest_station is None:
@@ -120,7 +120,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             super_area_closest_station_super_area.append(nan_integer)
         else:
             super_area_closest_station.append(super_area.closest_station.id)
-            super_area_closest_station_super_area.append(super_area.closest_station.super_area.id)
+            super_area_closest_station_super_area.append(
+                super_area.closest_station.super_area.id
+            )
 
     area_ids = np.array(area_ids, dtype=np.int)
     area_names = np.array(area_names, dtype="S20")
@@ -147,7 +149,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_closest_commuting_city_super_area, dtype=np.int
     )
     super_area_closest_station = np.array(super_area_closest_station, dtype=np.int)
-    super_area_closest_station_super_area = np.array(super_area_closest_station_super_area, dtype=np.int)
+    super_area_closest_station_super_area = np.array(
+        super_area_closest_station_super_area, dtype=np.int
+    )
 
     with h5py.File(file_path, "a") as f:
         geography_dset = f.create_group("geography")
@@ -164,13 +168,15 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             "super_area_closest_commuting_city", data=super_area_closest_commuting_city
         )
         geography_dset.create_dataset(
-            "super_area_closest_commuting_city_super_area", data=super_area_closest_commuting_city_super_area
+            "super_area_closest_commuting_city_super_area",
+            data=super_area_closest_commuting_city_super_area,
         )
         geography_dset.create_dataset(
             "super_area_closest_station", data=super_area_closest_station
         )
         geography_dset.create_dataset(
-            "super_area_closest_station_super_area", data=super_area_closest_station_super_area
+            "super_area_closest_station_super_area",
+            data=super_area_closest_station_super_area,
         )
         geography_dset.create_dataset(
             "super_area_coordinates", data=super_area_coordinates
@@ -384,14 +390,10 @@ def restore_geography_properties_from_hdf5(
             geography["super_area_id"].read_direct(
                 super_areas_ids, np.s_[idx1:idx2], np.s_[0:length]
             )
-            closest_hospitals_ids = np.empty(length, dtype=int)
-            geography["closest_hospitals_ids"].read_direct(
-                closest_hospitals_ids, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            closest_hospitals_super_areas = np.empty(length, dtype=int)
-            geography["closest_hospitals_super_areas"].read_direct(
-                closest_hospitals_super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            closest_hospitals_ids = geography["closest_hospitals_ids"][idx1:idx2]
+            closest_hospitals_super_areas = geography["closest_hospitals_super_areas"][
+                idx1:idx2
+            ]
             super_area_cities = np.empty(length, dtype=int)
             geography["super_area_city"].read_direct(
                 super_area_cities, np.s_[idx1:idx2], np.s_[0:length]
@@ -402,8 +404,12 @@ def restore_geography_properties_from_hdf5(
             )
             super_area_closest_commuting_city_super_area = np.empty(length, dtype=int)
             geography["super_area_closest_commuting_city_super_area"].read_direct(
-                super_area_closest_commuting_city_super_area, np.s_[idx1:idx2], np.s_[0:length]
+                super_area_closest_commuting_city_super_area,
+                np.s_[idx1:idx2],
+                np.s_[0:length],
             )
+            super_area_city = np.empty(length, dtype=int)
+            geography["super_area_city"].read_direct(super_area_city, np.s_[idx1:idx2], np.s_[0:length])
             super_area_closest_station = np.empty(length, dtype=int)
             geography["super_area_closest_station"].read_direct(
                 super_area_closest_station, np.s_[idx1:idx2], np.s_[0:length]
@@ -422,6 +428,7 @@ def restore_geography_properties_from_hdf5(
                     if super_area_id not in domain_super_areas:
                         continue
                 super_area = world.super_areas.get_from_id(super_areas_ids[k])
+                super_area.city = world.cities.get_from_id(super_area_city[k])
                 # load closest hospitals
                 hospitals = []
                 for hospital_id, hospital_super_area_id in zip(
@@ -442,7 +449,7 @@ def restore_geography_properties_from_hdf5(
                         )
                     hospitals.append(hospital)
                 super_area.closest_hospitals = hospitals
-                # load closest station 
+                # load closest station
                 closest_station_id = super_area_closest_station[k]
                 closest_station_super_area_id = super_area_closest_station_super_area[k]
                 if (
@@ -452,27 +459,27 @@ def restore_geography_properties_from_hdf5(
                     closest_station = world.stations.get_from_id(closest_station_id)
                 else:
                     closest_station = ExternalGroup(
-                        domain_id=super_areas_to_domain_dict[
-                            closest_station_id 
-                        ],
+                        domain_id=super_areas_to_domain_dict[closest_station_id],
                         spec="station",
                         id=closest_station_id,
                     )
-                super_area.closest_station = closest_station 
+                super_area.closest_station = closest_station
                 # load closest commuting city
                 closest_commuting_city_id = super_area_closest_commuting_city[k]
-                closest_commuting_super_area_id = super_area_closest_commuting_city_super_area[k]
+                closest_commuting_super_area_id = super_area_closest_commuting_city_super_area[
+                    k
+                ]
                 if (
                     domain_super_areas is None
                     or closest_commuting_city_id in domain_super_areas
                 ):
-                    closest_commuting_city = world.cities.get_from_id(closest_commuting_city_id)
+                    closest_commuting_city = world.cities.get_from_id(
+                        closest_commuting_city_id
+                    )
                 else:
                     closest_commuting_city = ExternalGroup(
-                        domain_id=super_areas_to_domain_dict[
-                            closest_commuting_city_id 
-                        ],
+                        domain_id=super_areas_to_domain_dict[closest_commuting_city_id],
                         spec="city",
                         id=closest_commuting_city_id,
                     )
-                super_area.closest_commuting_city = closest_commuting_city 
+                super_area.closest_commuting_city = closest_commuting_city
