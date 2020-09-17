@@ -6,13 +6,14 @@ import yaml
 
 from june import paths
 
-default_config_filename = paths.configs_path / "defaults/commute.yaml"
+default_config_filename = paths.configs_path / "defaults/groups/travel/mode_of_transport.yaml"
 
-default_commute_file = paths.data_path / "input/commute/commute_ew.csv"
+default_commute_file = paths.data_path / "input/travel/mode_of_transport_ew.csv"
 
 
 class ModeOfTransport:
     __all = {}
+    __slots__ = "description", "is_public"
 
     def __new__(
             cls,
@@ -224,7 +225,7 @@ class RegionalGenerator:
         return self.msoarea
 
 
-class CommuteGenerator:
+class ModeOfTransportGenerator:
     def __init__(
             self,
             regional_generators: Dict[str, RegionalGenerator]
@@ -266,7 +267,7 @@ class CommuteGenerator:
             cls,
             filename: str = default_commute_file,
             config_filename: str = default_config_filename
-    ) -> "CommuteGenerator":
+    ) -> "ModeOfTransportGenerator":
         """
         Parse configuration describing each included mode of transport
         along with census data describing the weightings for modes of
@@ -308,6 +309,6 @@ class CommuteGenerator:
                     weighted_modes=weighted_modes
                 )
 
-        return CommuteGenerator(
+        return ModeOfTransportGenerator(
             regional_generators
         )

@@ -6,7 +6,7 @@ import yaml
 from typing import List, Optional
 
 from june import paths
-from june.demography.geography import SuperAreas, SuperArea
+from june.geography import SuperAreas, SuperArea
 from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)

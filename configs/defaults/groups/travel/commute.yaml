@@ -1,0 +1,4 @@
+# if not specified, it defaults to 4 hubs
+cities:
+  London:
+    n_stations_per_super_station: 8

@@ -40,9 +40,9 @@ class Supergroup:
     def get_from_id(self, id):
         return self.members_by_id[id]
 
-    def __add__(self, households: "Households"):
-        for household in households:
-            self.add(household)
+    def __add__(self, supergroup: "Supergroup"):
+        for group in supergroup:
+            self.add(group)
         return self
 
     def clear(self):

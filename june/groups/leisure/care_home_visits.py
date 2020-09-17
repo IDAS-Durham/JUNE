@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import yaml
 from random import randint, shuffle
-from june.demography.geography import Areas, SuperAreas
-from june.groups import CareHomes, Households, Household, CareHome
+from june.geography import Areas, SuperAreas
+from june.groups import CareHomes, Households, Household
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor

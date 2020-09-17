@@ -6,7 +6,7 @@ from enum import IntEnum
 from sklearn.neighbors import BallTree
 
 from june.groups import Supergroup, Group, Subgroup
-from june.demography.geography import Area, Areas, SuperArea, SuperAreas, Geography
+from june.geography import Area, Areas, SuperArea, SuperAreas, Geography
 
 earth_radius = 6371  # km
 

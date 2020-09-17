@@ -287,7 +287,7 @@ class Logger:
                 super_area_dset = f.require_group(super_area)
                 location_dset = super_area_dset.require_group("locations")
                 time_dset = location_dset.require_group(time_stamp)
-                locations = np.array(super_area_dict["location"], dtype="S")
+                locations = np.array(super_area_dict["location"], dtype="S20")
                 time_dset.create_dataset("locations", data=locations)
         self.infection_location = []
         self.super_areas_infected = []

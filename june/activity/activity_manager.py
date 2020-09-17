@@ -10,10 +10,9 @@ from time import time as wall_clock
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
-from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+
 from june.groups.leisure import Leisure
-from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+from june.groups.travel import Travel
 
 from june.policy import (
     IndividualPolicies,
@@ -26,7 +25,6 @@ from june.mpi_setup import (
     mpi_size,
     mpi_rank,
     MovablePeople,
-    count_people_in_dict,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,13 +50,14 @@ class ActivityManager:
         all_activities,
         activity_to_super_groups: dict,
         leisure: Optional[Leisure] = None,
-        min_age_home_alone: int = 15,
+        travel: Optional[Travel] = None,
     ):
         self.logger = logger
         self.policies = policies
         self.world = world
         self.timer = timer
         self.leisure = leisure
+        self.travel = travel
         self.all_activities = all_activities
 
         if self.world.box_mode:
@@ -78,18 +77,6 @@ class ActivityManager:
                 "commute": activity_to_super_groups.get("commute", []),
                 "rail_travel": activity_to_super_groups.get("rail_travel", []),
             }
-        self.min_age_home_alone = min_age_home_alone
-
-        if (
-            "rail_travel_out" in self.all_activities
-            or "rail_travel_back" in self.all_activities
-        ):
-            travel_options = activity_to_super_groups["rail_travel"]
-            if "travelunits" in travel_options:
-                self.travelunit_distributor = TravelUnitDistributor(
-                    self.world.travelcities.members, self.world.travelunits.members
-                )
-
         self.furlough_ratio = 0
         self.key_ratio = 0
         self.random_ratio = 0
@@ -120,14 +107,6 @@ class ActivityManager:
     @property
     def active_super_groups(self):
         return self.activities_to_super_groups(self.timer.activities)
-
-    def distribute_rail_out(self):
-        if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distributor.distribute_people_out()
-
-    def distribute_rail_back(self):
-        if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distributor.distribute_people_back()
 
     @staticmethod
     def apply_activity_hierarchy(activities: List[str]) -> List[str]:
@@ -186,10 +165,8 @@ class ActivityManager:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person=person, to_send_abroad=to_send_abroad
                 )
-            elif person.mode_of_transport is not None and person.mode_of_transport.is_public and activity == "commute":
-                for commutecity in self.world.commutecities:
-                    if person in commutecity.commuters:
-                        subgroup = commutecity.get_commute_subgroup(person=person)
+            elif activity == "commute":
+                subgroup = self.travel.get_commute_subgroup(person=person)
             else:
                 subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
@@ -221,10 +198,6 @@ class ActivityManager:
 
     def do_timestep(self):
         activities = self.timer.activities
-        if "rail_travel_out" in activities:
-            self.distribute_rail_out()
-        if "rail_travel_back" in activities:
-            self.distribute_rail_back()
         if self.leisure is not None:
             if self.policies is not None:
                 self.policies.leisure_policies.apply(
@@ -284,44 +257,46 @@ class ActivityManager:
 
         return to_send_abroad
 
-    def send_and_receive_people_from_abroad_old(self, to_send_abroad):
-        # send people abroad
-        tick, tickw = perf_counter(), wall_clock()
-        people_from_abroad = {}
-        n_people_from_abroad = 0
-        for rank in range(mpi_size):
-            if rank == mpi_rank:
-                # my turn to send my data
-                for rank_receiving in range(mpi_size):
-                    if rank == rank_receiving:
-                        continue
-                    if rank_receiving in to_send_abroad:
-                        n_people_this_rank = count_people_in_dict(
-                            to_send_abroad[rank_receiving]
-                        )
-                        mpi_comm.send(
-                            to_send_abroad[rank_receiving],
-                            dest=rank_receiving,
-                            tag=rank_receiving,
-                        )
-                        print(
-                            f"I am rank {mpi_rank} and I just sent {n_people_this_rank} to {rank_receiving}"
-                        )
-                        continue
-                    mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
-            else:
-                # I have to listen
-                data = mpi_comm.recv(source=rank, tag=mpi_rank)
-                if data is not None:
-                    n_people_this_rank = count_people_in_dict(data)
-                    print(
-                        f"I am rank {mpi_rank} and I just received {n_people_this_rank} from {rank}"
-                    )
-                    update_data(people_from_abroad, data)
-                    n_people_from_abroad += n_people_this_rank
-        tock,tockw = perf_counter(), wall_clock()
-        logger.info(f'CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw-tickw} - {self.timer.date}')
-        return people_from_abroad, n_people_from_abroad
+    #def send_and_receive_people_from_abroad_old(self, to_send_abroad):
+    #    # send people abroad
+    #    tick, tickw = perf_counter(), wall_clock()
+    #    people_from_abroad = {}
+    #    n_people_from_abroad = 0
+    #    for rank in range(mpi_size):
+    #        if rank == mpi_rank:
+    #            # my turn to send my data
+    #            for rank_receiving in range(mpi_size):
+    #                if rank == rank_receiving:
+    #                    continue
+    #                if rank_receiving in to_send_abroad:
+    #                    n_people_this_rank = count_people_in_dict(
+    #                        to_send_abroad[rank_receiving]
+    #                    )
+    #                    mpi_comm.send(
+    #                        to_send_abroad[rank_receiving],
+    #                        dest=rank_receiving,
+    #                        tag=rank_receiving,
+    #                    )
+    #                    print(
+    #                        f"I am rank {mpi_rank} and I just sent {n_people_this_rank} to {rank_receiving}"
+    #                    )
+    #                    continue
+    #                mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
+    #        else:
+    #            # I have to listen
+    #            data = mpi_comm.recv(source=rank, tag=mpi_rank)
+    #            if data is not None:
+    #                n_people_this_rank = count_people_in_dict(data)
+    #                print(
+    #                    f"I am rank {mpi_rank} and I just received {n_people_this_rank} from {rank}"
+    #                )
+    #                update_data(people_from_abroad, data)
+    #                n_people_from_abroad += n_people_this_rank
+    #    tock, tockw = perf_counter(), wall_clock()
+    #    logger.info(
+    #        f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw-tickw} - {self.timer.date}"
+    #    )
+    #    return people_from_abroad, n_people_from_abroad
 
     def send_and_receive_people_from_abroad(self, movable_people):
         """
@@ -363,5 +338,6 @@ class ActivityManager:
 
         tock, tockw = perf_counter(), wall_clock()
         logger.info(
-            f'CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}')
+            f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
+        )
         return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad

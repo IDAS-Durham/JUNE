@@ -5,7 +5,7 @@ import logging
 from random import random, sample
 from typing import List, Dict
 from june.demography import Person
-from june.demography.geography import Geography, SuperAreas, Areas
+from june.geography import Geography, SuperAreas
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,

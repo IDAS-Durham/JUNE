@@ -7,7 +7,7 @@ import pytest
 import yaml
 
 from june.demography import Demography, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june import paths
 from june.distributors import WorkerDistributor, load_workflow_df, load_sex_per_sector
 
@@ -89,7 +89,6 @@ class TestDistribution:
         self,
         worker_config: dict,
         worker_super_areas: list,
-        worker_geography: Geography,
         worker_population: Population,
     ):
         case = unittest.TestCase()
@@ -102,7 +101,7 @@ class TestDistribution:
                     <= person.age
                     <= worker_config["age_range"][1]
                 )
-                and not isinstance(person.work_super_area, str)
+                and person.work_super_area is not None
             ]
         )
         work_super_area_name = list(np.unique(work_super_area_name))
@@ -120,7 +119,7 @@ class TestDistribution:
                     <= person.age
                     <= worker_config["age_range"][1]
                 )
-                and isinstance(person.work_super_area, str)
+                and person.work_super_area is None 
             ]
         )
         assert 0.050 < nr_working_from_home / len(worker_population) < 0.070
@@ -128,7 +127,6 @@ class TestDistribution:
     def test__worker_nr_in_sector_larger_than_its_sub(
         self,
         worker_config: dict,
-        worker_geography: Geography,
         worker_population: Population,
     ):
         occupations = np.array(
@@ -146,4 +144,3 @@ class TestDistribution:
             sector_worker_nr = len(idx)
             p_sub_sector = p_sub_sectors[idx]
             sub_sector_worker_nr = len(p_sub_sector[p_sub_sector != None])
-            print("------>", sector_worker_nr, sub_sector_worker_nr)

@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import fixture
 from june.groups import Household
-from june.demography.geography import Area, SuperArea
+from june.geography import Area, SuperArea
 from june.world import generate_world_from_geography
 
 from june.groups.leisure import (
@@ -15,7 +15,7 @@ from june.groups.leisure import (
     PubDistributor,
     CinemaDistributor,
 )
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Person, Demography
 from june import World
 
@@ -110,7 +110,7 @@ def test__person_drags_household(leisure):
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(
-        geography, include_households=True, include_commute=False
+        geography, include_households=True
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
