@@ -8,7 +8,7 @@ import h5py
 import pandas as pd
 
 from june import paths
-from june.demography.geography import Geography, Area
+from june.geography import Geography, Area
 from june.groups.group import Group, Supergroup
 
 default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"

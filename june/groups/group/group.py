@@ -104,7 +104,7 @@ class Group(AbstractGroup):
         return self.subgroups[item]
 
     def add(
-        self, person: Person, activity: str, subgroup_type: SubgroupType, dynamic=False
+        self, person: Person, activity: str, subgroup_type: SubgroupType#, dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -117,8 +117,8 @@ class Group(AbstractGroup):
         group_type
             
         """
-        if not dynamic:
-            self[subgroup_type].append(person)
+        #if not dynamic:
+        self[subgroup_type].append(person)
         if activity is not None:
             setattr(person.subgroups, activity, self[subgroup_type])
 

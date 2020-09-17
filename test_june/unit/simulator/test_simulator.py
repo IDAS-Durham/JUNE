@@ -4,10 +4,11 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography, Area, SuperArea, Areas, SuperAreas
+from june.geography import Geography, Area, SuperArea, Areas, SuperAreas
 from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
+from june.groups.travel import ModeOfTransport, Travel
 from june.infection import InfectionSelector, SymptomTag
 from june.interaction import Interaction
 from june.policy import (
@@ -17,7 +18,6 @@ from june.policy import (
     SevereSymptomsStayHome,
     IndividualPolicies,
 )
-from june.commute import ModeOfTransport
 from june.groups import (
     Hospital,
     School,
@@ -25,12 +25,6 @@ from june.groups import (
     Household,
     University,
     CareHome,
-    CommuteHub,
-    CommuteHubs,
-    CommuteCity,
-    CommuteCities,
-    CommuteUnits,
-    CommuteCityUnits,
 )
 from june.groups import (
     Hospitals,
@@ -67,6 +61,11 @@ def make_policies():
 @pytest.fixture(name="sim", scope="module")
 def setup_sim(dummy_world, selector):
     world = dummy_world
+    for person in world.people:
+        person.susceptibility = 1.0
+        person.infection = None
+        person.subgroups.medical_facility = None
+        person.dead = False
     leisure_instance = leisure.generate_leisure_for_world(
         world=world, list_of_leisure_groups=["pubs", "cinemas", "groceries"]
     )
@@ -75,15 +74,19 @@ def setup_sim(dummy_world, selector):
     )
     interaction = Interaction.from_file()
     policies = Policies.from_file()
+    travel = Travel()
     sim = Simulator.from_file(
         world=world,
         infection_selector=selector,
         interaction=interaction,
         config_filename=test_config,
         leisure=leisure_instance,
+        travel=travel,
         policies=policies,
     )
-    sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(3, False, False)
+    sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
+        3, False, False
+    )
     return sim
 
 
@@ -120,8 +123,8 @@ def test__activities_to_super_groups(sim: Simulator):
 
     assert groups == [
         "hospitals",
-        "commuteunits",
-        "commutecityunits",
+        "city_transports",
+        "inter_city_transports",
         "schools",
         "companies",
         "universities",
@@ -187,6 +190,7 @@ def test__move_people_to_leisure(sim: Simulator):
                     n_groceries += 1
                 if person not in person.residence.people:
                     assert person in person.leisure.people
+                assert person in person.leisure.people
     assert n_leisure > 0
     assert n_cinemas > 0
     assert n_pubs > 0
@@ -205,8 +209,6 @@ def test__move_people_to_primary_activity(sim: Simulator):
 
 
 def test__move_people_to_commute(sim: Simulator):
-    #sim.activity_manager.distribute_commuters()
-    sim.clear_world()
     sim.activity_manager.move_people_to_active_subgroups(["commute", "residence"])
     n_commuters = 0
     for person in sim.world.people.members:

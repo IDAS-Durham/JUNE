@@ -5,7 +5,7 @@ import numpy as np
 import yaml
 
 from june import paths
-from june.demography.geography import Area, SuperArea, Geography
+from june.geography import Area, SuperArea, Geography
 from june.groups.school import Schools
 
 default_config_filename = (

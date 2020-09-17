@@ -1,7 +1,7 @@
 from typing import List
 
 from june.groups import University
-from june.demography.geography import SuperArea, SuperAreas
+from june.geography import SuperArea, SuperAreas
 
 
 class UniversityDistributor:

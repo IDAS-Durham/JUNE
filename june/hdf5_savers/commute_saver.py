@@ -2,258 +2,287 @@ import h5py
 import numpy as np
 
 from june.world import World
-from june.groups.commute import (
-    CommuteCity,
-    CommuteCities,
-    CommuteCityUnit,
-    CommuteCityUnits,
-    CommuteHub,
-    CommuteHubs,
-    CommuteUnit,
-    CommuteUnits,
+from june.geography import City, Cities, Station, Stations
+from june.groups.travel import (
+    CityTransport,
+    CityTransports,
+    InterCityTransport,
+    InterCityTransports,
 )
 
 nan_integer = -999
+int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
+string_15_vlen_type = h5py.vlen_dtype(np.dtype("S15"))
+string_30_vlen_type = h5py.vlen_dtype(np.dtype("S30"))
 
-
-def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
-    n_cities = len(commute_cities)
-    dt = h5py.vlen_dtype(np.dtype("int64"))
+def save_cities_to_hdf5(cities: Cities, file_path: str):
+    n_cities = len(cities)
     with h5py.File(file_path, "a") as f:
-        commute_cities_dset = f.create_group("commute_cities")
+        cities_dset = f.create_group("cities")
         ids = []
-        commute_hubs_list = []
-        commute_hubs_list_lengths = []
-        commute_city_units_ids_list = []
-        commute_city_units_is_peak_list = []
-        cities_names_list = []
-        commute_internal_list = []
-        commute_city_super_areas = []
-        for city in commute_cities:
+        super_areas_list = []
+        city_super_area_list = []
+        super_areas_list_lengths = []
+        names = []
+        commuters_list = []
+        commuters_list_lengths = []
+        stations_id_list = []
+        station_ids_lengths = []
+        stations_per_city = []
+        cities_transport_numbers = []
+        coordinates = []
+        for city in cities:
             ids.append(city.id)
-            cities_names_list.append(city.city.encode("ascii", "ignore"))
-            if not city.commutehubs:
-                hubs = np.array([-999, -999], dtype=np.int)
-            else:
-                hubs = np.array([hub.id for hub in city.commutehubs], dtype=np.int)
-            commute_hubs_list.append(hubs)
-            commute_hubs_list_lengths.append(len(hubs))
-            commute_internal = []
-            for commute_intern in city.commute_internal:
-                commute_internal.append(commute_intern.id)
-            commute_internal = np.array(commute_internal, dtype=np.int)
-            commute_internal_list.append(commute_internal)
+            names.append(city.name.encode("ascii", "ignore"))
+            commuters = [person_id for person_id in list(city.commuter_ids)]
+            commuters_list_lengths.append(len(commuters))
+            commuters_list.append(np.array(commuters, dtype=np.int))
+            super_areas = np.array(
+                [
+                    super_area.encode("ascii", "ignore")
+                    for super_area in city.super_areas
+                ],
+                dtype="S20",
+            )
+            super_areas_list.append(super_areas)
+            super_areas_list_lengths.append(len(super_areas))
+            coordinates.append(np.array(city.coordinates, dtype=np.float))
+            cities_transport_numbers.append(len(city.city_transports))
             if city.super_area is None:
-                commute_city_super_areas.append(nan_integer)
+                city_super_area_list.append(nan_integer)
             else:
-                commute_city_super_areas.append(city.super_area.id)
-            commute_city_units_ids = []
-            commute_city_units_is_peak = []
-            for commute_city_unit in city.commutecityunits:
-                commute_city_units_ids.append(commute_city_unit.id)
-                commute_city_units_is_peak.append(commute_city_unit.is_peak)
-            commute_city_units_ids = np.array(commute_city_units_ids, dtype=np.int)
-            commute_city_units_is_peak = np.array(
-                commute_city_units_is_peak, dtype=np.int
+                city_super_area_list.append(city.super_area.id)
+            # stations
+            stations_per_city.append(len(city.stations))
+            stations_ids = np.array(
+                [station.id for station in city.stations], dtype=np.int
             )
-            commute_city_units_ids_list.append(commute_city_units_ids)
-            commute_city_units_is_peak_list.append(commute_city_units_is_peak)
+            station_ids_lengths.append(len(stations_ids))
+            stations_id_list.append(stations_ids)
 
         ids = np.array(ids, dtype=np.int)
-        if len(np.unique(commute_hubs_list_lengths)) == 1:
-            commute_hubs_list = np.array(commute_hubs_list, dtype=np.int)
+        names = np.array(names, dtype="S30")
+        if len(np.unique(super_areas_list_lengths)) == 1:
+            super_areas_list = np.array(super_areas_list, dtype="S15")
         else:
-            commute_hubs_list = np.array(commute_hubs_list, dtype=dt)
-        cities_names_list = np.array(cities_names_list, dtype="S20")
-        if sum([len(c_id) for c_id in commute_city_units_ids_list]) == len(commute_cities):
-            commute_city_units_ids_list = np.array(commute_city_units_ids_list, dtype=np.int)
+            super_areas_list = np.array(super_areas_list, dtype=string_15_vlen_type)
+        if len(np.unique(station_ids_lengths)) == 1:
+            stations_id_list = np.array(stations_id_list, dtype=np.int)
         else:
-            commute_city_units_ids_list = np.array(commute_city_units_ids_list, dtype=dt)
-
-        if sum([len(c_id) for c_id in commute_city_units_is_peak_list]) == len(commute_cities):
-            commute_city_units_is_peak_list = np.array(
-                commute_city_units_is_peak_list, dtype=np.int
-            )
+            stations_id_list = np.array(stations_id_list, dtype=int_vlen_type)
+        if len(np.unique(commuters_list_lengths)) == 1:
+            commuters_list = np.array(commuters_list, dtype=np.int)
         else:
-            commute_city_units_is_peak_list = np.array(
-                commute_city_units_is_peak_list, dtype=dt
-            )
+            commuters_list = np.array(commuters_list, dtype=int_vlen_type)
+        cities_transport_numbers = np.array(cities_transport_numbers, dtype=np.int)
+        city_super_area_list = np.array(city_super_area_list, dtype=np.int)
 
-        commute_city_super_areas = np.array(commute_city_super_areas, dtype=np.int)
-        commute_internal_list = np.array(commute_internal_list, dtype=dt)
-        commute_cities_dset.attrs["n_commute_cities"] = n_cities
-        commute_cities_dset.create_dataset("id", data=ids)
-        commute_cities_dset.create_dataset("city_names", data=cities_names_list)
-        commute_cities_dset.create_dataset("super_area", data=commute_city_super_areas)
-        commute_cities_dset.create_dataset("commute_hubs", data=commute_hubs_list)
-        commute_cities_dset.create_dataset(
-            "commute_city_units_ids", data=commute_city_units_ids_list
+        stations_ids = np.array(stations_ids, dtype=int_vlen_type)
+        stations_per_city = np.array(stations_per_city, dtype=np.int)
+
+        cities_dset.attrs["n_cities"] = n_cities
+        cities_dset.create_dataset("id", data=ids)
+        cities_dset.create_dataset("name", data=names)
+        cities_dset.create_dataset("coordinates", data=coordinates)
+        cities_dset.create_dataset("super_areas", data=super_areas_list)
+        cities_dset.create_dataset("city_super_area", data=city_super_area_list)
+        cities_dset.create_dataset("commuters", data=commuters_list)
+        cities_dset.create_dataset(
+            "city_transports_number", data=cities_transport_numbers
         )
-        commute_cities_dset.create_dataset(
-            "commute_city_units_is_peak", data=commute_city_units_is_peak_list
-        )
-        commute_cities_dset.create_dataset(
-            "commute_internal", data=commute_internal_list
-        )
+        # stations
+        cities_dset.create_dataset("station_id", data=stations_id_list)
+        cities_dset.create_dataset("stations_per_city", data=stations_per_city)
 
 
-def load_commute_cities_from_hdf5(file_path: str, domain_super_areas=None):
+def load_cities_from_hdf5(file_path: str):
     """
-    Loads commute_cities from an hdf5 file located at ``file_path``.
+    Loads cities from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        commute_cities = f["commute_cities"]
-        commute_cities_list = []
-        n_commute_cities = commute_cities.attrs["n_commute_cities"]
-        ids = commute_cities["id"]
-        city_names = commute_cities["city_names"]
-        commute_hubs = commute_cities["commute_hubs"]
-        commute_city_units_ids_list = commute_cities["commute_city_units_ids"]
-        commute_city_units_is_peak_list = commute_cities["commute_city_units_is_peak"]
-        commute_internal = commute_cities["commute_internal"]
-        commute_city_units_list = []
-        super_areas = commute_cities["super_area"]
-        for k in range(n_commute_cities):
-            if domain_super_areas is not None:
-                super_area = super_areas[k]
-                if super_area == nan_integer or super_area not in domain_super_areas:
-                    continue
-            commute_city = CommuteCity()
-            commute_city.id = ids[k]
-            commute_city.city = city_names[k].decode()
-            commute_city.super_area = super_areas[k]
-            if commute_hubs[k][0] == -999:
-                commute_city.commutehubs = []
-            else:
-                commute_city.commutehubs = commute_hubs[k]
-            commute_city.commute_internal = commute_internal[k]
-            commute_city_units_ids = commute_city_units_ids_list[k]
-            commute_city_units_is_peak = commute_city_units_is_peak_list[k]
-            for i in range(len(commute_city_units_ids)):
-                cu = CommuteCityUnit(
-                    city=commute_city.city, is_peak=commute_city_units_is_peak[i]
-                )
-                cu.id = commute_city_units_ids[i]
-                commute_city.commutecityunits.append(cu)
-                commute_city_units_list.append(cu)
-            commute_cities_list.append(commute_city)
-    cc = CommuteCities(commute_cities_list)
-    ccu = CommuteCityUnits(commutecities=cc, commute_city_units=commute_city_units_list)
-    return cc, ccu
-
-
-def save_commute_hubs_to_hdf5(commute_hubs: CommuteHubs, file_path: str):
-    n_hubs = len(commute_hubs)
-    dt = h5py.vlen_dtype(np.dtype("int32"))
-    with h5py.File(file_path, "a") as f:
-        commute_hubs_dset = f.create_group("commute_hubs")
-        ids = []
+        cities = f["cities"]
+        cities_list = []
+        n_cities = cities.attrs["n_cities"]
+        ids = cities["id"]
+        length = n_cities
+        idx1 = 0
+        idx2 = length
+        ids = np.empty(length, dtype=int)
+        cities["id"].read_direct(
+            cities, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        names = np.empty(length, dtype="S30")
+        cities["name"].read_direct(
+            names, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        coordinates = np.empty((length,2), dtype=float)
+        cities["coordinates"].read_direct(
+            coordinates, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        super_areas_list = np.empty(length, dtype="S20")
+        cities["super_areas"].read_direct(
+            super_areas_list, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        city_transports_list = np.empty(length, dtype=int)
+        cities["city_transports_number"].read_direct(
+            city_transports_list, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        station_ids_list = np.empty(length, dtype=int)
+        cities["station_id"].read_direct(
+            station_ids_list, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        stations_per_city = np.empty(length, dtype=int)
+        cities["stations_per_city"].read_direct(
+            stations_per_city, np.s_[idx1:idx2], np.s_[0:length]
+        )
         cities = []
-        commute_units_list = []
-        commute_through_list = []
-        commute_units_length_list = []
-        super_areas = []
-        for hub in commute_hubs:
-            ids.append(hub.id)
-            cities.append(hub.city)
-            if hub.super_area is None:
-                super_areas.append(nan_integer)
-            else:
-                super_areas.append(hub.super_area.id)
-            commute_through = []
-            for commute_throu in hub.commute_through:
-                commute_through.append(commute_throu.id)
-            commute_through = np.array(commute_through, dtype=np.int)
-            commute_through_list.append(commute_through)
-            commute_units = []
-            for commute_unit in hub.commuteunits:
-                commute_units.append(commute_unit.id)
-            commute_units_list.append(np.array(commute_units, dtype=np.int))
-            commute_units_length_list.append(len(commute_units))
-        if len(np.unique(commute_units_length_list)) == 1:
-            commute_units_list = np.array(commute_units_list, dtype=int)
-        else:
-            commute_units_list = np.array(commute_units_list, dtype=dt)
-        ids = np.array(ids, dtype=np.int)
-        cities = np.array(cities, dtype="S20")
-        commute_through_list = np.array(commute_through_list, dtype=dt)
-        commute_hubs_dset.attrs["n_commute_hubs"] = n_hubs
-        commute_hubs_dset.create_dataset("id", data=ids)
-        commute_hubs_dset.create_dataset("city_names", data=cities)
-        commute_hubs_dset.create_dataset("super_area", data=super_areas)
-        commute_hubs_dset.create_dataset("commute_units", data=commute_units_list)
-        commute_hubs_dset.create_dataset("commute_through", data=commute_through_list)
+        city_transports = []
+        for k in range(n_cities):
+            name = names[k].decode()
+            super_areas = [super_area.decode() for super_area in super_areas_list[k]]
+            city = City(
+                name=names[k].decode(),
+                super_areas=super_areas,
+                coordinates=coordinates[k],
+            )
+            city_transports_city = []
+            for i in range(city_transports_list[k]):
+                city_transports_city.append(CityTransport())
+            city.city_transports = CityTransports(city_transports_city)
+            city_transports += city_transports_city
+            city.id = ids[k]
+            cities.append(city)
+    return Cities(cities), CityTransports(city_transports)
 
 
-def load_commute_hubs_from_hdf5(file_path: str, domain_super_areas=None):
+def save_stations_to_hdf5(stations: Stations, file_path: str):
+    n_stations = len(stations)
+    with h5py.File(file_path, "a") as f:
+        stations_dset = f.create_group("stations")
+        stations_dset.attrs["n_stations"] = n_stations
+        station_ids = []
+        station_cities = []
+        station_super_areas = []
+        station_commuters = []
+        station_transport_numbers = []
+        for station in stations:
+            station_ids.append(station.id)
+            station_super_areas.append(station.super_area.id)
+            station_commuters.append(
+                np.array([person_id for person_id in list(station.commuter_ids)], dtype=np.int)
+            )
+            station_transport_numbers.append(len(station.inter_city_transports))
+            station_cities.append(station.city.encode("ascii", "ignore"))
+        station_ids = np.array(station_ids, dtype=np.int)
+        station_super_areas = np.array(station_super_areas, dtype=np.int)
+        station_commuters = np.array(station_commuters, dtype=int_vlen_type)
+        station_transport_numbers = np.array(station_transport_numbers, dtype=np.int)
+        station_cities = np.array(station_cities, dtype="S30")
+        stations_dset.create_dataset("id", data=station_ids)
+        stations_dset.create_dataset("super_area", data=station_super_areas)
+        stations_dset.create_dataset("commuters", data=station_commuters)
+        stations_dset.create_dataset(
+            "transport_numbers", data=station_transport_numbers
+        )
+        stations_dset.create_dataset("station_cities", data=station_cities)
+
+
+def load_stations_from_hdf5(file_path: str):
     """
-    Loads commute_hubs from an hdf5 file located at ``file_path``.
+    Loads cities from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        commute_hubs = f["commute_hubs"]
-        commute_hubs_list = []
-        n_commute_hubs = commute_hubs.attrs["n_commute_hubs"]
-        ids = commute_hubs["id"]
-        city_names = commute_hubs["city_names"]
-        commute_through = commute_hubs["commute_through"]
-        commute_units = commute_hubs["commute_units"]
-        super_areas = commute_hubs["super_area"]
-        commute_units_list = []
-        for k in range(n_commute_hubs):
-            if domain_super_areas is not None:
-                super_area = super_areas[k]
-                if super_area == nan_integer or super_area not in domain_super_areas:
-                    continue
-            commute_hub = CommuteHub(lat_lon=None, city=city_names[k].decode())
-            commute_hub.id = ids[k]
-            commute_hub.city = city_names[k].decode()
-            commute_hub.commute_through = commute_through[k]
-            commute_hub.super_area = super_areas[k]
-            for unit_id in commute_units[k]:
-                cunit = CommuteUnit(
-                    commutehub_id=ids[k],
-                    city=city_names[k].decode(),
-                    is_peak=np.random.choice(2, p=[0.8, 0.2]),
-                )
-                cunit.id = unit_id
-                commute_units_list.append(cunit)
-                commute_hub.commuteunits.append(cunit)
-            commute_hubs_list.append(commute_hub)
-    ch = CommuteHubs(commutecities=None, commute_hubs = commute_hubs_list)
-    cu = CommuteUnits(commutehubs=ch, commute_units=commute_units_list)
-    return ch, cu
+        stations = f["stations"]
+        n_stations = stations.attrs["n_stations"]
+        length = n_stations
+        idx1 = 0
+        idx2 = length
+        ids = np.empty(length, dtype=int)
+        cities["id"].read_direct(
+            ids, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        transport_numbers = np.empty(length, dtype=int)
+        cities["transport_numbers"].read_direct(
+            transport_numbers, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        cities = np.empty(length, dtype="S30")
+        cities["station_cities"].read_direct(
+            cities, np.s_[idx1:idx2], np.s_[0:length]
+        )
+        stations = []
+        inter_city_transports = []
+        for k in range(n_stations):
+            station = Station(city=cities[k].decode())
+            station.id = ids[k]
+            stations.append(station)
+            inter_city_transports_station = []
+            for i in range(transport_numbers[k]):
+                inter_city_transports_station.append(InterCityTransport())
+                station.inter_city_transports = inter_city_transports_station
+            inter_city_transports += inter_city_transports_station
+    return Stations(stations), InterCityTransports(inter_city_transports)
 
 
-def restore_commute_properties_from_hdf5(world: World, file_path: str, domain_super_areas=None):
-    for city in world.commutecities:
-        if domain_super_areas and city.super_area not in domain_super_areas:
-            continue
-        people_ids = city.people
-        commute_hubs = [world.commutehubs.get_from_id(idx) for idx in city.commutehubs]
-        city.commutehubs = commute_hubs
-        commute_internal_people = [
-            world.people.get_from_id(idx) for idx in city.commute_internal
-        ]
-        city.commute_internal = commute_internal_people
-        if city.super_area == nan_integer:
-            city.super_area = None
-        else:
-            city.super_area = world.super_areas.get_from_id(city.super_area)
+def restore_cities_and_stations_properties_from_hdf5(world: World, file_path: str):
+    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
+        #load cities data
+        cities = f["cities"]
+        n_cities = cities.attrs["n_cities"]
+        stations_per_city= np.empty(n_cities, dtype=int)
+        cities["stations_per_city"].read_direct(
+            stations_per_city, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        city_ids = np.empty(n_cities, dtype=int)
+        cities["id"].read_direct(
+            city_ids, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        city_station_ids = np.empty(n_cities, dtype=int_vlen_type)
+        cities["station_id"].read_direct(
+            city_station_ids, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        city_commuters_list = np.empty(n_cities, dtype=int_vlen_type)
+        cities["commuters"].read_direct(
+            city_commuters_list, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        # load stations data
+        stations = f["stations"]
+        n_stations = stations.attrs["n_stations"]
+        station_ids = np.empty(n_stations, dtype=int)
+        stations["id"].read_direct(
+            station_ids, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        station_commuters_list = np.empty(n_stations, dtype=int_vlen_type)
+        stations["commuters"].read_direct(
+            station_commuters_list, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        station_super_areas = np.empty(n_stations, dtype=int)
+        stations["super_area"].read_direct(
+            station_super_areas, np.s_[0:n_cities], np.s_[0:n_cities]
+        )
+        for k in range(n_stations):
+            station_id = station_ids[k]
+            station = world.stations.get_from_id(station_id)
+            station.super_area = world.super_areas.get_from_id(station_super_areas[k])
+            station.commuter_ids = set([
+                c_id 
+                for c_id in station_commuters_list[k]
+            ])
 
-    for hub in world.commutehubs:
-        if domain_super_areas and hub.super_area not in domain_super_areas:
-            continue
-        if hub.super_area == nan_integer:
-            hub.super_area = None
-        else:
-            hub.super_area = world.super_areas.get_from_id(hub.super_area)
-        commute_through_people = [
-            world.people.get_from_id(id) for id in hub.commute_through
-        ]
-        hub.commute_through = commute_through_people
+        for k in range(n_cities):
+            city_id = city_ids[k]
+            city = world.cities.get_from_id(city_id)
+            commuters = set([
+                commuter_id 
+                for commuter_id in city_commuters_list[k]
+            ])
+            city.commuter_ids = commuters
+            city.stations = []
+            for station_id in city_station_ids[k]:
+                station = world.stations.get_from_id(station_id)
+                city.stations.append(station)

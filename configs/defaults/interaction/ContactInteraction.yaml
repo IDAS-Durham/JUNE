@@ -5,8 +5,8 @@ beta:
  pub: 0.5 
  grocery: 0.25
  cinema: 0.25
- commute_unit: 0.5 
- commute_city_unit: 0.5 
+ city_transport: 0.5 
+ inter_city_transport: 0.5 
  hospital: 0.05
  care_home: 1.2
  company: 0.8 
@@ -64,13 +64,14 @@ contact_matrices:
     proportion_physical: [[0.12]]
     characteristic_time: 3
 
-  commute_unit:
+  city_transport:
+    contacts: [[6]]
+    proportion_physical: [[0.07]]
+    characteristic_time: 2
+
+  inter_city_transport:
     contacts: [[4]]
     proportion_physical: [[0.05]]
     characteristic_time: 2
 
-  commute_city_unit:
-    contacts: [[6]]
-    proportion_physical: [[0.07]]
-    characteristic_time: 2
 

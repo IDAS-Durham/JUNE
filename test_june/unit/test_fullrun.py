@@ -7,12 +7,11 @@ from pathlib import Path
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
-from june.demography.geography import Geography
-from june.demography import Demography, Person, Population
+from june.geography import Geography
+from june.demography import Demography, Person
 from june.interaction import Interaction
 from june.infection import InfectionSelector
-from june.commute import ModeOfTransport
-from june.logger import Logger
+from june.groups.travel import ModeOfTransport, Travel
 from june.groups import (
     Hospitals,
     Schools,
@@ -28,12 +27,6 @@ from june.groups import (
     Household,
     University,
     CareHome,
-    CommuteHub,
-    CommuteHubs,
-    CommuteCity,
-    CommuteCities,
-    CommuteUnits,
-    CommuteCityUnits,
 )
 from june.groups import (
     Hospitals,
@@ -75,8 +68,9 @@ def test__full_run(dummy_world, selector):
             "care_home_visits",
         ],
     )
-    leisure_instance.distribute_social_venues_to_areas(
-        world.areas, super_areas=world.super_areas
+    travel = Travel()
+    leisure_instance.distribute_social_venues_to_households(
+        world.households, super_areas=world.super_areas
     )
     interaction = Interaction.from_file()
     policies = Policies.from_file()
@@ -86,6 +80,7 @@ def test__full_run(dummy_world, selector):
         infection_selector=selector,
         config_filename=test_config,
         leisure=leisure_instance,
+        travel=travel,
         policies=policies,
         logger=Logger(),
     )

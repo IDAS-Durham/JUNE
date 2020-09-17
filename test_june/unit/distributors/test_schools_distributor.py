@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from june.world import World, generate_world_from_geography
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.groups.school import Schools
 from june.distributors.school_distributor import SchoolDistributor
 

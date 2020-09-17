@@ -2,8 +2,13 @@ import pandas as pd
 import pytest
 import numpy as np
 from collections import Counter
+<<<<<<< HEAD
 from june.demography.geography import Geography, SuperArea, SuperAreas, Area
 from june.demography import Demography, Person, Population
+=======
+from june.geography import Geography
+from june.demography import Demography, Person
+>>>>>>> refactor/commute
 from june import World
 from june.infection_seed import InfectionSeed
 from june.infection import InfectionSelector

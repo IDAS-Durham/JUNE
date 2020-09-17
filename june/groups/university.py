@@ -4,7 +4,7 @@ from random import randint
 from typing import List
 
 from june.groups import Group, Subgroup, Supergroup
-from june.demography.geography import SuperAreas, Areas
+from june.geography import SuperAreas, Areas
 from june.paths import data_path
 
 age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23 : 5}

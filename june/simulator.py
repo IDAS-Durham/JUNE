@@ -12,6 +12,7 @@ from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
+from june.groups.travel import Travel
 from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
@@ -71,6 +72,7 @@ class Simulator:
         policies: Optional[Policies] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
+        travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         logger: "Logger" = None,
     ) -> "Simulator":
@@ -142,6 +144,7 @@ class Simulator:
             all_activities=all_activities,
             activity_to_super_groups=activity_to_super_groups,
             leisure=leisure,
+            travel=travel,
             policies=policies,
             timer=timer,
         )

@@ -47,7 +47,10 @@ class Area:
     _id = count()
 
     def __init__(
-        self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
+        self,
+        name: str = None,
+        super_area: "SuperArea" = None,
+        coordinates: Tuple[float, float] = None,
     ):
         """
         Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.
@@ -70,12 +73,19 @@ class Area:
         for person in demography.populate(self.name):
             self.add(person)
 
-
 class Areas:
+<<<<<<< HEAD:june/demography/geography.py
     __slots__ = "members_dict", "super_area", "ball_tree"
 
     def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
         self.members_dict = {area.id : area for area in areas}
+=======
+    __slots__ = "members_dict", "super_area", "ball_tree", "members_by_name"
+
+    def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
+        self.members_dict = {area.id : area for area in areas}
+        self.members_by_name = {area.name : area for area in areas}
+>>>>>>> refactor/commute:june/geography/geography.py
         self.super_area = super_area
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
@@ -130,6 +140,8 @@ class Areas:
         return self.get_closest_areas(coordinates, k=1, return_distance=False)[0]
 
 
+
+
 class SuperArea:
     """
     Coarse geographical resolution.
@@ -138,7 +150,10 @@ class SuperArea:
     __slots__ = (
         "id",
         "name",
+        "city",
         "coordinates",
+        "closest_commuting_city",
+        "closest_station",
         "workers",
         "areas",
         "companies",
@@ -154,6 +169,9 @@ class SuperArea:
     ):
         self.id = next(self._id)
         self.name = name
+        self.city = None
+        self.closest_commuting_city = None
+        self.closest_station = None
         self.coordinates = coordinates
         self.areas = areas or []
         self.workers = []
@@ -170,7 +188,11 @@ class SuperArea:
 
 
 class SuperAreas:
+<<<<<<< HEAD:june/demography/geography.py
     __slots__ = "members_dict", "ball_tree"
+=======
+    __slots__ = "members", "ball_tree", "members_by_name"
+>>>>>>> refactor/commute:june/geography/geography.py
 
     def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
         """
@@ -183,7 +205,12 @@ class SuperAreas:
         ball_tree
             whether to construct a NN tree for the super areas
         """
+<<<<<<< HEAD:june/demography/geography.py
         self.members_dict = {area.id : area for area in super_areas}
+=======
+        self.members = super_areas
+        self.members_by_name = {super_area.name : super_area for super_area in super_areas}
+>>>>>>> refactor/commute:june/geography/geography.py
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
         else:
@@ -209,7 +236,7 @@ class SuperAreas:
         coordinates = np.array(
             [np.deg2rad(super_area.coordinates) for super_area in self]
         )
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_super_areas(self, coordinates, k=1, return_distance=False):
