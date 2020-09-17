@@ -2,10 +2,12 @@ import h5py
 import numpy as np
 from collections import OrderedDict
 
+from .utils import read_dataset
 from june.groups import ExternalSubgroup, ExternalGroup
 from june.groups.travel import ModeOfTransport
 from june.demography import Population, Person
 from june.demography.person import Activities
+from june.geography import ExternalSuperArea
 from june.world import World
 
 nan_integer = -999  # only used to store/load hdf5 integer arrays with inf/nan values
@@ -57,6 +59,7 @@ def save_population_to_hdf5(
             areas = []
             super_areas = []
             work_super_areas = []
+            work_super_areas_cities = []
             sectors = []
             sub_sectors = []
             group_ids = []
@@ -81,10 +84,6 @@ def save_population_to_hdf5(
                 else:
                     socioecon_indices.append(person.socioecon_index)
 
-                # if person.home_city is None:
-                #    home_city.append(nan_integer)
-                # else:
-                #    home_city.append(person.home_city.id)
                 if person.area is not None:
                     areas.append(person.area.id)
                     super_areas.append(person.area.super_area.id)
@@ -93,8 +92,13 @@ def save_population_to_hdf5(
                     super_areas.append(nan_integer)
                 if person.work_super_area is not None:
                     work_super_areas.append(person.work_super_area.id)
+                    if person.work_super_area.city is not None:
+                        work_super_areas_cities.append(person.work_super_area.city.id)
+                    else:
+                        work_super_areas_cities.append(nan_integer)
                 else:
                     work_super_areas.append(nan_integer)
+                    work_super_areas_cities.append(nan_integer)
                 if person.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
@@ -151,6 +155,7 @@ def save_population_to_hdf5(
             areas = np.array(areas, dtype=np.int)
             super_areas = np.array(super_areas, dtype=np.int)
             work_super_areas = np.array(work_super_areas, dtype=np.int)
+            work_super_areas_cities = np.array(work_super_areas_cities, dtype=np.int)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
@@ -207,6 +212,11 @@ def save_population_to_hdf5(
                     "work_super_area", data=work_super_areas, maxshape=(None,)
                 )
                 people_dset.create_dataset(
+                    "work_super_area_city",
+                    data=work_super_areas_cities,
+                    maxshape=(None,),
+                )
+                people_dset.create_dataset(
                     "mode_of_transport_description",
                     data=mode_of_transport_description,
                     maxshape=(None,),
@@ -241,6 +251,8 @@ def save_population_to_hdf5(
                 people_dset["super_area"][idx1:idx2] = super_areas
                 people_dset["work_super_area"].resize(newshape)
                 people_dset["work_super_area"][idx1:idx2] = work_super_areas
+                people_dset["work_super_area_city"].resize(newshape)
+                people_dset["work_super_area_city"][idx1:idx2] = work_super_areas_cities
                 people_dset["group_ids"].resize(newshape[0], axis=0)
                 people_dset["group_ids"][idx1:idx2] = group_ids
                 people_dset["group_specs"].resize(newshape[0], axis=0)
@@ -281,41 +293,20 @@ def load_population_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            population["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            ages = np.empty(length, dtype=int)
-            population["age"].read_direct(ages, np.s_[idx1:idx2], np.s_[0:length])
-            sexes = np.empty(length, dtype="S10")
-            population["sex"].read_direct(sexes, np.s_[idx1:idx2], np.s_[0:length])
-            ethns = np.empty(length, dtype="S20")
-            population["ethnicity"].read_direct(
-                ethns, np.s_[idx1:idx2], np.s_[0:length]
+            ids = read_dataset(population["id"], idx1, idx2)
+            ages = read_dataset(population["age"], idx1, idx2)
+            sexes = read_dataset(population["sex"], idx1, idx2)
+            ethns = read_dataset(population["ethnicity"], idx1, idx2)
+            socioecon_indices = read_dataset(population["socioecon_index"], idx1, idx2)
+            super_areas = read_dataset(population["super_area"], idx1, idx2)
+            sectors = read_dataset(population["sector"], idx1, idx2)
+            sub_sectors = read_dataset(population["sub_sector"], idx1, idx2)
+            lockdown_status = read_dataset(population["lockdown_status"], idx1, idx2)
+            mode_of_transport_is_public_list = read_dataset(
+                population["mode_of_transport_is_public"], idx1, idx2
             )
-            socioecon_indices = np.empty(length, dtype=int)
-            population["socioecon_index"].read_direct(
-                socioecon_indices, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_areas = np.empty(length, dtype=int)
-            population["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            sectors = np.empty(length, dtype="S20")
-            population["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
-            sub_sectors = np.empty(length, dtype="S20")
-            population["sub_sector"].read_direct(
-                sub_sectors, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            lockdown_status = np.empty(length, dtype="S20")
-            population["lockdown_status"].read_direct(
-                lockdown_status, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            mode_of_transport_is_public_list = np.empty(length, dtype=bool)
-            population["mode_of_transport_is_public"].read_direct(
-                mode_of_transport_is_public_list, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            mode_of_transport_description_list = np.empty(length, dtype="S100")
-            population["mode_of_transport_description"].read_direct(
-                mode_of_transport_description_list, np.s_[idx1:idx2], np.s_[0:length]
+            mode_of_transport_description_list = read_dataset(
+                population["mode_of_transport_description"], idx1, idx2
             )
             for k in range(idx2 - idx1):
                 if domain_super_areas is not None:
@@ -385,34 +376,17 @@ def restore_population_properties_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            population["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            group_ids = np.empty((length, len(activities_fields)), dtype=int)
-            population["group_ids"].read_direct(
-                group_ids, np.s_[idx1:idx2], np.s_[0:length]
+            ids = read_dataset(population["id"], idx1, idx2)
+            group_ids = read_dataset(population["group_ids"], idx1, idx2)
+            group_specs = read_dataset(population["group_specs"], idx1, idx2)
+            subgroup_types = read_dataset(population["subgroup_types"], idx1, idx2)
+            group_super_areas = read_dataset(
+                population["group_super_areas"], idx1, idx2
             )
-            group_specs = np.empty((length, len(activities_fields)), dtype="S20")
-            population["group_specs"].read_direct(
-                group_specs, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            subgroup_types = np.empty((length, len(activities_fields)), dtype=int)
-            population["subgroup_types"].read_direct(
-                subgroup_types, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            group_super_areas = np.empty((length, len(activities_fields)), dtype=int)
-            population["group_super_areas"].read_direct(
-                group_super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            areas = np.empty(length, dtype=int)
-            population["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
-            super_areas = np.empty(length, dtype=int)
-            population["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            work_super_areas = np.empty(length, dtype=int)
-            population["work_super_area"].read_direct(
-                work_super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            areas = read_dataset(population["area"], idx1, idx2)
+            super_areas = read_dataset(population["super_area"], idx1, idx2)
+            work_super_areas = read_dataset(population["work_super_area"])
+            work_super_areas_cities = read_dataset(population["work_super_area_city"])
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]
@@ -438,13 +412,23 @@ def restore_population_properties_from_hdf5(
                         person.work_super_area = world.super_areas.get_from_id(
                             work_super_area_id
                         )
+                        if person.work_super_area.city is not None:
+                            assert (
+                                person.work_super_area.city.id
+                                == work_super_areas_cities[k]
+                            )
                         person.work_super_area.workers.append(person)
                     else:
-                        person.work_super_area = ExternalGroup(
+                        person.work_super_area = ExternalSuperArea(
                             domain_id=super_areas_to_domain_dict[work_super_area_id],
-                            spec="super_area",
                             id=work_super_area_id,
                         )
+                        if work_super_areas_cities[k] == nan_integer:
+                            person.work_super_area.city = None
+                        else:
+                            person.work_super_area.city = world.cities.get_from_id(
+                                work_super_areas_cities[k]
+                            )
                 # restore groups and subgroups
                 subgroups_instances = Activities(
                     None, None, None, None, None, None, None
