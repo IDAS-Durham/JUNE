@@ -58,6 +58,7 @@ class City:
             A tuple or array of floats indicating latitude and longitude of the city (in degrees).
         """
         self.id = next(self._id)
+        self.super_area = super_area
         self.super_areas = super_areas
         self.name = name
         self.super_stations = None

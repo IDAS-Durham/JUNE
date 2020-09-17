@@ -214,9 +214,9 @@ class TestSaveGeography:
 
 
 class TestSaveTravel:
-    def test__save_cities(self, world_h5):
-        cities = world_h5.cities
-        city_transports = world_h5.city_transports
+    def test__save_cities(self, full_world):
+        cities = full_world.cities
+        city_transports = full_world.city_transports
         assert len(cities) > 0
         save_cities_to_hdf5(cities, "test.hdf5")
         cities_recovered, city_transports_recovered = load_cities_from_hdf5("test.hdf5")
@@ -230,9 +230,9 @@ class TestSaveTravel:
             assert city.coordinates[1] == city_recovered.coordinates[1]
             assert len(city.city_transports) == len(city_recovered.city_transports)
 
-    def test__save_stations(self, world_h5):
-        stations = world_h5.stations
-        inter_city_transports = world_h5.inter_city_transports
+    def test__save_stations(self, full_world):
+        stations = full_world.stations
+        inter_city_transports = full_world.inter_city_transports
         assert len(stations) > 0
         save_stations_to_hdf5(stations, "test.hdf5")
         stations_recovered, inter_city_transports_recovered = load_stations_from_hdf5(
@@ -343,15 +343,15 @@ class TestSaveWorld:
             else:
                 assert school2.super_area is None
 
-    def test__work_super_area(self, world_h5, world_h5_loaded):
-        for p1, p2 in zip(world_h5.people, world_h5_loaded.people):
+    def test__work_super_area(self, full_world, full_world_loaded):
+        for p1, p2 in zip(full_world.people, full_world_loaded.people):
             if p1.work_super_area is None:
                 assert p2.work_super_area is None
             else:
                 assert p1.work_super_area.id == p2.work_super_area.id
 
-    def test__super_area_city(self, world_h5, world_h5_loaded):
-        for sa1, sa2 in zip(world_h5.super_areas, world_h5_loaded.super_areas):
+    def test__super_area_city(self, full_world, full_world_loaded):
+        for sa1, sa2 in zip(full_world.super_areas, full_world_loaded.super_areas):
             if sa1.city is None:
                 assert sa2.city is None
             else:
@@ -367,9 +367,9 @@ class TestSaveWorld:
                 assert sa1.closest_commuting_city.id == sa2.closest_commuting_city.id
                 assert sa1.closest_commuting_city.name == sa2.closest_commuting_city.name
 
-    def test__care_home_area(self, world_h5, world_h5_loaded):
-        assert len(world_h5_loaded.care_homes) == len(world_h5_loaded.care_homes)
-        for carehome, carehome2 in zip(world_h5.care_homes, world_h5_loaded.care_homes):
+    def test__care_home_area(self, full_world, full_world_loaded):
+        assert len(full_world_loaded.care_homes) == len(full_world_loaded.care_homes)
+        for carehome, carehome2 in zip(full_world.care_homes, full_world_loaded.care_homes):
             assert carehome.area.id == carehome2.area.id
             assert carehome.area.name == carehome2.area.name
 
@@ -396,19 +396,21 @@ class TestSaveWorld:
                 assert v1.super_area.id == v2.super_area.id
                 assert v1.super_area.name == v2.super_area.name
 
-    def test__commute(self, world_h5, world_h5_loaded):
-        assert len(world_h5.city_transports) > 0
-        assert len(world_h5.inter_city_transports) > 0
-        assert len(world_h5.city_transports) == len(world_h5_loaded.city_transports)
-        assert len(world_h5.inter_city_transports) == len(
-            world_h5_loaded.inter_city_transports
+    def test__commute(self, full_world, full_world_loaded):
+        assert len(full_world.city_transports) > 0
+        assert len(full_world.inter_city_transports) > 0
+        assert len(full_world.city_transports) == len(full_world_loaded.city_transports)
+        assert len(full_world.inter_city_transports) == len(
+            full_world_loaded.inter_city_transports
         )
-        for city1, city2 in zip(world_h5.cities, world_h5_loaded.cities):
+        for city1, city2 in zip(full_world.cities, full_world_loaded.cities):
             assert city1.name == city2.name
             assert len(city1.commuter_ids) == len(city2.commuter_ids)
             assert city1.commuter_ids == city2.commuter_ids
             assert len(city1.stations) == len(city2.stations)
+            assert city1.super_area.id == city2.super_area.id
             for station1, station2 in zip(city1.stations, city2.stations):
+                assert station1.super_area.id == station2.super_area.id
                 assert len(station1.commuter_ids) == len(station2.commuter_ids)
                 assert station1.commuter_ids == station2.commuter_ids
 

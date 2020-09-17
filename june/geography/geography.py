@@ -74,18 +74,10 @@ class Area:
             self.add(person)
 
 class Areas:
-<<<<<<< HEAD:june/demography/geography.py
-    __slots__ = "members_dict", "super_area", "ball_tree"
-
+    __slots__ = "members_by_id", "super_area", "ball_tree", "members_by_name"
     def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
-        self.members_dict = {area.id : area for area in areas}
-=======
-    __slots__ = "members_dict", "super_area", "ball_tree", "members_by_name"
-
-    def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
-        self.members_dict = {area.id : area for area in areas}
+        self.members_by_id = {area.id : area for area in areas}
         self.members_by_name = {area.name : area for area in areas}
->>>>>>> refactor/commute:june/geography/geography.py
         self.super_area = super_area
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
@@ -102,11 +94,11 @@ class Areas:
         return self.members[index]
 
     def get_from_id(self, id):
-        return self.members_dict[id]
+        return self.members_by_id[id]
 
     @property
     def members(self):
-        return list(self.members_dict.values())
+        return list(self.members_by_id.values())
 
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
@@ -188,11 +180,7 @@ class SuperArea:
 
 
 class SuperAreas:
-<<<<<<< HEAD:june/demography/geography.py
-    __slots__ = "members_dict", "ball_tree"
-=======
-    __slots__ = "members", "ball_tree", "members_by_name"
->>>>>>> refactor/commute:june/geography/geography.py
+    __slots__ = "members_by_id", "ball_tree", "members_by_name"
 
     def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
         """
@@ -205,12 +193,8 @@ class SuperAreas:
         ball_tree
             whether to construct a NN tree for the super areas
         """
-<<<<<<< HEAD:june/demography/geography.py
-        self.members_dict = {area.id : area for area in super_areas}
-=======
-        self.members = super_areas
+        self.members_by_id = {area.id : area for area in super_areas}
         self.members_by_name = {super_area.name : super_area for super_area in super_areas}
->>>>>>> refactor/commute:june/geography/geography.py
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
         else:
@@ -226,11 +210,11 @@ class SuperAreas:
         return self.members[index]
 
     def get_from_id(self, id):
-        return self.members_dict[id]
+        return self.members_by_id[id]
 
     @property
     def members(self):
-        return list(self.members_dict.values())
+        return list(self.members_by_id.values())
 
     def construct_ball_tree(self):
         coordinates = np.array(

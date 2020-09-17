@@ -9,7 +9,7 @@ import re
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 from june.groups import Household
 from june.utils.parse_probabilities import parse_age_probabilities
-from june.demography.geography import Area
+from june.geography import Area
 
 
 @jit(nopython=True)

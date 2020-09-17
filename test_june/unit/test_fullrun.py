@@ -6,9 +6,10 @@ but at least we can use it in the meantime to make sure the code runs before pus
 from pathlib import Path
 from june.simulator import Simulator
 from june import world
+from june.logger import Logger
 from june.time import Timer
 from june.geography import Geography
-from june.demography import Demography, Person
+from june.demography import Demography, Person, Population
 from june.interaction import Interaction
 from june.infection import InfectionSelector
 from june.groups.travel import ModeOfTransport, Travel
@@ -68,10 +69,10 @@ def test__full_run(dummy_world, selector):
             "care_home_visits",
         ],
     )
-    travel = Travel()
-    leisure_instance.distribute_social_venues_to_households(
-        world.households, super_areas=world.super_areas
+    leisure_instance.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
     )
+    travel = Travel()
     interaction = Interaction.from_file()
     policies = Policies.from_file()
     sim = Simulator.from_file(

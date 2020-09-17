@@ -500,7 +500,7 @@ class Simulator:
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
-                infected_ids, people_from_abroad_dict
+                infected_ids, people_from_abroad_dict, infection_location
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
         # recount people active to check people conservation

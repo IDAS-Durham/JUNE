@@ -10,7 +10,7 @@ from june.infection import SymptomTag
 from june.logger import Logger, ReadLogger
 from june.world import World
 from june.demography import Person, Population
-from june.demography.geography import Area, Areas, SuperAreas
+from june.geography import Area, Areas, SuperAreas
 from june.time import Timer
 from june import paths
 from june.simulator import Simulator

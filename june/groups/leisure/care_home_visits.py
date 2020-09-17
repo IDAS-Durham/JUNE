@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 from random import randint, shuffle
 from june.geography import Areas, SuperAreas
-from june.groups import CareHomes, Households, Household
+from june.groups import CareHomes, Households, Household, CareHome
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor

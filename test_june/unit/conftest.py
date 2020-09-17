@@ -285,7 +285,7 @@ def setup_world(dummy_world, policy_simulator):
 @pytest.fixture(name="full_world_geography", scope="session")
 def make_full_world_geography():
     geography = Geography.from_file(
-        {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
+        {"super_area": ["E02001731", "E02002566"]}
     )
     return geography
 
@@ -302,7 +302,7 @@ def create_full_world(full_world_geography):
     geography.care_homes = CareHomes.for_geography(geography)
     geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
-        geography=geography, include_households=True, include_commute=True
+        geography=geography, include_households=True
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
@@ -314,16 +314,14 @@ def create_full_world(full_world_geography):
         areas=world.areas, super_areas=world.super_areas
     )
     travel = Travel()
-    travel.assign_mode_of_transport_to_people(world)
-    travel.distribute_commuters_to_stations_and_cities(world)
-    travel.create_transport_units_at_stations_and_cities(world)
+    travel.initialise_commute(world)
     return world
 
 
 @pytest.fixture(name="domains_world", scope="session")
 def create_domains_world():
     geography = Geography.from_file(
-        {"super_area": ["E02003282", "E02002559", "E02006887", "E02003034"]}
+        {"super_area": ["E02001731", "E02002566"]}
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
@@ -331,7 +329,7 @@ def create_domains_world():
     geography.care_homes = CareHomes.for_geography(geography)
     geography.universities = Universities.for_super_areas(geography.super_areas)
     world = generate_world_from_geography(
-        geography=geography, include_households=True, include_commute=False
+        geography=geography, include_households=True
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)

@@ -23,8 +23,7 @@ class Transports(Supergroup):
     """
 
     def __init__(self, transports: List[Transport]):
-        super().__init__()
-        self.members = transports
+        super().__init__(transports)
 
 
 class CityTransport(Transport):

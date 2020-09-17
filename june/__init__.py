@@ -4,7 +4,6 @@ import os
 import yaml
 
 from june import paths
-from . import box
 from . import demography
 from . import distributors
 from . import groups
