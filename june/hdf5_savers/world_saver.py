@@ -194,7 +194,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if "cities" and "stations" in f_keys:
         logger.info("restoring commute...")
         restore_cities_and_stations_properties_from_hdf5(
-            world=world, file_path=file_path
+            world=world, file_path=file_path, chunk_size=chunk_size
         )
     if "companies" in f_keys:
         logger.info("restoring companies...")
@@ -385,7 +385,11 @@ def generate_domain_from_hdf5(
     if "cities" and "stations" in f_keys:
         logger.info("restoring commute...")
         restore_cities_and_stations_properties_from_hdf5(
-            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
 
     if "social_venues" in f_keys:

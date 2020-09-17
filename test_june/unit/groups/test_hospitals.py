@@ -57,7 +57,7 @@ def test__initialize_hospitals_from_geography():
     geography = Geography.from_file({"super_area": ["E02003282", "E02005560"]})
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
-    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 468 + 41 
-    assert hospitals.members[0].super_area.name == 'E02005560' 
-    assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 2115 + 296 
-    assert hospitals.members[1].trust_code == 'RAJ' 
+    assert hospitals.members[1].super_area.name == 'E02005560' 
+    assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 468 + 41 
+    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 2115 + 296 
+    assert hospitals.members[0].trust_code == 'RAJ' 

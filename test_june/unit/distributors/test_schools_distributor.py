@@ -114,7 +114,6 @@ def test__non_mandatory_dont_go_if_school_full(school_world):
                     )[int(school.n_pupils_max) :]
                 ]
             )
-            print(ages)
             older_kids_when_full = np.sum(ages > mandatory_age_range[1])
             younger_kids_when_full = np.sum(ages < mandatory_age_range[0])
             if older_kids_when_full > 0 or younger_kids_when_full > 0:

@@ -3,6 +3,7 @@ import yaml
 from random import randint
 from typing import List
 from enum import IntEnum
+from itertools import chain
 import numpy as np
 from collections import defaultdict
 
@@ -140,7 +141,6 @@ class Travel:
             return
 
         logger.info(f"Assigning commuters to stations...")
-        commuters_per_city = defaultdict(int)
         for i, person in enumerate(world.people):
             if person.mode_of_transport.is_public:
                 if person.work_city is not None:
@@ -149,10 +149,28 @@ class Travel:
                         person.work_city.commuter_ids.add(person.id)
                     else:
                         # commutes away to an external station
-                        person.area.super_area.closest_station.commuter_ids.add(person.id)
+                        person.area.super_area.closest_station.commuter_ids.add(
+                            person.id
+                        )
             if i % 500_000 == 0:
                 logger.info(f"Assigned {i} of {len(world.people)} commuters...")
         logger.info(f"Commuters assigned")
+        for city in world.cities:
+            if city.external:
+                continue
+            else:
+                internal = len(city.commuter_ids)
+                external = len(
+                    list(
+                        chain.from_iterable(
+                            station.commuter_ids for station in city.stations
+                        )
+                    )
+                )
+                logger.info(
+                    f"City {city.name} has {internal} people commuting internally"
+                    f"and {external} people commuting externally."
+                )
 
     def create_transport_units_at_stations_and_cities(
         self, world, people_per_city_transport=50, people_per_inter_city_transport=50
