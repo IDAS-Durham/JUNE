@@ -25,7 +25,7 @@ def set_random_seed(seed=999):
     @nb.njit(cache=True)
     def set_seed_numba(seed):
         random.seed(seed)
-        return np.random.seed(seed)
+        np.random.seed(seed)
 
     np.random.seed(seed)
     set_seed_numba(seed)

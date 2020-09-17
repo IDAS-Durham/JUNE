@@ -1,9 +1,18 @@
 import h5py
 import numpy as np
+from typing import List
 
 from june.world import World
-from june.geography import City, Cities, Station, Stations
+from june.geography import (
+    City,
+    Cities,
+    Station,
+    Stations,
+    ExternalStation,
+    ExternalCity,
+)
 from .utils import read_dataset
+from june.groups import ExternalGroup, ExternalSubgroup
 from june.groups.travel import (
     CityTransport,
     CityTransports,
@@ -22,15 +31,16 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
     with h5py.File(file_path, "a") as f:
         cities_dset = f.create_group("cities")
         ids = []
-        super_areas_list = []
         city_super_area_list = []
+        super_areas_list = []
         super_areas_list_lengths = []
         names = []
         commuters_list = []
         commuters_list_lengths = []
         stations_id_list = []
         station_ids_lengths = []
-        cities_transport_numbers = []
+        city_transport_ids_list = []
+        city_transport_ids_list_lengths = []
         coordinates = []
         for city in cities:
             ids.append(city.id)
@@ -48,7 +58,11 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             super_areas_list.append(super_areas)
             super_areas_list_lengths.append(len(super_areas))
             coordinates.append(np.array(city.coordinates, dtype=np.float))
-            cities_transport_numbers.append(len(city.city_transports))
+            city_transport_ids = [
+                city_transport.id for city_transport in city.city_transports
+            ]
+            city_transport_ids_list.append(np.array(city_transport_ids, dtype=np.int))
+            city_transport_ids_list_lengths.append(len(city_transport_ids))
             if city.super_area is None:
                 city_super_area_list.append(nan_integer)
             else:
@@ -74,7 +88,12 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             commuters_list = np.array(commuters_list, dtype=np.int)
         else:
             commuters_list = np.array(commuters_list, dtype=int_vlen_type)
-        cities_transport_numbers = np.array(cities_transport_numbers, dtype=np.int)
+        if len(np.unique(city_transport_ids_list_lengths)) == 1:
+            city_transport_ids_list = np.array(city_transport_ids_list, dtype=np.int)
+        else:
+            city_transport_ids_list = np.array(
+                city_transport_ids_list, dtype=int_vlen_type
+            )
         city_super_area_list = np.array(city_super_area_list, dtype=np.int)
 
         stations_ids = np.array(stations_ids, dtype=int_vlen_type)
@@ -86,14 +105,16 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         cities_dset.create_dataset("super_areas", data=super_areas_list)
         cities_dset.create_dataset("city_super_area", data=city_super_area_list)
         cities_dset.create_dataset("commuters", data=commuters_list)
-        cities_dset.create_dataset(
-            "city_transports_number", data=cities_transport_numbers
-        )
+        cities_dset.create_dataset("city_transport_ids", data=city_transport_ids_list)
         # stations
         cities_dset.create_dataset("station_id", data=stations_id_list)
 
 
-def load_cities_from_hdf5(file_path: str):
+def load_cities_from_hdf5(
+    file_path: str,
+    domain_super_areas: List[int] = None,
+    super_areas_to_domain_dict: dict = None,
+):
     """
     Loads cities from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -104,45 +125,54 @@ def load_cities_from_hdf5(file_path: str):
         cities = f["cities"]
         cities_list = []
         n_cities = cities.attrs["n_cities"]
-        length = n_cities
-        idx1 = 0
-        idx2 = length
-        ids = np.empty(length, dtype=int)
-        cities["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-        names = np.empty(length, dtype="S30")
-        cities["name"].read_direct(names, np.s_[idx1:idx2], np.s_[0:length])
-        coordinates = np.empty((length, 2), dtype=float)
-        cities["coordinates"].read_direct(
-            coordinates, np.s_[idx1:idx2], np.s_[0:length]
-        )
-        super_areas_list = np.empty(
-            cities["super_areas"].shape, dtype=cities["super_areas"].dtype
-        )
-        cities["super_areas"].read_direct(
-            super_areas_list, np.s_[idx1:idx2], np.s_[0:length]
-        )
-        city_transports_list = np.empty(length, dtype=int)
-        cities["city_transports_number"].read_direct(
-            city_transports_list, np.s_[idx1:idx2], np.s_[0:length]
-        )
+        ids = read_dataset(cities["id"])
+        names = read_dataset(cities["name"])
+        coordinates = read_dataset(cities["coordinates"])
+        super_areas_list = read_dataset(cities["super_areas"])
+        city_super_areas = read_dataset(cities["city_super_area"])
+        city_transport_ids_list = read_dataset(cities["city_transport_ids"])
         cities = []
         city_transports = []
         for k in range(n_cities):
             name = names[k].decode()
             super_areas = [super_area.decode() for super_area in super_areas_list[k]]
-            city = City(
-                name=names[k].decode(),
-                super_areas=super_areas,
-                coordinates=coordinates[k],
-            )
+            city_super_area = city_super_areas[k]
+            city_transport_ids = city_transport_ids_list[k]
             city_transports_city = []
-            for i in range(city_transports_list[k]):
-                city_transports_city.append(CityTransport())
+            print("--")
+            print(city_super_area)
+            print(domain_super_areas)
+            if domain_super_areas is None or city_super_area in domain_super_areas:
+                city = City(
+                    name=names[k].decode(),
+                    super_areas=super_areas,
+                    coordinates=coordinates[k],
+                )
+                city.id = ids[k]
+                for city_transport_id in city_transport_ids:
+                    city_transport = CityTransport()
+                    city_transport.id = city_transport_id
+                    city_transports_city.append(city_transport)
+            else:
+                print(f"city with id {ids[k]} is external here")
+                # this city is external to the domain
+                city = ExternalCity(
+                    id=ids[k],
+                    domain_id=super_areas_to_domain_dict[city_super_area],
+                    commuter_ids=None,
+                )
+                print(f"city {city.id} is external: {city.external}")
+                for city_transport_id in city_transport_ids:
+                    city_transport = ExternalGroup(
+                        domain_id=super_areas_to_domain_dict[city_super_area],
+                        spec="city_transport",
+                        id=city_transport_id,
+                    )
+                    city_transports_city.append(city_transport)
             city.city_transports = CityTransports(city_transports_city)
             city_transports += city_transports_city
-            city.id = ids[k]
             cities.append(city)
-    return Cities(cities), CityTransports(city_transports)
+    return Cities(cities, ball_tree=False), CityTransports(city_transports)
 
 
 def save_stations_to_hdf5(stations: Stations, file_path: str):
@@ -154,7 +184,8 @@ def save_stations_to_hdf5(stations: Stations, file_path: str):
         station_cities = []
         station_super_areas = []
         station_commuters = []
-        station_transport_numbers = []
+        station_transport_ids_list = []
+        station_transport_ids_list_lengths = []
         for station in stations:
             station_ids.append(station.id)
             station_super_areas.append(station.super_area.id)
@@ -164,23 +195,38 @@ def save_stations_to_hdf5(stations: Stations, file_path: str):
                     dtype=np.int,
                 )
             )
-            station_transport_numbers.append(len(station.inter_city_transports))
+            station_transport_ids = [
+                transport.id for transport in station.inter_city_transports
+            ]
+            station_transport_ids_list.append(
+                np.array(station_transport_ids, dtype=np.int)
+            )
+            station_transport_ids_list_lengths.append(len(station_transport_ids))
             station_cities.append(station.city.encode("ascii", "ignore"))
         station_ids = np.array(station_ids, dtype=np.int)
         station_super_areas = np.array(station_super_areas, dtype=np.int)
         station_commuters = np.array(station_commuters, dtype=int_vlen_type)
-        station_transport_numbers = np.array(station_transport_numbers, dtype=np.int)
         station_cities = np.array(station_cities, dtype="S30")
+        if len(np.unique(station_transport_ids_list_lengths)) == 1:
+            station_transport_ids_list = np.array(
+                station_transport_ids_list, dtype=np.int
+            )
+        else:
+            station_transport_ids_list = np.array(
+                station_transport_ids_list, dtype=int_vlen_type
+            )
         stations_dset.create_dataset("id", data=station_ids)
         stations_dset.create_dataset("super_area", data=station_super_areas)
         stations_dset.create_dataset("commuters", data=station_commuters)
-        stations_dset.create_dataset(
-            "transport_numbers", data=station_transport_numbers
-        )
+        stations_dset.create_dataset("transport_ids", data=station_transport_ids_list)
         stations_dset.create_dataset("station_cities", data=station_cities)
 
 
-def load_stations_from_hdf5(file_path: str):
+def load_stations_from_hdf5(
+    file_path: str,
+    domain_super_areas: List[int] = None,
+    super_areas_to_domain_dict: dict = None,
+):
     """
     Loads cities from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -190,77 +236,79 @@ def load_stations_from_hdf5(file_path: str):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
-        length = n_stations
-        idx1 = 0
-        idx2 = length
-        ids = np.empty(length, dtype=int)
-        stations["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-        transport_numbers = np.empty(length, dtype=int)
-        stations["transport_numbers"].read_direct(
-            transport_numbers, np.s_[idx1:idx2], np.s_[0:length]
-        )
-        cities = np.empty(length, dtype="S30")
-        stations["station_cities"].read_direct(
-            cities, np.s_[idx1:idx2], np.s_[0:length]
-        )
+        ids = read_dataset(stations["id"])
+        transport_ids = read_dataset(stations["transport_ids"])
+        cities = read_dataset(stations["station_cities"])
+        super_areas = read_dataset(stations["super_area"])
         stations = []
         inter_city_transports = []
         for k in range(n_stations):
-            station = Station(city=cities[k].decode())
-            station.id = ids[k]
-            stations.append(station)
+            super_area = super_areas[k]
             inter_city_transports_station = []
-            for i in range(transport_numbers[k]):
-                inter_city_transports_station.append(InterCityTransport())
+            if domain_super_areas is None or super_area in domain_super_areas:
+                station = Station(city=cities[k].decode())
+                station.id = ids[k]
+                for transport_id in transport_ids[k]:
+                    inter_city_transport = InterCityTransport()
+                    inter_city_transport.id = transport_id
+                    inter_city_transports_station.append(inter_city_transport)
+            else:
+                station = ExternalStation(
+                    id=ids[k],
+                    domain_id=super_areas_to_domain_dict[super_area],
+                    commuter_ids=None,
+                )
+                for transport_id in transport_ids[k]:
+                    inter_city_transport = ExternalGroup(
+                        domain_id=super_areas_to_domain_dict[super_area],
+                        spec="inter_city_transport",
+                        id=transport_id,
+                    )
+                    inter_city_transports_station.append(inter_city_transport)
             station.inter_city_transports = inter_city_transports_station
             inter_city_transports += inter_city_transports_station
+            stations.append(station)
     return Stations(stations), InterCityTransports(inter_city_transports)
 
 
-def restore_cities_and_stations_properties_from_hdf5(world: World, file_path: str):
+def restore_cities_and_stations_properties_from_hdf5(
+    world: World,
+    file_path: str,
+    domain_super_areas: List[int] = None,
+):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # load cities data
         cities = f["cities"]
         n_cities = cities.attrs["n_cities"]
-        city_ids = np.empty(n_cities, dtype=int)
-        cities["id"].read_direct(city_ids, np.s_[0:n_cities], np.s_[0:n_cities])
-        city_station_ids = np.empty(n_cities, dtype=int_vlen_type)
-        cities["station_id"].read_direct(
-            city_station_ids, np.s_[0:n_cities], np.s_[0:n_cities]
-        )
-        city_commuters_list = np.empty(n_cities, dtype=int_vlen_type)
-        cities["commuters"].read_direct(
-            city_commuters_list, np.s_[0:n_cities], np.s_[0:n_cities]
-        )
+        city_ids = read_dataset(cities["id"])
+        city_station_ids = read_dataset(cities["station_id"])
+        city_commuters_list = read_dataset(cities["commuters"])
         city_super_areas = read_dataset(cities["city_super_area"])
         # load stations data
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
-        station_ids = np.empty(n_stations, dtype=int)
-        stations["id"].read_direct(
-            station_ids, np.s_[0:n_stations], np.s_[0:n_stations]
-        )
-        station_commuters_list = np.empty(n_stations, dtype=int_vlen_type)
-        stations["commuters"].read_direct(
-            station_commuters_list, np.s_[0:n_stations], np.s_[0:n_stations]
-        )
-        station_super_areas = np.empty(n_stations, dtype=int)
-        stations["super_area"].read_direct(
-            station_super_areas, np.s_[0:n_stations], np.s_[0:n_stations]
-        )
+        station_ids = read_dataset(stations["id"])
+        station_commuters_list = read_dataset(stations["commuters"])
+        station_super_areas = read_dataset(stations["super_area"])
         for k in range(n_stations):
             station_id = station_ids[k]
             station = world.stations.get_from_id(station_id)
-            station.super_area = world.super_areas.get_from_id(station_super_areas[k])
             station.commuter_ids = set([c_id for c_id in station_commuters_list[k]])
+            station_super_area = station_super_areas[k]
+            if domain_super_areas is None or station_super_area in domain_super_areas:
+                station.super_area = world.super_areas.get_from_id(
+                    station_super_areas[k]
+                )
 
         for k in range(n_cities):
             city_id = city_ids[k]
+            city_super_area = city_super_areas[k]
             city = world.cities.get_from_id(city_id)
             commuters = set([commuter_id for commuter_id in city_commuters_list[k]])
             city.commuter_ids = commuters
-            city.stations = []
-            city.super_area = world.super_areas.get_from_id(city_super_areas[k])
-            for station_id in city_station_ids[k]:
-                station = world.stations.get_from_id(station_id)
-                city.stations.append(station)
+            if domain_super_areas is None or city_super_area in domain_super_areas:
+                city.stations = []
+                city.super_area = world.super_areas.get_from_id(city_super_area)
+                for station_id in city_station_ids[k]:
+                    station = world.stations.get_from_id(station_id)
+                    city.stations.append(station)

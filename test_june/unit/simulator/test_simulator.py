@@ -190,7 +190,6 @@ def test__move_people_to_leisure(sim: Simulator):
                     n_groceries += 1
                 if person not in person.residence.people:
                     assert person in person.leisure.people
-                assert person in person.leisure.people
     assert n_leisure > 0
     assert n_cinemas > 0
     assert n_pubs > 0

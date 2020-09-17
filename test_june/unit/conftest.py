@@ -45,10 +45,10 @@ def set_random_seed(seed=999):
     @nb.njit(cache=True)
     def set_seed_numba(seed):
         random.seed(seed)
-        return np.random.seed(seed)
+        np.random.seed(seed)
 
-    np.random.seed(seed)
     set_seed_numba(seed)
+    np.random.seed(seed)
     random.seed(seed)
     return
 
@@ -255,7 +255,6 @@ def make_policy_simulator(dummy_world, interaction, selector):
         config_filename=config_name,
         logger=None,
         travel = travel,
-        save_path=None,
         policies=None,
         leisure=None,
     )
@@ -321,7 +320,7 @@ def create_full_world(full_world_geography):
 @pytest.fixture(name="domains_world", scope="session")
 def create_domains_world():
     geography = Geography.from_file(
-        {"super_area": ["E02001731", "E02002566"]}
+        {"super_area": ["E02001731", "E02001732", "E02002566", "E02002567"]}
     )
     geography.hospitals = Hospitals.for_geography(geography)
     geography.schools = Schools.for_geography(geography)
@@ -340,4 +339,6 @@ def create_domains_world():
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas
     )
+    travel = Travel()
+    travel.initialise_commute(world)
     return world

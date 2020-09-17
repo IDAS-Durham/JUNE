@@ -72,7 +72,6 @@ def run_simulator(selector):
     sim.run()
     return sim
 
-
 def test__checkpoints_are_saved(selector):
     june.simulator.output_logger.disabled = True
     sim = run_simulator(selector)
@@ -113,4 +112,5 @@ def test__checkpoints_are_saved(selector):
         assert person1.recovered == person2.recovered
         assert person1.susceptibility == person2.susceptibility
         assert person1.dead == person2.dead
+    # clean up
 

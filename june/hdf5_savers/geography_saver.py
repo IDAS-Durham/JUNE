@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from june.groups import ExternalGroup, ExternalSubgroup
 from june.geography import Geography, Area, SuperArea, Areas, SuperAreas
+from .utils import read_dataset
 from june.world import World
 
 nan_integer = -999
@@ -217,22 +218,10 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_areas)
             length = idx2 - idx1
-            area_ids = np.empty(length, dtype=int)
-            geography["area_id"].read_direct(
-                area_ids, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            area_names = np.empty(length, dtype="S20")
-            geography["area_name"].read_direct(
-                area_names, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            area_coordinates = np.empty((length, 2), dtype=float)
-            geography["area_coordinates"].read_direct(
-                area_coordinates, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            area_super_areas = np.empty(length, dtype=int)
-            geography["area_super_area"].read_direct(
-                area_super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            area_ids = read_dataset(geography["area_id"], index1=idx1, index2=idx2)
+            area_names = read_dataset(geography["area_name"], index1=idx1, index2=idx2)
+            area_coordinates = read_dataset(geography["area_coordinates"], idx1, idx2)
+            area_super_areas = read_dataset(geography["area_super_area"], idx1, idx2)
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = area_super_areas[k]
@@ -256,17 +245,10 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_super_areas)
             length = idx2 - idx1
-            super_area_ids = np.empty(length, dtype=int)
-            geography["super_area_id"].read_direct(
-                super_area_ids, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_area_names = np.empty(length, dtype="S20")
-            geography["super_area_name"].read_direct(
-                super_area_names, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_area_coordinates = np.empty((length, 2), dtype=float)
-            geography["super_area_coordinates"].read_direct(
-                super_area_coordinates, np.s_[idx1:idx2], np.s_[0:length]
+            super_area_ids = read_dataset(geography["super_area_id"], idx1, idx2)
+            super_area_names = read_dataset(geography["super_area_name"], idx1, idx2)
+            super_area_coordinates = read_dataset(
+                geography["super_area_coordinates"], idx1, idx2
             )
             for k in range(idx2 - idx1):
                 if domain_super_areas is not None:
@@ -312,26 +294,17 @@ def restore_geography_properties_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_areas)
             length = idx2 - idx1
-            areas_ids = np.empty(length, dtype=int)
-            geography["area_id"].read_direct(
-                areas_ids, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_areas = np.empty(length, dtype=int)
-            geography["area_super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            social_venues_specs = np.empty(length, dtype=str_vlen_type)
-            social_venues_ids = np.empty(length, dtype=int_vlen_type)
-            social_venues_super_areas = np.empty(length, dtype=int_vlen_type)
+            areas_ids = read_dataset(geography["area_id"], idx1, idx2)
+            super_areas = read_dataset(geography["area_super_area"], idx1, idx2)
             if "social_venues_specs" in geography and "social_venues_ids" in geography:
-                geography["social_venues_specs"].read_direct(
-                    social_venues_specs, np.s_[idx1:idx2], np.s_[0:length]
+                social_venues_specs = read_dataset(
+                    geography["social_venues_specs"], idx1, idx2
                 )
-                geography["social_venues_ids"].read_direct(
-                    social_venues_ids, np.s_[idx1:idx2], np.s_[0:length]
+                social_venues_ids = read_dataset(
+                    geography["social_venues_ids"], idx1, idx2
                 )
-                geography["social_venues_super_areas"].read_direct(
-                    social_venues_super_areas, np.s_[idx1:idx2], np.s_[0:length]
+                social_venues_super_areas = read_dataset(
+                    geography["social_venues_super_areas"], idx1, idx2
                 )
             for k in range(length):
                 if domain_super_areas is not None:
@@ -386,37 +359,26 @@ def restore_geography_properties_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_super_areas)
             length = idx2 - idx1
-            super_areas_ids = np.empty(length, dtype=int)
-            geography["super_area_id"].read_direct(
-                super_areas_ids, np.s_[idx1:idx2], np.s_[0:length]
+            super_areas_ids = read_dataset(geography["super_area_id"], idx1, idx2)
+            closest_hospitals_ids = read_dataset(
+                geography["closest_hospitals_ids"], idx1, idx2
             )
-            closest_hospitals_ids = geography["closest_hospitals_ids"][idx1:idx2]
-            closest_hospitals_super_areas = geography["closest_hospitals_super_areas"][
-                idx1:idx2
-            ]
-            super_area_cities = np.empty(length, dtype=int)
-            geography["super_area_city"].read_direct(
-                super_area_cities, np.s_[idx1:idx2], np.s_[0:length]
+            closest_hospitals_super_areas = read_dataset(
+                geography["closest_hospitals_super_areas"], idx1, idx2
             )
-            super_area_closest_commuting_city = np.empty(length, dtype=int)
-            geography["super_area_closest_commuting_city"].read_direct(
-                super_area_closest_commuting_city, np.s_[idx1:idx2], np.s_[0:length]
+            super_area_cities = read_dataset(geography["super_area_city"], idx1, idx2)
+            super_area_closest_commuting_city = read_dataset(
+                geography["super_area_closest_commuting_city"], idx1, idx2
             )
-            super_area_closest_commuting_city_super_area = np.empty(length, dtype=int)
-            geography["super_area_closest_commuting_city_super_area"].read_direct(
-                super_area_closest_commuting_city_super_area,
-                np.s_[idx1:idx2],
-                np.s_[0:length],
+            super_area_closest_commuting_city_super_area = read_dataset(
+                geography["super_area_closest_commuting_city_super_area"], idx1, idx2
             )
-            super_area_city = np.empty(length, dtype=int)
-            geography["super_area_city"].read_direct(super_area_city, np.s_[idx1:idx2], np.s_[0:length])
-            super_area_closest_station = np.empty(length, dtype=int)
-            geography["super_area_closest_station"].read_direct(
-                super_area_closest_station, np.s_[idx1:idx2], np.s_[0:length]
+            super_area_city = read_dataset(geography["super_area_city"], idx1, idx2)
+            super_area_closest_station = read_dataset(
+                geography["super_area_closest_station"], idx1, idx2
             )
-            super_area_closest_station_super_area = np.empty(length, dtype=int)
-            geography["super_area_closest_station_super_area"].read_direct(
-                super_area_closest_station_super_area, np.s_[idx1:idx2], np.s_[0:length]
+            super_area_closest_station_super_area = read_dataset(
+                geography["super_area_closest_station_super_area"], idx1, idx2
             )
             for k in range(length):
                 if domain_super_areas is not None:
@@ -428,58 +390,61 @@ def restore_geography_properties_from_hdf5(
                     if super_area_id not in domain_super_areas:
                         continue
                 super_area = world.super_areas.get_from_id(super_areas_ids[k])
-                super_area.city = world.cities.get_from_id(super_area_city[k])
                 # load closest hospitals
-                hospitals = []
-                for hospital_id, hospital_super_area_id in zip(
-                    closest_hospitals_ids[k], closest_hospitals_super_areas[k]
-                ):
+                if world.hospitals:
+                    hospitals = []
+                    for hospital_id, hospital_super_area_id in zip(
+                        closest_hospitals_ids[k], closest_hospitals_super_areas[k]
+                    ):
+                        if (
+                            domain_super_areas is None
+                            or hospital_super_area_id in domain_super_areas
+                        ):
+                            hospital = world.hospitals.get_from_id(hospital_id)
+                        else:
+                            hospital = ExternalGroup(
+                                domain_id=super_areas_to_domain_dict[
+                                    hospital_super_area_id
+                                ],
+                                spec="hospital",
+                                id=hospital_id,
+                            )
+                        hospitals.append(hospital)
+                    super_area.closest_hospitals = hospitals
+                # load closest station
+                if world.stations:
+                    closest_station_id = super_area_closest_station[k]
+                    closest_station_super_area_id = super_area_closest_station_super_area[k]
                     if (
                         domain_super_areas is None
-                        or hospital_super_area_id in domain_super_areas
+                        or closest_station_super_area_id in domain_super_areas
                     ):
-                        hospital = world.hospitals.get_from_id(hospital_id)
+                        closest_station = world.stations.get_from_id(closest_station_id)
                     else:
-                        hospital = ExternalGroup(
-                            domain_id=super_areas_to_domain_dict[
-                                hospital_super_area_id
-                            ],
-                            spec="hospital",
-                            id=hospital_id,
+                        closest_station = ExternalGroup(
+                            domain_id=super_areas_to_domain_dict[closest_station_super_area_id],
+                            spec="station",
+                            id=closest_station_id,
                         )
-                    hospitals.append(hospital)
-                super_area.closest_hospitals = hospitals
-                # load closest station
-                closest_station_id = super_area_closest_station[k]
-                closest_station_super_area_id = super_area_closest_station_super_area[k]
-                if (
-                    domain_super_areas is None
-                    or closest_station_super_area_id in domain_super_areas
-                ):
-                    closest_station = world.stations.get_from_id(closest_station_id)
-                else:
-                    closest_station = ExternalGroup(
-                        domain_id=super_areas_to_domain_dict[closest_station_id],
-                        spec="station",
-                        id=closest_station_id,
-                    )
-                super_area.closest_station = closest_station
+                    super_area.closest_station = closest_station
                 # load closest commuting city
-                closest_commuting_city_id = super_area_closest_commuting_city[k]
-                closest_commuting_super_area_id = super_area_closest_commuting_city_super_area[
-                    k
-                ]
-                if (
-                    domain_super_areas is None
-                    or closest_commuting_city_id in domain_super_areas
-                ):
-                    closest_commuting_city = world.cities.get_from_id(
-                        closest_commuting_city_id
-                    )
-                else:
-                    closest_commuting_city = ExternalGroup(
-                        domain_id=super_areas_to_domain_dict[closest_commuting_city_id],
-                        spec="city",
-                        id=closest_commuting_city_id,
-                    )
-                super_area.closest_commuting_city = closest_commuting_city
+                if world.cities:
+                    super_area.city = world.cities.get_from_id(super_area_city[k])
+                    closest_commuting_city_id = super_area_closest_commuting_city[k]
+                    closest_commuting_super_area_id = super_area_closest_commuting_city_super_area[
+                        k
+                    ]
+                    if (
+                        domain_super_areas is None
+                        or closest_commuting_super_area_id in domain_super_areas
+                    ):
+                        closest_commuting_city = world.cities.get_from_id(
+                            closest_commuting_city_id
+                        )
+                    else:
+                        closest_commuting_city = ExternalGroup(
+                            domain_id=super_areas_to_domain_dict[closest_commuting_super_area_id],
+                            spec="city",
+                            id=closest_commuting_city_id,
+                        )
+                    super_area.closest_commuting_city = closest_commuting_city
