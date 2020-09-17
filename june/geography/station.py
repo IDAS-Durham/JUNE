@@ -3,13 +3,14 @@ import pandas as pd
 import numpy as np
 import math
 import logging
+from random import randint
 from sklearn.neighbors import BallTree
 from itertools import chain, count
 from collections import defaultdict
 
 from june.paths import data_path
 from june.geography import City, SuperAreas, SuperArea
-from june.groups import Supergroup
+from june.groups import Supergroup, ExternalGroup, ExternalSubgroup
 
 default_super_stations_filename = (
     data_path / "input/geography/stations_per_super_area_ew.csv"
@@ -163,7 +164,7 @@ class Station:
     This represents smaller stations (like your nearest bus station) that go to one
     SuperStation.
     """
-
+    external = False
     _id = count()
 
     def __init__(
@@ -179,6 +180,11 @@ class Station:
     @property
     def coordinates(self):
         return self.super_area.coordinates
+
+    def get_commute_subgroup(self, person):
+        return self.inter_city_transports[
+            randint(0, len(self.inter_city_transports) - 1)
+        ][0]
 
 
 class Stations(Supergroup):
@@ -250,3 +256,21 @@ class Stations(Supergroup):
         )
         super_areas = [self[idx] for idx in indcs[:, 0]]
         return super_areas[0]
+
+class ExternalStation(ExternalGroup):
+    """
+    This a station that lives outside the simulated domain.
+    """
+    __slots__ = "commuter_ids", "inter_city_transports", "super_area"
+    external = True
+    def __init__(self, id, domain_id, commuter_ids = None):
+        super().__init__(spec="station", domain_id=domain_id, id=id)
+        self.commuter_ids = commuter_ids
+        self.inter_city_transports = None
+        self.super_area = None
+
+    def get_commute_subgroup(self, person):
+        group = self.inter_city_transports[
+            randint(0, len(self.inter_city_transports) - 1)
+        ]
+        return ExternalSubgroup(group=group, subgroup_type=0)

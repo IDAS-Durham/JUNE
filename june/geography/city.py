@@ -9,7 +9,7 @@ import logging
 
 from june.paths import data_path
 from june.geography import SuperArea, Geography
-from june.groups import Supergroup
+from june.groups import Supergroup, ExternalSubgroup, ExternalGroup
 
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
 
@@ -32,6 +32,7 @@ class City:
     A city is a collection of areas, with some added methods for functionality,
     such as commuting or local lockdowns.
     """
+    external = False
 
     _id = count()
 
@@ -86,9 +87,7 @@ class City:
             return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
         else:
             closest_station = person.super_area.closest_station
-            return closest_station.inter_city_transports[
-                randint(0, len(closest_station.inter_city_transports) - 1)
-            ][0]
+            return closest_station.get_commute_subgroup(person)
 
 
 class Cities(Supergroup):
@@ -185,3 +184,22 @@ class Cities(Supergroup):
             if city.stations.members:
                 return city
         logger.warning("No commuting city in this world.")
+
+class ExternalCity(ExternalGroup):
+    """
+    This a city that lives outside the simulated domain.
+    """
+    __slots__ = "commuter_ids", "city_transports", "super_area", "coordinates"
+    external = True
+    def __init__(self, id, domain_id, coordinates= None, commuter_ids = None):
+        super().__init__(spec="city", domain_id=domain_id, id=id)
+        self.commuter_ids = commuter_ids
+        self.city_transports = None
+        self.super_area = None
+        self.coordinates = coordinates
+
+    def get_commute_subgroup(self, person):
+        group = self.city_transports[
+            randint(0, len(self.inter_city_transports) - 1)
+        ]
+        return ExternalSubgroup(group=group, subgroup_type=0)

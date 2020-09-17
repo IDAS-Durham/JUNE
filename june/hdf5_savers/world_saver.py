@@ -286,15 +286,19 @@ def generate_domain_from_hdf5(
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
         )
-    if "commute_cities" in f_keys:
-        logger.info("loading commute cities...")
-        domain.commutecities, domain.commutecityunits = load_commute_cities_from_hdf5(
-            file_path, domain_super_areas=super_area_ids
+    if "cities" in f_keys:
+        logger.info("loading cities...")
+        domain.cities, domain.city_transports = load_cities_from_hdf5(
+            file_path=file_path,
+            domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
-    if "commute_hubs" in f_keys:
-        logger.info("loading commute hubs...")
-        domain.commutehubs, domain.commuteunits = load_commute_hubs_from_hdf5(
-            file_path, domain_super_areas=super_area_ids
+    if "stations" in f_keys:
+        logger.info("loading stations...")
+        domain.stations, domain.inter_city_transports = load_stations_from_hdf5(
+            file_path,
+            domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "households" in f_keys:
         logger.info("loading households...")
@@ -356,11 +360,6 @@ def generate_domain_from_hdf5(
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
         )
-    if "commute_hubs" and "commute_cities" in f_keys:
-        logger.info("restoring commute...")
-        restore_commute_properties_from_hdf5(
-            world=domain, file_path=file_path, domain_super_areas=super_area_ids
-        )
     if "companies" in f_keys:
         logger.info("restoring companies...")
         restore_companies_properties_from_hdf5(
@@ -380,6 +379,12 @@ def generate_domain_from_hdf5(
     if "universities" in f_keys:
         logger.info("restoring unis...")
         restore_universities_properties_from_hdf5(
+            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+        )
+
+    if "cities" and "stations" in f_keys:
+        logger.info("restoring commute...")
+        restore_cities_and_stations_properties_from_hdf5(
             world=domain, file_path=file_path, domain_super_areas=super_area_ids
         )
 

@@ -42,7 +42,7 @@ class Area:
         "care_home",
         "schools",
         "households",
-        "social_venues"
+        "social_venues",
     )
     _id = count()
 
@@ -73,11 +73,16 @@ class Area:
         for person in demography.populate(self.name):
             self.add(person)
 
+
 class Areas:
     __slots__ = "members_by_id", "super_area", "ball_tree", "members_by_name"
+
     def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
-        self.members_by_id = {area.id : area for area in areas}
-        self.members_by_name = {area.name : area for area in areas}
+        self.members_by_id = {area.id: area for area in areas}
+        try:
+            self.members_by_name = {area.name: area for area in areas}
+        except AttributeError:
+            self.members_by_name = None
         self.super_area = super_area
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
@@ -102,7 +107,7 @@ class Areas:
 
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_areas(self, coordinates, k=1, return_distance=False):
@@ -132,8 +137,6 @@ class Areas:
         return self.get_closest_areas(coordinates, k=1, return_distance=False)[0]
 
 
-
-
 class SuperArea:
     """
     Coarse geographical resolution.
@@ -149,7 +152,7 @@ class SuperArea:
         "workers",
         "areas",
         "companies",
-        "closest_hospitals"
+        "closest_hospitals",
     )
     _id = count()
 
@@ -193,8 +196,13 @@ class SuperAreas:
         ball_tree
             whether to construct a NN tree for the super areas
         """
-        self.members_by_id = {area.id : area for area in super_areas}
-        self.members_by_name = {super_area.name : super_area for super_area in super_areas}
+        self.members_by_id = {area.id: area for area in super_areas}
+        try:
+            self.members_by_name = {
+                super_area.name: super_area for super_area in super_areas
+            }
+        except AttributeError:
+            self.members_by_name = None
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
         else:

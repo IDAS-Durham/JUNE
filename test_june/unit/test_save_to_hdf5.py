@@ -229,6 +229,8 @@ class TestSaveTravel:
             assert city.coordinates[0] == city_recovered.coordinates[0]
             assert city.coordinates[1] == city_recovered.coordinates[1]
             assert len(city.city_transports) == len(city_recovered.city_transports)
+            for ct1, ct2 in zip(city.city_transports, city_recovered.city_transports):
+                assert ct1.id == ct2.id
 
     def test__save_stations(self, full_world):
         stations = full_world.stations
@@ -246,6 +248,8 @@ class TestSaveTravel:
             assert len(station.inter_city_transports) == len(
                 station_recovered.inter_city_transports
             )
+            for ict1, ict2 in zip(station.inter_city_transports, station_recovered.inter_city_transports):
+                assert ict1.id == ict2.id
 
 
 class TestSaveUniversities:

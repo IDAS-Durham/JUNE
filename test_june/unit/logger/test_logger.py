@@ -72,7 +72,7 @@ def create_interaction():
 @pytest.fixture(name="geog", scope="module")
 def create_geography():
     geog = Geography.from_file(filter_key={"area": ["E00000001"]})
-    return geog  
+    return geog
 
 
 @pytest.fixture(name="world", scope="module")
@@ -81,6 +81,7 @@ def make_dummy_world(geog):
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
 
     household1 = Household()
+    household1.id = 1992
     household1.area = super_area.areas[0]
     hospital = Hospital(
         n_beds=40,
@@ -214,34 +215,34 @@ def test__log_infected_in_timestep(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
     i = 0
     sim.timer.reset()
+    infected_people = []
     while sim.timer.date <= sim.timer.final_date:
         time = sim.timer.date
         sim.do_timestep()
+        i += 1
+        current_infected = []
+        for person in world.people:
+            if person.infected: 
+                current_infected.append(person.id)
+        infected_people.append(current_infected)
         if i > 10:
             break
-        i += 1
         next(sim.timer)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         super_area = list(f.keys())[0]
         super_area = f[super_area]
         keys = list(super_area[f"infection"].keys())
-        for key in keys:
+        keys_datetime = [datetime.strptime(key, "%Y-%m-%dT%H:%M:%S.%f") for key in keys]
+        keys_argsort = np.argsort(keys_datetime)
+        keys = np.array(keys)[keys_argsort]
+        for i, key in enumerate(keys):
+            print(key)
+            if len(infected_people[i]) == 0:
+                continue
             ids_found = list(super_area[f"infection/{key}/id"][:])
-            if key in (
-                "2020-03-01T00:00:00.000000",
-                "2020-03-02T00:00:00.000000",
-                "2020-03-02T12:00:00.000000",
-            ):
-                assert len(ids_found) == 2
-                assert ids_found ==  [353348, 353349]
-            elif key in ("2020-03-03T00:00:00.000000", "2020-03-03T12:00:00.000000"):
-                assert len(ids_found) == 4
-                assert ids_found == [353346,353348, 353349,353350]
-            else:
-                assert len(ids_found) == 5
-                assert ids_found == [353346,353347,353348, 353349,353350]
-
+            assert len(ids_found) == len(infected_people[i])
+            assert ids_found == infected_people[i]
 
 
 def test__log_infected(world, interaction, selector):
@@ -292,11 +293,11 @@ def test__log_infection_location(world, interaction, selector):
             locations_found = list(locations[f"{key}/locations"][:])
             if key == "2020-03-03T00:00:00.000000":
                 assert len(locations_found) == 2
-                assert locations_found[0] == b"household_114754"
-                assert locations_found[1] == b"household_114754"
+                assert locations_found[0] == b"household_1992"
+                assert locations_found[1] == b"household_1992"
             elif key == "2020-03-04T00:00:00.000000":
                 assert len(locations_found) == 1
-                assert locations_found[0] == b"household_114754"
+                assert locations_found[0] == b"household_1992"
             else:
                 assert len(locations_found) == 0
     assert all(key in time_steps for key in keys)

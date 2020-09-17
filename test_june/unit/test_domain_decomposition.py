@@ -109,3 +109,85 @@ class TestDomainDecomposition:
                                 subgroup_domain.group.super_area.name
                                 == subgroup.group.super_area.name
                             )
+
+    def test__stations_and_cities(self, domains_world, domains):
+        assert len(domains_world.cities) > 0
+        assert len(domains_world.stations) > 0
+        assert len(domains_world.city_transports) > 0
+        assert len(domains_world.inter_city_transports) > 0
+        for city in domains_world.cities:
+            for domain in domains:
+                assert len(domain.cities) == len(domains_world.cities)
+                domain_super_area_ids = [super_area.id for super_area in domain]
+                if city.super_area.id in domain_super_area_ids:
+                    for super_area in domain.super_areas:
+                        if super_area.closest_commuting_city.id == city.id:
+                            assert super_area.closest_commuting_city.external is False
+                    for city_domain in domain.cities:
+                        if city.id == city_domain.id:
+                            assert city_domain.external is False
+                            assert city.super_area.id == city_domain.super_area.id
+                            assert city.name == city_domain.name
+                            assert len(city.city_transports) == len(
+                                city_domain.city_transports
+                            )
+                            for ct1, ct2 in zip(
+                                city.city_transports, city_domain.city_transports
+                            ):
+                                assert ct2.external is False
+                                assert ct1.id == ct2.id
+                            assert city.commuter_ids == city_domain.commuter_ids
+                            break
+                else:
+                    for super_area in domain.super_areas:
+                        if super_area.closest_commuting_city.id == city.id:
+                            assert super_area.closest_commuting_city.external is True
+                    for city_domain in domain.cities:
+                        if city.id == city_domain.id:
+                            assert city_domain.external
+                            for ct1, ct2 in zip(
+                                city.city_transports, city_domain.city_transports
+                            ):
+                                assert ct2.external
+                                assert ct1.id == ct2.id
+                            assert city.commuter_ids == city_domain.commuter_ids
+                            break
+
+        for station in domains_world.stations:
+            for domain in domains:
+                assert len(domain.stations) == len(domains_world.stations)
+                domain_super_area_ids = [super_area.id for super_area in domain]
+                if station.super_area.id in domain_super_area_ids:
+                    for super_area in domain.super_areas:
+                        if super_area.closest_station.id == station.id:
+                            assert super_area.closest_station.external is False
+                    for station_domain in domain.stations:
+                        if station.id == station_domain.id:
+                            assert station_domain.external is False
+                            assert station.super_area.id == station_domain.super_area.id
+                            assert len(station.inter_city_transports) == len(
+                                station_domain.inter_city_transports
+                            )
+                            for ct1, ct2 in zip(
+                                station.inter_city_transports,
+                                station_domain.inter_city_transports,
+                            ):
+                                assert ct2.external is False
+                                assert ct1.id == ct2.id
+                            assert station.commuter_ids == station_domain.commuter_ids
+                            break
+                else:
+                    for super_area in domain.super_areas:
+                        if super_area.closest_station.id == station.id:
+                            assert super_area.closest_station.external is True
+                    for station_domain in domain.stations:
+                        if station.id == station_domain.id:
+                            assert station_domain.external
+                            for ct1, ct2 in zip(
+                                station.inter_city_transports,
+                                station_domain.inter_city_transports,
+                            ):
+                                assert ct2.external
+                                assert ct1.id == ct2.id
+                            assert station.commuter_ids == station_domain.commuter_ids
+                            break
