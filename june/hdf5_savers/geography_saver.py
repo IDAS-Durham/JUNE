@@ -367,19 +367,6 @@ def restore_geography_properties_from_hdf5(
                 geography["closest_hospitals_super_areas"], idx1, idx2
             )
             super_area_cities = read_dataset(geography["super_area_city"], idx1, idx2)
-            super_area_closest_commuting_city = read_dataset(
-                geography["super_area_closest_commuting_city"], idx1, idx2
-            )
-            super_area_closest_commuting_city_super_area = read_dataset(
-                geography["super_area_closest_commuting_city_super_area"], idx1, idx2
-            )
-            super_area_city = read_dataset(geography["super_area_city"], idx1, idx2)
-            super_area_closest_station = read_dataset(
-                geography["super_area_closest_station"], idx1, idx2
-            )
-            super_area_closest_station_super_area = read_dataset(
-                geography["super_area_closest_station_super_area"], idx1, idx2
-            )
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area_id = super_areas_ids[k]
@@ -410,40 +397,3 @@ def restore_geography_properties_from_hdf5(
                         )
                     hospitals.append(hospital)
                 super_area.closest_hospitals = hospitals
-                # load closest station
-                closest_station_id = super_area_closest_station[k]
-                closest_station_super_area_id = super_area_closest_station_super_area[k]
-                if (
-                    (domain_super_areas is None
-                    or closest_station_super_area_id in domain_super_areas)
-                    and world.stations
-                ):
-                    closest_station = world.stations.get_from_id(closest_station_id)
-                else:
-                    closest_station = ExternalGroup(
-                        domain_id=super_areas_to_domain_dict[closest_station_super_area_id],
-                        spec="station",
-                        id=closest_station_id,
-                    )
-                super_area.closest_station = closest_station
-                # load closest commuting city
-                super_area.city = world.cities.get_from_id(super_area_city[k])
-                closest_commuting_city_id = super_area_closest_commuting_city[k]
-                closest_commuting_super_area_id = super_area_closest_commuting_city_super_area[
-                    k
-                ]
-                if (
-                    (domain_super_areas is None
-                    or closest_commuting_super_area_id in domain_super_areas)
-                    and world.cities
-                ):
-                    closest_commuting_city = world.cities.get_from_id(
-                        closest_commuting_city_id
-                    )
-                else:
-                    closest_commuting_city = ExternalGroup(
-                        domain_id=super_areas_to_domain_dict[closest_commuting_super_area_id],
-                        spec="city",
-                        id=closest_commuting_city_id,
-                    )
-                super_area.closest_commuting_city = closest_commuting_city

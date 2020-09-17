@@ -42,6 +42,9 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         city_transport_ids_list = []
         city_transport_ids_list_lengths = []
         coordinates = []
+        super_area_city = []
+        super_area_closest_commuting_city = []
+        super_area_closest_commuting_city_super_area = []
         for city in cities:
             ids.append(city.id)
             names.append(city.name.encode("ascii", "ignore"))
@@ -232,7 +235,7 @@ def load_stations_from_hdf5(
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
         ids = read_dataset(stations["id"])
-        if stations["transport_ids"].shape[1] > 0:
+        if len(stations["transport_ids"].shape) == 1:
             transport_ids = read_dataset(stations["transport_ids"])
         else:
             transport_ids = [[] for _ in range(stations["transport_ids"].len())]
@@ -270,7 +273,11 @@ def load_stations_from_hdf5(
 
 
 def restore_cities_and_stations_properties_from_hdf5(
-    world: World, file_path: str, domain_super_areas: List[int] = None,
+    world: World,
+    file_path: str,
+    chunk_size: int,
+    domain_super_areas: List[int] = None,
+    super_areas_to_domain_dict: dict = None,
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # load cities data
@@ -285,7 +292,7 @@ def restore_cities_and_stations_properties_from_hdf5(
         n_stations = stations.attrs["n_stations"]
         station_ids = read_dataset(stations["id"])
         station_super_areas = read_dataset(stations["super_area"])
-        if stations["commuters"].shape[1] > 0:
+        if len(stations["commuters"].shape) == 1:
             station_commuters_list = read_dataset(stations["commuters"])
         else:
             station_commuters_list = [[] for _ in range(stations["commuters"].len())]
@@ -307,7 +314,79 @@ def restore_cities_and_stations_properties_from_hdf5(
             city.commuter_ids = commuters
             if domain_super_areas is None or city_super_area in domain_super_areas:
                 city.stations = []
-                city.super_area = world.super_areas.get_from_id(city_super_area)
+                city_super_area_instance = world.super_areas.get_from_id(
+                    city_super_area
+                )
+                city.super_area = city_super_area_instance
+                city_super_area_instance.city = city
                 for station_id in city_station_ids[k]:
                     station = world.stations.get_from_id(station_id)
                     city.stations.append(station)
+        # super areas info
+        geography = f["geography"]
+        n_super_areas = geography.attrs["n_super_areas"]
+        n_chunks = int(np.ceil(n_super_areas / chunk_size))
+        for chunk in range(n_chunks):
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_super_areas)
+            length = idx2 - idx1
+            super_area_ids = read_dataset(geography["super_area_id"], idx1, idx2)
+            super_area_closest_commuting_city = read_dataset(
+                geography["super_area_closest_commuting_city"], idx1, idx2
+            )
+            super_area_closest_commuting_city_super_area = read_dataset(
+                geography["super_area_closest_commuting_city_super_area"], idx1, idx2
+            )
+            super_area_city = read_dataset(geography["super_area_city"], idx1, idx2)
+            super_area_closest_station = read_dataset(
+                geography["super_area_closest_station"], idx1, idx2
+            )
+            super_area_closest_station_super_area = read_dataset(
+                geography["super_area_closest_station_super_area"], idx1, idx2
+            )
+            # load closest station
+            for k in range(length):
+                super_area_id = super_area_ids[k]
+                if domain_super_areas is not None:
+                    if super_area_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area_id not in domain_super_areas:
+                        continue
+                super_area = world.super_areas.get_from_id(super_area_id)
+                closest_station_id = super_area_closest_station[k]
+                closest_station_super_area_id = super_area_closest_station_super_area[k]
+                if (
+                    domain_super_areas is None
+                    or closest_station_super_area_id in domain_super_areas
+                ):
+                    closest_station = world.stations.get_from_id(closest_station_id)
+                else:
+                    closest_station = ExternalGroup(
+                        domain_id=super_areas_to_domain_dict[closest_station_super_area_id],
+                        spec="station",
+                        id=closest_station_id,
+                    )
+                super_area.closest_station = closest_station
+                # load closest commuting city
+                closest_commuting_city_id = super_area_closest_commuting_city[k]
+                closest_commuting_super_area_id = super_area_closest_commuting_city_super_area[
+                    k
+                ]
+                if (
+                    domain_super_areas is None
+                    or closest_commuting_super_area_id in domain_super_areas
+                ) and world.cities:
+                    closest_commuting_city = world.cities.get_from_id(
+                        closest_commuting_city_id
+                    )
+                else:
+                    closest_commuting_city = ExternalGroup(
+                        domain_id=super_areas_to_domain_dict[
+                            closest_commuting_super_area_id
+                        ],
+                        spec="city",
+                        id=closest_commuting_city_id,
+                    )
+                super_area.closest_commuting_city = closest_commuting_city

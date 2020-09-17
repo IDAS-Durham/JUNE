@@ -169,9 +169,6 @@ def test__age_profile(world, selector):
         age_profile={"0-9": 0.0, "10-39": 1.0, "40-100": 0.0},
     )
     seed.unleash_virus(Population(world.people), n_cases=20)
-    for person in world.people:
-        if person.infected and (person.age <10 or person.age >= 40):
-            print(person.id)
     should_not_infected = [
         person
         for person in world.people

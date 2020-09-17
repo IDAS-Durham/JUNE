@@ -15,24 +15,22 @@ def make_commuting_network(geo):
     world = World()
     world.areas = geo.areas
     world.super_areas = geo.super_areas
-    generate_commuting_network(world)
     people = []
     for i in range(1000):
         person = Person.from_attributes()
         person.mode_of_transport = ModeOfTransport(is_public=True, description="asd")
-        person.work_super_area = world.super_areas[1]
-        world.super_areas[1].workers.append(person)
+        person.work_super_area = world.super_areas[0]
+        world.super_areas[0].workers.append(person)
         if i % 4 == 0:
             # these people commute internally
-            person.area = world.super_areas[1].areas[0]
+            person.area = world.super_areas[0].areas[0]
         else:
             # these people come from abroad
-            person.area = world.super_areas[0].areas[0]
+            person.area = world.super_areas[1].areas[0]
         people.append(person)
     world.people = Population(people)
     travel = Travel()
-    travel.distribute_commuters_to_stations_and_cities(world)
-    travel.create_transport_units_at_stations_and_cities(world)
+    travel.initialise_commute(world)
     return world, travel
 
 class TestCommute:
