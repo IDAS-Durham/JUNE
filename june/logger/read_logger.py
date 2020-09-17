@@ -79,23 +79,21 @@ class ReadLogger:
             super_areas = [
                 key for key in f.keys() if key not in ("population", "parameters")
             ]
-            for super_area in super_areas:
+            for i, super_area in enumerate(super_areas):
                 try:
                     infections = f[f"{super_area}/infection"]
                     time_stamps = [key for key in infections]
-                    ids = []
-                    symptoms = []
-                    n_secondary_infections = []
+                    ids, symptoms, n_secondary_infections = [], [], []
                     for time_stamp in time_stamps:
                         ids.append(
-                            list(f[super_area]["infection"][time_stamp]["id"][:])
+                            list(infections[time_stamp]["id"][:])
                         )
                         symptoms.append(
-                            list(f[super_area]["infection"][time_stamp]["symptoms"][:])
+                            list(infections[time_stamp]["symptoms"][:])
                         )
                         n_secondary_infections.append(
                             list(
-                                f[super_area]["infection"][time_stamp][
+                                infections[time_stamp][
                                     "n_secondary_infections"
                                 ][:]
                             )
@@ -109,21 +107,20 @@ class ReadLogger:
                             "super_area": [super_area] * len(ids),
                         }
                     )
-                    infections_df["time_stamp"] = pd.to_datetime(
-                        infections_df["time_stamp"]
-                    )
                     infections_df.set_index("time_stamp", inplace=True)
+                    infections_df.index = pd.to_datetime(infections_df.index)
+                    infections_per_super_area.append(infections_df)
                 except KeyError:
                     continue
-                infections_per_super_area.append(infections_df)
-        infections_df = functools.reduce(lambda a, b: a + b, infections_per_super_area)
-        # convert symptoms to arrays for fast counting later
-        for df in infections_per_super_area:
-            df["symptoms"] = df.apply(lambda x: np.array(x.symptoms), axis=1)
-            df["infected_id"] = df.apply(lambda x: np.array(x.infected_id), axis=1)
-            df["n_secondary_infections"] = df.apply(
-                lambda x: np.array(x.n_secondary_infections), axis=1
-            )
+        infections_df = pd.DataFrame(
+            index=infections_per_super_area[0].index, 
+            columns=infections_per_super_area[0].columns
+        )
+        for ts,_ in infections_df.iterrows():
+            for col in ["infected_id","symptoms","n_secondary_infections"]:
+                infections_df.loc[ts,col] = np.concatenate([
+                    x.loc[ts,col] for x in infections_per_super_area if len(x) > 0
+                ])
         return infections_per_super_area, infections_df
 
     def process_symptoms(
