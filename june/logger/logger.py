@@ -454,7 +454,7 @@ class Logger:
         meta_dict["user"] = user
         if comment is None:
             comment: "No comment provided."
-        meta_dict["user_comment"] = f"{user} -- {comment}"
+        meta_dict["user_comment"] = f"{comment}"
         meta_dict["time_of_log"] = datetime.datetime.now().replace(microsecond=0)
         meta_dict["june_path"] = str(june.__path__[0])
 

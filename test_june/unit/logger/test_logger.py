@@ -287,14 +287,14 @@ def test__log_infected_in_timestep(sim):
 
 def test__log_meta_info(sim):
     user = "test_user"
-    test_comment = "This is a test comment, testing, testing 1, 2"
+    test_comment = "This is a test comment, testing, testing, 1, 2"
 
     sim.logger.log_meta_info(comment=test_comment)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         assert type(f["meta/branch"][()]) is str 
         assert type(f["meta/local_SHA"][()]) is str
-        assert f["meta/user_comment"][()] == f"{user} -- {test_comment}"
+        assert f["meta/user_comment"][()] == test_comment
         assert type(f["meta/time_of_log"][()]) is str
 
 
