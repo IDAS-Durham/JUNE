@@ -126,7 +126,7 @@ class SuperStations:
             station_instances = []
             for _, row in stations.iterrows():
                 station_name = row["station"]
-                logger.info(f"Station {station_name} initialised.")
+                logger.info(f"Super station {station_name} initialised.")
                 station = SuperStation(
                     name=station_name, super_area=row["super_area"], city=city
                 )

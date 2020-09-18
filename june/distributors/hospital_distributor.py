@@ -100,8 +100,10 @@ class HospitalDistributor:
         super_areas:
             object containing all the super areas to distribute medics
         """
+        logger.info(f"Distributing medics to hospitals")
         for super_area in super_areas:
             self.distribute_medics_to_hospitals(super_area)
+        logger.info(f"Medics distributed to hospitals")
 
     def get_hospitals_in_super_area(self, super_area: SuperArea) -> List["Hospital"]:
         """

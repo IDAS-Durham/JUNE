@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from random import randint
 from typing import List
+import logging
 
 from june.groups import Group, Subgroup, Supergroup
 from june.geography import SuperAreas, Areas
@@ -11,6 +12,7 @@ age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23 : 5}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
+logger = logging.getLogger(__name__)
 
 class University(Group):
     def __init__(
@@ -105,4 +107,5 @@ class Universities(Supergroup):
                 super_area = super_area
             )
             universities.append(university)
+        logger.info(f"There are {len(universities)} universities in this world.")
         return cls(universities)

@@ -95,6 +95,7 @@ class WorkerDistributor:
         """
         self.areas = areas
         self.super_areas = super_areas
+        logger.info(f"Distributing workers to super areas...")
         for i, area in enumerate(iter(self.areas)):
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
@@ -106,9 +107,7 @@ class WorkerDistributor:
                     self._assign_lockdown_status(idx, person)
             if i % 5000 == 0 and i != 0:
                 logger.info(f"Distributed workers in {i} areas of {len(self.areas)}")
-        logger.info(
-            f"There are {self.n_boundary_workers} who had to be told to stay real"
-        )
+        logger.info(f"Workers distributed.")
 
     def _work_place_lottery(
         self, area_name: str, wf_area_df: pd.DataFrame, n_workers: int
