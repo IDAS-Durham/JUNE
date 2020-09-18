@@ -43,6 +43,7 @@ def infect_person(person, selector, symptom_tag="mild"):
     if symptom_tag != "asymptomatic":
         person.residence.group.quarantine_starting_date = 5.3
 
+
 class TestSevereSymptomsStayHome:
     def test__policy_adults(self, setup_policy_world, selector):
         world, pupil, student, worker, sim = setup_policy_world

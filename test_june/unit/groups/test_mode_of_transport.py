@@ -50,7 +50,7 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.total == 2
@@ -62,7 +62,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.total == 7
@@ -71,7 +71,7 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.modes == ["car"]
@@ -83,7 +83,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.modes == ["car", "bus", "magic_carpet"]
@@ -92,7 +92,7 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weights == [1]
@@ -104,7 +104,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weights == [2 / 7, 4 / 7, 1 / 7]
@@ -113,7 +113,7 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weighted_random_choice() == "car"
@@ -125,7 +125,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weighted_random_choice() == "car" or "bus" or "magic_carpet"
@@ -138,7 +138,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weighted_random_choice() == "bus"
