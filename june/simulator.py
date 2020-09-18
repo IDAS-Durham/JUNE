@@ -87,7 +87,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
-        comment: str = None,
+        comment: str = None
     ) -> "Simulator":
 
         """
@@ -157,8 +157,10 @@ class Simulator:
             policies=policies,
             timer=timer,
         )
-        print(config)
-        logger = Logger(save_path=save_path,config=config) # This allows for logging config.
+        if not world.box_mode and save_path is not None:
+           logger = Logger(save_path=save_path, config=config)
+        else:
+            logger = None
 
         return cls(
             world=world,
@@ -168,7 +170,7 @@ class Simulator:
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
-            logger=logger,
+            #logger=logger,
             comment=comment,
             checkpoint_dates=checkpoint_dates,
         )
