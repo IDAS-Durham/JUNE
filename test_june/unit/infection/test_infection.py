@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import june.infection.symptoms
-from june.demography import person, Population
+from june.demography import person
 from june.infection import Infection, InfectionSelector
 from june.infection.infection_selector import default_transmission_config_path
 from june.infection import symptoms_trajectory as symtraj
@@ -18,7 +18,6 @@ dir_pwd = path_pwd.parent
 constant_config = (
     dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 )
-susceptibility_config = paths.configs_path / 'tests/test_susceptibility.yaml'
 
 
 class MockHealthIndexGenerator:
@@ -211,21 +210,3 @@ class TestInfectionSelector:
         np.testing.assert_allclose(
             max_prob / true_avg_peak_infectivity, 0.48, atol=0.1,
         )
-
-    def test__setting_susceptibility(self):
-        dummy_young = person.Person.from_attributes(sex="f", age=10)
-        dummy_old = person.Person.from_attributes(sex="f", age=30)
-        dummy_very_old = person.Person.from_attributes(sex="f", age=99)
-        population = Population([dummy_young, dummy_old, dummy_very_old])
-        selector = InfectionSelector.from_file(
-                susceptibilities_by_age_config_path = susceptibility_config
-        )
-        assert dummy_young.susceptibility == 1.
-        selector.set_susceptibilities_by_age(population=population)
-        assert dummy_young.susceptibility == 0.5
-        assert dummy_old.susceptibility == 0.7
-        assert dummy_very_old.susceptibility == 1.
-        selector.infect_person_at_time(person=dummy_young, time=0.) 
-        assert dummy_young.susceptibility == 0.
-
-

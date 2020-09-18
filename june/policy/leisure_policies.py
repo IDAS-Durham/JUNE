@@ -18,11 +18,14 @@ class LeisurePolicy(Policy):
         super().__init__(start_time, end_time)
         self.policy_type = "leisure"
 
+
 class LeisurePolicies(PolicyCollection):
     policy_type = "leisure"
+
     def apply(self, date: datetime, leisure: Leisure):
         for policy in self.policies:
             policy.apply(date=date, leisure=leisure)
+
 
 class CloseLeisureVenue(LeisurePolicy):
     def __init__(
@@ -50,14 +53,12 @@ class CloseLeisureVenue(LeisurePolicy):
     def is_active(self, date: datetime.datetime) -> bool:
         """
         Returns true if the policy is active, false otherwise
-
         Parameters
         ----------
         date:
             date to check
         """
         return self.start_time <= date <= self.end_time
-
 
     def apply(self, date: datetime.datetime, leisure: Leisure):
         if self.is_active(date):
@@ -66,7 +67,6 @@ class CloseLeisureVenue(LeisurePolicy):
             if self.end_time == date:
                 for venue in self.venues_to_close:
                     leisure.closed_venues.remove(venue)
-
 
 
 class ChangeLeisureProbability(LeisurePolicy):
@@ -124,14 +124,10 @@ class ChangeLeisureProbability(LeisurePolicy):
                 activity_distributor = leisure.leisure_distributors[activity]
                 activity_distributor.male_probabilities = self.leisure_probabilities[
                     activity
-                ][
-                    "men"
-                ]
+                ]["men"]
                 activity_distributor.female_probabilities = self.leisure_probabilities[
                     activity
-                ][
-                    "women"
-                ]
+                ]["women"]
         else:
             # use original probabilities
             for activity in self.leisure_probabilities:
@@ -150,5 +146,3 @@ class ChangeLeisureProbability(LeisurePolicy):
                 ][
                     "women"
                 ]
-
-
