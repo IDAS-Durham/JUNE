@@ -47,7 +47,7 @@ class TestCommuteCity:
         )
 
     def test__city_grouptype(self, city):
-        assert len(city.commuters) == 0
+        assert len(city.people) == 0
         assert len(city.commutehubs) == 0
         assert len(city.commute_internal) == 0
         assert len(city.commutecityunits) == 0
@@ -121,7 +121,7 @@ class TestNewcastle:
 
     def test__commutecities(self, commutecities_nc):
         assert len(commutecities_nc.members) == 11
-        assert (len(commutecities_nc.members[7].commuters)) > 0
+        assert (len(commutecities_nc.members[7].people)) > 0
 
     @pytest.fixture(name="commutehubs_nc")
     def create_commutehubs_with_people(self, commutecities_nc):
@@ -163,3 +163,4 @@ class TestNewcastle:
 
     def test__commutecityunits(self, commutecityunits_nc):
         assert len(commutecityunits_nc.members) > 0
+        # assert len(commutecityunits_nc.members[0].people) > 0

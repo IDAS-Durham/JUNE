@@ -14,7 +14,6 @@ from .leisure_policies import (
 from .individual_policies import (
     IndividualPolicy,
     IndividualPolicies,
-    IndividualInteraction,
     StayHome,
     SevereSymptomsStayHome,
     Quarantine,

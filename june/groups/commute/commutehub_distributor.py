@@ -54,7 +54,7 @@ class CommuteHubDistributor:
             # people commuting into city
             to_commute_in = []
             to_commute_out = []
-            for commuter in commutecity.commuters:
+            for commuter in commutecity.people:
 
                 msoa = self._get_msoa_oa(commuter.area.name)
                 # check if live AND work in metropolitan area

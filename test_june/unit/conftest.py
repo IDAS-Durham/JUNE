@@ -140,7 +140,7 @@ def create_simulator_box(world_box, interaction, selector):
 
 @pytest.fixture(name="world_visits", scope="session")
 def make_super_areas():
-    geo = Geography.from_file({"super_area": ["E02003353", "E02002512"]})
+    geo = Geography.from_file({"super_area": ["E02003353"]})
     geo.care_homes = CareHomes.for_geography(geo)
     world = generate_world_from_geography(geo, include_households=True)
     return world
@@ -149,7 +149,7 @@ def make_super_areas():
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
-    g = Geography.from_file(filter_key={"super_area": ["E02002512", "E02001697", "E02001731"]})
+    g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
@@ -189,7 +189,7 @@ def make_dummy_world():
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.area = super_area.areas[0]
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
-    #commuter.mode_of_transport = "public"
+    commuter.mode_of_transport = "public"
     household.add(commuter)
 
     world = World()
@@ -215,16 +215,13 @@ def make_dummy_world():
     world.groceries = Groceries([grocery])
     # commute
     world.commutecities = CommuteCities.for_super_areas(world.super_areas)
-    world.commutecities[7].add(commuter)
-    world.commutecities[7].add_internal_commuter(commuter)
     world.commutehubs = CommuteHubs(world.commutecities)
     world.commutehubs.from_file()
     world.commutehubs.init_hubs()
     world.commutehubs[0].commute_through.append(commuter)
-    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
-    world.commutecityunits.init_units()
     world.commuteunits = CommuteUnits(world.commutehubs.members)
     world.commuteunits.init_units()
+    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
     world.cemeteries = Cemeteries()
     return world
 
