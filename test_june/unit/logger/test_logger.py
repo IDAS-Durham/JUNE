@@ -47,7 +47,9 @@ test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file()
+    selector = InfectionSelector.from_file(
+        paths.configs_path / "defaults/transmission/XNExp.yaml"
+    )
     selector.recovery_rate = 1.0
     selector.transmission_probability = 1.0
     return selector
@@ -171,13 +173,6 @@ def create_sim(world, interaction, selector):
     return sim
 
 
-test_dict = {
-    "A": 10,
-    "B": {"B1": {},},
-}
-
-l = Logger()
-
 
 def test__log_population(sim):
     sim.logger.log_population(sim.world.people, chunk_size=2)
@@ -199,7 +194,10 @@ def test__log_hospital_characteristics(sim):
 
 def test__log_parameters(sim):
     sim.logger.log_parameters(
-        interaction=sim.interaction, activity_manager=sim.activity_manager
+        interaction=sim.interaction, 
+        infection_seed=sim.infection_seed,
+        infection_selector=sim.infection_selector,
+        activity_manager=sim.activity_manager
     )
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
@@ -210,7 +208,7 @@ def test__log_parameters(sim):
         assert set(
             f["parameters/policies/close_leisure_venue/venues_to_close"][()]
         ) == set(["cinema", "pub"])
-
+        assert f["parameters/transmission_type"][()] == "xnexp"
 
 def test__log_infection_location(sim):
     time_steps = []
@@ -289,13 +287,17 @@ def test__log_infected_in_timestep(sim):
     assert len(infected_set) == 2
 
 def test__log_meta_info(sim):
+    user = os.getlogin()
     test_comment = "This is a test comment, testing, testing 1, 2"
 
     sim.logger.log_meta_info(comment=test_comment)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        assert 1 == 1
-
+        assert type(f["meta/branch"][()]) is str 
+        assert type(f["meta/local_SHA"][()]) is str
+        assert f["meta/user"][()] == user
+        assert f["meta/user_comment"][()] == f"{user} -- {test_comment}"
+        assert type(f["meta/time_of_log"][()]) is str
 
 
 
