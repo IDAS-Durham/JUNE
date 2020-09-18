@@ -37,6 +37,7 @@ class Logger:
             os.remove(self.file_path)
         except OSError:
             pass
+
         if self.config is not None:
             self.log_config(config=self.config)
 
@@ -414,10 +415,10 @@ class Logger:
 
     def log_config(self,config=None):
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            config = f.require_group("config")
+            config_dset = f.require_group("config")
             if config is not None:
-                config_path = f"config"
-                self.unpack_dict(f, config, config_path, depth=0)
+                dset_path = f"config"
+                self.unpack_dict(f, config, dset_path, depth=0)
 
 
     @staticmethod
