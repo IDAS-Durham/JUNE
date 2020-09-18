@@ -76,6 +76,20 @@ class TestCloseLeisure:
             worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
         ) or worker in worker.residence.people
         sim.clear_world()
+        
+        sim.clear_world()
+        time_after_policy = datetime(2020, 3,30)
+        policies.leisure_policies.apply(
+            date=time_after_policy, leisure=leisure_instance
+        )
+        assert list(leisure_instance.closed_venues) == []
+        sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
+            10000, False, False
+        )
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy , 0.0
+        )
+        assert worker in worker.leisure.people
 
 
 class TestReduceLeisureProbabilities:
