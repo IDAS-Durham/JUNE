@@ -431,7 +431,7 @@ class Logger:
             username = "no_user"
         return username
 
-    def log_meta_info(self,comment):
+    def log_meta_info(self,comment=None,random_state=None):
         june_git = Path(june.__path__[0]).parent / '.git'
         meta_dict = {}
         branch_cmd = f'git --git-dir {june_git} rev-parse --abbrev-ref HEAD'.split()

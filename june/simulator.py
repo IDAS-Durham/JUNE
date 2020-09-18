@@ -87,7 +87,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
-        comment: str = None
+        comment: str = None,
     ) -> "Simulator":
 
         """
@@ -170,7 +170,7 @@ class Simulator:
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
-            #logger=logger,
+            logger=logger,
             comment=comment,
             checkpoint_dates=checkpoint_dates,
         )
