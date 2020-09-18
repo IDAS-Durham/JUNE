@@ -38,7 +38,7 @@ class Logger:
         except OSError:
             pass
         if self.config is not None:
-            self.log_config()
+            self.log_config(config=self.config)
 
     def log_population(
         self, population: Population, rank: int = 0, chunk_size: int = 100000,
@@ -414,12 +414,12 @@ class Logger:
 
                             self.unpack_dict(f, pol.__dict__, policy_path, depth=0)
 
-    def log_config(self,):
+    def log_config(self,config=None):
         with h5py.File(self.file_path, "a", libver="latest") as f:
             config = f.require_group("config")
-            if self.config is not None:
+            if config is not None:
                 config_path = f"config"
-                self.unpack_dict(f, self.config, config_path, depth=0)
+                self.unpack_dict(f, config, config_path, depth=0)
 
 
     @staticmethod

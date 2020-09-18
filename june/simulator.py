@@ -157,8 +157,8 @@ class Simulator:
             policies=policies,
             timer=timer,
         )
-
-        logger = Logger(save_path,config=config) # This allows for logging config.
+        print(config)
+        logger = Logger(save_path=save_path,config=config) # This allows for logging config.
 
         return cls(
             world=world,
