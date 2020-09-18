@@ -28,7 +28,6 @@ class Logger:
         file_name:
             name of output hdf5 file
         """
-        print(save_path,file_name,rank,config)
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / file_name

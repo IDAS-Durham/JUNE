@@ -37,7 +37,6 @@ class ReadLogger:
         Load data related to population (age, sex, ...)
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-            print(f.keys())
             population = f["population"]
             self.n_people = population.attrs["n_people"]
             self.ids = population["id"][:]
@@ -145,7 +144,6 @@ class ReadLogger:
             SymptomTag.dead_icu,
             SymptomTag.dead_hospital,
         ]
-        print(symptoms_df)
         df = pd.DataFrame()
         df["daily_recovered"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
