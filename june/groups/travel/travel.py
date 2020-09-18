@@ -70,13 +70,16 @@ def generate_commuting_network(
     if not world.stations.members:
         logger.warning("No stations in this world, travel won't work")
         return
-    for super_area in world.super_areas:
-        super_area.closest_commuting_city = world.cities.get_closest_commuting_city(
-            super_area.coordinates
-        )
-        super_area.closest_station = super_area.closest_commuting_city.stations.get_closest_station(
-            super_area.coordinates
-        )
+    if world.cities.members:
+        for super_area in world.super_areas:
+            super_area.closest_commuting_city = world.cities.get_closest_commuting_city(
+                super_area.coordinates
+            )
+        if world.stations.members:
+            for super_area in world.super_areas:
+                super_area.closest_station = super_area.closest_commuting_city.stations.get_closest_station(
+                    super_area.coordinates
+                )
 
 
 class Travel:
