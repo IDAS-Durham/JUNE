@@ -321,9 +321,7 @@ class Logger:
             return None
         for key, val in data.items():
             dset_path = f"{base_path}/{key}"
-            if type(val) in [
-                int, float, str, List[int], List[float], np.ndarray
-            ]:
+            if type(val) in [int, float, str, np.ndarray]:
                 hdf5_obj.create_dataset(dset_path, data=val)
             elif isinstance(val, list):
                 if all(isinstance(x, (int, float)) for x in val): # mixed float, int.
