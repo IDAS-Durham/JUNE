@@ -56,7 +56,11 @@ with h5py.File(world_file, "r") as f:
     n_super_areas = f["geography"].attrs["n_super_areas"]
 
 # log_population
-logger = Logger(file_name=f"logger_{seed}.{rank}.hdf5")
+if seed == 999:
+    save_path = "results"
+else:
+    save_path = f"results_{seed:02d}"
+logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
 population = load_population_from_hdf5(world_file)
 logger.log_population(population)
 
@@ -116,13 +120,16 @@ if rank == 0:
 elif rank > 0:
     selected_ids = comm.recv(source=0, tag=0)
 
-#print("Received selected IDs = ", selected_ids)
-#print("Len selected IDs = ", len(selected_ids))
+print("Received selected IDs = ", selected_ids)
+print("Len selected IDs = ", len(selected_ids))
 
+found = 0
 for inf_id in selected_ids:
     if inf_id in domain.people.people_dict:
+        found += 1
         person = domain.people.get_from_id(inf_id)
         simulator.infection_selector.infect_person_at_time(person, 0.0)
+print(f"DOMAIN {rank} found {found} people.")
 
 del population
 
