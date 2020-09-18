@@ -143,6 +143,8 @@ def test__read_daily_hospital_admissions():
     hospital_admissions_df = pd.Series(hospital_admissions)
     hospital_admissions_df.index = pd.to_datetime(hospital_admissions_df.index)
     hospital_admissions_logged = world_df["daily_hospital_admissions"]
+    print('hospital admissions logged')
+    print(hospital_admissions_logged)
     hospital_admissions_logged = hospital_admissions_logged[
         hospital_admissions_logged.values > 0
     ]
@@ -327,7 +329,6 @@ def test__read_infection_location(selector, interaction):
         "household_1993",
         "household_1993",
     ]
-
 
 # Test hospitalisations by age
 # Test hospitalisations by area
