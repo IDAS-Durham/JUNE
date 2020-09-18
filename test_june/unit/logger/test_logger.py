@@ -1,6 +1,7 @@
 import copy
 from datetime import datetime
 from pathlib import Path
+import os
 
 import h5py
 
@@ -275,6 +276,7 @@ def test__log_infected_in_timestep(sim):
         next(sim.timer)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
+        print(list(f.keys()))
         super_area = list(f.keys())[0]
         super_area = f[super_area]
         first_ts = time_steps[0]
@@ -285,3 +287,26 @@ def test__log_infected_in_timestep(sim):
     assert all(t in keys for t in time_steps)
     assert infected_set.issubset(world_ids)
     assert len(infected_set) == 2
+
+def test__log_meta_info(sim):
+    test_comment = "This is a test comment, testing, testing 1, 2"
+
+    sim.logger.log_meta_info(comment=test_comment)
+
+    with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
+        assert 1 == 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

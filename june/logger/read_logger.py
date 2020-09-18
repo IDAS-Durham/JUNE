@@ -37,6 +37,7 @@ class ReadLogger:
         Load data related to population (age, sex, ...)
         """
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+            print(f.keys())
             population = f["population"]
             self.n_people = population.attrs["n_people"]
             self.ids = population["id"][:]
@@ -54,7 +55,6 @@ class ReadLogger:
         t0 = time.time()
         t_end = time.time()
         self.infections_per_super_area = []
-        self.infections_df = None #pd.DataFrame()
 
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             super_areas = [
@@ -110,6 +110,18 @@ class ReadLogger:
                 except KeyError:
                     continue
 
+        self.infections_df = pd.DataFrame(
+            index=self.infections_per_super_area[0].index, 
+            columns=self.infections_per_super_area[0].columns
+        )
+
+        
+        for ts,_ in self.infections_df.iterrows():
+            for col in ["infected_id","symptoms","n_secondary_infections"]:
+                self.infections_df.loc[ts,col] = np.concatenate([
+                    x.loc[ts,col] for x in self.infections_per_super_area if len(x) > 0
+                ])
+
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
     ) -> pd.DataFrame:
@@ -133,6 +145,7 @@ class ReadLogger:
             SymptomTag.dead_icu,
             SymptomTag.dead_hospital,
         ]
+        print(symptoms_df)
         df = pd.DataFrame()
         df["daily_recovered"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.recovered), axis=1
