@@ -238,7 +238,6 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
             person.subgroups.leisure = None
-            person.subgroups.commute = None
 
     @staticmethod
     def check_inputs(time_config: dict):

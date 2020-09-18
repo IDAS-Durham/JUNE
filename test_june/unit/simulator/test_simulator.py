@@ -205,8 +205,7 @@ def test__move_people_to_primary_activity(sim: Simulator):
 
 
 def test__move_people_to_commute(sim: Simulator):
-    #sim.activity_manager.distribute_commuters()
-    sim.clear_world()
+    sim.activity_manager.distribute_commuters()
     sim.activity_manager.move_people_to_active_subgroups(["commute", "residence"])
     n_commuters = 0
     for person in sim.world.people.members:
