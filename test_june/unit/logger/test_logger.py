@@ -1,7 +1,6 @@
 import copy
 from datetime import datetime
 from pathlib import Path
-import os
 
 import h5py
 
@@ -287,7 +286,7 @@ def test__log_infected_in_timestep(sim):
     assert len(infected_set) == 2
 
 def test__log_meta_info(sim):
-    user = os.getlogin()
+    user = "test_user"
     test_comment = "This is a test comment, testing, testing 1, 2"
 
     sim.logger.log_meta_info(comment=test_comment)
@@ -295,7 +294,6 @@ def test__log_meta_info(sim):
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         assert type(f["meta/branch"][()]) is str 
         assert type(f["meta/local_SHA"][()]) is str
-        assert f["meta/user"][()] == user
         assert f["meta/user_comment"][()] == f"{user} -- {test_comment}"
         assert type(f["meta/time_of_log"][()]) is str
 
