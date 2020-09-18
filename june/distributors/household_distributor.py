@@ -291,6 +291,7 @@ class HouseholdDistributor:
         n_people_in_communal_filename
             path to file containing the number of people living in communal establishments per area
         """
+        logger.info(f"Distributing people to households")
         area_names = [area.name for area in areas]
         household_numbers_df = pd.read_csv(
             number_households_per_composition_filename, index_col=0
@@ -320,6 +321,9 @@ class HouseholdDistributor:
             counter += 1
             if counter % 5000 == 0:
                 logger.info(f"filled {counter} areas of {len(area_names)}")
+        logger.info(
+            f"People assigned to households. There are {len(households_total)} households in this world."
+        )
         return Households(households_total)
 
     def distribute_people_to_households(

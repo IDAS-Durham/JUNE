@@ -37,10 +37,13 @@ possible_groups = [
 
 
 def _populate_areas(areas: Areas, demography):
+    logger.info(f"Populating areas")
     people = Population()
     for area in areas:
         area.populate(demography)
         people.extend(area.people)
+    n_people = len(people)
+    logger.info(f"Areas populated. This world's population is: {n_people}")
     return people
 
 
@@ -158,9 +161,9 @@ def generate_world_from_geography(
     include_households=True,
 ):
     """
-        Initializes the world given a geometry. The demography is calculated
-        with the default settings for that geography.
-        """
+    Initializes the world given a geometry. The demography is calculated
+    with the default settings for that geography.
+    """
     world = World()
     world.box_mode = box_mode
     if demography is None:

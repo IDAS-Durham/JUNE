@@ -156,7 +156,7 @@ class ModeOfTransport:
 class RegionalGenerator:
     def __init__(
             self,
-            msoarea: str,
+            area: str,
             weighted_modes: List[
                 Tuple[int, "ModeOfTransport"]
             ]
@@ -167,13 +167,13 @@ class RegionalGenerator:
 
         Parameters
         ----------
-        msoarea
+        area
             A unique identifier for a Output region
         weighted_modes
             A list of tuples comprising the number of people using a mode
             of a transport and a representation of that mode of transport
         """
-        self.msoarea = msoarea
+        self.area = area
         self.weighted_modes = weighted_modes
 
     @property
@@ -222,7 +222,7 @@ class RegionalGenerator:
         return f"<{self.__class__.__name__} {self}>"
 
     def __str__(self):
-        return self.msoarea
+        return self.area
 
 
 class ModeOfTransportGenerator:
@@ -239,12 +239,12 @@ class ModeOfTransportGenerator:
         Parameters
         ----------
         regional_generators
-            A dictionary mapping Geography msoareas to objects that randomly
+            A dictionary mapping Geography areas to objects that randomly
             generate modes of transport
         """
         self.regional_generators = regional_generators
 
-    def regional_gen_from_msoarea(self, area: str) -> RegionalGenerator:
+    def regional_gen_from_area(self, area: str) -> RegionalGenerator:
         """
         Get a regional generator for an Area identified
         by its output output area, e.g. E00062207
@@ -290,7 +290,7 @@ class ModeOfTransportGenerator:
         with open(filename) as f:
             reader = csv.reader(f)
             headers = next(reader)
-            msoarea_column = headers.index("geography code")
+            area_column = headers.index("geography code")
             modes_of_transport = ModeOfTransport.load_from_file(
                 config_filename
             )
@@ -303,9 +303,9 @@ class ModeOfTransportGenerator:
                             ]),
                         mode
                     ))
-                msoarea = row[msoarea_column]
-                regional_generators[msoarea] = RegionalGenerator(
-                    msoarea=msoarea,
+                area = row[area_column]
+                regional_generators[area] = RegionalGenerator(
+                    area=area,
                     weighted_modes=weighted_modes
                 )
 
