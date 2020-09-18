@@ -108,7 +108,7 @@ simulator = Simulator.from_file(
 print("simulator ready to go")
 
 if rank == 0:
-    n_cases = 500
+    n_cases = 50
     selected_people = np.random.choice(len(population.people), n_cases, replace=False)
     selected_ids = []
     for selected_person in selected_people:
@@ -123,13 +123,10 @@ elif rank > 0:
 print("Received selected IDs = ", selected_ids)
 print("Len selected IDs = ", len(selected_ids))
 
-found = 0
 for inf_id in selected_ids:
     if inf_id in domain.people.people_dict:
-        found += 1
         person = domain.people.get_from_id(inf_id)
         simulator.infection_selector.infect_person_at_time(person, 0.0)
-print(f"DOMAIN {rank} found {found} people.")
 
 del population
 
