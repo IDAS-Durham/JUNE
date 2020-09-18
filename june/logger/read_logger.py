@@ -118,9 +118,9 @@ class ReadLogger:
         )
         for ts,_ in infections_df.iterrows():
             for col in ["infected_id","symptoms","n_secondary_infections"]:
-                infections_df.loc[ts,col] = np.concatenate([
+                infections_df.loc[ts,col] = list(np.concatenate([
                     x.loc[ts,col] for x in infections_per_super_area if len(x) > 0
-                ])
+                ]))
         return infections_per_super_area, infections_df
 
     def process_symptoms(

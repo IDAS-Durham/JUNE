@@ -7,7 +7,7 @@ activity_to_groups:
   residence: ['households', 'care_homes']
 
 time:
-  total_days: 30
+  total_days: 5
   initial_day: "2020-03-01" 
   step_duration: 
       weekday:
