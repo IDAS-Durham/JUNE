@@ -20,6 +20,7 @@ from june.logger import Logger
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
+import june
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -38,6 +39,8 @@ class Simulator:
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
         save_path: str = "results",
+        logger: Logger = None,
+        comment: str = None,
         checkpoint_dates: List[datetime.date] = None,
     ):
         """
@@ -56,6 +59,7 @@ class Simulator:
         self.infection_selector = infection_selector
         self.infection_seed = infection_seed
         self.timer = timer
+        self.comment = comment
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
@@ -64,10 +68,13 @@ class Simulator:
         if save_path is not None:
             self.save_path = Path(save_path)
             self.save_path.mkdir(exist_ok=True, parents=True)
-        if not self.world.box_mode and save_path is not None:
-            self.logger = Logger(save_path=self.save_path)
+        if logger is None:
+            if not self.world.box_mode and save_path is not None:
+                self.logger = Logger(save_path=self.save_path)
+            else:
+                self.logger = None
         else:
-            self.logger = None
+            self.logger = logger
 
     @classmethod
     def from_file(
@@ -80,6 +87,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
+        comment: str = None,
     ) -> "Simulator":
 
         """
@@ -95,6 +103,8 @@ class Simulator:
         world
         config_filename
             The path to the world yaml configuration
+        comment
+            A brief description of the purpose of the run(s)
 
         Returns
         -------
@@ -147,14 +157,21 @@ class Simulator:
             policies=policies,
             timer=timer,
         )
+        if not world.box_mode and save_path is not None:
+           logger = Logger(save_path=save_path, config=config)
+        else:
+            logger = None
+
         return cls(
             world=world,
-            activity_manager=activity_manager,
+            interaction=interaction,
             timer=timer,
+            activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
-            interaction=interaction,
+            logger=logger,
+            comment=comment,
             checkpoint_dates=checkpoint_dates,
         )
 
@@ -442,6 +459,7 @@ class Simulator:
         """
         Run simulation with n_seed initial infections
         """
+
         logger.info(
             f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
         )
@@ -458,6 +476,7 @@ class Simulator:
                 activity_manager=self.activity_manager,
                 rank=0,
             )
+            self.logger.log_meta_info(self.comment)
 
             if self.world.hospitals is not None:
                 self.logger.log_hospital_characteristics(self.world.hospitals)
