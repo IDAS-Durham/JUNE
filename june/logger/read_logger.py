@@ -4,6 +4,7 @@ from random import sample, randint
 import pandas as pd
 import datetime
 import functools
+from itertools import chain
 from pathlib import Path
 from typing import List
 
@@ -61,6 +62,12 @@ class ReadLogger:
             self.infections_per_super_area += infections_per_super_area
             infections_world_list.append(infections_world_df)
         self.infections_df = functools.reduce(lambda a, b: a + b, infections_world_list)
+        self.infections_df["symptoms"] = self.infections_df.apply(
+            lambda x: np.array(x.symptoms), axis=1
+        )
+        self.infections_df["infected_id"] = self.infections_df.apply(
+            lambda x: np.array(x.infected_id), axis=1
+        )
         self.start_date = min(self.infections_per_super_area[0].index)
         self.end_date = max(self.infections_per_super_area[0].index)
 
@@ -85,18 +92,10 @@ class ReadLogger:
                     time_stamps = [key for key in infections]
                     ids, symptoms, n_secondary_infections = [], [], []
                     for time_stamp in time_stamps:
-                        ids.append(
-                            list(infections[time_stamp]["id"][:])
-                        )
-                        symptoms.append(
-                            list(infections[time_stamp]["symptoms"][:])
-                        )
+                        ids.append(list(infections[time_stamp]["id"][:]))
+                        symptoms.append(list(infections[time_stamp]["symptoms"][:]))
                         n_secondary_infections.append(
-                            list(
-                                infections[time_stamp][
-                                    "n_secondary_infections"
-                                ][:]
-                            )
+                            list(infections[time_stamp]["n_secondary_infections"][:])
                         )
                     infections_df = pd.DataFrame(
                         {
@@ -113,14 +112,20 @@ class ReadLogger:
                 except KeyError:
                     continue
         infections_df = pd.DataFrame(
-            index=infections_per_super_area[0].index, 
-            columns=infections_per_super_area[0].columns
+            index=infections_per_super_area[0].index,
+            columns=infections_per_super_area[0].columns,
         )
-        for ts,_ in infections_df.iterrows():
-            for col in ["infected_id","symptoms","n_secondary_infections"]:
-                infections_df.loc[ts,col] = list(np.concatenate([
-                    x.loc[ts,col] for x in infections_per_super_area if len(x) > 0
-                ]))
+        for ts, _ in infections_df.iterrows():
+            for col in ["infected_id", "symptoms", "n_secondary_infections"]:
+                infections_df.loc[ts, col] = list(
+                    chain(
+                        *[
+                            x.loc[ts, col]
+                            for x in infections_per_super_area
+                            if len(x) > 0
+                        ]
+                    )
+                )
         return infections_per_super_area, infections_df
 
     def process_symptoms(
@@ -159,7 +164,9 @@ class ReadLogger:
         df["daily_deaths_icu"] = symptoms_df.apply(
             lambda x: np.count_nonzero(x.symptoms == SymptomTag.dead_icu), axis=1
         )  # .cumsum()
-        df['daily_deaths'] = df[['daily_deaths_home', 'daily_deaths_hospital', 'daily_deaths_icu']].sum(axis=1)
+        df["daily_deaths"] = df[
+            ["daily_deaths_home", "daily_deaths_hospital", "daily_deaths_icu"]
+        ].sum(axis=1)
         # get rid of those that just recovered or died
         df["current_infected"] = symptoms_df.apply(
             lambda x: (
@@ -186,18 +193,16 @@ class ReadLogger:
             .astype(int)
         )
         # filter rows that contain at least one hospitalised person
-        symptoms_df = symptoms_df.loc[df['current_hospitalised'] > 0]
-        for ts,row in symptoms_df.iterrows():
-            mask = (row["symptoms"] == SymptomTag.hospitalised)
-            for col,data in row.iteritems():
-                if col in ('symptoms', 'infected_id'):
-                    symptoms_df.loc[ts,col] = data[mask]
-        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(
-            lambda x: x.explode() 
-        )
-        unique,unique_indices = np.unique(
-            flat_df["infected_id"].values,return_index=True
-        ) # will only return the first index of each.
+        symptoms_df = symptoms_df.loc[df["current_hospitalised"] > 0]
+        for ts, row in symptoms_df.iterrows():
+            mask = row["symptoms"] == SymptomTag.hospitalised
+            for col, data in row.iteritems():
+                if col in ("symptoms", "infected_id"):
+                    symptoms_df.loc[ts, col] = data[mask]
+        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(lambda x: x.explode())
+        unique, unique_indices = np.unique(
+            flat_df["infected_id"].values, return_index=True
+        )  # will only return the first index of each.
         flat_hospitalised_df = flat_df.iloc[unique_indices]
         df["daily_hospital_admissions"] = flat_hospitalised_df.groupby(
             flat_hospitalised_df.index
@@ -330,6 +335,7 @@ class ReadLogger:
                 self._load_infection_location_for_rank(rank=rank)
             )
         self.locations_df = pd.concat(infection_locations)
+        self.locations_df = self.locations_df.groupby('time_stamp').sum()
 
     def _load_infection_location_for_rank(self, rank: int) -> pd.DataFrame:
         """
@@ -379,7 +385,7 @@ class ReadLogger:
         locations_df = locations_df.resample("D").sum()
         locations_df = locations_df[locations_df["location_id"] != 0]
         locations_df["location"] = locations_df.apply(
-            lambda x: [location_name.split("_")[0] for location_name in x.location_id],
+                lambda x: [location_name.split("_")[:-1] for location_name in x.location_id],
             axis=1,
         )
         return locations_df
@@ -615,4 +621,3 @@ class ReadLogger:
         )
         super_area_df.reset_index(inplace=True)
         return super_area_df.set_index("time_stamp")
-
