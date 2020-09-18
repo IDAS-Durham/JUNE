@@ -1,7 +1,10 @@
 from typing import List
+import logging
 
 from june.groups import University
 from june.geography import SuperArea, SuperAreas
+
+logger = logging.getLogger(__name__)
 
 
 class UniversityDistributor:
@@ -38,12 +41,20 @@ class UniversityDistributor:
                                     return students
                     elif household.type == "communal":
                         for person in household.people:
-                            if self.min_student_age <= person.age <= self.max_student_age:
+                            if (
+                                self.min_student_age
+                                <= person.age
+                                <= self.max_student_age
+                            ):
                                 if person.primary_activity is None:
                                     students_in_communal.append(person)
                     else:
                         for person in household.people:
-                            if self.min_student_age <= person.age <= self.max_student_age:
+                            if (
+                                self.min_student_age
+                                <= person.age
+                                <= self.max_student_age
+                            ):
                                 if person.primary_activity is None:
                                     students_in_normal_household.append(person)
         if len(students) < n_students:
@@ -64,6 +75,8 @@ class UniversityDistributor:
         For each university, search for students in nearby areas and allocate them to
         the university.
         """
+        logger.info(f"Distributing students to universities")
+        n_total_students = 0
         for university in self.universities:
             close_super_areas = super_areas.get_closest_super_areas(
                 coordinates=university.coordinates,
@@ -73,5 +86,9 @@ class UniversityDistributor:
             students = self.find_students_in_super_areas(
                 close_super_areas, university.n_students_max
             )
+            n_total_students += len(students)
             for student in students:
                 university.add(student, subgroup="student")
+        logger.info(
+            f"Distributed {n_total_students} students to {len(self.universities)} universities"
+        )

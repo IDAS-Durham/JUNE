@@ -37,6 +37,7 @@ class SocialVenues(Supergroup):
 
     def __init__(self, social_venues: List[SocialVenue], make_tree=True):
         super().__init__(members=social_venues)
+        logger.info(f"Initialized {len(self)} {self.spec}(s)")
         self.ball_tree = None
         if make_tree:
             if not social_venues:
