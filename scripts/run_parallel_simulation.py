@@ -43,8 +43,8 @@ else:
     seed = 999
 set_random_seed(seed)
 
-world_file = "./london_parallel_60.hdf5"
-config_path = "./config_nocommute.yaml"
+world_file = "./tests.hdf5"
+config_path = "./config_simulation.yaml"
 
 # parallel setup
 

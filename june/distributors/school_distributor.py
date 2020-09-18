@@ -118,7 +118,10 @@ class SchoolDistributor:
         """
         Function to distribute kids to schools according to distance 
         """
-        for area in areas:
+        logger.info(f"Distributing kids to schools")
+        for i, area in enumerate(areas):
+            if i % 4000 == 0:
+                logger.info(f"Distributed kids in {i} of {len(areas)} areas.")
             closest_schools_by_age = {}
             is_school_full = {}
             for agegroup in self.schools.school_trees:
@@ -139,6 +142,7 @@ class SchoolDistributor:
             self.distribute_non_mandatory_kids_to_school(
                 area, is_school_full, closest_schools_by_age
             )
+        logger.info(f"Kids distributed to schools")
 
     def distribute_mandatory_kids_to_school(
         self, area: Area, is_school_full: dict, closest_schools_by_age: dict

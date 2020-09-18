@@ -75,7 +75,8 @@ class TestCloseLeisure:
         assert (
             worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
         ) or worker in worker.residence.people
-
+        sim.clear_world()
+        
         sim.clear_world()
         time_after_policy = datetime(2020, 3,30)
         policies.leisure_policies.apply(
@@ -89,7 +90,6 @@ class TestCloseLeisure:
             activities, time_after_policy , 0.0
         )
         assert worker in worker.leisure.people
-        sim.clear_world()
 
 
 class TestReduceLeisureProbabilities:

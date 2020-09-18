@@ -45,6 +45,14 @@ def generate_commuting_network(
     world.cities = Cities.for_super_areas(
         world.super_areas, city_super_areas_filename=city_super_areas_filename
     )
+    city_names = [city.name for city in world.cities]
+    if len(city_names) > 0:
+        logger.info(
+            f"This world has {len(city_names)} cities, with names\n" f"{city_names}"
+        )
+    else:
+        logger.info(f"This world has no important cities in it")
+    logger.info("Creating stations...")
     world.stations = Stations([])
     for city in world.cities:
         city.stations = Stations([])
@@ -67,19 +75,15 @@ def generate_commuting_network(
             world.stations += super_station.stations
         if city.stations.members:
             city.stations._construct_ball_tree()
-    if not world.stations.members:
-        logger.warning("No stations in this world, travel won't work")
-        return
-    if world.cities.members:
+    logger.info(f"This world has {len(world.stations)} secondary stations")
+    if world.stations.members:
         for super_area in world.super_areas:
             super_area.closest_commuting_city = world.cities.get_closest_commuting_city(
                 super_area.coordinates
             )
-        if world.stations.members:
-            for super_area in world.super_areas:
-                super_area.closest_station = super_area.closest_commuting_city.stations.get_closest_station(
-                    super_area.coordinates
-                )
+            super_area.closest_station = super_area.closest_commuting_city.stations.get_closest_station(
+                super_area.coordinates
+            )
 
 
 class Travel:
@@ -99,6 +103,7 @@ class Travel:
         self.super_stations_filename = super_stations_filename
 
     def initialise_commute(self, world):
+        logger.info(f"Initialising commute...")
         generate_commuting_network(
             world=world,
             commute_config_filename=self.commute_config_filename,
@@ -113,15 +118,21 @@ class Travel:
         """
         Assigns a mode of transport (public or not) to the world's population
         """
+        logger.info(f"Determining peole mode of transport")
         mode_of_transport_generator = ModeOfTransportGenerator.from_file()
-        for area in world.areas:
-            mode_of_transport_generator_area = mode_of_transport_generator.regional_gen_from_msoarea(
+        for i, area in enumerate(world.areas):
+            if i % 4000 == 0:
+                logger.info(
+                    f"Mode of transport allocated in {i} of {len(world.areas)} areas."
+                )
+            mode_of_transport_generator_area = mode_of_transport_generator.regional_gen_from_area(
                 area.name
             )
             for person in area.people:
                 person.mode_of_transport = (
                     mode_of_transport_generator_area.weighted_random_choice()
                 )
+        logger.info(f"Mode of transport determined for everyone.")
 
     def distribute_commuters_to_stations_and_cities(self, world):
         """
@@ -139,10 +150,11 @@ class Travel:
         people_per_inter_city_transport
             Maximum number of people inside an inter city transport.
         """
-        if world.cities is None or len(world.cities) == 0:
-            logger.warning(f"No cities initialised in this world, no one will commute.")
+        has_cities = world.cities is not None and len(world.cities) > 0
+        has_stations = world.stations is not None and len(world.stations) > 0
+        if not has_cities and not has_stations:
+            logger.warning(f"No stations and cities in this world, no commuting.")
             return
-
         logger.info(f"Assigning commuters to stations...")
         for i, person in enumerate(world.people):
             if person.mode_of_transport.is_public:
@@ -150,7 +162,7 @@ class Travel:
                     if person.home_city == person.work_city:
                         # this person commutes internally
                         person.work_city.commuter_ids.add(person.id)
-                    else:
+                    elif world.stations:
                         # commutes away to an external station
                         person.area.super_area.closest_station.commuter_ids.add(
                             person.id
@@ -172,7 +184,7 @@ class Travel:
                 )
                 logger.info(
                     f"City {city.name} has {internal} people commuting internally"
-                    f"and {external} people commuting externally."
+                    f" and {external} people commuting externally."
                 )
 
     def create_transport_units_at_stations_and_cities(

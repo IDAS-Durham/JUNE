@@ -139,14 +139,16 @@ class Leisure:
             self.leisure_distributors["household_visits"].link_households_to_households(
                 super_areas
             )
+        logger.info("Done")
         logger.info("Linking households with care homes for visits")
         if "care_home_visits" in self.leisure_distributors:
             self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
                 super_areas
             )
+        logger.info("Done")
         logger.info("Distributing social venues to areas")
         for i, area in enumerate(areas):
-            if i % 1_000_000 == 0:
+            if i % 2000 == 0:
                 logger.info(f"Distributed in {i} of {len(areas)} areas.")
             for activity, distributor in self.leisure_distributors.items():
                 if "visits" in activity:

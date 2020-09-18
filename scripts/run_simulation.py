@@ -35,7 +35,7 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./london_20.hdf5"
+world_file = "./tests.hdf5"
 config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
@@ -52,9 +52,7 @@ leisure = generate_leisure_for_config(world, config_path)
 travel = Travel()
 # health index and infection selecctor
 health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
-infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator,
-    susceptibilities_by_age_config_path=paths.configs_path / 'tests/test_susceptibility.yaml')
-infection_selector.set_susceptibilities_by_age(population=world.people)
+infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
 # interaction
 interaction = Interaction.from_file()
