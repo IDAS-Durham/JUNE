@@ -57,5 +57,5 @@ travel.initialise_commute(world)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
-world.to_hdf5("london_20.hdf5")
+world.to_hdf5("london_60_parallel.hdf5")
 print("Done :)")

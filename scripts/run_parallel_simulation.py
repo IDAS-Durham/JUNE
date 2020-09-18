@@ -4,6 +4,7 @@ import numba as nb
 import random
 from mpi4py import MPI
 import h5py
+import sys
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
@@ -36,10 +37,14 @@ def set_random_seed(seed=999):
     return
 
 
-set_random_seed()
+if len(sys.argv) > 1:
+    seed = int(sys.argv[1])
+else:
+    seed = 999
+set_random_seed(seed)
 
-world_file = "./london_20.hdf5"
-config_path = "./config_simulation.yaml"
+world_file = "./london_parallel_60.hdf5"
+config_path = "./config_nocommute.yaml"
 
 # parallel setup
 
@@ -51,7 +56,7 @@ with h5py.File(world_file, "r") as f:
     n_super_areas = f["geography"].attrs["n_super_areas"]
 
 # log_population
-logger = Logger(file_name=f"logger.{rank}.hdf5")
+logger = Logger(file_name=f"logger_{seed}.{rank}.hdf5")
 population = load_population_from_hdf5(world_file)
 logger.log_population(population)
 
