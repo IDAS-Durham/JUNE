@@ -8,7 +8,7 @@ from sklearn.neighbors import BallTree
 from itertools import chain, count
 from collections import defaultdict
 
-from june.paths import data_path
+from june.paths import data_path, configs_path
 from june.geography import City, SuperAreas, SuperArea
 from june.groups import Supergroup, ExternalGroup, ExternalSubgroup
 
@@ -63,115 +63,18 @@ def _add_distance_to_lat_lon(latitude, longitude, distance, bearing):
     return lat2, lon2
 
 
-class SuperStation:
-    """
-    An important train station (like King's Cross). This is used to model commute and travel.
-    """
-
-    _id = count()
-
-    def __init__(self, name: str = None, super_area: str = None, city: str = None):
-        self.id = next(self._id)
-        self.name = name
-        self.super_area = super_area
-        self.city = city
-        self.stations = None
-
-    def get_coordinates(self, super_areas: SuperAreas):
-        return super_areas.members_by_name[self.super_area].coordinates
-
-    @property
-    def commuters(self):
-        return list(chain.from_iterable(station.commuters for station in self.stations))
-
-
-class SuperStations:
-    """
-    A collection of super stations, probably in the same city.
-    """
-
-    def __init__(self, stations: List[SuperStation]):
-        self.members = stations
-
-    def __iter__(self):
-        return iter(self.members)
-
-    def __getitem__(self, idx):
-        return self.members[idx]
-
-    def __len__(self):
-        return len(self.members)
-
-    @classmethod
-    def from_file(
-        cls,
-        super_areas: List[str],
-        city: str = None,
-        super_station_super_areas_filename=default_super_stations_filename,
-    ):
-        """
-        Filters stations in the given file with the given super_areas list.
-        
-        Parameters
-        ----------
-        super_areas
-            A list of super_area names. 
-        station_super_areas_filename
-            A path to a csv file containing two columns, "station" and "super_area", mapping each station to an super_area.
-        """
-        stations = pd.read_csv(super_station_super_areas_filename)
-        stations = stations.loc[stations.super_area.isin(super_areas)]
-        if len(stations) > 0:
-            stations.reset_index(inplace=True)
-            station_instances = []
-            for _, row in stations.iterrows():
-                station_name = row["station"]
-                logger.info(f"Super station {station_name} initialised.")
-                station = SuperStation(
-                    name=station_name, super_area=row["super_area"], city=city
-                )
-                station_instances.append(station)
-            return cls(station_instances)
-        else:
-            return cls([])
-
-    @classmethod
-    def for_city(
-        cls,
-        city: City,
-        super_station_super_areas_filename=default_super_stations_filename,
-    ):
-        """
-        Initializes stations for the given city.
-
-        Parameters
-        ----------
-        city
-            An instance of a City
-        station_super_areas_filename
-            A path to a csv file containing two columns, "station" and "super_area", mapping each station to an super_area.
-        """
-        super_stations = cls.from_file(
-            super_areas=city.super_areas,
-            city=city.name,
-            super_station_super_areas_filename=super_station_super_areas_filename,
-        )
-        return super_stations
-
 
 class Station:
     """
-    This represents smaller stations (like your nearest bus station) that go to one
-    SuperStation.
+    This represents a railway station (like King's Cross).
     """
     external = False
     _id = count()
 
     def __init__(
-        self, super_station: str = None, city: str = None, super_area: SuperArea = None
+        self, city: str = None, super_area: SuperArea = None
     ):
         self.id = next(self._id)
-        self.super_station = super_station
         self.commuter_ids = set()
         self.city = city
         self.super_area = super_area
@@ -189,7 +92,7 @@ class Station:
 
 class Stations(Supergroup):
     """
-    A collection of stations belonging to one super station.
+    A collection of stations belonging to a city.
     """
 
     def __init__(self, stations: List[Station]):
@@ -197,45 +100,40 @@ class Stations(Supergroup):
         self._ball_tree = None
 
     @classmethod
-    def for_super_station(
+    def from_city_center(
         cls,
+        city: City,
         super_areas: SuperAreas,
-        super_station: SuperStation = None,
         number_of_stations: int = 4,
-        distance_to_super_station: int = 20,
+        distance_to_city_center: int = 20,
     ):
         """
-        Distributes stations (``number_of_stations``) around the ``super_station``. The stations are uniformly distributed in a circle around
-        the super station location, at a distance ``distance_to_super_station``.
-        The ``super_areas`` argument needs to be passed, to know where to locate the station.
+        Initialises ``number_of_stations`` radially around the city center.
 
         Parameters
         ----------
         super_areas 
             The super_areas where to put the hubs on
-        super_station
-            The super station the station belongs to
         number_of_stations:
             How many stations to initialise
-        distance_to_station
-            The distance from the station to the super station 
+        distance_to_city_center 
+            The distance from the center to the each station 
         """
         stations = []
         angle = 0
         delta_angle = 2 * np.pi / number_of_stations
-        station_coordinates = super_station.get_coordinates(super_areas=super_areas)
+        city_coordinates = city.coordinates
         for i in range(number_of_stations):
             station_position = _add_distance_to_lat_lon(
-                station_coordinates[0],
-                station_coordinates[1],
-                distance_to_super_station,
+                city_coordinates[0],
+                city_coordinates[1],
+                distance_to_city_center,
                 angle,
             )
             angle += delta_angle
             super_area = super_areas.get_closest_super_area(np.array(station_position))
             station = Station(
-                super_station=super_station.name,
-                city=super_station.city,
+                city=city.name,
                 super_area=super_area,
             )
             stations.append(station)
