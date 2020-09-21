@@ -221,7 +221,8 @@ class SocialVenues(Supergroup):
         venue_idxs = self.ball_tree.query(
             np.deg2rad(coordinates).reshape(1, -1), return_distance=False, k=k
         ).flatten()
-        return [self[idx] for idx in venue_idxs]
+        social_venues = self.members
+        return [social_venues[idx] for idx in venue_idxs]
 
     def get_venues_in_radius(self, coordinates, radius=5):
         """
@@ -248,4 +249,5 @@ class SocialVenues(Supergroup):
         venue_idxs = venue_idxs[0]
         if not venue_idxs.size:
             return None
-        return [self[idx] for idx in venue_idxs]
+        social_venues = self.members
+        return [social_venues[idx] for idx in venue_idxs]

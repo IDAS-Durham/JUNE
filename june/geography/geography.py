@@ -11,7 +11,9 @@ from june.demography.person import Person
 default_hierarchy_filename = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
-default_area_coord_filename = paths.data_path / "input/geography/area_coordinates_sorted.csv"
+default_area_coord_filename = (
+    paths.data_path / "input/geography/area_coordinates_sorted.csv"
+)
 default_superarea_coord_filename = (
     paths.data_path / "input/geography/super_area_coordinates_sorted.csv"
 )
@@ -69,8 +71,15 @@ class Area:
         self.people.append(person)
         person.area = self
 
-    def populate(self, demography):
-        for person in demography.populate(self.name):
+    def populate(
+        self, demography, ethnicity=True, socioecon_index=True, comorbidity=True
+    ):
+        for person in demography.populate(
+            self.name,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            comorbidity=comorbidity,
+        ):
             self.add(person)
 
 
@@ -263,17 +272,21 @@ class SuperAreas:
     def get_closest_super_area(self, coordinates):
         return self.get_closest_super_areas(coordinates, k=1, return_distance=False)[0]
 
+
 class ExternalSuperArea:
     """
     This a city that lives outside the simulated domain.
     """
+
     external = True
     __slots__ = "city", "spec", "id", "domain_id"
+
     def __init__(self, id, domain_id):
         self.city = None
         self.spec = "super_area"
         self.id = id
         self.domain_id = domain_id
+
 
 class Geography:
     def __init__(
