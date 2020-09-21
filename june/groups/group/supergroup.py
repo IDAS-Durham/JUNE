@@ -17,6 +17,7 @@ class Supergroup:
     def __init__(self, members):
         self.group_type = self.__class__.__name__
         self.spec = self.get_spec()
+        self.members = members
         self.members_by_id = self._make_member_ids_dict(members)
 
     def _make_member_ids_dict(self, members):
@@ -50,10 +51,7 @@ class Supergroup:
 
     def add(self, group):
         self.members_by_id[group.id] = group
-
-    @property
-    def members(self):
-        return list(self.members_by_id.values())
+        self.members.append(group)
 
     @property
     def member_ids(self):
