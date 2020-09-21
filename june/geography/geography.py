@@ -156,8 +156,7 @@ class SuperArea:
         "name",
         "city",
         "coordinates",
-        "closest_commuting_city",
-        "closest_station",
+        "closest_station_for_city",
         "workers",
         "areas",
         "companies",
@@ -175,8 +174,7 @@ class SuperArea:
         self.id = next(self._id)
         self.name = name
         self.city = None
-        self.closest_commuting_city = None
-        self.closest_station = None
+        self.closest_station_for_city = {}
         self.coordinates = coordinates
         self.areas = areas or []
         self.workers = []

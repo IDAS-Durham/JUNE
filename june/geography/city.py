@@ -86,8 +86,15 @@ class City:
         if person.id in self.commuter_ids:
             return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
         else:
-            closest_station = person.super_area.closest_station
+            closest_station = person.super_area.closest_station_for_city[self.name]
             return closest_station.get_commute_subgroup(person)
+    
+    def get_closest_station(self, coordinates):
+        return self.stations.get_closest_station(coordinates)
+    
+    @property
+    def has_stations(self):
+        return (self.stations is not None) and (len(self.stations) > 0)
 
 
 class Cities(Supergroup):

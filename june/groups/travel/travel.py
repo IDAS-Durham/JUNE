@@ -10,7 +10,7 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 
 from june.paths import configs_path, data_path
-from june.geography import Cities, Stations, SuperStations, Station
+from june.geography import Cities, Stations, Station
 from june.groups import Group, Supergroup
 from .transport import (
     Transport,
@@ -22,24 +22,23 @@ from .transport import (
 )
 from .mode_of_transport import ModeOfTransport, ModeOfTransportGenerator
 
-default_commute_config_filenmame = configs_path / "defaults/groups/travel/commute.yaml"
-default_super_stations_filename = (
-    data_path / "input/geography/stations_per_super_area_ew.csv"
-)
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
+
+default_city_stations_config_filename = (
+    configs_path / "defaults/travel/city_stations.yaml"
+)
 
 
 def generate_commuting_network(
     world,
-    commute_config_filename=default_commute_config_filenmame,
     city_super_areas_filename=default_cities_filename,
-    super_stations_filename=default_super_stations_filename,
+    city_stations_filename=default_city_stations_config_filename,
 ):
     """
     Generates cities, super stations, and stations on the given world.
     """
-    with open(commute_config_filename) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+    with open(city_stations_filename) as f:
+        stations_per_city = yaml.load(f, Loader=yaml.FullLoader)["number_of_stations"]
     # initialise cities
     logger.info("Creating cities...")
     world.cities = Cities.for_super_areas(
@@ -55,35 +54,27 @@ def generate_commuting_network(
     logger.info("Creating stations...")
     world.stations = Stations([])
     for city in world.cities:
-        city.stations = Stations([])
-        city.super_stations = SuperStations.for_city(city, super_stations_filename)
-        # by default, 4 stations per super station, unless specified in the config file
-        if city.name in config["cities"]:
-            n_stations_per_super_station = config["cities"][city.name][
-                "n_stations_per_super_station"
-            ]
+        print(city.name)
+        print(stations_per_city)
+        if city.name not in stations_per_city:
+            continue
         else:
-            n_stations_per_super_station = 4
-        for super_station in city.super_stations:
-            super_station.stations = Stations.for_super_station(
-                super_station=super_station,
-                super_areas=world.super_areas,
-                number_of_stations=n_stations_per_super_station,
-                distance_to_super_station=50,
+            n_stations = stations_per_city[city.name]
+            city.stations = Stations.from_city_center(
+                city=city, super_areas=world.super_areas, number_of_stations=n_stations
             )
-            city.stations += super_station.stations
-            world.stations += super_station.stations
-        if city.stations.members:
+            world.stations += city.stations
+            # initialise ball tree for stations in the city.
             city.stations._construct_ball_tree()
-    logger.info(f"This world has {len(world.stations)} secondary stations")
-    if world.stations.members:
-        for super_area in world.super_areas:
-            super_area.closest_commuting_city = world.cities.get_closest_commuting_city(
-                super_area.coordinates
-            )
-            super_area.closest_station = super_area.closest_commuting_city.stations.get_closest_station(
-                super_area.coordinates
-            )
+            logger.info(f"City {city.name} has {n_stations} stations.")
+    logger.info(f"This world has {len(world.stations)} stations.")
+    logger.info(f"Recording closest stations to super areas")
+    for super_area in world.super_areas:
+        for city in world.cities:
+            if city.has_stations:
+                super_area.closest_station_for_city[
+                    city.name
+                ] = city.get_closest_station(super_area.coordinates)
 
 
 class Travel:
@@ -94,21 +85,18 @@ class Travel:
 
     def __init__(
         self,
-        commute_config_filename=default_commute_config_filenmame,
         city_super_areas_filename=default_cities_filename,
-        super_stations_filename=default_super_stations_filename,
+        city_stations_filename=default_city_stations_config_filename,
     ):
-        self.commute_config_filename = commute_config_filename
         self.city_super_areas_filename = city_super_areas_filename
-        self.super_stations_filename = super_stations_filename
+        self.city_stations_filename = city_stations_filename
 
     def initialise_commute(self, world):
         logger.info(f"Initialising commute...")
         generate_commuting_network(
             world=world,
-            commute_config_filename=self.commute_config_filename,
             city_super_areas_filename=self.city_super_areas_filename,
-            super_stations_filename=self.super_stations_filename,
+            city_stations_filename=self.city_stations_filename,
         )
         self.assign_mode_of_transport_to_people(world)
         self.distribute_commuters_to_stations_and_cities(world)
@@ -116,9 +104,9 @@ class Travel:
 
     def assign_mode_of_transport_to_people(self, world):
         """
-        Assigns a mode of transport (public or not) to the world's population
+        Assigns a mode of transport (public or not) to the world's population.
         """
-        logger.info(f"Determining peole mode of transport")
+        logger.info(f"Determining people mode of transport")
         mode_of_transport_generator = ModeOfTransportGenerator.from_file()
         for i, area in enumerate(world.areas):
             if i % 4000 == 0:
@@ -129,9 +117,14 @@ class Travel:
                 area.name
             )
             for person in area.people:
-                person.mode_of_transport = (
-                    mode_of_transport_generator_area.weighted_random_choice()
-                )
+                if person.age < 18 or person.age >= 65:
+                    person.mode_of_transport = ModeOfTransport(
+                        description="Not in employment", is_public=False
+                    )
+                else:
+                    person.mode_of_transport = (
+                        mode_of_transport_generator_area.weighted_random_choice()
+                    )
         logger.info(f"Mode of transport determined for everyone.")
 
     def distribute_commuters_to_stations_and_cities(self, world):
@@ -158,20 +151,20 @@ class Travel:
         logger.info(f"Assigning commuters to stations...")
         for i, person in enumerate(world.people):
             if person.mode_of_transport.is_public:
-                if person.work_city is not None:
+                if person.work_city is not None and person.work_city.has_stations:
                     if person.home_city == person.work_city:
                         # this person commutes internally
                         person.work_city.commuter_ids.add(person.id)
                     elif world.stations:
                         # commutes away to an external station
-                        person.area.super_area.closest_station.commuter_ids.add(
-                            person.id
-                        )
+                        person.super_area.closest_station_for_city[
+                            person.work_city.name
+                        ].commuter_ids.add(person.id)
             if i % 500_000 == 0:
                 logger.info(f"Assigned {i} of {len(world.people)} commuters...")
         logger.info(f"Commuters assigned")
         for city in world.cities:
-            if city.external:
+            if city.external or not city.stations:
                 continue
             else:
                 internal = len(city.commuter_ids)
@@ -194,22 +187,25 @@ class Travel:
         world.city_transports = CityTransports([])
         world.inter_city_transports = InterCityTransports([])
         for city in world.cities:
-            n_commute_internal = len(city.commuter_ids)
-            number_city_transports = int(
-                np.ceil(n_commute_internal / people_per_city_transport)
-            )
-            for _ in range(number_city_transports):
-                city_transport = CityTransport()
-                city.city_transports.append(city_transport)
-                world.city_transports.add(city_transport)
-            for station in city.stations:
-                number_inter_city_transports = int(
-                    np.ceil(len(station.commuter_ids) / people_per_inter_city_transport)
+            if city.has_stations:
+                n_commute_internal = len(city.commuter_ids)
+                number_city_transports = int(
+                    np.ceil(n_commute_internal / people_per_city_transport)
                 )
-                for _ in range(number_inter_city_transports):
-                    inter_city_transport = InterCityTransport()
-                    station.inter_city_transports.append(inter_city_transport)
-                    world.inter_city_transports.add(inter_city_transport)
+                for _ in range(number_city_transports):
+                    city_transport = CityTransport()
+                    city.city_transports.append(city_transport)
+                    world.city_transports.add(city_transport)
+                for station in city.stations:
+                    number_inter_city_transports = int(
+                        np.ceil(
+                            len(station.commuter_ids) / people_per_inter_city_transport
+                        )
+                    )
+                    for _ in range(number_inter_city_transports):
+                        inter_city_transport = InterCityTransport()
+                        station.inter_city_transports.append(inter_city_transport)
+                        world.inter_city_transports.add(inter_city_transport)
         logger.info(f"Cities' transport initialised")
 
     def get_commute_subgroup(self, person):
