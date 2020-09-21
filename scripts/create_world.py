@@ -35,14 +35,14 @@ config_path = "./config_simulation.yaml"
 geography = Geography.from_file({"super_area": london_areas})
 
 # add buildings
-geography.hospitals = Hospitals.for_geography(geography)
-geography.companies = Companies.for_geography(geography)
-geography.schools = Schools.for_geography(geography)
-geography.universities = Universities.for_super_areas(geography.super_areas)
-geography.care_homes = CareHomes.for_geography(geography)
+#geography.hospitals = Hospitals.for_geography(geography)
+#geography.companies = Companies.for_geography(geography)
+#geography.schools = Schools.for_geography(geography)
+#geography.universities = Universities.for_super_areas(geography.super_areas)
+#geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
 world = generate_world_from_geography(
-    geography, include_households=True
+    geography, include_households=False
 )
 #
 ## some leisure activities

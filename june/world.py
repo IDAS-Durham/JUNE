@@ -18,7 +18,11 @@ from june.distributors import (
     UniversityDistributor,
 )
 from june.geography import Geography, Areas
-from june.groups.travel import generate_commuting_network, Travel, ModeOfTransportGenerator
+from june.groups.travel import (
+    generate_commuting_network,
+    Travel,
+    ModeOfTransportGenerator,
+)
 from june.groups import *
 
 logger = logging.getLogger(__name__)
@@ -36,11 +40,18 @@ possible_groups = [
 ]
 
 
-def _populate_areas(areas: Areas, demography):
+def _populate_areas(
+    areas: Areas, demography, ethnicity=True, socioecon_index=True, comorbidity=True
+):
     logger.info(f"Populating areas")
     people = Population()
     for area in areas:
-        area.populate(demography)
+        area.populate(
+            demography,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            comorbidity=comorbidity,
+        )
         people.extend(area.people)
     n_people = len(people)
     logger.info(f"Areas populated. This world's population is: {n_people}")
@@ -77,11 +88,9 @@ class World:
         self.box_mode = False
         self.cities = None
         self.stations = None
-#        self.id = 0 # for parallelisation
 
-    def distribute_people(
-        self, include_households=True
-    ):
+
+    def distribute_people(self, include_households=True):
         """
         Distributes people to buildings assuming default configurations.
         """
@@ -117,16 +126,16 @@ class World:
                 self.super_areas
             )
 
-
         if self.universities is not None:
             uni_distributor = UniversityDistributor(self.universities)
             uni_distributor.distribute_students_to_universities(self.super_areas)
 
-
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
-            hospital_distributor.assign_closest_hospitals_to_super_areas(self.super_areas)
+            hospital_distributor.assign_closest_hospitals_to_super_areas(
+                self.super_areas
+            )
 
         # Companies last because need hospital and school workers first
         if self.companies is not None:
@@ -151,6 +160,7 @@ class World:
             It is advise to keep it around 1e5
         """
         from june.hdf5_savers import save_world_to_hdf5
+
         save_world_to_hdf5(world=self, file_path=file_path, chunk_size=chunk_size)
 
 
@@ -159,6 +169,9 @@ def generate_world_from_geography(
     demography: Optional[Demography] = None,
     box_mode=False,
     include_households=True,
+    ethnicity=True,
+    socioecon_index=True,
+    comorbidity=True,
 ):
     """
     Initializes the world given a geometry. The demography is calculated
@@ -170,7 +183,13 @@ def generate_world_from_geography(
         demography = Demography.for_geography(geography)
     if box_mode:
         world.hospitals = Hospitals.for_box_mode()
-        world.people = _populate_areas(geography.areas, demography)
+        world.people = _populate_areas(
+            geography.areas,
+            demography,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            comorbidity=comorbidity,
+        )
         world.boxes = Boxes([Box()])
         world.cemeteries = Cemeteries()
         world.boxes.members[0].set_population(world.people)
@@ -182,10 +201,6 @@ def generate_world_from_geography(
         geography_group = getattr(geography, possible_group)
         if geography_group is not None:
             setattr(world, possible_group, geography_group)
-    world.distribute_people(
-        include_households=include_households,
-    )
+    world.distribute_people(include_households=include_households,)
     world.cemeteries = Cemeteries()
     return world
-
-
