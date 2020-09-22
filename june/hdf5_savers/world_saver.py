@@ -359,6 +359,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict
         )
     if "companies" in f_keys:
         logger.info("restoring companies...")

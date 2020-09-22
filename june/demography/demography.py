@@ -170,8 +170,10 @@ class Population:
         """
         if people is None:
             self.people_dict = {}
+            self.people = []
         else:
             self.people_dict = {person.id: person for person in people}
+            self.people = people
 
     def __len__(self):
         return len(self.people)
@@ -181,10 +183,14 @@ class Population:
 
     def __getitem__(self, index):
         return self.people[index]
+    
+    def add(self, person):
+        self.people_dict[person.id] = person
+        self.people.append(person)
 
     def extend(self, people):
         for person in people:
-            self.people_dict[person.id] = person
+            self.add(person)
 
     def get_from_id(self, id):
         return self.people_dict[id]
@@ -192,10 +198,6 @@ class Population:
     @property
     def members(self):
         return self.people
-
-    @property
-    def people(self):
-        return list(self.people_dict.values())
 
     @property
     def people_ids(self):

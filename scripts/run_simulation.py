@@ -35,7 +35,7 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./london_20.hdf5"
+world_file = "./tests.hdf5"
 config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
@@ -65,7 +65,7 @@ interaction = Interaction.from_file()
 #infection_seed.unleash_virus(50) # number of initial cases
 
 # policies
-policies = Policies.from_file()
+policies = Policies([])#.from_file()
 
 # create simulator
 
@@ -73,6 +73,7 @@ simulator = Simulator.from_file(
    world=world,
    policies=policies,
    interaction=interaction,
+   #leisure=leisure,
    leisure=leisure,
    travel = travel,
    infection_selector=infection_selector,
