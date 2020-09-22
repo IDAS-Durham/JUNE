@@ -239,14 +239,14 @@ class SkipActivity(IndividualPolicy):
 
 class CloseSchools(SkipActivity):
     def __init__(
-            self, start_time: str, end_time: str, years_to_close=None, compliance=1., full_closure=None,
+            self, start_time: str, end_time: str, years_to_close=None, attending_compliance=1., full_closure=None,
     ):
         super().__init__(
             start_time, end_time, activities_to_remove=["primary_activity"]
         )
         self.full_closure = full_closure
         self.years_to_close = years_to_close
-        self.compliance = compliance # compliance given across the whole year group uniformly
+        self.attending_compliance = attending_compliance # compliance with opening
         if self.years_to_close == "all":
             self.years_to_close = np.arange(20)
 
@@ -271,11 +271,13 @@ class CloseSchools(SkipActivity):
         """
         try:
             if person.primary_activity.group.spec == "school":
-                if self.full_closure:
+                if self.full_closure
                     return True
-                elif person.age in self.years_to_close:
-                    if not self._check_kid_goes_to_school(person):
-                        if random() < self.compliance:
+                elif not self._check_kid_goes_to_school(person):
+                    if person.age in self.years_to_close:
+                        return True
+                    else:
+                        if random() > self.attending_compliance:
                             return True
         except AttributeError:
             return False
