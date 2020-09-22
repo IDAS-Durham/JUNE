@@ -415,13 +415,13 @@ close_schools:
         start_time: 2020-06-01
         end_time: 2020-06-11
         years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
-	attending_compliance: 12.5
+        attending_compliance: 12.5
         full_closure: False
     3:
         start_time: 2020-06-11
         end_time: 2020-09-01
         years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
-	attending_compliance: 19.5
+        attending_compliance: 19.5
         full_closure: False
 
 close_universities:
