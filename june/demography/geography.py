@@ -139,13 +139,15 @@ class SuperArea:
 
     def __init__(
         self,
-        name: str = None,
+        name: Optional[str] = None,
         areas: List[Area] = None,
         coordinates: Tuple[float, float] = None,
+        region: Optional[str] = None,
     ):
         self.id = next(self._id)
         self.name = name
         self.coordinates = coordinates
+        self.region = region
         self.areas = areas or []
         self.workers = []
         self.companies = []
@@ -306,11 +308,14 @@ class Geography:
         """
         total_areas_list = []
         super_areas_list = []
+        super_area_region_hierarchy = hierarchy[['super_area', 'region']].drop_duplicates()
+        super_area_region_hierarchy.set_index('super_area', inplace=True)
         for super_area_name, row in super_area_coordinates.iterrows():
             super_area = SuperArea(
                 areas=None,
                 name=super_area_name,
                 coordinates=np.array([row.latitude, row.longitude]),
+                region=super_area_region_hierarchy.loc[super_area].region
             )
             areas_df = area_coordinates.loc[hierarchy.loc[super_area_name, "area"]]
             areas_list = cls._create_areas(areas_df, super_area)

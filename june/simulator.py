@@ -283,6 +283,11 @@ class Simulator:
         person:
             person to send to cemetery
         """
+        if person.hospital is not None:
+            death_location = f'{person.hospital.group.spec}_{perosn.hospital.group.id}'
+        else:
+            death_location = f'{person.residence.group.spec}_{perosn.residence.group.id}'
+        self.record.accumulate_death(person.id, location=death_location)
         person.dead = True
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
