@@ -416,7 +416,7 @@ change_leisure_probability:
                     65-100: 0.170
                 women:
                     18-65: 0.256
-	            65-100: 0.170
+                    65-100: 0.170
 
     3:
         start_time: 2020-07-11
@@ -428,7 +428,7 @@ change_leisure_probability:
                     65-100: 0.268
                 women:
                     18-65: 0.402
-	            65-100: 0.268
+                    65-100: 0.268
 
     4:
         start_time: 2020-07-18
@@ -440,7 +440,7 @@ change_leisure_probability:
                     65-100: 0.366
                 women:
                     18-65: 0.548
-	            65-100: 0.366
+                    65-100: 0.366
 
     5:
         start_time: 2020-07-25
@@ -452,7 +452,7 @@ change_leisure_probability:
                     65-100: 0.463
                 women:
                     18-65: 0.695
-	            65-100: 0.463
+                    65-100: 0.463
 
     6:
         start_time: 2020-08-01
@@ -464,7 +464,7 @@ change_leisure_probability:
                     65-100: 0.561
                 women:
                     18-65: 0.841
-	            65-100: 0.561
+                    65-100: 0.561
 
     7:
         start_time: 2020-08-08
@@ -476,7 +476,7 @@ change_leisure_probability:
                     65-100: 0.659
                 women:
                     18-65: 0.988
-	            65-100: 0.659
+                    65-100: 0.659
 
     8:
         start_time: 2020-08-15
@@ -488,7 +488,7 @@ change_leisure_probability:
                     65-100: 0.756
                 women:
                     18-65: 1.13
-	            65-100: 0.756
+                    65-100: 0.756
 
     9:
         start_time: 2020-08-22
@@ -500,7 +500,7 @@ change_leisure_probability:
                     65-100: 0.854
                 women:
                     18-65: 1.28
-	            65-100: 0.854
+                    65-100: 0.854
 
     10:
         start_time: 2020-08-29
@@ -512,7 +512,7 @@ change_leisure_probability:
                     65-100: 0.917
                 women:
                     18-65: 1.38
-	            65-100: 0.917
+                    65-100: 0.917
 
 
 close_schools:
