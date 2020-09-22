@@ -19,7 +19,7 @@ import time
 import numpy as np
 
 # load london super areas
-london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:50]
+london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
 
 # add King's cross are for station
 if "E00004734" not in london_areas:
@@ -58,5 +58,5 @@ travel.initialise_commute(world)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
-world.to_hdf5("london_10.hdf5")
+world.to_hdf5("london_20.hdf5")
 print("Done :)")

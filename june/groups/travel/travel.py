@@ -54,8 +54,6 @@ def generate_commuting_network(
     logger.info("Creating stations...")
     world.stations = Stations([])
     for city in world.cities:
-        print(city.name)
-        print(stations_per_city)
         if city.name not in stations_per_city:
             continue
         else:
