@@ -34,6 +34,3 @@ time:
           1: ['medical_facility', 'leisure', 'residence']
           2: ['medical_facility', 'leisure', 'residence']
           3: ['medical_facility', 'residence']
-
-checkpoint_dates:
-  2020-04-10
