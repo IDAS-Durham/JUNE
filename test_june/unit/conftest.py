@@ -8,7 +8,7 @@ import pytest
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.demography.geography import Geography, Areas, SuperAreas
+from june.demography.geography import Geography, Areas, SuperAreas, Regions
 from june.commute import ModeOfTransport
 from june.groups import *
 from june.groups.leisure import *
@@ -204,6 +204,7 @@ def make_dummy_world():
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
+    world.regions = Regions([super_area.region])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
     world.cinemas = Cinemas([cinema])

@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 from .policy import Policy, Policies, PolicyCollection
 from june.groups import Hospitals
@@ -20,9 +21,9 @@ class MedicalCarePolicy(Policy):
 class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
 
-    def apply(self, person: Person, medical_facilities):
+    def apply(self, person: Person, medical_facilities, record: Optional['Record']):
         for policy in self.policies:
-            policy.apply(person, medical_facilities)
+            policy.apply(person, medical_facilities, record=record)
 
 
 class Hospitalisation(MedicalCarePolicy):
@@ -31,7 +32,7 @@ class Hospitalisation(MedicalCarePolicy):
     enough. When the person recovers, releases the person from the hospital.
     """
 
-    def apply(self, person: Person, hospitals: Hospitals):
+    def apply(self, person: Person, hospitals: Hospitals, record: Optional["Record"] = None):
         if person.recovered:
             if person.medical_facility is not None:
                 person.medical_facility.group.release_as_patient(person)
@@ -44,13 +45,15 @@ class Hospitalisation(MedicalCarePolicy):
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.patients
                 ]
-                record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
+                if record is not None:
+                    record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
                         patient_id = person.id)
             elif symptoms_tag == SymptomTag.intensive_care:
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.icu_patients
                 ]
-                record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
+                if record is not None:
+                    record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
                         patient_id = person.id,
                         intensive_care=True)
             else:
