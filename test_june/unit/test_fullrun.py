@@ -49,6 +49,7 @@ from june import World
 from june.world import generate_world_from_geography
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
+from june.records import Record
 from june import paths
 
 from pathlib import Path
@@ -76,6 +77,22 @@ def test__full_run(dummy_world, selector):
     )
     leisure_instance.distribute_social_venues_to_households(world.households, super_areas=world.super_areas)
     interaction = Interaction.from_file()
+    record = Record(
+            record_path = 'results',
+            filename='june_records.hdf5',
+            locations_counts=
+            {
+            'household': len(world.households),
+            'care_home': len(world.care_homes),
+            'school': len(world.schools),
+            'company': len(world.companies),
+            'pub': len(world.pubs),
+            'cinema': len(world.cinemas),
+            'grocery': len(world.groceries),
+            'commute_unit': len(world.commuteunits),
+            'commute_city_unit': len(world.commutecityunits),
+            }
+    )
     policies = Policies.from_file()
     sim = Simulator.from_file(
         world=world,
@@ -84,7 +101,7 @@ def test__full_run(dummy_world, selector):
         config_filename=test_config,
         leisure=leisure_instance,
         policies=policies,
-        save_path=None,
+        record=record,
     )
     seed = InfectionSeed(sim.world.super_areas, selector)
     seed.unleash_virus(1)

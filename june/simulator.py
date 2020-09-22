@@ -37,7 +37,7 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        save_path: str = "results",
+        record: Optional["Record"] = None,
         checkpoint_dates: List[datetime.date] = None,
     ):
         """
@@ -61,13 +61,7 @@ class Simulator:
         else:
             self.checkpoint_dates = checkpoint_dates
         self.sort_people_world()
-        if save_path is not None:
-            self.save_path = Path(save_path)
-            self.save_path.mkdir(exist_ok=True, parents=True)
-        if not self.world.box_mode and save_path is not None:
-            self.logger = Logger(save_path=self.save_path)
-        else:
-            self.logger = None
+        self.record = record
 
     @classmethod
     def from_file(
@@ -79,7 +73,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        save_path: str = "results",
+        record: Optional["Record"] = None,
     ) -> "Simulator":
 
         """
@@ -153,7 +147,7 @@ class Simulator:
             timer=timer,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            save_path=save_path,
+            record=record,
             interaction=interaction,
             checkpoint_dates=checkpoint_dates,
         )
@@ -169,7 +163,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        save_path: str = "results",
+        record: Optional["Record"] = None,
     ):
         """
         Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
@@ -185,7 +179,7 @@ class Simulator:
             infection_seed=infection_seed,
             leisure=leisure,
             config_filename=config_filename,
-            save_path=save_path,
+            record=record,
         )
         with open(checkpoint_path, "rb") as f:
             checkpoint_data = pickle.load(f)
@@ -284,10 +278,13 @@ class Simulator:
             person to send to cemetery
         """
         if person.hospital is not None:
-            death_location = f'{person.hospital.group.spec}_{perosn.hospital.group.id}'
+            death_location = f"{person.hospital.group.spec}_{person.hospital.group.id}"
         else:
-            death_location = f'{person.residence.group.spec}_{perosn.residence.group.id}'
-        self.record.accumulate_death(person.id, location=death_location)
+            death_location = (
+                f"{person.residence.group.spec}_{person.residence.group.id}"
+            )
+        if self.record is not None:
+            self.record.accumulate_death(person.id, location=death_location)
         person.dead = True
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
@@ -312,6 +309,8 @@ class Simulator:
             time (in days), at which the person recovers
         """
         person.infection = None
+        if self.record is not None:
+            self.record.accumulate_recoveries(recovered_person_id=person.id)
 
     def update_health_status(self, time: float, duration: float):
         """
@@ -326,10 +325,6 @@ class Simulator:
         duration:
             duration of time step
         """
-        super_area_infections = {
-            super_area.name: {"ids": [], "symptoms": [], "n_secondary_infections": []}
-            for super_area in self.world.super_areas
-        }
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
@@ -338,22 +333,16 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
-            super_area_dict = super_area_infections[person.area.super_area.name]
-            super_area_dict["ids"].append(person.id)
-            super_area_dict["symptoms"].append(person.infection.tag.value)
-            super_area_dict["n_secondary_infections"].append(
-                person.infection.number_of_infected
-            )
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
-                person=person, medical_facilities=self.world.hospitals
+                person=person,
+                medical_facilities=self.world.hospitals,
+                record=self.record,
             )
             if new_status == "recovered":
                 self.recover(person)
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
-        if self.logger is not None:
-            self.logger.log_infected(self.timer.date, super_area_infections)
 
     def do_timestep(self):
         """
@@ -408,10 +397,10 @@ class Simulator:
                             ].area.super_area.name
                             for idx in new_infected_ids
                         ]
-                        if self.logger is not None:
-                            self.logger.accumulate_infection_location(
+                        if self.record is not None:
+                            self.record.accumulate_infections(
                                 location=group.spec + f"_{group.id}",
-                                super_areas_infection=super_area_new_infected,
+                                new_infected_ids=new_infected_ids,
                             )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
@@ -438,10 +427,11 @@ class Simulator:
                 assert infected_ids[i] == person.id
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
-        if self.logger:
-            self.logger.log_infection_location(self.timer.date)
-            if self.world.hospitals is not None:
-                self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        if self.record is not None:
+            self.record.summarise_time_step(
+                timestamp=self.timer.date, world=self.world
+            )
+            self.record.time_step(timestamp=self.timer.date)
         self.clear_world()
 
     def run(self):
@@ -455,6 +445,7 @@ class Simulator:
             f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
         )
         self.clear_world()
+        """
         if self.logger:
             self.logger.log_population(self.world.people, rank=0)
             self.logger.log_parameters(
@@ -464,9 +455,7 @@ class Simulator:
                 activity_manager=self.activity_manager,
                 rank=0,
             )
-
-            if self.world.hospitals is not None:
-                self.logger.log_hospital_characteristics(self.world.hospitals)
+        """
 
         while self.timer.date < self.timer.final_date:
             if self.infection_seed:

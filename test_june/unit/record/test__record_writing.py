@@ -104,90 +104,92 @@ def test__locations_id():
 
 def test__writing_infections():
     record = Record(record_path="results", filename="test.hdf5")
-    time_stamp = datetime.datetime(2020, 10, 10)
+    timestamp = datetime.datetime(2020, 10, 10)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate_infections(location="care_home_0", new_infected_ids=[0, 10, 20])
-    record.infections(time_stamp=time_stamp)
+    record.events['infections'].record(hdf5_file=record.file,timestamp=timestamp)
     table = record.file.root.infections
     df = pd.DataFrame.from_records(table.read())
     assert len(df) == 3
-    assert df.time_stamp.unique()[0].decode() == "2020-10-10"
-    assert df.location_id.unique() == [1]
-    assert len(df.infected_id) == 3
-    assert df.infected_id[0] == 0
-    assert df.infected_id[1] == 10
-    assert df.infected_id[2] == 20
+    assert df.timestamp.unique()[0].decode() == "2020-10-10"
+    assert df.infection_location_ids.unique() == [1]
+    assert len(df.new_infected_ids) == 3
+    assert df.new_infected_ids[0] == 0
+    assert df.new_infected_ids[1] == 10
+    assert df.new_infected_ids[2] == 20
     del df
     record.file.close()
 
-
 def test__writing_hospital_admissions():
     record = Record(record_path="results", filename="test.hdf5")
-    time_stamp = datetime.datetime(2020, 4, 4)
+    timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate_hospitalisation(hospital_id=0, patient_id=10)
-    record.hospital_admissions(time_stamp=time_stamp)
+    record.events['hospital_admissions'].record(hdf5_file=record.file,timestamp=timestamp)
     table = record.file.root.hospital_admissions
     df = pd.DataFrame.from_records(table.read())
     assert len(df) == 1
-    assert df.time_stamp.iloc[0].decode() == "2020-04-04"
-    assert df.hospital_id.iloc[0] == 0
-    assert df.patient_id.iloc[0] == 10
+    assert df.timestamp.iloc[0].decode() == "2020-04-04"
+    assert df.hospital_ids.iloc[0] == 0
+    assert df.patient_ids.iloc[0] == 10
     record.file.close()
 
 
 def test__writing_intensive_care_admissions():
     record = Record(record_path="results", filename="test.hdf5")
-    time_stamp = datetime.datetime(2020, 4, 4)
+    timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate_hospitalisation(hospital_id=0, patient_id=10, intensive_care=True)
-    record.intensive_care_admissions(time_stamp=time_stamp)
+    record.events['icu_admissions'].record(hdf5_file=record.file,timestamp=timestamp)
     table = record.file.root.icu_admissions
     df = pd.DataFrame.from_records(table.read())
     assert len(df) == 1
-    assert df.time_stamp.iloc[0].decode() == "2020-04-04"
-    assert df.hospital_id.iloc[0] == 0
-    assert df.patient_id.iloc[0] == 10
+    assert df.timestamp.iloc[0].decode() == "2020-04-04"
+    assert df.hospital_ids.iloc[0] == 0
+    assert df.patient_ids.iloc[0] == 10
     record.file.close()
 
 
 def test__writing_death():
     record = Record(record_path="results", filename="test.hdf5")
-    time_stamp = datetime.datetime(2020, 4, 4)
+    timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate_death(death_location="household_3", dead_person_id=10)
-    record.deaths(time_stamp=time_stamp)
+    record.events['deaths'].record(hdf5_file=record.file,timestamp=timestamp)
     table = record.file.root.deaths
     df = pd.DataFrame.from_records(table.read())
     assert len(df) == 1
-    assert df.time_stamp.iloc[0].decode() == "2020-04-04"
-    assert df.death_location_id.iloc[0] == 3
-    assert df.dead_person_id.iloc[0] == 10
+    assert df.timestamp.iloc[0].decode() == "2020-04-04"
+    assert df.death_location_ids.iloc[0] == 3
+    assert df.dead_person_ids.iloc[0] == 10
     record.file.close()
 
 
 def test__sumarise_time_tep(dummy_world):
     record = Record(record_path="results", filename="test.hdf5", 
             locations_to_store={'household':1, 'care_home':1, 'hospital':1})
-    time_stamp = datetime.datetime(2020, 4, 4)
+    timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate_infections(location="care_home_0", new_infected_ids=[2])
     record.accumulate_infections(location="household_0", new_infected_ids=[0])
     record.accumulate_hospitalisation(hospital_id=0, patient_id=1)
     record.accumulate_hospitalisation(hospital_id=0, patient_id=1, intensive_care=True)
     record.summarise_time_step("2020-04-04", dummy_world)
-    record.time_step(time_stamp)
-    time_stamp = datetime.datetime(2020, 4, 5)
+    print(record.events['infections'].new_infected_ids)
+    record.time_step(timestamp)
+    timestamp = datetime.datetime(2020, 4, 5)
     record.accumulate_death(death_location="care_home_0", dead_person_id=2)
     record.accumulate_death(death_location="household_0", dead_person_id=0)
     record.accumulate_death(death_location="hospital_0", dead_person_id=1)
     record.summarise_time_step("2020-04-05", dummy_world)
-    record.time_step(time_stamp)
+    record.time_step(timestamp)
 
     summary_df = pd.read_csv(record.record_path / 'summary.csv', index_col=0)
-    print(summary_df['daily_hospital_deaths'])
+    print(summary_df)
     region_1 = summary_df[summary_df['region'] == 'region_1']
     region_2 = summary_df[summary_df['region'] == 'region_2']
+    print(region_1)
+    print(region_2)
     assert region_1.loc['2020-04-04']['daily_infections_by_residence'] == 2
     assert region_1.loc['2020-04-05']['daily_infections_by_residence'] == 0
     assert region_2.loc['2020-04-04']['daily_infections_by_residence'] == 0
