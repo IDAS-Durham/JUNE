@@ -91,7 +91,7 @@ class Areas:
 
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_areas(self, coordinates, k=1, return_distance=False):
@@ -130,6 +130,7 @@ class SuperArea:
         "id",
         "name",
         "coordinates",
+        "region",
         "workers",
         "areas",
         "companies",
@@ -195,7 +196,7 @@ class SuperAreas:
         coordinates = np.array(
             [np.deg2rad(super_area.coordinates) for super_area in self]
         )
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_super_areas(self, coordinates, k=1, return_distance=False):
@@ -230,9 +231,47 @@ class SuperAreas:
         return self.get_closest_super_areas(coordinates, k=1, return_distance=False)[0]
 
 
+class Region:
+    """
+    Coarsest geographical resolution
+    """
+
+    __slots__ = ("id", "name", "super_areas")
+    _id = count()
+
+    def __init__(
+        self, name: Optional[str] = None, super_areas: List[SuperAreas] = None,
+    ):
+        self.id = next(self._id)
+        self.name = name
+        self.super_areas = super_areas or []
+
+    @property
+    def people(self):
+        return list(
+            chain.from_iterable(super_area.people for super_area in self.super_areas)
+        )
+
+
+class Regions:
+    __slots__ = "members"
+
+    def __init__(self, regions: List[Region]):
+        self.members = regions
+
+    def __iter__(self):
+        return iter(self.members)
+
+    def __len__(self):
+        return len(self.members)
+
+    def __getitem__(self, index):
+        return self.members[index]
+
+
 class Geography:
     def __init__(
-        self, areas: List[Area], super_areas: List[SuperArea],
+        self, areas: List[Area], super_areas: List[SuperArea], regions: List[Region]
     ):
         """
         Generate hierachical devision of geography.
@@ -248,6 +287,7 @@ class Geography:
         """
         self.areas = areas
         self.super_areas = super_areas
+        self.regions = regions
         # possible buildings
         self.households = None
         self.schools = None
@@ -294,6 +334,64 @@ class Geography:
         return areas
 
     @classmethod
+    def _create_super_areas(
+        cls,
+        super_area_coords: pd.DataFrame,
+        area_coords: pd.DataFrame,
+        region: "Region",
+        hierarchy: pd.DataFrame,
+    ) -> List[Area]:
+        """
+        Applies the _create_super_area function throught the super_area_coords dataframe.
+        If super_area_coords is a series object, then it does not use the apply()
+        function as it does not support the axis=1 parameter.
+
+        Parameters
+        ----------
+        super_area_coords
+            pandas Dataframe with the super area name as index and the coordinates
+            X, Y where X is longitude and Y is latitude.
+        region
+            region instance to what all the super areas belong to
+        """
+        # if a single area is given, then area_coords is a series
+        # and we cannot do iterrows()
+        area_hierarchy = hierarchy.reset_index()
+        area_hierarchy.set_index("super_area", inplace=True)
+        total_areas_list, super_areas_list = [], []
+        if isinstance(super_area_coords, pd.Series):
+            super_areas_list = [
+                SuperArea(
+                    super_area_coords.name,
+                    areas=None,
+                    region=region,
+                    coordinates=np.array(
+                        [super_area_coords.latitude, super_area_coords.longitude]
+                    ),
+                )
+            ]
+            areas_df = area_coords.loc[
+                area_hierarchy.loc[super_area_coords.name, "area"]
+            ]
+            areas_list = cls._create_areas(areas_df, super_areas_list[0])
+            super_areas_list[0].areas = areas_list
+            total_areas_list += areas_list
+        else:
+            for super_area_name, row in super_area_coords.iterrows():
+                super_area = SuperArea(
+                    areas=None,
+                    name=super_area_name,
+                    coordinates=np.array([row.latitude, row.longitude]),
+                    region=region,
+                )
+                areas_df = area_coords.loc[area_hierarchy.loc[super_area_name, "area"]]
+                areas_list = cls._create_areas(areas_df, super_area)
+                super_area.areas = areas_list
+                total_areas_list += list(areas_list)
+                super_areas_list.append(super_area)
+        return super_areas_list, total_areas_list
+
+    @classmethod
     def create_geographical_units(
         cls,
         hierarchy: pd.DataFrame,
@@ -303,32 +401,33 @@ class Geography:
         """
         Create geo-graph of the used geographical units.
 
-        Note: This function looks a bit more complicated than need be,
-        but it was created with a eye on the future.
         """
-        total_areas_list = []
-        super_areas_list = []
-        super_area_region_hierarchy = hierarchy[['super_area', 'region']].drop_duplicates()
-        super_area_region_hierarchy.set_index('super_area', inplace=True)
-        for super_area_name, row in super_area_coordinates.iterrows():
-            super_area = SuperArea(
-                areas=None,
-                name=super_area_name,
-                coordinates=np.array([row.latitude, row.longitude]),
-                region=super_area_region_hierarchy.loc[super_area].region
+        region_hierarchy = hierarchy.reset_index().set_index("region")["super_area"]
+        region_hierarchy = region_hierarchy.drop_duplicates()
+        region_list = []
+        total_areas_list, total_super_areas_list = [], []
+        for region_name in region_hierarchy.index.unique():
+            region = Region(name=region_name, super_areas=None)
+
+            super_areas_df = super_area_coordinates.loc[
+                region_hierarchy.loc[region_name]
+            ]
+            super_areas_list, areas_list = cls._create_super_areas(
+                super_areas_df, area_coordinates, region, hierarchy=hierarchy
             )
-            areas_df = area_coordinates.loc[hierarchy.loc[super_area_name, "area"]]
-            areas_list = cls._create_areas(areas_df, super_area)
-            super_area.areas = areas_list
+            region.super_areas = super_areas_list
+            total_super_areas_list += list(super_areas_list)
             total_areas_list += list(areas_list)
-            super_areas_list.append(super_area)
+            region_list.append(region)
         areas = Areas(total_areas_list)
-        super_areas = SuperAreas(super_areas_list)
+        super_areas = SuperAreas(total_super_areas_list)
+        regions = Regions(region_list)
         logger.info(
             f"There are {len(areas)} areas and "
-            + f"{len(super_areas)} super_areas in the world."
+            + f"{len(super_areas)} super_areas "
+            + f"and {len(regions)} in the world."
         )
-        return areas, super_areas
+        return areas, super_areas, regions
 
     @classmethod
     def from_file(
@@ -366,10 +465,8 @@ class Geography:
         geo_hierarchy = pd.read_csv(hierarchy_filename)
         areas_coord = pd.read_csv(area_coordinates_filename)
         super_areas_coord = pd.read_csv(super_area_coordinates_filename)
-
         if filter_key is not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
-
         areas_coord = areas_coord.loc[areas_coord.area.isin(geo_hierarchy.area)]
         super_areas_coord = super_areas_coord.loc[
             super_areas_coord.super_area.isin(geo_hierarchy.super_area)
@@ -377,10 +474,10 @@ class Geography:
         areas_coord.set_index("area", inplace=True)
         super_areas_coord.set_index("super_area", inplace=True)
         geo_hierarchy.set_index("super_area", inplace=True)
-        areas, super_areas = cls.create_geographical_units(
+        areas, super_areas, regions = cls.create_geographical_units(
             geo_hierarchy, areas_coord, super_areas_coord
         )
-        return cls(areas, super_areas)
+        return cls(areas, super_areas, regions)
 
 
 def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:

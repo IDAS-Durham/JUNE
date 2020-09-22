@@ -14,10 +14,6 @@ from june.records.helpers_recors_writer import (
 )
 from june import paths
 
-default_super_area_region_filename = (
-    paths.data_path / "input/geography/area_super_area_region.csv"
-)
-
 
 class Record:
     def __init__(
@@ -35,7 +31,6 @@ class Record:
             "commute_unit": 1,
             "commute_city_unit": 1,
         },
-        super_area_region_filename: Optional[str] = default_super_area_region_filename,
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
@@ -49,17 +44,11 @@ class Record:
         self.locations_to_store = locations_to_store
         self.initialize_tables()
         self.file.close()
-        if super_area_region_filename is not None:
-            # write header summary
-            with open(self.record_path / "summary.csv", mode="w") as summary_file:
-                summary_file.write(
-                    "time_stamp,region,daily_infections,daily_hospital_admissions,daily_icu_admissions, \n"
-                )
+        with open(self.record_path / "summary.csv", mode="w") as summary_file:
+            summary_file.write(
+                "time_stamp,region,daily_infections,daily_hospital_admissions,daily_icu_admissions, \n"
+            )
 
-            self.super_area_region_df = pd.read_csv(super_area_region_filename)[
-                ["super_area", "region"]
-            ].drop_duplicates()
-            self.super_area_region_df.set_index("super_area", inplace=True)
 
     def initialize_tables(self):
         self.infection_locations, self.new_infected_ids = [], []
