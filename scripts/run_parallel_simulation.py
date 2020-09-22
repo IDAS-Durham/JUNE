@@ -18,6 +18,7 @@ from june.policy import Policies
 from june import paths
 from june.groups.commute import *
 from june.logger import Logger
+from june.logger.read_logger import ReadLogger
 from june.domain import Domain, generate_super_areas_to_domain_dict
 
 
@@ -60,12 +61,13 @@ if seed == 999:
     save_path = "results"
 else:
     save_path = f"results_{seed:02d}"
+
 logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
 population = load_population_from_hdf5(world_file)
 logger.log_population(population)
 
 super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
-print("MPI SIZE", size)
+
 domain = Domain.from_hdf5(
     domain_id=rank,
     super_areas_to_domain_dict=super_areas_to_domain_dict,
@@ -83,11 +85,6 @@ infection_selector = InfectionSelector.from_file(
 
 # interaction
 interaction = Interaction.from_file()
-
-# initial infection seeding
-# infection_seed = InfectionSeed(domain.super_areas, infection_selector,)
-
-# infection_seed.unleash_virus(50)  # number of initial cases
 
 # policies
 policies = Policies.from_file()
@@ -109,12 +106,8 @@ print("simulator ready to go")
 
 # infection seed
 if rank == 0:
-    n_cases = 50
-    selected_people = np.random.choice(len(population.people), n_cases, replace=False)
-    selected_ids = []
-    for selected_person in selected_people:
-        selected_ids.append(population.people[selected_person].id)
-    #print("Original Selected IDS = ", selected_ids)
+    n_cases = 250
+    selected_ids = np.random.choice(population.people_ids, n_cases, replace=False)
     for rank_receiving in range(1, size):
         comm.send(selected_ids, dest=rank_receiving, tag=0)
 
@@ -134,5 +127,9 @@ del population
 t1 = time.time()
 simulator.run()
 t2 = time.time()
+
+if rank == 0:
+    logger = ReadLogger(save_path, n_processes=size)
+    logger.world_summary().to_csv(save_path + "_summary.csv")
 
 print(f" Simulation took {t2-t1} seconds")

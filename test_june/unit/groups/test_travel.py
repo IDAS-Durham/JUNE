@@ -16,7 +16,7 @@ def make_commuting_network(geo):
     world.areas = geo.areas
     world.super_areas = geo.super_areas
     people = []
-    for i in range(1000):
+    for i in range(12):
         person = Person.from_attributes()
         person.mode_of_transport = ModeOfTransport(is_public=True, description="asd")
         person.work_super_area = world.super_areas[0]
@@ -40,9 +40,6 @@ class TestCommute:
         city = world.cities[0]
         assert city.name == "Newcastle upon Tyne"
         assert city.super_areas[0] == "E02001731"
-        assert len(city.super_stations) == 1
-        assert city.super_stations[0].name == "Newcastle"
-        assert len(city.super_stations[0].stations) == 4
         assert len(city.stations) == 4
         for super_area in world.super_areas:
             if super_area.name == "E02001731":
@@ -57,8 +54,8 @@ class TestCommute:
         for station in city.stations:
             n_external_commuters += len(station.commuter_ids)
         n_internal_commuters = len(city.commuter_ids)
-        assert n_internal_commuters == 250
-        assert n_external_commuters == 750
+        assert n_internal_commuters == 3
+        assert n_external_commuters == 9
         
 
     def test__get_travel_subgroup(self, travel_world):
@@ -71,4 +68,21 @@ class TestCommute:
         worker = world.people[1]
         subgroup = travel.get_commute_subgroup(worker)
         assert subgroup.group.spec == "inter_city_transport"
+
+    def test__all_commuters_get_commute(self, travel_world):
+        world, travel = travel_world
+        assigned_commuters = 0
+        for person in world.people:
+            subgroup = travel.get_commute_subgroup(person)
+            if subgroup is not None:
+                assigned_commuters += 1
+        commuters = 0
+        for city in world.cities:
+            commuters += len(city.commuter_ids)
+        for station in world.stations:
+            commuters += len(station.commuter_ids)
+        assert commuters > 0
+        assert commuters == assigned_commuters
+
+
 

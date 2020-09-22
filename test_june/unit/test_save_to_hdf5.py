@@ -359,21 +359,18 @@ class TestSaveWorld:
                     assert p1.work_super_area.city.id == p2.work_super_area.city.id
 
     def test__super_area_city(self, full_world, full_world_loaded):
+        has_city = False
         for sa1, sa2 in zip(full_world.super_areas, full_world_loaded.super_areas):
             if sa1.city is None:
                 assert sa2.city is None
             else:
+                has_city = True
                 assert sa1.city.id == sa2.city.id
                 assert sa1.city.name == sa2.city.name
-            if sa1.closest_station is None:
-                assert sa2.closest_station is None
-            else:
-                assert sa1.closest_station.id == sa2.closest_station.id
-            if sa1.closest_commuting_city is None:
-                assert sa2.closest_commuting_city is None
-            else:
-                assert sa1.closest_commuting_city.id == sa2.closest_commuting_city.id
-                assert sa1.closest_commuting_city.name == sa2.closest_commuting_city.name
+            for city, closest_station in sa1.closest_station_for_city.items():
+                assert city in sa2.closest_station_for_city
+                assert sa2.closest_station_for_city[city].id == closest_station.id
+        assert has_city
 
     def test__care_home_area(self, full_world, full_world_loaded):
         assert len(full_world_loaded.care_homes) == len(full_world_loaded.care_homes)

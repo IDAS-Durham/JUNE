@@ -63,7 +63,7 @@ class City:
         self.super_areas = super_areas
         self.name = name
         self.super_stations = None
-        self.stations = None
+        self.stations = []
         self.coordinates = coordinates
         self.city_transports = []
         self.commuter_ids = set()  # internal commuters in the city
@@ -81,13 +81,17 @@ class City:
 
     def get_commute_subgroup(self, person):
         """
-        Gets the commute subgroup of the person.
+        Gets the commute subgroup of the person. We first check if
+        the person is in the list of the internal city commuters. If not,
+        we then check if the person is a commuter in their closest city station.
+        If none of the above, then that person doesn't need commuting.
         """
         if person.id in self.commuter_ids:
             return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
         else:
             closest_station = person.super_area.closest_station_for_city[self.name]
-            return closest_station.get_commute_subgroup(person)
+            if person.id in closest_station.commuter_ids:
+                return closest_station.get_commute_subgroup(person)
     
     def get_closest_station(self, coordinates):
         return self.stations.get_closest_station(coordinates)
