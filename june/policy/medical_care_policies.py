@@ -44,10 +44,15 @@ class Hospitalisation(MedicalCarePolicy):
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.patients
                 ]
+                record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
+                        patient_id = person.id)
             elif symptoms_tag == SymptomTag.intensive_care:
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.icu_patients
                 ]
+                record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
+                        patient_id = person.id,
+                        intensive_care=True)
             else:
                 raise ValueError(
                     f"Person with symptoms tag {person.infection.tag} cannot go to hospital."
