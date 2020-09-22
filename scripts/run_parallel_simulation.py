@@ -43,8 +43,7 @@ else:
     seed = 999
 set_random_seed(seed)
 
-world_file = f"./london_20.hdf5"
-print(world_file)
+world_file = f"./tests.hdf5"
 config_path = "./config_simulation.yaml"
 
 # parallel setup
