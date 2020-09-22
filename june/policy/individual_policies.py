@@ -271,7 +271,7 @@ class CloseSchools(SkipActivity):
         """
         try:
             if person.primary_activity.group.spec == "school":
-                if self.full_closure
+                if self.full_closure:
                     return True
                 elif not self._check_kid_goes_to_school(person):
                     if person.age in self.years_to_close:
