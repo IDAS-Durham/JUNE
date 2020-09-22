@@ -35,8 +35,8 @@ class SchoolDistributor:
         neighbour_schools: int = 35,
         age_range: Tuple[int, int] = (0, 19),
         mandatory_age_range: Tuple[int, int] = (5, 18),
-        teacher_student_ratio_primary = 21,
-        teacher_student_ratio_secondary = 16,
+        teacher_student_ratio_primary=21,
+        teacher_student_ratio_secondary=16,
         teacher_min_age=21,
         max_classroom_size=40,
     ):
@@ -96,7 +96,7 @@ class SchoolDistributor:
             config["age_range"],
             config["mandatory_age_range"],
             config["teacher_min_age"],
-            config["max_classroom_size"]
+            config["max_classroom_size"],
         )
 
     @classmethod
@@ -281,16 +281,28 @@ class SchoolDistributor:
                             secondary_schools.append(school)
         # assign teacher to student ratios in schools
         for school in primary_schools:
-            school.n_teachers_max = int(np.round(school.n_pupils / np.random.poisson(self.teacher_student_ratio_primary)))
+            school.n_teachers_max = int(
+                np.round(
+                    school.n_pupils
+                    / np.random.poisson(self.teacher_student_ratio_primary)
+                )
+            )
         for school in secondary_schools:
-            school.n_teachers_max = int(np.round(school.n_pupils / np.random.poisson(self.teacher_student_ratio_secondary)))
+            school.n_teachers_max = int(
+                np.round(
+                    school.n_pupils
+                    / np.random.poisson(self.teacher_student_ratio_secondary)
+                )
+            )
 
         np.random.shuffle(primary_schools)
         np.random.shuffle(secondary_schools)
         all_teachers = [
             person
             for person in super_area.workers
-            if person.sector == self.education_sector_label and person.age > self.teacher_min_age and person.primary_activity is None
+            if person.sector == self.education_sector_label
+            and person.age > self.teacher_min_age
+            and person.primary_activity is None
         ]
         primary_teachers = []
         secondary_teachers = []
@@ -317,7 +329,7 @@ class SchoolDistributor:
                         all_filled = True
                         break
                     primary_school.add(teacher, school.SubgroupType.teachers)
-                    teacher.lockdown_status = 'key_worker'
+                    teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
 
@@ -333,18 +345,22 @@ class SchoolDistributor:
                         all_filled = True
                         break
                     secondary_school.add(teacher, school.SubgroupType.teachers)
-                    teacher.lockdown_status = 'key_worker'
+                    teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
 
         remaining_teachers = primary_teachers + secondary_teachers + extra_teachers
-        empty_schools = [school for school in primary_schools + secondary_schools if school.n_pupils > 0 and school.n_teachers == 0]
+        empty_schools = [
+            school
+            for school in primary_schools + secondary_schools
+            if school.n_pupils > 0 and school.n_teachers == 0
+        ]
         for school in empty_schools:
             if not remaining_teachers:
                 break
             teacher = remaining_teachers.pop()
             school.add(teacher, school.SubgroupType.teachers)
-            teacher.lockdown_status = 'key_worker'
+            teacher.lockdown_status = "key_worker"
 
         while remaining_teachers:
             all_filled = True
@@ -358,15 +374,14 @@ class SchoolDistributor:
                         all_filled = True
                         break
                     school.add(teacher, school.SubgroupType.teachers)
-                    teacher.lockdown_status = 'key_worker'
+                    teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
 
-    def limit_classroom_sizes(self, ):
-        '''
+    def limit_classroom_sizes(self,):
+        """
         Limit subgroup sizes that represent class rooms to a maximum number of students.
         If maximum number is exceeded create new subgroups to distribute students homogeneously
-        '''
+        """
         for school in self.schools:
             school.limit_classroom_sizes(self.max_classroom_size)
-
