@@ -108,10 +108,24 @@ close_companies:
         key_probability: 0.22
     11:
         start_time: 2020-08-12
-        #end_time: 2020-08-25
-        end_time: 2020-12-01
+        end_time: 2020-08-25
         full_closure: False 
         avoid_work_probability: 0.18
+        furlough_probability: 0.34
+        key_probability: 0.22
+    12:
+        start_time: 2020-08-25
+        end_time: 2020-09-09
+        full_closure: False 
+        avoid_work_probability: 0.15
+        furlough_probability: 0.34
+        key_probability: 0.22
+    13:
+        start_time: 2020-09-09
+        #end_time: 2020-09-17
+        end_time: 2020-12-01
+        full_closure: False 
+        avoid_work_probability: 0.135
         furlough_probability: 0.34
         key_probability: 0.22
 
