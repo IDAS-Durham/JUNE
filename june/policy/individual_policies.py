@@ -274,7 +274,7 @@ class CloseSchools(SkipActivity):
                 if self.full_closure:
                     return True
                 elif not self._check_kid_goes_to_school(person):
-                    if person.age in self.years_to_close:
+                    if self.years_to_close and person.age in self.years_to_close:
                         return True
                     else:
                         if random() > self.attending_compliance:
