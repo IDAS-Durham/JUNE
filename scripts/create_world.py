@@ -28,10 +28,9 @@ if "E00004734" not in london_areas:
 t1 = time.time()
 
 # default config path
-config_path = "./config_nocommute.yaml"
+config_path = "./config_simulation.yaml"
 
 # define geography, let's run the first 20 super areas of london
-#geography = Geography.from_file({"region": ["East of England"]})
 geography = Geography.from_file({"super_area": london_areas})
 
 # add buildings
