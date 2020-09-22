@@ -34,13 +34,13 @@ class UniversityDistributor:
             for area in super_area.areas:
                 for household in area.households:
                     if household.type == "student":
-                        for student in household.people:
+                        for student in household.residents:
                             if student.primary_activity is None:
                                 students.append(student)
                                 if len(students) >= n_students:
                                     return students
                     elif household.type == "communal":
-                        for person in household.people:
+                        for person in household.residents:
                             if (
                                 self.min_student_age
                                 <= person.age
@@ -49,7 +49,7 @@ class UniversityDistributor:
                                 if person.primary_activity is None:
                                     students_in_communal.append(person)
                     else:
-                        for person in household.people:
+                        for person in household.residents:
                             if (
                                 self.min_student_age
                                 <= person.age

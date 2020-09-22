@@ -35,13 +35,13 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./london_10.hdf5"
+world_file = "./london_20.hdf5"
 config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
 
-logger = Logger(save_path='results_nompi', file_name=f'logger_0.hdf5') 
+logger = Logger(save_path='results_nompi', file_name=f'logger.0.hdf5') 
 population = load_population_from_hdf5(world_file)
 logger.log_population(population)
 
