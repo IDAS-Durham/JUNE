@@ -31,7 +31,6 @@ t1 = time.time()
 config_path = "./config_simulation.yaml"
 
 # define geography, let's run the first 20 super areas of london
-#geography = Geography.from_file({"region": ["East of England"]})
 geography = Geography.from_file({"super_area": london_areas})
 
 # add buildings
