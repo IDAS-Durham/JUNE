@@ -361,12 +361,47 @@ mask_wearing:
             school: 0.
             household: 0.
             university: 0.5
-
     11: 
         start_time: 2020-08-12
-        #end_time: 2020-08-25
-        end_time: 2020-12-01
+        end_time: 2020-08-25
         compliance: 0.745
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    12: 
+        start_time: 2020-08-25
+        end_time: 2020-09-08
+        compliance: 0.725
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    13: 
+        start_time: 2020-09-08
+        #end_time: 2020-09-16
+        end_time: 2020-12-01
+        compliance: 0.735
         beta_factor: 0.5
         mask_probabilities: 
             box: 1.
