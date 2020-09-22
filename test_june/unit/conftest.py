@@ -233,8 +233,7 @@ def make_dummy_world():
     ]
     world.stations = city.stations
     world.super_areas[0].city = city
-    world.super_areas[0].closest_commuting_city = city
-    world.super_areas[0].closest_station = city.stations[0]
+    world.super_areas[0].closest_station_for_city[city.name] = city.stations[0]
     city_transports = CityTransports([CityTransport()])
     world.city_transports = city_transports
     city.city_transports = city_transports
