@@ -6,6 +6,7 @@ class ExternalGroup:
         self.id = id
         self.domain_id = domain_id
 
+
 class ExternalSubgroup:
     external = True
     __slots__ = ("subgroup_type", "group")

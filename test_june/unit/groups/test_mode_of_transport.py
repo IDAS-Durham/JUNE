@@ -95,7 +95,7 @@ class TestRegionalGenerator:
             area="test_area", weighted_modes=weighted_modes
         )
 
-        assert regional_gen.weights == [1]
+        assert (regional_gen.weights == [1]).all()
 
         weighted_modes = [
             (2, c.ModeOfTransport("car")),
@@ -107,7 +107,7 @@ class TestRegionalGenerator:
             area="test_area", weighted_modes=weighted_modes
         )
 
-        assert regional_gen.weights == [2 / 7, 4 / 7, 1 / 7]
+        assert (regional_gen.weights == [2 / 7, 4 / 7, 1 / 7]).all()
 
     def test__weighted_choice__chooses_random_value_from_the_modes(self):
         weighted_modes = [(2, c.ModeOfTransport("car"))]
