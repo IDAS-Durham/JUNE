@@ -3,6 +3,7 @@ from itertools import count
 from typing import List, Dict, Optional
 
 import numpy as np
+from random import randint, random
 import pandas as pd
 import yaml
 from scipy.stats import rv_discrete
@@ -10,6 +11,7 @@ from scipy.stats import rv_discrete
 from june import paths
 from june.demography import Person, Population
 from june.geography import Geography, Areas, SuperAreas
+from june.utils import random_choice_numba
 
 default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (
@@ -95,6 +97,11 @@ class WorkerDistributor:
         """
         self.areas = areas
         self.super_areas = super_areas
+        lockdown_tags = np.array(["key_worker", "random", "furlough"])
+        lockdown_tags_idx = np.arange(0, len(lockdown_tags))
+        lockdown_tags_probabilities_by_sector = self._parse_closure_probabilities_by_sector(
+            company_closure=self.company_closure, lockdown_tags=lockdown_tags
+        )
         logger.info(f"Distributing workers to super areas...")
         for i, area in enumerate(iter(self.areas)):
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
@@ -104,7 +111,9 @@ class WorkerDistributor:
                 if self.age_range[0] <= person.age <= self.age_range[1]:
                     self._assign_work_location(idx, person, wf_area_df)
                     self._assign_work_sector(idx, person)
-                    self._assign_lockdown_status(idx, person)
+                    self._assign_lockdown_status(
+                        lockdown_tags_probabilities_by_sector, lockdown_tags, lockdown_tags_idx, person
+                    )
             if i % 5000 == 0 and i != 0:
                 logger.info(f"Distributed workers in {i} areas of {len(self.areas)}")
         logger.info(f"Workers distributed.")
@@ -192,7 +201,7 @@ class WorkerDistributor:
         """
         Selects random SuperArea to send a worker to work in
         """
-        idx = np.random.choice(np.arange(len(self.super_areas)))
+        idx = randint(0, len(self.super_areas) - 1)
         self.super_areas.members[idx].add_worker(person)
 
     def _assign_work_sector(self, i: int, person: Person):
@@ -216,9 +225,7 @@ class WorkerDistributor:
         ratio = self.sub_sector_ratio[person.sector][person.sex]
         distr = self.sub_sector_distr[person.sector][person.sex]
         if MC_random < ratio:
-            sub_sector_idx = rv_discrete(
-                values=(np.arange(len(distr)), distr)
-            ).rvs()
+            sub_sector_idx = rv_discrete(values=(np.arange(len(distr)), distr)).rvs()
             person.sub_sector = self.sub_sector_distr[person.sector]["label"][
                 sub_sector_idx
             ]
@@ -230,26 +237,42 @@ class WorkerDistributor:
 
         self.lockdown_status_random = np.random.choice(2, n_workers, p=[4 / 5, 1 / 5])
 
-    def _assign_lockdown_status(self, idx, person):
+    def _parse_closure_probabilities_by_sector(
+        self, company_closure: dict, lockdown_tags: List
+    ):
+        """
+        parses config file of closure probabilities
+        """
+        ret = {}
+        for sector in company_closure:
+            ret[sector] = np.array(
+                [
+                    self.company_closure[sector][lockdown_tags[0]],
+                    self.company_closure[sector][lockdown_tags[1]],
+                    self.company_closure[sector][lockdown_tags[2]],
+                ]
+            )
+        return ret
+
+    def _assign_lockdown_status(
+        self, probabilities_by_sector: dict, lockdown_tags: List[str], lockdown_tags_idx:List[int], person: Person
+    ):
         """
         Assign lockdown_status in proportion to definitions in the policy config
         """
-        values = ["key_worker", "random", "furlough"]
-        probs = [
-            self.company_closure[person.sector][values[0]],
-            self.company_closure[person.sector][values[1]],
-            self.company_closure[person.sector][values[2]],
-        ]
-        value = np.random.choice(values, 1, p=probs)[0]
+        # value = np.random.choice(values, 1, p=probs)[0]
+        idx = random_choice_numba(
+            lockdown_tags_idx, probabilities_by_sector[person.sector]
+        )
 
         # Currently all people definitely not furloughed or key are assigned a 'random' tag which allows for
         # them to dynamically be sent to work. For now we fix this so that the same 1/5 people go to work once a week
         # rather than a 1/5 chance that a person with a 'random' tag goes to work.
         # If commented out then people will be correctly assigned random tag for going to work randomly
-        #if value == "random" and self.lockdown_status_random[idx] == 0:
+        # if value == "random" and self.lockdown_status_random[idx] == 0:
         #    value = "furlough"
 
-        person.lockdown_status = value
+        person.lockdown_status = lockdown_tags[idx]
 
     @classmethod
     def for_geography(

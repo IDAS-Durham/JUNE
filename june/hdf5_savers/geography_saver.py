@@ -9,7 +9,7 @@ from june.world import World
 
 nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
-str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
+str_vlen_type = h5py.vlen_dtype(np.dtype("S40"))
 
 social_venues_spec_mapper = {
     "pubs": "pubs",
@@ -58,10 +58,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     social_venues_ids_list = []
     social_venues_super_areas = []
     super_area_city = []
-    super_area_closest_commuting_city = []
-    super_area_closest_commuting_city_super_area = []
-    super_area_closest_station = []
-    super_area_closest_station_super_area = []
+    super_area_closest_stations_cities = []
+    super_area_closest_stations_stations = []
+    super_area_closest_stations_lengths = []
 
     for area in geography.areas:
         area_ids.append(area.id)
@@ -106,24 +105,16 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             super_area_city.append(nan_integer)
         else:
             super_area_city.append(super_area.city.id)
-        if super_area.closest_commuting_city is None:
-            super_area_closest_commuting_city.append(nan_integer)
-            super_area_closest_commuting_city_super_area.append(nan_integer)
-        else:
-            super_area_closest_commuting_city.append(
-                super_area.closest_commuting_city.id
-            )
-            super_area_closest_commuting_city_super_area.append(
-                super_area.closest_commuting_city.super_area.id
-            )
-        if super_area.closest_station is None:
-            super_area_closest_station.append(nan_integer)
-            super_area_closest_station_super_area.append(nan_integer)
-        else:
-            super_area_closest_station.append(super_area.closest_station.id)
-            super_area_closest_station_super_area.append(
-                super_area.closest_station.super_area.id
-            )
+        cities = []
+        stations = []
+        for key, value in super_area.closest_station_for_city.items():
+            cities.append(key.encode("ascii", "ignore"))
+            stations.append(value.id)
+        super_area_closest_stations_cities.append(cities)
+        super_area_closest_stations_stations.append(stations)
+        super_area_closest_stations_lengths.append(
+            len(super_area.closest_station_for_city)
+        )
 
     area_ids = np.array(area_ids, dtype=np.int)
     area_names = np.array(area_names, dtype="S20")
@@ -143,16 +134,20 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             closest_hospitals_super_areas, dtype=int_vlen_type
         )
     super_area_city = np.array(super_area_city, dtype=np.int)
-    super_area_closest_commuting_city = np.array(
-        super_area_closest_commuting_city, dtype=np.int
-    )
-    super_area_closest_commuting_city_super_area = np.array(
-        super_area_closest_commuting_city_super_area, dtype=np.int
-    )
-    super_area_closest_station = np.array(super_area_closest_station, dtype=np.int)
-    super_area_closest_station_super_area = np.array(
-        super_area_closest_station_super_area, dtype=np.int
-    )
+    if len(np.unique(super_area_closest_stations_lengths)) == 1:
+        super_area_closest_stations_cities = np.array(
+            super_area_closest_stations_cities, dtype="S40"
+        )
+        super_area_closest_stations_stations = np.array(
+            super_area_closest_stations_stations, dtype=np.int
+        )
+    else:
+        super_area_closest_stations_cities = np.array(
+            super_area_closest_stations_cities, dtype=str_vlen_type
+        )
+        super_area_closest_stations_stations = np.array(
+            super_area_closest_stations_stations, dtype=int_vlen_type
+        )
 
     with h5py.File(file_path, "a") as f:
         geography_dset = f.create_group("geography")
@@ -166,18 +161,12 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset("super_area_name", data=super_area_names)
         geography_dset.create_dataset("super_area_city", data=super_area_city)
         geography_dset.create_dataset(
-            "super_area_closest_commuting_city", data=super_area_closest_commuting_city
+            "super_area_closest_stations_cities",
+            data=super_area_closest_stations_cities,
         )
         geography_dset.create_dataset(
-            "super_area_closest_commuting_city_super_area",
-            data=super_area_closest_commuting_city_super_area,
-        )
-        geography_dset.create_dataset(
-            "super_area_closest_station", data=super_area_closest_station
-        )
-        geography_dset.create_dataset(
-            "super_area_closest_station_super_area",
-            data=super_area_closest_station_super_area,
+            "super_area_closest_stations_stations",
+            data=super_area_closest_stations_stations,
         )
         geography_dset.create_dataset(
             "super_area_coordinates", data=super_area_coordinates

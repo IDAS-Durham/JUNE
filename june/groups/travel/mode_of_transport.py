@@ -5,6 +5,7 @@ import numpy as np
 import yaml
 
 from june import paths
+from june.utils import random_choice_numba
 
 default_config_filename = paths.configs_path / "defaults/groups/travel/mode_of_transport.yaml"
 
@@ -175,9 +176,13 @@ class RegionalGenerator:
         """
         self.area = area
         self.weighted_modes = weighted_modes
+        self.total = self._get_total()
+        self.modes = self._get_modes()
+        self.weights = self._get_weights()
+        self.modes_idx = np.arange(0, len(self.modes))
 
-    @property
-    def total(self) -> int:
+    #@property
+    def _get_total(self) -> int:
         """
         The sum of the numbers of people using each mode of transport
         """
@@ -187,8 +192,8 @@ class RegionalGenerator:
             in self.weighted_modes
         )
 
-    @property
-    def modes(self) -> List["ModeOfTransport"]:
+    #@property
+    def _get_modes(self) -> List["ModeOfTransport"]:
         """
         A list of modes of transport
         """
@@ -198,25 +203,27 @@ class RegionalGenerator:
             in self.weighted_modes
         ]
 
-    @property
-    def weights(self) -> List[float]:
+    #@property
+    def _get_weights(self) -> List[float]:
         """
         The normalised weights for each mode of transport.
         """
-        return [
+        return np.array([
             mode[0] / self.total
             for mode
             in self.weighted_modes
-        ]
+        ])
 
     def weighted_random_choice(self) -> "ModeOfTransport":
         """
         Randomly choose a mode of transport, weighted by usage in this region.
         """
-        return np.random.choice(
-            self.modes,
-            p=self.weights
-        )
+        idx = random_choice_numba(self.modes_idx, self.weights)
+        return self.modes[idx]
+        #return np.random.choice(
+        #    self.modes,
+        #    p=self.weights
+        #)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self}>"

@@ -16,21 +16,13 @@ from june.groups.leisure import (
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 from june.groups import Household, ExternalSubgroup, Households
+from june.utils import random_choice_numba
 from june import paths
-
 
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger(__name__)
-
-
-@jit(nopython=True)
-def random_choice_numba(arr, prob):
-    """
-    Fast implementation of np.random.choice
-    """
-    return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
 @jit(nopython=True)
@@ -339,10 +331,10 @@ class Leisure:
                 subgroup = group[leisure_subgroup_type]
             assert subgroup is not None
             self.send_household_with_person_if_necessary(
-               person,
-               subgroup,
-               prob_age_sex["drags_household"][activity],
-               to_send_abroad=to_send_abroad,
+                person,
+                subgroup,
+                prob_age_sex["drags_household"][activity],
+                to_send_abroad=to_send_abroad,
             )
             if activity == "household_visits":
                 group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
