@@ -265,11 +265,6 @@ class CloseSchools(SkipActivity):
                     if keyworkers_parents > 1:
                         return True
 
-        if random() < self.compliance:
-            return True
-        else:
-            return False
-
     def check_skips_activity(self, person: "Person") -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
