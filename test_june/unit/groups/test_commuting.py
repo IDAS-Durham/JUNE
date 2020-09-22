@@ -86,10 +86,6 @@ class TestCommuteCityUnit:
 class TestNewcastle:
     @pytest.fixture(name="super_area_commute_nc")
     def super_area_name_nc(self):
-        # return ['E02001731', 'E02001729', 'E02001688', 'E02001689', 'E02001736',
-        #        'E02001720', 'E02001724', 'E02001730', 'E02006841', 'E02001691',
-        #        'E02001713', 'E02001712', 'E02001694', 'E02006842', 'E02001723',
-        #        'E02001715', 'E02001710', 'E02001692', 'E02001734', 'E02001709']
         return ["E02001731", "E02001729"]
 
     @pytest.fixture(name="geography_commute_nc")

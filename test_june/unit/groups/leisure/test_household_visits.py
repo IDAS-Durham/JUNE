@@ -96,6 +96,8 @@ def test__people_stay_home_when_receiving_visits(leisure):
     visitor_household.social_venues = {"household_visits": [resident_household]}
     resident_household.clear()
     visitor_household.clear()
+    resident.busy = False
+    visitor.busy = False
     # check it removes if not busy
     for _ in range(200):
         subgroup = leisure.get_subgroup_for_person_and_housemates(visitor)
@@ -104,7 +106,11 @@ def test__people_stay_home_when_receiving_visits(leisure):
             assert visitor.leisure.subgroup_type == 3
             assert subgroup.group.spec == "household"
             assert visitor in resident_household.people
-            assert resident in resident_household.people
+            assert resident.leisure == resident.residence
+        resident.subgroups.leisure = None
+        resident.busy = False
+        visitor.busy = False
+        visitor.subgroups.leisure = None
         resident_household.clear()
         visitor_household.clear()
 
@@ -118,7 +124,11 @@ def test__people_stay_home_when_receiving_visits(leisure):
             assert visitor.leisure.subgroup_type == 3
             assert subgroup.group.spec == "household"
             assert visitor in resident_household.people
-            assert resident in resident_household.people
+            assert resident.leisure == resident.residence
+        resident.subgroups.leisure = None
+        resident.busy = False
+        visitor.busy = False
+        visitor.subgroups.leisure = None
         resident_household.clear()
         visitor_household.clear()
 

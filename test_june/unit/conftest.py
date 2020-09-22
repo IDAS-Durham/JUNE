@@ -151,6 +151,7 @@ def make_super_areas():
 def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
+    area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
     school = School(
         coordinates=super_area.coordinates,
@@ -164,28 +165,29 @@ def make_dummy_world():
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area.name,
+        super_area=super_area,
         coordinates=super_area.coordinates,
     )
     worker = Person.from_attributes(age=40)
-    worker.area = super_area
+    worker.area = super_area.areas[0]
     household.add(worker, subgroup_type=household.SubgroupType.adults)
     worker.sector = "Q"
     company.add(worker)
 
     pupil = Person.from_attributes(age=6)
-    pupil.area = super_area
+    pupil.area = super_area.areas[0] 
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = super_area
+    household.area = super_area.areas[0] 
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
-    student.area = super_area
+    student.area = super_area.areas[0] 
     household.add(student, subgroup_type=household.SubgroupType.adults)
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
 
     commuter = Person.from_attributes(sex="m", age=30)
+    commuter.area = super_area.areas[0]
     commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
     commuter.mode_of_transport = "public"
     household.add(commuter)
