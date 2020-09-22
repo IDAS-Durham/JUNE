@@ -37,9 +37,9 @@ shielding:
     # CIRCUIT BREAKER
     3:
         min_age: 70
-	compliance: 0.7
-	start_time: 2020-10-02
-	end_time: 2020-10-16
+        compliance: 0.7
+        start_time: 2020-10-02
+        end_time: 2020-10-16
 
 
 close_companies:
@@ -131,7 +131,7 @@ close_companies:
         start_time: 2020-09-09
         #end_time: 2020-09-17
         #end_time: 2020-12-01
-	end_time: 2020-10-02
+        end_time: 2020-10-02
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
@@ -191,7 +191,7 @@ social_distancing:
     3:
         start_time: 2020-07-04 
         #end_time: 2020-12-10
-	end_time: 2020-10-02
+        end_time: 2020-10-02
         beta_factors:
             box: 0.875
             pub: 0.875
