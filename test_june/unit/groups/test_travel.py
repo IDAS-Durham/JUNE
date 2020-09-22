@@ -69,3 +69,20 @@ class TestCommute:
         subgroup = travel.get_commute_subgroup(worker)
         assert subgroup.group.spec == "inter_city_transport"
 
+    def test__all_commuters_get_commute(self, travel_world):
+        world, travel = travel_world
+        assigned_commuters = 0
+        for person in world.people:
+            subgroup = travel.get_commute_subgroup(person)
+            if subgroup is not None:
+                assigned_commuters += 1
+        commuters = 0
+        for city in world.cities:
+            commuters += len(city.commuter_ids)
+        for station in world.stations:
+            commuters += len(station.commuter_ids)
+        assert commuters > 0
+        assert commuters == assigned_commuters
+
+
+

@@ -542,10 +542,7 @@ class Simulator:
         Run simulation with n_seed initial infections
         """
         output_logger.info(
-            f"Starting group_dynamics for {self.timer.total_days} days at day {self.timer.day}"
-        )
-        output_logger.info(
-            f"starting the loop ..., at {self.timer.day} days, to run for {self.timer.total_days} days"
+            f"Starting simulation for {self.timer.total_days} days at day {self.timer.day}, to run for {self.timer.total_days} days"
         )
         self.clear_world()
         if self.logger:
