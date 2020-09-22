@@ -365,15 +365,9 @@ class TestSaveWorld:
             else:
                 assert sa1.city.id == sa2.city.id
                 assert sa1.city.name == sa2.city.name
-            if sa1.closest_station is None:
-                assert sa2.closest_station is None
-            else:
-                assert sa1.closest_station.id == sa2.closest_station.id
-            if sa1.closest_commuting_city is None:
-                assert sa2.closest_commuting_city is None
-            else:
-                assert sa1.closest_commuting_city.id == sa2.closest_commuting_city.id
-                assert sa1.closest_commuting_city.name == sa2.closest_commuting_city.name
+            for city, closest_station in sa1.closest_station_for_city.items():
+                assert city in sa2.closest_station_for_city
+                assert sa2.closest_station_for_city[city].id == closest_station.id
 
     def test__care_home_area(self, full_world, full_world_loaded):
         assert len(full_world_loaded.care_homes) == len(full_world_loaded.care_homes)

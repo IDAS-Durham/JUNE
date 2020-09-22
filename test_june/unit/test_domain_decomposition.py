@@ -120,9 +120,6 @@ class TestDomainDecomposition:
                 assert len(domain.cities) == len(domains_world.cities)
                 domain_super_area_ids = [super_area.id for super_area in domain]
                 if city.super_area.id in domain_super_area_ids:
-                    for super_area in domain.super_areas:
-                        if super_area.closest_commuting_city.id == city.id:
-                            assert super_area.closest_commuting_city.external is False
                     for city_domain in domain.cities:
                         if city.id == city_domain.id:
                             assert city_domain.external is False
@@ -139,9 +136,6 @@ class TestDomainDecomposition:
                             assert city.commuter_ids == city_domain.commuter_ids
                             break
                 else:
-                    for super_area in domain.super_areas:
-                        if super_area.closest_commuting_city.id == city.id:
-                            assert super_area.closest_commuting_city.external is True
                     for city_domain in domain.cities:
                         if city.id == city_domain.id:
                             assert city_domain.external
@@ -159,8 +153,16 @@ class TestDomainDecomposition:
                 domain_super_area_ids = [super_area.id for super_area in domain]
                 if station.super_area.id in domain_super_area_ids:
                     for super_area in domain.super_areas:
-                        if super_area.closest_station.id == station.id:
-                            assert super_area.closest_station.external is False
+                        if (
+                            super_area.closest_station_for_city[station.city].id
+                            == station.id
+                        ):
+                            assert (
+                                super_area.closest_station_for_city[
+                                    station.city
+                                ].external
+                                is False
+                            )
                     for station_domain in domain.stations:
                         if station.id == station_domain.id:
                             assert station_domain.external is False
@@ -178,8 +180,16 @@ class TestDomainDecomposition:
                             break
                 else:
                     for super_area in domain.super_areas:
-                        if super_area.closest_station.id == station.id:
-                            assert super_area.closest_station.external is True
+                        if (
+                            super_area.closest_station_for_city[station.city].id
+                            == station.id
+                        ):
+                            assert (
+                                super_area.closest_station_for_city[
+                                    station.city
+                                ].external
+                                is True
+                            )
                     for station_domain in domain.stations:
                         if station.id == station_domain.id:
                             assert station_domain.external

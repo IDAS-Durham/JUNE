@@ -63,7 +63,7 @@ class City:
         self.super_areas = super_areas
         self.name = name
         self.super_stations = None
-        self.stations = None
+        self.stations = []
         self.coordinates = coordinates
         self.city_transports = []
         self.commuter_ids = set()  # internal commuters in the city

@@ -181,7 +181,6 @@ class RegionalGenerator:
         self.weights = self._get_weights()
         self.modes_idx = np.arange(0, len(self.modes))
 
-    #@property
     def _get_total(self) -> int:
         """
         The sum of the numbers of people using each mode of transport
@@ -192,7 +191,6 @@ class RegionalGenerator:
             in self.weighted_modes
         )
 
-    #@property
     def _get_modes(self) -> List["ModeOfTransport"]:
         """
         A list of modes of transport
@@ -203,7 +201,6 @@ class RegionalGenerator:
             in self.weighted_modes
         ]
 
-    #@property
     def _get_weights(self) -> List[float]:
         """
         The normalised weights for each mode of transport.
@@ -220,10 +217,6 @@ class RegionalGenerator:
         """
         idx = random_choice_numba(self.modes_idx, self.weights)
         return self.modes[idx]
-        #return np.random.choice(
-        #    self.modes,
-        #    p=self.weights
-        #)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self}>"
