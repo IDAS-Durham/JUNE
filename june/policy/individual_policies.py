@@ -248,7 +248,7 @@ class CloseSchools(SkipActivity):
         self.years_to_close = years_to_close
         self.attending_compliance = attending_compliance # compliance with opening
         if self.years_to_close == "all":
-            self.years_to_close = np.arange(20)
+            self.years_to_close = list(np.arange(20))
 
     def _check_kid_goes_to_school(self, person: "Person"):
         """
