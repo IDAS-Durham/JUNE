@@ -11,9 +11,11 @@ from june.records.helpers_recors_writer import (
     InfectionRecord,
     HospitalAdmissionsRecord,
     DeathsRecord,
+    RecoveriesRecord,
 )
 from june import paths
 
+# TODO: record hospital occupancy, static datasets
 
 class Record:
     def __init__(
@@ -46,9 +48,10 @@ class Record:
         self.file.close()
         with open(self.record_path / "summary.csv", mode="w") as summary_file:
             summary_file.write(
-                "time_stamp,region,daily_infections,daily_hospital_admissions,daily_icu_admissions, \n"
+                "time_stamp,region,daily_infections_by_residence," +
+                "daily_hospital_admissions,daily_icu_admissions," +
+                "daily_deaths_by_residence,daily_care_home_deaths,daily_hospital_deaths\n"
             )
-
 
     def initialize_tables(self):
         self.infection_locations, self.new_infected_ids = [], []
@@ -65,6 +68,8 @@ class Record:
         )
         self.death_location_ids, self.dead_person_ids = [], []
         self.deaths_table = self.file.create_table(self.root, "deaths", DeathsRecord)
+        self.recovered_person_id = []
+        self.recoveries_table = self.file.create_table(self.root, "recoveries", RecoveriesRecord)
 
     def get_global_location_id(self, location: str) -> int:
         location_id = int(location.split("_")[-1])
@@ -78,7 +83,6 @@ class Record:
 
     def invert_global_location_id(self, location_global_id: int) -> (str, int):
         cummulative_values = np.cumsum(list(self.locations_to_store.values()))
-        print(cummulative_values)
         idx = np.digitize(location_global_id, cummulative_values)
         location_type = list(self.locations_to_store.keys())[idx]
         if idx == 0:
@@ -176,43 +180,83 @@ class Record:
         self.file.root.deaths.flush()
         self.death_location_ids, self.dead_person_ids = [], []
 
-    def summarise_time_step(self, time_stamp: str, hospitals: "World"):
-        hospital_super_areas = [
-            hospitals[hospital_id].super_area for hospital_id in self.hospital_ids
-        ]
-        hospital_regions = Counter(
-            self.super_area_region_df.loc[hospital_super_areas].region
+    def recoveries(
+        self, time_stamp: str,
+    ):
+        data = np.rec.fromarrays(
+            (
+                np.array(
+                    [time_stamp.strftime("%Y-%m-%d")] * len(self.dead_person_ids),
+                    dtype="S10",
+                ),
+                np.array(self.recovered_person_id, dtype=np.int32),
+            )
         )
-        intensive_care_super_areas = [
-            hospitals[hospital_id].super_area for hospital_id in self.icu_hospital_ids
+        self.file.root.recoveries.append(data)
+        self.file.root.recoveries.flush()
+        self.recovered_person_id = []
+
+
+
+    def summarise_time_step(self, time_stamp: str, world: "World"):
+        hospital_regions = [
+            world.hospitals[hospital_id].super_area.region.name
+            for hospital_id in self.hospital_ids
         ]
-        intensive_care_regions = Counter(
-            self.super_area_region_df.loc[intensive_care_super_areas].region
-        )
+        hospitalised_per_region = Counter(hospital_regions)
+        intensive_care_regions = [
+            world.hospitals[hospital_id].super_area.region.name
+            for hospital_id in self.icu_hospital_ids
+        ]
+        intensive_care_per_region = Counter(intensive_care_regions)
+        daily_infected_regions = [
+            world.people[person_id].area.super_area.region.name
+            for person_id in self.new_infected_ids
+        ]
+        daily_infected_per_region = Counter(daily_infected_regions)
+
+        deaths_regions = [
+            world.people[person_id].area.super_area.region.name
+            for person_id in self.dead_person_ids
+        ]
+        all_deaths_per_region = Counter(deaths_regions)
+
+        hospital_deaths_regions, care_home_deaths_regions = [], []
+        for death_location_id in self.death_location_ids:
+            location_type, location_id = self.invert_global_location_id(
+                death_location_id
+            )
+            if location_type == "care_home":
+                care_home_deaths_regions.append(
+                    world.care_homes[location_id].super_area.region.name
+                )
+            elif location_type == "hospital":
+                hospital_deaths_regions.append(
+                    world.hospitals[location_id].super_area.region.name
+                )
+        hospital_deaths_per_region = Counter(hospital_deaths_regions)
+        care_home_deaths_per_region = Counter(care_home_deaths_regions)
         with open(self.record_path / "summary.csv", "a", newline="") as summary_file:
             summary_writer = csv.writer(summary_file)
-            for region in self.super_area_region_df.region.unique():
+            for region in [region.name for region in world.regions]:
                 summary_writer.writerow(
                     [
                         time_stamp,
                         region,
-                        hospital_regions.get(region, 0),
-                        intensive_care_regions.get(region, 0),
+                        daily_infected_per_region.get(region, 0),
+                        hospitalised_per_region.get(region, 0),
+                        intensive_care_per_region.get(region, 0),
+                        all_deaths_per_region.get(region, 0),
+                        care_home_deaths_per_region.get(region, 0),
+                        hospital_deaths_per_region.get(region, 0),
                     ]
                 )
-        """
-        location_regions = (self.infection_locations)
-        icu_admissions_regions = (self.icu_hospital_ids)
-        deaths_region
-        hospital_deaths_region
-        """
-        # make sure all Counters give same order in regions
-        # add row to csv ('daily_hospital_admissions', 'daily_icu_admissions', 'daily_home_deaths', 'daily_hospital_deaths' 'daily_care_home_deaths' 'region')
 
-    def record_time_step(self, time_stamp: str):
+    def time_step(self, time_stamp: str):
         self.file = open_file(self.record_path / self.filename, mode="a")
         self.infections(time_stamp=time_stamp)
         self.hospital_admissions(time_stamp=time_stamp)
         self.intensive_care_admissions(time_stamp=time_stamp)
         self.deaths(time_stamp=time_stamp)
+        self.recoveries(time_stamp=time_stamp)
         self.file.close()
