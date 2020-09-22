@@ -43,7 +43,8 @@ else:
     seed = 999
 set_random_seed(seed)
 
-world_file = "./tests.hdf5"
+world_file = f"./london_20.hdf5"
+print(world_file)
 config_path = "./config_simulation.yaml"
 
 # parallel setup
@@ -107,6 +108,7 @@ simulator = Simulator.from_file(
 )
 print("simulator ready to go")
 
+# infection seed
 if rank == 0:
     n_cases = 50
     selected_people = np.random.choice(len(population.people), n_cases, replace=False)

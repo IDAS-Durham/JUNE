@@ -331,18 +331,12 @@ def restore_cities_and_stations_properties_from_hdf5(
             idx2 = min((chunk + 1) * chunk_size, n_super_areas)
             length = idx2 - idx1
             super_area_ids = read_dataset(geography["super_area_id"], idx1, idx2)
-            super_area_closest_commuting_city = read_dataset(
-                geography["super_area_closest_commuting_city"], idx1, idx2
-            )
-            super_area_closest_commuting_city_super_area = read_dataset(
-                geography["super_area_closest_commuting_city_super_area"], idx1, idx2
-            )
             super_area_city = read_dataset(geography["super_area_city"], idx1, idx2)
-            super_area_closest_station = read_dataset(
-                geography["super_area_closest_station"], idx1, idx2
+            super_area_closest_stations_cities = read_dataset(
+                geography["super_area_closest_stations_cities"], idx1, idx2
             )
-            super_area_closest_station_super_area = read_dataset(
-                geography["super_area_closest_station_super_area"], idx1, idx2
+            super_area_closest_stations_stations = read_dataset(
+                geography["super_area_closest_stations_stations"], idx1, idx2
             )
             # load closest station
             for k in range(length):
@@ -355,12 +349,10 @@ def restore_cities_and_stations_properties_from_hdf5(
                     if super_area_id not in domain_super_areas:
                         continue
                 super_area = world.super_areas.get_from_id(super_area_id)
-                closest_station_id = super_area_closest_station[k]
-                closest_station = world.stations.get_from_id(closest_station_id)
-                super_area.closest_station = closest_station
-                # load closest commuting city
-                closest_commuting_city_id = super_area_closest_commuting_city[k]
-                closest_commuting_city = world.cities.get_from_id(
-                    closest_commuting_city_id
-                )
-                super_area.closest_commuting_city = closest_commuting_city
+                for city, station in zip(
+                    super_area_closest_stations_cities[k],
+                    super_area_closest_stations_stations[k],
+                ):
+                    super_area.closest_station_for_city[
+                        city.decode()
+                    ] = world.stations.get_from_id(station)

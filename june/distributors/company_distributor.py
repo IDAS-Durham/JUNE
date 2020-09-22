@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 import numpy as np
+from random import randint
 
 
 from june.groups import Companies
@@ -49,7 +50,9 @@ class CompanyDistributor:
                 continue
             if company_dict[worker.sector]:
                 if full_idx[worker.sector] >= len(company_dict[worker.sector]):
-                    company = np.random.choice(company_dict[worker.sector])
+                    idx = randint(0, len(company_dict[worker.sector]) - 1)
+                    company = company_dict[worker.sector][idx]
+                    #company = np.random.choice(company_dict[worker.sector])
                 else:
                     company = company_dict[worker.sector][0]
                     if company.n_workers >= company.n_workers_max:
