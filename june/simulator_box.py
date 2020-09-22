@@ -30,11 +30,12 @@ class SimulatorBox(Simulator):
             interaction: Interaction,
             timer,
             activity_manager,
-            infection_selector: InfectionSelector =None,
+            infection_selector: InfectionSelector = None,
             infection_seed: Optional["InfectionSeed"] = None,
             checkpoint_dates: List[datetime.date] = None,
+            logger = None,
             save_path: str = "results",
-            light_logger: bool = False,
+            comment: str = None,
     ):
         """
         Class to run an epidemic spread simulation on a box. It is 
@@ -58,8 +59,6 @@ class SimulatorBox(Simulator):
             minimum age of a child to be left alone at home when ill
         policies:
             policies to be implemented at different time steps
-        save_path:
-            path to save logger results
         """
         self.beta_copy = interaction.beta
 
@@ -71,7 +70,8 @@ class SimulatorBox(Simulator):
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             save_path=save_path,
-            light_logger=light_logger,
+            logger=None,
+            comment=comment,
             checkpoint_dates=checkpoint_dates,
         )
 

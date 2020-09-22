@@ -32,7 +32,7 @@ shielding:
         min_age: 70
         compliance: 0.7
         start_time: 2020-03-24
-        end_time: 2020-06-01
+        end_time: 2020-08-01
 
 
 close_companies:
@@ -108,7 +108,8 @@ close_companies:
         key_probability: 0.22
     11:
         start_time: 2020-08-12
-        end_time: 2020-08-25
+        #end_time: 2020-08-25
+        end_time: 2020-12-01
         full_closure: False 
         avoid_work_probability: 0.18
         furlough_probability: 0.34
@@ -148,6 +149,22 @@ social_distancing:
             school: 0.75
             household: 1.0
             university: 0.75
+    3:
+        start_time: 2020-07-04 
+        end_time: 2020-12-01
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            commute_unit: 0.875
+            commute_city_unit: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
 
 mask_wearing:
     1: 
@@ -303,6 +320,47 @@ mask_wearing:
             box: 1.
             pub: 0.
             grocery: 1.
+<<<<<<< HEAD
+=======
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    10: 
+        start_time: 2020-08-07
+        end_time: 2020-08-12
+        compliance: 0.70
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            commute_unit: 1.
+            commute_city_unit: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+
+    11: 
+        start_time: 2020-08-12
+        #end_time: 2020-08-25
+        end_time: 2020-12-01
+        compliance: 0.745
+        beta_factor: 0.5
+        mask_probabilities: 
+            box: 1.
+            pub: 0.
+            grocery: 1.
+>>>>>>> master
             cinema: 0.
             commute_unit: 1.
             commute_city_unit: 1.
@@ -351,6 +409,7 @@ mask_wearing:
             university: 0.5
 
 
+
 close_leisure_venue:
     start_time: 2020-03-21
     end_time: 2020-07-04 
@@ -381,4 +440,4 @@ close_schools:
 
 close_universities:
     start_time: 2020-03-20
-    end_time: 2020-10-01
+    end_time: 2021-10-15

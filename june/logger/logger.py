@@ -6,10 +6,18 @@ from june.demography import Population
 from collections import defaultdict
 from pathlib import Path
 import datetime
-
+import pandas as pd # For parameter logger.
+import subprocess # For git logger.
+import june
 
 class Logger:
-    def __init__(self, save_path: str = "results"):
+    def __init__(
+        self,
+        save_path: str = "results",
+        file_name: str = "logger.hdf5",
+        rank: int = 0,
+        config: dict = None,
+    ):
         """
         Logger used by the simulator to store the relevant information.
 
@@ -22,19 +30,19 @@ class Logger:
         """
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.save_path / "logger.hdf5"
-        self.infection_location = []
-        # Remove if exists
+        self.file_path = self.save_path / file_name
+        self.infection_location, self.super_areas_infection = [], []
+        self.config = config
         try:
             os.remove(self.file_path)
         except OSError:
             pass
 
+        if self.config is not None:
+            self.log_config(config=self.config)
+
     def log_population(
-        self,
-        population: Population,
-        light_logger: bool = True,
-        chunk_size: int = 100000,
+        self, population: Population, rank: int = 0, chunk_size: int = 100000,
     ):
         """
         Saves the Population object to hdf5 format file ``self.save_path``. Currently for each person,
@@ -45,18 +53,20 @@ class Logger:
         ----------
         population:
             population object
+        rank:
+            id of rank that will save population (for parallel code)
         chunk_size:
             number of people to save at a time. Note that they have to be copied to be saved,
             so keep the number below 1e6.
         """
-        n_people = len(population.people)
-        dt = h5py.vlen_dtype(np.dtype("int32"))
-        # dt = tuple
-        n_chunks = int(np.ceil(n_people / chunk_size))
-        with h5py.File(self.file_path, "a", libver="latest") as f:
-            people_dset = f.create_group("population")
-            people_dset.attrs["n_people"] = n_people
-            if not light_logger:
+        if rank == 0:
+            n_people = len(population.people)
+            dt = h5py.vlen_dtype(np.dtype("int32"))
+            # dt = tuple
+            n_chunks = int(np.ceil(n_people / chunk_size))
+            with h5py.File(self.file_path, "a", libver="latest") as f:
+                people_dset = f.create_group("population")
+                people_dset.attrs["n_people"] = n_people
                 for chunk in range(n_chunks):
                     idx1 = chunk * chunk_size
                     idx2 = min((chunk + 1) * chunk_size, n_people)
@@ -128,39 +138,39 @@ class Logger:
                         ] = socioeconomic_indcs
 
     def log_infected(
-        self,
-        date: "datetime",
-        infected_ids: List[int],
-        symptoms: List[int],
-        n_secondary_infections: List[int],
+        self, date: "datetime", super_area_infections: dict,
     ):
         """
-        Log relevant information of infected people per time step.
+        Log relevant information of infected people per super area and time step.
 
         Parameters
         ----------
         date:
             datetime of time step to log
-        infected_ids:
+        super_area_infections:
+            dictionary containing (per super area) the IDs of infected people, their symtpoms tag,
+            and the number of secondary infections they produced.
             list of IDs of everyone infected 
-        symptoms:
-            list of symptoms of everyone infected
-        n_secondary_infections:
-            list of number of secondary infections for everyone infected
         """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            infected_dset = f.create_group(time_stamp)
-            ids = np.array(infected_ids, dtype=np.int64)
-            symptoms = np.array(symptoms, dtype=np.int16)
-            n_secondary_infections = np.array(n_secondary_infections, dtype=np.int16)
-            infected_dset.create_dataset("id", compression="gzip", data=ids)
-            infected_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
-            infected_dset.create_dataset(
-                "n_secondary_infections",
-                compression="gzip",
-                data=n_secondary_infections,
-            )
+            for super_area in super_area_infections.keys():
+                super_area_dict = super_area_infections[super_area]
+                super_area_dset = f.require_group(super_area)
+                infection_dset = super_area_dset.require_group("infection")
+                time_dset = infection_dset.create_group(time_stamp)
+                ids = np.array(super_area_dict["ids"], dtype=np.int64)
+                symptoms = np.array(super_area_dict["symptoms"], dtype=np.int16)
+                n_secondary_infections = np.array(
+                    super_area_dict["n_secondary_infections"], dtype=np.int16
+                )
+                time_dset.create_dataset("id", compression="gzip", data=ids)
+                time_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
+                time_dset.create_dataset(
+                    "n_secondary_infections",
+                    compression="gzip",
+                    data=n_secondary_infections,
+                )
 
     def log_hospital_characteristics(self, hospitals: "Hospitals"):
         """
@@ -171,25 +181,41 @@ class Logger:
         hospitals:
             hospitals to log
         """
-        coordinates = []
-        n_beds = []
-        n_icu_beds = []
-        trust_code = []
+        super_area_hospitals = {
+            super_area: {
+                "coordinates": [],
+                "n_beds": [],
+                "n_icu_beds": [],
+                "trust_code": [],
+            }
+            for super_area in [hospital.super_area.name for hospital in hospitals]
+        }
         for hospital in hospitals:
-            coordinates.append(hospital.coordinates)
-            n_beds.append(hospital.n_beds)
-            n_icu_beds.append(hospital.n_icu_beds)
-            trust_code.append(hospital.trust_code)
-        coordinates = np.array(coordinates, dtype=np.float16)
-        n_beds = np.array(n_beds, dtype=np.int16)
-        n_icu_beds = np.array(n_icu_beds, dtype=np.int16)
-        trust_code = np.array(trust_code, dtype="S10")
+            super_area_hospitals[hospital.super_area.name]["coordinates"].append(
+                hospital.coordinates
+            )
+            super_area_hospitals[hospital.super_area.name]["n_beds"].append(
+                hospital.n_beds
+            )
+            super_area_hospitals[hospital.super_area.name]["n_icu_beds"].append(
+                hospital.n_icu_beds
+            )
+            super_area_hospitals[hospital.super_area.name]["trust_code"].append(
+                hospital.trust_code
+            )
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            hospital_dset = f.require_group("hospitals")
-            hospital_dset.create_dataset("coordinates", data=coordinates)
-            hospital_dset.create_dataset("n_beds", data=n_beds)
-            hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
-            hospital_dset.create_dataset("trust_code", data=trust_code)
+            for super_area in super_area_hospitals.keys():
+                super_area_dict = super_area_hospitals[super_area]
+                super_area_dset = f.require_group(super_area)
+                hospital_dset = super_area_dset.require_group("hospitals")
+                coordinates = np.array(super_area_dict["coordinates"], dtype=np.float16)
+                hospital_dset.create_dataset("coordinates", data=coordinates)
+                n_beds = np.array(super_area_dict["n_beds"], dtype=np.int)
+                hospital_dset.create_dataset("n_beds", data=n_beds)
+                n_icu_beds = np.array(super_area_dict["n_icu_beds"], dtype=np.int)
+                hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
+                trust_code = np.array(super_area_dict["trust_code"], dtype="S10")
+                hospital_dset.create_dataset("trust_code", data=trust_code)
 
     def log_hospital_capacity(self, date: "datetime", hospitals: "Hospitals"):
         """
@@ -203,51 +229,35 @@ class Logger:
             hospitals to log
         """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        hospital_ids = []
-        n_patients = []
-        n_patients_icu = []
+        super_area_hospitals = {
+            super_area: {"id": [], "n_patients": [], "n_patients_icu": []}
+            for super_area in [hospital.super_area.name for hospital in hospitals]
+        }
         for hospital in hospitals:
-            hospital_ids.append(hospital.id)
-            n_patients.append(
+            super_area_hospitals[hospital.super_area.name]["id"].append(hospital.id)
+            super_area_hospitals[hospital.super_area.name]["n_patients"].append(
                 len(hospital.subgroups[hospital.SubgroupType.patients].people)
             )
-            n_patients_icu.append(
+            super_area_hospitals[hospital.super_area.name]["n_patients_icu"].append(
                 len(hospital.subgroups[hospital.SubgroupType.icu_patients].people)
             )
         # save to hdf5
-        hospitals_ids = np.array(hospital_ids, dtype=np.int16)
-        n_patients = np.array(n_patients, dtype=np.int16)
-        n_patients_icu = np.array(n_patients_icu, dtype=np.int16)
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            hospital_dset = f.require_group("hospitals")
-            time_dset = hospital_dset.create_group(time_stamp)
-            time_dset.create_dataset("hospital_id", data=hospital_ids)
-            time_dset.create_dataset("n_patients", data=n_patients)
-            time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
+            for super_area in super_area_hospitals.keys():
+                super_area_dict = super_area_hospitals[super_area]
+                super_area_dset = f.require_group(super_area)
+                hospital_dset = super_area_dset.require_group("hospitals")
+                time_dset = hospital_dset.create_group(time_stamp)
+                ids = np.array(super_area_dict["id"], dtype=np.int)
+                n_patients = np.array(super_area_dict["n_patients"], dtype=np.int)
+                n_patients_icu = np.array(
+                    super_area_dict["n_patients_icu"], dtype=np.int
+                )
+                time_dset.create_dataset("id", data=ids)
+                time_dset.create_dataset("n_patients", data=n_patients)
+                time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
 
-    def get_number_group_instances(self, world: "World", location: str):
-        """
-        Given the world and a location, find the number of instances of that location that exist in the world
-
-        Parameters
-        ----------
-        world:
-            world instance
-        location:
-            location type
-        """
-        plural = location + "s"
-        if location == "grocery":
-            plural = "groceries"
-        elif location == "company":
-            plural = "companies"
-        elif location == "commute_unit":
-            plural = "commuteunits"
-        elif location == "commutecity_unit":
-            plural = "commutecityunits"
-        return len(getattr(world, plural).members)
-
-    def accumulate_infection_location(self, location, n_infected=1):
+    def accumulate_infection_location(self, location, super_areas_infection):
         """
         Store where infections happend in a time step
         
@@ -255,39 +265,67 @@ class Logger:
         ----------
         location:
             group type of the group in which the infection took place
+        super_area_infection:
+            super area in which the person that was infected lives
         """
-        self.infection_location += [location] * n_infected
+        self.infection_location += [location] * len(super_areas_infection)
+        self.super_areas_infection += super_areas_infection
 
     def log_infection_location(self, time):
         """
-        Log where did all infections in a time step happened, as a number count
+        Log where did all infections in a time step happened
 
         Parameters
         ----------
         time:
             datetime to log
         """
+        super_area_locations = {
+            super_area: {"location": [],} for super_area in self.super_areas_infection
+        }
+        for super_area, location in zip(
+            self.super_areas_infection, self.infection_location
+        ):
+            super_area_locations[super_area]["location"].append(location)
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        unique_locations, counts = np.unique(
-            np.array(self.infection_location), return_counts=True
-        )
-        unique_locations = np.array(unique_locations, dtype="S10")
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            locations_dset = f.require_group("locations")
-            time_dset = locations_dset.create_group(time_stamp)
-            time_dset.create_dataset("infection_location", data=unique_locations)
-            time_dset.create_dataset("infection_counts", data=counts)
+            for super_area in super_area_locations.keys():
+                super_area_dict = super_area_locations[super_area]
+                super_area_dset = f.require_group(super_area)
+                location_dset = super_area_dset.require_group("locations")
+                time_dset = location_dset.require_group(time_stamp)
+                locations = np.array(super_area_dict["location"], dtype="S")
+                time_dset.create_dataset("locations", data=locations)
         self.infection_location = []
+        self.super_areas_infection = []
 
-    def unpack_dict(self,hdf5_obj,data,base_path,depth=0,max_depth=5):
-        if depth>max_depth:
+    def unpack_dict(self, hdf5_obj, data, base_path, depth=0, max_depth=5):
+        """
+        Recursively unpack a nested dict of data into an hdf5 object, starting
+        group name at base_path
+
+        Parameters
+        ----------
+        hdf5_obj
+            The open hdf5_object
+        data
+            A (nested) dictionary of data: dict vals can be
+            int, float, str, List[int,float], np.ndarray, datetime.datetime, pd.Timestamp.
+        base_path
+            the top-level location of the group data in the hdf5_obj.
+        depth
+            leave this at zero - keeps track of number of depth of recursion.
+        max_depth
+            breaks recursion if depth > max_depth.
+        """
+        if depth > max_depth:
             return None
         for key, val in data.items():
             dset_path = f"{base_path}/{key}"
-            if type(val) in [int, float, str, List[int], List[float], np.ndarray]:
+            if type(val) in [int, float, str, np.ndarray]:
                 hdf5_obj.create_dataset(dset_path, data=val)
             elif isinstance(val, list):
-                if all(isinstance(x, (int, float)) for x in val):
+                if all(isinstance(x, (int, float)) for x in val): # mixed float, int.
                     hdf5_obj.create_dataset(dset_path, data=val)
                 elif all(isinstance(x, str) for x in val):
                     asciiList = [x.encode("ascii", "ignore") for x in val]
@@ -295,8 +333,8 @@ class Logger:
                     hdf5_obj.create_dataset(
                         dset_path, (len(asciiList),), dtype=dt, data=asciiList
                     )
-
-            elif isinstance(val, datetime.datetime):
+            elif isinstance(val, (datetime.datetime,pd.Timestamp)):
+                # both datetime.datetime and pd.Timetamp have the same strftime...!
                 hdf5_obj.create_dataset(
                     dset_path, data=val.strftime("%Y-%m-%dT%H:%M:%S.%f")
                 )
@@ -304,6 +342,7 @@ class Logger:
                 self.unpack_dict(
                     hdf5_obj, val, dset_path, depth=depth + 1
                 )  # Recursion!!
+            # TODO: implement try/except val.__repr__ in "else" block?
 
     def log_parameters(
         self,
@@ -311,56 +350,118 @@ class Logger:
         infection_seed: "InfectionSeed" = None,
         infection_selector: "InfectionSelector" = None,
         activity_manager: "ActivityManager" = None,
+        rank: int = 0,
     ):
+        if rank == 0:
+            with h5py.File(self.file_path, "a", libver="latest") as f:
+                params = f.require_group("parameters")
+
+                # interaction params
+                if interaction is not None:
+                    for key, data in interaction.beta.items():
+                        beta_path = f"parameters/beta/{key}"
+                        f.create_dataset(beta_path, data=data)
+
+                    f.create_dataset(
+                        "parameters/alpha_physical", data=interaction.alpha_physical
+                    )
+
+                    for key, data in interaction.contact_matrices.items():
+                        dset_path = f"parameters/contact_matrices/{key}"
+                        f.create_dataset(dset_path, data=data)
+
+                selector_keys = [
+                    "transmission_type", "asymptomatic_ratio"
+                ]
+                if infection_selector is not None:
+                    f.create_dataset(
+                        "parameters/asymptomatic_ratio",
+                        data=infection_selector.health_index_generator.asymptomatic_ratio,
+                    )  #
+                    f.create_dataset(
+                        "parameters/transmission_type",
+                        data=infection_selector.transmission_type,
+                    )  #
+                seed_keys = ["seed_strength", "min_date", "max_date"]
+                if infection_seed is not None:
+                    seed_dict = {key:infection_seed.__dict__[key] for key in seed_keys}
+                    dset_path = f"parameters/infection_seed"
+                    self.unpack_dict(f, data=seed_dict, base_path=dset_path)
+
+                # policies
+                if activity_manager is not None:
+                    if activity_manager.policies:
+                        policy_types = defaultdict(int)
+                        for pol in activity_manager.policies.policies:
+                            policy_types[
+                                pol.get_spec()
+                            ] += 1  # How many of each type of policy?
+
+                        for pol in activity_manager.policies.policies:
+                            pol_spec = pol.get_spec()
+                            n_instances = policy_types[pol_spec]
+
+                            if n_instances > 1:
+                                for i in range(1, n_instances + 1):
+                                    policy_path = f"parameters/policies/{pol_spec}/{i}"
+                                    # Loop through until we find a path that doesn't exist, then make it
+                                    if policy_path not in f:
+                                        break
+                            else:
+                                i = None
+                                policy_path = f"parameters/policies/{pol_spec}"
+
+                            self.unpack_dict(f, pol.__dict__, policy_path, depth=0)
+
+    def log_config(self,config=None):
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            params = f.require_group("parameters")
+            config_dset = f.require_group("config")
+            if config is not None:
+                dset_path = f"config"
+                self.unpack_dict(f, config, dset_path, depth=0)
 
-            # interaction params
-            if interaction is not None:
-                for key, data in interaction.beta.items():
-                    beta_path = f"parameters/beta/{key}"
-                    f.create_dataset(beta_path, data=data)
 
-                f.create_dataset(
-                    "parameters/alpha_physical", data=interaction.alpha_physical
-                )
+    @staticmethod
+    def get_username():
+        try:
+            username = os.getlogin()
+        except:
+            username = "no_user"
+        return username
 
-                for key, data in interaction.contact_matrices.items():
-                    dset_path = f"parameters/contact_matrices/{key}"
-                    f.create_dataset(dset_path, data=data)
+    def log_meta_info(self,comment=None,random_state=None):
+        june_git = Path(june.__path__[0]).parent / '.git'
+        meta_dict = {}
+        branch_cmd = f'git --git-dir {june_git} rev-parse --abbrev-ref HEAD'.split()
+        try:
+            meta_dict["branch"] = subprocess.run(
+                branch_cmd,stdout=subprocess.PIPE
+            ).stdout.decode('utf-8').strip()
+        except Exception as e:
+            print(e)
+            print("Could not record git branch")
+            meta_dict["branch"] =  "unavailable"
+        local_SHA_cmd = f'git --git-dir {june_git} log -n 1 --format="%h"'.split()
+        try:
+            meta_dict["local_SHA"] = subprocess.run(
+                local_SHA_cmd,stdout=subprocess.PIPE
+            ).stdout.decode('utf-8').strip()
+        except:
+            print("Could not record local git SHA")
+            meta_dict["local_SHA"] = "unavailable"
+        user = self.get_username()
+        meta_dict["user"] = user
+        if comment is None:
+            comment: "No comment provided."
+        meta_dict["user_comment"] = f"{comment}"
+        meta_dict["time_of_log"] = datetime.datetime.now().replace(microsecond=0)
+        meta_dict["june_path"] = str(june.__path__[0])
 
-            if infection_selector is not None:
-                f.create_dataset(
-                    "parameters/asymptomatic_ratio",
-                    data=infection_selector.health_index_generator.asymptomatic_ratio,
-                )  #
+        with h5py.File(self.file_path, "a", libver="latest") as f:
+            meta = f.require_group("meta")
+            self.unpack_dict(f, data=meta_dict, base_path="meta")
+            # TODO: log number of threads for parallelised version.
 
-            if infection_seed is not None:
-                f.create_dataset(
-                    "parameters/seed_strength", data=infection_seed.seed_strength
-                )
 
-            # policies
-            if activity_manager is not None:
-                if activity_manager.policies:
-                    policy_types = defaultdict(int)
-                    for pol in activity_manager.policies.policies:
-                        policy_types[
-                            pol.get_spec()
-                        ] += 1  # How many of each type of policy?
+        return None
 
-                    for pol in activity_manager.policies.policies:
-                        pol_spec = pol.get_spec()
-                        n_instances = policy_types[pol_spec]
-
-                        if n_instances > 1:
-                            for i in range(1, n_instances + 1):
-                                policy_path = f"parameters/policies/{pol_spec}/{i}"
-                                # Loop through until we find a path that doesn't exist, then make it
-                                if policy_path not in f:
-                                    break
-                        else:
-                            i = None
-                            policy_path = f"parameters/policies/{pol_spec}"
-
-                        self.unpack_dict(f, pol.__dict__, policy_path, depth=0)
