@@ -13,7 +13,7 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
-from june.infection_seed import InfectionSeed
+from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
@@ -90,6 +90,21 @@ interaction = Interaction.from_file()
 policies = Policies.from_file()
 
 # create simulator
+
+oc = Observed2Cases.from_file(
+        health_index_generator=health_index_generator,
+        smoothing=True
+        )
+daily_cases_per_region = oc.get_regional_latent_cases()
+daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
+        daily_cases_per_region,
+        dates=['2020-02-28', '2020-02-29', '2020-03-01', '2020-03-02']
+        )
+infection_seed = InfectionSeed(world=domain,
+        selector=infection_selector,
+        daily_super_area_cases=daily_cases_per_super_area,
+        seed_strength=0.9,
+        )
 
 travel = Travel()
 simulator = Simulator.from_file(
