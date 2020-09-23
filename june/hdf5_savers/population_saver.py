@@ -400,7 +400,6 @@ def restore_population_properties_from_hdf5(
                 # restore area
                 person.area = world.areas.get_from_id(areas[k])
                 person.area.people.append(person)
-                person.area.super_area.people.append(person)
                 work_super_area_id = work_super_areas[k]
                 if work_super_area_id == nan_integer:
                     person.work_super_area = None
