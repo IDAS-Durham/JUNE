@@ -125,28 +125,36 @@ class Record:
             self.events[event_name].record(hdf5_file=self.file, timestamp=timestamp)
         self.file.close()
 
-    def summarise_time_step(self, timestamp: str, world: "World"):
-        hospital_regions = [
-            world.hospitals[hospital_id].super_area.region.name
-            for hospital_id in self.events["hospital_admissions"].hospital_ids
-        ]
-        hospitalised_per_region = Counter(hospital_regions)
-        intensive_care_regions = [
-            world.hospitals[hospital_id].super_area.region.name
-            for hospital_id in self.events["icu_admissions"].hospital_ids
-        ]
-        intensive_care_per_region = Counter(intensive_care_regions)
-        daily_infected_regions = [
-            world.people[person_id].area.super_area.region.name
-            for person_id in self.events["infections"].new_infected_ids
-        ]
-        daily_infected_per_region = Counter(daily_infected_regions)
+    def summarise_hospitalisations(self, timestamp: str, world: "World"):
+        hospitalised_per_region = Counter(
+            [
+                world.hospitals[hospital_id].super_area.region.name
+                for hospital_id in self.events["hospital_admissions"].hospital_ids
+            ]
+        )
+        intensive_care_per_region = Counter(
+            [
+                world.hospitals[hospital_id].super_area.region.name
+                for hospital_id in self.events["icu_admissions"].hospital_ids
+            ]
+        )
+        return hospitalised_per_region, intensive_care_per_region
 
-        deaths_regions = [
-            world.people[person_id].area.super_area.region.name
-            for person_id in self.events["deaths"].dead_person_ids
-        ]
-        all_deaths_per_region = Counter(deaths_regions)
+    def summarise_infections(self, timestamp: str, world="World"):
+        return Counter(
+            [
+                world.people[person_id].area.super_area.region.name
+                for person_id in self.events["infections"].new_infected_ids
+            ]
+        )
+
+    def summarise_deaths(self, timestamp: str, world="World"):
+        all_deaths_per_region = Counter(
+            [
+                world.people[person_id].area.super_area.region.name
+                for person_id in self.events["deaths"].dead_person_ids
+            ]
+        )
 
         hospital_deaths_regions, care_home_deaths_regions = [], []
         for death_location_id in self.events["deaths"].death_location_ids:
@@ -163,6 +171,25 @@ class Record:
                 )
         hospital_deaths_per_region = Counter(hospital_deaths_regions)
         care_home_deaths_per_region = Counter(care_home_deaths_regions)
+        return (
+            all_deaths_per_region,
+            hospital_deaths_per_region,
+            care_home_deaths_per_region,
+        )
+
+    def summarise_time_step(self, timestamp: str, world: "World"):
+        (
+            hospitalised_per_region,
+            intensive_care_per_region,
+        ) = self.summarise_hospitalisations(timestamp=timestamp, world=world)
+        daily_infected_per_region = self.summarise_infections(
+            timestamp=timestamp, world=world
+        )
+        (
+            all_deaths_per_region,
+            hospital_deaths_per_region,
+            care_home_deaths_per_region,
+        ) = self.summarise_deaths(timestamp=timestamp, world=world)
         with open(self.record_path / "summary.csv", "a", newline="") as summary_file:
             summary_writer = csv.writer(summary_file)
             for region in [region.name for region in world.regions]:

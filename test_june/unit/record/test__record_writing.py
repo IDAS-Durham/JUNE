@@ -75,11 +75,11 @@ def create_dummy_world():
 
 
 def test__locations_id():
-    locations_to_store = {"household": 5, "care_home": 4, "school": 3, "grocery": 1}
+    locations_counts = {"household": 5, "care_home": 4, "school": 3, "grocery": 1}
     record = Record(
         record_path="results",
         filename="test.hdf5",
-        locations_to_store=locations_to_store,
+        locations_counts=locations_counts,
     )
 
     global_id = record.get_global_location_id("household_2")
@@ -167,29 +167,25 @@ def test__writing_death():
 
 def test__sumarise_time_tep(dummy_world):
     record = Record(record_path="results", filename="test.hdf5", 
-            locations_to_store={'household':1, 'care_home':1, 'hospital':1})
+            locations_counts={'household':1, 'care_home':1, 'hospital':1})
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate_infections(location="care_home_0", new_infected_ids=[2])
     record.accumulate_infections(location="household_0", new_infected_ids=[0])
     record.accumulate_hospitalisation(hospital_id=0, patient_id=1)
     record.accumulate_hospitalisation(hospital_id=0, patient_id=1, intensive_care=True)
-    record.summarise_time_step("2020-04-04", dummy_world)
-    print(record.events['infections'].new_infected_ids)
+    record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
     timestamp = datetime.datetime(2020, 4, 5)
     record.accumulate_death(death_location="care_home_0", dead_person_id=2)
     record.accumulate_death(death_location="household_0", dead_person_id=0)
     record.accumulate_death(death_location="hospital_0", dead_person_id=1)
-    record.summarise_time_step("2020-04-05", dummy_world)
+    record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
 
     summary_df = pd.read_csv(record.record_path / 'summary.csv', index_col=0)
-    print(summary_df)
     region_1 = summary_df[summary_df['region'] == 'region_1']
     region_2 = summary_df[summary_df['region'] == 'region_2']
-    print(region_1)
-    print(region_2)
     assert region_1.loc['2020-04-04']['daily_infections_by_residence'] == 2
     assert region_1.loc['2020-04-05']['daily_infections_by_residence'] == 0
     assert region_2.loc['2020-04-04']['daily_infections_by_residence'] == 0
