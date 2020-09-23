@@ -10,5 +10,5 @@ female_age_probabilities:
   7-12: 5.69
   12-16: 4.83
   17-100: 0.
-weekend_boost: 1.5
+weekend_boost: 1.0
 drags_household_probability: 0.0
