@@ -21,7 +21,7 @@ class PumpLatrines(SocialVenues):
         super().__init__(pump_latrines, make_tree=False)
 
     @classmethod
-    def for_areas(cls, areas: List[Area], venues_per_capita=1/(100+35/2), max_size=10):
+    def for_areas(cls, areas: List[Area], venues_per_capita=1/(100+35/2), max_size=np.inf):
         pump_latrines = []
         for area in areas:
             area_population = len(area.people)
