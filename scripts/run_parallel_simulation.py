@@ -141,7 +141,6 @@ def generate_simulator():
     print("simulator ready to go")
     return simulator
 
-@profile(filename=f"profile_{rank}.prof")
 def run_simulator(simulator):
 
     t1 = time.time()
