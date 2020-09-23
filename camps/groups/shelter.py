@@ -52,9 +52,9 @@ class Shelter(Household):
         return self.area.coordinates
 
     def get_leisure_subgroup(self, person):
-        if self.n_households == 0:
+        if self.n_families == 0:
             return None
-        elif self.n_households == 1:
+        elif self.n_families == 1:
             return self[0]
         else:
             return self[randint(0,1)]
