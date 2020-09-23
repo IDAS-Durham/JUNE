@@ -10,6 +10,7 @@ from june.demography import Person, Population
 def make_sa():
     return Geography.from_file({"super_area": ["E02001731", "E02005123"]})
 
+
 @pytest.fixture(name="travel_world", scope="module")
 def make_commuting_network(geo):
     world = World()
@@ -32,6 +33,7 @@ def make_commuting_network(geo):
     travel = Travel()
     travel.initialise_commute(world)
     return world, travel
+
 
 class TestCommute:
     def test__generate_commuting_network(self, travel_world):
@@ -56,11 +58,10 @@ class TestCommute:
         n_internal_commuters = len(city.commuter_ids)
         assert n_internal_commuters == 3
         assert n_external_commuters == 9
-        
 
     def test__get_travel_subgroup(self, travel_world):
         world, travel = travel_world
-        #get internal commuter
+        # get internal commuter
         worker = world.people[0]
         subgroup = travel.get_commute_subgroup(worker)
         assert subgroup.group.spec == "city_transport"
@@ -68,6 +69,29 @@ class TestCommute:
         worker = world.people[1]
         subgroup = travel.get_commute_subgroup(worker)
         assert subgroup.group.spec == "inter_city_transport"
+
+    def test__number_of_commuters(self, travel_world):
+        world, travel = travel_world
+        public_transports = 0
+        for person in world.people:
+            if (
+                person.mode_of_transport is not None
+                and person.mode_of_transport.is_public
+            ):
+                if (
+                    person.work_super_area.city is not None
+                    and person.work_super_area.city.stations
+                ):
+                    public_transports += 1
+        commuters = 0
+        for city in world.cities:
+            commuters += len(city.commuter_ids)
+        for station in world.stations:
+            commuters += len(station.commuter_ids)
+        assert public_transports == commuters
+        print(commuters)
+        print(public_transports)
+        raise ValueError
 
     def test__all_commuters_get_commute(self, travel_world):
         world, travel = travel_world
@@ -83,6 +107,3 @@ class TestCommute:
             commuters += len(station.commuter_ids)
         assert commuters > 0
         assert commuters == assigned_commuters
-
-
-

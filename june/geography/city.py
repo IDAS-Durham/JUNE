@@ -130,9 +130,11 @@ class Cities(Supergroup):
         city_super_areas.set_index("city", inplace=True)
         cities = []
         for city in city_super_areas.index.unique():
-            super_area_names = city_super_areas.loc[city, "super_area"].values
+            super_area_names = city_super_areas.loc[city, "super_area"]
             if type(super_area_names) == str:
                 super_area_names = [super_area_names]
+            else:
+                super_area_names = super_area_names.values.astype(str)
             city = City(name=city, super_areas=super_area_names)
             lats = []
             lons = []

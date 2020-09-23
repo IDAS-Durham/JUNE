@@ -112,7 +112,10 @@ class WorkerDistributor:
                     self._assign_work_location(idx, person, wf_area_df)
                     self._assign_work_sector(idx, person)
                     self._assign_lockdown_status(
-                        lockdown_tags_probabilities_by_sector, lockdown_tags, lockdown_tags_idx, person
+                        lockdown_tags_probabilities_by_sector,
+                        lockdown_tags,
+                        lockdown_tags_idx,
+                        person,
                     )
             if i % 5000 == 0 and i != 0:
                 logger.info(f"Distributed workers in {i} areas of {len(self.areas)}")
@@ -179,23 +182,21 @@ class WorkerDistributor:
             work_location = wf_area_df.index.values[self.work_msoa_woman_rnd[i]]
         else:
             work_location = wf_area_df.index.values[self.work_msoa_man_rnd[i]]
-        super_area = [
-            super_area
-            for super_area in self.super_areas
-            if super_area.name == work_location
-        ]
-        if super_area:
-            super_area = super_area[0]
+        try:
+            super_area = self.super_areas.members_by_name[work_location]
             super_area.add_worker(person)
-        elif work_location in list(self.non_geographical_work_location.keys()):
-            if self.non_geographical_work_location[work_location] == "home":
-                person.work_super_area = None
-            elif self.non_geographical_work_location[work_location] == "bind":
-                self._select_rnd_superarea(person)
+        except KeyError:
+            if work_location in list(self.non_geographical_work_location):
+                if self.non_geographical_work_location[work_location] == "home":
+                    person.work_super_area = None
+                elif self.non_geographical_work_location[work_location] == "bind":
+                    self._select_rnd_superarea(person)
+                else:
+                    raise KeyError(
+                        f"Work location {work_location} not found in world's geogeraphy"
+                    )
             else:
-                raise ValueError
-        else:
-            self._select_rnd_superarea(person)
+                self._select_rnd_superarea(person)
 
     def _select_rnd_superarea(self, person: Person):
         """
@@ -255,7 +256,11 @@ class WorkerDistributor:
         return ret
 
     def _assign_lockdown_status(
-        self, probabilities_by_sector: dict, lockdown_tags: List[str], lockdown_tags_idx:List[int], person: Person
+        self,
+        probabilities_by_sector: dict,
+        lockdown_tags: List[str],
+        lockdown_tags_idx: List[int],
+        person: Person,
     ):
         """
         Assign lockdown_status in proportion to definitions in the policy config
