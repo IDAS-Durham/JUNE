@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-from random import random, sample
+from random import random, randint 
 from typing import List, Dict
 from june.demography import Person
 from june.geography import Geography, SuperAreas, Areas
@@ -316,11 +316,7 @@ class Leisure:
             elif candidates_length == 1:
                 group = candidates[0]
             else:
-                indices = sample(range(len(candidates)), len(candidates))
-                for idx in indices:
-                    group = candidates[idx]
-                    if group is not None:
-                        break
+                group = candidates[randint(0, candidates_length-1)]
             if group is None:
                 return
             elif group.external:
