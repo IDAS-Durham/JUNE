@@ -37,7 +37,7 @@ class Shelter(Household):
 
     @property
     def families(self):
-        return [subgroup for subgroup in self.subgroups if len(subgroup) != 0]
+        return [subgroup for subgroup in self.subgroups if len(subgroup.people) != 0]
 
     @property
     def n_families(self):
@@ -50,10 +50,6 @@ class Shelter(Household):
     @property
     def coordinates(self):
         return self.area.coordinates
-
-    @property
-    def size(self):
-        return self.n_households
 
     def get_leisure_subgroup(self, person):
         if self.n_households == 0:
