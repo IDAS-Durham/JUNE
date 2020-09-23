@@ -179,6 +179,7 @@ class Companies(Supergroup):
             sizes = np.concatenate(
                 (sizes, np.random.randint(max(size_min, 1), size_max, int(counts)))
             )
+        np.random.shuffle(sizes)
         sectors = []
         for sector, counts in company_sectors.items():
             sectors += [sector] * int(counts)
@@ -192,11 +193,6 @@ class Companies(Supergroup):
                 sectors,
             )
         )
-        # shuffle and reorder companies
-        min_idx = companies[0].id
-        shuffle(companies)
-        for i, company in enumerate(companies):
-            company.id = min_idx + i
         return companies
 
     @classmethod
