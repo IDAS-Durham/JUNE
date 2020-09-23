@@ -168,7 +168,7 @@ class ActivityManager:
             elif activity == "commute":
                 subgroup = self.travel.get_commute_subgroup(person=person)
             else:
-                subgroup = self.get_personal_subgroup(person=person, activity=activity)
+                subgroup = getattr(person, activity) 
             if subgroup is not None:
                 if subgroup.external:
                     person.busy = True
@@ -179,22 +179,6 @@ class ActivityManager:
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
-
-    def get_personal_subgroup(self, person: "Person", activity: str) -> "Subgroup":
-        """
-        Find the subgroup a person belongs to for a particular activity.
-        
-        Parameters
-        ----------
-        person:
-            person that is looking for a subgroup 
-        activity:
-            the activity the person wants to find a subgroup for
-        Returns
-        -------
-        Subgroup for activity
-        """
-        return getattr(person, activity)
 
     def do_timestep(self):
         activities = self.timer.activities
@@ -256,47 +240,6 @@ class ActivityManager:
                 to_send_abroad.add_person(person, external_subgroup)
 
         return to_send_abroad
-
-    #def send_and_receive_people_from_abroad_old(self, to_send_abroad):
-    #    # send people abroad
-    #    tick, tickw = perf_counter(), wall_clock()
-    #    people_from_abroad = {}
-    #    n_people_from_abroad = 0
-    #    for rank in range(mpi_size):
-    #        if rank == mpi_rank:
-    #            # my turn to send my data
-    #            for rank_receiving in range(mpi_size):
-    #                if rank == rank_receiving:
-    #                    continue
-    #                if rank_receiving in to_send_abroad:
-    #                    n_people_this_rank = count_people_in_dict(
-    #                        to_send_abroad[rank_receiving]
-    #                    )
-    #                    mpi_comm.send(
-    #                        to_send_abroad[rank_receiving],
-    #                        dest=rank_receiving,
-    #                        tag=rank_receiving,
-    #                    )
-    #                    print(
-    #                        f"I am rank {mpi_rank} and I just sent {n_people_this_rank} to {rank_receiving}"
-    #                    )
-    #                    continue
-    #                mpi_comm.send(None, dest=rank_receiving, tag=rank_receiving)
-    #        else:
-    #            # I have to listen
-    #            data = mpi_comm.recv(source=rank, tag=mpi_rank)
-    #            if data is not None:
-    #                n_people_this_rank = count_people_in_dict(data)
-    #                print(
-    #                    f"I am rank {mpi_rank} and I just received {n_people_this_rank} from {rank}"
-    #                )
-    #                update_data(people_from_abroad, data)
-    #                n_people_from_abroad += n_people_this_rank
-    #    tock, tockw = perf_counter(), wall_clock()
-    #    logger.info(
-    #        f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw-tickw} - {self.timer.date}"
-    #    )
-    #    return people_from_abroad, n_people_from_abroad
 
     def send_and_receive_people_from_abroad(self, movable_people):
         """
