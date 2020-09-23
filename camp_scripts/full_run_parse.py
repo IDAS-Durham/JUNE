@@ -119,6 +119,9 @@ else:
 
 print ('Comorbidities set to: {}'.format(args.comorbidities))
 print ('Parameters path set to: {}'.format(args.parameters))
+print ('Household beta set to: {}'.format(args.household_beta))
+print ('Indoor beta ratio is set to: {}'.format(args.indoor_beta_ratio))
+print ('Outdoor beta ratio set to: {}'.format(args.outdoor_beta_ratio))
 print ('Infectiousness path set to: {}'.format(args.infectiousness_path))
 print ('Child susceptibility change set to: {}'.format(args.child_susceptibility))
 
@@ -145,8 +148,8 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
-#world = generate_empty_world()
+#world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
