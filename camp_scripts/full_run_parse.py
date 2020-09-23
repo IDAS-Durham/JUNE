@@ -73,6 +73,23 @@ parser.add_argument(
     default="ContactInteraction_med_low_low_low.yaml",
 )
 parser.add_argument(
+    "-hb", "--household_beta", help="Household beta", required=False, default=False
+)
+parser.add_argument(
+    "-ih",
+    "--indoor_beta_ratio",
+    help="Indoor/household beta ratio scaling",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-oh",
+    "--outdoor_beta_ratio",
+    help="Outdoor/household beta ratio scaling",
+    required=False,
+    default=False,
+)
+parser.add_argument(
     "-inf",
     "--infectiousness_path",
     help="path to infectiousness parameter file",
@@ -207,15 +224,15 @@ elif args.infectiousness_path == "xnexp":
 else:
     raise NotImplementedError
 
-print ('Comorbidities set to: {}'.format(args.comorbidities))
-print ('Parameters path set to: {}'.format(args.parameters))
-print ('Household beta set to: {}'.format(args.household_beta))
-print ('Indoor beta ratio is set to: {}'.format(args.indoor_beta_ratio))
-print ('Outdoor beta ratio set to: {}'.format(args.outdoor_beta_ratio))
-print ('Infectiousness path set to: {}'.format(args.infectiousness_path))
-print ('Child susceptibility change set to: {}'.format(args.child_susceptibility))
+print("Comorbidities set to: {}".format(args.comorbidities))
+print("Parameters path set to: {}".format(args.parameters))
+print("Indoor beta ratio is set to: {}".format(args.indoor_beta_ratio))
+print("Outdoor beta ratio set to: {}".format(args.outdoor_beta_ratio))
+print("Infectiousness path set to: {}".format(args.infectiousness_path))
+print("Child susceptibility change set to: {}".format(args.child_susceptibility))
 
 print("Isolation units set to: {}".format(args.isolation_units))
+print("Household beta set to: {}".format(args.household_beta))
 if args.isolation_units:
     print("Testing time set to: {}".format(args.isolation_testing))
     print("Isolation time set to: {}".format(args.isolation_time))
@@ -376,21 +393,39 @@ if args.play_group_beta_ratio:
     )
 
 if args.household_beta:
-    interaction.beta['household'] = float(args.household_beta)
-    interaction.beta['hospital'] = float(args.household_beta)*0.1
+    interaction.beta["household"] = float(args.household_beta)
+    interaction.beta["hospital"] = float(args.household_beta) * 0.1
 
 if args.indoor_beta_ratio:
-    interaction.beta['play_group'] = interaction.beta['household']*float(args.indoor_beta_ratio)
-    interaction.beta['pump_latrine'] = interaction.beta['household']*float(args.indoor_beta_ratio)
+    interaction.beta["play_group"] = interaction.beta["household"] * float(
+        args.indoor_beta_ratio
+    )
+    interaction.beta["pump_latrine"] = interaction.beta["household"] * float(
+        args.indoor_beta_ratio
+    )
 
 if args.outdoor_beta_ratio:
-    interaction.beta['communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['female_communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['religious'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['distribution_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['n_f_distribution_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['e_voucher'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['learning_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta["communal"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["female_communal"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["religious"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["distribution_center"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["n_f_distribution_center"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["e_voucher"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["learning_center"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
 
 cases_detected = {
     "CXB-202": 3,
