@@ -77,6 +77,8 @@ class Record:
         )
 
     def get_global_location_id(self, location: str) -> int:
+        if 'infection_seed' in location:
+            return -1
         location_id = int(location.split("_")[-1])
         location_type = "_".join(location.split("_")[:-1])
         order_in_keys = list(self.locations_counts.keys()).index(location_type)
@@ -85,6 +87,8 @@ class Record:
         return global_location_id
 
     def invert_global_location_id(self, location_global_id: int) -> (str, int):
+        if location_global_id == -1:
+            return 'infection_seed', 0
         cummulative_values = np.cumsum(list(self.locations_counts.values()))
         idx = np.digitize(location_global_id, cummulative_values)
         location_type = list(self.locations_counts.keys())[idx]

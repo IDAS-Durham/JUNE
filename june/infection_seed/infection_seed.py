@@ -47,8 +47,8 @@ class InfectionSeed:
         self.msoa_region = msoa_region
         if self.super_areas is not None:
             self.super_area_names = [
-            super_area.name for super_area in self.super_areas.members
-        ]
+                super_area.name for super_area in self.super_areas.members
+            ]
         self.dates = dates
         self.min_date = min(self.dates) if self.dates else None
         self.max_date = max(self.dates) if self.dates else None
@@ -90,7 +90,7 @@ class InfectionSeed:
         Seed instance
         """
 
-        dates = n_cases_region.index.tolist() 
+        dates = n_cases_region.index.tolist()
         msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
         return InfectionSeed(
             super_areas,
@@ -131,7 +131,12 @@ class InfectionSeed:
         )
         return np.array(self.super_areas.members)[filter_region]
 
-    def infect_super_areas(self, super_areas: List["SuperArea"], n_cases: int):
+    def infect_super_areas(
+        self,
+        super_areas: List["SuperArea"],
+        n_cases: int,
+        record: Optional["Record"] = None,
+    ):
         """
         Infect n_cases random people from a list of super_areas. It will place
         more cases in proportion to the super_area population
@@ -155,9 +160,11 @@ class InfectionSeed:
         for super_area, n_cases_super_area in n_cases_dict.items():
             if super_area in self.super_areas.members:
                 if n_cases_super_area > 0:
-                    self.infect_super_area(super_area, n_cases_super_area)
+                    self.infect_super_area(super_area, n_cases_super_area, record)
 
-    def infect_super_area(self, super_area: "SuperArea", n_cases: int):
+    def infect_super_area(
+        self, super_area: "SuperArea", n_cases: int, record: "Record"
+    ):
         """
         Infect n_cases random people from a super_area.
         
@@ -172,20 +179,26 @@ class InfectionSeed:
         susceptible_in_area = [
             person for person in super_area.people if person.susceptible
         ]
-        choices = self.select_from_susceptible(susceptible_in_area, n_cases, self.age_profile)
+        choices = self.select_from_susceptible(
+            susceptible_in_area, n_cases, self.age_profile
+        )
         for choice in choices:
             person = list(susceptible_in_area)[choice]
             self.selector.infect_person_at_time(person=person, time=1.0)
+            if record is not None:
+                record.accumulate_infections("infection_seed_0", [person.id])
 
     def select_from_susceptible(self, susceptibles, n_cases, age_profile):
         if age_profile is None:
             return np.random.choice(len(susceptibles), n_cases, replace=False)
         else:
             shuffle(susceptibles)
-            n_per_age_group = n_cases*np.array(list(self.age_profile.values()))
+            n_per_age_group = n_cases * np.array(list(self.age_profile.values()))
             choices = []
             for idx, age_group in enumerate(self.age_profile.keys()):
-                age_choices = self.get_people_from_age_group(susceptibles, int(n_per_age_group[idx]), age_group)
+                age_choices = self.get_people_from_age_group(
+                    susceptibles, int(n_per_age_group[idx]), age_group
+                )
                 choices.extend(age_choices)
             return choices
 
@@ -194,15 +207,15 @@ class InfectionSeed:
         for idx, person in enumerate(people):
             if len(choices) == n_people:
                 break
-            if int(age_group.split('-')[0]) <= person.age < int(age_group.split('-')[1]):
+            if (
+                int(age_group.split("-")[0])
+                <= person.age
+                < int(age_group.split("-")[1])
+            ):
                 choices.append(idx)
         return choices
-                
 
-            
-
-
-    def unleash_virus_per_region(self, date):
+    def unleash_virus_per_region(self, date, record):
         """
         Seed the infection per region, using data on number of infected people/region
 
@@ -214,7 +227,7 @@ class InfectionSeed:
                 super_areas = self._filter_region(region=region)
                 if super_areas.size:
                     self.infect_super_areas(
-                        super_areas, int(self.seed_strength * n_cases)
+                        super_areas, int(self.seed_strength * n_cases), record=record
                     )
             self.dates_seeded.append(date.date())
 
@@ -228,8 +241,7 @@ class InfectionSeed:
             self.infect_super_area(self, n_cases)
             self.dates_seeded.append(date.date())
 
-
-    def unleash_virus(self, n_cases, box_mode=False):
+    def unleash_virus(self, n_cases, record, box_mode=False):
         """
         Seed the infection with n_cases random people being infected,
         proportionally place more cases in the more populated super areas.
@@ -238,10 +250,12 @@ class InfectionSeed:
             self.infect_super_area(self.super_areas.members[0], n_cases)
         else:
             self.infect_super_areas(
-                self.super_areas.members, int(self.seed_strength * n_cases)
+                self.super_areas.members,
+                int(self.seed_strength * n_cases),
+                record=record,
             )
 
-    def unleash_virus_regional_cases(self, region, n_cases):
+    def unleash_virus_regional_cases(self, region, n_cases, record):
         """
         Seed the infection with n_cases random people being infected in region ```region```,
         proportionally place more cases in the more populated super areas.
@@ -249,7 +263,5 @@ class InfectionSeed:
         super_areas = self._filter_region(region=region)
         if super_areas.size:
             self.infect_super_areas(
-                super_areas, int(self.seed_strength * n_cases)
+                super_areas, int(self.seed_strength * n_cases), record=record
             )
-
-
