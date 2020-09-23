@@ -8,7 +8,7 @@ from typing import Optional, List
 from collections import Counter
 
 from june.groups import Supergroup
-from june.records.helpers_recors_writer import (
+from june.records.event_records_writer import (
     InfectionRecord,
     HospitalAdmissionsRecord,
     ICUAdmissionsRecord,
