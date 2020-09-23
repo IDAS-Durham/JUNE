@@ -88,6 +88,9 @@ class UniversityDistributor:
             )
             n_total_students += len(students)
             for student in students:
+                # remove student from working population
+                if student.work_super_area is not None:
+                    student.work_super_area.remove_worker(student)
                 university.add(student, subgroup="student")
         logger.info(
             f"Distributed {n_total_students} students to {len(self.universities)} universities"

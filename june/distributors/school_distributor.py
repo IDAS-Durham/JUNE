@@ -190,6 +190,9 @@ class SchoolDistributor:
                         school = closest_schools_by_age[person.age][random_number]
                     else:  # just keep the school saved in the previous for loop
                         pass
+                # remove from working population
+                if person.work_super_area is not None:
+                    person.work_super_area.remove_worker(person)
                 school.add(person, school.SubgroupType.students)
 
     def distribute_non_mandatory_kids_to_school(
@@ -228,6 +231,8 @@ class SchoolDistributor:
                             find_school = True
                             break
                     if find_school:
+                        if person.work_super_area is not None:
+                            person.work_super_area.remove_worker(person)
                         school.add(person, school.SubgroupType.students)
 
     def distribute_teachers_to_schools_in_super_areas(

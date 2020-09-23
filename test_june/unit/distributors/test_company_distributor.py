@@ -61,6 +61,14 @@ def make_world(geography):
     )
     return world
 
+def test__company_and_work_super_area(company_world):
+    has_people = False
+    for person in company_world.people:
+        if person.work_super_area is not None:
+            has_people = True
+            assert person.work_super_area == person.primary_activity.group.super_area
+    assert has_people
+
 
 class TestLockdownStatus:
     def test__lockdown_status_random(self, company_world):
