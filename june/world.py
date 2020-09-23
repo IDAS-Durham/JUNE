@@ -229,6 +229,7 @@ def generate_world_from_geography(
         return world
     world.areas = geography.areas
     world.super_areas = geography.super_areas
+    world.regions = geography.regions
     world.people = _populate_areas(world.areas, demography)
     for possible_group in possible_groups:
         geography_group = getattr(geography, possible_group)

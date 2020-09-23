@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional, List
 from collections import Counter
 
+from june.groups import Supergroup
 from june.records.helpers_recors_writer import (
     InfectionRecord,
     HospitalAdmissionsRecord,
@@ -16,22 +17,13 @@ from june.records.helpers_recors_writer import (
 )
 from june import paths
 
+
 class Record:
     def __init__(
         self,
         record_path: str,
         filename: str,
-        locations_counts: dict = {
-            "household": 1,
-            "care_home": 1,
-            "school": 1,
-            "company": 1,
-            "pub": 1,
-            "cinema": 1,
-            "grocery": 1,
-            "commute_unit": 1,
-            "commute_city_unit": 1,
-        },
+        locations_counts: dict = {"household": 1, "care_home": 1,},
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
@@ -67,13 +59,28 @@ class Record:
 
         self.file.close()
 
+    @classmethod
+    def from_world(cls, record_path: str, filename: str, world: "World"):
+        all_super_groups = []
+        for attribute, value in world.__dict__.items():
+            if isinstance(value, Supergroup):
+                all_super_groups.append(attribute)
+        locations_counts = {}
+        for sg in all_super_groups:
+            super_group = getattr(world, sg)
+            locations_counts[super_group.group_spec] = len(super_group)
+        print(locations_counts)
+        return cls(
+            record_path=record_path,
+            filename=filename,
+            locations_counts=locations_counts,
+        )
+
     def get_global_location_id(self, location: str) -> int:
         location_id = int(location.split("_")[-1])
         location_type = "_".join(location.split("_")[:-1])
         order_in_keys = list(self.locations_counts.keys()).index(location_type)
-        n_previous_locations = sum(
-            list(self.locations_counts.values())[:order_in_keys]
-        )
+        n_previous_locations = sum(list(self.locations_counts.values())[:order_in_keys])
         global_location_id = n_previous_locations + location_id
         return global_location_id
 
@@ -110,9 +117,7 @@ class Record:
         )
 
     def accumulate_recoveries(self, recovered_person_id):
-        self.events["recoveries"].accumulate(
-            recovered_person_id=recovered_person_id, 
-        )
+        self.events["recoveries"].accumulate(recovered_person_id=recovered_person_id,)
 
     def time_step(self, timestamp: str):
         self.file = tables.open_file(self.record_path / self.filename, mode="a")
@@ -163,7 +168,7 @@ class Record:
             for region in [region.name for region in world.regions]:
                 summary_writer.writerow(
                     [
-                        timestamp,
+                        timestamp.strftime("%Y-%m-%d"),
                         region,
                         daily_infected_per_region.get(region, 0),
                         hospitalised_per_region.get(region, 0),
