@@ -73,33 +73,6 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         leisure_distributors[
             "care_home_visits"
         ] = CareHomeVisitsDistributor.from_config()
-
-    if "pump_latrines" in list_of_leisure_groups:
-        if not hasattr(world, "pump_latrines"):
-            raise ValueError("Your world does note have pumps and latrines")
-        leisure_distributors["pump_latrines"] = PumpLatrineDistributor.from_config(
-            world.pump_latrines
-        )
-    if "distribution_centers" in list_of_leisure_groups:
-        if not hasattr(world, "distribution_centers"):
-            raise ValueError("Your world does note have distribution centers")
-        leisure_distributors[
-            "distribution_centers"
-        ] = DistributionCenterDistributor.from_config(world.distribution_centers)
-    if "communals" in list_of_leisure_groups:
-        if not hasattr(world, "communals"):
-            raise ValueError("Your world does note have communal spaces")
-        leisure_distributors["communals"] = CommunalDistributor.from_config(
-            world.communals
-        )
-    if "female_communals" in list_of_leisure_groups:
-        if not hasattr(world, "female_communals"):
-            raise ValueError(
-                "Your world does note have female friendly communal spaces"
-            )
-        leisure_distributors[
-            "female_communals"
-        ] = FemaleCommunalDistributor.from_config(world.female_communals)
     if "household_visits" in list_of_leisure_groups:
         if not hasattr(world, "households"):
             raise ValueError("Your world does not have households.")
@@ -263,8 +236,6 @@ class Leisure:
                             try:
                                 mate.leisure.remove(mate)
                             except:
-                                print(person)
-                                print(subgroup.group.spec)
                                 raise ValueError
                             mate.subgroups.leisure = subgroup
                             subgroup.append(mate)

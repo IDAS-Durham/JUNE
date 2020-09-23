@@ -22,10 +22,9 @@ from june.infection import Infection, HealthIndexGenerator
 from june.infection_seed import InfectionSeed
 from june.infection import InfectionSelector
 from june.interaction import Interaction
-from june.groups import Hospital, Hospitals
+from june.groups import Hospital, Hospitals, Cemeteries
 from june.distributors import HospitalDistributor
 from june.hdf5_savers import generate_world_from_hdf5
-from june.groups import Cemeteries
 from june.policy import Policy, Policies
 from june.logger.read_logger import ReadLogger
 from june.simulator import Simulator
@@ -34,7 +33,7 @@ from camps.activity import CampActivityManager
 from camps.paths import camp_data_path, camp_configs_path
 from camps.world import World
 from camps.groups.leisure import generate_leisure_for_world, generate_leisure_for_config
-from camp_creation import (
+from camps.camp_creation import (
     generate_empty_world,
     populate_world,
     distribute_people_to_households,
@@ -47,36 +46,136 @@ from camps.groups import FemaleCommunals, FemaleCommunalDistributor
 from camps.groups import Religiouss, ReligiousDistributor
 from camps.groups import Shelter, Shelters, ShelterDistributor
 from camps.groups import IsolationUnit, IsolationUnits
-from camps.groups import LearningCenters 
+from camps.groups import LearningCenters
 from camps.distributors import LearningCenterDistributor
-from camps.groups import PlayGroups, PlayGroupDistributor 
+from camps.groups import PlayGroups, PlayGroupDistributor
 from camps.groups import EVouchers, EVoucherDistributor
 from camps.groups import NFDistributionCenters, NFDistributionCenterDistributor
+from camps.groups import SheltersVisitsDistributor
 
-from june.groups.leisure import HouseholdVisitsDistributor
 
-#=============== Argparse =========================#
+# =============== Argparse =========================#
 
-parser = argparse.ArgumentParser(description='Full run of the camp')
+parser = argparse.ArgumentParser(description="Full run of the camp")
 
-parser.add_argument('-c', '--comorbidities', help="True to include comorbidities", required=False, default="True")
-parser.add_argument('-p', '--parameters', help="Parameter file", required=False, default="ContactInteraction_med_low_low_low.yaml")
-parser.add_argument('-hb', '--household_beta', help="Household beta", required=False, default=False)
-parser.add_argument('-ih', '--indoor_beta_ratio', help="Indoor/household beta ratio scaling", required=False, default=False)
-parser.add_argument('-oh', '--outdoor_beta_ratio', help="Outdoor/household beta ratio scaling", required=False, default=False)
-parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
-parser.add_argument('-cs', '--child_susceptibility' ,help="Reduce child susceptibility", required=False, default=False)
-parser.add_argument('-u', '--isolation_units', help="True to include isolation units", required=False, default="False")
-parser.add_argument('-t', '--isolation_testing', help="Model weights in HDF5 format", required=False, default=3)
-parser.add_argument('-i', '--isolation_time', help="Ouput file name", required=False, default=7)
-parser.add_argument('-ic', '--isolation_compliance', help="Isolation unit self reporting compliance", required=False, default=0.6)
-parser.add_argument('-m', '--mask_wearing', help="True to include mask wearing", required=False, default="False")
-parser.add_argument('-mc', '--mask_compliance', help="Mask wearing compliance", required=False, default="False")
-parser.add_argument('-mb', '--mask_beta_factor', help="Mask beta factor reduction", required=False, default=0.5)
-parser.add_argument('-lc', '--learning_centers' ,help="Add learning centers", required=False, default=False)
-parser.add_argument('-lch', '--learning_center_beta_ratio', help="Learning center/household beta ratio scaling", required=False, default=False)
-parser.add_argument('-pgh', '--play_group_beta_ratio', help="Play group/household beta ratio scaling", required=False, default=False)
-parser.add_argument('-s', '--save_path', help="Path of where to save logger", required=False, default="results")
+parser.add_argument(
+    "-c",
+    "--comorbidities",
+    help="True to include comorbidities",
+    required=False,
+    default="True",
+)
+parser.add_argument(
+    "-p",
+    "--parameters",
+    help="Parameter file",
+    required=False,
+    default="ContactInteraction_med_low_low_low.yaml",
+)
+parser.add_argument(
+    "-hb", "--household_beta", help="Household beta", required=False, default=False
+)
+parser.add_argument(
+    "-ih",
+    "--indoor_beta_ratio",
+    help="Indoor/household beta ratio scaling",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-oh",
+    "--outdoor_beta_ratio",
+    help="Outdoor/household beta ratio scaling",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-inf",
+    "--infectiousness_path",
+    help="path to infectiousness parameter file",
+    required=False,
+    default="nature",
+)
+parser.add_argument(
+    "-cs",
+    "--child_susceptibility",
+    help="Reduce child susceptibility",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-u",
+    "--isolation_units",
+    help="True to include isolation units",
+    required=False,
+    default="False",
+)
+parser.add_argument(
+    "-t",
+    "--isolation_testing",
+    help="Model weights in HDF5 format",
+    required=False,
+    default=3,
+)
+parser.add_argument(
+    "-i", "--isolation_time", help="Ouput file name", required=False, default=7
+)
+parser.add_argument(
+    "-ic",
+    "--isolation_compliance",
+    help="Isolation unit self reporting compliance",
+    required=False,
+    default=0.6,
+)
+parser.add_argument(
+    "-m",
+    "--mask_wearing",
+    help="True to include mask wearing",
+    required=False,
+    default="False",
+)
+parser.add_argument(
+    "-mc",
+    "--mask_compliance",
+    help="Mask wearing compliance",
+    required=False,
+    default="False",
+)
+parser.add_argument(
+    "-mb",
+    "--mask_beta_factor",
+    help="Mask beta factor reduction",
+    required=False,
+    default=0.5,
+)
+parser.add_argument(
+    "-lc",
+    "--learning_centers",
+    help="Add learning centers",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-lch",
+    "--learning_center_beta_ratio",
+    help="Learning center/household beta ratio scaling",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-pgh",
+    "--play_group_beta_ratio",
+    help="Play group/household beta ratio scaling",
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "-s",
+    "--save_path",
+    help="Path of where to save logger",
+    required=False,
+    default="results",
+)
 args = parser.parse_args()
 
 if args.comorbidities == "True":
@@ -88,7 +187,7 @@ if args.child_susceptibility == "True":
     args.child_susceptibility = True
 else:
     args.child_susceptibility = False
-    
+
 if args.isolation_units == "True":
     args.isolation_units = True
 else:
@@ -104,52 +203,62 @@ if args.learning_centers == "True":
 else:
     args.learning_centers = False
 
-if args.infectiousness_path == 'nature':
-    transmission_config_path = camp_configs_path / 'defaults/transmission/nature.yaml'
-elif args.infectiousness_path == 'correction_nature':
-    transmission_config_path = camp_configs_path / 'defaults/transmission/correction_nature.yaml'
-elif args.infectiousness_path == 'nature_larger':
-    transmission_config_path = camp_configs_path / 'defaults/transmission/nature_larger_presymptomatic_transmission.yaml'
-elif args.infectiousness_path == 'nature_lower':
-    transmission_config_path = camp_configs_path / 'defaults/transmission/nature_lower_presymptomatic_transmission.yaml'
-elif args.infectiousness_path == 'xnexp':
-    transmission_config_path = camp_configs_path / 'defaults/transmission/XNExp.yaml'    
+if args.infectiousness_path == "nature":
+    transmission_config_path = camp_configs_path / "defaults/transmission/nature.yaml"
+elif args.infectiousness_path == "correction_nature":
+    transmission_config_path = (
+        camp_configs_path / "defaults/transmission/correction_nature.yaml"
+    )
+elif args.infectiousness_path == "nature_larger":
+    transmission_config_path = (
+        camp_configs_path
+        / "defaults/transmission/nature_larger_presymptomatic_transmission.yaml"
+    )
+elif args.infectiousness_path == "nature_lower":
+    transmission_config_path = (
+        camp_configs_path
+        / "defaults/transmission/nature_lower_presymptomatic_transmission.yaml"
+    )
+elif args.infectiousness_path == "xnexp":
+    transmission_config_path = camp_configs_path / "defaults/transmission/XNExp.yaml"
 else:
     raise NotImplementedError
 
-print ('Comorbidities set to: {}'.format(args.comorbidities))
-print ('Parameters path set to: {}'.format(args.parameters))
-print ('Household beta set to: {}'.format(args.household_beta))
-print ('Indoor beta ratio is set to: {}'.format(args.indoor_beta_ratio))
-print ('Outdoor beta ratio set to: {}'.format(args.outdoor_beta_ratio))
-print ('Infectiousness path set to: {}'.format(args.infectiousness_path))
-print ('Child susceptibility change set to: {}'.format(args.child_susceptibility))
+print("Comorbidities set to: {}".format(args.comorbidities))
+print("Parameters path set to: {}".format(args.parameters))
+print("Indoor beta ratio is set to: {}".format(args.indoor_beta_ratio))
+print("Outdoor beta ratio set to: {}".format(args.outdoor_beta_ratio))
+print("Infectiousness path set to: {}".format(args.infectiousness_path))
+print("Child susceptibility change set to: {}".format(args.child_susceptibility))
 
-print ('Isolation units set to: {}'.format(args.isolation_units))
+print("Isolation units set to: {}".format(args.isolation_units))
+print("Household beta set to: {}".format(args.household_beta))
 if args.isolation_units:
-    print ('Testing time set to: {}'.format(args.isolation_testing))
-    print ('Isolation time set to: {}'.format(args.isolation_time))
-    print ('Isolation compliance set to: {}'.format(args.isolation_compliance))
+    print("Testing time set to: {}".format(args.isolation_testing))
+    print("Isolation time set to: {}".format(args.isolation_time))
+    print("Isolation compliance set to: {}".format(args.isolation_compliance))
 
-print ('Mask wearing set to: {}'.format(args.mask_wearing))
+print("Mask wearing set to: {}".format(args.mask_wearing))
 if args.mask_wearing:
-    print ('Mask compliance set to: {}'.format(args.mask_compliance))
-    print ('Mask beta factor set up: {}'.format(args.mask_beta_factor))
+    print("Mask compliance set to: {}".format(args.mask_compliance))
+    print("Mask beta factor set up: {}".format(args.mask_beta_factor))
 
-print ('Learning centers set to: {}'.format(args.learning_centers))
+print("Learning centers set to: {}".format(args.learning_centers))
 if args.learning_centers:
-    print ('Learning center beta ratio set to: {}'.format(args.learning_center_beta_ratio))
+    print(
+        "Learning center beta ratio set to: {}".format(args.learning_center_beta_ratio)
+    )
 
-print ('Plag group beta ratio set to: {}'.format(args.play_group_beta_ratio))
-print ('Save path set to: {}'.format(args.save_path))
+print("Plag group beta ratio set to: {}".format(args.play_group_beta_ratio))
+print("Save path set to: {}".format(args.save_path))
 
-#=============== world creation =========================#
+# =============== world creation =========================#
 CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
-#world = generate_empty_world({"super_area": ["CXB-219-C"]})
-#world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
-world = generate_empty_world()
+# world = generate_empty_world({"super_area": ["CXB-219-C"]})
+world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+# world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -172,12 +281,9 @@ world.isolation_units = IsolationUnits([IsolationUnit()])
 hospital_distributor.distribute_medics_from_world(world.people)
 
 if args.learning_centers:
-    world.learning_centers = LearningCenters.for_areas(
-                        world.areas,
-                        n_shifts=4
-    )
+    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=4)
     learning_center_distributor = LearningCenterDistributor.from_file(
-    learning_centers=world.learning_centers
+        learning_centers=world.learning_centers
     )
     learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
     learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
@@ -211,17 +317,18 @@ for area in world.areas:
 
 if args.comorbidities:
 
-    comorbidity_data = load_comorbidity_data(camp_data_path / "input/demography/myanmar_male_comorbidities.csv",\
-                                              camp_data_path / "input/demography/myanmar_female_comorbidities.csv"
+    comorbidity_data = load_comorbidity_data(
+        camp_data_path / "input/demography/myanmar_male_comorbidities.csv",
+        camp_data_path / "input/demography/myanmar_female_comorbidities.csv",
     )
     for person in world.people:
         person.comorbidity = generate_comorbidity(person, comorbidity_data)
 
     health_index_generator = HealthIndexGenerator.from_file_with_comorbidities(
-        camp_configs_path / 'defaults/comorbidities.yaml',
-        camp_data_path / 'input/demography/uk_male_comorbidities.csv',
-        camp_data_path / 'input/demography/uk_female_comorbidities.csv',
-        asymptomatic_ratio=0.2
+        camp_configs_path / "defaults/comorbidities.yaml",
+        camp_data_path / "input/demography/uk_male_comorbidities.csv",
+        camp_data_path / "input/demography/uk_female_comorbidities.csv",
+        asymptomatic_ratio=0.2,
     )
 
 
@@ -266,37 +373,56 @@ if args.child_susceptibility:
 # =================================== infection ===============================#
 
 
-selector = InfectionSelector.from_file(health_index_generator=health_index_generator,
-        transmission_config_path=transmission_config_path)
+selector = InfectionSelector.from_file(
+    health_index_generator=health_index_generator,
+    transmission_config_path=transmission_config_path,
+)
 
 interaction = Interaction.from_file(
-    config_filename=camp_configs_path
-    / "defaults/interaction/" / args.parameters,
+    config_filename=camp_configs_path / "defaults/interaction/" / args.parameters,
 )
 
 if args.learning_centers and args.learning_center_beta_ratio:
-    interaction.beta['learning_center'] = interaction.beta['household']*float(args.learning_center_beta_ratio)
+    interaction.beta["learning_center"] = interaction.beta["household"] * float(
+        args.learning_center_beta_ratio
+    )
 
 if args.play_group_beta_ratio:
-    interaction.beta['play_group'] = interaction.beta['household']*float(args.play_group_beta_ratio)
+    interaction.beta["play_group"] = interaction.beta["household"] * float(
+        args.play_group_beta_ratio
+    )
 
 if args.household_beta:
-    interaction.beta['household'] = float(args.household_beta)
+    interaction.beta["household"] = float(args.household_beta)
+    interaction.beta["hospital"] = float(args.household_beta) * 0.1
     interaction.beta['shelter'] = float(args.household_beta)
-    interaction.beta['hospital'] = float(args.household_beta)*0.1
 
 if args.outdoor_beta_ratio:
     interaction.beta['play_group'] = interaction.beta['household']*float(args.indoor_beta_ratio)
     interaction.beta['pump_latrine'] = interaction.beta['household']*float(args.indoor_beta_ratio)
-
+    
 if args.indoor_beta_ratio:
-    interaction.beta['communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['female_communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['religious'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['distribution_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['n_f_distribution_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['e_voucher'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
-    interaction.beta['learning_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta["communal"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["female_communal"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["religious"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["distribution_center"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["n_f_distribution_center"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["e_voucher"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
+    interaction.beta["learning_center"] = interaction.beta["household"] * float(
+        args.outdoor_beta_ratio
+    )
 
 cases_detected = {
     "CXB-202": 3,
@@ -326,43 +452,44 @@ print("Infected people in seed = ", len(world.people.infected))
 # ==================================================================================#
 
 # =================================== leisure config ===============================#
-leisure_instance = generate_leisure_for_config(world=world, config_filename=CONFIG_PATH)
-leisure_instance.leisure_distributors = {}
-leisure_instance.leisure_distributors[
-    "pump_latrines"
-] = PumpLatrineDistributor.from_config(pump_latrines=world.pump_latrines)
-leisure_instance.leisure_distributors[
-    "play_groups"
-] = PlayGroupDistributor.from_config(play_groups=world.play_groups)
-leisure_instance.leisure_distributors[
+leisure = generate_leisure_for_config(world=world, config_filename=CONFIG_PATH)
+leisure.leisure_distributors = {}
+leisure.leisure_distributors["pump_latrines"] = PumpLatrineDistributor.from_config(
+    pump_latrines=world.pump_latrines
+)
+leisure.leisure_distributors["play_groups"] = PlayGroupDistributor.from_config(
+    play_groups=world.play_groups
+)
+leisure.leisure_distributors[
     "distribution_centers"
 ] = DistributionCenterDistributor.from_config(
     distribution_centers=world.distribution_centers
 )
-leisure_instance.leisure_distributors[
-    "communals"
-] = CommunalDistributor.from_config(
+leisure.leisure_distributors["communals"] = CommunalDistributor.from_config(
     communals=world.communals
 )
-leisure_instance.leisure_distributors[
+leisure.leisure_distributors[
     "female_communals"
-] = FemaleCommunalDistributor.from_config(
-    female_communals=world.female_communals
+] = FemaleCommunalDistributor.from_config(female_communals=world.female_communals)
+leisure.leisure_distributors["religiouss"] = ReligiousDistributor.from_config(
+    religiouss=world.religiouss
 )
-leisure_instance.leisure_distributors[
-    'religiouss'
-] = ReligiousDistributor.from_config(religiouss=world.religiouss)
-leisure_instance.leisure_distributors[
-    'e_vouchers'
-] = EVoucherDistributor.from_config(evouchers=world.e_vouchers)
-leisure_instance.leisure_distributors[
-    'n_f_distribution_centers'
+leisure.leisure_distributors["e_vouchers"] = EVoucherDistributor.from_config(
+    evouchers=world.e_vouchers
+)
+leisure.leisure_distributors[
+    "n_f_distribution_centers"
 ] = NFDistributionCenterDistributor.from_config(
     nfdistributioncenters=world.n_f_distribution_centers
 )
-
+leisure.leisure_distributors[
+    "shelters_visits"
+] = SheltersVisitsDistributor.from_config()
+leisure.leisure_distributors["shelters_visits"].link_shelters_to_shelters(
+    world.super_areas
+)
 # associate social activities to shelters
-leisure_instance.distribute_social_venues_to_households(world.shelters, world.super_areas)
+leisure.distribute_social_venues_to_households(world.shelters, world.super_areas)
 
 # ==================================================================================#
 
@@ -371,14 +498,14 @@ Simulator.ActivityManager = CampActivityManager
 simulator = Simulator.from_file(
     world=world,
     interaction=interaction,
-    leisure=leisure_instance,
+    leisure=leisure,
     policies=policies,
     config_filename=CONFIG_PATH,
     infection_selector=selector,
-    save_path=args.save_path
+    save_path=args.save_path,
 )
 
-leisure_instance.leisure_distributors
+leisure.leisure_distributors
 
 simulator.timer.reset()
 
@@ -387,7 +514,6 @@ simulator.run()
 # ==================================================================================#
 read = ReadLogger(output_path=args.save_path)
 summary = read.run_summary(
-    super_area_region_path=camp_data_path 
-    / 'input/geography/area_super_area_region.csv'
+    super_area_region_path=camp_data_path / "input/geography/area_super_area_region.csv"
 )
-summary.to_csv(Path(args.save_path) / 'summary.csv')
+summary.to_csv(Path(args.save_path) / "summary.csv")
