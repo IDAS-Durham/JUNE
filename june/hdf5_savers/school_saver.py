@@ -46,7 +46,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 n_pupils_max.append(school.n_pupils_max)
                 age_min.append(school.age_min)
                 age_max.append(school.age_max)
-                if type(school.sector) is float:
+                if type(school.sector) is float or school.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
                     sectors.append(school.sector.encode("ascii", "ignore"))
@@ -110,8 +110,6 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["n_classrooms"][idx1:idx2] = n_classrooms 
                 schools_dset["years"].resize(newshape[0], axis=0)
                 schools_dset["years"][idx1:idx2] = years 
-
-
 
 
 def load_schools_from_hdf5(file_path: str, chunk_size: int = 50000, domain_super_areas=None):
