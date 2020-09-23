@@ -99,7 +99,7 @@ def generate_simulator():
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.39)
     infection_selector = InfectionSelector.from_file(
         health_index_generator=health_index_generator
     )
@@ -110,14 +110,13 @@ def generate_simulator():
     daily_cases_per_region = oc.get_regional_latent_cases()
     daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
             daily_cases_per_region,
-            dates=['2020-02-28', '2020-02-29', '2020-03-01', '2020-03-02']
+            dates=['2020-02-28', '2020-03-02']
             )
     infection_seed = InfectionSeed(world=domain,
-            selector=infection_selector,
+            infection_selector=infection_selector,
             daily_super_area_cases=daily_cases_per_super_area,
-            seed_strength=0.9,
+            seed_strength=0.66,
             )
-    
     # interaction
     interaction = Interaction.from_file()
     

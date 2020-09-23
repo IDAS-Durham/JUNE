@@ -47,7 +47,7 @@ class ReadLogger:
                 swmr=True,
             ) as f:
                 if rank == 0:
-                    population = f["population"]
+                    population = f["population"][:]
                     self.n_people = population.attrs["n_people"]
                     self.ids = population["id"][:]
                     self.ages = population["age"][:]
@@ -55,7 +55,7 @@ class ReadLogger:
                     self.ethnicities = population["ethnicity"][:]
                     self.socioeconomic_indices = population["socioeconomic_index"][:]
                 else:
-                    population += f['population']
+                    population += f['population'][:]
                     self.n_people += population.attrs["n_people"]
                     self.ids += population["id"][:]
                     self.ages += population["age"][:]
