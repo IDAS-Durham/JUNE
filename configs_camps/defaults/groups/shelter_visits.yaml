@@ -1,0 +1,8 @@
+male_age_probabilities:
+  0-65: 2.0
+  65-100: 1.24
+female_age_probabilities:
+  0-65: 2.0
+  65-100: 1.24
+weekend_boost: 1.0
+drags_household_probability: 0.0
