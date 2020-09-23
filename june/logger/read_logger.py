@@ -31,27 +31,38 @@ class ReadLogger:
         """
         self.output_path = Path(output_path)
         self.root_output_file = root_output_file
+        self.n_processes = n_processes
         self.load_population_data()
-        self.load_infected_data(n_processes)
+        self.load_infected_data(self.n_processes)
 
     def load_population_data(self):
         """
         Load data related to population (age, sex, ...)
         """
-        with h5py.File(
-            self.output_path / f"{self.root_output_file}.0.hdf5",
-            "r",
-            libver="latest",
-            swmr=True,
-        ) as f:
-            population = f["population"]
-            self.n_people = population.attrs["n_people"]
-            self.ids = population["id"][:]
-            self.ages = population["age"][:]
-            self.sexes = population["sex"][:]
-            self.ethnicities = population["ethnicity"][:]
-            self.socioeconomic_indices = population["socioeconomic_index"][:]
-
+        for rank in range(self.n_processes):
+            with h5py.File(
+                self.output_path / f"{self.root_output_file}.{rank}.hdf5",
+                "r",
+                libver="latest",
+                swmr=True,
+            ) as f:
+                if rank == 0:
+                    population = f["population"]
+                    self.n_people = population.attrs["n_people"]
+                    self.ids = population["id"][:]
+                    self.ages = population["age"][:]
+                    self.sexes = population["sex"][:]
+                    self.ethnicities = population["ethnicity"][:]
+                    self.socioeconomic_indices = population["socioeconomic_index"][:]
+                else:
+                    population += f['population']
+                    self.n_people += population.attrs["n_people"]
+                    self.ids += population["id"][:]
+                    self.ages += population["age"][:]
+                    self.sexes += population["sex"][:]
+                    self.ethnicities += population["ethnicity"][:]
+                    self.socioeconomic_indices += population["socioeconomic_index"][:]
+ 
     def load_infected_data(self, n_processes):
         self.infections_per_super_area, infections_world_list = [], []
         for rank in range(n_processes):

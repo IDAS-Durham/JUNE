@@ -144,3 +144,11 @@ class TestDistribution:
             sector_worker_nr = len(idx)
             p_sub_sector = p_sub_sectors[idx]
             sub_sector_worker_nr = len(p_sub_sector[p_sub_sector != None])
+
+    def test__worker_super_area(self, worker_population, worker_geography):
+        has_workers = False
+        for super_area in worker_geography.super_areas:
+            for worker in super_area.workers:
+                has_workers = True
+                assert worker.work_super_area == super_area
+        assert has_workers

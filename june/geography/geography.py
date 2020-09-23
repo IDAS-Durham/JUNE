@@ -185,6 +185,10 @@ class SuperArea:
         self.workers.append(person)
         person.work_super_area = self
 
+    def remove_worker(self, person: Person):
+        self.workers.remove(person)
+        person.work_super_area = None
+
     @property
     def people(self):
         return list(chain.from_iterable(area.people for area in self.areas))
