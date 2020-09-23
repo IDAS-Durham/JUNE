@@ -6,5 +6,5 @@ female_age_probabilities:
   19-100: 0.024
 neighbours_to_consider: 5
 maximum_distance: 1000
-weekend_boost: 1.5
+weekend_boost: 1.0
 drags_household_probability: 0.0
