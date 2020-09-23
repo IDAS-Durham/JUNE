@@ -26,7 +26,7 @@ class TestModeOfTransport:
 
     def test__load_from_file__uses_correct_values_from_configs(self):
         modes_of_transport = c.ModeOfTransport.load_from_file()
-        assert len(modes_of_transport) == 12
+        assert len(modes_of_transport) == 11 # used to be 12 with unemployment
         assert "Work mainly at or from home" in modes_of_transport
         assert c.ModeOfTransport.load_from_file()[0] is modes_of_transport[0]
 
