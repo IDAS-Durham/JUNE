@@ -265,8 +265,7 @@ class Simulator:
         except AssertionError:
             raise SimulatorError("Config file contains unsupported activity name.")
 
-    @staticmethod
-    def bury_the_dead(world: World, person: "Person"):
+    def bury_the_dead(self, world: World, person: "Person"):
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! 
@@ -277,14 +276,14 @@ class Simulator:
         person:
             person to send to cemetery
         """
-        if person.hospital is not None:
-            death_location = f"{person.hospital.group.spec}_{person.hospital.group.id}"
-        else:
-            death_location = (
-                f"{person.residence.group.spec}_{person.residence.group.id}"
-            )
         if self.record is not None:
-            self.record.accumulate_death(person.id, location=death_location)
+            if person.medical_facility is not None:
+                death_location = f"{person.medical_facility.group.spec}_{person.medical_facility.group.id}"
+            else:
+                death_location = (
+                    f"{person.residence.group.spec}_{person.residence.group.id}"
+                )
+            self.record.accumulate_death(dead_person_id=person.id, death_location=death_location)
         person.dead = True
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
@@ -296,8 +295,7 @@ class Simulator:
             )
         person.subgroups = Activities(None, None, None, None, None, None, None)
 
-    @staticmethod
-    def recover(person: "Person"):
+    def recover(self, person: "Person"):
         """
         When someone recovers, erase the health information they carry and change their susceptibility.
 
@@ -428,9 +426,7 @@ class Simulator:
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.record is not None:
-            self.record.summarise_time_step(
-                timestamp=self.timer.date, world=self.world
-            )
+            self.record.summarise_time_step(timestamp=self.timer.date, world=self.world)
             self.record.time_step(timestamp=self.timer.date)
         self.clear_world()
 

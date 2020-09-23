@@ -77,21 +77,10 @@ def test__full_run(dummy_world, selector):
     )
     leisure_instance.distribute_social_venues_to_households(world.households, super_areas=world.super_areas)
     interaction = Interaction.from_file()
-    record = Record(
+    record = Record.from_world(
             record_path = 'results',
             filename='june_records.hdf5',
-            locations_counts=
-            {
-            'household': len(world.households),
-            'care_home': len(world.care_homes),
-            'school': len(world.schools),
-            'company': len(world.companies),
-            'pub': len(world.pubs),
-            'cinema': len(world.cinemas),
-            'grocery': len(world.groceries),
-            'commute_unit': len(world.commuteunits),
-            'commute_city_unit': len(world.commutecityunits),
-            }
+            world=world,
     )
     policies = Policies.from_file()
     sim = Simulator.from_file(

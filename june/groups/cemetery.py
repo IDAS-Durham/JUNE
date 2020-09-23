@@ -4,6 +4,7 @@ from june.groups.group import Supergroup
 class Cemetery:
     def __init__(self):
         self.people = []
+        self.spec = 'cemetery'
 
     def add(self, person):
         self.people.append(person)
