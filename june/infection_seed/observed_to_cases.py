@@ -384,7 +384,7 @@ class Observed2Cases:
         -------
         data frame with the number of cases by super area, indexed by date
         """
-        n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[1]]
+        n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
         n_cases_per_super_area_df = pd.DataFrame(
             0,
             index=n_cases_per_region_df.index,
