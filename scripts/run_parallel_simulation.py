@@ -5,6 +5,7 @@ import random
 from mpi4py import MPI
 import h5py
 import sys
+import cProfile
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
@@ -38,6 +39,26 @@ def set_random_seed(seed=999):
     return
 
 
+# a decorator for profiling
+def profile(filename=None, comm=MPI.COMM_WORLD):
+  def prof_decorator(f):
+    def wrap_f(*args, **kwargs):
+      pr = cProfile.Profile()
+      pr.enable()
+      result = f(*args, **kwargs)
+      pr.disable()
+
+      if filename is None:
+        pr.print_stats()
+      else:
+        filename_r = filename + ".{}".format(comm.rank)
+        pr.dump_stats(filename_r)
+
+      return result
+    return wrap_f
+  return prof_decorator
+
+
 if len(sys.argv) > 1:
     seed = int(sys.argv[1])
 else:
@@ -52,84 +73,91 @@ config_path = "./config_simulation.yaml"
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
-
-with h5py.File(world_file, "r") as f:
-    n_super_areas = f["geography"].attrs["n_super_areas"]
-
-# log_population
 if seed == 999:
     save_path = "results"
 else:
     save_path = f"results_{seed:02d}"
 
-logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
-population = load_population_from_hdf5(world_file)
-logger.log_population(population)
+def generate_simulator():
+    with h5py.File(world_file, "r") as f:
+        n_super_areas = f["geography"].attrs["n_super_areas"]
+    
+    
+    logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
+    population = load_population_from_hdf5(world_file)
+    logger.log_population(population)
+    
+    super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
+    
+    domain = Domain.from_hdf5(
+        domain_id=rank,
+        super_areas_to_domain_dict=super_areas_to_domain_dict,
+        hdf5_file_path=world_file,
+    )
+    #
+    # regenerate lesiure
+    leisure = generate_leisure_for_config(domain, config_path)
+    #
+    # health index and infection selecctor
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+    infection_selector = InfectionSelector.from_file(
+        health_index_generator=health_index_generator
+    )
+    
+    # interaction
+    interaction = Interaction.from_file()
+    
+    # policies
+    policies = Policies.from_file()
+    
+    # create simulator
+    
+    travel = Travel()
+    simulator = Simulator.from_file(
+        world=domain,
+        policies=policies,
+        interaction=interaction,
+        leisure=leisure,
+        travel=travel,
+        infection_selector=infection_selector,
+        config_filename=config_path,
+        logger=logger,
+    )
 
-super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
+    # infection seed
+    if rank == 0:
+        n_cases = 250
+        selected_ids = np.random.choice(population.people_ids, n_cases, replace=False)
+        for rank_receiving in range(1, size):
+            comm.send(selected_ids, dest=rank_receiving, tag=0)
+    
+    elif rank > 0:
+        selected_ids = comm.recv(source=0, tag=0)
+    
+    
+    for inf_id in selected_ids:
+        if inf_id in domain.people.people_dict:
+            person = domain.people.get_from_id(inf_id)
+            simulator.infection_selector.infect_person_at_time(person, 0.0)
 
-domain = Domain.from_hdf5(
-    domain_id=rank,
-    super_areas_to_domain_dict=super_areas_to_domain_dict,
-    hdf5_file_path=world_file,
-)
-#
-# regenerate lesiure
-leisure = generate_leisure_for_config(domain, config_path)
-#
-# health index and infection selecctor
-health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
-infection_selector = InfectionSelector.from_file(
-    health_index_generator=health_index_generator
-)
+    del population
+    print("simulator ready to go")
+    return simulator
 
-# interaction
-interaction = Interaction.from_file()
+@profile(filename=f"profile_{rank}.prof")
+def run_simulator(simulator):
 
-# policies
-policies = Policies.from_file()
+    t1 = time.time()
+    simulator.run()
+    t2 = time.time()
+    print(f" Simulation took {t2-t1} seconds")
 
-# create simulator
+def save_summary():
+    if rank == 0:
+        logger = ReadLogger(save_path, n_processes=size)
+        logger.world_summary().to_csv(save_path + "_summary.csv")
 
-travel = Travel()
-simulator = Simulator.from_file(
-    world=domain,
-    policies=policies,
-    interaction=interaction,
-    leisure=leisure,
-    travel=travel,
-    infection_selector=infection_selector,
-    config_filename=config_path,
-    logger=logger,
-)
-print("simulator ready to go")
-
-# infection seed
-if rank == 0:
-    n_cases = 250
-    selected_ids = np.random.choice(population.people_ids, n_cases, replace=False)
-    for rank_receiving in range(1, size):
-        comm.send(selected_ids, dest=rank_receiving, tag=0)
-
-elif rank > 0:
-    selected_ids = comm.recv(source=0, tag=0)
-
-print("Received selected IDs = ", selected_ids)
-print("Len selected IDs = ", len(selected_ids))
-
-for inf_id in selected_ids:
-    if inf_id in domain.people.people_dict:
-        person = domain.people.get_from_id(inf_id)
-        simulator.infection_selector.infect_person_at_time(person, 0.0)
-
-del population
-
-t1 = time.time()
-simulator.run()
-t2 = time.time()
-
-if rank == 0:
-    logger = ReadLogger(save_path, n_processes=size)
-    logger.world_summary().to_csv(save_path + "_summary.csv")
-
-print(f" Simulation took {t2-t1} seconds")
+if __name__ == "__main__":
+    simulator = generate_simulator()
+    run_simulator(simulator)
+    save_summary()
