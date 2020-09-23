@@ -279,6 +279,7 @@ if args.play_group_beta_ratio:
 
 if args.household_beta:
     interaction.beta['household'] = float(args.household_beta)
+    interaction.beta['hospital'] = float(args.household_beta)*0.1
 
 if args.indoor_beta_ratio:
     interaction.beta['play_group'] = interaction.beta['household']*float(args.indoor_beta_ratio)
