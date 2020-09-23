@@ -63,7 +63,6 @@ class Simulator:
             self.checkpoint_dates = checkpoint_dates
         self.sort_people_world()
         self.medical_facilities = self._get_medical_facilities()
-        print(self.medical_facilities)
         if save_path is not None:
             self.save_path = Path(save_path)
             self.save_path.mkdir(exist_ok=True, parents=True)

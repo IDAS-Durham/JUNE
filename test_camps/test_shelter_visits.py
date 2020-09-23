@@ -22,6 +22,8 @@ def test__shelter_links(visits_world):
             shelters_to_visit_sizes[0] += 1
         else:
             shelters_to_visit_sizes[len(shelter.shelters_to_visit)] += 1
+            for shelter in shelter.shelters_to_visit:
+                assert isinstance(shelter, Shelter)
 
     assert set(shelters_to_visit_sizes.keys()) == set([0, 1, 2, 3])
     for i in shelters_to_visit_sizes.values():
@@ -36,4 +38,7 @@ def test__shelter_get_candidates(camps_world):
         possible_venues = shelter_visits_distributor.get_possible_venues_for_household(
             shelter
         )
-        assert possible_venues == shelter.shelters_to_visit
+        if shelter.shelters_to_visit is None:
+            assert possible_venues == ()
+        else:
+            assert possible_venues == shelter.shelters_to_visit

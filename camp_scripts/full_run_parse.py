@@ -33,7 +33,7 @@ from camps.activity import CampActivityManager
 from camps.paths import camp_data_path, camp_configs_path
 from camps.world import World
 from camps.groups.leisure import generate_leisure_for_world, generate_leisure_for_config
-from camp_creation import (
+from camps.camp_creation import (
     generate_empty_world,
     populate_world,
     distribute_people_to_households,
@@ -236,7 +236,7 @@ print("Save path set to: {}".format(args.save_path))
 CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
-#world = generate_empty_world({"super_area": ["CXB-219-C"]})
+# world = generate_empty_world({"super_area": ["CXB-219-C"]})
 world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
 # world = generate_empty_world()
 
@@ -403,9 +403,9 @@ print("Infected people in seed = ", len(world.people.infected))
 # =================================== leisure config ===============================#
 leisure = generate_leisure_for_config(world=world, config_filename=CONFIG_PATH)
 leisure.leisure_distributors = {}
-leisure.leisure_distributors[
-    "pump_latrines"
-] = PumpLatrineDistributor.from_config(pump_latrines=world.pump_latrines)
+leisure.leisure_distributors["pump_latrines"] = PumpLatrineDistributor.from_config(
+    pump_latrines=world.pump_latrines
+)
 leisure.leisure_distributors["play_groups"] = PlayGroupDistributor.from_config(
     play_groups=world.play_groups
 )
@@ -431,16 +431,14 @@ leisure.leisure_distributors[
 ] = NFDistributionCenterDistributor.from_config(
     nfdistributioncenters=world.n_f_distribution_centers
 )
-#leisure.leisure_distributors[
-#    "shelters_visits"
-#] = SheltersVisitsDistributor.from_config()
-#leisure.leisure_distributors["shelters_visits"].link_shelters_to_shelters(
-#    world.super_areas
-#)
-# associate social activities to shelters
-leisure.distribute_social_venues_to_households(
-    world.shelters, world.super_areas
+leisure.leisure_distributors[
+    "shelters_visits"
+] = SheltersVisitsDistributor.from_config()
+leisure.leisure_distributors["shelters_visits"].link_shelters_to_shelters(
+    world.super_areas
 )
+# associate social activities to shelters
+leisure.distribute_social_venues_to_households(world.shelters, world.super_areas)
 
 # ==================================================================================#
 
