@@ -15,7 +15,7 @@ from june.records.event_records_writer import (
     DeathsRecord,
     RecoveriesRecord,
 )
-from june.records.static_records_writer import PeopleRecord, LocationRecord
+from june.records.static_records_writer import PeopleRecord, LocationRecord, AreaRecord, SuperAreaRecord, RegionRecord
 from june import paths
 
 
@@ -62,6 +62,9 @@ class Record:
             self.statics = {
                 "people": PeopleRecord(hdf5_file=self.file),
                 "locations": LocationRecord(hdf5_file=self.file),
+                "areas": AreaRecord(hdf5_file=self.file),
+                "super_areas": SuperAreaRecord(hdf5_file=self.file),
+                "regions": RegionRecord(hdf5_file=self.file),
             }
 
         self.file.close()

@@ -136,144 +136,81 @@ class LocationRecord(StaticRecord):
         str_data = [location_type]
         return int_data, float_data, str_data
 
-class HospitalRecord(StaticRecord):
+class AreaRecord(StaticRecord):
     def __init__(self, hdf5_file):
         super().__init__(
             hdf5_file=hdf5_file,
-            table_name="locations",
+            table_name="areas",
             int_names=[
                 "id",
-                "super_area",
+                "super_area_id",
             ],
             float_names=["latitude", "longitude"],
-            str_names=["type"],
-            expectedrows=1_000_000,
+            str_names=["name"],
+            expectedrows=10_000,
         )
 
     def get_data(self, world, get_global_location_id):
-        (
-            ids,
-            latitude,
-            longitude,
-            location_type,
-            super_area_id
-        ) = ([], [], [], [],[])
-        for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup):
-                for group in getattr(world, attribute):
-                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
-                    latitude.append(group.coordinates[0])
-                    longitude.append(group.coordinates[1])
-                    location_type.append(group.spec)
-                    super_area_id.append(group.super_area.id)
-        int_data=[ids, super_area_id]
+        area_id, super_area_id, latitude, longitude, area_name = [], [], [], [], []
+        for area in world.areas:
+            area_id.append(area.id)
+            super_area_id.append(area.super_area.id)
+            latitude.append(area.coordinates[0])
+            longitude.append(area.coordinates[1])
+            area_name.append(area.name)
+        int_data=[area_id, super_area_id]
         float_data = [latitude, longitude]
-        str_data = [location_type]
+        str_data = [area_name]
         return int_data, float_data, str_data
 
 class SuperAreaRecord(StaticRecord):
     def __init__(self, hdf5_file):
         super().__init__(
             hdf5_file=hdf5_file,
-            table_name="locations",
+            table_name="super_areas",
             int_names=[
                 "id",
-                "super_area",
+                "region_id",
             ],
             float_names=["latitude", "longitude"],
-            str_names=["type"],
-            expectedrows=1_000_000,
+            str_names=["name"],
+            expectedrows=5_000,
         )
 
     def get_data(self, world, get_global_location_id):
-        (
-            ids,
-            latitude,
-            longitude,
-            location_type,
-            super_area_id
-        ) = ([], [], [], [],[])
-        for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup):
-                for group in getattr(world, attribute):
-                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
-                    latitude.append(group.coordinates[0])
-                    longitude.append(group.coordinates[1])
-                    location_type.append(group.spec)
-                    super_area_id.append(group.super_area.id)
-        int_data=[ids, super_area_id]
+        super_area_id, region_id, latitude, longitude, super_area_name = [], [], [], [], []
+        for super_area in world.super_areas:
+            super_area_id.append(super_area.id)
+            region_id.append(super_area.region.id)
+            latitude.append(super_area.coordinates[0])
+            longitude.append(super_area.coordinates[1])
+            super_area_name.append(super_area.name)
+        int_data=[super_area_id, region_id]
         float_data = [latitude, longitude]
-        str_data = [location_type]
-        return int_data, float_data, str_data
-
-class AreaRecord(StaticRecord):
-    def __init__(self, hdf5_file):
-        super().__init__(
-            hdf5_file=hdf5_file,
-            table_name="locations",
-            int_names=[
-                "id",
-                "super_area",
-            ],
-            float_names=["latitude", "longitude"],
-            str_names=["type"],
-            expectedrows=1_000_000,
-        )
-
-    def get_data(self, world, get_global_location_id):
-        (
-            ids,
-            latitude,
-            longitude,
-            location_type,
-            super_area_id
-        ) = ([], [], [], [],[])
-        for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup):
-                for group in getattr(world, attribute):
-                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
-                    latitude.append(group.coordinates[0])
-                    longitude.append(group.coordinates[1])
-                    location_type.append(group.spec)
-                    super_area_id.append(group.super_area.id)
-        int_data=[ids, super_area_id]
-        float_data = [latitude, longitude]
-        str_data = [location_type]
+        str_data = [super_area_name]
         return int_data, float_data, str_data
 
 class RegionRecord(StaticRecord):
     def __init__(self, hdf5_file):
         super().__init__(
             hdf5_file=hdf5_file,
-            table_name="locations",
+            table_name="regions",
             int_names=[
                 "id",
-                "super_area",
             ],
-            float_names=["latitude", "longitude"],
-            str_names=["type"],
-            expectedrows=1_000_000,
+            float_names=[],
+            str_names=["name"],
+            expectedrows=50,
         )
 
     def get_data(self, world, get_global_location_id):
-        (
-            ids,
-            latitude,
-            longitude,
-            location_type,
-            super_area_id
-        ) = ([], [], [], [],[])
-        for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup):
-                for group in getattr(world, attribute):
-                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
-                    latitude.append(group.coordinates[0])
-                    longitude.append(group.coordinates[1])
-                    location_type.append(group.spec)
-                    super_area_id.append(group.super_area.id)
-        int_data=[ids, super_area_id]
-        float_data = [latitude, longitude]
-        str_data = [location_type]
+        region_id, region_name = [], []
+        for region in world.regions:
+            region_id.append(region.id)
+            region_name.append(region.name)
+        int_data=[region_id]
+        float_data = []
+        str_data = [region_name]
         return int_data, float_data, str_data
 
 
