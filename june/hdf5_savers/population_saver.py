@@ -385,8 +385,10 @@ def restore_population_properties_from_hdf5(
             )
             areas = read_dataset(population["area"], idx1, idx2)
             super_areas = read_dataset(population["super_area"], idx1, idx2)
-            work_super_areas = read_dataset(population["work_super_area"])
-            work_super_areas_cities = read_dataset(population["work_super_area_city"])
+            work_super_areas = read_dataset(population["work_super_area"], idx1, idx2)
+            work_super_areas_cities = read_dataset(
+                population["work_super_area_city"], idx1, idx2
+            )
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]

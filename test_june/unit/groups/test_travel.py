@@ -89,9 +89,6 @@ class TestCommute:
         for station in world.stations:
             commuters += len(station.commuter_ids)
         assert public_transports == commuters
-        print(commuters)
-        print(public_transports)
-        raise ValueError
 
     def test__all_commuters_get_commute(self, travel_world):
         world, travel = travel_world
