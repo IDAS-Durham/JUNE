@@ -1,28 +1,279 @@
 import tables
 import numpy as np
+
 from june.records.helper_records_writer import _get_description_for_event
+from june.groups import Supergroup
+
 
 class StaticRecord:
-    def __init__(self, hdf5_file, table_name, int_names, float_names):
+    def __init__(self, hdf5_file, table_name, int_names, float_names, str_names, expectedrows):
         if not isinstance(hdf5_file, tables.file.File):
             raise TypeError("hdf5_file must be an open HDF5 file (use tables.openFile)")
         self.file = hdf5_file
         self.table_name = table_name
-        self.int_names = int_names
-        self.float_names = float_names
-        self.attributes = int_names + float_names
-        for attribute in self.attributes:
-            setattr(self, attribute, [])
-        self._create_table(int_names, float_names)
+        self._create_table(int_names, float_names, str_names, expectedrows)
 
-    def _create_table(self, int_names, float_names):
+    def _create_table(self, int_names, float_names, str_names, expectedrows):
         table_description = _get_description_for_event(
-            int_names=int_names, float_names=float_names, timestamp=False
+            int_names=int_names,
+            float_names=float_names,
+            str_names=str_names,
+            timestamp=False,
         )
         self.table = self.file.create_table(
-            self.file.root, self.table_name, table_description
+            self.file.root,
+            self.table_name,
+            table_description,
+            expectedrows=expectedrows,
         )
 
-    def record_in_chunks(self, hdf5_file):
+    def _record(self, hdf5_file, int_data, float_data, str_data):
+        data = np.rec.fromarrays(
+            [np.array(data, dtype=np.int32) for data in int_data]
+            + [np.array(data, dtype=np.float32) for data in float_data]
+            + [np.array(data, dtype="S20") for data in str_data]
+        )
+        table = getattr(hdf5_file.root, self.table_name)
+        table.append(data)
+        table.flush()
+
+    def get_data(self, world, get_global_location_id):
+        pass
+
+    def record(self, hdf5_file, world, get_global_location_id):
+        int_data, float_data, str_data = self.get_data(world=world, get_global_location_id=get_global_location_id)
+        self._record(
+            hdf5_file=hdf5_file,
+            int_data=int_data,
+            float_data = float_data,
+            str_data=str_data
+        )
+
+
+
+class PeopleRecord(StaticRecord):
+    def __init__(self, hdf5_file):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="population",
+            int_names=[
+                "id",
+                "age",
+                "socioeconomic_index",
+                "primary_activity_id",
+                "residence_id",
+            ],
+            float_names=[],
+            str_names=["sex", "ethnicity"],
+            expectedrows=1_000_000,
+        )
+
+    def get_data(self, world, get_global_location_id):
+        (
+            ids,
+            age,
+            socioeconomic_index,
+            primary_activity_id,
+            residence_id,
+            sex,
+            ethnicity,
+        ) = ([], [], [], [], [], [], [])
+        for person in world.people:
+            ids.append(person.id)
+            age.append(person.age)
+            socioeconomic_index.append(person.socioecon_index)
+            primary_activity = (
+                f"{person.primary_activity.group.spec}_{person.primary_activity.group.id}"
+                if person.primary_activity is not None
+                else f"None"
+            )
+            primary_activity_id.append(get_global_location_id(primary_activity))
+            residence = (
+                f"{person.residence.group.spec}_{person.residence.group.id}"
+                if person.residence is not None
+                else f"None"
+            )
+            residence_id.append(get_global_location_id(residence))
+            sex.append(person.sex)
+            ethnicity.append(person.ethnicity)
+        int_data=[ids, age, socioeconomic_index, primary_activity_id, residence_id]
+        float_data = []
+        str_data = [sex, ethnicity]
+        return int_data, float_data, str_data
+
+class LocationRecord(StaticRecord):
+    def __init__(self, hdf5_file):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="locations",
+            int_names=[
+                "id",
+                "area_id",
+            ],
+            float_names=["latitude", "longitude"],
+            str_names=["type"],
+            expectedrows=1_000_000,
+        )
+
+    def get_data(self, world, get_global_location_id):
+        (
+            ids,
+            latitude,
+            longitude,
+            location_type,
+            area_id
+        ) = ([], [], [], [],[])
+        for attribute, value in world.__dict__.items():
+            if isinstance(value, Supergroup):
+                for group in getattr(world, attribute):
+                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
+                    latitude.append(group.coordinates[0])
+                    longitude.append(group.coordinates[1])
+                    location_type.append(group.spec)
+                    area_id.append(group.area.id)
+        int_data=[ids, area_id]
+        float_data = [latitude, longitude]
+        str_data = [location_type]
+        return int_data, float_data, str_data
+
+class HospitalRecord(StaticRecord):
+    def __init__(self, hdf5_file):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="locations",
+            int_names=[
+                "id",
+                "super_area",
+            ],
+            float_names=["latitude", "longitude"],
+            str_names=["type"],
+            expectedrows=1_000_000,
+        )
+
+    def get_data(self, world, get_global_location_id):
+        (
+            ids,
+            latitude,
+            longitude,
+            location_type,
+            super_area_id
+        ) = ([], [], [], [],[])
+        for attribute, value in world.__dict__.items():
+            if isinstance(value, Supergroup):
+                for group in getattr(world, attribute):
+                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
+                    latitude.append(group.coordinates[0])
+                    longitude.append(group.coordinates[1])
+                    location_type.append(group.spec)
+                    super_area_id.append(group.super_area.id)
+        int_data=[ids, super_area_id]
+        float_data = [latitude, longitude]
+        str_data = [location_type]
+        return int_data, float_data, str_data
+
+class SuperAreaRecord(StaticRecord):
+    def __init__(self, hdf5_file):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="locations",
+            int_names=[
+                "id",
+                "super_area",
+            ],
+            float_names=["latitude", "longitude"],
+            str_names=["type"],
+            expectedrows=1_000_000,
+        )
+
+    def get_data(self, world, get_global_location_id):
+        (
+            ids,
+            latitude,
+            longitude,
+            location_type,
+            super_area_id
+        ) = ([], [], [], [],[])
+        for attribute, value in world.__dict__.items():
+            if isinstance(value, Supergroup):
+                for group in getattr(world, attribute):
+                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
+                    latitude.append(group.coordinates[0])
+                    longitude.append(group.coordinates[1])
+                    location_type.append(group.spec)
+                    super_area_id.append(group.super_area.id)
+        int_data=[ids, super_area_id]
+        float_data = [latitude, longitude]
+        str_data = [location_type]
+        return int_data, float_data, str_data
+
+class AreaRecord(StaticRecord):
+    def __init__(self, hdf5_file):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="locations",
+            int_names=[
+                "id",
+                "super_area",
+            ],
+            float_names=["latitude", "longitude"],
+            str_names=["type"],
+            expectedrows=1_000_000,
+        )
+
+    def get_data(self, world, get_global_location_id):
+        (
+            ids,
+            latitude,
+            longitude,
+            location_type,
+            super_area_id
+        ) = ([], [], [], [],[])
+        for attribute, value in world.__dict__.items():
+            if isinstance(value, Supergroup):
+                for group in getattr(world, attribute):
+                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
+                    latitude.append(group.coordinates[0])
+                    longitude.append(group.coordinates[1])
+                    location_type.append(group.spec)
+                    super_area_id.append(group.super_area.id)
+        int_data=[ids, super_area_id]
+        float_data = [latitude, longitude]
+        str_data = [location_type]
+        return int_data, float_data, str_data
+
+class RegionRecord(StaticRecord):
+    def __init__(self, hdf5_file):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="locations",
+            int_names=[
+                "id",
+                "super_area",
+            ],
+            float_names=["latitude", "longitude"],
+            str_names=["type"],
+            expectedrows=1_000_000,
+        )
+
+    def get_data(self, world, get_global_location_id):
+        (
+            ids,
+            latitude,
+            longitude,
+            location_type,
+            super_area_id
+        ) = ([], [], [], [],[])
+        for attribute, value in world.__dict__.items():
+            if isinstance(value, Supergroup):
+                for group in getattr(world, attribute):
+                    ids.append(get_global_location_id(f"{group.spec}_{group.id}"))
+                    latitude.append(group.coordinates[0])
+                    longitude.append(group.coordinates[1])
+                    location_type.append(group.spec)
+                    super_area_id.append(group.super_area.id)
+        int_data=[ids, super_area_id]
+        float_data = [latitude, longitude]
+        str_data = [location_type]
+        return int_data, float_data, str_data
 
 

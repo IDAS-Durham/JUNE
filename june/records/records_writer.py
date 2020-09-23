@@ -15,6 +15,7 @@ from june.records.event_records_writer import (
     DeathsRecord,
     RecoveriesRecord,
 )
+from june.records.static_records_writer import PeopleRecord, LocationRecord
 from june import paths
 
 
@@ -24,6 +25,7 @@ class Record:
         record_path: str,
         filename: str,
         locations_counts: dict = {"household": 1, "care_home": 1,},
+        record_static_data=False,
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
@@ -56,11 +58,16 @@ class Record:
                     "daily_hospital_deaths",
                 ]
             )
+        if record_static_data:
+            self.statics = {
+                "people": PeopleRecord(hdf5_file=self.file),
+                "locations": LocationRecord(hdf5_file=self.file),
+            }
 
         self.file.close()
 
     @classmethod
-    def from_world(cls, record_path: str, filename: str, world: "World"):
+    def from_world(cls, record_path: str, filename: str, world: "World", record_static_data=False):
         all_super_groups = []
         for attribute, value in world.__dict__.items():
             if isinstance(value, Supergroup):
@@ -69,16 +76,18 @@ class Record:
         for sg in all_super_groups:
             super_group = getattr(world, sg)
             locations_counts[super_group.group_spec] = len(super_group)
-        print(locations_counts)
         return cls(
             record_path=record_path,
             filename=filename,
             locations_counts=locations_counts,
+            record_static_data=record_static_data,
         )
 
     def get_global_location_id(self, location: str) -> int:
-        if 'infection_seed' in location:
+        if "infection_seed" in location:
             return -1
+        elif location == "None":
+            return -2
         location_id = int(location.split("_")[-1])
         location_type = "_".join(location.split("_")[:-1])
         order_in_keys = list(self.locations_counts.keys()).index(location_type)
@@ -88,7 +97,9 @@ class Record:
 
     def invert_global_location_id(self, location_global_id: int) -> (str, int):
         if location_global_id == -1:
-            return 'infection_seed', 0
+            return "infection_seed", 0
+        elif location_global_id == -2:
+            return "None", 0
         cummulative_values = np.cumsum(list(self.locations_counts.values()))
         idx = np.digitize(location_global_id, cummulative_values)
         location_type = list(self.locations_counts.keys())[idx]
@@ -97,6 +108,12 @@ class Record:
         else:
             location_id = location_global_id - cummulative_values[idx - 1]
         return location_type, location_id
+
+    def static_data(self, world: "World"):
+        self.file = tables.open_file(self.record_path / self.filename, mode="a")
+        for static_name in self.statics.keys():
+            self.statics[static_name].record(hdf5_file=self.file, world=world, get_global_location_id=self.get_global_location_id)
+        self.file.close()
 
     def accumulate_infections(self, location, new_infected_ids):
         location_id = self.get_global_location_id(location)

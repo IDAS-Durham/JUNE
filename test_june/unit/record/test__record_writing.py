@@ -48,7 +48,7 @@ def create_dummy_world():
             Hospital(
                 n_beds=1,
                 n_icu_beds=1,
-                super_area=super_areas[2],
+                area=areas[5],
                 coordinates=(0.0, 0.0),
             )
         ]
@@ -64,13 +64,17 @@ def create_dummy_world():
     world.hospitals = hospitals
     world.care_homes = care_homes
     world.people = [
-        Person.from_attributes(id=0,),
-        Person.from_attributes(id=1),
-        Person.from_attributes(id=2),
+        Person.from_attributes(id=0,age=0,ethnicity='A',socioecon_index=0),
+        Person.from_attributes(id=1, age=1,ethnicity='B', socioecon_index=1),
+        Person.from_attributes(id=2, age=2,sex="m", ethnicity='C', socioecon_index=2),
     ]
     world.people[0].area = super_areas[0].areas[0]  # household resident
+    world.people[0].subgroups.primary_activity = hospitals[0].subgroups[0]
+    world.people[0].subgroups.residence = households[0].subgroups[0]
     world.people[1].area = super_areas[0].areas[0]
+    world.people[1].subgroups.residence = households[0].subgroups[0]
     world.people[2].area = super_areas[0].areas[1]  # care home resident
+    world.people[2].subgroups.residence = care_homes[0].subgroups[0]
     return world
 
 
@@ -170,6 +174,46 @@ def test__writing_death():
     assert df.dead_person_ids.iloc[0] == 10
     record.file.close()
 
+def test__static_people(dummy_world):
+    record = Record.from_world(record_path="results", filename="test.hdf5", 
+            world=dummy_world, record_static_data=True)
+    record.static_data(world=dummy_world)
+    record.file = open_file(record.record_path / record.filename, mode="a")
+    table = record.file.root.population
+    df = pd.DataFrame.from_records(table.read(), index='id')
+    assert df.loc[0, 'age'] == 0
+    assert df.loc[1, 'age'] == 1
+    assert df.loc[2, 'age'] == 2
+    assert df.loc[0, 'socioeconomic_index'] == 0
+    assert df.loc[1, 'socioeconomic_index'] == 1
+    assert df.loc[2, 'socioeconomic_index'] == 2
+    assert record.invert_global_location_id(df.loc[0, 'primary_activity_id']) == ('hospital', 0)
+    assert record.invert_global_location_id(df.loc[1, 'primary_activity_id']) == ('None', 0)
+    assert record.invert_global_location_id(df.loc[0, 'residence_id']) == ('household', 0)
+    assert record.invert_global_location_id(df.loc[2, 'residence_id']) == ('care_home', 0)
+    assert df.loc[0, 'ethnicity'] == b'A'
+    assert df.loc[1, 'ethnicity'] == b'B'
+    assert df.loc[2, 'ethnicity'] == b'C'
+    assert df.loc[0, 'sex'] == b'f'
+    assert df.loc[2, 'sex'] == b'm'
+    record.file.close()
+
+def test__static_location(dummy_world):
+    record = Record.from_world(record_path="results", filename="test.hdf5", 
+            world=dummy_world, record_static_data=True)
+    record.static_data(world=dummy_world)
+    record.file = open_file(record.record_path / record.filename, mode="a")
+    table = record.file.root.locations
+    df = pd.DataFrame.from_records(table.read(), index='id')
+    for index, row in df.iterrows():
+        location_type, location_id = record.invert_global_location_id(index)
+        assert row['type'].decode() == location_type
+        assert getattr(dummy_world, location_type + 's')[location_id].area.id == row['area_id']
+        if index == 2:
+            assert dummy_world.areas[row['area_id']].name == 'area_6'
+
+    record.file.close()
+
 
 def test__sumarise_time_tep(dummy_world):
     record = Record(record_path="results", filename="test.hdf5", 
@@ -188,7 +232,7 @@ def test__sumarise_time_tep(dummy_world):
     record.accumulate_death(death_location="hospital_0", dead_person_id=1)
     record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
-
+    record.file.close()
     summary_df = pd.read_csv(record.record_path / 'summary.csv', index_col=0)
     region_1 = summary_df[summary_df['region'] == 'region_1']
     region_2 = summary_df[summary_df['region'] == 'region_2']
@@ -209,3 +253,5 @@ def test__sumarise_time_tep(dummy_world):
 
     assert region_1.loc['2020-04-05']['daily_care_home_deaths'] == 1
     assert region_2.loc['2020-04-05']['daily_hospital_deaths'] == 1
+
+
