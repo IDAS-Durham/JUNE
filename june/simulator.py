@@ -63,7 +63,6 @@ class Simulator:
             self.checkpoint_dates = checkpoint_dates
         self.sort_people_world()
         self.medical_facilities = self._get_medical_facilities()
-        print(self.medical_facilities)
         if save_path is not None:
             self.save_path = Path(save_path)
             self.save_path.mkdir(exist_ok=True, parents=True)
@@ -231,7 +230,7 @@ class Simulator:
         to False.
         """
         for group_name in self.activity_manager.all_groups:
-            if group_name in ["care_home_visits", "household_visits"]:
+            if "visits" in group_name:
                 continue
             grouptype = getattr(self.world, group_name)
             if grouptype is not None:
@@ -246,7 +245,7 @@ class Simulator:
     def _get_medical_facilities(self):
         medical_facilities = []
         for group_name in self.activity_manager.all_groups:
-            if group_name in ["care_home_visits", "household_visits"]:
+            if "visits" in group_name:
                 continue
             grouptype = getattr(self.world, group_name)
             if grouptype is not None:
@@ -390,7 +389,7 @@ class Simulator:
         group_instances = [
             getattr(self.world, group)
             for group in active_groups
-            if group not in ["household_visits", "care_home_visits"]
+            if "visits" not in group
         ]
         n_people = 0
 

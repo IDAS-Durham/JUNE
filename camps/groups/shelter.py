@@ -1,17 +1,20 @@
 import numpy as np
 from enum import IntEnum
+from random import randint
 
 from june.groups import Group, Supergroup, Households, Household
 from june.demography.geography import Areas
 
 
 class Shelter(Household):
+    __slots__ = "shelters_to_visit"
     class SubgroupType(IntEnum):
         household_1 = 1
         household_2 = 2
 
     def __init__(self, area=None):
         super().__init__(type="shelter", area=area)
+        self.shelters_to_visit = None
 
     def add(self, household: Household):
         if not isinstance(household, Household):
@@ -27,13 +30,14 @@ class Shelter(Household):
                 self.subgroups[1].append(person)
                 setattr(person.subgroups, "residence", self[1])
         else:
+            assert self.n_households == 2
             raise ValueError("Shelter full!")
         # add to residents
         self.residents = tuple((*self.residents, person))
 
     @property
     def families(self):
-        return [subgroup for subgroup in self.subgroups if len(subgroup) != 0]
+        return [subgroup for subgroup in self.subgroups if len(subgroup.people) != 0]
 
     @property
     def n_families(self):
@@ -48,7 +52,12 @@ class Shelter(Household):
         return self.area.coordinates
 
     def get_leisure_subgroup(self, person):
-        raise NotImplementedError()
+        if self.n_households == 0:
+            return None
+        elif self.n_households == 1:
+            return self[0]
+        else:
+            return self[randint(0,1)]
 
 class Shelters(Supergroup):
     def __init__(self, shelters):
