@@ -21,6 +21,8 @@ class CampActivityManager(ActivityManager):
 
     def activate_next_shift(self,):
         for super_group in self.active_groups:
+            if "visits" in super_group:
+                continue
             super_group_instance = getattr(self.world, super_group)
             try:
                 if super_group_instance.has_shifts:

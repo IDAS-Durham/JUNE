@@ -22,10 +22,9 @@ from june.infection import Infection, HealthIndexGenerator
 from june.infection_seed import InfectionSeed
 from june.infection import InfectionSelector
 from june.interaction import Interaction
-from june.groups import Hospital, Hospitals
+from june.groups import Hospital, Hospitals, Cemeteries
 from june.distributors import HospitalDistributor
 from june.hdf5_savers import generate_world_from_hdf5
-from june.groups import Cemeteries
 from june.policy import Policy, Policies
 from june.logger.read_logger import ReadLogger
 from june.simulator import Simulator
@@ -237,8 +236,8 @@ print("Save path set to: {}".format(args.save_path))
 CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
-world = generate_empty_world({"super_area": ["CXB-219-C"]})
-# world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+#world = generate_empty_world({"super_area": ["CXB-219-C"]})
+world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
 # world = generate_empty_world()
 
 # populate empty world
