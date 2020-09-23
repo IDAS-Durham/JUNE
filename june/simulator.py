@@ -283,7 +283,9 @@ class Simulator:
                 death_location = (
                     f"{person.residence.group.spec}_{person.residence.group.id}"
                 )
-            self.record.accumulate_death(dead_person_id=person.id, death_location=death_location)
+            self.record.accumulate_death(
+                dead_person_id=person.id, death_location=death_location
+            )
         person.dead = True
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
@@ -460,7 +462,9 @@ class Simulator:
                     >= self.timer.date
                     >= self.infection_seed.min_date
                 ):
-                    self.infection_seed.unleash_virus_per_region(self.timer.date)
+                    self.infection_seed.unleash_virus_per_region(
+                        self.timer.date, record=self.record
+                    )
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_dates
