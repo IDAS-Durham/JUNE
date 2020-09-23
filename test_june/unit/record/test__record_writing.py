@@ -82,12 +82,18 @@ def test__locations_id():
         locations_counts=locations_counts,
     )
 
+    global_id = record.get_global_location_id("infection_seed_0")
+    assert global_id == -1
     global_id = record.get_global_location_id("household_2")
     assert global_id == 2
     global_id = record.get_global_location_id("care_home_2")
     assert global_id == 7
     global_id = record.get_global_location_id("school_0")
     assert global_id == 9
+
+    location_type, location_id = record.invert_global_location_id(-1)
+    assert location_type == "infection_seed"
+    assert location_id == 0
 
     location_type, location_id = record.invert_global_location_id(2)
     assert location_type == "household"
