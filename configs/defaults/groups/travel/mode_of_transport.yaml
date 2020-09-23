@@ -20,5 +20,6 @@
   is_public: false
 - description: Other method of travel to work
   is_public: false
-- description: Not in employment
-  is_public: false
+# Note : this is disabled as we only distribute this among workers.
+  #- description: Not in employment
+  #is_public: false
