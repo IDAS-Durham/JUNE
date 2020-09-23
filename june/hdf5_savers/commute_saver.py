@@ -349,7 +349,10 @@ def restore_cities_and_stations_properties_from_hdf5(
                     if super_area_id not in domain_super_areas:
                         continue
                 super_area = world.super_areas.get_from_id(super_area_id)
-                super_area.city = world.cities.get_from_id(super_area_city[k])
+                if super_area_city[k] == nan_integer:
+                    super_area.city = None
+                else:
+                    super_area.city = world.cities.get_from_id(super_area_city[k])
                 for city, station in zip(
                     super_area_closest_stations_cities[k],
                     super_area_closest_stations_stations[k],
