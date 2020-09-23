@@ -284,11 +284,11 @@ if args.household_beta:
     interaction.beta['household'] = float(args.household_beta)
     interaction.beta['hospital'] = float(args.household_beta)*0.1
 
-if args.indoor_beta_ratio:
+if args.outdoor_beta_ratio:
     interaction.beta['play_group'] = interaction.beta['household']*float(args.indoor_beta_ratio)
     interaction.beta['pump_latrine'] = interaction.beta['household']*float(args.indoor_beta_ratio)
 
-if args.outdoor_beta_ratio:
+if args.indoor_beta_ratio:
     interaction.beta['communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
     interaction.beta['female_communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
     interaction.beta['religious'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
