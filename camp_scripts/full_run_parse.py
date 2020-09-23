@@ -61,6 +61,9 @@ parser = argparse.ArgumentParser(description='Full run of the camp')
 
 parser.add_argument('-c', '--comorbidities', help="True to include comorbidities", required=False, default="True")
 parser.add_argument('-p', '--parameters', help="Parameter file", required=False, default="ContactInteraction_med_low_low_low.yaml")
+parser.add_argument('-hb', '--household_beta', help="Household beta", required=False, default=False)
+parser.add_argument('-ih', '--indoor_beta_ratio', help="Indoor/household beta ratio scaling", required=False, default=False)
+parser.add_argument('-oh', '--outdoor_beta_ratio', help="Outdoor/household beta ratio scaling", required=False, default=False)
 parser.add_argument('-inf', '--infectiousness_path', help="path to infectiousness parameter file", required=False, default='nature')
 parser.add_argument('-cs', '--child_susceptibility' ,help="Reduce child susceptibility", required=False, default=False)
 parser.add_argument('-u', '--isolation_units', help="True to include isolation units", required=False, default="False")
@@ -142,8 +145,8 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-#world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
-world = generate_empty_world()
+world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+#world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -274,6 +277,21 @@ if args.learning_centers and args.learning_center_beta_ratio:
 if args.play_group_beta_ratio:
     interaction.beta['play_group'] = interaction.beta['household']*float(args.play_group_beta_ratio)
 
+if args.household_beta:
+    interaction.beta['household'] = float(args.household_beta)
+
+if args.indoor_beta_ratio:
+    interaction.beta['play_group'] = interaction.beta['household']*float(args.indoor_beta_ratio)
+    interaction.beta['pump_latrine'] = interaction.beta['household']*float(args.indoor_beta_ratio)
+
+if args.outdoor_beta_ratio:
+    interaction.beta['communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['female_communal'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['religious'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['distribution_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['n_f_distribution_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['e_voucher'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['learning_center'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
 
 cases_detected = {
     "CXB-202": 3,
