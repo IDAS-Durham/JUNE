@@ -29,7 +29,7 @@ class FemaleCommunals(SocialVenues):
         areas: Areas,
         coordinates_filename: str = default_female_communals_coordinates_filename,
         max_distance_to_area=5,
-        max_size=50,
+        max_size=np.inf,
     ):
         female_communals_df = pd.read_csv(coordinates_filename)
         coordinates = female_communals_df.loc[:, ["latitude", "longitude"]].values
