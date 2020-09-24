@@ -81,14 +81,14 @@ class TransmissionXNExp(Transmission):
 
     def __init__(
         self,
-        max_probability=1.0,
-        time_first_infectious=2.6,
-        norm_time=1.0,
-        n=1.0,
-        alpha=5.0,
-        max_symptoms=None,
-        asymptomatic_infectious_factor=None,
-        mild_infectious_factor=None,
+        max_probability: float = 1.0,
+        time_first_infectious: float = 2.6,
+        norm_time: float = 1.0,
+        n: float = 1.0,
+        alpha: float = 5.0,
+        max_symptoms: str = None,
+        asymptomatic_infectious_factor: float = None,
+        mild_infectious_factor: float = None,
     ):
         """
         Class that defines the time profile of the infectiousness to be of the form x^n exp(-x/alpha)
@@ -258,7 +258,7 @@ class TransmissionXNExp(Transmission):
 
     def _modify_infectiousness_for_symptoms(
         self,
-        max_symptoms: "SymptomTag",
+        max_symptoms: str,
         asymptomatic_infectious_factor,
         mild_infectious_factor,
     ):
@@ -274,11 +274,8 @@ class TransmissionXNExp(Transmission):
         """
         if (
             asymptomatic_infectious_factor is not None
-            and max_symptoms == SymptomTag.asymptomatic
+            and max_symptoms == "asymptomatic"
         ):
             self.norm *= asymptomatic_infectious_factor
-        elif (
-            mild_infectious_factor is not None and max_symptoms == SymptomTag.mild
-        ):
+        elif mild_infectious_factor is not None and max_symptoms == "mild":
             self.norm *= mild_infectious_factor
-
