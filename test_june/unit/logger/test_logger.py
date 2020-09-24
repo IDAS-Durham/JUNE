@@ -179,7 +179,6 @@ def create_sim(world, interaction, selector):
     return sim
 
 
-<<<<<<< HEAD
 test_dict = {
     "A": 10,
     "B": {"B1": {},},
@@ -188,10 +187,6 @@ test_dict = {
 
 def test__log_population(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
-=======
-
-def test__log_population(sim):
->>>>>>> master
     sim.logger.log_population(sim.world.people, chunk_size=2)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         assert f["population"].attrs["n_people"] == 5
@@ -296,7 +291,6 @@ def test__log_infection_location(world, interaction, selector):
         i += 1
         next(sim.timer)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-<<<<<<< HEAD
         super_area = sim.world.super_areas[0].name
         locations = f[f"{super_area}/locations"]
         keys = list(locations.keys())
@@ -313,32 +307,11 @@ def test__log_infection_location(world, interaction, selector):
                 assert len(locations_found) == 0
     assert all(key in time_steps for key in keys)
 
-
-"""
-def test__log_hospital_characteristics(sim):
-    sim.logger.log_hospital_characteristics(sim.world.hospitals)
-    with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = sim.world.super_areas[0].name
-        assert set(f[f"{super_area}/hospitals/n_beds"]) == set([40])
-        assert set(f[f"{super_area}/hospitals/n_icu_beds"]) == set([5])
-"""
-=======
-        print(list(f.keys()))
-        super_area = list(f.keys())[0]
-        super_area = f[super_area]
-        first_ts = time_steps[0]
-        keys = list(super_area[f"infection"].keys())
-        infected_set = set(super_area[f"infection/{first_ts}/id"][()])
-        world_ids = set([p.id for p in sim.world.people])
-
-    assert all(t in keys for t in time_steps)
-    assert infected_set.issubset(world_ids)
-    assert len(infected_set) == 2
-
-def test__log_meta_info(sim):
+def test__log_meta_info(world, interaction, selector):
+    clean_world(world)
+    sim = create_sim(world, interaction, selector)
     user = "test_user"
     test_comment = "This is a test comment, testing, testing, 1, 2"
-
     sim.logger.log_meta_info(comment=test_comment)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
@@ -360,4 +333,3 @@ def test__log_meta_info(sim):
 
 
 
->>>>>>> master
