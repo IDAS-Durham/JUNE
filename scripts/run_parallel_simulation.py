@@ -2,6 +2,7 @@ import time
 import numpy as np
 import numba as nb
 import random
+from pathlib import Path
 from mpi4py import MPI
 import h5py
 import sys
@@ -84,8 +85,6 @@ def generate_simulator():
     
     
     logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
-    population = load_population_from_hdf5(world_file)
-    logger.log_population(population)
     
     super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
     
@@ -94,6 +93,7 @@ def generate_simulator():
         super_areas_to_domain_dict=super_areas_to_domain_dict,
         hdf5_file_path=world_file,
     )
+    logger.log_population(domain.people)
     #
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
@@ -137,7 +137,6 @@ def generate_simulator():
         config_filename=config_path,
         logger=logger,
     )
-
     print("simulator ready to go")
     return simulator
 
@@ -151,7 +150,7 @@ def run_simulator(simulator):
 def save_summary():
     if rank == 0:
         logger = ReadLogger(save_path, n_processes=size)
-        logger.world_summary().to_csv(save_path + "_summary.csv")
+        logger.world_summary().to_csv(Path(save_path) / "summary.csv")
 
 if __name__ == "__main__":
     simulator = generate_simulator()
