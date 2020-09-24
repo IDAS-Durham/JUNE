@@ -135,7 +135,6 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             file_path=file_path, chunk_size=chunk_size
         )
     if "companies" in f_keys:
-        logger.info("loading companies...")
         world.companies = load_companies_from_hdf5(
             file_path=file_path, chunk_size=chunk_size
         )
@@ -156,10 +155,8 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         logger.info("loading stations...")
         world.stations, world.inter_city_transports = load_stations_from_hdf5(file_path)
     if "households" in f_keys:
-        logger.info("loading households...")
         world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size)
     if "population" in f_keys:
-        logger.info("loading population...")
         world.people = load_population_from_hdf5(file_path, chunk_size=chunk_size)
     if "social_venues" in f_keys:
         logger.info("loading social venues...")
@@ -173,12 +170,10 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         world=world, file_path=file_path, chunk_size=chunk_size
     )
     if "population" in f_keys:
-        logger.info("restoring population...")
         restore_population_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size
         )
     if "households" in f_keys:
-        logger.info("restoring households...")
         restore_households_properties_from_hdf5(
             world=world, file_path=file_path, chunk_size=chunk_size
         )
@@ -267,7 +262,6 @@ def generate_domain_from_hdf5(
             domain_super_areas=super_area_ids,
         )
     if "companies" in f_keys:
-        logger.info("loading companies...")
         domain.companies = load_companies_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
@@ -302,12 +296,10 @@ def generate_domain_from_hdf5(
             super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "households" in f_keys:
-        logger.info("loading households...")
         domain.households = load_households_from_hdf5(
             file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
         )
     if "population" in f_keys:
-        logger.info("loading population...")
         domain.people = load_population_from_hdf5(
             file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
         )
@@ -329,7 +321,6 @@ def generate_domain_from_hdf5(
         super_areas_to_domain_dict=super_areas_to_domain_dict,
     )
     if "population" in f_keys:
-        logger.info("restoring population...")
         restore_population_properties_from_hdf5(
             world=domain,
             file_path=file_path,
@@ -338,7 +329,6 @@ def generate_domain_from_hdf5(
             super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "households" in f_keys:
-        logger.info("restoring households...")
         restore_households_properties_from_hdf5(
             world=domain,
             file_path=file_path,
