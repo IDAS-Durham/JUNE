@@ -20,7 +20,6 @@ class MedicalCarePolicy(Policy):
 
 class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
-
     def apply(self, person: Person, medical_facilities, record: Optional['Record']):
         for policy in self.policies:
             policy.apply(person, medical_facilities, record=record)
@@ -41,21 +40,19 @@ class Hospitalisation(MedicalCarePolicy):
         if symptoms_tag in hospitalised_tags:
             if person.medical_facility is None:
                 hospitals.allocate_patient(person)
+                if record is not None:
+                    record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
+                        patient_id = person.id,
+                        intensive_care= symptoms_tag == SymptomTag.intensive_care)
+
             elif symptoms_tag == SymptomTag.hospitalised:
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.patients
                 ]
-                if record is not None:
-                    record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
-                        patient_id = person.id)
             elif symptoms_tag == SymptomTag.intensive_care:
                 person.subgroups.medical_facility = person.medical_facility.group[
                     person.medical_facility.group.SubgroupType.icu_patients
                 ]
-                if record is not None:
-                    record.accumulate_hospitalisation(hospital_id=person.medical_facility.group.id,
-                        patient_id = person.id,
-                        intensive_care=True)
             else:
                 raise ValueError(
                     f"Person with symptoms tag {person.infection.tag} cannot go to hospital."

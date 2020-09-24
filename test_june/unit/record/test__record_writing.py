@@ -266,7 +266,9 @@ def test__static_geography(dummy_world):
     for super_area in dummy_world.super_areas:
         assert (
             super_area.region.name
-            == region_df.loc[super_area_df.loc[super_area.id].region_id, "name"].decode()
+            == region_df.loc[
+                super_area_df.loc[super_area.id].region_id, "name"
+            ].decode()
         )
     record.file.close()
 
