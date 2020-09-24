@@ -1,11 +1,13 @@
 import h5py
 import numpy as np
+import logging
 
 from june.groups import Company, Companies
 from june.world import World
 
 nan_integer = -999
 
+logger = logging.getLogger(__name__)
 
 def save_companies_to_hdf5(
     companies: Companies, file_path: str, chunk_size: int = 500000
@@ -85,12 +87,14 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    logger.info("loading companies...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         companies = f["companies"]
         companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
+            logger.info(f"Companies chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1

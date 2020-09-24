@@ -1,5 +1,7 @@
 import h5py
 import numpy as np
+import logging
+
 from june.world import World
 from june.groups import Household, Households
 from collections import defaultdict, OrderedDict
@@ -9,6 +11,7 @@ nan_integer = -999
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
+logger = logging.getLogger(__name__)
 
 
 def save_households_to_hdf5(
@@ -139,12 +142,14 @@ def load_households_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    logger.info("loading households...")
     households_list = []
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
+            logger.info(f"Households chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
@@ -186,11 +191,13 @@ def restore_households_properties_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    logger.info("restoring households...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
+            logger.info(f"Households chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
