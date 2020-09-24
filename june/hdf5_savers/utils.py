@@ -15,11 +15,16 @@ def read_dataset(dataset, index1=None, index2=None):
 
 def write_dataset(group, dataset_name, data, index1 = None, index2 = None):
     if dataset_name not in group:
-        group.create_dataset(dataset_name, data=data, maxshape=(None,))
+        if len(data.shape) > 1:
+            maxshape=(None, *data.shape[1:])
+        else:
+            maxshape = (None,)
+        group.create_dataset(dataset_name, data=data, maxshape=maxshape)
     else:
-        newshape = (group[dataset_name].shape[0] + data.shape[0],)
+        if len(data.shape) > 1:
+            newshape = (group[dataset_name].shape[0] + data.shape[0], *data.shape[1:])
+        else:
+            newshape = (group[dataset_name].shape[0] + data.shape[0],)
         group[dataset_name].resize(newshape)
         group[dataset_name][index1:index2] = data
-        print(dataset_name)
-        print(group[dataset_name][:])
 
