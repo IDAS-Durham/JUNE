@@ -34,6 +34,13 @@ shielding:
         start_time: 2020-03-24
         end_time: 2020-08-01
 
+    # CIRCUIT BREAKER
+    3:
+        min_age: 70
+        compliance: 0.7
+        start_time: 2020-10-16
+        end_time: 2020-10-30
+
 
 close_companies:
     1:
@@ -123,11 +130,29 @@ close_companies:
     13:
         start_time: 2020-09-09
         #end_time: 2020-09-17
+        #end_time: 2020-12-01
+        end_time: 2020-10-16
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.22
+
+    # CIRCUIT BREAKER
+    14:
+        start_time: 2020-10-16
+        end_time: 2020-10-30
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.22
+    15:
+        start_time: 2020-10-30
         end_time: 2020-12-01
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
         key_probability: 0.22
+
 
 social_distancing:
     1: 
@@ -165,7 +190,42 @@ social_distancing:
             university: 0.75
     3:
         start_time: 2020-07-04 
-        end_time: 2020-12-01
+        #end_time: 2020-12-10
+        end_time: 2020-10-16
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            commute_unit: 0.875
+            commute_city_unit: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+
+    # CIRCUIT BREAKER
+    4:
+        start_time: 2020-10-16
+        end_time: 2020-10-30
+        beta_factors:
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+    5:
+        start_time: 2020-10-30
+        end_time: 2020-12-10
         beta_factors:
             box: 0.875
             pub: 0.875
@@ -361,9 +421,11 @@ mask_wearing:
             school: 0.
             household: 0.
             university: 0.5
+
     11: 
         start_time: 2020-08-12
-        end_time: 2020-08-25
+        #end_time: 2020-08-25
+        end_time: 2020-12-01
         compliance: 0.745
         beta_factor: 0.5
         mask_probabilities: 
@@ -417,11 +479,17 @@ mask_wearing:
             household: 0.
             university: 0.5
 
-
 close_leisure_venue:
-    start_time: 2020-03-21
-    end_time: 2020-07-04 
-    venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
+    1:
+        start_time: 2020-03-21
+        end_time: 2020-07-04 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
+
+    # CIRCUIT BREAKER
+    2:
+        start_time: 2020-10-16
+        end_time: 2020-10-30
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
 
 change_leisure_probability:
     1:
@@ -548,6 +616,25 @@ change_leisure_probability:
                 women:
                     18-65: 1.38
                     65-100: 0.917
+
+    # CIRCUIT BREAKER
+
+    11:
+        start_time: 2020-10-16
+        end_time: 2020-10-30
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 0.50
+                    65-100: 0.25
+                women: 
+                    0-64: 0.50
+                    65-100: 0.25
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
 
 
 close_schools:
