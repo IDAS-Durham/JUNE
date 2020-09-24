@@ -12,15 +12,7 @@ import june
 
 class Logger:
     def __init__(
-<<<<<<< HEAD
-        self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 0
-=======
-        self,
-        save_path: str = "results",
-        file_name: str = "logger.hdf5",
-        rank: int = 0,
-        config: dict = None,
->>>>>>> master
+self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 0, config: dict = None,
     ):
         """
         Logger used by the simulator to store the relevant information.
@@ -37,13 +29,9 @@ class Logger:
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / file_name
-<<<<<<< HEAD
         self.infection_location, self.super_areas_infected = [], []
         self.rank = rank
-=======
-        self.infection_location, self.super_areas_infection = [], []
         self.config = config
->>>>>>> master
         try:
             os.remove(self.file_path)
         except OSError:
