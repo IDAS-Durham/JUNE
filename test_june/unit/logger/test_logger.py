@@ -52,7 +52,9 @@ def clean_world(world):
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file()
+    selector = InfectionSelector.from_file(
+        paths.configs_path / "defaults/transmission/XNExp.yaml"
+    )
     selector.recovery_rate = 1.0
     selector.transmission_probability = 1.0
     return selector
@@ -197,7 +199,10 @@ def test__log_population(world, interaction, selector):
 def test__log_parameters(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
     sim.logger.log_parameters(
-        interaction=sim.interaction, activity_manager=sim.activity_manager
+        interaction=sim.interaction, 
+        infection_seed=sim.infection_seed,
+        infection_selector=sim.infection_selector,
+        activity_manager=sim.activity_manager
     )
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
@@ -208,7 +213,7 @@ def test__log_parameters(world, interaction, selector):
         assert set(
             f["parameters/policies/close_leisure_venue/venues_to_close"][()]
         ) == set(["cinema", "pub"])
-
+        assert f["parameters/transmission_type"][()] == "xnexp"
 
 def test__log_infected_in_timestep(world, interaction, selector):
     clean_world(world)
@@ -302,12 +307,29 @@ def test__log_infection_location(world, interaction, selector):
                 assert len(locations_found) == 0
     assert all(key in time_steps for key in keys)
 
+def test__log_meta_info(world, interaction, selector):
+    clean_world(world)
+    sim = create_sim(world, interaction, selector)
+    user = "test_user"
+    test_comment = "This is a test comment, testing, testing, 1, 2"
+    sim.logger.log_meta_info(comment=test_comment)
 
-"""
-def test__log_hospital_characteristics(sim):
-    sim.logger.log_hospital_characteristics(sim.world.hospitals)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = sim.world.super_areas[0].name
-        assert set(f[f"{super_area}/hospitals/n_beds"]) == set([40])
-        assert set(f[f"{super_area}/hospitals/n_icu_beds"]) == set([5])
-"""
+        assert type(f["meta/branch"][()]) is str 
+        assert type(f["meta/local_SHA"][()]) is str
+        assert f["meta/user_comment"][()] == test_comment
+        assert type(f["meta/time_of_log"][()]) is str
+
+
+
+
+
+
+
+
+
+
+
+
+
+
