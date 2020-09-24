@@ -1,6 +1,8 @@
 import h5py
 import numpy as np
 from collections import OrderedDict
+import logging
+logger = logging.getLogger(__name__)
 
 from .utils import read_dataset
 from june.groups import ExternalSubgroup, ExternalGroup
@@ -283,6 +285,7 @@ def load_population_from_hdf5(
     This function should be rarely be called oustide world.py
     """
     people = []
+    logger.info("loading population...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # people = []
         population = f["population"]
@@ -290,6 +293,7 @@ def load_population_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
+            logger.info(f"Population chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
@@ -365,6 +369,7 @@ def restore_population_properties_from_hdf5(
     domain_super_areas=None,
     super_areas_to_domain_dict: dict = None,
 ):
+    logger.info("restoring population...")
     activities_fields = Activities.__fields__
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         # people = []
@@ -373,6 +378,7 @@ def restore_population_properties_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
+            logger.info(f"Population chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
