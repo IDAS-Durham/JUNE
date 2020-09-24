@@ -24,15 +24,15 @@ from june import paths
 
 
 from june.hdf5_savers.checkpoint_saver import (
-    _save_transmissions_xnexp,
-    _load_transmissions_xnexp,
+    _save_transmissions_to_hdf5,
+    _load_transmissions_from_hdf5,
 )
 
 test_config = paths.configs_path / "tests/test_checkpoint_config.yaml"
 
 
 class TestTransmissionSavers:
-    def test__xnexp_saver(self):
+    def test__save_xnexp(self):
         with h5py.File("checkpoint_tests.hdf5", "w") as f:
             pass
         transmission1 = TransmissionXNExp(
@@ -56,8 +56,10 @@ class TestTransmissionSavers:
             mild_infectious_factor=13,
         )
         transmissions = [transmission1, transmission2]
-        _save_transmissions_xnexp("checkpoint_tests.hdf5", transmissions, chunk_size=1)
-        transmissions_recovered = _load_transmissions_xnexp(
+        _save_transmissions_to_hdf5(
+            "checkpoint_tests.hdf5", transmissions, chunk_size=1
+        )
+        transmissions_recovered = _load_transmissions_from_hdf5(
             "checkpoint_tests.hdf5", chunk_size=1
         )
         for transmission, transmissions_recovered in zip(
@@ -69,9 +71,8 @@ class TestTransmissionSavers:
                 "n",
                 "norm",
                 "alpha",
-                "probability"
+                "probability",
             ]:
-                print(attribute)
                 assert getattr(transmission, attribute) == getattr(
                     transmissions_recovered, attribute
                 )
