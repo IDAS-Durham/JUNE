@@ -10,7 +10,7 @@ from typing import List
 
 from june.infection import SymptomTag
 from june import paths
-
+import time
 
 class ReadLogger:
     def __init__(
@@ -94,6 +94,7 @@ class ReadLogger:
         Load data on infected people over time and convert to a list of data frames 
         ``self.infections_per_super_area``
         """
+<<<<<<< HEAD
         # <<<<<<< HEAD
         infections_per_super_area = []
         with h5py.File(
@@ -102,13 +103,26 @@ class ReadLogger:
             libver="latest",
             swmr=True,
         ) as f:
+=======
+        t0 = time.time()
+        t_end = time.time()
+        self.infections_per_super_area = []
+
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+>>>>>>> master
             super_areas = [
-                key for key in f.keys() if key not in ("population", "parameters")
+                key for key in f.keys() if key not in ("population", "parameters", "meta", "config")
             ]
+<<<<<<< HEAD
             for i, super_area in enumerate(super_areas):
+=======
+            for i,super_area in enumerate(super_areas):
+>>>>>>> master
                 try:
+                    t_i = time.time()
                     infections = f[f"{super_area}/infection"]
                     time_stamps = [key for key in infections]
+<<<<<<< HEAD
                     ids, symptoms, n_secondary_infections = [], [], []
                     for time_stamp in time_stamps:
                         ids.append(list(infections[time_stamp]["id"][:]))
@@ -143,6 +157,32 @@ class ReadLogger:
                             #                                ][:]
                             #                            )
                             # >>>>>>> master
+=======
+                    ids = []
+                    symptoms = []
+                    n_secondary_infections = []
+                    infections_df = pd.DataFrame(
+                        index=time_stamps,
+                        columns=["infected_id","symptoms","n_secondary_infections","super_area"]
+                    )
+                    for time_stamp in time_stamps:
+                        ids.append(
+                            #list(
+                                infections[time_stamp]["id"][:]
+                            #)
+                        )
+                        symptoms.append(
+                            #list(
+                                infections[time_stamp]["symptoms"][:]
+                            #)
+                        )
+                        n_secondary_infections.append(
+                            #list(
+                                infections[time_stamp][
+                                    "n_secondary_infections"
+                                ][:]
+                            #)
+>>>>>>> master
                         )
                     infections_df = pd.DataFrame(
                         {
@@ -150,10 +190,11 @@ class ReadLogger:
                             "infected_id": ids,
                             "symptoms": symptoms,
                             "n_secondary_infections": n_secondary_infections,
-                            "super_area": [super_area] * len(ids),
+                            "super_area": [super_area] * len(ids)
                         }
                     )
                     infections_df.set_index("time_stamp", inplace=True)
+<<<<<<< HEAD
                     # <<<<<<< HEAD
                     infections_df.index = pd.to_datetime(infections_df.index)
                     infections_per_super_area.append(infections_df)
@@ -162,6 +203,18 @@ class ReadLogger:
         infections_df = pd.DataFrame(
             index=infections_per_super_area[0].index,
             columns=infections_per_super_area[0].columns,
+=======
+                    infections_df.index = pd.to_datetime(infections_df.index)
+                    self.infections_per_super_area.append(infections_df)
+                    if i % 100 == 0:
+                        print(f"{i} of {len(super_areas)} super areas,{(time.time()-t0)/60.:.3f} min, {(time.time()-t_i)/60.:.3f}")
+                except KeyError:
+                    continue
+
+        self.infections_df = pd.DataFrame(
+            index=self.infections_per_super_area[0].index, 
+            columns=self.infections_per_super_area[0].columns
+>>>>>>> master
         )
         for ts, _ in infections_df.iterrows():
             for col in ["infected_id", "symptoms", "n_secondary_infections"]:
@@ -200,6 +253,13 @@ class ReadLogger:
     #            lambda x: np.array(x.n_secondary_infections), axis=1
     #        )
     # >>>>>>> master
+
+        
+        for ts,_ in self.infections_df.iterrows():
+            for col in ["infected_id","symptoms","n_secondary_infections"]:
+                self.infections_df.loc[ts,col] = np.concatenate([
+                    x.loc[ts,col] for x in self.infections_per_super_area if len(x) > 0
+                ])
 
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
@@ -425,7 +485,7 @@ class ReadLogger:
             swmr=True,
         ) as f:
             super_areas = [
-                key for key in f.keys() if key not in ("population", "parameters")
+                key for key in f.keys() if key not in ("population", "parameters", "meta")
             ]
 
             time_stamps, infection_location, super_areas_for_df = [], [], []
@@ -624,6 +684,18 @@ class ReadLogger:
     def repack_dict(
         self, hdf5_obj, output_dict, base_path, output_name=None, depth=0, max_depth=8
     ):
+        """
+        Pack datesets into a (nested) dictionary.
+
+        Parameters
+        ----------
+        hdf5_obj
+            an open hdf5 object.
+        output_dict
+            an empty dictionary to store output data in
+        base_path
+            the path to start at
+        """
 
         if output_name is None:
             output_name = base_path.split("/")[-1]
@@ -648,7 +720,28 @@ class ReadLogger:
                     max_depth=max_depth,
                 )  # Recursion!
 
-    def get_parameters(self, parameters=["beta", "alpha_physical"], max_depth=8):
+    def get_parameters(self, parameters=None, max_depth=8):
+        """
+        Get the parameters which are stored in the logger.
+
+        Parameters
+        ----------
+        parameters:
+            which parameters to recover.
+            default ["beta", "alpha_physical", "infection_seed", "asyptomatic_ratio"].
+        max_depth:
+            maximum nested dictionary depth to stop searching. Default = 8.
+        Returns
+            nested dictionary of parameters the simulation was run with.
+        -------
+        """
+        defaults = [
+            "beta", "alpha_physical", "infection_seed", "asymptomatic_ratio", "transmission_type"
+        ]
+
+        if parameters is None:
+            parameters = defaults
+
         if isinstance(parameters, list):
             parameters = {p: p for p in parameters}
 
@@ -666,6 +759,25 @@ class ReadLogger:
                 )
 
         return output_params
+
+    def get_config(self,):
+        output_dict = {}
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+            dset_path = f"config"
+            self.repack_dict(
+                f,
+                output_dict,
+                dset_path,
+            )
+        return output_dict["config"]
+
+    def get_meta_info(self,parameters=None):
+        meta_info = {}
+
+        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+            self.repack_dict(f,output_dict=meta_info,base_path="meta")
+        return meta_info["meta"]
+
 
     def super_areas_to_region(
         self,

@@ -52,7 +52,9 @@ def clean_world(world):
 
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
-    selector = InfectionSelector.from_file()
+    selector = InfectionSelector.from_file(
+        paths.configs_path / "defaults/transmission/XNExp.yaml"
+    )
     selector.recovery_rate = 1.0
     selector.transmission_probability = 1.0
     return selector
@@ -177,6 +179,7 @@ def create_sim(world, interaction, selector):
     return sim
 
 
+<<<<<<< HEAD
 test_dict = {
     "A": 10,
     "B": {"B1": {},},
@@ -185,6 +188,10 @@ test_dict = {
 
 def test__log_population(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
+=======
+
+def test__log_population(sim):
+>>>>>>> master
     sim.logger.log_population(sim.world.people, chunk_size=2)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
         assert f["population"].attrs["n_people"] == 5
@@ -197,7 +204,10 @@ def test__log_population(world, interaction, selector):
 def test__log_parameters(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
     sim.logger.log_parameters(
-        interaction=sim.interaction, activity_manager=sim.activity_manager
+        interaction=sim.interaction, 
+        infection_seed=sim.infection_seed,
+        infection_selector=sim.infection_selector,
+        activity_manager=sim.activity_manager
     )
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
@@ -208,7 +218,7 @@ def test__log_parameters(world, interaction, selector):
         assert set(
             f["parameters/policies/close_leisure_venue/venues_to_close"][()]
         ) == set(["cinema", "pub"])
-
+        assert f["parameters/transmission_type"][()] == "xnexp"
 
 def test__log_infected_in_timestep(world, interaction, selector):
     clean_world(world)
@@ -286,6 +296,7 @@ def test__log_infection_location(world, interaction, selector):
         i += 1
         next(sim.timer)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
+<<<<<<< HEAD
         super_area = sim.world.super_areas[0].name
         locations = f[f"{super_area}/locations"]
         keys = list(locations.keys())
@@ -311,3 +322,42 @@ def test__log_hospital_characteristics(sim):
         assert set(f[f"{super_area}/hospitals/n_beds"]) == set([40])
         assert set(f[f"{super_area}/hospitals/n_icu_beds"]) == set([5])
 """
+=======
+        print(list(f.keys()))
+        super_area = list(f.keys())[0]
+        super_area = f[super_area]
+        first_ts = time_steps[0]
+        keys = list(super_area[f"infection"].keys())
+        infected_set = set(super_area[f"infection/{first_ts}/id"][()])
+        world_ids = set([p.id for p in sim.world.people])
+
+    assert all(t in keys for t in time_steps)
+    assert infected_set.issubset(world_ids)
+    assert len(infected_set) == 2
+
+def test__log_meta_info(sim):
+    user = "test_user"
+    test_comment = "This is a test comment, testing, testing, 1, 2"
+
+    sim.logger.log_meta_info(comment=test_comment)
+
+    with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
+        assert type(f["meta/branch"][()]) is str 
+        assert type(f["meta/local_SHA"][()]) is str
+        assert f["meta/user_comment"][()] == test_comment
+        assert type(f["meta/time_of_log"][()]) is str
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> master
