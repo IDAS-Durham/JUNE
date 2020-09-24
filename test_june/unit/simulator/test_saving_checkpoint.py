@@ -7,19 +7,75 @@ import june.simulator
 
 from june.logger import Logger
 from june.groups import Hospitals, Hospital
-from june.demography import  Demography, Population
+from june.demography import Demography, Population
 from june.geography import Geography
 from june.geography import Areas
-from june.world import generate_world_from_geography 
+from june.world import generate_world_from_geography
 from june.hdf5_savers import generate_world_from_hdf5
 from june.groups.travel import Travel, generate_commuting_network
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator
+from june.infection.symptoms import SymptomTag
 from june.infection_seed import InfectionSeed
+from june.infection.transmission_xnexp import TransmissionXNExp
+from june.infection.transmission import TransmissionGamma
 from june import paths
 
+
+from june.hdf5_savers.checkpoint_saver import (
+    _save_transmissions_xnexp,
+    _load_transmissions_xnexp,
+)
+
 test_config = paths.configs_path / "tests/test_checkpoint_config.yaml"
+
+
+class TestTransmissionSavers:
+    def test__xnexp_saver(self):
+        with h5py.File("checkpoint_tests.hdf5", "w") as f:
+            pass
+        transmission1 = TransmissionXNExp(
+            max_probability=1,
+            time_first_infectious=1,
+            norm_time=2,
+            n=3,
+            alpha=4,
+            max_symptoms="asymptomatic",
+            asymptomatic_infectious_factor=5,
+            mild_infectious_factor=6,
+        )
+        transmission2 = TransmissionXNExp(
+            max_probability=7,
+            time_first_infectious=8,
+            norm_time=9,
+            n=10,
+            alpha=11,
+            max_symptoms="mild",
+            asymptomatic_infectious_factor=12,
+            mild_infectious_factor=13,
+        )
+        transmissions = [transmission1, transmission2]
+        _save_transmissions_xnexp("checkpoint_tests.hdf5", transmissions, chunk_size=1)
+        transmissions_recovered = _load_transmissions_xnexp(
+            "checkpoint_tests.hdf5", chunk_size=1
+        )
+        for transmission, transmissions_recovered in zip(
+            transmissions_recovered, transmissions
+        ):
+            for attribute in [
+                "time_first_infectious",
+                "norm_time",
+                "n",
+                "norm",
+                "alpha",
+                "probability"
+            ]:
+                print(attribute)
+                assert getattr(transmission, attribute) == getattr(
+                    transmissions_recovered, attribute
+                )
+
 
 def _populate_areas(areas: Areas, demography):
     people = Population()
@@ -42,10 +98,9 @@ def create_world():
             )
         ]
     )
-    world = generate_world_from_geography(
-        geography=geography, include_households=True
-    )
+    world = generate_world_from_geography(geography=geography, include_households=True)
     return world
+
 
 def run_simulator(selector):
     world = create_world()
@@ -57,7 +112,7 @@ def run_simulator(selector):
         person.dead = False
     interaction = Interaction.from_file()
     policies = Policies([])
-    logger = Logger(save_path='tests')
+    logger = Logger(save_path="tests")
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
@@ -72,13 +127,14 @@ def run_simulator(selector):
     sim.run()
     return sim
 
+
 def test__checkpoints_are_saved(selector):
     june.simulator.output_logger.disabled = True
     sim = run_simulator(selector)
     fresh_world = generate_world_from_hdf5("./checkpoint_world.hdf5")
     interaction = Interaction.from_file()
     policies = Policies([])
-    logger = Logger(save_path='tests')
+    logger = Logger(save_path="tests")
     sim_recovered = Simulator.from_checkpoint(
         world=fresh_world,
         checkpoint_path="tests/checkpoint_2020-03-25.pkl",
@@ -113,4 +169,3 @@ def test__checkpoints_are_saved(selector):
         assert person1.susceptibility == person2.susceptibility
         assert person1.dead == person2.dead
     # clean up
-
