@@ -391,7 +391,7 @@ class Schools(Supergroup):
         """
         school_tree = self.school_trees[age]
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
-        k = min(k, len(list(school_tree.data)))
+        k = min(k, school_tree.data.shape[0])
         distances, neighbours = school_tree.query(
             coordinates_rad, k=k, sort_results=True,
         )
