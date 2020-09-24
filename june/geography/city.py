@@ -86,6 +86,8 @@ class City:
         we then check if the person is a commuter in their closest city station.
         If none of the above, then that person doesn't need commuting.
         """
+        if not self.stations:
+            return
         if person.id in self.commuter_ids:
             return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
         else:
@@ -212,6 +214,8 @@ class ExternalCity(ExternalGroup):
         self.coordinates = coordinates
 
     def get_commute_subgroup(self, person):
+        if not self.commuter_ids:
+            return
         group = self.city_transports[
             randint(0, len(self.city_transports) - 1)
         ]
