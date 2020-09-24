@@ -269,6 +269,32 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
         self.infection_location.append(location)
         self.super_areas_infected.append(super_areas_infected)
 
+    def log_infection_location(self, time):
+        """
+        Log where did all infections in a time step happened
+        Parameters
+        ----------
+        time:
+            datetime to log
+        """
+        super_area_locations = {
+            super_area: {"location": [],} for super_area in self.super_areas_infected
+        }
+        for super_area, location in zip(
+            self.super_areas_infected, self.infection_location
+        ):
+            super_area_locations[super_area]["location"].append(location)
+        time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        with h5py.File(self.file_path, "a", libver="latest") as f:
+            for super_area in super_area_locations.keys():
+                super_area_dict = super_area_locations[super_area]
+                super_area_dset = f.require_group(super_area)
+                location_dset = super_area_dset.require_group("locations")
+                time_dset = location_dset.require_group(time_stamp)
+                locations = np.array(super_area_dict["location"], dtype="S20")
+                time_dset.create_dataset("locations", data=locations)
+        self.infection_location = []
+        self.super_areas_infected = []
 
     def unpack_dict(self, hdf5_obj, data, base_path, depth=0, max_depth=5):
         """
