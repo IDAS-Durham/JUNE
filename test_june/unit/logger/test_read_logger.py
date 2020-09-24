@@ -308,9 +308,14 @@ def test__read_infection_location(selector, interaction):
     )
     sim.logger.log_population(sim.world.people,)
     i = 0
+    new_infected = {}
+    current_infected = len(world.people.infected)
     while sim.timer.date <= sim.timer.final_date:
         time = sim.timer.date
+        time_step = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
         sim.do_timestep()
+        new_infected[time_step] = len(world.people.infected) - current_infected
+        current_infected = len(world.people.infected)
         if i > 10:
             break
         i += 1
@@ -318,17 +323,9 @@ def test__read_infection_location(selector, interaction):
     read = ReadLogger(output_path=output_path)
     read.load_infection_location(n_processes=1)
     dates = [date.date().strftime("%Y-%m-%d") for date in list(read.locations_df.index)]
-    assert dates == ["2020-03-03", "2020-03-05", "2020-03-07"]
-    assert read.locations_df.loc["2020-03-03"]["location_id"] == [
-        "household_1993",
-        "household_1993",
-    ]
-    assert read.locations_df.loc["2020-03-05"]["location_id"] == ["household_1993"]
-    assert read.locations_df.loc["2020-03-07"]["location_id"] == [
-        "household_1993",
-        "household_1993",
-        "household_1993",
-    ]
+    for index, row in read.locations_df.iterrows():
+        time_step = index.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        assert row['location_id'] == ['household_1993']*new_infected[time_step]
 
 # Test hospitalisations by age
 # Test hospitalisations by area
