@@ -232,10 +232,10 @@ def generate_domain_from_hdf5(
     from june.domain import Domain
 
     # get the super area ids of this domain
-    super_area_ids = []
+    super_area_ids = set()
     for super_area, did in super_areas_to_domain_dict.items():
         if did == domain_id:
-            super_area_ids.append(super_area)
+            super_area_ids.add(super_area)
     domain = Domain()
     # get keys in hdf5 file
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
