@@ -69,6 +69,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
         pass
     geo = Geography(world.areas, world.super_areas)
     save_geography_to_hdf5(geo, file_path)
+    logger.info("saving population...")
     save_population_to_hdf5(world.people, file_path, chunk_size)
     if world.hospitals is not None:
         logger.info("saving hospitals...")

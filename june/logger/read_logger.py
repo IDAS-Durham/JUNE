@@ -55,14 +55,21 @@ class ReadLogger:
                     self.ethnicities = population["ethnicity"][:]
                     self.socioeconomic_indices = population["socioeconomic_index"][:]
                 else:
-                    population += f['population']
+                    population = f["population"]
                     self.n_people += population.attrs["n_people"]
-                    self.ids += population["id"][:]
-                    self.ages += population["age"][:]
-                    self.sexes += population["sex"][:]
-                    self.ethnicities += population["ethnicity"][:]
-                    self.socioeconomic_indices += population["socioeconomic_index"][:]
- 
+                    self.ids = np.concatenate((self.ids, population["id"][:]))
+                    self.ages = np.concatenate((self.ages, population["age"][:]))
+                    self.sexes = np.concatenate((self.sexes, population["sex"][:]))
+                    self.ethnicities = np.concatenate(
+                        (self.ethnicities, population["ethnicity"][:])
+                    )
+                    self.socioeconomic_indices = np.concatenate(
+                        (
+                            self.socioeconomic_indices,
+                            population["socioeconomic_index"][:],
+                        )
+                    )
+
     def load_infected_data(self, n_processes):
         self.infections_per_super_area, infections_world_list = [], []
         for rank in range(n_processes):
@@ -87,7 +94,7 @@ class ReadLogger:
         Load data on infected people over time and convert to a list of data frames 
         ``self.infections_per_super_area``
         """
-#<<<<<<< HEAD
+        # <<<<<<< HEAD
         infections_per_super_area = []
         with h5py.File(
             self.output_path / f"{self.root_output_file}.{rank}.hdf5",
@@ -108,34 +115,34 @@ class ReadLogger:
                         symptoms.append(list(infections[time_stamp]["symptoms"][:]))
                         n_secondary_infections.append(
                             list(infections[time_stamp]["n_secondary_infections"][:])
-# TODO: revise merge
-#=======
-#        self.infections_per_super_area = []
-#        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
-#            super_areas = [
-#                key for key in f.keys() if key not in ("population", "parameters")
-#            ]
-#            for super_area in super_areas:
-#                try:
-#                    infections = f[f"{super_area}/infection"]
-#                    time_stamps = [key for key in infections]
-#                    ids = []
-#                    symptoms = []
-#                    n_secondary_infections = []
-#                    for time_stamp in time_stamps:
-#                        ids.append(
-#                            list(f[super_area]["infection"][time_stamp]["id"][:])
-#                        )
-#                        symptoms.append(
-#                            list(f[super_area]["infection"][time_stamp]["symptoms"][:])
-#                        )
-#                        n_secondary_infections.append(
-#                            list(
-#                                f[super_area]["infection"][time_stamp][
-#                                    "n_secondary_infections"
-#                                ][:]
-#                            )
-#>>>>>>> master
+                            # TODO: revise merge
+                            # =======
+                            #        self.infections_per_super_area = []
+                            #        with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
+                            #            super_areas = [
+                            #                key for key in f.keys() if key not in ("population", "parameters")
+                            #            ]
+                            #            for super_area in super_areas:
+                            #                try:
+                            #                    infections = f[f"{super_area}/infection"]
+                            #                    time_stamps = [key for key in infections]
+                            #                    ids = []
+                            #                    symptoms = []
+                            #                    n_secondary_infections = []
+                            #                    for time_stamp in time_stamps:
+                            #                        ids.append(
+                            #                            list(f[super_area]["infection"][time_stamp]["id"][:])
+                            #                        )
+                            #                        symptoms.append(
+                            #                            list(f[super_area]["infection"][time_stamp]["symptoms"][:])
+                            #                        )
+                            #                        n_secondary_infections.append(
+                            #                            list(
+                            #                                f[super_area]["infection"][time_stamp][
+                            #                                    "n_secondary_infections"
+                            #                                ][:]
+                            #                            )
+                            # >>>>>>> master
                         )
                     infections_df = pd.DataFrame(
                         {
@@ -147,7 +154,7 @@ class ReadLogger:
                         }
                     )
                     infections_df.set_index("time_stamp", inplace=True)
-#<<<<<<< HEAD
+                    # <<<<<<< HEAD
                     infections_df.index = pd.to_datetime(infections_df.index)
                     infections_per_super_area.append(infections_df)
                 except KeyError:
@@ -168,30 +175,31 @@ class ReadLogger:
                     )
                 )
         return infections_per_super_area, infections_df
-#=======
-#                except KeyError:
-#                    continue
-#                self.infections_per_super_area.append(infections_df)
-#        self.infections_df = functools.reduce(
-#            lambda a, b: a + b, self.infections_per_super_area
-#        )
-#        # convert symptoms to arrays for fast counting later
-#        for df in self.infections_per_super_area:
-#            df["symptoms"] = df.apply(lambda x: np.array(x.symptoms), axis=1)
-#            df["infected_id"] = df.apply(lambda x: np.array(x.infected_id), axis=1)
-#            df["n_secondary_infections"] = df.apply(
-#                lambda x: np.array(x.n_secondary_infections), axis=1
-#            )
-#        self.infections_df["symptoms"] = self.infections_df.apply(
-#            lambda x: np.array(x.symptoms), axis=1
-#        )
-#        self.infections_df["infected_id"] = self.infections_df.apply(
-#            lambda x: np.array(x.infected_id), axis=1
-#        )
-#        self.infections_df["n_secondary_infections"] = self.infections_df.apply(
-#            lambda x: np.array(x.n_secondary_infections), axis=1
-#        )
-#>>>>>>> master
+
+    # =======
+    #                except KeyError:
+    #                    continue
+    #                self.infections_per_super_area.append(infections_df)
+    #        self.infections_df = functools.reduce(
+    #            lambda a, b: a + b, self.infections_per_super_area
+    #        )
+    #        # convert symptoms to arrays for fast counting later
+    #        for df in self.infections_per_super_area:
+    #            df["symptoms"] = df.apply(lambda x: np.array(x.symptoms), axis=1)
+    #            df["infected_id"] = df.apply(lambda x: np.array(x.infected_id), axis=1)
+    #            df["n_secondary_infections"] = df.apply(
+    #                lambda x: np.array(x.n_secondary_infections), axis=1
+    #            )
+    #        self.infections_df["symptoms"] = self.infections_df.apply(
+    #            lambda x: np.array(x.symptoms), axis=1
+    #        )
+    #        self.infections_df["infected_id"] = self.infections_df.apply(
+    #            lambda x: np.array(x.infected_id), axis=1
+    #        )
+    #        self.infections_df["n_secondary_infections"] = self.infections_df.apply(
+    #            lambda x: np.array(x.n_secondary_infections), axis=1
+    #        )
+    # >>>>>>> master
 
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
@@ -400,7 +408,7 @@ class ReadLogger:
                 self._load_infection_location_for_rank(rank=rank)
             )
         self.locations_df = pd.concat(infection_locations)
-        self.locations_df = self.locations_df.groupby('time_stamp').sum()
+        self.locations_df = self.locations_df.groupby("time_stamp").sum()
 
     def _load_infection_location_for_rank(self, rank: int) -> pd.DataFrame:
         """
@@ -450,7 +458,9 @@ class ReadLogger:
         locations_df = locations_df.resample("D").sum()
         locations_df = locations_df[locations_df["location_id"] != 0]
         locations_df["location"] = locations_df.apply(
-                lambda x: [location_name.split("_")[:-1] for location_name in x.location_id],
+            lambda x: [
+                location_name.split("_")[:-1] for location_name in x.location_id
+            ],
             axis=1,
         )
         return locations_df
