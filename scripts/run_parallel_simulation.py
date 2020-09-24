@@ -14,7 +14,7 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
-from june.infection_seed import InfectionSeed
+from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
@@ -99,11 +99,24 @@ def generate_simulator():
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.39)
     infection_selector = InfectionSelector.from_file(
         health_index_generator=health_index_generator
     )
-    
+    oc = Observed2Cases.from_file(
+            health_index_generator=health_index_generator,
+            smoothing=True
+            )
+    daily_cases_per_region = oc.get_regional_latent_cases()
+    daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
+            daily_cases_per_region,
+            dates=['2020-02-28', '2020-03-02']
+            )
+    infection_seed = InfectionSeed(world=domain,
+            infection_selector=infection_selector,
+            daily_super_area_cases=daily_cases_per_super_area,
+            seed_strength=0.66,
+            )
     # interaction
     interaction = Interaction.from_file()
     
@@ -120,31 +133,14 @@ def generate_simulator():
         leisure=leisure,
         travel=travel,
         infection_selector=infection_selector,
+        infection_seed=infection_seed,
         config_filename=config_path,
         logger=logger,
     )
 
-    # infection seed
-    if rank == 0:
-        n_cases = 250
-        selected_ids = np.random.choice(population.people_ids, n_cases, replace=False)
-        for rank_receiving in range(1, size):
-            comm.send(selected_ids, dest=rank_receiving, tag=0)
-    
-    elif rank > 0:
-        selected_ids = comm.recv(source=0, tag=0)
-    
-    
-    for inf_id in selected_ids:
-        if inf_id in domain.people.people_dict:
-            person = domain.people.get_from_id(inf_id)
-            simulator.infection_selector.infect_person_at_time(person, 0.0)
-
-    del population
     print("simulator ready to go")
     return simulator
 
-@profile(filename=f"profile_{rank}.prof")
 def run_simulator(simulator):
 
     t1 = time.time()
