@@ -179,12 +179,6 @@ def create_sim(world, interaction, selector):
     return sim
 
 
-test_dict = {
-    "A": 10,
-    "B": {"B1": {},},
-}
-
-
 def test__log_population(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
     sim.logger.log_population(sim.world.people, chunk_size=2)
@@ -199,10 +193,10 @@ def test__log_population(world, interaction, selector):
 def test__log_parameters(world, interaction, selector):
     sim = create_sim(world, interaction, selector)
     sim.logger.log_parameters(
-        interaction=sim.interaction, 
+        interaction=sim.interaction,
         infection_seed=sim.infection_seed,
         infection_selector=sim.infection_selector,
-        activity_manager=sim.activity_manager
+        activity_manager=sim.activity_manager,
     )
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
@@ -214,6 +208,7 @@ def test__log_parameters(world, interaction, selector):
             f["parameters/policies/close_leisure_venue/venues_to_close"][()]
         ) == set(["cinema", "pub"])
         assert f["parameters/transmission_type"][()] == "xnexp"
+
 
 def test__log_infected_in_timestep(world, interaction, selector):
     clean_world(world)
@@ -227,7 +222,7 @@ def test__log_infected_in_timestep(world, interaction, selector):
         i += 1
         current_infected = []
         for person in world.people:
-            if person.infected: 
+            if person.infected:
                 current_infected.append(person.id)
         infected_people.append(current_infected)
         if i > 10:
@@ -242,7 +237,6 @@ def test__log_infected_in_timestep(world, interaction, selector):
         keys_argsort = np.argsort(keys_datetime)
         keys = np.array(keys)[keys_argsort]
         for i, key in enumerate(keys):
-            print(key)
             if len(infected_people[i]) == 0:
                 continue
             ids_found = list(super_area[f"infection/{key}/id"][:])
@@ -307,6 +301,7 @@ def test__log_infection_location(world, interaction, selector):
                 assert len(locations_found) == 0
     assert all(key in time_steps for key in keys)
 
+
 def test__log_meta_info(world, interaction, selector):
     clean_world(world)
     sim = create_sim(world, interaction, selector)
@@ -315,21 +310,7 @@ def test__log_meta_info(world, interaction, selector):
     sim.logger.log_meta_info(comment=test_comment)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        assert type(f["meta/branch"][()]) is str 
+        assert type(f["meta/branch"][()]) is str
         assert type(f["meta/local_SHA"][()]) is str
         assert f["meta/user_comment"][()] == test_comment
         assert type(f["meta/time_of_log"][()]) is str
-
-
-
-
-
-
-
-
-
-
-
-
-
-
