@@ -20,6 +20,7 @@ from june.interaction import Interaction, InteractiveGroup
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
+from june.logger import Logger
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from time import perf_counter
 from time import time as wall_clock
@@ -40,7 +41,8 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        logger: "Logger" = None,
+        logger: Logger = None,
+        comment: str = None,
         checkpoint_dates: List[datetime.date] = None,
     ):
         """
@@ -57,6 +59,7 @@ class Simulator:
         self.infection_selector = infection_selector
         self.infection_seed = infection_seed
         self.timer = timer
+        self.comment = comment
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
@@ -75,6 +78,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         logger: "Logger" = None,
+        comment: str = None,
     ) -> "Simulator":
 
         """
@@ -89,6 +93,8 @@ class Simulator:
         world
         config_filename
             The path to the world yaml configuration
+        comment
+            A brief description of the purpose of the run(s)
 
         Returns
         -------
@@ -150,12 +156,13 @@ class Simulator:
         )
         return cls(
             world=world,
-            activity_manager=activity_manager,
+            interaction=interaction,
             timer=timer,
+            activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             logger=logger,
-            interaction=interaction,
+            comment=comment,
             checkpoint_dates=checkpoint_dates,
         )
 
@@ -552,6 +559,7 @@ class Simulator:
                 infection_selector=self.infection_selector,
                 activity_manager=self.activity_manager,
             )
+            self.logger.log_meta_info(self.comment)
 
             """
             if self.world.hospitals is not None:
