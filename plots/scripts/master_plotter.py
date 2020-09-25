@@ -51,9 +51,6 @@ class Plotter:
         print ("Plotting restaurant reopening")
         restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
-        plt.xticks(rotation=45)
-        plt.ylabel('% pupils attending')
-        plt.xlabel('Date')
         plt.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting school reopening")
@@ -66,7 +63,7 @@ class Plotter:
     def plot_all(self):
 
         print ("Plotting the world")
-        
+
         self.plot_policies()
 
 
