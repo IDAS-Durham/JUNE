@@ -381,9 +381,7 @@ class Simulator:
         )
         infected_ids = []
         first_person_id = self.world.people[0].id
-        print('group instances = ', group_instances)
         for group_type in group_instances:
-            print(group_type)
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
                 n_people += int_group.size
