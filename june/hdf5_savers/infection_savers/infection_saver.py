@@ -90,23 +90,29 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
         transmissions = load_transmissions_from_hdf5(
             hdf5_file_path=hdf5_file_path, chunk_size=chunk_size
         )
+        trans_symp_index = 0
         n_infections = infections_group.attrs["n_infections"]
         n_chunks = int(np.ceil(n_infections / chunk_size))
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_infections)
-            for index in range(idx1, idx2):
-                infection = Infection(
-                    transmission=transmissions[index], symptoms=symptoms_list[index]
+            attribute_dict = {}
+            for attribute_name in infections_group.keys():
+                if attribute_name in ["symptoms", "transmissions"]:
+                    continue
+                attribute_dict[attribute_name] = read_dataset(
+                    infections_group[attribute_name], idx1, idx2
                 )
-                for attribute_name in infections_group.keys():
-                    if attribute_name in ["symptoms", "transmissions"]:
-                        continue
-                    attribute_value = read_dataset(
-                        infections_group[attribute_name], idx1, idx2
-                    )
+            for index in range(idx2 - idx1):
+                infection = Infection(
+                    transmission=transmissions[trans_symp_index],
+                    symptoms=symptoms_list[trans_symp_index],
+                )
+                trans_symp_index += 1
+                for attribute_name in attribute_dict:
+                    attribute_value = attribute_dict[attribute_name][index]
                     if attribute_value == np.nan:
                         attribute_value = None
                     setattr(infection, attribute_name, attribute_value)
                 infections.append(infection)
-    return infections 
+    return infections

@@ -4,17 +4,19 @@ from collections import defaultdict
 from typing import List
 
 from june import paths
-from june.infection.transmission import TransmissionGamma, Transmission
+from june.infection.transmission import TransmissionGamma, Transmission, TransmissionConstant
 from june.infection.transmission_xnexp import TransmissionXNExp
 from june.hdf5_savers.utils import read_dataset, write_dataset
 
 str_to_class = {
     "TransmissionXNExp": TransmissionXNExp,
     "TransmissionGamma": TransmissionGamma,
+    "TransmissionConstant": TransmissionConstant,
 }
 attributes_to_save_dict = {
     "TransmissionXNExp": ["time_first_infectious", "norm_time", "n", "norm", "alpha"],
-    "TransmissionGamma": ["shape", "shift", "scale", "norm"]
+    "TransmissionGamma": ["shape", "shift", "scale", "norm"],
+    "TransmissionConstant": ["probability"]
 }
 
 
@@ -96,12 +98,15 @@ def load_transmissions_from_hdf5(hdf5_file_path: str, chunk_size=50000):
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_transsmissions)
-            for index in range(idx1, idx2):
+            attribute_dict = {}
+            for attribute_name in transmissions_group.keys():
+                attribute_dict[attribute_name] = read_dataset(
+                    transmissions_group[attribute_name], idx1, idx2
+                )
+            for index in range(idx2-idx1):
                 transmission = transmission_class()
-                for attribute_name in transmissions_group.keys():
-                    attribute_value = read_dataset(
-                        transmissions_group[attribute_name], idx1, idx2
-                    )
+                for attribute_name in attribute_dict:
+                    attribute_value = attribute_dict[attribute_name][index]
                     if attribute_value == np.nan:
                         attribute_value = None
                     setattr(transmission, attribute_name, attribute_value)
