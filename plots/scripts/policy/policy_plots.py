@@ -1,10 +1,12 @@
 import numpy as np
+import pandas as pd
 import time
 from datetime import datetime, timedelta
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
 from june import paths
+from june.policy import Policy, Policies
 
 default_policy_filename = (
     paths.configs_path / "defaults/policy/policy.yaml"
@@ -62,13 +64,13 @@ class PolicyPlots:
         ax.vlines(datetime(2020,7,4).date(),-110,230, linestyles='--',  color='green', label = '4th July')
         ax.hlines(0, dates[0], dates[-1], linestyles='--')
         ax.legend(bbox_to_anchor=(1.05, 1))
-        ax.title('Year on year restaurant attendance (OpenTable)')
-        ax.ylabel('% difference')
-        ax.xlabel('Date')
+        ax.set_ylabel('% difference')
+        ax.set_xlabel('Date')
+        plt.xticks(rotation=45)
 
         return ax
             
-    def plot_school_repopening(
+    def plot_school_reopening(
             self,
             policy_filename = default_policy_filename,
             gov_filename = default_gov_filename,
@@ -113,7 +115,7 @@ class PolicyPlots:
         children_in_school = np.array(children_in_school)
         per_in_school = children_in_school*100/len(children)
 
-        dfe_attendance = pd.read_csv(default_gov_attendance)
+        dfe_attendance = pd.read_csv(default_gov_filename)
 
         dfe_dates = []
         for date in dfe_attendance['date']:
@@ -128,17 +130,17 @@ class PolicyPlots:
         dfe_per = np.array(dfe_per)
         dfe_per *= 100
 
-        f, ax = plt.subplots()
-        ax.plot(dates, per_in_school, label='DfE statistics')
-        ax.plot(dfe_dates, dfe_per, label='JUNE')
+        f, ax = plt.subplots(figsize=(5,3))
+        ax.plot(dates, per_in_school, label='JUNE')
+        ax.plot(dfe_dates, dfe_per, label='DfE statistics')
         ax.vlines(datetime(2020,6,1),1,19,linestyle='--',color='green', label='Early years +\nY6 opening')
         ax.vlines(datetime(2020,6,15),1,19,linestyle='--',color='orange', label='Y10+Y12\noffered support')
         ax.vlines(datetime(2020,7,16),1,19,linestyle='--',color='red', label='Summer holidays')
-        ax.xticks(rotation=45)
-        ax.ylim((0,20))
-        ax.xlim((datetime(2020,4,1),datetime(2020,7,25)))
-        ax.ylabel('% pupils attending')
-        ax.xlabel('Date')
+        ax.set_ylim((0,20))
+        ax.set_xlim((datetime(2020,4,1),datetime(2020,7,25)))
         ax.legend(loc='upper left')
+        ax.set_ylabel('% pupils attending')
+        ax.set_xlabel('Date')
+        plt.xticks(rotation=45)
 
         return ax
