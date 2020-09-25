@@ -284,6 +284,8 @@ def test__log_infection_location(world, interaction, selector):
 
         for key in locations.keys():
             assert key in new_infected.keys()
+        for key in new_infected.keys():
+            assert key in locations.keys()
 
 
 def test__log_meta_info(world, interaction, selector):

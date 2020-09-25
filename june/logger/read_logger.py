@@ -33,7 +33,6 @@ class ReadLogger:
         self.root_output_file = root_output_file
         self.n_processes = n_processes
         self.load_population_data()
-        print(f'Reading {self.n_processes} processes')
         self.load_infected_data()
 
     def load_population_data(self):
@@ -97,14 +96,12 @@ class ReadLogger:
         )
         self.start_date = min(self.infections_df.index)
         self.end_date = max(self.infections_df.index)
-        print('Finished loading infected data')
 
     def _load_infected_data_for_rank(self, rank: int):
         """
         Load data on infected people over time and convert to a list of data frames 
         ``self.infections_per_super_area``
         """
-        print(f'Reading rank = {rank}')
         infections_per_super_area = []
         with h5py.File(
             self.output_path / f"{self.root_output_file}.{rank}.hdf5",
@@ -121,7 +118,7 @@ class ReadLogger:
                     self.symptoms.append(list(infections[time_stamp]["symptoms"][:]))
 
             else:
-                for i, time_stamp in enumerate(time_stamps):
+                for i, time_stamp in enumerate(self.time_stamps):
                     self.ids[i] += list(infections[time_stamp]["id"][:])
                     self.symptoms[i] += list(infections[time_stamp]["symptoms"][:])
         
@@ -626,18 +623,6 @@ class ReadLogger:
             self.repack_dict(f,output_dict=meta_info,base_path="meta")
         return meta_info["meta"]
 
-
-    def super_areas_to_region(
-        self,
-        super_areas,
-        super_area_region_path=paths.data_path
-        / "input/geography/area_super_area_region.csv",
-    ):
-        super_area_region = pd.read_csv(super_area_region_path)
-        super_area_region = super_area_region.drop(columns="area").drop_duplicates()
-        super_area_region.set_index("super_area", inplace=True)
-        return super_area_region.loc[super_areas]["region"].values
-
     def run_summary(self,):
         super_area_df = self.super_area_summary()
         super_area_df["region"] = self.super_areas_to_region(
@@ -656,3 +641,38 @@ class ReadLogger:
         )
         super_area_df.reset_index(inplace=True)
         return super_area_df.set_index("time_stamp")
+
+
+    def super_areas_to_region_mapping(self, super_areas, super_area_region_path=paths.data_path / 'input/geography/area_super_area_region.csv'):
+        super_area_region = pd.read_csv(super_area_region_path)
+        super_area_region = super_area_region.drop(columns='area').drop_duplicates()
+        super_area_region.set_index('super_area', inplace=True)
+        return super_area_region.loc[super_areas]['region'].values
+
+    def region_summary(self) -> pd.DataFrame:
+        """ 
+        Generate a summary for regions, on how many people are recovered, dead, infected,
+        susceptible, hospitalised or in intensive care, per time step.
+        Returns
+        -------
+        A data frame whose index is the date recorded, and columns are regions, number of recovered,
+        dead, infected...
+        """
+        regions = self.super_areas_to_region_mapping(self.super_areas)
+        self.infections_df["regions"] = self.infections_df.apply(
+          lambda x: regions[x.infected_id], axis=1
+        )
+        regions_df = []
+        for region in np.unique(regions):
+            region_df = pd.DataFrame()
+            n_people_in_region = np.sum(regions == region)
+            region_df["symptoms"] = self.infections_df.apply(
+              lambda x: x.symptoms[x.regions == region], axis=1
+            )
+            region_df["infected_id"] = self.infections_df.apply(
+              lambda x: x.infected_id[x.regions == region], axis=1
+            )
+            region_df = self.process_symptoms(region_df, n_people_in_region)
+            region_df["region"] = region
+            regions_df.append(region_df)
+        return pd.concat(regions_df)
