@@ -33,7 +33,12 @@ class Plotting:
 
         policy_plots = PolicyPlots(self.world)
 
+        restaurant_reopening_plot.policy_plots.plot_restaurant_reopening()
+        restaurant_reopening_plot.plot()
+        restaurant_reopening_plot.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
+    
         school_reopening_plot = policy_plots.plot_school_reopening()
+        school_reopening_plot.plot()
         school_reopening_plot.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
 
     
