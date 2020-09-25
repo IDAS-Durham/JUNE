@@ -10,17 +10,17 @@ quarantine:
     1:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-        compliance: 0.5 
-        household_compliance: 0.2
+        compliance: 0.2
+        household_compliance: 0.1
         start_time: 2020-03-16 
-        end_time: 2020-03-24 
+        end_time: 2020-07-04 
     2:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
-        compliance: 0.95 # for the symptomatic individual - needs to be checked
-        household_compliance: 0.9
-        start_time: 2020-03-24
-        end_time: 2021-07-04
+        compliance: 0.15 # for the symptomatic individual - needs to be checked
+        household_compliance: 0.1
+        start_time: 2020-07-04
+        end_time: 2021-12-01
 
 shielding:
     1:
