@@ -1,6 +1,7 @@
 import numpy as np
 import time
 from datetime import datetime, timedelta
+import argparse
 import matplotlib.pyplot as plt
 
 from june.hdf5_savers import generate_world_from_hdf5
@@ -11,7 +12,7 @@ plt.style.reload_library()
 
 default_world_filename = 'world.hdf5'
 
-class Plotting:
+class Plotter:
     """
     Master plotting script for paper and validation plots
     Parameters
@@ -60,4 +61,19 @@ class Plotting:
         
         self.plot_policies()
 
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Full run of the camp")
+
+    parser.add_argument(
+        "-w",
+        "--world_filename",
+        help="Relative directory to world file",
+        required=False,
+        default = default_world_filename
+    )
+    args = parser.parse_args()
     
+    plotter = Plotter.from_file(args.world_filename)
+    plotter.plot_all()
