@@ -110,14 +110,12 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
                         maxshape=(None,),
                         compression="gzip",
                     )
-                    """
                     people_dset.create_dataset(
                         "super_area",
                         data=super_areas,
                         maxshape=(None,),
                         compression="gzip",
                     )
-                    """
                 else:
                     newshape = (people_dset["id"].shape[0] + ids.shape[0],)
                     people_dset["id"].resize(newshape)
