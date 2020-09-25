@@ -76,23 +76,27 @@ class ReadLogger:
                     )
 
     def load_infected_data(self):
-        self.infections_per_super_area, infections_world_list = [], []
+        infections_world_list = []
         for rank in range(self.n_processes):
-            (
-                infections_per_super_area,
-                infections_world_df,
-            ) = self._load_infected_data_for_rank(rank)
-            self.infections_per_super_area += infections_per_super_area
-            infections_world_list.append(infections_world_df)
-        self.infections_df = functools.reduce(lambda a, b: a + b, infections_world_list)
+            self._load_infected_data_for_rank(rank)
+        self.infections_df = pd.DataFrame(
+                {
+                    "time_stamp": self.time_stamps,
+                    "infected_id": self.ids,
+                    "symptoms": self.symptoms,
+                }
+            )
+        self.infections_df.set_index("time_stamp", inplace=True)
+        self.infections_df.index = pd.to_datetime(self.infections_df.index)
+
         self.infections_df["symptoms"] = self.infections_df.apply(
             lambda x: np.array(x.symptoms), axis=1
         )
         self.infections_df["infected_id"] = self.infections_df.apply(
             lambda x: np.array(x.infected_id), axis=1
         )
-        self.start_date = min(self.infections_per_super_area[0].index)
-        self.end_date = max(self.infections_per_super_area[0].index)
+        self.start_date = min(self.infections_df.index)
+        self.end_date = max(self.infections_df.index)
         print('Finished loading infected data')
 
     def _load_infected_data_for_rank(self, rank: int):
@@ -108,50 +112,19 @@ class ReadLogger:
             libver="latest",
             swmr=True,
         ) as f:
-            super_areas = [
-                key for key in f.keys() if key not in ("population", "parameters")
-            ]
-            for i, super_area in enumerate(super_areas):
-                try:
-                    infections = f[f"{super_area}/infection"]
-                    time_stamps = [key for key in infections]
-                    ids, symptoms, n_secondary_infections = [], [], []
-                    for time_stamp in time_stamps:
-                        ids.append(list(infections[time_stamp]["id"][:]))
-                        symptoms.append(list(infections[time_stamp]["symptoms"][:]))
-                        n_secondary_infections.append(
-                            list(infections[time_stamp]["n_secondary_infections"][:])
-                        )
-                    infections_df = pd.DataFrame(
-                        {
-                            "time_stamp": time_stamps,
-                            "infected_id": ids,
-                            "symptoms": symptoms,
-                            "n_secondary_infections": n_secondary_infections,
-                            "super_area": [super_area] * len(ids),
-                        }
-                    )
-                    infections_df.set_index("time_stamp", inplace=True)
-                    infections_df.index = pd.to_datetime(infections_df.index)
-                    infections_per_super_area.append(infections_df)
-                except KeyError:
-                    continue
-        infections_df = pd.DataFrame(
-            index=infections_per_super_area[0].index,
-            columns=infections_per_super_area[0].columns,
-        )
-        for ts, _ in infections_df.iterrows():
-            for col in ["infected_id", "symptoms", "n_secondary_infections"]:
-                infections_df.loc[ts, col] = list(
-                    chain(
-                        *[
-                            x.loc[ts, col]
-                            for x in infections_per_super_area
-                            if len(x) > 0
-                        ]
-                    )
-                )
-        return infections_per_super_area, infections_df
+            infections = f[f"infection"]
+            self.time_stamps = [key for key in infections]
+            if rank == 0:
+                self.ids, self.symptoms = [], []
+                for i, time_stamp in enumerate(self.time_stamps):
+                    self.ids.append(list(infections[time_stamp]["id"][:]))
+                    self.symptoms.append(list(infections[time_stamp]["symptoms"][:]))
+
+            else:
+                for i, time_stamp in enumerate(time_stamps):
+                    self.ids[i] += list(infections[time_stamp]["id"][:])
+                    self.symptoms[i] += list(infections[time_stamp]["symptoms"][:])
+        
 
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
@@ -257,26 +230,21 @@ class ReadLogger:
         A data frame whose index is the date recorded, and columns are super area, number of recovered, 
         dead, infected...
         """
-        super_area_dfs = []
-        for i, df in enumerate(self.infections_per_super_area):
-            super_area = df.iloc[0]["super_area"]
-            n_people_in_area = np.sum(self.super_areas == super_area)
-            super_area_df = self.process_symptoms(df, n_people=n_people_in_area)
-            current_columns = [
-                column for column in super_area_df.columns if "current" in column
-            ]
-            daily_columns = [
-                column for column in super_area_df.columns if "daily" in column
-            ]
-            resampled_df = (
-                super_area_df[current_columns].resample("D").mean().astype(int)
+        areas_df = []
+        for area in np.unique(self.super_areas):
+            area_df = pd.DataFrame()
+            n_people_in_area = np.sum(self.super_areas == area)
+            area_df["symptoms"] = self.infections_df.apply(
+                lambda x: x.symptoms[x.super_areas == area], axis=1
             )
-            resampled_df[daily_columns] = (
-                super_area_df[daily_columns].resample("D").sum()
+            area_df["infected_id"] = self.infections_df.apply(
+                lambda x: x.infected_id[x.super_areas == area], axis=1
             )
-            resampled_df["super_area"] = super_area
-            super_area_dfs.append(resampled_df)
-        return pd.concat(super_area_dfs)
+            area_df = self.process_symptoms(area_df, n_people_in_area)
+            area_df["super_area"] = area
+            areas_df.append(area_df)
+        return pd.concat(areas_df)
+
 
     def age_summary(self, age_ranges: List[int]) -> pd.DataFrame:
         """
@@ -356,11 +324,25 @@ class ReadLogger:
     def load_infection_location(self) -> pd.DataFrame:
         infection_locations = []
         for rank in range(self.n_processes):
-            infection_locations.append(
-                self._load_infection_location_for_rank(rank=rank)
-            )
-        self.locations_df = pd.concat(infection_locations)
-        self.locations_df = self.locations_df.groupby("time_stamp").sum()
+            self._load_infection_location_for_rank(rank=rank)
+        locations_df = pd.DataFrame(
+            {
+                "time_stamp": self.location_time_stamps,
+                "location_id": self.infection_location,
+            }
+        )
+        locations_df["time_stamp"] = pd.to_datetime(locations_df["time_stamp"])
+        locations_df.set_index("time_stamp", inplace=True)
+        locations_df = locations_df.resample("D").sum()
+        locations_df = locations_df[locations_df["location_id"] != 0]
+        locations_df["location"] = locations_df.apply(
+            lambda x: [
+                ''.join(location_name.split("_")[:-1]) for location_name in x.location_id
+            ],
+            axis=1,
+        )
+        self.locations_df = locations_df
+
 
     def _load_infection_location_for_rank(self, rank: int) -> pd.DataFrame:
         """
@@ -376,47 +358,21 @@ class ReadLogger:
             libver="latest",
             swmr=True,
         ) as f:
-            super_areas = [
-                key for key in f.keys() if key not in ("population", "parameters", "meta")
-            ]
-
-            time_stamps, infection_location, super_areas_for_df = [], [], []
-            for super_area in super_areas:
-                try:
-                    locations = f[f"{super_area}/locations"]
-                    location_per_area, super_area_per_area = [], []
-                    for time_stamp in locations.keys():
-                        locations_for_df = list(
-                            locations[time_stamp]["locations"][:].astype("U")
+            locations = f[f"locations"]
+            if rank == 0:
+                self.location_time_stamps, self.infection_location = [], [] 
+                for i, time_stamp in enumerate(locations.keys()):
+                    self.infection_location.append(
+                        list(
+                            locations[time_stamp]["infection_location"][:].astype("U")
                         )
-                        location_per_area.append(locations_for_df)
-                        super_area_per_area.append([super_area] * len(locations_for_df))
-                    time_stamps += list(locations.keys())
-                    infection_location += location_per_area
-                    super_areas_for_df += super_area_per_area
+                    )
+                    self.location_time_stamps.append(time_stamp)
+            else:
+                for i, time_stamp in enumerate(locations.keys()):
+                    self.infection_location[i] += list(locations[time_stamp]['infection_location'][:].astype("U"))
 
-                except KeyError:
-                    continue
-        locations_df = pd.DataFrame(
-            {
-                "time_stamp": time_stamps,
-                "location_id": infection_location,
-                "super_area": super_areas_for_df,
-            }
-        )
-        locations_df["time_stamp"] = pd.to_datetime(locations_df["time_stamp"])
-        locations_df.set_index("time_stamp", inplace=True)
-        locations_df = locations_df.groupby(locations_df.index).sum()
-        locations_df = locations_df.resample("D").sum()
-        locations_df = locations_df[locations_df["location_id"] != 0]
-        locations_df["location"] = locations_df.apply(
-            lambda x: [
-                ''.join(location_name.split("_")[:-1]) for location_name in x.location_id
-            ],
-            axis=1,
-        )
-        return locations_df
-
+        
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:
         """
         Get a data frame with the number of infection happening at each type of place, 

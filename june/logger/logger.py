@@ -29,7 +29,7 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.file_path = self.save_path / file_name
-        self.infection_location, self.super_areas_infected = [], []
+        self.infection_location, self.new_infected_ids = [], []
         self.rank = rank
         self.config = config
         try:
@@ -134,7 +134,7 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
                     ] = socioeconomic_indcs
 
     def log_infected(
-        self, date: "datetime", super_area_infections: dict,
+            self, date: "datetime", infected_ids: List[int], symptoms: List[int], 
     ):
         """
         Log relevant information of infected people per super area and time step.
@@ -150,23 +150,12 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
         """
         time_stamp = date.strftime("%Y-%m-%dT%H:%M:%S.%f")
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            for super_area in super_area_infections.keys():
-                super_area_dict = super_area_infections[super_area]
-                super_area_dset = f.require_group(super_area)
-                infection_dset = super_area_dset.require_group("infection")
-                time_dset = infection_dset.create_group(time_stamp)
-                ids = np.array(super_area_dict["ids"], dtype=np.int64)
-                symptoms = np.array(super_area_dict["symptoms"], dtype=np.int16)
-                n_secondary_infections = np.array(
-                    super_area_dict["n_secondary_infections"], dtype=np.int16
-                )
-                time_dset.create_dataset("id", compression="gzip", data=ids)
-                time_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
-                time_dset.create_dataset(
-                    "n_secondary_infections",
-                    compression="gzip",
-                    data=n_secondary_infections,
-                )
+            infection_dset = f.require_group("infection")
+            time_dset = infection_dset.create_group(time_stamp)
+            ids = np.array(infected_ids, dtype=np.int64)
+            symptoms = np.array(symptoms, dtype=np.int16)
+            time_dset.create_dataset("id", compression="gzip", data=ids)
+            time_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
 
     def log_hospital_characteristics(self, hospitals: "Hospitals"):
         """
@@ -253,7 +242,7 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
                 time_dset.create_dataset("n_patients", data=n_patients)
                 time_dset.create_dataset("n_patients_icu", data=n_patients_icu)
 
-    def accumulate_infection_location(self, location, super_areas_infected):
+    def accumulate_infection_location(self, location, new_infected_ids):
         """
         Store where infections happend in a time step
         
@@ -261,11 +250,9 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
         ----------
         location:
             group type of the group in which the infection took place
-        super_area_infection:
-            super area in which the person that was infected lives
         """
-        self.infection_location.append(location)
-        self.super_areas_infected.append(super_areas_infected)
+        self.infection_location += [location] * len(new_infected_ids)
+        self.new_infected_ids += new_infected_ids
 
     def log_infection_location(self, time):
         """
@@ -275,24 +262,16 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
         time:
             datetime to log
         """
-        super_area_locations = {
-            super_area: {"location": [],} for super_area in self.super_areas_infected
-        }
-        for super_area, location in zip(
-            self.super_areas_infected, self.infection_location
-        ):
-            super_area_locations[super_area]["location"].append(location)
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        infection_location = np.array(self.infection_location, dtype="S20")
+        new_infected_ids = np.array(self.new_infected_ids, dtype=np.int)
         with h5py.File(self.file_path, "a", libver="latest") as f:
-            for super_area in super_area_locations.keys():
-                super_area_dict = super_area_locations[super_area]
-                super_area_dset = f.require_group(super_area)
-                location_dset = super_area_dset.require_group("locations")
-                time_dset = location_dset.require_group(time_stamp)
-                locations = np.array(super_area_dict["location"], dtype="S20")
-                time_dset.create_dataset("locations", data=locations)
+            locations_dset = f.require_group("locations")
+            time_dset = locations_dset.create_group(time_stamp)
+            time_dset.create_dataset("infection_location", data=infection_location)
+            time_dset.create_dataset("new_infected_ids", data=new_infected_ids)
         self.infection_location = []
-        self.super_areas_infected = []
+        self.new_infected_ids = []
 
     def unpack_dict(self, hdf5_obj, data, base_path, depth=0, max_depth=5):
         """
