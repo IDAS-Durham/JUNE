@@ -99,7 +99,7 @@ class InfectionSelector:
         time_to_symptoms_onset = symptoms.time_exposed
         transmission = self._select_transmission(
             time_to_symptoms_onset=time_to_symptoms_onset,
-            max_symptoms_tag=symptoms.max_tag,
+            max_symptoms_tag=symptoms.max_tag.name,
         )
         return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
 

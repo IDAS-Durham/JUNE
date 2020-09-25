@@ -164,7 +164,7 @@ class Hospitals(Supergroup):
         hospitals = []
         hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
         hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
-        return cls(hospitals, neighbour_hospitals=None, box_mode=True)
+        return cls(hospitals, neighbour_hospitals=None, box_mode=True, ball_tree=False)
 
     @classmethod
     def from_file(
