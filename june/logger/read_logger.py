@@ -33,6 +33,7 @@ class ReadLogger:
         self.root_output_file = root_output_file
         self.n_processes = n_processes
         self.load_population_data()
+        print(f'Reading {self.n_processes} processes')
         self.load_infected_data(self.n_processes)
 
     def load_population_data(self):
@@ -52,6 +53,7 @@ class ReadLogger:
                     self.ids = population["id"][:]
                     self.ages = population["age"][:]
                     self.sexes = population["sex"][:]
+                    self.super_areas = population["super_area"][:].astype("U13")
                     self.ethnicities = population["ethnicity"][:]
                     self.socioeconomic_indices = population["socioeconomic_index"][:]
                 else:
@@ -60,6 +62,9 @@ class ReadLogger:
                     self.ids = np.concatenate((self.ids, population["id"][:]))
                     self.ages = np.concatenate((self.ages, population["age"][:]))
                     self.sexes = np.concatenate((self.sexes, population["sex"][:]))
+                    self.super_areas = np.concatenate((self.super_areas,
+                        population['super_area'][:].astype("U13"))
+                        )
                     self.ethnicities = np.concatenate(
                         (self.ethnicities, population["ethnicity"][:])
                     )
@@ -94,6 +99,7 @@ class ReadLogger:
         Load data on infected people over time and convert to a list of data frames 
         ``self.infections_per_super_area``
         """
+        print(f'Reading rank = {rank}')
         infections_per_super_area = []
         with h5py.File(
             self.output_path / f"{self.root_output_file}.{rank}.hdf5",
