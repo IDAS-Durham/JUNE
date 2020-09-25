@@ -12,12 +12,15 @@ plt.style.reload_library()
 default_world_filename = 'world.hdf5'
 
 class Plotting:
+    """
+    Master plotting script for paper and validation plots
+    Parameters
+    ----------
+    world
+        Preloaded world which can also be passed from the master plotting script
+    """
 
-    def __init__(
-            self,
-            world = default_world,
-    ):
-
+    def __init__(self, world):
         self.world = world
 
     @classmethod
@@ -33,6 +36,7 @@ class Plotting:
             self,
             save_dir: str = '../plots/policy/'
     ):
+        "Make all policy plots"
 
         policy_plots = PolicyPlots(self.world)
 
