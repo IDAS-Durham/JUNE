@@ -321,7 +321,7 @@ def test__read_infection_location(selector, interaction):
         i += 1
         next(sim.timer)
     read = ReadLogger(output_path=output_path)
-    read.load_infection_location(n_processes=1)
+    read.load_infection_location()
     dates = [date.date().strftime("%Y-%m-%d") for date in list(read.locations_df.index)]
     for index, row in read.locations_df.iterrows():
         time_step = index.strftime("%Y-%m-%dT%H:%M:%S.%f")
