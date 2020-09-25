@@ -424,8 +424,7 @@ mask_wearing:
 
     11: 
         start_time: 2020-08-12
-        #end_time: 2020-08-25
-        end_time: 2020-12-01
+        end_time: 2020-08-25
         compliance: 0.745
         beta_factor: 0.5
         mask_probabilities: 
