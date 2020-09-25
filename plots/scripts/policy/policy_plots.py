@@ -4,13 +4,27 @@ from datetime import datetime, timedelta
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
-default_policy_filename = '../configs/defaults/policy/policy.yaml'
+from june import paths
 
-default_attendance_filename = 'YoY_Seated_Diner_Data.csv'
-
-default_gov_filename = '../custom_data/data-attendance-in-education-and-early-years-settings-during-the-coronavirus-covid-19-outbreak.csv'
+default_policy_filename = (
+    paths.config_paths / "defaults/policy/policy.yaml"
+)
+default_attendance_filename = (
+    paths.data_path / "plotting/yoy_seated_data.csv"
+)
+default_gov_filename = (
+    paths.data_path / "plotting/dfe_education_attendance.csv" 
+)
 
 class PolicyPlots:
+    """
+    Class for plotting policy related plots
+    
+    Parameters
+    ----------
+    world
+        Preloaded world which can also be passed from the master plotting script
+    """
 
     def __init__(self, world):
         self.world = world
@@ -19,6 +33,8 @@ class PolicyPlots:
             self,
             attendance_filename = default_attendance_filename,
     ):
+        "Plotting attendance at restaurants according to OpenTable"
+        
         data_file = pd.read_csv(attendance_filename)
         uk_data = data_file[data_file['Name'] == 'United Kingdom']
 
@@ -57,6 +73,7 @@ class PolicyPlots:
             policy_filename = default_policy_filename,
             gov_filename = default_gov_filename,
     ):
+        "Plotting school reopening in JUNE vs. DeE data"
 
         children = []
         for person in self.world.people:
