@@ -320,10 +320,7 @@ class Simulator:
         duration:
             duration of time step
         """
-        super_area_infections = {
-            super_area.name: {"ids": [], "symptoms": [], "n_secondary_infections": []}
-            for super_area in self.world.super_areas
-        }
+        new_infected_ids, symptoms = [], []
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
@@ -332,12 +329,8 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
-            super_area_dict = super_area_infections[person.area.super_area.name]
-            super_area_dict["ids"].append(person.id)
-            super_area_dict["symptoms"].append(person.infection.tag.value)
-            super_area_dict["n_secondary_infections"].append(
-                person.infection.number_of_infected
-            )
+            new_infected_ids.append(person.id)
+            symptoms.append(person.infection.tag.value)
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person, medical_facilities=self.world.hospitals
@@ -347,7 +340,7 @@ class Simulator:
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
         if self.logger is not None:
-            self.logger.log_infected(self.timer.date, super_area_infections)
+            self.logger.log_infected(self.timer.date, new_infected_ids, symptoms)
 
     def infect_people(self, infected_ids, people_from_abroad_dict, infection_locations):
         foreign_ids, foreign_infection_locations = [], []
@@ -357,7 +350,7 @@ class Simulator:
                 if self.logger is not None:
                     self.logger.accumulate_infection_location(
                         location=inf_loc,
-                        super_areas_infected=person.area.super_area.name,
+                        new_infected_ids=[person.id]
                     )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
@@ -422,7 +415,7 @@ class Simulator:
             if self.logger is not None:
                 self.logger.accumulate_infection_location(
                     location=infection_data[1],
-                    super_areas_infected=person.area.super_area.name,
+                    new_infected_ids=[person.id],
                 )
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
@@ -535,8 +528,6 @@ class Simulator:
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
-            # if self.world.hospitals is not None:
-            #    self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         # remove everyone from their active groups
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()

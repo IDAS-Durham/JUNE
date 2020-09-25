@@ -126,15 +126,7 @@ def test__read_daily_hospital_admissions():
 
             if new_status == "recovered":
                 person.infection = None
-        n_secondary_infections = [0] * len(ids)
-        super_area_infections = {
-            "holi": {
-                "ids": ids,
-                "symptoms": symptoms,
-                "n_secondary_infections": n_secondary_infections,
-            }
-        }
-        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infected(timer.date, ids, symptoms)
         logger.log_infection_location(time)
         next(timer)
     read = ReadLogger(output_path=output_path)
@@ -196,15 +188,7 @@ def test__read_infected_and_dead():
             elif new_status == "dead":
                 person.infection = None
                 person.dead = True
-        n_secondary_infections = [0] * len(ids)
-        super_area_infections = {
-            "holi": {
-                "ids": ids,
-                "symptoms": symptoms,
-                "n_secondary_infections": n_secondary_infections,
-            }
-        }
-        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infected(timer.date, ids, symptoms)
         logger.log_infection_location(time)
         next(timer)
     read = ReadLogger(output_path=output_path)
@@ -259,15 +243,7 @@ def test__read_current_infected():
                 person.dead = True
             else:
                 infected[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
-        n_secondary_infections = [0] * len(ids)
-        super_area_infections = {
-            "holi": {
-                "ids": ids,
-                "symptoms": symptoms,
-                "n_secondary_infections": n_secondary_infections,
-            }
-        }
-        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infected(timer.date, ids, symptoms)
         logger.log_infection_location(time)
         next(timer)
     read = ReadLogger(output_path=output_path)
