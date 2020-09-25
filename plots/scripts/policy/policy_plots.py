@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from june import paths
 
 default_policy_filename = (
-    paths.config_paths / "defaults/policy/policy.yaml"
+    paths.configs_path / "defaults/policy/policy.yaml"
 )
 default_attendance_filename = (
     paths.data_path / "plotting/yoy_seated_data.csv"
