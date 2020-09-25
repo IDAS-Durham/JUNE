@@ -38,19 +38,26 @@ class Plotting:
     ):
         "Make all policy plots"
 
+        print ("Setting up policy plots")
+        
         policy_plots = PolicyPlots(self.world)
 
+        print ("Plotting restaurant reopening")
         restaurant_reopening_plot.policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
         restaurant_reopening_plot.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
-    
+
+        print ("Plotting school reopening")
         school_reopening_plot = policy_plots.plot_school_reopening()
         school_reopening_plot.plot()
         school_reopening_plot.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
 
+        print ("All policy plots finished")
     
     def plot_all(self):
 
+        print ("Plotting the world")
+        
         self.plot_policies()
 
     
