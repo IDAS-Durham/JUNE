@@ -127,6 +127,63 @@ def test__read_daily_hospital_admissions():
         check_dtype=False,
     )
 
+def test__read_daily_icu_admissions():
+    world = make_dummy_world(infected=True)
+    output_path = "dummy_results"
+    logger = Logger(save_path=output_path)
+    timer = Timer(initial_day="2020-03-10", total_days=15)
+    saved_ids = []
+    icu_admissions = defaultdict(int)
+    logger.log_population(world.people)
+    while timer.date <= timer.final_date:
+        time = timer.date
+        ids = []
+        symptoms = []
+        for person in world.people.infected:
+            new_status = person.infection.update_health_status(
+                timer.now, timer.duration
+            )
+            ids.append(person.id)
+            symptoms.append(person.infection.tag.value)
+            if (
+                person.infection.symptoms.tag == SymptomTag.intensive_care
+                and person.id not in saved_ids
+            ):
+                saved_ids.append(person.id)
+                icu_admissions[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
+
+            if new_status == "recovered":
+                person.infection = None
+        n_secondary_infections = [0] * len(ids)
+        super_area_infections = {
+            "holi": {
+                "ids": ids,
+                "symptoms": symptoms,
+                "n_secondary_infections": n_secondary_infections,
+            }
+        }
+        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infection_location(time)
+        next(timer)
+    read = ReadLogger(output_path=output_path)
+    world_df = read.world_summary()
+    for col in world_df.columns:
+        print(col)
+    # Test hospital admissions are right
+    icu_admissions_df = pd.Series(icu_admissions)
+    icu_admissions_df.index = pd.to_datetime(icu_admissions_df.index)
+    icu_admissions_logged = world_df["daily_icu_admissions"]
+    icu_admissions_logged = icu_admissions_logged[
+        icu_admissions_logged.values > 0
+    ]
+    assert sum(list(icu_admissions.values())) > 0
+    assert sum(list(icu_admissions.values())) == icu_admissions_logged.sum()
+    pd._testing.assert_series_equal(
+        icu_admissions_df,
+        icu_admissions_logged,
+        check_names=False,
+        check_dtype=False,
+    )
 
 def test__read_infected_and_dead():
     world = make_dummy_world(infected=False)

@@ -184,14 +184,14 @@ class ReadLogger:
             .astype(int)
         )
         # filter rows that contain at least one hospitalised person
-        symptoms_df = symptoms_df[df['current_hospitalised'] > 0]
-        print(symptoms_df.head(4))
-        for ts,row in symptoms_df.iterrows():
+        hospitalised_df = symptoms_df[df['current_hospitalised'] > 0]
+        #print(hospitalised_df.head(4))
+        for ts,row in hospitalised_df.iterrows():
             mask = (row["symptoms"] == SymptomTag.hospitalised)
             for col,data in row.iteritems():
-                if col in ('symptoms', 'infected_id'):
-                    symptoms_df.loc[ts,col] = data[mask]
-        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(
+                if col in ("symptoms", "infected_id"):
+                    hospitalised_df.loc[ts,col] = data[mask]
+        flat_df = hospitalised_df[["symptoms", "infected_id"]].apply(
             lambda x: x.explode() 
         )
         unique,unique_indices = np.unique(
@@ -202,6 +202,25 @@ class ReadLogger:
             flat_hospitalised_df.index
         ).size()
         df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
+
+        icu_df = symptoms_df[df['current_intensive_care'] > 0]
+        for ts,row in icu_df.iterrows():
+            mask = (row["symptoms"] == SymptomTag.intensive_care)
+            for col,data in row.iteritems():
+                if col in ("symptoms", "infected_id"):
+                    icu_df.loc[ts,col] = data[mask]
+        flat_df = icu_df[["symptoms", "infected_id"]].apply(
+            lambda x: x.explode() 
+        )
+        unique,unique_indices = np.unique(
+            flat_df["infected_id"].values,return_index=True
+        ) # will only return the first index of each.
+        flat_icu_df = flat_df.iloc[unique_indices]
+        df["daily_icu_admissions"] = flat_icu_df.groupby(
+            flat_icu_df.index
+        ).size()
+        df["daily_icu_admissions"] = df["daily_icu_admissions"].fillna(0.0)
+
         return df
 
     def world_summary(self) -> pd.DataFrame:
