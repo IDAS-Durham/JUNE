@@ -3,9 +3,9 @@ import time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
-default_policy_file = '../configs/defaults/policy/policy.yaml'
+default_policy_filename = '../configs/defaults/policy/policy.yaml'
 
-default_gov_attendance = '../custom_data/data-attendance-in-education-and-early-years-settings-during-the-coronavirus-covid-19-outbreak.csv'
+default_gov_filename = '../custom_data/data-attendance-in-education-and-early-years-settings-during-the-coronavirus-covid-19-outbreak.csv'
 
 class PolicyPlots:
 
@@ -14,8 +14,8 @@ class PolicyPlots:
 
     def plot_school_repopening(
             self,
-            policy_file = default_policy_file,
-            gov_attendance = default_gov_attendance,
+            policy_filename = default_policy_filename,
+            gov_filename = default_gov_filename,
     ):
 
         children = []
@@ -26,7 +26,7 @@ class PolicyPlots:
             except AttributeError:
                 pass
 
-        policies = Policies.from_file(policy_file)
+        policies = Policies.from_file(policy_filename)
 
         activities = ["primary_activity", "residence"]
 
@@ -35,7 +35,6 @@ class PolicyPlots:
 
         dates = []
         children_in_school = []
-
         for i in range(no_days):
             date = begin_date + timedelta(i)
             dates.append(date)
