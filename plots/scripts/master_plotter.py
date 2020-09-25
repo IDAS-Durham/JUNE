@@ -1,7 +1,9 @@
 import numpy as np
+import pandas as pd
 import time
 from datetime import datetime, timedelta
 import argparse
+import os
 import matplotlib.pyplot as plt
 
 from june.hdf5_savers import generate_world_from_hdf5
@@ -31,7 +33,7 @@ class Plotter:
     ):
         world = generate_world_from_hdf5(world_filename)
 
-        return Plotting(world)
+        return Plotter(world)
         
     def plot_policies(
             self,
@@ -39,19 +41,25 @@ class Plotter:
     ):
         "Make all policy plots"
 
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
         print ("Setting up policy plots")
-        
+
         policy_plots = PolicyPlots(self.world)
 
         print ("Plotting restaurant reopening")
-        restaurant_reopening_plot.policy_plots.plot_restaurant_reopening()
+        restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
-        restaurant_reopening_plot.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
+        plt.xticks(rotation=45)
+        plt.ylabel('% pupils attending')
+        plt.xlabel('Date')
+        plt.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting school reopening")
         school_reopening_plot = policy_plots.plot_school_reopening()
         school_reopening_plot.plot()
-        school_reopening_plot.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("All policy plots finished")
     
