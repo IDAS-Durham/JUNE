@@ -77,7 +77,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        logger: "Logger" = None,
+        logger: Logger = None,
         comment: str = None,
     ) -> "Simulator":
 
@@ -177,7 +177,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        logger: "Logger" = None,
+        logger: Logger = None,
     ):
         """
         Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
