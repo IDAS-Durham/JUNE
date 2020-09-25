@@ -24,7 +24,8 @@ from june.time import Timer
 from june.world import World
 from june.logger import Logger
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
-#from june.hdf5_savers import save_checkpoint_to_hdf5
+
+# from june.hdf5_savers import save_checkpoint_to_hdf5
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -64,6 +65,9 @@ class Simulator:
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
+            if logger is None:
+                raise SimulatorError("Checkpoint requires not None logger for now..")
+            self.checkpoint_path = logger.save_path
             self.checkpoint_dates = checkpoint_dates
         self.logger = logger
 
@@ -167,6 +171,36 @@ class Simulator:
             checkpoint_dates=checkpoint_dates,
         )
 
+    @classmethod
+    def from_checkpoint(
+        cls,
+        world: World,
+        checkpoint_path: str,
+        interaction: Interaction,
+        infection_selector=None,
+        policies: Optional[Policies] = None,
+        infection_seed: Optional[InfectionSeed] = None,
+        leisure: Optional[Leisure] = None,
+        travel: Optional[Travel] = None,
+        config_filename: str = default_config_filename,
+        logger: Optional[Logger] = None,
+        comment: Optional[str] = None,
+    ):
+        from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
+
+        return generate_simulator_from_checkpoint(
+            world=world,
+            checkpoint_path=checkpoint_path,
+            interaction=interaction,
+            infection_selector=infection_selector,
+            policies=policies,
+            infection_seed=infection_seed,
+            leisure=leisure,
+            travel=travel,
+            config_filename=config_filename,
+            logger=logger,
+            comment=comment,
+        )
 
     def clear_world(self):
         """
@@ -537,6 +571,15 @@ class Simulator:
             next(self.timer)
 
     def save_checkpoint(self, saving_date):
-        save_checkpoint_to_hdf5(self, saving_date)
+        print("saving checkpoint")
+        print(saving_date)
+        print("date timer")
+        print(self.timer.date)
+        from june.hdf5_savers.checkpoint_saver import save_checkpoint_to_hdf5
 
-
+        save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
+        save_checkpoint_to_hdf5(
+            population=self.world.people,
+            date=str(saving_date),
+            hdf5_file_path=save_path,
+        )
