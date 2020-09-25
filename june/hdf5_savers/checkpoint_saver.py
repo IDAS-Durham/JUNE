@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import h5py
 from collections import defaultdict
+from glob import glob
 
 from june.world import World
 from june.interaction import Interaction
@@ -74,7 +75,7 @@ def save_checkpoint_to_hdf5(
     )
 
 
-def load_checkponit_from_hdf5(hdf5_file_path: str, chunk_size=50000):
+def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=True):
     """
     Loads checkpoint data from hdf5. 
 
@@ -95,8 +96,51 @@ def load_checkponit_from_hdf5(hdf5_file_path: str, chunk_size=50000):
         ret["susceptible_id"] = people_group["susceptible_id"][:]
         ret["recovered_id"] = people_group["recovered_id"][:]
         ret["dead_id"] = people_group["dead_id"][:]
-        ret["date"] = f["time"].attrs["date"]
+        if load_date:
+            ret["date"] = f["time"].attrs["date"]
     return ret
+
+
+def combine_checkpoints_for_ranks(hdf5_file_root: str):
+    """
+    After running a parallel simulation with checkpoints, the
+    checkpoint data will be scattered accross, with each process
+    saving a checkpoint_date.0.hdf5 file. This function can be used
+    to unify all data in one single checkpoint, so that we can load it
+    later with any arbitray number of cores.
+
+    Parameters
+    ----------
+    hdf5_file_root
+        the str root of the pasts like "checkpoint_2020-01-01". The checkpoint files
+        will be expected to have names like "checkpoint_2020-01-01.{rank}.hdf5 where
+        rank = 0, 1, 2, etc.
+    """
+    checkpoint_files = glob(hdf5_file_root + ".[0-9]*.hdf5")
+    print(f"found {checkpoint_files}")
+    ret = load_checkpoint_from_hdf5(checkpoint_files[0])
+    for i in range(1, len(checkpoint_files)):
+        file = checkpoint_files[i]
+        ret2 = load_checkpoint_from_hdf5(file, load_date=False)
+        for key, value in ret2.items():
+            ret[key] = np.concatenate((ret[key], value))
+
+    unified_checkpoint_path = hdf5_file_root + ".hdf5"
+    with h5py.File(unified_checkpoint_path, "w") as f:
+        f.create_group("time")
+        f["time"].attrs["date"] = ret["date"]
+        f.create_group("people_data")
+        for name in ["infected_id", "dead_id", "recovered_id", "susceptible_id"]:
+            write_dataset(
+                group=f["people_data"],
+                dataset_name=name,
+                data=np.array(ret[name], dtype=np.int),
+            )
+    save_infections_to_hdf5(
+        hdf5_file_path=unified_checkpoint_path,
+        infections=ret["infection_list"],
+        chunk_size=1000000,
+    )
 
 
 def generate_simulator_from_checkpoint(
@@ -131,8 +175,11 @@ def generate_simulator_from_checkpoint(
         logger=logger,
         comment=comment,
     )
-    checkpoint_data = load_checkponit_from_hdf5(checkpoint_path, chunk_size=chunk_size)
+    people_ids = set(world.people.people_ids)
+    checkpoint_data = load_checkpoint_from_hdf5(checkpoint_path, chunk_size=chunk_size)
     for dead_id in checkpoint_data["dead_id"]:
+        if dead_id not in people_ids:
+            continue
         person = simulator.world.people.get_from_id(dead_id)
         person.dead = True
         person.susceptibility = 0.0
@@ -140,11 +187,15 @@ def generate_simulator_from_checkpoint(
         cemetery.add(person)
         person.subgroups = Activities(None, None, None, None, None, None, None)
     for recovered_id in checkpoint_data["recovered_id"]:
+        if recovered_id not in people_ids:
+            continue
         person = simulator.world.people.get_from_id(recovered_id)
         person.susceptibility = 0.0
     for infected_id, infection in zip(
         checkpoint_data["infected_id"], checkpoint_data["infection_list"]
     ):
+        if infected_id not in people_ids:
+            continue
         person = simulator.world.people.get_from_id(infected_id)
         person.infection = infection
         person.susceptibility = 0.0

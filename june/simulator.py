@@ -571,13 +571,12 @@ class Simulator:
             next(self.timer)
 
     def save_checkpoint(self, saving_date):
-        print("saving checkpoint")
-        print(saving_date)
-        print("date timer")
-        print(self.timer.date)
         from june.hdf5_savers.checkpoint_saver import save_checkpoint_to_hdf5
 
-        save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
+        if mpi_size == 1:
+            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
+        else:
+            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
         save_checkpoint_to_hdf5(
             population=self.world.people,
             date=str(saving_date),
