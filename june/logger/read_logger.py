@@ -34,7 +34,7 @@ class ReadLogger:
         self.n_processes = n_processes
         self.load_population_data()
         print(f'Reading {self.n_processes} processes')
-        self.load_infected_data(self.n_processes)
+        self.load_infected_data()
 
     def load_population_data(self):
         """
@@ -75,9 +75,9 @@ class ReadLogger:
                         )
                     )
 
-    def load_infected_data(self, n_processes):
+    def load_infected_data(self):
         self.infections_per_super_area, infections_world_list = [], []
-        for rank in range(n_processes):
+        for rank in range(self.n_processes):
             (
                 infections_per_super_area,
                 infections_world_df,
@@ -93,6 +93,7 @@ class ReadLogger:
         )
         self.start_date = min(self.infections_per_super_area[0].index)
         self.end_date = max(self.infections_per_super_area[0].index)
+        print('Finished loading infected data')
 
     def _load_infected_data_for_rank(self, rank: int):
         """
@@ -352,9 +353,9 @@ class ReadLogger:
             for random_id in random_ids
         ]
 
-    def load_infection_location(self, n_processes) -> pd.DataFrame:
+    def load_infection_location(self) -> pd.DataFrame:
         infection_locations = []
-        for rank in range(n_processes):
+        for rank in range(self.n_processes):
             infection_locations.append(
                 self._load_infection_location_for_rank(rank=rank)
             )
@@ -410,7 +411,7 @@ class ReadLogger:
         locations_df = locations_df[locations_df["location_id"] != 0]
         locations_df["location"] = locations_df.apply(
             lambda x: [
-                location_name.split("_")[:-1] for location_name in x.location_id
+                ''.join(location_name.split("_")[:-1]) for location_name in x.location_id
             ],
             axis=1,
         )
