@@ -59,7 +59,7 @@ class PolicyPlots:
     ):
 
         children = []
-        for person in world.people:
+        for person in self.world.people:
             try:
                 if person.primary_activity.group.spec == 'school' and person.age < 19:
                     children.append(person)
