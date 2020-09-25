@@ -39,11 +39,14 @@ def save_transmissions_to_hdf5(
         number of hdf5 chunks to use while saving
     """
     with h5py.File(hdf5_file_path, "a") as f:
-        f.create_group("transmissions")
+        if "infections" not in f:
+            f.create_group("infections")
+        f["infections"].create_group("transmissions")
+        transmissions_group = f["infections"]["transmissions"]
         n_transsmissions = len(transmissions)
-        f["transmissions"].attrs["n_transsmissions"] = n_transsmissions
+        transmissions_group.attrs["n_transsmissions"] = n_transsmissions
         transmission_type = transmissions[0].__class__.__name__
-        f["transmissions"].attrs["transmission_type"] = transmission_type
+        transmissions_group.attrs["transmission_type"] = transmission_type
         n_chunks = int(np.ceil(n_transsmissions / chunk_size))
         attributes_to_save = attributes_to_save_dict[transmission_type]
         for chunk in range(n_chunks):
@@ -64,7 +67,7 @@ def save_transmissions_to_hdf5(
                 )
             for attribute_name in attributes_to_save:
                 write_dataset(
-                    group=f["transmissions"],
+                    group=transmissions_group,
                     dataset_name=attribute_name,
                     data=attribute_dict[attribute_name],
                     index1=idx1,
@@ -85,7 +88,7 @@ def load_transmissions_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     """
     transmissions = []
     with h5py.File(hdf5_file_path, "r") as f:
-        transmissions_group = f["transmissions"]
+        transmissions_group = f["infections"]["transmissions"]
         n_transsmissions = transmissions_group.attrs["n_transsmissions"]
         transmission_type = transmissions_group.attrs["transmission_type"]
         transmission_class = str_to_class[transmission_type]
@@ -99,6 +102,8 @@ def load_transmissions_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                     attribute_value = read_dataset(
                         transmissions_group[attribute_name], idx1, idx2
                     )
+                    if attribute_value == np.nan:
+                        attribute_value = None
                     setattr(transmission, attribute_name, attribute_value)
                 transmissions.append(transmission)
     return transmissions
