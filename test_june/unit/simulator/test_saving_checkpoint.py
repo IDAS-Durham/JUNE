@@ -97,7 +97,7 @@ def run_simulator(selector):
         policies=policies,
     )
     seed = InfectionSeed(sim.world, selector)
-    seed.unleash_virus(sim.world.people, n_cases=20)
+    seed.unleash_virus(sim.world.people, n_cases=50)
     sim.run()
     return sim
 
@@ -111,6 +111,7 @@ class TestCheckpoints:
         assert len(sim.world.people.infected) > 0
         assert len(sim.world.people.recovered) > 0
         assert len(sim.world.people.susceptible) > 0
+        assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
         interaction = Interaction.from_file()
         policies = Policies([])
