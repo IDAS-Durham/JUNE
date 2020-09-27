@@ -245,10 +245,10 @@ def test__log_hospital_admissions(world, interaction, selector):
             assert read.run_summary.loc[key, "daily_hospital_admissions"] == len(
                 hospital_admissions[key]
             )
+    clean_world(world)
 
 
 def test__log_deaths(world, interaction, selector):
-    clean_world(world)
     sim = create_sim(world, interaction, selector, seed="dead")
     sim.timer.reset()
     counter = 0
@@ -273,3 +273,4 @@ def test__log_deaths(world, interaction, selector):
             assert read.run_summary.loc[key, "daily_deaths_by_residence"] == len(
                 deaths[key]
             )
+    clean_world(world)
