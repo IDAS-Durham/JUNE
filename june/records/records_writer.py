@@ -12,6 +12,7 @@ from june.records.event_records_writer import (
     InfectionRecord,
     HospitalAdmissionsRecord,
     ICUAdmissionsRecord,
+    DischargesRecord,
     DeathsRecord,
     RecoveriesRecord,
 )
@@ -30,7 +31,6 @@ class Record:
         self,
         record_path: str,
         filename: str,
-        locations_counts: dict = {"household": 1, "care_home": 1,},
         record_static_data=False,
     ):
         self.record_path = Path(record_path)
@@ -42,11 +42,11 @@ class Record:
         self.filename = filename
         self.file = tables.open_file(self.record_path / self.filename, mode="w")
         self.root = self.file.root
-        self.locations_counts = locations_counts
         self.events = {
             "infections": InfectionRecord(hdf5_file=self.file),
             "hospital_admissions": HospitalAdmissionsRecord(hdf5_file=self.file),
             "icu_admissions": ICUAdmissionsRecord(hdf5_file=self.file),
+            "discharges": DischargesRecord(hdf5_file=self.file),
             "deaths": DeathsRecord(hdf5_file=self.file),
             "recoveries": RecoveriesRecord(hdf5_file=self.file),
         }
@@ -75,25 +75,6 @@ class Record:
             }
 
         self.file.close()
-
-    @classmethod
-    def from_world(
-        cls, record_path: str, filename: str, world: "World", record_static_data=False
-    ):
-        all_super_groups = []
-        for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup) and attribute != "cities":
-                all_super_groups.append(attribute)
-        locations_counts = {}
-        for sg in all_super_groups:
-            super_group = getattr(world, sg)
-            locations_counts[super_group.group_spec] = len(super_group)
-        return cls(
-            record_path=record_path,
-            filename=filename,
-            locations_counts=locations_counts,
-            record_static_data=record_static_data,
-        )
 
     def static_data(self, world: "World"):
         self.file = tables.open_file(self.record_path / self.filename, mode="a")

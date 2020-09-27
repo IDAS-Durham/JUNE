@@ -80,6 +80,9 @@ class Person(dataobject):
 
     @property
     def recovered(self):
+        print('dead = ', self.dead)
+        print('susceptible = ', self.susceptible)
+        print('infected = ', self.infected)
         return not (self.dead or self.susceptible or self.infected)
 
     @property

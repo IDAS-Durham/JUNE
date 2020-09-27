@@ -165,10 +165,9 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record.from_world(
+    record = Record(
         record_path="results",
         filename="test.hdf5",
-        world=dummy_world,
         record_static_data=True,
     )
     record.static_data(world=dummy_world)
@@ -201,10 +200,9 @@ def test__static_people(dummy_world):
 
 
 def test__static_location(dummy_world):
-    record = Record.from_world(
+    record = Record(
         record_path="results",
         filename="test.hdf5",
-        world=dummy_world,
         record_static_data=True,
     )
     record.static_data(world=dummy_world)
@@ -236,10 +234,9 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record.from_world(
+    record = Record(
         record_path="results",
         filename="test.hdf5",
-        world=dummy_world,
         record_static_data=True,
     )
     record.static_data(world=dummy_world)
@@ -274,7 +271,6 @@ def test__sumarise_time_tep(dummy_world):
     record = Record(
         record_path="results",
         filename="test.hdf5",
-        locations_counts={"household": 1, "care_home": 1, "hospital": 1},
     )
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
