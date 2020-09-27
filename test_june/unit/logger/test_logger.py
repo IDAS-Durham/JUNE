@@ -230,16 +230,14 @@ def test__log_infected_in_timestep(world, interaction, selector):
         next(sim.timer)
 
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = list(f.keys())[0]
-        super_area = f[super_area]
-        keys = list(super_area[f"infection"].keys())
+        keys = list(f[f"infection"].keys())
         keys_datetime = [datetime.strptime(key, "%Y-%m-%dT%H:%M:%S.%f") for key in keys]
         keys_argsort = np.argsort(keys_datetime)
         keys = np.array(keys)[keys_argsort]
         for i, key in enumerate(keys):
             if len(infected_people[i]) == 0:
                 continue
-            ids_found = list(super_area[f"infection/{key}/id"][:])
+            ids_found = list(f[f"infection/{key}/id"][:])
             assert len(ids_found) == len(infected_people[i])
             assert ids_found == infected_people[i]
 
@@ -251,24 +249,13 @@ def test__log_infected(world, interaction, selector):
     test_dt_str = test_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
     test_ids = [7, 8, 9, 10, 11, 12]
     test_symptoms = [0, 0, 1, 1, 2, 3]
-    test_nsecondary = [10, 9, 8, 7, 6, 5]
-    test_super_area_infections = {
-        "dummy_super_area": {
-            "ids": test_ids,
-            "symptoms": test_symptoms,
-            "n_secondary_infections": test_nsecondary,
-        }
-    }
-    sim.logger.log_infected(test_datetime, test_super_area_infections)
+    sim.logger.log_infected(test_datetime, test_ids, test_symptoms)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = f["dummy_super_area"]
-        f_ids = super_area[f"infection/{test_dt_str}/id"][()]
-        f_symptoms = super_area[f"infection/{test_dt_str}/symptoms"][()]
-        f_nsecondary = super_area[f"infection/{test_dt_str}/n_secondary_infections"][()]
+        f_ids = f[f"infection/{test_dt_str}/id"][()]
+        f_symptoms = f[f"infection/{test_dt_str}/symptoms"][()]
 
     assert set(test_ids) == set(f_ids)
     assert set(test_symptoms) == set(f_symptoms)
-    assert set(test_nsecondary) == set(f_nsecondary)
 
 
 def test__log_infection_location(world, interaction, selector):
@@ -288,16 +275,17 @@ def test__log_infection_location(world, interaction, selector):
         i += 1
         next(sim.timer)
     with h5py.File(sim.logger.file_path, "r", libver="latest", swmr=True) as f:
-        super_area = sim.world.super_areas[0].name
-        locations = f[f"{super_area}/locations"]
-        keys = list(locations.keys())
-        for key in keys:
-            locations_found = list(locations[f"{key}/locations"][:])
+        locations = f[f"locations"]
+        for key in locations.keys():
+            locations_found = list(locations[key]['infection_location'][:])
             assert len(locations_found) == new_infected[key]
             for location_found in locations_found:
                 assert location_found == b"household_1992"
 
-    assert all(key in new_infected.keys() for key in keys)
+        for key in locations.keys():
+            assert key in new_infected.keys()
+        for key in new_infected.keys():
+            assert key in locations.keys()
 
 
 def test__log_meta_info(world, interaction, selector):

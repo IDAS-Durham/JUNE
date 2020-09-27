@@ -32,10 +32,6 @@ class Hospitalisation(MedicalCarePolicy):
     """
 
     def apply(self, person: Person, hospitals: Hospitals, record: Optional["Record"] = None):
-        if person.recovered:
-            if person.medical_facility is not None:
-                person.subgroups.medical_facility = None
-            return
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
             # note, we dont model hospital capacity here.
@@ -72,4 +68,14 @@ class Hospitalisation(MedicalCarePolicy):
                     person.subgroups.medical_facility = closest_hospital.subgroups[
                         closest_hospital.SubgroupType.icu_patients
                     ]
+        else: 
+            if person.medical_facility is not None:
+                if record is not None:
+                    record.accumulate(
+                        table_name='discharges',
+                        hospital_id=person.medical_facility.group.id,
+                        patient_id = person.id,
+                        )
+                person.subgroups.medical_facility = None
+            return
 

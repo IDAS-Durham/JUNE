@@ -92,13 +92,14 @@ class HospitalAdmissionsRecord(EventRecord):
         self.hospital_ids.append(hospital_id)
         self.patient_ids.append(patient_id)
 
-class HospitalDischargesRecord(EventRecord):
+
+class ICUAdmissionsRecord(EventRecord):
     def __init__(
         self, hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
-            table_name="hospital_discharges",
+            table_name="icu_admissions",
             int_names=["hospital_ids", "patient_ids"],
             float_names=[],
             str_names=[],
@@ -108,14 +109,13 @@ class HospitalDischargesRecord(EventRecord):
         self.hospital_ids.append(hospital_id)
         self.patient_ids.append(patient_id)
 
-
-class ICUAdmissionsRecord(EventRecord):
+class DischargesRecord(EventRecord):
     def __init__(
         self, hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
-            table_name="icu_admissions",
+            table_name="discharges",
             int_names=["hospital_ids", "patient_ids"],
             float_names=[],
             str_names=[],

@@ -162,7 +162,7 @@ def make_dummy_world(geog):
 
 
 def create_sim(world, interaction, selector, seed=False):
-    record = Record.from_world(record_path="results", filename="test.hdf5", world=world)
+    record = Record(record_path="results", filename="test.hdf5")
     policies = Policies(
         [Hospitalisation(start_time="1000-01-01", end_time="9999-01-01")]
     )
