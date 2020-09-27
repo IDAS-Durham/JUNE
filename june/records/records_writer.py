@@ -15,6 +15,7 @@ from june.records.event_records_writer import (
     DischargesRecord,
     DeathsRecord,
     RecoveriesRecord,
+    SymptomsRecord,
 )
 from june.records.static_records_writer import (
     PeopleRecord,
@@ -49,6 +50,7 @@ class Record:
             "discharges": DischargesRecord(hdf5_file=self.file),
             "deaths": DeathsRecord(hdf5_file=self.file),
             "recoveries": RecoveriesRecord(hdf5_file=self.file),
+            "symptoms": SymptomsRecord(hdf5_file=self.file),
         }
         with open(self.record_path / "summary.csv", "w", newline="") as summary_file:
             writer = csv.writer(summary_file)
@@ -73,7 +75,6 @@ class Record:
                 "super_areas": SuperAreaRecord(hdf5_file=self.file),
                 "regions": RegionRecord(hdf5_file=self.file),
             }
-
         self.file.close()
 
     def static_data(self, world: "World"):

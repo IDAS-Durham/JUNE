@@ -75,14 +75,20 @@ def test__writing_infections():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 10, 10)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate(table_name='infections',location_spec="care_home", location_id=0, infected_id=0)
     record.accumulate(
-            table_name='infections',
-        location_spec="care_home", location_id=0, infected_id=10
+        table_name="infections", location_spec="care_home", location_id=0, infected_id=0
     )
     record.accumulate(
-            table_name='infections',
-        location_spec="care_home", location_id=0, infected_id=20
+        table_name="infections",
+        location_spec="care_home",
+        location_id=0,
+        infected_id=10,
+    )
+    record.accumulate(
+        table_name="infections",
+        location_spec="care_home",
+        location_id=0,
+        infected_id=20,
     )
     record.events["infections"].record(hdf5_file=record.file, timestamp=timestamp)
     table = record.file.root.infections
@@ -103,7 +109,7 @@ def test__writing_hospital_admissions():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate(table_name='hospital_admissions',hospital_id=0, patient_id=10)
+    record.accumulate(table_name="hospital_admissions", hospital_id=0, patient_id=10)
     record.events["hospital_admissions"].record(
         hdf5_file=record.file, timestamp=timestamp
     )
@@ -115,7 +121,8 @@ def test__writing_hospital_admissions():
     assert df.hospital_ids.iloc[0] == 0
     assert df.patient_ids.iloc[0] == 10
 
-'''
+
+"""
 def test__writing_hospital_discharges():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
@@ -131,13 +138,14 @@ def test__writing_hospital_discharges():
     assert df.timestamp.iloc[0].decode() == "2020-04-04"
     assert df.hospital_ids.iloc[0] == 0
     assert df.patient_ids.iloc[0] == 10
-'''
+"""
+
 
 def test__writing_intensive_care_admissions():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate(table_name='icu_admissions',hospital_id=0, patient_id=10)
+    record.accumulate(table_name="icu_admissions", hospital_id=0, patient_id=10)
     record.events["icu_admissions"].record(hdf5_file=record.file, timestamp=timestamp)
     table = record.file.root.icu_admissions
     df = pd.DataFrame.from_records(table.read())
@@ -152,7 +160,9 @@ def test__writing_death():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate(table_name='deaths',location_spec="household", location_id=0, dead_person_id=10)
+    record.accumulate(
+        table_name="deaths", location_spec="household", location_id=0, dead_person_id=10
+    )
     record.events["deaths"].record(hdf5_file=record.file, timestamp=timestamp)
     table = record.file.root.deaths
     df = pd.DataFrame.from_records(table.read())
@@ -166,9 +176,7 @@ def test__writing_death():
 
 def test__static_people(dummy_world):
     record = Record(
-        record_path="results",
-        filename="test.hdf5",
-        record_static_data=True,
+        record_path="results", filename="test.hdf5", record_static_data=True,
     )
     record.static_data(world=dummy_world)
     record.file = open_file(record.record_path / record.filename, mode="a")
@@ -201,9 +209,7 @@ def test__static_people(dummy_world):
 
 def test__static_location(dummy_world):
     record = Record(
-        record_path="results",
-        filename="test.hdf5",
-        record_static_data=True,
+        record_path="results", filename="test.hdf5", record_static_data=True,
     )
     record.static_data(world=dummy_world)
     record.file = open_file(record.record_path / record.filename, mode="a")
@@ -235,9 +241,7 @@ def test__static_location(dummy_world):
 
 def test__static_geography(dummy_world):
     record = Record(
-        record_path="results",
-        filename="test.hdf5",
-        record_static_data=True,
+        record_path="results", filename="test.hdf5", record_static_data=True,
     )
     record.static_data(world=dummy_world)
     record.file = open_file(record.record_path / record.filename, mode="a")
@@ -268,49 +272,48 @@ def test__static_geography(dummy_world):
 
 def test__sumarise_time_tep(dummy_world):
     dummy_world.people = Population(dummy_world.people)
-    record = Record(
-        record_path="results",
-        filename="test.hdf5",
-    )
+    record = Record(record_path="results", filename="test.hdf5",)
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate(
-        table_name='infections',
+        table_name="infections",
         location_spec="care_home",
         location_id=dummy_world.care_homes[0].id,
         infected_id=2,
     )
     record.accumulate(
-        table_name='infections',
+        table_name="infections",
         location_spec="household",
         location_id=dummy_world.households[0].id,
         infected_id=0,
     )
     record.accumulate(
-        table_name='hospital_admissions',
-        hospital_id=dummy_world.hospitals[0].id, patient_id=1
+        table_name="hospital_admissions",
+        hospital_id=dummy_world.hospitals[0].id,
+        patient_id=1,
     )
     record.accumulate(
-        table_name='icu_admissions',
-        hospital_id=dummy_world.hospitals[0].id, patient_id=1
+        table_name="icu_admissions",
+        hospital_id=dummy_world.hospitals[0].id,
+        patient_id=1,
     )
     record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
     timestamp = datetime.datetime(2020, 4, 5)
     record.accumulate(
-        table_name='deaths',
+        table_name="deaths",
         location_spec="care_home",
         location_id=dummy_world.care_homes[0].id,
         dead_person_id=2,
     )
     record.accumulate(
-            table_name='deaths',
+        table_name="deaths",
         location_spec="household",
         location_id=dummy_world.households[0].id,
         dead_person_id=0,
     )
     record.accumulate(
-            table_name='deaths',
+        table_name="deaths",
         location_spec="hospital",
         location_id=dummy_world.hospitals[0].id,
         dead_person_id=1,

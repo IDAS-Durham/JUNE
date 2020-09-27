@@ -58,7 +58,7 @@ class Simulator:
         self.infection_selector = infection_selector
         self.infection_seed = infection_seed
         self.timer = timer
-        #self.comment = comment
+        # self.comment = comment
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
@@ -286,9 +286,10 @@ class Simulator:
             else:
                 death_location = person.residence.group
             self.record.accumulate(
-                    table_name='deaths',
-                    location_spec=death_location.spec, location_id=death_location.id, 
-                    dead_person_id=person.id, 
+                table_name="deaths",
+                location_spec=death_location.spec,
+                location_id=death_location.id,
+                dead_person_id=person.id,
             )
         person.dead = True
         person.infection = None
@@ -314,7 +315,9 @@ class Simulator:
         """
         person.infection = None
         if self.record is not None:
-            self.record.accumulate(table_name='recoveries',recovered_person_id=person.id)
+            self.record.accumulate(
+                table_name="recoveries", recovered_person_id=person.id
+            )
 
     def update_health_status(self, time: float, duration: float):
         """
@@ -337,6 +340,12 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
+            if previous_tag != person.infection.tag:
+                self.record.accumulate(
+                    table_name="symptoms",
+                    infected_id=person.id,
+                    symptoms=person.infection.tag.value,
+                )
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person,
@@ -355,10 +364,10 @@ class Simulator:
                 person = self.world.people.get_from_id(inf_id)
                 if self.record is not None:
                     self.record.accumulate(
-                            table_name='infections',
-                            location_spec=''.join(inf_loc.split('_')[:-1]),
-                            location_id=int(inf_loc.split('_')[-1]),
-                            infected_id=person.id
+                        table_name="infections",
+                        location_spec="".join(inf_loc.split("_")[:-1]),
+                        location_id=int(inf_loc.split("_")[-1]),
+                        infected_id=person.id,
                     )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
@@ -422,11 +431,11 @@ class Simulator:
             person = self.world.people.get_from_id(infection_data[0])
             if self.record is not None:
                 self.record.accumulate(
-                            table_name='infections',
-                            location_spec=''.join(location_data[1].split('_')[:-1]),
-                            location_id=location_data[1].split('_')[-1],
-                            infected_id=person.id
-                    )
+                    table_name="infections",
+                    location_spec="".join(location_data[1].split("_")[:-1]),
+                    location_id=location_data[1].split("_")[-1],
+                    infected_id=person.id,
+                )
 
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
