@@ -37,13 +37,13 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area", "trust_code" 
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "area", "trust_code" 
 
     def __init__(
         self,
         n_beds: int,
         n_icu_beds: int,
-        super_area: str = None,
+        area: str = None,
         coordinates: Optional[Tuple[float, float]] = None,
         trust_code: str = None,
     ):
@@ -56,17 +56,21 @@ class Hospital(Group):
             total number of regular beds in the hospital
         n_icu_beds:
             total number of ICU beds in the hospital
-        super_area:
+        area:
             name of the super area the hospital belongs to
         coordinates:
             latitude and longitude 
         """
         super().__init__()
-        self.super_area = super_area
+        self.area = area 
         self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.trust_code = trust_code
+
+    @property
+    def super_area(self):
+        return self.area.super_area
 
     @property
     def full(self):

@@ -8,7 +8,7 @@ import h5py
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.geography import Geography, Areas, SuperAreas, Cities, City, Station, Stations
+from june.geography import Geography, Areas, SuperAreas, Regions,Cities, City, Station, Stations
 from june.groups.travel import (
     ModeOfTransport,
     CityTransport,
@@ -176,7 +176,7 @@ def make_dummy_world():
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area,
+        area=area,
         coordinates=super_area.coordinates,
     )
     super_area.closest_hospitals = [hospital]
@@ -216,6 +216,7 @@ def make_dummy_world():
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
+    world.regions = Regions([super_area.region])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
     world.cinemas = Cinemas([cinema])
