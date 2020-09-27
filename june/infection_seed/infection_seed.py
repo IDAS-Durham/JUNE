@@ -97,7 +97,8 @@ class InfectionSeed:
                     person = self.world.people.get_from_id(inf_id)
                     self.infection_selector.infect_person_at_time(person, 0.0)
                     if record is not None:
-                        record.accumulate_infection(
+                        record.accumulate(
+                            table_name='infections',
                             location_spec="infection_seed",
                             location_id=0,
                             infected_id=person.id,
@@ -111,7 +112,8 @@ class InfectionSeed:
                     person_to_infect = self.world.people.get_from_id(inf_id)
                 self.infection_selector.infect_person_at_time(person_to_infect, 0.0)
                 if record is not None:
-                    record.accumulate_infection(
+                    record.accumulate(
+                        table_name='infections',
                         location_spec="infection_seed",
                         location_id=0,
                         infected_id=person_to_infect.id,

@@ -15,7 +15,7 @@ from june.geography.geography import (
     SuperArea,
     Region,
 )
-from june.groups import Supergroup 
+from june.groups import Supergroup
 from june import World
 
 
@@ -70,20 +70,27 @@ def create_dummy_world():
     world.people[2].subgroups.residence = care_homes[0].subgroups[0]
     return world
 
+
 def test__writing_infections():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 10, 10)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate_infection(location_spec="care_home", location_id=0,infected_id=0)
-    record.accumulate_infection(location_spec="care_home", location_id=0,infected_id=10)
-    record.accumulate_infection(location_spec="care_home", location_id=0,infected_id=20)
+    record.accumulate(table_name='infections',location_spec="care_home", location_id=0, infected_id=0)
+    record.accumulate(
+            table_name='infections',
+        location_spec="care_home", location_id=0, infected_id=10
+    )
+    record.accumulate(
+            table_name='infections',
+        location_spec="care_home", location_id=0, infected_id=20
+    )
     record.events["infections"].record(hdf5_file=record.file, timestamp=timestamp)
     table = record.file.root.infections
     df = pd.DataFrame.from_records(table.read())
     record.file.close()
     assert len(df) == 3
     assert df.timestamp.unique()[0].decode() == "2020-10-10"
-    assert df.location_ids.unique() == [0] 
+    assert df.location_ids.unique() == [0]
     assert df.location_specs.unique() == [b"care_home"]
     assert len(df.infected_ids) == 3
     assert df.infected_ids[0] == 0
@@ -96,7 +103,7 @@ def test__writing_hospital_admissions():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate_hospitalisation(hospital_id=0, patient_id=10)
+    record.accumulate(table_name='hospital_admissions',hospital_id=0, patient_id=10)
     record.events["hospital_admissions"].record(
         hdf5_file=record.file, timestamp=timestamp
     )
@@ -108,11 +115,29 @@ def test__writing_hospital_admissions():
     assert df.hospital_ids.iloc[0] == 0
     assert df.patient_ids.iloc[0] == 10
 
+'''
+def test__writing_hospital_discharges():
+    record = Record(record_path="results", filename="test.hdf5")
+    timestamp = datetime.datetime(2020, 4, 4)
+    record.file = open_file(record.record_path / record.filename, mode="a")
+    record.accumulate_hospital_discharge(hospital_id=0, patient_id=10)
+    record.events["hospital_discharges"].record(
+        hdf5_file=record.file, timestamp=timestamp
+    )
+    table = record.file.root.hospital_admissions
+    df = pd.DataFrame.from_records(table.read())
+    record.file.close()
+    assert len(df) == 1
+    assert df.timestamp.iloc[0].decode() == "2020-04-04"
+    assert df.hospital_ids.iloc[0] == 0
+    assert df.patient_ids.iloc[0] == 10
+'''
+
 def test__writing_intensive_care_admissions():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate_hospitalisation(hospital_id=0, patient_id=10, intensive_care=True)
+    record.accumulate(table_name='icu_admissions',hospital_id=0, patient_id=10)
     record.events["icu_admissions"].record(hdf5_file=record.file, timestamp=timestamp)
     table = record.file.root.icu_admissions
     df = pd.DataFrame.from_records(table.read())
@@ -127,16 +152,17 @@ def test__writing_death():
     record = Record(record_path="results", filename="test.hdf5")
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate_death(location_spec="household", location_id=3,dead_person_id=10)
+    record.accumulate(table_name='deaths',location_spec="household", location_id=0, dead_person_id=10)
     record.events["deaths"].record(hdf5_file=record.file, timestamp=timestamp)
     table = record.file.root.deaths
     df = pd.DataFrame.from_records(table.read())
     record.file.close()
     assert len(df) == 1
     assert df.timestamp.iloc[0].decode() == "2020-04-04"
-    assert df.location_specs.iloc[0].decode() == 'household' 
-    assert df.location_ids.iloc[0] == 3
+    assert df.location_specs.iloc[0].decode() == "household"
+    assert df.location_ids.iloc[0] == 0
     assert df.dead_person_ids.iloc[0] == 10
+
 
 def test__static_people(dummy_world):
     record = Record.from_world(
@@ -150,7 +176,7 @@ def test__static_people(dummy_world):
     table = record.file.root.population
     df = pd.DataFrame.from_records(table.read(), index="id")
     record.file.close()
-    str_cols = record.statics['people'].str_names
+    str_cols = record.statics["people"].str_names
     for col in str_cols:
         df[col] = df[col].str.decode("utf-8")
     assert df.loc[0, "age"] == 0
@@ -159,14 +185,14 @@ def test__static_people(dummy_world):
     assert df.loc[0, "socioeconomic_index"] == 0
     assert df.loc[1, "socioeconomic_index"] == 1
     assert df.loc[2, "socioeconomic_index"] == 2
-    assert df.loc[0, "primary_activity_type"] == 'hospital'
+    assert df.loc[0, "primary_activity_type"] == "hospital"
     assert df.loc[0, "primary_activity_id"] == dummy_world.hospitals[0].id
-    assert df.loc[1, 'primary_activity_type'] == 'None'
-    assert df.loc[1, 'primary_activity_id'] == 0 
-    assert df.loc[1, 'residence_type'] == 'household'
-    assert df.loc[1, 'residence_id'] == dummy_world.households[0].id
-    assert df.loc[2, 'residence_type'] == 'care_home'
-    assert df.loc[2, 'residence_id'] == dummy_world.care_homes[0].id
+    assert df.loc[1, "primary_activity_type"] == "None"
+    assert df.loc[1, "primary_activity_id"] == 0
+    assert df.loc[1, "residence_type"] == "household"
+    assert df.loc[1, "residence_id"] == dummy_world.households[0].id
+    assert df.loc[2, "residence_type"] == "care_home"
+    assert df.loc[2, "residence_id"] == dummy_world.care_homes[0].id
     assert df.loc[0, "ethnicity"] == "A"
     assert df.loc[1, "ethnicity"] == "B"
     assert df.loc[2, "ethnicity"] == "C"
@@ -194,12 +220,14 @@ def test__static_location(dummy_world):
                 group_ids.append(group.id)
 
     for index, row in df.iterrows():
-        assert row["spec"].decode() == location_types[index] 
+        assert row["spec"].decode() == location_types[index]
         assert (
-            getattr(dummy_world, location_types[index] + "s")[group_ids[index]].area.id
+            getattr(dummy_world, location_types[index] + "s")
+            .get_from_id(group_ids[index])
+            .area.id
             == row["area_id"]
         )
-        assert group_ids[index] == row['group_id']
+        assert group_ids[index] == row["group_id"]
         if index == 2:
             assert dummy_world.areas.get_from_id(row["area_id"]).name == "area_6"
     assert len(df) == len(dummy_world.households) + len(dummy_world.care_homes) + len(
@@ -240,6 +268,7 @@ def test__static_geography(dummy_world):
             ].decode()
         )
 
+
 def test__sumarise_time_tep(dummy_world):
     dummy_world.people = Population(dummy_world.people)
     record = Record(
@@ -249,16 +278,47 @@ def test__sumarise_time_tep(dummy_world):
     )
     timestamp = datetime.datetime(2020, 4, 4)
     record.file = open_file(record.record_path / record.filename, mode="a")
-    record.accumulate_infection(location_spec="care_home", location_id=0,infected_id=2)
-    record.accumulate_infection(location_spec="household", location_id=0,infected_id=0)
-    record.accumulate_hospitalisation(hospital_id=0, patient_id=1)
-    record.accumulate_hospitalisation(hospital_id=0, patient_id=1, intensive_care=True)
+    record.accumulate(
+        table_name='infections',
+        location_spec="care_home",
+        location_id=dummy_world.care_homes[0].id,
+        infected_id=2,
+    )
+    record.accumulate(
+        table_name='infections',
+        location_spec="household",
+        location_id=dummy_world.households[0].id,
+        infected_id=0,
+    )
+    record.accumulate(
+        table_name='hospital_admissions',
+        hospital_id=dummy_world.hospitals[0].id, patient_id=1
+    )
+    record.accumulate(
+        table_name='icu_admissions',
+        hospital_id=dummy_world.hospitals[0].id, patient_id=1
+    )
     record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
     timestamp = datetime.datetime(2020, 4, 5)
-    record.accumulate_death(location_spec="care_home", location_id=0, dead_person_id=2)
-    record.accumulate_death(location_spec="household", location_id=0,dead_person_id=0)
-    record.accumulate_death(location_spec="hospital", location_id=0, dead_person_id=1)
+    record.accumulate(
+        table_name='deaths',
+        location_spec="care_home",
+        location_id=dummy_world.care_homes[0].id,
+        dead_person_id=2,
+    )
+    record.accumulate(
+            table_name='deaths',
+        location_spec="household",
+        location_id=dummy_world.households[0].id,
+        dead_person_id=0,
+    )
+    record.accumulate(
+            table_name='deaths',
+        location_spec="hospital",
+        location_id=dummy_world.hospitals[0].id,
+        dead_person_id=1,
+    )
     record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
     record.file.close()
@@ -282,4 +342,3 @@ def test__sumarise_time_tep(dummy_world):
 
     assert region_1.loc["2020-04-05"]["daily_care_home_deaths"] == 1
     assert region_2.loc["2020-04-05"]["daily_hospital_deaths"] == 1
-

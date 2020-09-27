@@ -101,33 +101,9 @@ class Record:
             self.statics[static_name].record(hdf5_file=self.file, world=world)
         self.file.close()
 
-    def accumulate_infection(self, location_spec, location_id, infected_id):
-        self.events["infections"].accumulate(
-            location_spec=location_spec,
-            location_id=location_id,
-            infected_id=infected_id,
-        )
-
-    def accumulate_hospitalisation(self, hospital_id, patient_id, intensive_care=False):
-        if intensive_care:
-            self.events["icu_admissions"].accumulate(
-                hospital_id=hospital_id, patient_id=patient_id
-            )
-        else:
-            self.events["hospital_admissions"].accumulate(
-                hospital_id=hospital_id, patient_id=patient_id
-            )
-
-    def accumulate_death(self, location_spec, location_id, dead_person_id):
-        self.events["deaths"].accumulate(
-            location_spec=location_spec,
-            location_id=location_id,
-            dead_person_id=dead_person_id,
-        )
-
-    def accumulate_recoveries(self, recovered_person_id):
-        self.events["recoveries"].accumulate(recovered_person_id=recovered_person_id,)
-
+    def accumulate(self, table_name: str, **kwargs):
+        self.events[table_name].accumulate(**kwargs)
+        
     def time_step(self, timestamp: str):
         self.file = tables.open_file(self.record_path / self.filename, mode="a")
         for event_name in self.events.keys():
@@ -135,7 +111,6 @@ class Record:
         self.file.close()
 
     def summarise_hospitalisations(self, timestamp: str, world: "World"):
-        print("hospital ids = ", self.events["hospital_admissions"].hospital_ids)
         hospitalised_per_region = Counter(
             [
                 world.hospitals.get_from_id(hospital_id).super_area.region.name
@@ -176,15 +151,15 @@ class Record:
         ):
             if location_type == "care_home":
                 care_home_deaths_regions.append(
-                    world.care_homes[location_id].super_area.region.name
+                    world.care_homes.get_from_id(location_id).super_area.region.name
                 )
             elif location_type == "household":
                 household_deaths_regions.append(
-                    world.households[location_id].super_area.region.name
+                    world.households.get_from_id(location_id).super_area.region.name
                 )
             elif location_type == "hospital":
                 hospital_deaths_regions.append(
-                    world.hospitals[location_id].super_area.region.name
+                    world.hospitals.get_from_id(location_id).super_area.region.name
                 )
         hospital_deaths_per_region = Counter(hospital_deaths_regions)
         care_home_deaths_per_region = Counter(care_home_deaths_regions)

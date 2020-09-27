@@ -285,7 +285,8 @@ class Simulator:
                 death_location = person.medical_facility.group
             else:
                 death_location = person.residence.group
-            self.record.accumulate_death(
+            self.record.accumulate(
+                    table_name='deaths',
                     location_spec=death_location.spec, location_id=death_location.id, 
                     dead_person_id=person.id, 
             )
@@ -313,7 +314,7 @@ class Simulator:
         """
         person.infection = None
         if self.record is not None:
-            self.record.accumulate_recoveries(recovered_person_id=person.id)
+            self.record.accumulate(table_name='recoveries',recovered_person_id=person.id)
 
     def update_health_status(self, time: float, duration: float):
         """
@@ -353,7 +354,8 @@ class Simulator:
             if inf_id in self.world.people.people_dict:
                 person = self.world.people.get_from_id(inf_id)
                 if self.record is not None:
-                    self.record.accumulate_infection(
+                    self.record.accumulate(
+                            table_name='infections',
                             location_spec=''.join(inf_loc.split('_')[:-1]),
                             location_id=int(inf_loc.split('_')[-1]),
                             infected_id=person.id
@@ -419,7 +421,8 @@ class Simulator:
         for infection_data in people_to_infect:
             person = self.world.people.get_from_id(infection_data[0])
             if self.record is not None:
-                self.record.accumulate_infection(
+                self.record.accumulate(
+                            table_name='infections',
                             location_spec=''.join(location_data[1].split('_')[:-1]),
                             location_id=location_data[1].split('_')[-1],
                             infected_id=person.id
