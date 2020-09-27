@@ -22,10 +22,7 @@ from june.infection import SymptomTag
 from june.interaction import Interaction
 from june.infection.infection_selector import InfectionSelector
 from june.infection_seed import InfectionSeed
-from june.policy import (
-    Policies,
-    Hospitalisation
-)
+from june.policy import Policies, Hospitalisation
 from june.simulator import Simulator
 from june.world import World
 from june.records import Record, RecordReader
@@ -39,6 +36,7 @@ def clean_world(world):
     for person in world.people:
         person.infection = None
         person.susceptibility = 1.0
+
 
 class MockHealthIndexGenerator:
     def __init__(self, desired_symptoms):
@@ -66,6 +64,7 @@ def infect_hospitalised_person(person):
     )
     selector = make_selector(desired_symptoms=max_symptom_tag)
     selector.infect_person_at_time(person, 0.0)
+
 
 def infect_dead_person(person):
     max_symptom_tag = random.choice(
@@ -108,7 +107,6 @@ def make_dummy_world(geog):
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
 
     household1 = Household()
-    household1.id = 1992
     household1.area = super_area.areas[0]
     hospital = Hospital(
         n_beds=40,
@@ -166,14 +164,15 @@ def make_dummy_world(geog):
 def create_sim(world, interaction, selector, seed=False):
     record = Record.from_world(record_path="results", filename="test.hdf5", world=world)
     policies = Policies(
-            [Hospitalisation(start_time='1000-01-01',
-                end_time='9999-01-01')]
+        [Hospitalisation(start_time="1000-01-01", end_time="9999-01-01")]
     )
     infection_seed = InfectionSeed(world=world, infection_selector=selector)
     if not seed:
         n_cases = 2
-        infection_seed.unleash_virus(population=world.people, n_cases=n_cases, record=record)
-    elif seed == 'hospitalised':
+        infection_seed.unleash_virus(
+            population=world.people, n_cases=n_cases, record=record
+        )
+    elif seed == "hospitalised":
         for person in world.people:
             infect_hospitalised_person(person)
     else:
@@ -212,14 +211,17 @@ def test__log_infected_by_region(world, interaction, selector):
         counter += 1
         already_infected += current_infected
     read = RecordReader(results_path=sim.record.record_path)
-    assert read.run_summary.iloc[0]['daily_infections_by_residence'] == 2 # seed
+    assert read.run_summary.iloc[0]["daily_infections_by_residence"] == 2  # seed
     for key in list(new_infected.keys())[1:]:
         if new_infected[key]:
-            assert read.run_summary.loc[key, 'daily_infections_by_residence'] == len(new_infected[key])
+            assert read.run_summary.loc[key, "daily_infections_by_residence"] == len(
+                new_infected[key]
+            )
+
 
 def test__log_hospital_admissions(world, interaction, selector):
     clean_world(world)
-    sim = create_sim(world, interaction, selector, seed='hospitalised')
+    sim = create_sim(world, interaction, selector, seed="hospitalised")
     sim.timer.reset()
     counter = 0
     saved_ids = []
@@ -240,11 +242,14 @@ def test__log_hospital_admissions(world, interaction, selector):
     read = RecordReader(results_path=sim.record.record_path)
     for key in list(hospital_admissions.keys()):
         if hospital_admissions[key]:
-            assert read.run_summary.loc[key, 'daily_hospital_admissions'] == len(hospital_admissions[key])
+            assert read.run_summary.loc[key, "daily_hospital_admissions"] == len(
+                hospital_admissions[key]
+            )
+
 
 def test__log_deaths(world, interaction, selector):
     clean_world(world)
-    sim = create_sim(world, interaction, selector, seed='dead')
+    sim = create_sim(world, interaction, selector, seed="dead")
     sim.timer.reset()
     counter = 0
     saved_ids = []
@@ -257,7 +262,7 @@ def test__log_deaths(world, interaction, selector):
             if person.dead and person.id not in saved_ids:
                 daily_deaths_ids.append(person.id)
                 saved_ids.append(person.id)
-        deaths[timer] = daily_deaths_ids 
+        deaths[timer] = daily_deaths_ids
         sim.record.summarise_time_step(timestamp=sim.timer.date, world=sim.world)
         sim.record.time_step(timestamp=sim.timer.date)
         next(sim.timer)
@@ -265,5 +270,6 @@ def test__log_deaths(world, interaction, selector):
     read = RecordReader(results_path=sim.record.record_path)
     for key in list(deaths.keys()):
         if deaths[key]:
-            assert read.run_summary.loc[key, 'daily_deaths_by_residence'] == len(deaths[key])
-
+            assert read.run_summary.loc[key, "daily_deaths_by_residence"] == len(
+                deaths[key]
+            )

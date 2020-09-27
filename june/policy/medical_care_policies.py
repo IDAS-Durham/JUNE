@@ -41,11 +41,15 @@ class Hospitalisation(MedicalCarePolicy):
             # note, we dont model hospital capacity here.
             closest_hospital = person.super_area.closest_hospitals[0]
             if record is not None and person.medical_facility is None:
-                record.accumulate_hospitalisation(
+                if symptoms_tag == SymptomTag.intensive_care:
+                    table_name = 'icu_admissions'
+                else:
+                    table_name = 'hospital_admissions'
+                record.accumulate(
+                        table_name=table_name,
                         hospital_id=closest_hospital.id,
                         patient_id = person.id,
-                        intensive_care = symptoms_tag == SymptomTag.intensive_care
-                )
+                        )
             if symptoms_tag == SymptomTag.hospitalised:
                 if closest_hospital.external:
                     # not in this domain, we need to send it over
