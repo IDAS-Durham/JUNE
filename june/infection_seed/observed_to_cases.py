@@ -497,8 +497,8 @@ class Observed2Cases:
         symptoms_trajectories: List["TrajectoryMaker"],
         avg_rate_for_symptoms: List["float"],
         symptoms_tags: List[str],
-    )->float:
-        '''
+    ) -> float:
+        """
         Get the time it takes to get certain symptoms weighted by population. For instance, 
         when computing the death rate, more people die in hospital than in icu, 
         therefore the median time to die in hospital gets weighted more than the median time 
@@ -518,7 +518,7 @@ class Observed2Cases:
         -------
         Weighted median time to symptoms
 
-        '''
+        """
         times_to_symptoms = self.get_time_it_takes_to_symptoms(
             symptoms_trajectories, symptoms_tags=symptoms_tags
         )
@@ -526,14 +526,14 @@ class Observed2Cases:
             avg_rate_for_symptoms
         )
 
-    def get_regional_latent_cases(self,)->pd.DataFrame:
-        '''
+    def get_regional_latent_cases(self,) -> pd.DataFrame:
+        """
         Find regional latent cases from the observed one.
 
         Returns
         -------
         data frame with latent cases per region indexed by date
-        '''
+        """
         symptoms_tags = ("dead_hospital", "dead_icu")
         symtpoms_rates = self.get_symptoms_rates_per_age_sex()
         avg_hospital_death_rate = self.weight_rates_by_age_sex_per_region(
@@ -555,4 +555,4 @@ class Observed2Cases:
         )
         return self.get_latent_cases_per_region(
             self.n_observed_deaths, median_time_to_death, avg_hospital_death_rate
-            )
+        )

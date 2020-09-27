@@ -20,7 +20,6 @@ from june.interaction import Interaction, InteractiveGroup
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
-from june.logger import Logger
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from time import perf_counter
 from time import time as wall_clock
@@ -41,8 +40,8 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        logger: Logger = None,
-        comment: str = None,
+        # comment: str = None, #TODO: what do we do with comment!!
+        record: Optional["Record"] = None,
         checkpoint_dates: List[datetime.date] = None,
     ):
         """
@@ -59,12 +58,12 @@ class Simulator:
         self.infection_selector = infection_selector
         self.infection_seed = infection_seed
         self.timer = timer
-        self.comment = comment
+        #self.comment = comment
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
             self.checkpoint_dates = checkpoint_dates
-        self.logger = logger
+        self.record = record
 
     @classmethod
     def from_file(
@@ -77,8 +76,8 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        logger: Logger = None,
-        comment: str = None,
+        # comment: str = None,
+        record: Optional["Record"] = None,
     ) -> "Simulator":
 
         """
@@ -161,8 +160,8 @@ class Simulator:
             activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            logger=logger,
-            comment=comment,
+            # comment=comment,
+            record=record,
             checkpoint_dates=checkpoint_dates,
         )
 
@@ -177,7 +176,7 @@ class Simulator:
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         config_filename: str = default_config_filename,
-        logger: Logger = None,
+        record: Optional["Record"] = None,
     ):
         """
         Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
@@ -193,7 +192,7 @@ class Simulator:
             infection_seed=infection_seed,
             leisure=leisure,
             config_filename=config_filename,
-            logger=logger,
+            record=record,
         )
         with open(checkpoint_path, "rb") as f:
             checkpoint_data = pickle.load(f)
@@ -270,8 +269,7 @@ class Simulator:
         except AssertionError:
             raise SimulatorError("Config file contains unsupported activity name.")
 
-    @staticmethod
-    def bury_the_dead(world: World, person: "Person"):
+    def bury_the_dead(self, world: World, person: "Person"):
         """
         When someone dies, send them to cemetery. 
         ZOMBIE ALERT!! 
@@ -282,6 +280,15 @@ class Simulator:
         person:
             person to send to cemetery
         """
+        if self.record is not None:
+            if person.medical_facility is not None:
+                death_location = person.medical_facility.group
+            else:
+                death_location = person.residence.group
+            self.record.accumulate_death(
+                    location_spec=death_location.spec, location_id=death_location.id, 
+                    dead_person_id=person.id, 
+            )
         person.dead = True
         person.infection = None
         cemetery = world.cemeteries.get_nearest(person)
@@ -293,8 +300,7 @@ class Simulator:
             )
         person.subgroups = Activities(None, None, None, None, None, None, None)
 
-    @staticmethod
-    def recover(person: "Person"):
+    def recover(self, person: "Person"):
         """
         When someone recovers, erase the health information they carry and change their susceptibility.
 
@@ -306,6 +312,8 @@ class Simulator:
             time (in days), at which the person recovers
         """
         person.infection = None
+        if self.record is not None:
+            self.record.accumulate_recoveries(recovered_person_id=person.id)
 
     def update_health_status(self, time: float, duration: float):
         """
@@ -320,10 +328,6 @@ class Simulator:
         duration:
             duration of time step
         """
-        super_area_infections = {
-            super_area.name: {"ids": [], "symptoms": [], "n_secondary_infections": []}
-            for super_area in self.world.super_areas
-        }
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
@@ -332,32 +336,27 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
-            super_area_dict = super_area_infections[person.area.super_area.name]
-            super_area_dict["ids"].append(person.id)
-            super_area_dict["symptoms"].append(person.infection.tag.value)
-            super_area_dict["n_secondary_infections"].append(
-                person.infection.number_of_infected
-            )
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
-                person=person, medical_facilities=self.world.hospitals
+                person=person,
+                medical_facilities=self.world.hospitals,
+                record=self.record,
             )
             if new_status == "recovered":
                 self.recover(person)
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
-        if self.logger is not None:
-            self.logger.log_infected(self.timer.date, super_area_infections)
 
     def infect_people(self, infected_ids, people_from_abroad_dict, infection_locations):
         foreign_ids, foreign_infection_locations = [], []
         for inf_id, inf_loc in zip(infected_ids, infection_locations):
             if inf_id in self.world.people.people_dict:
                 person = self.world.people.get_from_id(inf_id)
-                if self.logger is not None:
-                    self.logger.accumulate_infection_location(
-                        location=inf_loc,
-                        super_areas_infected=person.area.super_area.name,
+                if self.record is not None:
+                    self.record.accumulate_infection(
+                            location_spec=''.join(inf_loc.split('_')[:-1]),
+                            location_id=int(inf_loc.split('_')[-1]),
+                            infected_id=person.id
                     )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
@@ -419,11 +418,13 @@ class Simulator:
         )
         for infection_data in people_to_infect:
             person = self.world.people.get_from_id(infection_data[0])
-            if self.logger is not None:
-                self.logger.accumulate_infection_location(
-                    location=infection_data[1],
-                    super_areas_infected=person.area.super_area.name,
-                )
+            if self.record is not None:
+                self.record.accumulate_infection(
+                            location_spec=''.join(location_data[1].split('_')[:-1]),
+                            location_id=location_data[1].split('_')[-1],
+                            infected_id=person.id
+                    )
+
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
     def do_timestep(self):
@@ -533,10 +534,9 @@ class Simulator:
             )
         # update the health status of the population
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
-        if self.logger:
-            self.logger.log_infection_location(self.timer.date)
-            # if self.world.hospitals is not None:
-            #    self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        if self.record is not None:
+            self.record.summarise_time_step(timestamp=self.timer.date, world=self.world)
+            self.record.time_step(timestamp=self.timer.date)
         # remove everyone from their active groups
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
@@ -552,19 +552,6 @@ class Simulator:
             f"Starting simulation for {self.timer.total_days} days at day {self.timer.day}, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        if self.logger:
-            self.logger.log_parameters(
-                interaction=self.interaction,
-                infection_seed=self.infection_seed,
-                infection_selector=self.infection_selector,
-                activity_manager=self.activity_manager,
-            )
-            self.logger.log_meta_info(self.comment)
-
-            """
-            if self.world.hospitals is not None:
-                self.logger.log_hospital_characteristics(self.world.hospitals)
-            """
 
         while self.timer.date < self.timer.final_date:
             if self.infection_seed:
@@ -573,7 +560,9 @@ class Simulator:
                     >= self.timer.date
                     >= self.infection_seed.min_date
                 ):
-                    self.infection_seed.unleash_virus_per_day(self.timer.date)
+                    self.infection_seed.unleash_virus_per_day(
+                        self.timer.date, record=self.record
+                    )
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_dates
@@ -615,5 +604,5 @@ class Simulator:
             "infection_list": infection_list,
             "timer": self.timer,
         }
-        with open(self.logger.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
+        with open(self.record.record_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
             pickle.dump(checkpoint_data, f)

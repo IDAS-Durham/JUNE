@@ -81,6 +81,10 @@ class CareHome(Group):
         return True
 
     @property
+    def coordinates(self):
+        return self.area.coordinates
+ 
+    @property
     def super_area(self):
         if self.area is None:
             return None

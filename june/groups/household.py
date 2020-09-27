@@ -119,6 +119,10 @@ class Household(Group):
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
 
+    @property
+    def coordinates(self):
+        return self.area.coordinates
+
     def quarantine(self, time, quarantine_days, household_compliance):
         if self.type == "communal":
             return False
