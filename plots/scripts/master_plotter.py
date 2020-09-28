@@ -50,9 +50,12 @@ class Plotter:
         leisure_plots = LeisurePlots(self.world)
 
         print ("Plotting week probabilities")
-        week_probabilities_plot = leisure_plots.plot_week_probabilities()
+        week_probabilities_plot, time_spent_plot = leisure_plots.plot_week_probabilities()
         week_probabilities_plot.plot()
         plt.savefig(save_dir + 'week_probabilities.png', dpi=150, bbox_inches='tight')
+
+        time_spent.plot()
+        plt.savefig(save_dir + 'time_spent.png', dpi=150, bbox_inches='tight')
         
     def plot_policies(
             self,
