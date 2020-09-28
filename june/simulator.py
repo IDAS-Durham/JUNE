@@ -64,9 +64,9 @@ class Simulator:
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
-            if logger is None:
+            if record is None:
                 raise SimulatorError("Checkpoint requires not None logger for now..")
-            self.checkpoint_path = logger.save_path
+            self.checkpoint_path = record.record_path
             self.checkpoint_dates = checkpoint_dates
         self.record = record
 
@@ -183,7 +183,6 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional["Record"] = None,
-        logger: Optional[Logger] = None,
         #comment: Optional[str] = None,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint

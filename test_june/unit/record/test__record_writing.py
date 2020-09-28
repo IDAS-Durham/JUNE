@@ -324,20 +324,19 @@ def test__sumarise_time_tep(dummy_world):
     summary_df = pd.read_csv(record.record_path / "summary.csv", index_col=0)
     region_1 = summary_df[summary_df["region"] == "region_1"]
     region_2 = summary_df[summary_df["region"] == "region_2"]
-    assert region_1.loc["2020-04-04"]["daily_infections_by_residence"] == 2
-    assert region_1.loc["2020-04-05"]["daily_infections_by_residence"] == 0
-    assert region_2.loc["2020-04-04"]["daily_infections_by_residence"] == 0
-    assert region_2.loc["2020-04-05"]["daily_infections_by_residence"] == 0
+    assert region_1.loc["2020-04-04"]["daily_infected"] == 2
+    assert region_1.loc["2020-04-05"]["daily_infected"] == 0
+    assert region_2.loc["2020-04-04"]["daily_infected"] == 0
+    assert region_2.loc["2020-04-05"]["daily_infected"] == 0
 
-    assert region_1.loc["2020-04-04"]["daily_hospital_admissions"] == 0
-    assert region_2.loc["2020-04-04"]["daily_hospital_admissions"] == 1
-    assert region_2.loc["2020-04-04"]["daily_icu_admissions"] == 1
-    assert region_1.loc["2020-04-05"]["daily_hospital_admissions"] == 0
-    assert region_1.loc["2020-04-05"]["daily_icu_admissions"] == 0
-    assert region_2.loc["2020-04-05"]["daily_icu_admissions"] == 0
+    assert region_1.loc["2020-04-04"]["daily_hospitalised"] == 0
+    assert region_2.loc["2020-04-04"]["daily_hospitalised"] == 1
+    assert region_2.loc["2020-04-04"]["daily_intensive_care"] == 1
+    assert region_1.loc["2020-04-05"]["daily_hospitalised"] == 0
+    assert region_1.loc["2020-04-05"]["daily_intensive_care"] == 0
+    assert region_2.loc["2020-04-05"]["daily_intensive_care"] == 0
 
-    assert region_1.loc["2020-04-05"]["daily_deaths_by_residence"] == 3
-    assert region_2.loc["2020-04-05"]["daily_deaths_by_residence"] == 0
+    assert region_1.loc["2020-04-05"]["daily_deaths"] == 3
+    assert region_2.loc["2020-04-05"]["daily_deaths"] == 0
 
-    assert region_1.loc["2020-04-05"]["daily_care_home_deaths"] == 1
     assert region_2.loc["2020-04-05"]["daily_hospital_deaths"] == 1
