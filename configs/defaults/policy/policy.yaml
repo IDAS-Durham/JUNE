@@ -389,8 +389,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -408,8 +408,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            commute_unit: 1.
-            commute_city_unit: 1.
+            inter_city_transport: 1.
+            city_transport: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
