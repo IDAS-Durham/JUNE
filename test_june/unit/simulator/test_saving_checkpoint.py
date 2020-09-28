@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import logging
 import june.simulator
+from pathlib import Path
 from random import randint
 
 from june.logger import Logger
@@ -104,7 +105,9 @@ def run_simulator(selector):
 
 class TestCheckpoints:
     def test__checkpoints_are_saved(self, selector):
-        checkpoint_path = "checkpoint_tests/checkpoint_2020-03-25.hdf5"
+        checkpoint_folder = Path("checkpoint_tests")
+        checkpoint_folder.mkdir(exist_ok=True, parents=True)
+        checkpoint_path = Path("checkpoint_tests/checkpoint_2020-03-25.hdf5")
         with h5py.File(checkpoint_path, "w") as f:
             pass
         sim = run_simulator(selector)
