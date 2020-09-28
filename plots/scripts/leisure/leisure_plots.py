@@ -18,52 +18,59 @@ class LeisurePlots:
     def __init__(self, world):
         self.world = world
 
+    def run_poisson_process(
+            self,
+    ):
+        probabilities_dict = parse_multiple_config_files()
+        self.time_spent_in_leisure, self.ret_child, self.ret_adult, self.ret_retired = simulate_leisure_week(probabilities_dict)
+
     def plot_week_probabilities(
             self,
     ):
         "Plotting probabaility of doing different activities in a week"
-
-        probabilities_dict = parse_multiple_config_files()
-        time_spent_in_leisure, ret_child, ret_adult, ret_retired = simulate_leisure_week(probabilities_dict)
 
         activities = []
         new_activities = []
         child_probability = []
         adult_probability = []
         retired_probability = []
-        for activity in ret_adult:
+        for activity in self.ret_adult:
             activities.append(activity)
             new_activities.append(activity.replace("_", " "))
-            adult_probability.append(ret_adult[activity])
+            adult_probability.append(self.ret_adult[activity])
             try:
-                child_probability.append(ret_child[activity])
+                child_probability.append(self.ret_child[activity])
             except:
                 child_probability.append(0.)
-            retired_probability.append(ret_retired[activity])
-
-        
-    
+            retired_probability.append(self.ret_retired[activity])
 
         x = np.arange(len(activities))  # the label locations
         width = 0.35  # the width of the bars
 
-        f_1, ax_1 = plt.subplots()
-        ax_.bar(x - width/2, child_probability, width/2, label = 'Children')
-        ax_1.bar(x, adult_probability, width/2, label = 'Adults')
-        ax_1.bar(x + width/2, retired_probability, width/2, label = 'Retired')
-        ax_1.set_ylabel('Probability of doing activity in a week')
-        ax_1.set_xticks(x)
-        ax_1.set_xticklabels(new_activities)
-        ax_1.legend()
+        f, ax = plt.subplots()
+        ax.bar(x - width/2, child_probability, width/2, label = 'Children')
+        ax.bar(x, adult_probability, width/2, label = 'Adults')
+        ax.bar(x + width/2, retired_probability, width/2, label = 'Retired')
+        ax.set_ylabel('Probability of doing activity in a week')
+        ax.set_xticks(x)
+        ax.set_xticklabels(new_activities)
+        ax.legend()
         plt.xticks(rotation=45)
 
-        f_2, ax_2 = plt.subplots()
-        ax_2.bar(time_spent_in_leisure.keys(), time_spent_in_leisure.values())
-        ax_2.axvline(65, color = "red", linestyle=":")
-        ax_2.set_ylabel("Hours of leisure a week")
-        ax_2.set_xlabel("Age")
+        return ax
 
-        return ax_1, ax_2
+    def plot_leisure_time_spent(
+            self
+    ):
+        "Plotting time spent in leisure by age"
+        
+        f, ax = plt.subplots()
+        ax.bar(self.time_spent_in_leisure.keys(), self.time_spent_in_leisure.values())
+        ax.axvline(65, color = "red", linestyle=":")
+        ax.set_ylabel("Hours of leisure a week")
+        ax.set_xlabel("Age")
+
+        return ax
 
 def parse_config_file(config_file_path):
     with open(config_file_path) as f:
@@ -127,8 +134,7 @@ def simulate_leisure_week(probabilities_dict):
     retired_activities = defaultdict(list)
     
     ages = np.arange(0,100)
-    for i in range(20):
-        print ('Working on week {}'.format(i))
+    for i in tqdm(range(50)):
         time_spent_in_leisure_week = defaultdict(int)
         child_activities_week = defaultdict(int)
         adult_activities_week = defaultdict(int)
