@@ -6,6 +6,8 @@ import yaml
 from itertools import chain
 from typing import Optional, List
 from pathlib import Path
+from time import perf_counter
+from time import time as wall_clock
 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
@@ -22,8 +24,8 @@ from june.time import Timer
 from june.world import World
 from june.logger import Logger
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
-from time import perf_counter
-from time import time as wall_clock
+
+# from june.hdf5_savers import save_checkpoint_to_hdf5
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -63,6 +65,9 @@ class Simulator:
         if checkpoint_dates is None:
             self.checkpoint_dates = ()
         else:
+            if logger is None:
+                raise SimulatorError("Checkpoint requires not None logger for now..")
+            self.checkpoint_path = logger.save_path
             self.checkpoint_dates = checkpoint_dates
         self.logger = logger
 
@@ -172,54 +177,30 @@ class Simulator:
         world: World,
         checkpoint_path: str,
         interaction: Interaction,
-        infection_selector: Optional[InfectionSelector] = None,
+        infection_selector=None,
         policies: Optional[Policies] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
+        travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        logger: Logger = None,
+        logger: Optional[Logger] = None,
+        comment: Optional[str] = None,
     ):
-        """
-        Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
-        initialisation but with the additional path to where the checkpoint pickle file is located.
-        The checkpoint saves information about the infection status of all the people in the world as well as the timings.
-        Note, nonetheless, that all the past infections / deaths will have the checkpoint date as date.
-        """
-        simulator = cls.from_file(
+        from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
+
+        return generate_simulator_from_checkpoint(
             world=world,
+            checkpoint_path=checkpoint_path,
             interaction=interaction,
             infection_selector=infection_selector,
             policies=policies,
             infection_seed=infection_seed,
             leisure=leisure,
+            travel=travel,
             config_filename=config_filename,
             logger=logger,
+            comment=comment,
         )
-        with open(checkpoint_path, "rb") as f:
-            checkpoint_data = pickle.load(f)
-        for dead_id in checkpoint_data["dead_ids"]:
-            person = simulator.world.people.get_from_id(dead_id)
-            person.dead = True
-            person.susceptibility = 0.0
-            cemetery = world.cemeteries.get_nearest(person)
-            cemetery.add(person)
-            person.subgroups = Activities(None, None, None, None, None, None, None)
-        for recovered_id in checkpoint_data["recovered_ids"]:
-            person = simulator.world.people.get_from_id(recovered_id)
-            person.susceptibility = 0.0
-        for infected_id, infection in zip(
-            checkpoint_data["infected_ids"], checkpoint_data["infection_list"]
-        ):
-            person = simulator.world.people.get_from_id(infected_id)
-            person.infection = infection
-            person.susceptibility = 0.0
-        # restore timer
-        checkpoint_timer = checkpoint_data["timer"]
-        simulator.timer.initial_date = checkpoint_timer.initial_date
-        simulator.timer.date = checkpoint_timer.date
-        simulator.timer.delta_time = checkpoint_timer.delta_time
-        simulator.timer.shift = checkpoint_timer.shift
-        return simulator
 
     def clear_world(self):
         """
@@ -580,31 +561,15 @@ class Simulator:
                 continue
             next(self.timer)
 
-    def save_checkpoint(self, date: datetime):
-        """
-        Saves a checkpoint at the given date. We save all the health information of the
-        population. We can then load the world back to the checkpoint state using the
-        from_checkpoint class method of this class.
-        """
-        recovered_people_ids = [
-            person.id for person in self.world.people if person.recovered
-        ]
-        dead_people_ids = [person.id for person in self.world.people if person.dead]
-        susceptible_people_ids = [
-            person.id for person in self.world.people if person.susceptible
-        ]
-        infected_people_ids = []
-        infection_list = []
-        for person in self.world.people.infected:
-            infected_people_ids.append(person.id)
-            infection_list.append(person.infection)
-        checkpoint_data = {
-            "recovered_ids": recovered_people_ids,
-            "dead_ids": dead_people_ids,
-            "susceptible_ids": susceptible_people_ids,
-            "infected_ids": infected_people_ids,
-            "infection_list": infection_list,
-            "timer": self.timer,
-        }
-        with open(self.logger.save_path / f"checkpoint_{str(date)}.pkl", "wb") as f:
-            pickle.dump(checkpoint_data, f)
+    def save_checkpoint(self, saving_date):
+        from june.hdf5_savers.checkpoint_saver import save_checkpoint_to_hdf5
+
+        if mpi_size == 1:
+            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
+        else:
+            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+        save_checkpoint_to_hdf5(
+            population=self.world.people,
+            date=str(saving_date),
+            hdf5_file_path=save_path,
+        )
