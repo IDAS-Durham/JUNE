@@ -47,17 +47,23 @@ class LeisurePlots:
         x = np.arange(len(activities))  # the label locations
         width = 0.35  # the width of the bars
 
-        f, ax = plt.subplots()
-        ax.bar(x - width/2, child_probability, width/2, label = 'Children')
-        ax.bar(x, adult_probability, width/2, label = 'Adults')
-        ax.bar(x + width/2, retired_probability, width/2, label = 'Retired')
-        ax.set_ylabel('Probability of doing activity in a week')
-        ax.set_xticks(x)
-        ax.set_xticklabels(new_activities)
-        ax.legend()
+        f_1, ax_1 = plt.subplots()
+        ax_.bar(x - width/2, child_probability, width/2, label = 'Children')
+        ax_1.bar(x, adult_probability, width/2, label = 'Adults')
+        ax_1.bar(x + width/2, retired_probability, width/2, label = 'Retired')
+        ax_1.set_ylabel('Probability of doing activity in a week')
+        ax_1.set_xticks(x)
+        ax_1.set_xticklabels(new_activities)
+        ax_1.legend()
         plt.xticks(rotation=45)
 
-        return ax
+        f_2, ax_2 = plt.subplots()
+        ax_2.bar(time_spent_in_leisure.keys(), time_spent_in_leisure.values())
+        ax_2.axvline(65, color = "red", linestyle=":")
+        ax_2.set_ylabel("Hours of leisure a week")
+        ax_2.set_xlabel("Age")
+
+        return ax_1, ax_2
 
 def parse_config_file(config_file_path):
     with open(config_file_path) as f:
