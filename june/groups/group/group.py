@@ -4,7 +4,7 @@ import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
-from typing import List
+from typing import List, Tuple
 
 from june.demography.person import Person
 from june.exc import GroupException
@@ -13,6 +13,7 @@ from .subgroup import Subgroup
 
 logger = logging.getLogger(__name__)
 
+    
 
 class Group(AbstractGroup):
     """
@@ -35,6 +36,7 @@ class Group(AbstractGroup):
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+    external = False
 
     class SubgroupType(IntEnum):
         """
@@ -102,7 +104,7 @@ class Group(AbstractGroup):
         return self.subgroups[item]
 
     def add(
-        self, person: Person, activity: str, subgroup_type: SubgroupType, dynamic=False
+        self, person: Person, activity: str, subgroup_type: SubgroupType#, dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -115,17 +117,17 @@ class Group(AbstractGroup):
         group_type
             
         """
-        if not dynamic:
-            self[subgroup_type].append(person)
+        #if not dynamic:
+        self[subgroup_type].append(person)
         if activity is not None:
             setattr(person.subgroups, activity, self[subgroup_type])
 
     @property
-    def people(self) -> List[Person]:
+    def people(self) -> Tuple[Person]:
         """
         All the people in this group
         """
-        return [person for subgroup in self.subgroups for person in subgroup.people]
+        return tuple(person for subgroup in self.subgroups for person in subgroup.people)
 
     @property
     def contains_people(self) -> bool:

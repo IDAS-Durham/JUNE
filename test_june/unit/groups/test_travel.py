@@ -1,99 +1,106 @@
 import pytest
 
+from june.geography import Geography
+from june.groups.travel import generate_commuting_network, Travel, ModeOfTransport
 from june import World
-from june.demography.geography import Geography, Area
-from june.demography import Person, Demography
-from june.distributors import WorkerDistributor
-from june.commute import CommuteGenerator
-from june.groups import (
-    CommuteCity,
-    CommuteCities,
-    CommuteCityDistributor,
-    CommuteHub,
-    CommuteHubs,
-    CommuteHubDistributor,
-    CommuteUnit,
-    CommuteUnits,
-    CommuteUnitDistributor,
-    CommuteCityUnit,
-    CommuteCityUnits,
-    CommuteCityUnitDistributor,
-)
-from june.groups import (
-    TravelCity,
-    TravelCities,
-    TravelCityDistributor,
-    TravelUnit,
-    TravelUnits,
-    TravelUnitDistributor,
-)
-from june.world import generate_world_from_geography
+from june.demography import Person, Population
 
 
-class TestTravel:
-    @pytest.fixture(name="super_area_commute_nc")
-    def super_area_name_nc(self):
-        # return ['E02001731', 'E02001729', 'E02001688', 'E02001689', 'E02001736',
-        #        'E02001720', 'E02001724', 'E02001730', 'E02006841', 'E02001691',
-        #        'E02001713', 'E02001712', 'E02001694', 'E02006842', 'E02001723',
-        #        'E02001715', 'E02001710', 'E02001692', 'E02001734', 'E02001709']
-        return ["E02001731", "E02001729"]
+@pytest.fixture(name="geo", scope="module")
+def make_sa():
+    return Geography.from_file({"super_area": ["E02001731", "E02005123"]})
 
-    @pytest.fixture(name="geography_commute_nc")
-    def create_geography_nc(self, super_area_commute_nc):
-        geography = Geography.from_file({"super_area": super_area_commute_nc})
-        return geography
 
-    @pytest.fixture(name="world_nc")
-    def create_world_nc(self, geography_commute_nc):
-        world = generate_world_from_geography(
-            geography_commute_nc, include_households=False, include_commute=False
-        )
+@pytest.fixture(name="travel_world", scope="module")
+def make_commuting_network(geo):
+    world = World()
+    world.areas = geo.areas
+    world.super_areas = geo.super_areas
+    people = []
+    for i in range(12):
+        person = Person.from_attributes()
+        person.mode_of_transport = ModeOfTransport(is_public=True, description="asd")
+        person.work_super_area = world.super_areas[0]
+        world.super_areas[0].workers.append(person)
+        if i % 4 == 0:
+            # these people commute internally
+            person.area = world.super_areas[0].areas[0]
+        else:
+            # these people come from abroad
+            person.area = world.super_areas[1].areas[0]
+        people.append(person)
+    world.people = Population(people)
+    travel = Travel()
+    travel.initialise_commute(world)
+    return world, travel
 
-        return world
 
-    @pytest.fixture(name="commutecities_nc")
-    def create_commute_setup(self, world_nc):
-        commutecities = CommuteCities.for_super_areas(world_nc.super_areas)
-        assert len(commutecities.members) == 11
+class TestCommute:
+    def test__generate_commuting_network(self, travel_world):
+        world, travel = travel_world
+        assert len(world.cities) == 1
+        city = world.cities[0]
+        assert city.name == "Newcastle upon Tyne"
+        assert city.super_areas[0] == "E02001731"
+        assert len(city.stations) == 4
+        for super_area in world.super_areas:
+            if super_area.name == "E02001731":
+                assert super_area.city.name == "Newcastle upon Tyne"
+            else:
+                assert super_area.city is None
 
-        return commutecities
+    def test__assign_commuters_to_stations(self, travel_world):
+        world, travel = travel_world
+        city = world.cities[0]
+        n_external_commuters = 0
+        for station in city.stations:
+            n_external_commuters += len(station.commuter_ids)
+        n_internal_commuters = len(city.commuter_ids)
+        assert n_internal_commuters == 3
+        assert n_external_commuters == 9
 
-    def test__travel_all(self, world_nc, commutecities_nc):
-        travelcities = TravelCities(commutecities_nc)
-        travelcities.init_cities()
-        assert len(travelcities.members) == 11
+    def test__get_travel_subgroup(self, travel_world):
+        world, travel = travel_world
+        # get internal commuter
+        worker = world.people[0]
+        subgroup = travel.get_commute_subgroup(worker)
+        assert subgroup.group.spec == "city_transport"
+        # extenral
+        worker = world.people[1]
+        subgroup = travel.get_commute_subgroup(worker)
+        assert subgroup.group.spec == "inter_city_transport"
 
-        travelcity_distributor = TravelCityDistributor(
-            travelcities.members, world_nc.super_areas.members
-        )
-        travelcity_distributor.distribute_msoas()
+    def test__number_of_commuters(self, travel_world):
+        world, travel = travel_world
+        public_transports = 0
+        for person in world.people:
+            if (
+                person.mode_of_transport is not None
+                and person.mode_of_transport.is_public
+            ):
+                if (
+                    person.work_super_area.city is not None
+                    and person.work_super_area.city.stations
+                ):
+                    public_transports += 1
+        commuters = 0
+        for city in world.cities:
+            commuters += len(city.commuter_ids)
+        for station in world.stations:
+            commuters += len(station.commuter_ids)
+        assert public_transports == commuters
 
-        travelunits = TravelUnits()
-        travelunit_distributor = TravelUnitDistributor(
-            travelcities.members, travelunits.members
-        )
-        travelunit_distributor.from_file()
-        travelunit_distributor.distribute_people_out()
-        assert len(travelunits.members) > 0
-
-        people = 0
-        for i in travelunits.members:
-            no_pass = i.no_passengers
-            people += no_pass
-
-        arrive = 0
-        for city in travelcities.members:
-            arrive += len(city.arrived)
-
-        assert people == arrive
-
-        travelunit_distributor.distribute_people_back()
-        assert len(travelunits.members) > 0
-
-        people = 0
-        for i in travelunits.members:
-            no_pass = i.no_passengers
-            people += no_pass
-
-        assert people == arrive
+    def test__all_commuters_get_commute(self, travel_world):
+        world, travel = travel_world
+        assigned_commuters = 0
+        for person in world.people:
+            subgroup = travel.get_commute_subgroup(person)
+            if subgroup is not None:
+                assigned_commuters += 1
+        commuters = 0
+        for city in world.cities:
+            commuters += len(city.commuter_ids)
+        for station in world.stations:
+            commuters += len(station.commuter_ids)
+        assert commuters > 0
+        assert commuters == assigned_commuters

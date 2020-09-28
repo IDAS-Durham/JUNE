@@ -5,6 +5,7 @@ from itertools import chain
 
 
 class Subgroup(AbstractGroup):
+    external = False
     __slots__ = (
         "group",
         "subgroup_type",
@@ -74,7 +75,7 @@ class Subgroup(AbstractGroup):
 
     def remove(self, person: Person):
         self.people.remove(person)
-        person.busy=False
+        person.busy = False
 
     def __getitem__(self, item):
         return list(self.people)[item]

@@ -4,7 +4,7 @@ from june import paths
 from june.distributors.carehome_distributor import CareHomeDistributor, CareHomeError
 from june.demography import Person
 from june.groups.carehome import CareHome, CareHomes
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Demography
 from june.demography.person import Person
 from june.world import World, generate_world_from_geography
