@@ -33,8 +33,8 @@ def set_random_seed(seed=999):
 
 set_random_seed()
 
-world_file = "./serial_world.hdf5"
-config_path = "./config_debug.yaml"
+world_file = "./tests.hdf5"
+config_path = "./config_simulation.yaml"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
