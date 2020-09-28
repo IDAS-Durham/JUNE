@@ -34,11 +34,11 @@ from .hospital_saver import (
     restore_hospital_properties_from_hdf5,
 )
 from .commute_saver import (
-    save_commute_cities_to_hdf5,
-    save_commute_hubs_to_hdf5,
-    load_commute_cities_from_hdf5,
-    load_commute_hubs_from_hdf5,
-    restore_commute_properties_from_hdf5,
+    save_cities_to_hdf5,
+    save_stations_to_hdf5,
+    load_cities_from_hdf5,
+    load_stations_from_hdf5,
+    restore_cities_and_stations_properties_from_hdf5,
 )
 from .university_saver import (
     save_universities_to_hdf5,
@@ -50,4 +50,9 @@ from .leisure_saver import (
     load_social_venues_from_hdf5,
     restore_social_venues_properties_from_hdf5,
 )
-from .world_saver import generate_world_from_hdf5, save_world_to_hdf5
+from .world_saver import (
+    generate_world_from_hdf5,
+    save_world_to_hdf5,
+    generate_domain_from_hdf5,
+)
+from .infection_savers import *

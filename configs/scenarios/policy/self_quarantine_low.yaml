@@ -123,7 +123,7 @@ close_companies:
     13:
         start_time: 2020-09-09
         #end_time: 2020-09-17
-        end_time: 2020-12-01
+        end_time: 2021-12-01
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
@@ -165,7 +165,7 @@ social_distancing:
             university: 0.75
     3:
         start_time: 2020-07-04 
-        end_time: 2020-12-01
+        end_time: 2021-12-01
         beta_factors:
             box: 0.875
             pub: 0.875
@@ -400,7 +400,7 @@ mask_wearing:
     13: 
         start_time: 2020-09-08
         #end_time: 2020-09-16
-        end_time: 2020-12-01
+        end_time: 2021-12-01
         compliance: 0.735
         beta_factor: 0.5
         mask_probabilities: 
@@ -589,6 +589,11 @@ close_schools:
     7:
         start_time: 2020-07-16
         end_time: 2020-09-01
+        years_to_close: all
+        full_closure: False
+    8:
+        start_time: 2020-10-26
+        end_time: 2020-10-31
         years_to_close: all
         full_closure: False
 

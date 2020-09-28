@@ -1,7 +1,7 @@
 import datetime
 
 from .policy import Policy, Policies, PolicyCollection
-from june.groups import Hospitals
+from june.groups import Hospitals, Hospital, ExternalSubgroup
 from june.demography import Person
 from june.infection.symptom_tag import SymptomTag
 
@@ -34,21 +34,31 @@ class Hospitalisation(MedicalCarePolicy):
     def apply(self, person: Person, hospitals: Hospitals):
         if person.recovered:
             if person.medical_facility is not None:
-                person.medical_facility.group.release_as_patient(person)
+                person.subgroups.medical_facility = None
             return
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
-            if person.medical_facility is None:
-                hospitals.allocate_patient(person)
-            elif symptoms_tag == SymptomTag.hospitalised:
-                person.subgroups.medical_facility = person.medical_facility.group[
-                    person.medical_facility.group.SubgroupType.patients
-                ]
-            elif symptoms_tag == SymptomTag.intensive_care:
-                person.subgroups.medical_facility = person.medical_facility.group[
-                    person.medical_facility.group.SubgroupType.icu_patients
-                ]
-            else:
-                raise ValueError(
-                    f"Person with symptoms tag {person.infection.tag} cannot go to hospital."
-                )
+            # note, we dont model hospital capacity here.
+            closest_hospital = person.super_area.closest_hospitals[0]
+            if symptoms_tag == SymptomTag.hospitalised:
+                if closest_hospital.external:
+                    # not in this domain, we need to send it over
+                    person.subgroups.medical_facility = ExternalSubgroup(
+                        group=closest_hospital,
+                        subgroup_type=Hospital.SubgroupType.patients,
+                    )
+                else:
+                    person.subgroups.medical_facility = closest_hospital.subgroups[
+                        closest_hospital.SubgroupType.patients
+                    ]
+            else: 
+                if closest_hospital.external:
+                    # not in this domain, we need to send it over
+                    person.subgroups.medical_facility = ExternalSubgroup(
+                        group=closest_hospital,
+                        subgroup_type=Hospital.SubgroupType.icu_patients,
+                    )
+                else:
+                    person.subgroups.medical_facility = closest_hospital.subgroups[
+                        closest_hospital.SubgroupType.icu_patients
+                    ]

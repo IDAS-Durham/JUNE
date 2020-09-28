@@ -2,22 +2,42 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 import random
+from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
+from june.groups import Household, Households, Cemeteries
 from june.infection import Infection, InfectionSelector
+from june.infection_seed import InfectionSeed
 from june.infection import SymptomTag
 from june.logger import Logger, ReadLogger
 from june.world import World
 from june.demography import Person, Population
+from june.geography import Area, Areas, SuperAreas
 from june.time import Timer
+from june import paths
+from june.simulator import Simulator
+from june.policy import (
+    Policy,
+    Quarantine,
+    Policies,
+    MedicalCarePolicies,
+    InteractionPolicies,
+    CloseLeisureVenue,
+)
+
+test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
 
 class MockSuperArea:
     def __init__(self):
         self.name = "holi"
+        self.id = 0
+        self.coordinates = (0, 0)
 
 
 class MockArea:
     def __init__(self):
         self.super_area = MockSuperArea()
+        self.id = 0
+        self.coordinates = (0, 0)
 
 
 class MockHealthIndexGenerator:
@@ -59,15 +79,23 @@ def infect_dead_person(person):
 def make_dummy_world(infected):
     world = World()
     people = []
+    mock_area = MockArea()
+    household = Household()
+    household.id = 1993
     for i in range(20):
         person = Person.from_attributes(
             age=40, sex="f", ethnicity="guapo", socioecon_index=0
         )
-        person.area = MockArea()
+        person.area = mock_area
         if infected:
             infect_hospitalised_person(person)
         people.append(person)
+        household.add(person)
     world.people = Population(people)
+    world.areas = Areas([mock_area])
+    world.households = Households([household])
+    world.cemeteries = Cemeteries()
+    world.super_areas = SuperAreas([MockSuperArea()])
     return world
 
 
@@ -98,15 +126,7 @@ def test__read_daily_hospital_admissions():
 
             if new_status == "recovered":
                 person.infection = None
-        n_secondary_infections = [0] * len(ids)
-        super_area_infections = {
-            "holi": {
-                "ids": ids,
-                "symptoms": symptoms,
-                "n_secondary_infections": n_secondary_infections,
-            }
-        }
-        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infected(timer.date, ids, symptoms)
         logger.log_infection_location(time)
         next(timer)
     read = ReadLogger(output_path=output_path)
@@ -115,6 +135,8 @@ def test__read_daily_hospital_admissions():
     hospital_admissions_df = pd.Series(hospital_admissions)
     hospital_admissions_df.index = pd.to_datetime(hospital_admissions_df.index)
     hospital_admissions_logged = world_df["daily_hospital_admissions"]
+    print('hospital admissions logged')
+    print(hospital_admissions_logged)
     hospital_admissions_logged = hospital_admissions_logged[
         hospital_admissions_logged.values > 0
     ]
@@ -166,15 +188,7 @@ def test__read_infected_and_dead():
             elif new_status == "dead":
                 person.infection = None
                 person.dead = True
-        n_secondary_infections = [0] * len(ids)
-        super_area_infections = {
-            "holi": {
-                "ids": ids,
-                "symptoms": symptoms,
-                "n_secondary_infections": n_secondary_infections,
-            }
-        }
-        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infected(timer.date, ids, symptoms)
         logger.log_infection_location(time)
         next(timer)
     read = ReadLogger(output_path=output_path)
@@ -192,8 +206,6 @@ def test__read_infected_and_dead():
     deaths_df.index = pd.to_datetime(deaths_df.index)
     deaths_logged = world_df["daily_deaths"]
     deaths_logged = deaths_logged[deaths_logged.values > 0]
-    print(deaths_df)
-    print(deaths_logged)
     assert sum(list(deaths.values())) == deaths_logged.sum()
     pd._testing.assert_series_equal(
         deaths_df, deaths_logged, check_names=False, check_dtype=False,
@@ -231,15 +243,7 @@ def test__read_current_infected():
                 person.dead = True
             else:
                 infected[time.strftime("%Y-%m-%dT%H:%M:%S.%f")] += 1
-        n_secondary_infections = [0] * len(ids)
-        super_area_infections = {
-            "holi": {
-                "ids": ids,
-                "symptoms": symptoms,
-                "n_secondary_infections": n_secondary_infections,
-            }
-        }
-        logger.log_infected(timer.date, super_area_infections)
+        logger.log_infected(timer.date, ids, symptoms)
         logger.log_infection_location(time)
         next(timer)
     read = ReadLogger(output_path=output_path)
@@ -253,6 +257,51 @@ def test__read_current_infected():
         infected_df, infected_logged, check_names=False, check_dtype=False,
     )
 
+
+def test__read_infection_location(selector, interaction):
+    world = make_dummy_world(infected=False)
+    output_path = "dummy_results"
+    logger = Logger(save_path=output_path)
+    leisure_instance = leisure.generate_leisure_for_config(
+        world=world, config_filename=test_config
+    )
+    leisure_instance.distribute_social_venues_to_areas(
+        world.areas, super_areas=world.super_areas
+    )
+    infection_seed = InfectionSeed(world=world, infection_selector=selector)
+    infection_seed.unleash_virus(world.people, n_cases=2)
+
+    policies = Policies([Quarantine(n_days=5)])
+
+    sim = Simulator.from_file(
+        world=world,
+        interaction=interaction,
+        infection_selector=selector,
+        config_filename=test_config,
+        leisure=leisure_instance,
+        policies=policies,
+        logger=logger,
+    )
+    sim.logger.log_population(sim.world.people,)
+    i = 0
+    new_infected = {}
+    current_infected = len(world.people.infected)
+    while sim.timer.date <= sim.timer.final_date:
+        time = sim.timer.date
+        time_step = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        sim.do_timestep()
+        new_infected[time_step] = len(world.people.infected) - current_infected
+        current_infected = len(world.people.infected)
+        if i > 10:
+            break
+        i += 1
+        next(sim.timer)
+    read = ReadLogger(output_path=output_path)
+    read.load_infection_location()
+    dates = [date.date().strftime("%Y-%m-%d") for date in list(read.locations_df.index)]
+    for index, row in read.locations_df.iterrows():
+        time_step = index.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        assert row['location_id'] == ['household_1993']*new_infected[time_step]
 
 # Test hospitalisations by age
 # Test hospitalisations by area

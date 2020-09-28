@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from june import paths
-from june.demography.geography import Area, Areas
+from june.geography import Area, Areas
 from june.groups import CareHome
 
 logger = logging.getLogger(__name__)
@@ -59,13 +59,17 @@ class CareHomeDistributor:
         """
         Creates care homes in areas from dataframe.
         """
+        logger.info(f"Populating care homes")
+        total_care_home_residents = 0
         care_homes_df = pd.read_csv(data_filename, index_col=0)
         area_names = [area.name for area in areas]
         care_homes_df = care_homes_df.loc[area_names]
         for area in areas:
             care_home_residents_number = care_homes_df.loc[area.name].values
+            total_care_home_residents += care_home_residents_number[0]
             if care_home_residents_number != 0:
                 self.populate_care_home_in_area(area)
+        logger.info(f"This world has {total_care_home_residents} people living in care homes.")
 
     def populate_care_home_in_area(self, area: Area):
         """

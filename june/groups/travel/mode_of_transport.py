@@ -5,14 +5,16 @@ import numpy as np
 import yaml
 
 from june import paths
+from june.utils import random_choice_numba
 
-default_config_filename = paths.configs_path / "defaults/commute.yaml"
+default_config_filename = paths.configs_path / "defaults/groups/travel/mode_of_transport.yaml"
 
-default_commute_file = paths.data_path / "input/commute/commute_ew.csv"
+default_commute_file = paths.data_path / "input/travel/mode_of_transport_ew.csv"
 
 
 class ModeOfTransport:
     __all = {}
+    __slots__ = "description", "is_public"
 
     def __new__(
             cls,
@@ -155,7 +157,7 @@ class ModeOfTransport:
 class RegionalGenerator:
     def __init__(
             self,
-            msoarea: str,
+            area: str,
             weighted_modes: List[
                 Tuple[int, "ModeOfTransport"]
             ]
@@ -166,17 +168,20 @@ class RegionalGenerator:
 
         Parameters
         ----------
-        msoarea
+        area
             A unique identifier for a Output region
         weighted_modes
             A list of tuples comprising the number of people using a mode
             of a transport and a representation of that mode of transport
         """
-        self.msoarea = msoarea
+        self.area = area
         self.weighted_modes = weighted_modes
+        self.total = self._get_total()
+        self.modes = self._get_modes()
+        self.weights = self._get_weights()
+        self.modes_idx = np.arange(0, len(self.modes))
 
-    @property
-    def total(self) -> int:
+    def _get_total(self) -> int:
         """
         The sum of the numbers of people using each mode of transport
         """
@@ -186,8 +191,7 @@ class RegionalGenerator:
             in self.weighted_modes
         )
 
-    @property
-    def modes(self) -> List["ModeOfTransport"]:
+    def _get_modes(self) -> List["ModeOfTransport"]:
         """
         A list of modes of transport
         """
@@ -197,34 +201,31 @@ class RegionalGenerator:
             in self.weighted_modes
         ]
 
-    @property
-    def weights(self) -> List[float]:
+    def _get_weights(self) -> List[float]:
         """
         The normalised weights for each mode of transport.
         """
-        return [
+        return np.array([
             mode[0] / self.total
             for mode
             in self.weighted_modes
-        ]
+        ])
 
     def weighted_random_choice(self) -> "ModeOfTransport":
         """
         Randomly choose a mode of transport, weighted by usage in this region.
         """
-        return np.random.choice(
-            self.modes,
-            p=self.weights
-        )
+        idx = random_choice_numba(self.modes_idx, self.weights)
+        return self.modes[idx]
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self}>"
 
     def __str__(self):
-        return self.msoarea
+        return self.area
 
 
-class CommuteGenerator:
+class ModeOfTransportGenerator:
     def __init__(
             self,
             regional_generators: Dict[str, RegionalGenerator]
@@ -238,12 +239,12 @@ class CommuteGenerator:
         Parameters
         ----------
         regional_generators
-            A dictionary mapping Geography msoareas to objects that randomly
+            A dictionary mapping Geography areas to objects that randomly
             generate modes of transport
         """
         self.regional_generators = regional_generators
 
-    def regional_gen_from_msoarea(self, area: str) -> RegionalGenerator:
+    def regional_gen_from_area(self, area: str) -> RegionalGenerator:
         """
         Get a regional generator for an Area identified
         by its output output area, e.g. E00062207
@@ -266,7 +267,7 @@ class CommuteGenerator:
             cls,
             filename: str = default_commute_file,
             config_filename: str = default_config_filename
-    ) -> "CommuteGenerator":
+    ) -> "ModeOfTransportGenerator":
         """
         Parse configuration describing each included mode of transport
         along with census data describing the weightings for modes of
@@ -289,7 +290,7 @@ class CommuteGenerator:
         with open(filename) as f:
             reader = csv.reader(f)
             headers = next(reader)
-            msoarea_column = headers.index("geography code")
+            area_column = headers.index("geography code")
             modes_of_transport = ModeOfTransport.load_from_file(
                 config_filename
             )
@@ -302,12 +303,12 @@ class CommuteGenerator:
                             ]),
                         mode
                     ))
-                msoarea = row[msoarea_column]
-                regional_generators[msoarea] = RegionalGenerator(
-                    msoarea=msoarea,
+                area = row[area_column]
+                regional_generators[area] = RegionalGenerator(
+                    area=area,
                     weighted_modes=weighted_modes
                 )
 
-        return CommuteGenerator(
+        return ModeOfTransportGenerator(
             regional_generators
         )

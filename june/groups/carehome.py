@@ -8,7 +8,7 @@ import h5py
 import pandas as pd
 
 from june import paths
-from june.demography.geography import Geography, Area
+from june.geography import Geography, Area
 from june.groups.group import Group, Supergroup
 
 default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
@@ -45,8 +45,6 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
-        self.relatives_in_care_homes = None
-        self.relatives_in_households = None
         self.quarantine_starting_date = None
 
     def add(
@@ -66,8 +64,6 @@ class CareHome(Group):
                 person, subgroup_type=subgroup_type, activity=activity
             )
 
-    def get_leisure_subgroup(self, person):
-        return self.subgroups[self.SubgroupType.visitors]
 
     @property
     def workers(self):
@@ -91,13 +87,19 @@ class CareHome(Group):
         else:
             return self.area.super_area
 
+    @property
+    def households_to_visit(self):
+        return None
+
+    @property
+    def care_homes_to_visit(self):
+        return None
+
 
 class CareHomes(Supergroup):
-    __slots__ = "members"
 
     def __init__(self, care_homes: List[CareHome]):
-        super().__init__()
-        self.members = care_homes
+        super().__init__(members=care_homes)
 
     @classmethod
     def for_geography(

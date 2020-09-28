@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from june.time import Timer
-from june.demography.geography import Geography, SuperArea, Area
+from june.geography import Geography, SuperArea, Area
 from june.demography import Demography, Person
 from june.groups.leisure import Pub, Pubs
 

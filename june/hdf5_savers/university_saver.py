@@ -58,7 +58,9 @@ def save_universities_to_hdf5(universities: Universities, file_path: str):
         )
 
 
-def load_universities_from_hdf5(file_path: str, chunk_size: int = 50000):
+def load_universities_from_hdf5(
+    file_path: str, chunk_size: int = 50000, domain_super_areas=None
+):
     """
     Loads universities from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -89,7 +91,19 @@ def load_universities_from_hdf5(file_path: str, chunk_size: int = 50000):
         universities["ukprns"].read_direct(
             ukprns, np.s_[0:n_universities], np.s_[0:n_universities]
         )
+        super_areas = np.empty(n_universities, dtype=int)
+        universities["super_area"].read_direct(
+            super_areas, np.s_[0:n_universities], np.s_[0:n_universities]
+        )
         for k in range(n_universities):
+            if domain_super_areas is not None:
+                super_area = super_areas[k]
+                if super_area == nan_integer:
+                    raise ValueError(
+                        "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                    )
+                if super_area not in domain_super_areas:
+                    continue
             university = University(
                 coordinates=coordinates[k],
                 n_students_max=n_students_max[k],
@@ -100,9 +114,10 @@ def load_universities_from_hdf5(file_path: str, chunk_size: int = 50000):
             universities_list.append(university)
     return Universities(universities_list)
 
-def restore_universities_properties_from_hdf5(world, file_path: str, chunk_size: int = 50000):
-    first_uni_id = world.universities[0].id
-    first_super_area_id = world.super_areas[0].id
+
+def restore_universities_properties_from_hdf5(
+    world, file_path: str, chunk_size: int = 50000, domain_super_areas=None
+):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]
         universities_list = []
@@ -116,10 +131,18 @@ def restore_universities_properties_from_hdf5(world, file_path: str, chunk_size:
             super_areas, np.s_[0:n_universities], np.s_[0:n_universities]
         )
         for k in range(n_universities):
-            university = world.universities[ids[k] - first_uni_id]
+            if domain_super_areas is not None:
+                super_area = super_areas[k]
+                if super_area == nan_integer:
+                    raise ValueError(
+                        "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                    )
+                if super_area not in domain_super_areas:
+                    continue
+            university = world.universities.get_from_id(ids[k])
             super_area = super_areas[k]
             if super_area == nan_integer:
                 super_area = None
             else:
-                super_area = world.super_areas[super_area - first_super_area_id]
+                super_area = world.super_areas.get_from_id(super_area)
             university.super_area = super_area

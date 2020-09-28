@@ -44,7 +44,7 @@ class Symptoms:
 
     def _make_symptom_trajectory(self, health_index):
         if health_index is None:
-            return SymptomTag(0)
+            return [(0, SymptomTag(0))]
         trajectory_maker = TrajectoryMakers.from_file()
         index_max_symptoms_tag = np.searchsorted(health_index, self.max_severity)
         self.max_tag = SymptomTag(index_max_symptoms_tag)

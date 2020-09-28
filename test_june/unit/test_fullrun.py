@@ -6,12 +6,13 @@ but at least we can use it in the meantime to make sure the code runs before pus
 from pathlib import Path
 from june.simulator import Simulator
 from june import world
+from june.logger import Logger
 from june.time import Timer
-from june.demography.geography import Geography
-from june.demography import Demography, Person
+from june.geography import Geography
+from june.demography import Demography, Person, Population
 from june.interaction import Interaction
 from june.infection import InfectionSelector
-from june.commute import ModeOfTransport
+from june.groups.travel import ModeOfTransport, Travel
 from june.groups import (
     Hospitals,
     Schools,
@@ -27,12 +28,6 @@ from june.groups import (
     Household,
     University,
     CareHome,
-    CommuteHub,
-    CommuteHubs,
-    CommuteCity,
-    CommuteCities,
-    CommuteUnits,
-    CommuteCityUnits,
 )
 from june.groups import (
     Hospitals,
@@ -74,7 +69,10 @@ def test__full_run(dummy_world, selector):
             "care_home_visits",
         ],
     )
-    leisure_instance.distribute_social_venues_to_households(world.households, super_areas=world.super_areas)
+    leisure_instance.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
+    )
+    travel = Travel()
     interaction = Interaction.from_file()
     policies = Policies.from_file()
     sim = Simulator.from_file(
@@ -83,9 +81,10 @@ def test__full_run(dummy_world, selector):
         infection_selector=selector,
         config_filename=test_config,
         leisure=leisure_instance,
+        travel=travel,
         policies=policies,
-        save_path=None,
+        logger=Logger(),
     )
-    seed = InfectionSeed(sim.world.super_areas, selector)
-    seed.unleash_virus(1)
+    seed = InfectionSeed(world=sim.world, infection_selector=selector)
+    seed.unleash_virus(Population(sim.world.people), n_cases=1)
     sim.run()

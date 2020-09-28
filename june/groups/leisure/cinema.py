@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from typing import List
-from june.demography.geography import Areas, SuperArea, SuperAreas, Geography
+from june.geography import Areas, SuperArea, SuperAreas, Geography
 
 from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
