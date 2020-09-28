@@ -68,6 +68,7 @@ def save_symptoms_to_hdf5(
                 )
         trajectory_times_list = []
         trajectory_symptom_list = []
+        trajectory_lengths = []
         for symptoms in symptoms_list:
             times = []
             symps = []
@@ -76,16 +77,29 @@ def save_symptoms_to_hdf5(
                 symps.append(symp.value)
             trajectory_times_list.append(np.array(times, dtype=np.float))
             trajectory_symptom_list.append(np.array(symps, dtype=np.int))
-        write_dataset(
-            group=symptoms_group,
-            dataset_name="trajectory_times",
-            data=np.array(trajectory_times_list, dtype=float_vlen_type),
-        )
-        write_dataset(
-            group=symptoms_group,
-            dataset_name="trajectory_symptoms",
-            data=np.array(trajectory_symptom_list, dtype=int_vlen_type),
-        )
+            trajectory_lengths.append(len(times))
+        if len(np.unique(trajectory_lengths)) == 1:
+            write_dataset(
+                group=symptoms_group,
+                dataset_name="trajectory_times",
+                data=np.array(trajectory_times_list, dtype=float),
+            )
+            write_dataset(
+                group=symptoms_group,
+                dataset_name="trajectory_symptoms",
+                data=np.array(trajectory_symptom_list, dtype=int),
+            )
+        else:
+            write_dataset(
+                group=symptoms_group,
+                dataset_name="trajectory_times",
+                data=np.array(trajectory_times_list, dtype=float_vlen_type),
+            )
+            write_dataset(
+                group=symptoms_group,
+                dataset_name="trajectory_symptoms",
+                data=np.array(trajectory_symptom_list, dtype=int_vlen_type),
+            )
 
 
 def load_symptoms_from_hdf5(hdf5_file_path: str, chunk_size=50000):
