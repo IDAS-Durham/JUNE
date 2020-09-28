@@ -70,9 +70,10 @@ def save_checkpoint_to_hdf5(
                 dataset_name=name,
                 data=np.array(data, dtype=np.int),
             )
-    save_infections_to_hdf5(
-        hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
-    )
+    if infection_list:
+        save_infections_to_hdf5(
+            hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
+        )
 
 
 def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=True):
