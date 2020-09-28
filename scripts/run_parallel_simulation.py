@@ -67,7 +67,7 @@ else:
 set_random_seed(seed)
 
 world_file = f"./tests.hdf5"
-config_path = "../../test_JUNE/scripts/config_comparison.yaml"
+config_path = "./config_simulation.yaml"
 
 # parallel setup
 
