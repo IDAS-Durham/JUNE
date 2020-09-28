@@ -27,11 +27,13 @@ class LeisurePlots:
         time_spent_in_leisure, ret_child, ret_adult, ret_retired = simulate_leisure_week(probabilities_dict)
 
         activities = []
+        new_activities = []
         child_probability = []
         adult_probability = []
         retired_probability = []
         for activity in ret_adult:
             activities.append(activity)
+            new_activities.append(activity.replace("_", " "))
             adult_probability.append(ret_adult[activity])
             try:
                 child_probability.append(ret_child[activity])
@@ -39,6 +41,8 @@ class LeisurePlots:
                 child_probability.append(0.)
             retired_probability.append(ret_retired[activity])
 
+        
+    
 
         x = np.arange(len(activities))  # the label locations
         width = 0.35  # the width of the bars
@@ -49,11 +53,20 @@ class LeisurePlots:
         ax.bar(x + width/2, retired_probability, width/2, label = 'Retired')
         ax.set_ylabel('Probability of doing activity in a week')
         ax.set_xticks(x)
-        ax.set_xticklabels(activities)
+        ax.set_xticklabels(new_activities)
         ax.legend()
         plt.xticks(rotation=45)
 
         return ax
+
+def parse_config_file(config_file_path):
+    with open(config_file_path) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    male_age_probabilities = parse_age_probabilities(config["male_age_probabilities"])
+    female_age_probabilities = parse_age_probabilities(
+        config["female_age_probabilities"]
+    )
+    return male_age_probabilities, female_age_probabilities
 
 def parse_config_file(config_file_path):
     with open(config_file_path) as f:
@@ -83,7 +96,7 @@ def simulate_poisson_process(
 ):
     activities = list(probabilities_dict.keys())
     does_activity_age = {}
-    for age in np.arange(0, 20):
+    for age in np.arange(0, 100):
         poisson_parameters = [
             probabilities_dict[activity]["m"][age] for activity in activities
         ]
@@ -108,7 +121,7 @@ def simulate_leisure_week(probabilities_dict):
     retired_activities = defaultdict(list)
     
     ages = np.arange(0,100)
-    for i in range(100):
+    for i in range(20):
         print ('Working on week {}'.format(i))
         time_spent_in_leisure_week = defaultdict(int)
         child_activities_week = defaultdict(int)

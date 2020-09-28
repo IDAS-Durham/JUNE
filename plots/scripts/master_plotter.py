@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
+from leisure import LeisurePlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
