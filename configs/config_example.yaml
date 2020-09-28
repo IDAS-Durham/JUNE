@@ -5,7 +5,7 @@ activity_to_super_groups:
   primary_activity: ['schools', 'companies', "universities"]
   leisure: ['pubs', 'cinemas', 'groceries', "care_home_visits", "household_visits"] 
   residence: ['households', 'care_homes']
-  #commute: ['city_transports', 'inter_city_transports']
+  commute: ['city_transports', 'inter_city_transports']
 
 time:
   total_days: 10
@@ -24,9 +24,9 @@ time:
           3: 12 
   step_activities:
       weekday:
-          0: ['medical_facility', 'residence'] #'commute', 'residence'] 
+          0: ['medical_facility', 'residence','commute', 'residence'] 
           1: ['medical_facility', 'primary_activity', 'leisure', 'residence'] 
-          2: ['medical_facility', 'residence'] #'commute', 'residence'] 
+          2: ['medical_facility', 'residence','commute', 'residence'] 
           3: ['medical_facility', 'leisure', 'residence']
           4: ['medical_facility', 'residence']
       weekend:
