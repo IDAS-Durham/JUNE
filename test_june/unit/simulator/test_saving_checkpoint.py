@@ -107,9 +107,6 @@ class TestCheckpoints:
     def test__checkpoints_are_saved(self, selector):
         checkpoint_folder = Path("checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
-        checkpoint_path = Path("checkpoint_tests/checkpoint_2020-03-25.hdf5")
-        with h5py.File(checkpoint_path, "w") as f:
-            pass
         sim = run_simulator(selector)
         assert len(sim.world.people.infected) > 0
         assert len(sim.world.people.recovered) > 0

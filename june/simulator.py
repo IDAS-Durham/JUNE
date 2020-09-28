@@ -25,8 +25,6 @@ from june.world import World
 from june.logger import Logger
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
-# from june.hdf5_savers import save_checkpoint_to_hdf5
-
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger(__name__)
