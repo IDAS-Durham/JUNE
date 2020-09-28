@@ -34,6 +34,22 @@ class Plotter:
         world = generate_world_from_hdf5(world_filename)
 
         return Plotter(world)
+
+    def plot_leisure(
+            self,
+            save_dir: str = '../plots/leisure/'
+    ):
+        "Make all leisure plots"
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        print ("Setting up leisure plots")
+
+        print ("Plotting week probabilities")
+        week_probabilities_plot = leisure_plots.plot_week_probabilities()
+        week_probabilities_plot.plot()
+        plt.savefig(save_dir + 'week_probabilities.png', dpi=150, bbox_inches='tight')
         
     def plot_policies(
             self,
@@ -51,9 +67,6 @@ class Plotter:
         print ("Plotting restaurant reopening")
         restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
-        plt.xticks(rotation=45)
-        plt.ylabel('% pupils attending')
-        plt.xlabel('Date')
         plt.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting school reopening")
@@ -68,6 +81,7 @@ class Plotter:
         print ("Plotting the world")
         
         self.plot_policies()
+        self.plot_leisure()
 
 
 if __name__ == "__main__":
