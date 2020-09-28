@@ -251,7 +251,7 @@ def make_policy_simulator(dummy_world, interaction, selector):
         interaction,
         infection_selector=selector,
         config_filename=config_name,
-        logger=None,
+        record=None,
         travel = travel,
         policies=None,
         leisure=None,

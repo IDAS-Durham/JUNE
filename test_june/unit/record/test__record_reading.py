@@ -4,10 +4,9 @@ import random
 import tables
 import numpy as np
 import pytest
-import pandas as pd
-
-from june import paths
-from june.demography import Person, Population
+import pandas as pd 
+from june import paths 
+from june.demography import Person, Population 
 from june.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
@@ -211,10 +210,10 @@ def test__log_infected_by_region(world, interaction, selector):
         counter += 1
         already_infected += current_infected
     read = RecordReader(results_path=sim.record.record_path)
-    assert read.run_summary.iloc[0]["daily_infections_by_residence"] == 2  # seed
+    assert read.regional_summary.iloc[0]["daily_infected"] == 2  # seed
     for key in list(new_infected.keys())[1:]:
         if new_infected[key]:
-            assert read.run_summary.loc[key, "daily_infections_by_residence"] == len(
+            assert read.regional_summary.loc[key, "daily_infected"] == len(
                 new_infected[key]
             )
 
@@ -242,7 +241,7 @@ def test__log_hospital_admissions(world, interaction, selector):
     read = RecordReader(results_path=sim.record.record_path)
     for key in list(hospital_admissions.keys()):
         if hospital_admissions[key]:
-            assert read.run_summary.loc[key, "daily_hospital_admissions"] == len(
+            assert read.regional_summary.loc[key, "daily_hospitalised"] == len(
                 hospital_admissions[key]
             )
     clean_world(world)
@@ -270,7 +269,7 @@ def test__log_deaths(world, interaction, selector):
     read = RecordReader(results_path=sim.record.record_path)
     for key in list(deaths.keys()):
         if deaths[key]:
-            assert read.run_summary.loc[key, "daily_deaths_by_residence"] == len(
+            assert read.regional_summary.loc[key, "daily_deaths"] == len(
                 deaths[key]
             )
     clean_world(world)

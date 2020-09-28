@@ -5,7 +5,7 @@ import numpy as np
 import csv
 from pathlib import Path
 from typing import Optional, List
-from collections import Counter
+from collections import Counter, defaultdict
 
 from june.groups import Supergroup
 from june.records.event_records_writer import (
@@ -29,10 +29,7 @@ from june import paths
 
 class Record:
     def __init__(
-        self,
-        record_path: str,
-        filename: str,
-        record_static_data=False,
+        self, record_path: str, filename: str, record_static_data=False,
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
@@ -54,19 +51,15 @@ class Record:
         }
         with open(self.record_path / "summary.csv", "w", newline="") as summary_file:
             writer = csv.writer(summary_file)
-            writer.writerow(
-                [
-                    "time_stamp",
-                    "region",
-                    "daily_infections_by_residence",
-                    "daily_hospital_admissions",
-                    "daily_icu_admissions",
-                    "daily_deaths_by_residence",
-                    "daily_household_deaths",
-                    "daily_care_home_deaths",
-                    "daily_hospital_deaths",
-                ]
+            fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            header = ["time_stamp", "region"]
+            for field in fields:
+                header.append("current_" + field)
+                header.append("daily_" + field)
+            header.extend(
+                ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
             )
+            writer.writerow(header)
         if record_static_data:
             self.statics = {
                 "people": PeopleRecord(hdf5_file=self.file),
@@ -85,88 +78,91 @@ class Record:
 
     def accumulate(self, table_name: str, **kwargs):
         self.events[table_name].accumulate(**kwargs)
-        
+
     def time_step(self, timestamp: str):
         self.file = tables.open_file(self.record_path / self.filename, mode="a")
         for event_name in self.events.keys():
             self.events[event_name].record(hdf5_file=self.file, timestamp=timestamp)
         self.file.close()
 
-    def summarise_hospitalisations(self, timestamp: str, world: "World"):
-        hospitalised_per_region = Counter(
-            [
-                world.hospitals.get_from_id(hospital_id).super_area.region.name
-                for hospital_id in self.events["hospital_admissions"].hospital_ids
-            ]
+    def summarise_hospitalisations(self, world: "World"):
+        hospital_admissions, icu_admissions = defaultdict(int), defaultdict(int)
+        for hospital_id in self.events["hospital_admissions"].hospital_ids:
+            region = world.hospitals.get_from_id(hospital_id).super_area.region.name
+            hospital_admissions[region] += 1
+        for hospital_id in self.events["icu_admissions"].hospital_ids:
+            region = world.hospitals.get_from_id(hospital_id).super_area.region.name
+            icu_admissions[region] += 1
+        current_hospitalised, current_intensive_care = (
+            defaultdict(int),
+            defaultdict(int),
         )
-        intensive_care_per_region = Counter(
-            [
-                world.hospitals.get_from_id(hospital_id).super_area.region.name
-                for hospital_id in self.events["icu_admissions"].hospital_ids
-            ]
-        )
-        return hospitalised_per_region, intensive_care_per_region
-
-    def summarise_infections(self, timestamp: str, world="World"):
-        return Counter(
-            [
-                world.people.get_from_id(person_id).area.super_area.region.name
-                for person_id in self.events["infections"].infected_ids
-            ]
-        )
-
-    def summarise_deaths(self, timestamp: str, world="World"):
-        all_deaths_per_region = Counter(
-            [
-                world.people.get_from_id(person_id).area.super_area.region.name
-                for person_id in self.events["deaths"].dead_person_ids
-            ]
-        )
-
-        hospital_deaths_regions, care_home_deaths_regions, household_deaths_regions = (
-            [],
-            [],
-            [],
-        )
-        for location_id, location_type in zip(
-            self.events["deaths"].location_ids, self.events["deaths"].location_specs
-        ):
-            if location_type == "care_home":
-                care_home_deaths_regions.append(
-                    world.care_homes.get_from_id(location_id).super_area.region.name
-                )
-            elif location_type == "household":
-                household_deaths_regions.append(
-                    world.households.get_from_id(location_id).super_area.region.name
-                )
-            elif location_type == "hospital":
-                hospital_deaths_regions.append(
-                    world.hospitals.get_from_id(location_id).super_area.region.name
-                )
-        hospital_deaths_per_region = Counter(hospital_deaths_regions)
-        care_home_deaths_per_region = Counter(care_home_deaths_regions)
-        household_deaths_per_region = Counter(household_deaths_regions)
+        for person in world.people:
+            if person.medical_facility is not None:
+                if person.medical_facility.subgroup_type == 1:
+                    region = person.medical_facility.group.super_area.region.name
+                    current_hospitalised[region] += 1
+                elif person.medical_facility.subgroup_type == 2:
+                    region = person.medical_facility.group.super_area.region.name
+                    current_intensive_care[region] += 1
         return (
-            all_deaths_per_region,
-            hospital_deaths_per_region,
-            care_home_deaths_per_region,
-            household_deaths_per_region,
+            hospital_admissions,
+            icu_admissions,
+            current_hospitalised,
+            current_intensive_care,
         )
+
+    def summarise_infections(self, world="World"):
+        daily_infections, current_infected = defaultdict(int), defaultdict(int)
+        for person_id in self.events["infections"].infected_ids:
+            region = world.people.get_from_id(person_id).super_area.region.name
+            daily_infections[region] += 1
+        for person in world.people.infected:
+            region = person.super_area.region.name
+            current_infected[region] += 1
+        return daily_infections, current_infected
+
+    def summarise_recoveries(self, world="World"):
+        daily_recovered, current_recovered = defaultdict(int), defaultdict(int)
+        for person_id in self.events["recoveries"].recovered_person_ids:
+            region = world.people.get_from_id(person_id).super_area.region.name
+            daily_recovered[region] += 1
+        for person in world.people:
+            if person.recovered:
+                region = person.super_area.region.name
+                current_recovered[region] += 1
+        return daily_recovered, current_recovered
+
+    def summarise_deaths(self, world="World"):
+        daily_deaths, daily_deaths_in_hospital = defaultdict(int), defaultdict(int)
+        for i, person_id in enumerate(self.events["deaths"].dead_person_ids):
+            region = world.people.get_from_id(person_id).super_area.region.name
+            daily_deaths[region] += 1
+            if self.events["deaths"].location_specs[i] == "hospital":
+                hospital_id = self.events["deaths"].location_ids[i]
+                region = world.hospitals.get_from_id(hospital_id).super_area.region.name
+                daily_deaths_in_hospital[region] += 1
+        return daily_deaths, daily_deaths_in_hospital
+
+    def summarise_susceptibles(self, world="World"):
+        current_susceptible = {}
+        for region in world.regions:
+            current_susceptible[region] = len(
+                [person for person in region.people if person.susceptible]
+            )
+        return current_susceptible
 
     def summarise_time_step(self, timestamp: str, world: "World"):
+        daily_infected, current_infected = self.summarise_infections(world=world)
+        daily_recovered, current_recovered = self.summarise_recoveries(world=world)
         (
-            hospitalised_per_region,
-            intensive_care_per_region,
-        ) = self.summarise_hospitalisations(timestamp=timestamp, world=world)
-        daily_infected_per_region = self.summarise_infections(
-            timestamp=timestamp, world=world
-        )
-        (
-            all_deaths_per_region,
-            hospital_deaths_per_region,
-            care_home_deaths_per_region,
-            household_deaths_per_region,
-        ) = self.summarise_deaths(timestamp=timestamp, world=world)
+            daily_hospitalised,
+            daily_intensive_care,
+            current_hospitalised,
+            current_intensive_care,
+        ) = self.summarise_hospitalisations(world=world)
+        current_susceptible = self.summarise_susceptibles(world=world)
+        daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
         with open(self.record_path / "summary.csv", "a", newline="") as summary_file:
             summary_writer = csv.writer(summary_file)
             for region in [region.name for region in world.regions]:
@@ -174,12 +170,16 @@ class Record:
                     [
                         timestamp.strftime("%Y-%m-%d"),
                         region,
-                        daily_infected_per_region.get(region, 0),
-                        hospitalised_per_region.get(region, 0),
-                        intensive_care_per_region.get(region, 0),
-                        all_deaths_per_region.get(region, 0),
-                        household_deaths_per_region.get(region, 0),
-                        care_home_deaths_per_region.get(region, 0),
-                        hospital_deaths_per_region.get(region, 0),
+                        current_infected.get(region, 0),
+                        daily_infected.get(region, 0),
+                        current_recovered.get(region, 0),
+                        daily_recovered.get(region, 0),
+                        current_hospitalised.get(region, 0),
+                        daily_hospitalised.get(region, 0),
+                        current_intensive_care.get(region, 0),
+                        daily_intensive_care.get(region, 0),
+                        current_susceptible.get(region, 0),
+                        daily_deaths_in_hospital.get(region, 0),
+                        daily_deaths.get(region, 0),
                     ]
                 )
