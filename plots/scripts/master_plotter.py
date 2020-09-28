@@ -58,6 +58,11 @@ class Plotter:
         school_reopening_plot.plot()
         plt.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
 
+        print ("Plotting beta fraction")
+        beta_fraction_plot = policy_plots.plot_beta_fraction()
+        beta_fraction_plot.plot()
+        plt.savefig(save_dir + 'beta_fraction.png', dpi=150, bbox_inches='tight')
+
         print ("All policy plots finished")
     
     def plot_all(self):
