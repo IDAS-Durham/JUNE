@@ -137,11 +137,11 @@ class ActivityManager:
         -------
         List of groups that are active.
         """
-
-        super_groups = [
-            self.activity_to_super_group_dict[activity] for activity in activities
-        ]
-        return list(chain.from_iterable(super_groups))
+        return list(
+            chain.from_iterable(
+                self.activity_to_super_group_dict[activity] for activity in activities
+            )
+        )
 
     def move_to_active_subgroup(
         self, activities: List[str], person: Person, to_send_abroad=None
@@ -168,7 +168,7 @@ class ActivityManager:
             elif activity == "commute":
                 subgroup = self.travel.get_commute_subgroup(person=person)
             else:
-                subgroup = getattr(person, activity) 
+                subgroup = getattr(person, activity)
             if subgroup is not None:
                 if subgroup.external:
                     person.busy = True
