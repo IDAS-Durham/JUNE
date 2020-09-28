@@ -83,7 +83,7 @@ def simulate_poisson_process(
 ):
     activities = list(probabilities_dict.keys())
     does_activity_age = {}
-    for age in np.arange(0, 100):
+    for age in np.arange(0, 20):
         poisson_parameters = [
             probabilities_dict[activity]["m"][age] for activity in activities
         ]
