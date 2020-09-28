@@ -74,10 +74,9 @@ def test__full_run(dummy_world, selector):
     )
     travel = Travel()
     interaction = Interaction.from_file()
-    record = Record.from_world(
+    record = Record(
             record_path = 'results',
             filename='june_records.hdf5',
-            world=world,
     )
     policies = Policies.from_file()
     sim = Simulator.from_file(

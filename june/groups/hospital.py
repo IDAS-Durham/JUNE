@@ -211,24 +211,24 @@ class Hospitals(Supergroup):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         neighbour_hospitals = config["neighbour_hospitals"]
-        hospital_df = pd.read_csv(filename, index_col=0)
-        super_area_names = [super_area.name for super_area in geography.super_areas]
-        hospital_df = hospital_df.loc[hospital_df.index.isin(super_area_names)]
+        hospital_df = pd.read_csv(filename, index_col=4)
+        area_names = [area.name for area in geography.areas]
+        hospital_df = hospital_df.loc[hospital_df.index.isin(area_names)]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
         hospitals = []
-        for super_area in geography.super_areas:
-            if super_area.name in hospital_df.index:
-                hospitals_in_area = hospital_df.loc[super_area.name]
+        for area in geography.areas:
+            if area.name in hospital_df.index:
+                hospitals_in_area = hospital_df.loc[area.name]
                 if isinstance(hospitals_in_area, pd.Series):
                     hospital = cls.create_hospital_from_df_row(
-                        super_area, hospitals_in_area, 
+                        area, hospitals_in_area, 
                     )
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
                         hospital = cls.create_hospital_from_df_row(
-                            super_area, row,  
+                            area, row,  
                         )
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
@@ -237,14 +237,14 @@ class Hospitals(Supergroup):
 
     @classmethod
     def create_hospital_from_df_row(
-        cls, super_area, row,  
+        cls, area, row,  
     ):
         coordinates = row[["latitude", "longitude"]].values.astype(np.float)
         n_beds = row["beds"]
         n_icu_beds = row["icu_beds"] 
         trust_code = row["code"]
         hospital = Hospital(
-            super_area=super_area,
+            area=area,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
