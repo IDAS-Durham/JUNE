@@ -36,9 +36,8 @@ class TravelCities(Supergroup):
         Assumptions:
         - Commting is turned on and all commute cities have been distirbuted
         """
-        
+        super().__init__([]) 
         self.commutecities = commutecities
-        self.members = []
 
     def init_cities(self):
         'Initialise all cities'
@@ -50,4 +49,4 @@ class TravelCities(Supergroup):
                 metro_centroid = commutecity.metro_centroid,
             )
 
-            self.members.append(travel_city)
+            self.add(travel_city)

@@ -1,6 +1,6 @@
 import numpy as np
 from june.groups import University, Universities
-from june.demography.geography import Area, SuperArea, Geography, SuperAreas
+from june.geography import Area, SuperArea, Geography, SuperAreas
 
 
 def test__university_init():

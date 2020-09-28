@@ -3,7 +3,6 @@ from random import choice
 from recordclass import dataobject
 import numpy as np
 
-from june.commute import ModeOfTransport
 from june.infection import Infection
 
 
@@ -32,15 +31,13 @@ class Person(dataobject):
     socioecon_index: str = None
     area: "Area" = None
     # work info
-    work_super_area: str = None
+    work_super_area: "SuperArea" = None
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
     comorbidity: str = None
     # commute
-    home_city: str = None
-    mode_of_transport: ModeOfTransport = None
-    # rail travel
+    mode_of_transport: "ModeOfTransport" = None
     # activities
     busy: bool = False
     subgroups: Activities = Activities(None, None, None, None, None, None, None)
@@ -148,8 +145,7 @@ class Person(dataobject):
             return None
         guardian = choice(possible_guardians)
         if (
-            guardian.infection is not None
-            and guardian.infection.should_be_in_hospital
+            guardian.infection is not None and guardian.infection.should_be_in_hospital
         ) or guardian.dead:
             return None
         else:
@@ -161,3 +157,20 @@ class Person(dataobject):
             return None
         else:
             return self.infection.symptoms
+
+    @property
+    def super_area(self):
+        try:
+            return self.area.super_area
+        except:
+            return None
+
+    @property
+    def home_city(self):
+        return self.area.super_area.city
+
+    @property
+    def work_city(self):
+        if self.work_super_area is None:
+            return None
+        return self.work_super_area.city

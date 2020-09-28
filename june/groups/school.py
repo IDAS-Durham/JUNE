@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.demography.geography import Geography, Areas, Area
+from june.geography import Geography, Areas, Area
 from june.groups.group import Group, Subgroup, Supergroup
 
 
@@ -199,8 +199,7 @@ class Schools(Supergroup):
         agegroup_to_global_indices:
             dictionary to map the
         """
-        super().__init__()
-        self.members = schools
+        super().__init__(members=schools)
         self.school_trees = school_trees
         self.school_agegroup_to_global_indices = agegroup_to_global_indices
 
@@ -392,7 +391,7 @@ class Schools(Supergroup):
         """
         school_tree = self.school_trees[age]
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
-        k = min(k, len(list(school_tree.data)))
+        k = min(k, school_tree.data.shape[0])
         distances, neighbours = school_tree.query(
             coordinates_rad, k=k, sort_results=True,
         )

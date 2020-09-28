@@ -3,7 +3,7 @@ from june.infection.infection_selector import InfectionSelector
 from june.groups import School
 from june.demography import Person
 from june import paths
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.interaction.interactive_group import InteractiveGroup
 from june.world import generate_world_from_geography
 from june.groups import Hospital, Hospitals
@@ -191,10 +191,11 @@ def test__infection_is_isolated(selector):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file()
-    infection_seed = InfectionSeed(world.super_areas, selector)
+    infection_seed = InfectionSeed(world, selector)
     n_cases = 5
     infection_seed.unleash_virus(
-        n_cases
+        world.people,
+        n_cases=n_cases
     )  # play around with the initial number of cases
     policies = Policies([])
     simulator = Simulator.from_file(

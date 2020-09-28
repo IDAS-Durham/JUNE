@@ -2,7 +2,8 @@ import h5py
 import numpy as np
 
 from june.world import World
-from june.groups import Hospital, Hospitals
+from june.groups import Hospital, Hospitals, ExternalGroup
+from .utils import read_dataset
 
 nan_integer = -999
 
@@ -90,7 +91,7 @@ def save_hospitals_to_hdf5(
                 hospitals_dset["coordinates"][idx1:idx2] = coordinates
 
 
-def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
+def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -125,7 +126,19 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
             hospitals["coordinates"].read_direct(
                 coordinates, np.s_[idx1:idx2], np.s_[0:length]
             )
+            super_areas = np.empty(length, dtype=int)
+            hospitals["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(idx2 - idx1):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 trust_code = trust_codes[k]
                 if trust_code.decode() == " ":
                     trust_code = None
@@ -143,10 +156,8 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000):
 
 
 def restore_hospital_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000
+    world: World, file_path: str, chunk_size=50000, domain_super_areas=None, super_areas_to_domain_dict:dict = None
 ):
-    first_hospital_id = world.hospitals[0].id
-    first_super_area_id = world.super_areas[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
         hospitals_list = []
@@ -163,10 +174,64 @@ def restore_hospital_properties_from_hdf5(
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
-                hospital = world.hospitals[ids[k] - first_hospital_id]
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                hospital = world.hospitals.get_from_id(ids[k])
                 super_area = super_areas[k]
                 if super_area == nan_integer:
                     super_area = None
                 else:
-                    super_area = world.super_areas[super_area - first_super_area_id]
+                    super_area = world.super_areas.get_from_id(super_area)
                 hospital.super_area = super_area
+
+        # super areas
+        geography = f["geography"]
+        n_super_areas = geography.attrs["n_super_areas"]
+        n_chunks = int(np.ceil(n_super_areas / chunk_size))
+        for chunk in range(n_chunks):
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_super_areas)
+            length = idx2 - idx1
+            super_areas_ids = read_dataset(geography["super_area_id"], idx1, idx2)
+            closest_hospitals_ids = read_dataset(
+                geography["closest_hospitals_ids"], idx1, idx2
+            )
+            closest_hospitals_super_areas = read_dataset(
+                geography["closest_hospitals_super_areas"], idx1, idx2
+            )
+            for k in range(length):
+                if domain_super_areas is not None:
+                    super_area_id = super_areas_ids[k]
+                    if super_area_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area_id not in domain_super_areas:
+                        continue
+                super_area = world.super_areas.get_from_id(super_areas_ids[k])
+                # load closest hospitals
+                hospitals = []
+                for hospital_id, hospital_super_area_id in zip(
+                    closest_hospitals_ids[k], closest_hospitals_super_areas[k]
+                ):
+                    if (
+                        domain_super_areas is None
+                        or hospital_super_area_id in domain_super_areas
+                    ):
+                        hospital = world.hospitals.get_from_id(hospital_id)
+                    else:
+                        hospital = ExternalGroup(
+                            domain_id=super_areas_to_domain_dict[
+                                hospital_super_area_id
+                            ],
+                            spec="hospital",
+                            id=hospital_id,
+                        )
+                    hospitals.append(hospital)
+                super_area.closest_hospitals = hospitals

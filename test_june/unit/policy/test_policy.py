@@ -7,7 +7,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.interaction import Interaction
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (

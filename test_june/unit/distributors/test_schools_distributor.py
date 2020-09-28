@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from june.world import World, generate_world_from_geography
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.groups.school import Schools
 from june.distributors.school_distributor import SchoolDistributor
 
@@ -114,7 +114,6 @@ def test__non_mandatory_dont_go_if_school_full(school_world):
                     )[int(school.n_pupils_max) :]
                 ]
             )
-            print(ages)
             older_kids_when_full = np.sum(ages > mandatory_age_range[1])
             younger_kids_when_full = np.sum(ages < mandatory_age_range[0])
             if older_kids_when_full > 0 or younger_kids_when_full > 0:

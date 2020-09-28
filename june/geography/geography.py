@@ -11,9 +11,11 @@ from june.demography.person import Person
 default_hierarchy_filename = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
-default_area_coord_filename = paths.data_path / "input/geography/area_coordinates.csv"
+default_area_coord_filename = (
+    paths.data_path / "input/geography/area_coordinates_sorted.csv"
+)
 default_superarea_coord_filename = (
-    paths.data_path / "input/geography/super_area_coordinates.csv"
+    paths.data_path / "input/geography/super_area_coordinates_sorted.csv"
 )
 default_logging_config_filename = (
     paths.configs_path / "config_world_creation_logger.yaml"
@@ -42,11 +44,15 @@ class Area:
         "care_home",
         "schools",
         "households",
+        "social_venues",
     )
     _id = count()
 
     def __init__(
-        self, name: str, super_area: "SuperArea", coordinates: Tuple[float, float],
+        self,
+        name: str = None,
+        super_area: "SuperArea" = None,
+        coordinates: Tuple[float, float] = None,
     ):
         """
         Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.
@@ -59,21 +65,33 @@ class Area:
         self.people = []
         self.schools = []
         self.households = []
+        self.social_venues = {}
 
     def add(self, person: Person):
         self.people.append(person)
         person.area = self
 
-    def populate(self, demography):
-        for person in demography.populate(self.name):
+    def populate(
+        self, demography, ethnicity=True, socioecon_index=True, comorbidity=True
+    ):
+        for person in demography.populate(
+            self.name,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            comorbidity=comorbidity,
+        ):
             self.add(person)
 
 
 class Areas:
-    __slots__ = "members", "super_area", "ball_tree"
+    __slots__ = "members_by_id", "super_area", "ball_tree", "members_by_name"
 
     def __init__(self, areas: List[Area], super_area=None, ball_tree: bool = True):
-        self.members = areas
+        self.members_by_id = {area.id: area for area in areas}
+        try:
+            self.members_by_name = {area.name: area for area in areas}
+        except AttributeError:
+            self.members_by_name = None
         self.super_area = super_area
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
@@ -89,9 +107,16 @@ class Areas:
     def __getitem__(self, index):
         return self.members[index]
 
+    def get_from_id(self, id):
+        return self.members_by_id[id]
+
+    @property
+    def members(self):
+        return list(self.members_by_id.values())
+
     def construct_ball_tree(self):
         coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_areas(self, coordinates, k=1, return_distance=False):
@@ -129,12 +154,15 @@ class SuperArea:
     __slots__ = (
         "id",
         "name",
+        "city",
         "coordinates",
+        "closest_station_for_city",
         "workers",
         "areas",
         "companies",
-        "groceries",
+        "closest_hospitals",
     )
+    external = False
     _id = count()
 
     def __init__(
@@ -145,15 +173,21 @@ class SuperArea:
     ):
         self.id = next(self._id)
         self.name = name
+        self.city = None
+        self.closest_station_for_city = {}
         self.coordinates = coordinates
         self.areas = areas or []
         self.workers = []
         self.companies = []
-        self.groceries = []
+        self.closest_hospitals = None
 
     def add_worker(self, person: Person):
         self.workers.append(person)
         person.work_super_area = self
+
+    def remove_worker(self, person: Person):
+        self.workers.remove(person)
+        person.work_super_area = None
 
     @property
     def people(self):
@@ -161,7 +195,7 @@ class SuperArea:
 
 
 class SuperAreas:
-    __slots__ = "members", "ball_tree"
+    __slots__ = "members_by_id", "ball_tree", "members_by_name"
 
     def __init__(self, super_areas: List[SuperArea], ball_tree: bool = True):
         """
@@ -174,7 +208,13 @@ class SuperAreas:
         ball_tree
             whether to construct a NN tree for the super areas
         """
-        self.members = super_areas
+        self.members_by_id = {area.id: area for area in super_areas}
+        try:
+            self.members_by_name = {
+                super_area.name: super_area for super_area in super_areas
+            }
+        except AttributeError:
+            self.members_by_name = None
         if ball_tree:
             self.ball_tree = self.construct_ball_tree()
         else:
@@ -189,11 +229,18 @@ class SuperAreas:
     def __getitem__(self, index):
         return self.members[index]
 
+    def get_from_id(self, id):
+        return self.members_by_id[id]
+
+    @property
+    def members(self):
+        return list(self.members_by_id.values())
+
     def construct_ball_tree(self):
         coordinates = np.array(
             [np.deg2rad(super_area.coordinates) for super_area in self]
         )
-        ball_tree = BallTree(coordinates, metric = 'haversine')
+        ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
     def get_closest_super_areas(self, coordinates, k=1, return_distance=False):
@@ -226,6 +273,21 @@ class SuperAreas:
 
     def get_closest_super_area(self, coordinates):
         return self.get_closest_super_areas(coordinates, k=1, return_distance=False)[0]
+
+
+class ExternalSuperArea:
+    """
+    This a city that lives outside the simulated domain.
+    """
+
+    external = True
+    __slots__ = "city", "spec", "id", "domain_id"
+
+    def __init__(self, id, domain_id):
+        self.city = None
+        self.spec = "super_area"
+        self.id = id
+        self.domain_id = domain_id
 
 
 class Geography:
