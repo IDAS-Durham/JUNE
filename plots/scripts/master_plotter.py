@@ -46,6 +46,8 @@ class Plotter:
 
         print ("Setting up leisure plots")
 
+        leisure_plots = LeisurePlots(self.world)
+
         print ("Plotting week probabilities")
         week_probabilities_plot = leisure_plots.plot_week_probabilities()
         week_probabilities_plot.plot()
@@ -79,9 +81,9 @@ class Plotter:
     def plot_all(self):
 
         print ("Plotting the world")
-        
-        self.plot_policies()
+
         self.plot_leisure()
+        self.plot_policies()
 
 
 if __name__ == "__main__":
