@@ -219,6 +219,10 @@ class Population:
     def recovered(self):
         return [person for person in self.people if person.recovered]
 
+    @property
+    def dead(self):
+        return [person for person in self.people if person.dead]
+
 
 class Demography:
     def __init__(

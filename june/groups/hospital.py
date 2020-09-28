@@ -134,6 +134,7 @@ class Hospitals(Supergroup):
         hospitals: List["Hospital"],
         neighbour_hospitals: int = 5, 
         box_mode: bool = False,
+        ball_tree = True
     ):
         """
         Create a group of hospitals, and provide functionality to locate patients
@@ -154,19 +155,16 @@ class Hospitals(Supergroup):
         super().__init__(members=hospitals)
         self.box_mode = box_mode
         self.neighbour_hospitals = neighbour_hospitals
-        coordinates = np.array([hospital.coordinates for hospital in hospitals])
-        if not box_mode:
-            if not self.members:
-                logger.warning(f"No hospitals in this domain / world.")
-            else:
-                self.init_trees(coordinates)
+        if ball_tree and self.members: 
+            coordinates = np.array([hospital.coordinates for hospital in hospitals])
+            self.init_trees(coordinates)
 
     @classmethod
     def for_box_mode(cls):
         hospitals = []
         hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
         hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
-        return cls(hospitals, neighbour_hospitals=None, box_mode=True)
+        return cls(hospitals, neighbour_hospitals=None, box_mode=True, ball_tree=False)
 
     @classmethod
     def from_file(
