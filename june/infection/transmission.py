@@ -7,7 +7,6 @@ from typing import Optional
 from math import gamma
 
 from june.infection.trajectory_maker import CompletionTime
-from june.infection.symptom_tag import SymptomTag
 from june import paths
 
 default_config_path = (
@@ -133,7 +132,7 @@ class TransmissionGamma(Transmission):
         shape: float = 2.0,
         rate: float = 3.0,
         shift: float = -2.0,
-        max_symptoms: Optional["SymptomTag"] = None,
+        max_symptoms: Optional[str] = None,
         asymptomatic_infectious_factor: Optional[float] = None,
         mild_infectious_factor: Optional[float] = None,
     ):
@@ -174,7 +173,7 @@ class TransmissionGamma(Transmission):
     @classmethod
     def from_file(
         cls,
-        max_symptoms: "SymptomTag" = None,
+        max_symptoms: str = None,
         config_path: str = default_gamma_config_path,
     ) -> "TransmissionGamma":
         """
@@ -220,7 +219,7 @@ class TransmissionGamma(Transmission):
     def from_file_linked_symptoms(
         cls,
         time_to_symptoms_onset: float,
-        max_symptoms: "SymptomTag" = None,
+        max_symptoms: str = None,
         config_path: str = default_gamma_config_path,
     ) -> "TransmissionGamma":
         """
@@ -294,7 +293,7 @@ class TransmissionGamma(Transmission):
 
     def _modify_infectiousness_for_symptoms(
         self,
-        max_symptoms: "SymptomTag",
+        max_symptoms: str,
         asymptomatic_infectious_factor=None,
         mild_infectious_factor=None,
     ):
@@ -313,9 +312,9 @@ class TransmissionGamma(Transmission):
         """
         if (
             asymptomatic_infectious_factor is not None
-            and max_symptoms == SymptomTag.asymptomatic
+            and max_symptoms == "asymptomatic"
         ):
             return asymptomatic_infectious_factor
-        elif mild_infectious_factor is not None and max_symptoms == SymptomTag.mild:
+        elif mild_infectious_factor is not None and max_symptoms == "mild":
             return mild_infectious_factor
         return 1.0

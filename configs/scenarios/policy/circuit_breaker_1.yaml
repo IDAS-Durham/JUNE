@@ -18,7 +18,7 @@ quarantine:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
         compliance: 0.95 # for the symptomatic individual - needs to be checked
-        household_compliance: 0.8
+        household_compliance: 0.9
         start_time: 2020-03-24
         end_time: 2021-07-04
 
@@ -33,6 +33,13 @@ shielding:
         compliance: 0.7
         start_time: 2020-03-24
         end_time: 2020-08-01
+
+    # CIRCUIT BREAKER
+    3:
+        min_age: 70
+        compliance: 0.7
+        start_time: 2020-10-24
+        end_time: 2020-11-07
 
 
 close_companies:
@@ -123,11 +130,29 @@ close_companies:
     13:
         start_time: 2020-09-09
         #end_time: 2020-09-17
+        #end_time: 2020-12-01
+        end_time: 2020-10-24
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.22
+
+    # CIRCUIT BREAKER
+    14:
+        start_time: 2020-10-24
+        end_time: 2020-11-07
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.22
+    15:
+        start_time: 2020-11-07
         end_time: 2021-12-01
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
         key_probability: 0.22
+
 
 social_distancing:
     1: 
@@ -138,8 +163,8 @@ social_distancing:
             pub: 0.875
             grocery: 0.875
             cinema: 0.875
-            city_transport: 0.875
-            inter_city_transport: 0.875
+            commute_unit: 0.875
+            commute_city_unit: 0.875
             hospital: 0.875
             care_home: 0.875
             company: 0.875
@@ -155,8 +180,8 @@ social_distancing:
             pub: 0.75
             grocery: 0.75
             cinema: 0.75
-            city_transport: 0.75
-            inter_city_transport: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
             hospital: 0.75
             care_home: 0.75
             company: 0.75
@@ -165,14 +190,49 @@ social_distancing:
             university: 0.75
     3:
         start_time: 2020-07-04 
-        end_time: 2021-12-01
+        #end_time: 2020-12-10
+        end_time: 2020-10-24
         beta_factors:
             box: 0.875
             pub: 0.875
             grocery: 0.875
             cinema: 0.875
-            city_transport: 0.875
-            inter_city_transport: 0.875
+            commute_unit: 0.875
+            commute_city_unit: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+
+    # CIRCUIT BREAKER
+    4:
+        start_time: 2020-10-24
+        end_time: 2020-11-07
+        beta_factors:
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            commute_unit: 0.75
+            commute_city_unit: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+    5:
+        start_time: 2020-11-07
+        end_time: 2021-12-10
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            commute_unit: 0.875
+            commute_city_unit: 0.875
             hospital: 0.875
             care_home: 0.875
             company: 0.875
@@ -191,8 +251,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -209,8 +269,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -227,8 +287,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -245,8 +305,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -263,8 +323,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -281,8 +341,8 @@ mask_wearing:
             pub: 0.
             grocery: 0.5
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -299,8 +359,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -317,8 +377,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -335,8 +395,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -353,14 +413,15 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
             school: 0.
             household: 0.
             university: 0.5
+
     11: 
         start_time: 2020-08-12
         end_time: 2020-08-25
@@ -371,8 +432,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -389,8 +450,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -408,8 +469,8 @@ mask_wearing:
             pub: 0.
             grocery: 1.
             cinema: 0.
-            inter_city_transport: 1.
-            city_transport: 1.
+            commute_unit: 1.
+            commute_city_unit: 1.
             hospital: 0.
             care_home: 0.5
             company: 0.5
@@ -417,11 +478,17 @@ mask_wearing:
             household: 0.
             university: 0.5
 
-
 close_leisure_venue:
-    start_time: 2020-03-21
-    end_time: 2020-07-04 
-    venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
+    1:
+        start_time: 2020-03-21
+        end_time: 2020-07-04 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
+
+    # CIRCUIT BREAKER
+    2:
+        start_time: 2020-10-24
+        end_time: 2020-11-07
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
 
 change_leisure_probability:
     1:
@@ -548,6 +615,25 @@ change_leisure_probability:
                 women:
                     18-65: 1.38
                     65-100: 0.917
+
+    # CIRCUIT BREAKER
+
+    11:
+        start_time: 2020-10-24
+        end_time: 2020-11-07
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 0.50
+                    65-100: 0.25
+                women: 
+                    0-64: 0.50
+                    65-100: 0.25
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
 
 
 close_schools:

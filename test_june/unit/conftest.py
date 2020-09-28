@@ -157,9 +157,6 @@ def make_super_areas():
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
-    #g = Geography.from_file(
-    #    filter_key={"super_area": ["E02002512", "E02001697", "E02001731"]}
-    #)
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
