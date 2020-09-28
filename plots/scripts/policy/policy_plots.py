@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 from datetime import datetime, timedelta
+from collections import defaultdict
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
@@ -63,9 +64,9 @@ class PolicyPlots:
         ax.vlines(datetime(2020,3,23).date(),-110,230, linestyles='--', color='red', label = '23rd March')
         ax.vlines(datetime(2020,7,4).date(),-110,230, linestyles='--',  color='green', label = '4th July')
         ax.hlines(0, dates[0], dates[-1], linestyles='--')
-        ax.legend(bbox_to_anchor=(1.05, 1))
         ax.set_ylabel('% difference')
         ax.set_xlabel('Date')
+        ax.legend(bbox_to_anchor=(1.05, 1))
         plt.xticks(rotation=45)
 
         return ax
@@ -136,11 +137,11 @@ class PolicyPlots:
         ax.vlines(datetime(2020,6,1),1,19,linestyle='--',color='green', label='Early years +\nY6 opening')
         ax.vlines(datetime(2020,6,15),1,19,linestyle='--',color='orange', label='Y10+Y12\noffered support')
         ax.vlines(datetime(2020,7,16),1,19,linestyle='--',color='red', label='Summer holidays')
+        ax.set_ylabel('% pupils attending')
+        ax.set_xlabel('Date')
         ax.set_ylim((0,20))
         ax.set_xlim((datetime(2020,4,1),datetime(2020,7,25)))
         ax.legend(loc='upper left')
-        ax.set_ylabel('% pupils attending')
-        ax.set_xlabel('Date')
         plt.xticks(rotation=45)
 
         return ax
@@ -153,12 +154,16 @@ class PolicyPlots:
 
         policies = Policies.from_file(policy_filename)
 
-        no_days = 200
-        begin_date = datetime(2020,3,1)
-
+        active_interaction_policies = policies.interaction_policies.get_active(
+            date=datetime(2020,3,23)
+        )
+        
         groups = []
         for group in active_interaction_policies[0].beta_factors:
             groups.append(group)
+
+        no_days = 200
+        begin_date = datetime(2020,3,1)
 
 
         dates = []
@@ -174,7 +179,6 @@ class PolicyPlots:
                 beta_reductions_dict = policy.apply()
                 for group in beta_reductions_dict:
                     beta_reductions[group] *= beta_reductions_dict[group]
-                    #print(beta_reductions[group])
             betas = []
             for group in beta_reductions:
                 betas.append(beta_reductions[group])
