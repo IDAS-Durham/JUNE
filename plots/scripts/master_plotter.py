@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
+from leisure import LeisurePlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -34,6 +35,24 @@ class Plotter:
         world = generate_world_from_hdf5(world_filename)
 
         return Plotter(world)
+
+    def plot_leisure(
+            self,
+            save_dir: str = '../plots/leisure/'
+    ):
+        "Make all leisure plots"
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        print ("Setting up leisure plots")
+
+        leisure_plots = LeisurePlots(self.world)
+
+        print ("Plotting week probabilities")
+        week_probabilities_plot = leisure_plots.plot_week_probabilities()
+        week_probabilities_plot.plot()
+        plt.savefig(save_dir + 'week_probabilities.png', dpi=150, bbox_inches='tight')
         
     def plot_policies(
             self,
@@ -69,6 +88,7 @@ class Plotter:
 
         print ("Plotting the world")
 
+        self.plot_leisure()
         self.plot_policies()
 
 
